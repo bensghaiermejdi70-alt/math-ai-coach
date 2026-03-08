@@ -1,0 +1,8 @@
+{
+  "/page": "app/page.js",
+  "/universite/analyse2/page": "app/universite/analyse2/page.js",
+  "/solve/page": "app/solve/page.js",
+  "/bac/page": "app/bac/page.js",
+  "/bac/trimestre1/complexes/page": "app/bac/trimestre1/complexes/page.js",
+  "/chat/page": "app/chat/page.js"
+}

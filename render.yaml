@@ -1,0 +1,27 @@
+databases:
+  - name: mathai-db
+    databaseName: mathai_coach
+    user: mathai_user
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: mathai-backend
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mathai-db
+          property: connectionString
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: http://localhost:3000
