@@ -9,6 +9,13 @@ env/
 dist/
 build/
 
+# Next.js
+.next/
+node_modules/
+frontend/.next/
+frontend/node_modules/
+frontend/out/
+
 # Environment
 .env
 .env.local
@@ -37,3 +44,7 @@ npm-debug.log*
 # DB
 *.sqlite
 *.db
+
+# Videos (IMPORTANT)
+public/*.mp4
+*.mp4

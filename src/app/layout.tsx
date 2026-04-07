@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/lib/auth/AuthContext'
 
 export const metadata: Metadata = {
-  title: 'MathAI Coach — Ton Professeur de Maths IA',
-  description: 'Plateforme IA de mathématiques adaptée aux programmes officiels Tunisie, Maroc et France. Solveur étape par étape, examens corrigés, chat IA professeur.',
-  keywords: 'mathématiques, IA, Tunisie, Bac, FST, examens, solveur, professeur IA',
-  authors: [{ name: 'MathAI Coach' }],
+  title: 'MathBac.AI — Ton Professeur de Maths IA',
+  description: 'Plateforme IA de mathématiques pour le Bac Tunisie et France. Solveur étape par étape, examens corrigés, simulation IA, chat professeur.',
+  keywords: 'mathématiques, IA, Tunisie, France, Bac, examens, solveur, professeur IA, MathBac',
+  authors: [{ name: 'MathBac.AI' }],
   viewport: 'width=device-width, initial-scale=1',
   themeColor: '#07080f',
 }
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <div className="mesh-bg" />
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

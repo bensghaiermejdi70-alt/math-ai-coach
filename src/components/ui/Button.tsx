@@ -1,4 +1,3 @@
-'use client'
 import { ReactNode, CSSProperties } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'teal' | 'gold' | 'danger'

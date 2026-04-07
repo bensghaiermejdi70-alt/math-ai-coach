@@ -1,4 +1,3 @@
-'use client'
 import { InputHTMLAttributes, TextareaHTMLAttributes, forwardRef } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
