@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '../../lib/auth/AuthContext'
-import { createClient } from '../../lib/supabase/client
+import { createClient } from '../../lib/supabase/client'
 
 const DURATIONS: Record<string, number> = { mensuel:30, annuel:365, sprint_bac:60 }
 const STATUS_STYLE: Record<string, string> = {
