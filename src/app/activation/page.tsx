@@ -4,10 +4,10 @@
 import { useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth/AuthContext'
-import { createClient } from '@/lib/supabase/client'
-import Navbar from '@/components/layout/Navbar'
-import Footer from '@/components/layout/Footer'
+import { useAuth } from '../../lib/auth/AuthContext'
+import { createClient } from '../../lib/supabase/client'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
 
 // ── Plans & prix ──────────────────────────────────────────────────
 const PLAN_PRICES: Record<string, number> = {
