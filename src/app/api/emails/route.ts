@@ -155,28 +155,6 @@ function emailRenouvellement(nom: string) {
 
 // ── Handler API ───────────────────────────────────────────────────
 
-import { NextRequest, NextResponse } from 'next/server'
-import { Resend } from 'resend'
-
-import {
-  emailBienvenue,
-  emailConfirmationAbonnement,
-  emailExpirationBientot,
-  emailRenouvellement,
-} from '@/lib/emails/templates'
-
-const FROM = 'MathBac.AI <noreply@bacai.tn>'
-
-function getResend() {
-  const key = process.env.RESEND_API_KEY
-
-  if (!key) {
-    throw new Error('Missing RESEND_API_KEY')
-  }
-
-  return new Resend(key)
-}
-
 export async function POST(req: NextRequest) {
   try {
     const { type, to, data } = await req.json()
