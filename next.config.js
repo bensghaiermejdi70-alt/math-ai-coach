@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // App Router est activé par défaut dans Next.js 14+
-  // src/app est automatiquement détecté via tsconfig paths
+  reactStrictMode: true,
+
   async rewrites() {
     return [
-      { source: '/api/:path*', destination: 'http://localhost:8000/api/:path*' }
+      {
+        source: '/api/:path*',
+        destination:
+          process.env.NODE_ENV === 'production'
+            ? 'https://YOUR_BACKEND_URL/api/:path*'
+            : 'http://localhost:8000/api/:path*',
+      },
     ]
   },
 }
