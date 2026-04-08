@@ -13,6 +13,8 @@
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.100.0",
     "autoprefixer": "^10.4.27",
+    "bullmq": "^5.73.1",
+    "ioredis": "^5.10.1",
     "next": "^14.2.3",
     "postcss": "^8.5.8",
     "react": "^18.3.1",
