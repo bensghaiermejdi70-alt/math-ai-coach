@@ -3,7 +3,13 @@
 // Installer : npm install resend
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { createAdminClient } from '@/lib/supabase/server'
+
+import {
+  emailBienvenue,
+  emailConfirmationAbonnement,
+  emailExpirationBientot,
+  emailRenouvellement,
+} from '@/lib/emails/templates'
 
 const FROM = 'MathBac.AI <noreply@bacai.tn>'
 const SITE = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
