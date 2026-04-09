@@ -6,16 +6,23 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function AuthCallback() {
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const supabase = createClient()
+
     const handleAuth = async () => {
       await supabase.auth.getSession()
+
+      // 🔥 redirection après login / reset password
       router.push('/')
     }
 
     handleAuth()
   }, [])
 
-  return <p style={{padding:20}}>Connexion en cours...</p>
+  return (
+    <div style={{ padding: 40 }}>
+      🔄 Connexion en cours...
+    </div>
+  )
 }
