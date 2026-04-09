@@ -521,7 +521,9 @@ export default function Navbar() {
                     <div style={{padding:'12px 16px',borderBottom:'1px solid var(--border)'}}>
                       <div style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{profile?.full_name || user.email?.split('@')[0]}</div>
                       <div style={{fontSize:10,color:hasActiveSubscription?'var(--teal)':'var(--muted)',fontFamily:'var(--font-mono)',marginTop:3}}>
-                        {hasActiveSubscription ? `✅ Abonné · ${daysRemaining}j restants` : '🔓 Compte gratuit'}
+                        {hasActiveSubscription
+  ? `✅ Abonné · ${daysRemaining ?? 0}j restants`
+  : '🔓 Compte gratuit'}
                       </div>
                     </div>
                     {[

@@ -26,9 +26,9 @@ const PROTECTED_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 🔥 SUPABASE CLIENT (corrigé cookies)
   const response = NextResponse.next()
 
+  // 🔥 SUPABASE SSR CLIENT
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -46,7 +46,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // 🔥 GET USER (fiable)
+  // 🔐 GET USER SESSION
   const {
     data: { user }
   } = await supabase.auth.getUser()
@@ -67,22 +67,22 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // 🔥 3. NON CONNECTÉ → BLOCK
-  if (!email && isProtected) {
+  // 🔥 3. NON CONNECTÉ → LOGIN
+  if (!user && isProtected) {
     return NextResponse.redirect(
       new URL('/login', request.url)
     )
   }
 
-  // 🔥 4. CONNECTÉ → CHECK DB (CRITIQUE)
-  if (email && isProtected) {
+  // 🔥 4. CONNECTÉ → CHECK SUBSCRIPTION
+  if (user && isProtected) {
     const { data: profile, error } = await supabase
-      .from('users')
-      .select('is_active, subscription_end')
-      .eq('email', email)
+      .from('profiles') // ✅ FIX IMPORTANT
+      .select('is_active, subscription_end, country')
+      .eq('id', user.id)
       .single()
 
-    // ⚠️ si erreur DB → bloquer
+    // ❌ si profil introuvable → abonnement
     if (error || !profile) {
       return NextResponse.redirect(
         new URL('/abonnement', request.url)
@@ -91,13 +91,17 @@ export async function middleware(request: NextRequest) {
 
     const now = new Date()
 
+    const endDate = profile.subscription_end
+      ? new Date(profile.subscription_end)
+      : null
+
     const isExpired =
-      profile.subscription_end &&
-      new Date(profile.subscription_end) < now
+      endDate ? endDate.getTime() < now.getTime() : true
 
     const hasAccess =
       profile.is_active === true && !isExpired
 
+    // 🔥 5. BLOQUAGE GLOBAL ACCÈS
     if (!hasAccess) {
       return NextResponse.redirect(
         new URL('/abonnement', request.url)
@@ -105,8 +109,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 🔥 5. BLOQUER LOGIN SI CONNECTÉ
-  if (email && (pathname === '/login' || pathname === '/register')) {
+  // 🔥 6. BLOQUER LOGIN SI CONNECTÉ
+  if (user && (pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
