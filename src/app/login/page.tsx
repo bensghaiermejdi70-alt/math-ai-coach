@@ -14,6 +14,7 @@ function LoginPageInner() {
   const {
     signIn,
     signInWithGoogle,
+    resetPassword,
     user,
     profile,
     isLoading
@@ -24,33 +25,51 @@ function LoginPageInner() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
+  
+  // États pour mot de passe oublié
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetSuccess, setResetSuccess] = useState(false)
 
-  // 🔥 REDIRECTION INTELLIGENTE APRÈS LOGIN
+  // 🔥 REDIRECTION CORRIGÉE - Déclenchée immédiatement quand user change
   useEffect(() => {
-    if (!isLoading && user) {
-      if (profile && !profile.is_active) {
-        router.push('/abonnement')
-      } else {
-        router.push(redirect)
-      }
-    }
-  }, [user, isLoading, profile])
+    // Ne rien faire pendant le chargement initial
+    if (isLoading) return
+    
+    // Si pas d'utilisateur, ne pas rediriger
+    if (!user) return
 
-  // 🔐 LOGIN EMAIL/PASSWORD
+    // CORRECTION : Redirection immédiate sans délai
+    if (profile && !profile.is_active) {
+      router.replace('/abonnement')
+    } else {
+      router.replace(redirect)
+    }
+  }, [user, profile, isLoading, redirect, router])
+
+  // 🔐 LOGIN EMAIL/PASSWORD - CORRIGÉ
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    const { error } = await signIn(email, password)
+    try {
+      const { error: signInError } = await signIn(email, password)
 
-    if (error) {
-      setError(error)
+      if (signInError) {
+        setError(signInError)
+        setLoading(false)
+        return
+      }
+
+      // CORRECTION : La redirection est gérée par le useEffect
+      // On ne fait rien ici, le useEffect détectera le changement de `user`
+      
+    } catch (err) {
+      setError("Une erreur est survenue lors de la connexion")
       setLoading(false)
-      return
     }
-
-    // redirection gérée par useEffect
   }
 
   // 🔵 GOOGLE LOGIN
@@ -63,6 +82,154 @@ function LoginPageInner() {
     }
   }
 
+  // Gestion mot de passe oublié
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setResetLoading(true)
+    setResetSuccess(false)
+
+    const { error } = await resetPassword(resetEmail)
+
+    if (error) {
+      setError(error)
+      setResetLoading(false)
+      return
+    }
+
+    setResetSuccess(true)
+    setResetLoading(false)
+  }
+
+  // Vue mot de passe oublié
+  if (showForgotPassword) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20,
+          background: 'var(--bg)'
+        }}
+      >
+        <div style={{ width: '100%', maxWidth: 420 }}>
+          <div style={{ textAlign: 'center', marginBottom: 30 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700 }}>
+              Mot de passe oublié
+            </h1>
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>
+              Recevez un lien pour réinitialiser votre mot de passe
+            </p>
+          </div>
+
+          {resetSuccess && (
+            <div
+              style={{
+                background: 'rgba(6,214,160,0.1)',
+                border: '1px solid rgba(6,214,160,0.3)',
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 15,
+                color: 'var(--teal)',
+                fontSize: 13
+              }}
+            >
+              ✅ Email envoyé ! Vérifiez votre boîte de réception.
+            </div>
+          )}
+
+          {error && (
+            <div
+              style={{
+                background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                padding: 12,
+                borderRadius: 10,
+                marginBottom: 15,
+                color: '#ef4444',
+                fontSize: 13
+              }}
+            >
+              ⚠️ {error}
+            </div>
+          )}
+
+          {!resetSuccess && (
+            <form onSubmit={handleForgotPassword}>
+              <input
+                type="email"
+                placeholder="Votre adresse email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                className="input"
+                style={{ marginBottom: 12 }}
+              />
+
+              <button
+                type="submit"
+                disabled={resetLoading}
+                className="btn btn-primary"
+                style={{ width: '100%', marginBottom: 12 }}
+              >
+                {resetLoading ? 'Envoi...' : 'Envoyer le lien'}
+              </button>
+            </form>
+          )}
+
+          <div style={{ textAlign: 'center', fontSize: 13, marginTop: 20 }}>
+            <button
+              onClick={() => {
+                setShowForgotPassword(false)
+                setResetSuccess(false)
+                setError('')
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent)',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              ← Retour à la connexion
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Si déjà connecté, afficher un message de redirection
+  if (!isLoading && user) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20,
+          background: 'var(--bg)'
+        }}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 18, marginBottom: 16 }}>
+            ✅ Connecté ! Redirection...
+          </div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+            {profile && !profile.is_active 
+              ? 'Vers la page d\'abonnement' 
+              : 'Vers l\'accueil'}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Vue normale de connexion
   return (
     <div
       style={{
@@ -74,10 +241,7 @@ function LoginPageInner() {
         background: 'var(--bg)'
       }}
     >
-
       <div style={{ width: '100%', maxWidth: 420 }}>
-
-        {/* HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 30 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700 }}>
             Connexion
@@ -87,7 +251,6 @@ function LoginPageInner() {
           </p>
         </div>
 
-        {/* ERROR */}
         {error && (
           <div
             style={{
@@ -104,9 +267,7 @@ function LoginPageInner() {
           </div>
         )}
 
-        {/* FORM */}
         <form onSubmit={handleSubmit}>
-
           <input
             type="email"
             placeholder="Email"
@@ -117,7 +278,7 @@ function LoginPageInner() {
             style={{ marginBottom: 12 }}
           />
 
-          <div style={{ position: 'relative', marginBottom: 12 }}>
+          <div style={{ position: 'relative', marginBottom: 8 }}>
             <input
               type={showPwd ? 'text' : 'password'}
               placeholder="Mot de passe"
@@ -145,6 +306,23 @@ function LoginPageInner() {
             </button>
           </div>
 
+          <div style={{ textAlign: 'right', marginBottom: 16 }}>
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--muted)',
+                fontSize: 12,
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
+            >
+              Mot de passe oublié ?
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -153,10 +331,8 @@ function LoginPageInner() {
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
-
         </form>
 
-        {/* 🔵 GOOGLE LOGIN */}
         <button
           onClick={handleGoogleLogin}
           className="btn btn-secondary"
@@ -172,9 +348,7 @@ function LoginPageInner() {
           🔵 Continuer avec Google
         </button>
 
-        {/* LINKS */}
         <div style={{ textAlign: 'center', fontSize: 13 }}>
-
           <p style={{ marginBottom: 8 }}>
             Pas de compte ?{' '}
             <Link href="/register" style={{ color: 'var(--accent)' }}>
@@ -195,9 +369,7 @@ function LoginPageInner() {
               Activer mon accès
             </Link>
           </p>
-
         </div>
-
       </div>
     </div>
   )
@@ -205,7 +377,7 @@ function LoginPageInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Chargement...</div>}>
       <LoginPageInner />
     </Suspense>
   )

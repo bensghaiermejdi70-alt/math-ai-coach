@@ -43,6 +43,7 @@ interface AuthContextType {
   signUp: (data: SignUpData) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   signInWithGoogle: () => Promise<any>
+  resetPassword: (email: string) => Promise<{ error: string | null }> // AJOUTÉ
 
   refreshSubscription: () => Promise<void>
   checkQuota: (type: QuotaType) => boolean
@@ -167,6 +168,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  // 🔑 RESET PASSWORD (AJOUTÉ)
+  async function resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    })
+
+    if (error)
+      return { error: translateAuthError(error.message) }
+
+    return { error: null }
+  }
+
   // 🚪 LOGOUT
   async function signOut() {
     setUser(null)
@@ -252,6 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         signInWithGoogle,
+        resetPassword, // AJOUTÉ
 
         refreshSubscription,
         checkQuota,
