@@ -105,7 +105,7 @@ function QuotaRow({ label, val }: { label: string; val: string }) {
 }
 
 export default function AbonnementFrancePage() {
-  const { user, hasActiveSubscription, subscription } = useAuth()
+  const { user, hasActiveSubscription, daysRemaining } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleStripeRedirect = (plan: typeof PLANS[0]) => {
