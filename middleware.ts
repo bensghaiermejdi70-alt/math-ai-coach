@@ -26,78 +26,91 @@ const PROTECTED_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 🔥 SUPABASE CLIENT (SOURCE DE VÉRITÉ)
+  // 🔥 SUPABASE CLIENT (corrigé cookies)
+  const response = NextResponse.next()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: () => {}
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookies) {
+          cookies.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        }
       }
     }
   )
 
+  // 🔥 GET USER (fiable)
   const {
     data: { user }
   } = await supabase.auth.getUser()
 
   const email = user?.email
 
-  // 🔥 1. ADMIN BYPASS TOTAL
-  if (email === ADMIN_EMAIL) {
-    return NextResponse.next()
+  const isProtected = PROTECTED_ROUTES.some(route =>
+    pathname.startsWith(route)
+  )
+
+  // 🔥 1. ADMIN BYPASS
+  if (email && email === ADMIN_EMAIL) {
+    return response
   }
 
   // 🔥 2. PUBLIC ROUTES
   if (PUBLIC_ROUTES.includes(pathname)) {
-    return NextResponse.next()
+    return response
   }
 
-  // 🔥 3. CHECK DB SUBSCRIPTION (IMPORTANT)
-  if (email) {
-    const { data: profile } = await supabase
-      .from('users')
-      .select('is_active, subscription_end')
-      .eq('email', email)
-      .single()
-
-    const now = new Date()
-
-    const isExpired =
-      profile?.subscription_end &&
-      new Date(profile.subscription_end) < now
-
-    const hasAccess = profile?.is_active && !isExpired
-
-    const isProtected = PROTECTED_ROUTES.some(r =>
-      pathname.startsWith(r)
-    )
-
-    if (isProtected && !hasAccess) {
-      return NextResponse.redirect(
-        new URL('/abonnement', request.url)
-      )
-    }
-  }
-
-  // 🔥 4. BLOCK UNAUTH USER
-  const isProtected = PROTECTED_ROUTES.some(r =>
-    pathname.startsWith(r)
-  )
-
+  // 🔥 3. NON CONNECTÉ → BLOCK
   if (!email && isProtected) {
     return NextResponse.redirect(
       new URL('/login', request.url)
     )
   }
 
-  // 🔥 5. LOGIN / REGISTER REDIRECT
+  // 🔥 4. CONNECTÉ → CHECK DB (CRITIQUE)
+  if (email && isProtected) {
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('is_active, subscription_end')
+      .eq('email', email)
+      .single()
+
+    // ⚠️ si erreur DB → bloquer
+    if (error || !profile) {
+      return NextResponse.redirect(
+        new URL('/abonnement', request.url)
+      )
+    }
+
+    const now = new Date()
+
+    const isExpired =
+      profile.subscription_end &&
+      new Date(profile.subscription_end) < now
+
+    const hasAccess =
+      profile.is_active === true && !isExpired
+
+    if (!hasAccess) {
+      return NextResponse.redirect(
+        new URL('/abonnement', request.url)
+      )
+    }
+  }
+
+  // 🔥 5. BLOQUER LOGIN SI CONNECTÉ
   if (email && (pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
