@@ -39,11 +39,11 @@ interface AuthContextType {
   hasActiveSubscription: boolean
   daysRemaining: number | null
 
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signIn: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>
   signUp: (data: SignUpData) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   signInWithGoogle: () => Promise<any>
-  resetPassword: (email: string) => Promise<{ error: string | null }> // AJOUTÉ
+  resetPassword: (email: string) => Promise<{ error: string | null }>
 
   refreshSubscription: () => Promise<void>
   checkQuota: (type: QuotaType) => boolean
@@ -127,15 +127,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🔐 LOGIN
+  // 🔐 LOGIN - CORRIGÉ : Retourne l'utilisateur immédiatement
   async function signIn(email: string, password: string) {
-    const { error } =
-      await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error)
-      return { error: translateAuthError(error.message) }
+    if (error) {
+      return { error: translateAuthError(error.message), user: null }
+    }
 
-    return { error: null }
+    // ✅ CORRECTION : Mettre à jour immédiatement le state
+    if (data.user) {
+      setUser(data.user)
+      await loadProfile(data.user.id)
+      await loadQuotas(data.user.id)
+    }
+
+    return { error: null, user: data.user }
   }
 
   // 🧾 REGISTER
@@ -168,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  // 🔑 RESET PASSWORD (AJOUTÉ)
+  // 🔑 RESET PASSWORD
   async function resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
@@ -265,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         signInWithGoogle,
-        resetPassword, // AJOUTÉ
+        resetPassword,
 
         refreshSubscription,
         checkQuota,

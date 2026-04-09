@@ -35,31 +35,41 @@ function LoginPageInner() {
   const [resetLoading, setResetLoading] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
 
-  // 🔥 Redirection immédiate quand user est disponible
+  // 🔥 CORRECTION : Redirection forcée avec window.location si router échoue
   useEffect(() => {
     if (isLoading) return
     if (!user) return
 
+    console.log('✅ Utilisateur connecté, redirection...')
+    
+    // Utiliser window.location pour une redirection forcée
     if (profile && !profile.is_active) {
-      router.replace('/abonnement')
+      window.location.href = '/abonnement'
     } else {
-      router.replace(redirect)
+      window.location.href = redirect
     }
-  }, [user, profile, isLoading, redirect, router])
+  }, [user, profile, isLoading, redirect])
 
-  // 🔐 LOGIN EMAIL/PASSWORD
+  // 🔐 LOGIN EMAIL/PASSWORD - CORRIGÉ
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const { error: signInError } = await signIn(email, password)
+      // CORRECTION : Récupérer l'utilisateur retourné
+      const { error: signInError, user: loggedInUser } = await signIn(email, password)
 
       if (signInError) {
         setError(signInError)
         setLoading(false)
         return
+      }
+
+      // ✅ Si on a l'utilisateur, la redirection se fera via le useEffect
+      if (loggedInUser) {
+        console.log('Connexion réussie, attente de redirection...')
+        // Le useEffect détectera le changement de `user`
       }
       
     } catch (err) {
@@ -68,7 +78,7 @@ function LoginPageInner() {
     }
   }
 
-  // 🔵 GOOGLE LOGIN (désactivé si GOOGLE_ENABLED = false)
+  // 🔵 GOOGLE LOGIN
   async function handleGoogleLogin() {
     try {
       setError('')
@@ -198,7 +208,7 @@ function LoginPageInner() {
     )
   }
 
-  // Si déjà connecté
+  // Si déjà connecté - afficher message et bouton manuel
   if (!isLoading && user) {
     return (
       <div
@@ -214,7 +224,7 @@ function LoginPageInner() {
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
           <div style={{ fontSize: 18, marginBottom: 16, fontWeight: 600 }}>
-            Connecté ! Redirection en cours...
+            Connecté ! Redirection...
           </div>
           <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>
             {profile && !profile.is_active 
@@ -231,7 +241,7 @@ function LoginPageInner() {
             }}
             className="btn btn-primary"
           >
-            Cliquez ici si la redirection ne marche pas →
+            Continuer →
           </button>
         </div>
       </div>
