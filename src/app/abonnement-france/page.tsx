@@ -105,7 +105,8 @@ function QuotaRow({ label, val }: { label: string; val: string }) {
 }
 
 export default function AbonnementFrancePage() {
-  const { user, hasActiveSubscription, daysRemaining } = useAuth()
+  // CORRECTION : Ajout de 'profile' dans la déstructuration
+  const { user, profile, hasActiveSubscription, daysRemaining } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleStripeRedirect = (plan: typeof PLANS[0]) => {
@@ -126,9 +127,25 @@ export default function AbonnementFrancePage() {
         <section style={{ textAlign:'center', padding:'100px clamp(20px,5vw,60px) 40px', position:'relative' }}>
           <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:600, height:300, background:'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', pointerEvents:'none' }} />
 
-          {hasActiveSubscription && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)', marginBottom:16 }}>
-              ✅ Abonnement actif — {subscription?.plan_type}
+          {/* CORRECTION : profile est maintenant disponible */}
+          {hasActiveSubscription && profile && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'rgba(6,214,160,0.1)',
+                border: '1px solid rgba(6,214,160,0.3)',
+                borderRadius: 100,
+                padding: '6px 16px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 12,
+                color: 'var(--teal)',
+                marginBottom: 16
+              }}
+            >
+              {/* CORRECTION : plan_type existe maintenant sur Profile */}
+              ✅ Abonnement actif — {profile.plan_type}
             </div>
           )}
 

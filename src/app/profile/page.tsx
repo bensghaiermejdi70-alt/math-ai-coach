@@ -1,3 +1,4 @@
+
 'use client'
 // src/app/profile/page.tsx
 
@@ -7,7 +8,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
 export default function ProfilePage() {
-  const { user, profile, subscription, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut } = useAuth()
+  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut } = useAuth()
 
   const QUOTA_BARS = [
     { icon:'🎯', label:'Simulations Bac',    used: quotas?.simulations_used || 0, limit: quotaLimits.simulations_per_week },
@@ -78,7 +79,7 @@ export default function ProfilePage() {
                     <p style={{ fontSize:12, color:'var(--muted)', marginTop:4 }}>Tous les quotas sont illimités</p>
                   </div>
 
-                ) : hasActiveSubscription && subscription ? (
+                ) : hasActiveSubscription && profile ? (
                   <>
                     <div style={{
                       display:'inline-flex', alignItems:'center', gap:8, marginBottom:20,
@@ -94,9 +95,8 @@ export default function ProfilePage() {
 
                     <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                       {[
-                        ['Plan', subscription.plan_type.replace('_', ' ')],
-                        ['Expire le', new Date(subscription.subscription_end!).toLocaleDateString('fr-TN', { day:'numeric', month:'long', year:'numeric' })],
-                        ['Méthode', subscription.payment_method?.toUpperCase() || '—'],
+                        ['Plan', profile.plan_type?.replace('_', ' ') || ''],
+                        ['Expire le', profile.subscription_end ? new Date(profile.subscription_end).toLocaleDateString('fr-TN', { day:'numeric', month:'long', year:'numeric' }) : ''],
                       ].map(([k, v]) => (
                         <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:13, padding:'7px 0', borderBottom:'1px solid var(--border)' }}>
                           <span style={{ color:'var(--muted)' }}>{k}</span>
@@ -109,10 +109,10 @@ export default function ProfilePage() {
                     <div style={{ marginBottom:20 }}>
                       <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--muted)', marginBottom:6 }}>
                         <span>Temps restant</span>
-                        <span>{daysRemaining}j / {subscription.plan_type === 'annuel' ? '365j' : '30j'}</span>
+                        <span>{daysRemaining}j / {profile.plan_type === 'annuel' ? '365j' : '30j'}</span>
                       </div>
                       <div className="progress">
-                        <div className="progress-fill" style={{ width:`${Math.min(100,(daysRemaining||0)/(subscription.plan_type==='annuel'?365:30)*100)}%`, background: daysRemaining&&daysRemaining<=7?'var(--orange)':'linear-gradient(90deg,var(--accent),var(--teal))' }} />
+                        <div className="progress-fill" style={{ width:`${Math.min(100,(daysRemaining||0)/(profile.plan_type==='annuel'?365:30)*100)}%`, background: daysRemaining&&daysRemaining<=7?'var(--orange)':'linear-gradient(90deg,var(--accent),var(--teal))' }} />
                       </div>
                     </div>
 

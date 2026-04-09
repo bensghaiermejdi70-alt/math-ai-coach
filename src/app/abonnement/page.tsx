@@ -1,3 +1,4 @@
+
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -63,7 +64,8 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 }
 
 export default function AbonnementPage() {
-  const { user, hasActiveSubscription, subscription } = useAuth()
+  // CORRECTION : Remplacé 'subscription' par 'profile'
+  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut } = useAuth()
   const [payment, setPayment] = useState('d17')
 
   function CtaBtn({ plan, sprint }: { plan: 'mensuel'|'annuel'|'sprint'; sprint: boolean }) {
@@ -110,7 +112,8 @@ export default function AbonnementPage() {
 
           {hasActiveSubscription && (
             <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)', marginBottom:16 }}>
-              ✅ Abonnement actif — {subscription?.plan_type}
+              {/* CORRECTION : Utilisé profile?.plan_type au lieu de subscription?.plan_type */}
+              ✅ Abonnement actif — {profile?.plan_type}
             </div>
           )}
 

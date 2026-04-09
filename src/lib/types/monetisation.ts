@@ -15,6 +15,11 @@ export interface Profile {
   device_fingerprint: string | null
   created_at: string
   updated_at: string
+  // AJOUTÉ : Propriétés d'abonnement (stockées dans la table profiles)
+  plan_type?: PlanType | null
+  is_active?: boolean
+  subscription_end?: string | null
+  subscription_start?: string | null
 }
 
 export interface Subscription {

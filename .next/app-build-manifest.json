@@ -16,6 +16,16 @@
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/app/layout-13c46761933af75d.js"
     ],
+    "/abonnement/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/abonnement/page-845d421ddaf59221.js"
+    ],
     "/abonnement-france/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
@@ -24,7 +34,7 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/abonnement-france/page-3a7fe4a9b35b8ff2.js"
+      "static/chunks/app/abonnement-france/page-313b96b73f9e4927.js"
     ],
     "/admin/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -45,16 +55,6 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/activation/page-ddab243d18113126.js"
     ],
-    "/abonnement/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/abonnement/page-252d7cd8da324ad3.js"
-    ],
     "/auth/login/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
@@ -71,16 +71,6 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/app/auth/register/page-6e1a9fea6ffa88c3.js"
     ],
-    "/bac-blanc-france/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-blanc-france/page-27b6be286cdc90e7.js"
-    ],
     "/bac-france/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
@@ -91,7 +81,7 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac-france/page-85c26450a37bd16f.js"
     ],
-    "/bac-france/premiere/page": [
+    "/bac-blanc-france/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
       "static/chunks/2117-e7b5e806e93f2c04.js",
@@ -99,107 +89,7 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/premiere/page-021b75a690a44ca5.js"
-    ],
-    "/bac-france/terminale-expertes/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-expertes/[slug]/page-c7be9f1225615051.js"
-    ],
-    "/bac-france/terminale-generale/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-generale/page-04e0d2158f0d1440.js"
-    ],
-    "/bac-france/terminale-generale/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-generale/[slug]/page-e4a37c1bfdfc7439.js"
-    ],
-    "/bac/eco-gestion/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/eco-gestion/[slug]/page-7c1776f8a9207197.js"
-    ],
-    "/bac-france/terminale-techno/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-techno/page-6a46f67eb1d04a05.js"
-    ],
-    "/bac-france/terminale-expertes/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-expertes/page-8ba14e68a263aaa8.js"
-    ],
-    "/bac-blanc/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-blanc/page-0fb54f31dbc1662c.js"
-    ],
-    "/bac-france/terminale-techno/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac-france/terminale-techno/[slug]/page-75f089f97fe484bd.js"
-    ],
-    "/bac/informatique/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/informatique/page-08a21c5f2ff3bad8.js"
-    ],
-    "/bac/informatique/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/informatique/[slug]/page-a4c1c03f4c6157b7.js"
+      "static/chunks/app/bac-blanc-france/page-27b6be286cdc90e7.js"
     ],
     "/bac-france/premiere/[slug]/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -211,7 +101,7 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac-france/premiere/[slug]/page-2e2dffa3baac209e.js"
     ],
-    "/bac/maths/deplacements/page": [
+    "/bac-france/premiere/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
       "static/chunks/2117-e7b5e806e93f2c04.js",
@@ -219,9 +109,9 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/deplacements/page-538f5d169bb13265.js"
+      "static/chunks/app/bac-france/premiere/page-021b75a690a44ca5.js"
     ],
-    "/bac/maths/limites/page": [
+    "/bac-france/terminale-expertes/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
       "static/chunks/2117-e7b5e806e93f2c04.js",
@@ -229,7 +119,77 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/limites/page-b7e6f2f234482699.js"
+      "static/chunks/app/bac-france/terminale-expertes/page-8ba14e68a263aaa8.js"
+    ],
+    "/bac-france/terminale-expertes/[slug]/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-france/terminale-expertes/[slug]/page-c7be9f1225615051.js"
+    ],
+    "/bac-blanc/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-blanc/page-0fb54f31dbc1662c.js"
+    ],
+    "/bac-france/terminale-generale/[slug]/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-france/terminale-generale/[slug]/page-e4a37c1bfdfc7439.js"
+    ],
+    "/bac-france/terminale-generale/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-france/terminale-generale/page-04e0d2158f0d1440.js"
+    ],
+    "/bac-france/terminale-techno/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-france/terminale-techno/page-6a46f67eb1d04a05.js"
+    ],
+    "/bac-france/terminale-techno/[slug]/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac-france/terminale-techno/[slug]/page-75f089f97fe484bd.js"
+    ],
+    "/bac/eco-gestion/[slug]/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/eco-gestion/[slug]/page-7c1776f8a9207197.js"
     ],
     "/bac/eco-gestion/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -240,6 +200,86 @@
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac/eco-gestion/page-68a7957a43905d38.js"
+    ],
+    "/bac/informatique/[slug]/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/informatique/[slug]/page-a4c1c03f4c6157b7.js"
+    ],
+    "/bac/informatique/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/informatique/page-08a21c5f2ff3bad8.js"
+    ],
+    "/bac/maths/complexes/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/complexes/page-6fc2e935bb810f91.js"
+    ],
+    "/bac/maths/fonctions-reciproques/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/fonctions-reciproques/page-b7e134f26cfb51ce.js"
+    ],
+    "/bac/maths/derivabilite/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/derivabilite/page-2710f8206378361c.js"
+    ],
+    "/bac/maths/deplacements/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/deplacements/page-538f5d169bb13265.js"
+    ],
+    "/bac/maths/isometries/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/isometries/page-f55e917f347c013c.js"
+    ],
+    "/bac/maths/limites/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/maths/limites/page-b7e6f2f234482699.js"
     ],
     "/bac/maths/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -260,26 +300,6 @@
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac/maths/primitives/page-80d4f1d7df184b68.js"
-    ],
-    "/bac/maths/isometries/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/isometries/page-f55e917f347c013c.js"
-    ],
-    "/bac/maths/derivabilite/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/derivabilite/page-2710f8206378361c.js"
     ],
     "/bac/maths/similitudes/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -311,16 +331,6 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac/page-fa76ab3d9d7b0994.js"
     ],
-    "/chat/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/chat/page-465c5ea440968159.js"
-    ],
     "/bac/sciences-exp/[slug]/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
@@ -330,114 +340,6 @@
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac/sciences-exp/[slug]/page-c4faf4a0254c553a.js"
-    ],
-    "/bac/maths/theoremes/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/theoremes/page-5f6c24f910c7dbbb.js"
-    ],
-    "/examens/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/examens/page-c93e4be9e75de897.js"
-    ],
-    "/bac/sciences-tech/[slug]/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/sciences-tech/[slug]/page-28fef1ab1979461d.js"
-    ],
-    "/bac/maths/complexes/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/complexes/page-6fc2e935bb810f91.js"
-    ],
-    "/bac/sciences-tech/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/sciences-tech/page-e2e99924198afb76.js"
-    ],
-    "/exercises/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/exercises/page-94b07609b2d418bb.js"
-    ],
-    "/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/page-26d94e3edd1534ef.js"
-    ],
-    "/login/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/app/login/page-908d0052eeaec5ea.js"
-    ],
-    "/bac/maths/fonctions-reciproques/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/bac/maths/fonctions-reciproques/page-b7e134f26cfb51ce.js"
-    ],
-    "/profile/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/profile/page-19ee8d347ea09c10.js"
-    ],
-    "/register/page": [
-      "static/chunks/webpack-c6074c84a5a563df.js",
-      "static/chunks/fd9d1056-877e9b2938e99709.js",
-      "static/chunks/2117-e7b5e806e93f2c04.js",
-      "static/chunks/main-app-88cd925a9ac45abc.js",
-      "static/chunks/7648-e542b868d570ecb3.js",
-      "static/chunks/8374-98ec30676729a5c0.js",
-      "static/chunks/app/register/page-a8a861d7a5cf247b.js"
     ],
     "/bac/sciences-exp/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -449,7 +351,7 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/bac/sciences-exp/page-334c4d2732c97570.js"
     ],
-    "/solve/page": [
+    "/bac/maths/theoremes/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
       "static/chunks/2117-e7b5e806e93f2c04.js",
@@ -457,9 +359,9 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/solve/page-cb6d4dd6f2d06a38.js"
+      "static/chunks/app/bac/maths/theoremes/page-5f6c24f910c7dbbb.js"
     ],
-    "/simulation/page": [
+    "/bac/sciences-tech/[slug]/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
       "static/chunks/2117-e7b5e806e93f2c04.js",
@@ -467,7 +369,56 @@
       "static/chunks/7648-e542b868d570ecb3.js",
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
-      "static/chunks/app/simulation/page-de974996bd16e12e.js"
+      "static/chunks/app/bac/sciences-tech/[slug]/page-28fef1ab1979461d.js"
+    ],
+    "/bac/sciences-tech/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/bac/sciences-tech/page-e2e99924198afb76.js"
+    ],
+    "/chat/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/chat/page-465c5ea440968159.js"
+    ],
+    "/exercises/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/exercises/page-94b07609b2d418bb.js"
+    ],
+    "/login/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/app/login/page-908d0052eeaec5ea.js"
+    ],
+    "/examens/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/examens/page-c93e4be9e75de897.js"
     ],
     "/examens-france/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
@@ -479,6 +430,45 @@
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/examens-france/page-21d4d329344d0ca8.js"
     ],
+    "/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/page-26d94e3edd1534ef.js"
+    ],
+    "/profile/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/profile/page-52f32d68cca6f5c7.js"
+    ],
+    "/register/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/app/register/page-a8a861d7a5cf247b.js"
+    ],
+    "/solve/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/solve/page-cb6d4dd6f2d06a38.js"
+    ],
     "/simulation-france/page": [
       "static/chunks/webpack-c6074c84a5a563df.js",
       "static/chunks/fd9d1056-877e9b2938e99709.js",
@@ -488,6 +478,16 @@
       "static/chunks/8374-98ec30676729a5c0.js",
       "static/chunks/5053-fa015e89bd8e6557.js",
       "static/chunks/app/simulation-france/page-31be95237838ff7d.js"
+    ],
+    "/simulation/page": [
+      "static/chunks/webpack-c6074c84a5a563df.js",
+      "static/chunks/fd9d1056-877e9b2938e99709.js",
+      "static/chunks/2117-e7b5e806e93f2c04.js",
+      "static/chunks/main-app-88cd925a9ac45abc.js",
+      "static/chunks/7648-e542b868d570ecb3.js",
+      "static/chunks/8374-98ec30676729a5c0.js",
+      "static/chunks/5053-fa015e89bd8e6557.js",
+      "static/chunks/app/simulation/page-de974996bd16e12e.js"
     ]
   }
 }
