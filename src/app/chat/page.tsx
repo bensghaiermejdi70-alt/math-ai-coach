@@ -1187,7 +1187,7 @@ export default function ChatPage() {
     if (!content || loading) return
 
     if (!isAdmin && !checkQuota('chat')) {
-      alert(`Quota atteint — ${chatLimit} messages/semaine. Renouvellement lundi prochain.\n\nUpgrade vers Sprint Bac pour plus de questions.`)
+      alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement`)
       return
     }
 
@@ -1418,14 +1418,25 @@ export default function ChatPage() {
 
                 {/* Lien upgrade si quota presque plein */}
                 {!isAdmin && quotaRemaining <= 5 && !isQuotaFull && (
-                  <a href="/abonnement" style={{ fontSize: 10, color: 'var(--gold)', textDecoration: 'none', fontFamily: 'monospace' }}>
-                    🔥 Sprint Bac pour +messages
-                  </a>
+                  <div style={{ fontSize:10, lineHeight:1.5 }}>
+                    <a href="/abonnement" style={{ color:'var(--gold)', textDecoration:'none', fontWeight:700, display:'block' }}>
+                      🇹🇳 Plans Tunisie : 60 DT · 90 DT · 600 DT →
+                    </a>
+                    <a href="/abonnement-france" style={{ color:'#60a5fa', textDecoration:'none', fontWeight:700, display:'block' }}>
+                      🇫🇷 Plans France : 19€ · 29€ · 199€ →
+                    </a>
+                  </div>
                 )}
                 {!isAdmin && isQuotaFull && (
-                  <a href="/abonnement" style={{ fontSize: 11, color: '#ef4444', textDecoration: 'none', fontWeight: 600 }}>
-                    Voir les abonnements →
-                  </a>
+                  <div style={{ fontSize:11, lineHeight:1.6 }}>
+                    <div style={{ color:'#ef4444', fontWeight:700, marginBottom:3 }}>🔒 Quota atteint</div>
+                    <a href="/abonnement" style={{ color:'var(--gold)', textDecoration:'none', fontWeight:600, display:'block' }}>
+                      🇹🇳 Abonnement Tunisie →
+                    </a>
+                    <a href="/abonnement-france" style={{ color:'#60a5fa', textDecoration:'none', fontWeight:600, display:'block' }}>
+                      🇫🇷 Abonnement France →
+                    </a>
+                  </div>
                 )}
               </div>
             </div>
@@ -1446,7 +1457,7 @@ export default function ChatPage() {
                 </button>
               </div>
               <div style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--muted)', marginTop: 7 }}>
-                Entrée pour envoyer · Shift+Entrée pour saut de ligne · Tunisie & France · 📈 Graphiques interactifs
+                Entrée pour envoyer · Shift+Entrée pour saut de ligne · 🇹🇳 60 DT/mois · 🇫🇷 19€/mois · 📈 Graphiques interactifs
               </div>
             </div>
           </div>
