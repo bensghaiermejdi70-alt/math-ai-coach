@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
 
+// 🔧 CONFIGURATION : Activer Google OAuth dans Supabase puis mettre à true
+const GOOGLE_ENABLED = false
+
 function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -32,15 +35,11 @@ function LoginPageInner() {
   const [resetLoading, setResetLoading] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
 
-  // 🔥 REDIRECTION CORRIGÉE - Déclenchée immédiatement quand user change
+  // 🔥 Redirection immédiate quand user est disponible
   useEffect(() => {
-    // Ne rien faire pendant le chargement initial
     if (isLoading) return
-    
-    // Si pas d'utilisateur, ne pas rediriger
     if (!user) return
 
-    // CORRECTION : Redirection immédiate sans délai
     if (profile && !profile.is_active) {
       router.replace('/abonnement')
     } else {
@@ -48,7 +47,7 @@ function LoginPageInner() {
     }
   }, [user, profile, isLoading, redirect, router])
 
-  // 🔐 LOGIN EMAIL/PASSWORD - CORRIGÉ
+  // 🔐 LOGIN EMAIL/PASSWORD
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -62,9 +61,6 @@ function LoginPageInner() {
         setLoading(false)
         return
       }
-
-      // CORRECTION : La redirection est gérée par le useEffect
-      // On ne fait rien ici, le useEffect détectera le changement de `user`
       
     } catch (err) {
       setError("Une erreur est survenue lors de la connexion")
@@ -72,7 +68,7 @@ function LoginPageInner() {
     }
   }
 
-  // 🔵 GOOGLE LOGIN
+  // 🔵 GOOGLE LOGIN (désactivé si GOOGLE_ENABLED = false)
   async function handleGoogleLogin() {
     try {
       setError('')
@@ -202,7 +198,7 @@ function LoginPageInner() {
     )
   }
 
-  // Si déjà connecté, afficher un message de redirection
+  // Si déjà connecté
   if (!isLoading && user) {
     return (
       <div
@@ -216,14 +212,27 @@ function LoginPageInner() {
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 18, marginBottom: 16 }}>
-            ✅ Connecté ! Redirection...
+          <div style={{ fontSize: 48, marginBottom: 16 }}>✅</div>
+          <div style={{ fontSize: 18, marginBottom: 16, fontWeight: 600 }}>
+            Connecté ! Redirection en cours...
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+          <div style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>
             {profile && !profile.is_active 
               ? 'Vers la page d\'abonnement' 
               : 'Vers l\'accueil'}
           </div>
+          <button
+            onClick={() => {
+              if (profile && !profile.is_active) {
+                window.location.href = '/abonnement'
+              } else {
+                window.location.href = redirect
+              }
+            }}
+            className="btn btn-primary"
+          >
+            Cliquez ici si la redirection ne marche pas →
+          </button>
         </div>
       </div>
     )
@@ -333,20 +342,36 @@ function LoginPageInner() {
           </button>
         </form>
 
-        <button
-          onClick={handleGoogleLogin}
-          className="btn btn-secondary"
-          style={{
-            width: '100%',
+        {/* 🔵 GOOGLE OAUTH - Conditionnel */}
+        {GOOGLE_ENABLED ? (
+          <button
+            onClick={handleGoogleLogin}
+            className="btn btn-secondary"
+            style={{
+              width: '100%',
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8
+            }}
+          >
+            🔵 Continuer avec Google
+          </button>
+        ) : (
+          <div style={{ 
+            textAlign: 'center', 
+            fontSize: 12, 
+            color: 'var(--muted)',
             marginBottom: 20,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8
-          }}
-        >
-          🔵 Continuer avec Google
-        </button>
+            padding: '12px',
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: 8,
+            border: '1px solid rgba(255,255,255,0.05)'
+          }}>
+            🔵 Connexion Google temporairement indisponible
+          </div>
+        )}
 
         <div style={{ textAlign: 'center', fontSize: 13 }}>
           <p style={{ marginBottom: 8 }}>
