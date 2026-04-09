@@ -1,9 +1,11 @@
+
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 
 // 🔧 CONFIGURATION : Activer Google OAuth dans Supabase puis mettre à true
 const GOOGLE_ENABLED = false
@@ -37,18 +39,10 @@ function LoginPageInner() {
 
   // 🔥 CORRECTION : Redirection forcée avec window.location si router échoue
   useEffect(() => {
-    if (isLoading) return
-    if (!user) return
-
-    console.log('✅ Utilisateur connecté, redirection...')
-    
-    // Utiliser window.location pour une redirection forcée
-    if (profile && !profile.is_active) {
-      window.location.href = '/abonnement'
-    } else {
+    if (!isLoading && user) {
       window.location.href = redirect
     }
-  }, [user, profile, isLoading, redirect])
+  }, [user, isLoading])
 
   // 🔐 LOGIN EMAIL/PASSWORD - CORRIGÉ
   async function handleSubmit(e: React.FormEvent) {
@@ -328,14 +322,19 @@ function LoginPageInner() {
           <div style={{ textAlign: 'right', marginBottom: 16 }}>
             <button
               type="button"
-              onClick={() => setShowForgotPassword(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--muted)',
-                fontSize: 12,
-                cursor: 'pointer',
-                textDecoration: 'underline'
+              onClick={async () => {
+                if (!email) {
+                  alert('Entrez votre email')
+                  return
+                }
+
+                const supabase = createClient()
+
+                await supabase.auth.resetPasswordForEmail(email, {
+                  redirectTo: `${window.location.origin}/auth/callback`
+                })
+
+                alert('Email envoyé 📩')
               }}
             >
               Mot de passe oublié ?

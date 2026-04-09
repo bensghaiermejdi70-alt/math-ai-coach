@@ -1,3 +1,4 @@
+
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
@@ -142,6 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadQuotas(data.user.id)
     }
 
+    if (!error) {
+      window.location.href = '/'
+    }
     return { error: null, user: data.user }
   }
 
