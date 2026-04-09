@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -31,12 +32,10 @@ function LoginPageInner() {
 
   // 🔥 REDIRECTION FIABLE
   useEffect(() => {
-    if (!isLoading && user) {
-      setTimeout(() => {
-        window.location.href = redirect
-      }, 300)
+    if (user) {
+      window.location.href = redirect
     }
-  }, [user, isLoading])
+  }, [user])
 
   // 🔐 LOGIN EMAIL/PASSWORD
   async function handleSubmit(e: React.FormEvent) {
@@ -51,6 +50,10 @@ function LoginPageInner() {
         setError(signInError)
         setLoading(false)
         return
+      }
+
+      if (!signInError) {
+        window.location.href = redirect
       }
 
       // redirection via useEffect
