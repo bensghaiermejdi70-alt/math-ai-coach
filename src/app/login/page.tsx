@@ -62,24 +62,24 @@ function LoginPageInner() {
   }
 
   // 🔐 RESET PASSWORD (CORRIGÉ - Pointe vers auth/callback)
-  aasync function handleResetPassword() {
-  if (!email) {
-    alert('Entrez votre email')
-    return
+  async function handleResetPassword() {
+    if (!email) {
+      alert('Entrez votre email')
+      return
+    }
+
+    const supabase = createClient()
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    })
+
+    if (error) {
+      alert('Erreur: ' + error.message)
+    } else {
+      alert('📩 Email envoyé ! Vérifiez votre boîte mail (et les spams).')
+    }
   }
-
-  const supabase = createClient()
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/callback`, // 👈 Pointe vers callback
-  })
-
-  if (error) {
-    alert('Erreur: ' + error.message)
-  } else {
-    alert('📩 Email envoyé ! Vérifiez votre boîte mail.')
-  }
-}
 
   // 🔥 UI SI CONNECTÉ
   if (!isLoading && user) {
