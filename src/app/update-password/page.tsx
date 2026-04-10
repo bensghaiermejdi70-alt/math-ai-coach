@@ -11,59 +11,28 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [validSession, setValidSession] = useState(false)
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
+  // ✅ VERSION SIMPLE ET STABLE
   useEffect(() => {
-    const initSession = async () => {
+    const init = async () => {
       try {
-        const url = new URL(window.location.href)
+        const { data, error } = await supabase.auth.getSession()
 
-        // 🔥 CAS 1 : ?code= (le plus fréquent)
-        const code = url.searchParams.get('code')
-
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-          if (error) {
-            setError('Lien expiré ou invalide')
-          } else {
-            setValidSession(true)
-          }
-
-          setChecking(false)
-          return
-        }
-
-        // 🔥 CAS 2 : #access_token (fallback)
-        const hash = window.location.hash
-        const params = new URLSearchParams(hash.replace('#', ''))
-
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
-
-        if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          })
-
-          if (error) {
-            setError('Erreur session')
-          } else {
-            setValidSession(true)
-          }
-        } else {
+        if (error || !data.session) {
           setError('Lien invalide ou expiré')
+        } else {
+          setValidSession(true)
         }
-      } catch (e) {
-        setError('Erreur lors de la vérification')
+      } catch {
+        setError('Erreur session')
       }
 
       setChecking(false)
     }
 
-    initSession()
+    init()
   }, [])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -75,7 +44,7 @@ export default function UpdatePasswordPage() {
     }
 
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères')
+      setError('Mot de passe ≥ 6 caractères')
       return
     }
 
@@ -101,6 +70,7 @@ export default function UpdatePasswordPage() {
     }, 1500)
   }
 
+  // ⏳ CHECK SESSION
   if (checking) {
     return (
       <div style={styles.center}>
@@ -109,6 +79,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
+  // ❌ ERREUR
   if (!validSession) {
     return (
       <div style={styles.center}>
@@ -120,13 +91,14 @@ export default function UpdatePasswordPage() {
             onClick={() => (window.location.href = '/login')}
             style={styles.button}
           >
-            Retour à la connexion
+            Retour connexion
           </button>
         </div>
       </div>
     )
   }
 
+  // ✅ FORM
   return (
     <div style={styles.container}>
       <div style={styles.card}>
@@ -143,6 +115,7 @@ export default function UpdatePasswordPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
+              required
             />
 
             <button
@@ -156,10 +129,10 @@ export default function UpdatePasswordPage() {
 
           <button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading}
             style={styles.button}
           >
-            {loading ? 'Mise à jour...' : 'Mettre à jour'}
+            {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
           </button>
         </form>
       </div>
