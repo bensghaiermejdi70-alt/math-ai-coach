@@ -11,30 +11,63 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [validSession, setValidSession] = useState(false)
-  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
-  // ✅ VERSION SIMPLE ET STABLE
+  // 🔥 CORRECTION MAJEURE : récupération session via URL
   useEffect(() => {
-    const init = async () => {
+    const initSession = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession()
+        const url = new URL(window.location.href)
 
-        if (error || !data.session) {
-          setError('Lien invalide ou expiré')
-        } else {
-          setValidSession(true)
+        // 🔥 CAS 1 : PKCE (code)
+        const code = url.searchParams.get('code')
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+          if (error) {
+            setError('Lien expiré ou invalide')
+          } else {
+            setValidSession(true)
+          }
+
+          setChecking(false)
+          return
         }
-      } catch {
-        setError('Erreur session')
+
+        // 🔥 CAS 2 : hash (ancien flow)
+        const hash = window.location.hash
+        const params = new URLSearchParams(hash.replace('#', ''))
+
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+
+          if (error) {
+            setError('Erreur session')
+          } else {
+            setValidSession(true)
+          }
+        } else {
+          setError('Lien invalide ou expiré')
+        }
+      } catch (e) {
+        setError('Erreur lors de la vérification')
       }
 
       setChecking(false)
     }
 
-    init()
+    initSession()
   }, [])
 
+  // 🔐 UPDATE PASSWORD
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -44,7 +77,7 @@ export default function UpdatePasswordPage() {
     }
 
     if (password.length < 6) {
-      setError('Mot de passe ≥ 6 caractères')
+      setError('Minimum 6 caractères')
       return
     }
 
@@ -65,12 +98,13 @@ export default function UpdatePasswordPage() {
 
     setMessage('✅ Mot de passe mis à jour')
 
+    // 🔥 REDIRECTION STABLE
     setTimeout(() => {
       window.location.href = '/dashboard'
     }, 1500)
   }
 
-  // ⏳ CHECK SESSION
+  // ⏳ LOADING
   if (checking) {
     return (
       <div style={styles.center}>
@@ -79,7 +113,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // ❌ ERREUR
+  // ❌ LIEN INVALIDE
   if (!validSession) {
     return (
       <div style={styles.center}>
@@ -91,18 +125,18 @@ export default function UpdatePasswordPage() {
             onClick={() => (window.location.href = '/login')}
             style={styles.button}
           >
-            Retour connexion
+            Retour à la connexion
           </button>
         </div>
       </div>
     )
   }
 
-  // ✅ FORM
+  // ✅ FORMULAIRE
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Changer mot de passe</h1>
+        <h1 style={styles.title}>🔐 Nouveau mot de passe</h1>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {message && <p style={{ color: 'green' }}>{message}</p>}
@@ -129,7 +163,7 @@ export default function UpdatePasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !password}
             style={styles.button}
           >
             {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
@@ -160,7 +194,7 @@ const styles: any = {
     background: '#111827',
     padding: 30,
     borderRadius: 12,
-    width: 350,
+    width: 360,
     color: 'white',
     textAlign: 'center',
   },
@@ -174,7 +208,7 @@ const styles: any = {
   },
   input: {
     width: '100%',
-    padding: 10,
+    padding: 12,
     paddingRight: 40,
     borderRadius: 6,
     border: '1px solid #374151',
@@ -189,14 +223,16 @@ const styles: any = {
     background: 'transparent',
     border: 'none',
     cursor: 'pointer',
+    fontSize: 16,
   },
   button: {
     width: '100%',
-    padding: 10,
+    padding: 12,
     borderRadius: 6,
     border: 'none',
     background: '#3b82f6',
     color: 'white',
     cursor: 'pointer',
+    fontWeight: 'bold',
   },
 }
