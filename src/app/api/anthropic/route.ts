@@ -96,16 +96,30 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Appel Anthropic ──
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(115000),
-    })
+    const apiKey = process.env.ANTHROPIC_API_KEY
+
+if (!apiKey) {
+  console.error('ANTHROPIC_API_KEY manquante ❌')
+  return NextResponse.json(
+    { error: 'Configuration serveur manquante (API key)' },
+    { status: 500 }
+  )
+}
+
+const response = await fetch('https://api.anthropic.com/v1/messages', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+  },
+  body: JSON.stringify({
+    model: 'claude-3-haiku-20240307',
+    max_tokens: 1000,
+    ...body,
+  }),
+  signal: AbortSignal.timeout(115000),
+})
 
     const data = await response.json()
 
