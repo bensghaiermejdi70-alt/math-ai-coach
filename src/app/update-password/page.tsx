@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -15,42 +14,74 @@ export default function UpdatePasswordPage() {
   const [message, setMessage] = useState('')
   const [isReady, setIsReady] = useState(false)
 
-  // 🔥 Récupérer la session depuis le token dans l'URL
   useEffect(() => {
     const handlePasswordRecovery = async () => {
-      // Vérifier si on a un hash dans l'URL (token de réinitialisation)
-      const hash = window.location.hash
-      
-      if (hash) {
-        // Échanger le token contre une session
-        const { data, error } = await supabase.auth.getSession()
+      try {
+        const url = new URL(window.location.href)
+        const code = url.searchParams.get('code')
+        const hash = window.location.hash
         
-        if (error) {
-          setMessage('Lien de réinitialisation invalide ou expiré')
-          return
-        }
-        
-        if (data.session) {
-          setIsReady(true)
-        } else {
-          // Essayer de récupérer depuis le hash si pas de session
-          const { data: exchangeData, error: exchangeError } = await supabase.auth.getUser()
+        console.log('🔍 URL complète:', window.location.href)
+        console.log('🔍 Code query param:', code)
+        console.log('🔍 Hash:', hash)
+
+        // 🔥 CAS 1: Flux PKCE (code dans query params) - Nouveau flux Supabase SSR
+        if (code) {
+          console.log('🔄 Tentative exchangeCodeForSession avec code:', code)
           
-          if (exchangeError || !exchangeData.user) {
-            setMessage('Lien de réinitialisation invalide ou expiré. Veuillez refaire une demande.')
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (error) {
+            console.error('❌ Erreur exchangeCodeForSession:', error)
+            setMessage('Lien invalide ou expiré. Erreur: ' + error.message)
             return
           }
           
-          setIsReady(true)
+          if (data.session) {
+            console.log('✅ Session établie via PKCE/code')
+            setIsReady(true)
+            return
+          }
         }
-      } else {
-        // Vérifier si déjà connecté
-        const { data } = await supabase.auth.getSession()
-        if (data.session) {
-          setIsReady(true)
-        } else {
-          setMessage('Aucun token de réinitialisation trouvé. Utilisez le lien depuis votre email.')
+
+        // 🔥 CAS 2: Flux Implicit (access_token dans hash) - Ancien flux
+        if (hash && hash.includes('access_token')) {
+          console.log('🔄 Détection access_token dans hash')
+          
+          // Le client Supabase parse automatiquement le hash
+          // On attend un peu que le parsing soit fait
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          const { data, error } = await supabase.auth.getSession()
+          
+          if (error) {
+            console.error('❌ Erreur getSession:', error)
+            setMessage('Erreur de session: ' + error.message)
+            return
+          }
+          
+          if (data.session) {
+            console.log('✅ Session établie via hash/access_token')
+            setIsReady(true)
+            return
+          }
         }
+
+        // 🔥 CAS 3: Déjà connecté (changement de MDP normal)
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (sessionData.session) {
+          console.log('✅ Déjà connecté, session existante')
+          setIsReady(true)
+          return
+        }
+
+        // ❌ Aucun token trouvé
+        console.error('❌ Aucun token valide trouvé dans l\'URL')
+        setMessage('Lien de réinitialisation invalide. Vérifiez que vous utilisez le lien depuis votre email. Si le problème persiste, redemandez un nouveau lien.')
+        
+      } catch (err: any) {
+        console.error('💥 Erreur inattendue:', err)
+        setMessage('Erreur technique: ' + (err.message || 'Inconnue'))
       }
     }
 
@@ -66,7 +97,6 @@ export default function UpdatePasswordPage() {
     setLoading(true)
     setMessage('')
 
-    // 🔥 Utiliser supabase.auth.updateUser pour changer le mot de passe
     const { error } = await supabase.auth.updateUser({
       password: password,
     })
@@ -74,26 +104,28 @@ export default function UpdatePasswordPage() {
     setLoading(false)
 
     if (error) {
+      console.error('❌ Erreur updateUser:', error)
       setMessage('Erreur: ' + error.message)
       return
     }
 
     setMessage('Mot de passe mis à jour avec succès 🎉 Redirection...')
 
-    // Redirection après succès
     setTimeout(() => {
       router.push('/dashboard')
     }, 1500)
   }
 
-  // Affichage si pas prêt
   if (!isReady && !message) {
     return (
       <div style={styles.container}>
         <div style={styles.card}>
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            <div style={{ fontSize: 30, marginBottom: 10 }}>⏳</div>
-            <p>Vérification du lien...</p>
+            <div style={{ fontSize: 40, marginBottom: 15, animation: 'spin 1s linear infinite' }}>⏳</div>
+            <p style={{ fontSize: 14, color: '#9ca3af' }}>Vérification du lien...</p>
+            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 10 }}>
+              Si ça prend trop de temps, vérifiez la console (F12)
+            </p>
           </div>
         </div>
       </div>
@@ -107,13 +139,10 @@ export default function UpdatePasswordPage() {
 
         {message && (
           <div style={{ 
-            ...styles.message, 
+            ...styles.messageBox, 
+            background: message.includes('succès') ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+            border: message.includes('succès') ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)',
             color: message.includes('succès') ? '#10b981' : '#ef4444',
-            background: message.includes('succès') ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            padding: '10px',
-            borderRadius: '8px',
-            marginBottom: '15px',
-            fontSize: '13px'
           }}>
             {message}
           </div>
@@ -169,6 +198,13 @@ export default function UpdatePasswordPage() {
           </button>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
@@ -235,10 +271,12 @@ const styles: any = {
     fontWeight: '600',
     transition: 'all 0.2s'
   },
-  message: {
+  messageBox: {
+    padding: '12px',
+    borderRadius: '8px',
+    marginBottom: '15px',
+    fontSize: '13px',
     textAlign: 'center'
   },
 }
-
-
 
