@@ -14,10 +14,28 @@ export default function UpdatePasswordPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
-  // 🔥 FIX CRITIQUE : récupérer session depuis URL (Supabase)
   useEffect(() => {
     const initSession = async () => {
       try {
+        const url = new URL(window.location.href)
+
+        // 🔥 CAS 1 : ?code= (le plus fréquent)
+        const code = url.searchParams.get('code')
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+          if (error) {
+            setError('Lien expiré ou invalide')
+          } else {
+            setValidSession(true)
+          }
+
+          setChecking(false)
+          return
+        }
+
+        // 🔥 CAS 2 : #access_token (fallback)
         const hash = window.location.hash
         const params = new URLSearchParams(hash.replace('#', ''))
 
@@ -48,7 +66,6 @@ export default function UpdatePasswordPage() {
     initSession()
   }, [])
 
-  // 🔐 update password
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -77,15 +94,13 @@ export default function UpdatePasswordPage() {
       return
     }
 
-    setMessage('✅ Mot de passe mis à jour avec succès')
+    setMessage('✅ Mot de passe mis à jour')
 
-    // ✅ redirection fiable
     setTimeout(() => {
       window.location.href = '/dashboard'
     }, 1500)
   }
 
-  // ⏳ loading
   if (checking) {
     return (
       <div style={styles.center}>
@@ -94,7 +109,6 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // ❌ lien invalide
   if (!validSession) {
     return (
       <div style={styles.center}>
@@ -113,7 +127,6 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // ✅ UI
   return (
     <div style={styles.container}>
       <div style={styles.card}>
