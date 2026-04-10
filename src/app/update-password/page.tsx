@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -11,68 +11,129 @@ export default function UpdatePasswordPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
+  const [validSession, setValidSession] = useState(false)
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
-  const handleUpdatePassword = async () => {
+  // ✅ Vérification du token Supabase (CRITIQUE)
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession()
+
+      if (data.session) {
+        setValidSession(true)
+      } else {
+        setError('Lien invalide ou expiré')
+      }
+
+      setChecking(false)
+    }
+
+    checkSession()
+  }, [])
+
+  // ✅ Update password
+  const handleUpdatePassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+
+    if (!validSession) {
+      setError('Session invalide')
+      return
+    }
+
     if (password.length < 6) {
-      setMessage('Le mot de passe doit contenir au moins 6 caractères')
+      setError('Le mot de passe doit contenir au moins 6 caractères')
       return
     }
 
     setLoading(true)
+    setError('')
     setMessage('')
 
     const { error } = await supabase.auth.updateUser({
-      password: password,
+      password,
     })
 
     setLoading(false)
 
     if (error) {
-      setMessage(error.message)
+      setError(error.message)
       return
     }
 
-    setMessage('Mot de passe mis à jour avec succès 🎉')
+    setMessage('✅ Mot de passe mis à jour avec succès')
 
-    // petite pause UX
+    // 🔥 Redirection fiable (IMPORTANT)
     setTimeout(() => {
-      router.push('/dashboard')
-    }, 800)
+      window.location.href = '/dashboard'
+    }, 1500)
   }
 
+  // ⏳ Vérification en cours
+  if (checking) {
+    return (
+      <div style={styles.center}>
+        <p>Vérification du lien...</p>
+      </div>
+    )
+  }
+
+  // ❌ Lien invalide
+  if (!validSession) {
+    return (
+      <div style={styles.center}>
+        <div style={styles.card}>
+          <h2>Lien invalide</h2>
+          <p style={{ color: 'red' }}>{error}</p>
+
+          <button
+            onClick={() => (window.location.href = '/login')}
+            style={styles.button}
+          >
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ✅ UI principale
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>Changer mot de passe</h1>
 
-        <div style={styles.inputWrapper}>
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Nouveau mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={styles.input}
-          />
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {message && <p style={{ color: 'green' }}>{message}</p>}
+
+        <form onSubmit={handleUpdatePassword}>
+          <div style={styles.inputWrapper}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Nouveau mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={styles.eyeButton}
+            >
+              {showPassword ? '🙈' : '👁️'}
+            </button>
+          </div>
 
           <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={styles.eyeButton}
+            type="submit"
+            disabled={loading || !password}
+            style={styles.button}
           >
-            {showPassword ? '🙈' : '👁️'}
+            {loading ? 'Mise à jour...' : 'Mettre à jour'}
           </button>
-        </div>
-
-        <button
-          onClick={handleUpdatePassword}
-          disabled={loading}
-          style={styles.button}
-        >
-          {loading ? 'Mise à jour...' : 'Mettre à jour'}
-        </button>
-
-        {message && <p style={styles.message}>{message}</p>}
+        </form>
       </div>
     </div>
   )
@@ -86,12 +147,21 @@ const styles: any = {
     alignItems: 'center',
     background: '#0f172a',
   },
+  center: {
+    display: 'flex',
+    height: '100vh',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: '#0f172a',
+    color: 'white',
+  },
   card: {
     background: '#111827',
     padding: 30,
     borderRadius: 12,
     width: 350,
     color: 'white',
+    textAlign: 'center',
   },
   title: {
     marginBottom: 20,
@@ -113,11 +183,11 @@ const styles: any = {
   eyeButton: {
     position: 'absolute',
     right: 10,
-    top: 8,
+    top: '50%',
+    transform: 'translateY(-50%)',
     background: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    fontSize: 16,
   },
   button: {
     width: '100%',
@@ -127,10 +197,5 @@ const styles: any = {
     background: '#3b82f6',
     color: 'white',
     cursor: 'pointer',
-  },
-  message: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#fbbf24',
   },
 }
