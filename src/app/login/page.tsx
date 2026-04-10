@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
@@ -7,22 +6,15 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
-// ✅ GOOGLE ACTIVÉ
 const GOOGLE_ENABLED = true
 
 function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const redirect = searchParams.get('redirect') || '/'
+  const redirect = searchParams.get('redirect') || '/dashboard'
 
-  const {
-    signIn,
-    signInWithGoogle,
-    user,
-    profile,
-    isLoading
-  } = useAuth()
+  const { signIn, signInWithGoogle, user, isLoading } = useAuth()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,10 +22,10 @@ function LoginPageInner() {
   const [loading, setLoading] = useState(false)
   const [showPwd, setShowPwd] = useState(false)
 
-  // 🔥 REDIRECTION FIABLE
+  // 🔥 REDIRECTION STABLE
   useEffect(() => {
     if (user) {
-      window.location.href = redirect
+      window.location.href = '/dashboard'
     }
   }, [user])
 
@@ -52,14 +44,9 @@ function LoginPageInner() {
         return
       }
 
-      if (!signInError) {
-        window.location.href = redirect
-      }
-
-      // redirection via useEffect
-
+      window.location.href = '/dashboard'
     } catch (err) {
-      setError("Une erreur est survenue lors de la connexion")
+      setError('Erreur connexion')
       setLoading(false)
     }
   }
@@ -69,12 +56,12 @@ function LoginPageInner() {
     try {
       setError('')
       await signInWithGoogle()
-    } catch (e) {
-      setError("Erreur connexion Google")
+    } catch {
+      setError('Erreur connexion Google')
     }
   }
 
-  // 🔐 RESET PASSWORD
+  // 🔐 RESET PASSWORD (FIX IMPORTANT)
   async function handleResetPassword() {
     if (!email) {
       alert('Entrez votre email')
@@ -83,29 +70,29 @@ function LoginPageInner() {
 
     const supabase = createClient()
 
+    const redirectUrl = `${window.location.origin}/update-password`
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`
+      redirectTo: redirectUrl,
     })
 
     if (error) {
       alert('Erreur: ' + error.message)
     } else {
-      alert('Email envoyé 📩')
+      alert('Email envoyé 📩 Vérifie ta boîte mail')
     }
   }
 
-  // 🔥 SI CONNECTÉ (fallback UI)
+  // 🔥 UI SI CONNECTÉ
   if (!isLoading && user) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 40 }}>✅</div>
-          <p>Connexion réussie... redirection</p>
+          <p>Connexion réussie</p>
 
           <button
-            onClick={() => {
-              window.location.href = redirect
-            }}
+            onClick={() => (window.location.href = '/dashboard')}
             className="btn btn-primary"
           >
             Continuer →
@@ -123,8 +110,8 @@ function LoginPageInner() {
           Connexion
         </h1>
 
-        <p style={{ textAlign: 'center', color: 'var(--muted)', marginBottom: 20 }}>
-          Accédez à votre espace d'apprentissage
+        <p style={{ textAlign: 'center', marginBottom: 20 }}>
+          Accédez à votre espace
         </p>
 
         {error && (
@@ -134,8 +121,7 @@ function LoginPageInner() {
             padding: 12,
             borderRadius: 10,
             marginBottom: 15,
-            color: '#ef4444',
-            fontSize: 13
+            color: '#ef4444'
           }}>
             ⚠️ {error}
           </div>
@@ -153,7 +139,7 @@ function LoginPageInner() {
             style={{ marginBottom: 12 }}
           />
 
-          <div style={{ position: 'relative', marginBottom: 8 }}>
+          <div style={{ position: 'relative' }}>
             <input
               type={showPwd ? 'text' : 'password'}
               placeholder="Mot de passe"
@@ -181,11 +167,11 @@ function LoginPageInner() {
             </button>
           </div>
 
-          <div style={{ textAlign: 'right', marginBottom: 16 }}>
+          <div style={{ textAlign: 'right', margin: '10px 0' }}>
             <button
               type="button"
               onClick={handleResetPassword}
-              style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
             >
               Mot de passe oublié ?
             </button>
@@ -195,40 +181,25 @@ function LoginPageInner() {
             type="submit"
             disabled={loading}
             className="btn btn-primary"
-            style={{ width: '100%', marginBottom: 12 }}
+            style={{ width: '100%' }}
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
-
         </form>
 
-        {/* 🔵 GOOGLE */}
+        {/* GOOGLE */}
         {GOOGLE_ENABLED && (
           <button
             onClick={handleGoogleLogin}
             className="btn btn-secondary"
-            style={{
-              width: '100%',
-              marginBottom: 20,
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 8
-            }}
+            style={{ width: '100%', marginTop: 12 }}
           >
-            🔵 Continuer avec Google
+            🔵 Google
           </button>
         )}
 
-        <div style={{ textAlign: 'center', fontSize: 13 }}>
-          <p>
-            Pas de compte ?{' '}
-            <Link href="/register">S'inscrire</Link>
-          </p>
-
-          <p>
-            Pas encore abonné ?{' '}
-            <Link href="/abonnement">Voir les plans</Link>
-          </p>
+        <div style={{ textAlign: 'center', fontSize: 13, marginTop: 20 }}>
+          <Link href="/register">Créer un compte</Link>
         </div>
 
       </div>
