@@ -45,6 +45,3 @@ npm-debug.log*
 *.sqlite
 *.db
 
-# Videos (IMPORTANT)
-public/*.mp4
-*.mp4
