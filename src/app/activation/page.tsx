@@ -63,7 +63,7 @@ const PAYMENT_INFO = {
     phone: true,
   },
   especes: {
-    icon:'💵', title:'Espèces (en main propre)',
+    icon:'💵', title:'Espèces (versement espece ou virement compte ccp mejdi ben sghaier 17000000000046507174)',
     steps:[
       "Appeler ou WhatsApp : 99 268 970",
       "Convenir d'un rendez-vous ou d'un envoi",
