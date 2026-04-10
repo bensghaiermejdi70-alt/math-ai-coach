@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function UpdatePasswordPage() {
-  const router = useRouter()
   const supabase = createClient()
 
   const [password, setPassword] = useState('')
@@ -16,26 +14,43 @@ export default function UpdatePasswordPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
-  // ✅ Vérification du token Supabase (CRITIQUE)
+  // 🔥 FIX CRITIQUE : récupérer session depuis URL (Supabase)
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession()
+    const initSession = async () => {
+      try {
+        const hash = window.location.hash
+        const params = new URLSearchParams(hash.replace('#', ''))
 
-      if (data.session) {
-        setValidSession(true)
-      } else {
-        setError('Lien invalide ou expiré')
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+
+          if (error) {
+            setError('Erreur session')
+          } else {
+            setValidSession(true)
+          }
+        } else {
+          setError('Lien invalide ou expiré')
+        }
+      } catch (e) {
+        setError('Erreur lors de la vérification')
       }
 
       setChecking(false)
     }
 
-    checkSession()
+    initSession()
   }, [])
 
-  // ✅ Update password
-  const handleUpdatePassword = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
+  // 🔐 update password
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
 
     if (!validSession) {
       setError('Session invalide')
@@ -64,13 +79,13 @@ export default function UpdatePasswordPage() {
 
     setMessage('✅ Mot de passe mis à jour avec succès')
 
-    // 🔥 Redirection fiable (IMPORTANT)
+    // ✅ redirection fiable
     setTimeout(() => {
       window.location.href = '/dashboard'
     }, 1500)
   }
 
-  // ⏳ Vérification en cours
+  // ⏳ loading
   if (checking) {
     return (
       <div style={styles.center}>
@@ -79,7 +94,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // ❌ Lien invalide
+  // ❌ lien invalide
   if (!validSession) {
     return (
       <div style={styles.center}>
@@ -98,7 +113,7 @@ export default function UpdatePasswordPage() {
     )
   }
 
-  // ✅ UI principale
+  // ✅ UI
   return (
     <div style={styles.container}>
       <div style={styles.card}>
