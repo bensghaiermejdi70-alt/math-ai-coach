@@ -61,25 +61,27 @@ function LoginPageInner() {
     }
   }
 
-  // 🔐 RESET PASSWORD (CORRIGÉ - Pointe vers auth/callback)
+  // 🔐 RESET PASSWORD (FIX IMPORTANT)
   async function handleResetPassword() {
-  if (!email) {
-    alert('Entrez votre email')
-    return
+    if (!email) {
+      alert('Entrez votre email')
+      return
+    }
+
+    const supabase = createClient()
+
+    const redirectUrl = `${window.location.origin}/update-password`
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    })
+
+    if (error) {
+      alert('Erreur: ' + error.message)
+    } else {
+      alert('Email envoyé 📩 Vérifie ta boîte mail')
+    }
   }
-
-  const supabase = createClient()
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/update-password`, // 👈 Direct ici
-  })
-
-  if (error) {
-    alert('Erreur: ' + error.message)
-  } else {
-    alert('📩 Email envoyé ! Vérifiez votre boîte mail.')
-  }
-}
 
   // 🔥 UI SI CONNECTÉ
   if (!isLoading && user) {
@@ -91,7 +93,7 @@ function LoginPageInner() {
 
           <button
             onClick={() => (window.location.href = '/dashboard')}
-            style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6 }}
+            className="btn btn-primary"
           >
             Continuer →
           </button>
@@ -101,14 +103,14 @@ function LoginPageInner() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#0f172a' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 420 }}>
 
-        <h1 style={{ fontSize: 26, fontWeight: 700, textAlign: 'center', color: 'white' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, textAlign: 'center' }}>
           Connexion
         </h1>
 
-        <p style={{ textAlign: 'center', color: '#9ca3af', marginBottom: 20 }}>
+        <p style={{ textAlign: 'center', marginBottom: 20 }}>
           Accédez à votre espace
         </p>
 
@@ -133,15 +135,8 @@ function LoginPageInner() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ 
-              width: '100%', 
-              padding: 12, 
-              marginBottom: 12, 
-              borderRadius: 6, 
-              border: '1px solid #374151', 
-              background: '#1f2937', 
-              color: 'white' 
-            }}
+            className="input"
+            style={{ marginBottom: 12 }}
           />
 
           <div style={{ position: 'relative' }}>
@@ -151,15 +146,8 @@ function LoginPageInner() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ 
-                width: '100%', 
-                padding: 12, 
-                paddingRight: 40, 
-                borderRadius: 6, 
-                border: '1px solid #374151', 
-                background: '#1f2937', 
-                color: 'white' 
-              }}
+              className="input"
+              style={{ paddingRight: 40 }}
             />
 
             <button
@@ -183,7 +171,7 @@ function LoginPageInner() {
             <button
               type="button"
               onClick={handleResetPassword}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#60a5fa' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6' }}
             >
               Mot de passe oublié ?
             </button>
@@ -192,42 +180,26 @@ function LoginPageInner() {
           <button
             type="submit"
             disabled={loading}
-            style={{ 
-              width: '100%', 
-              padding: 12, 
-              background: '#3b82f6', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: 6, 
-              fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.6 : 1 
-            }}
+            className="btn btn-primary"
+            style={{ width: '100%' }}
           >
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
 
+        {/* GOOGLE */}
         {GOOGLE_ENABLED && (
           <button
             onClick={handleGoogleLogin}
-            style={{ 
-              width: '100%', 
-              marginTop: 12, 
-              padding: 12, 
-              background: 'transparent', 
-              border: '1px solid #374151', 
-              color: 'white', 
-              borderRadius: 6, 
-              cursor: 'pointer' 
-            }}
+            className="btn btn-secondary"
+            style={{ width: '100%', marginTop: 12 }}
           >
             🔵 Google
           </button>
         )}
 
         <div style={{ textAlign: 'center', fontSize: 13, marginTop: 20 }}>
-          <Link href="/register" style={{ color: '#9ca3af' }}>Créer un compte</Link>
+          <Link href="/register">Créer un compte</Link>
         </div>
 
       </div>
@@ -237,7 +209,7 @@ function LoginPageInner() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Chargement...</div>}>
+    <Suspense fallback={<div>Chargement...</div>}>
       <LoginPageInner />
     </Suspense>
   )
