@@ -1,45 +1,47 @@
-```tsx
 'use client'
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function UpdatePasswordPage() {
+export default function Page() {
   const supabase = createClient()
 
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState<string>('')
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState<string>('')
+  const [message, setMessage] = useState<string>('')
 
-  // 🔥 FIX PRINCIPAL : récupérer correctement la session depuis le lien email
   useEffect(() => {
     const init = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(
-        window.location.href
-      )
+      try {
+        const { error } = await supabase.auth.exchangeCodeForSession(
+          window.location.href
+        )
 
-      if (error) {
-        setError('Lien invalide ou expiré')
-        return
+        if (error) {
+          setError('Lien invalide ou expiré')
+          return
+        }
+
+        setReady(true)
+      } catch {
+        setError('Erreur de session')
       }
-
-      setReady(true)
     }
 
     init()
   }, [])
 
-  async function handleUpdate(e: React.FormEvent) {
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
     setLoading(true)
     setError('')
     setMessage('')
 
-    // ✅ sécurité mot de passe
-    if (password.length < 6) {
+    if (!password || password.length < 6) {
       setError('Mot de passe trop court (min 6 caractères)')
       setLoading(false)
       return
@@ -55,16 +57,19 @@ export default function UpdatePasswordPage() {
       return
     }
 
-    setMessage('✅ Mot de passe mis à jour !')
+    setMessage('Mot de passe mis à jour !')
 
-    // ✅ redirection propre vers app/dashboard
     setTimeout(() => {
-      window.location.href = '/dashboard' // adapte si besoin (/app)
+      window.location.href = '/dashboard'
     }, 1500)
   }
 
   if (!ready) {
-    return <p style={{ textAlign: 'center' }}>Connexion en cours...</p>
+    return (
+      <div style={{ textAlign: 'center', marginTop: 50 }}>
+        🔐 Vérification du lien...
+      </div>
+    )
   }
 
   return (
@@ -72,54 +77,46 @@ export default function UpdatePasswordPage() {
       style={{
         minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignItems: 'center'
       }}
     >
-      <div style={{ width: 400 }}>
+      <form onSubmit={handleUpdate} style={{ width: 400 }}>
         <h2>🔐 Nouveau mot de passe</h2>
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {message && <p style={{ color: 'green' }}>{message}</p>}
 
-        <form onSubmit={handleUpdate}>
-          <div style={{ position: 'relative', marginBottom: 10 }}>
-            <input
-              type={showPwd ? 'text' : 'password'}
-              placeholder="Nouveau mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: 10,
-                paddingRight: 40
-              }}
-            />
+        <div style={{ position: 'relative', marginBottom: 10 }}>
+          <input
+            type={showPwd ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Nouveau mot de passe"
+            style={{ width: '100%', padding: 10, paddingRight: 40 }}
+          />
 
-            <button
-              type="button"
-              onClick={() => setShowPwd(!showPwd)}
-              style={{
-                position: 'absolute',
-                right: 10,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {showPwd ? '🙈' : '👁️'}
-            </button>
-          </div>
-
-          <button type="submit" disabled={loading}>
-            {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
+          <button
+            type="button"
+            onClick={() => setShowPwd(!showPwd)}
+            style={{
+              position: 'absolute',
+              right: 10,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            {showPwd ? '🙈' : '👁️'}
           </button>
-        </form>
-      </div>
+        </div>
+
+        <button type="submit" disabled={loading} style={{ width: '100%' }}>
+          {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
+        </button>
+      </form>
     </div>
   )
 }
-```
