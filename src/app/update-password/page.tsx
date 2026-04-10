@@ -9,6 +9,7 @@ export default function UpdatePasswordPage() {
   const router = useRouter()
 
   const [password, setPassword] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -30,10 +31,10 @@ export default function UpdatePasswordPage() {
     }
 
     setMessage('✅ Mot de passe mis à jour !')
-    setLoading(false)
 
+    // 🔥 REDIRECTION AUTO
     setTimeout(() => {
-      router.push('/')
+      window.location.href = '/' // ou '/chat' ou '/dashboard'
     }, 1500)
   }
 
@@ -52,18 +53,43 @@ export default function UpdatePasswordPage() {
         {message && <p style={{ color: 'green' }}>{message}</p>}
 
         <form onSubmit={handleUpdate}>
-          <input
-            type="password"
-            placeholder="Nouveau mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', marginBottom: 10 }}
-          />
+
+          {/* 🔐 INPUT PASSWORD AVEC OEIL */}
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <input
+              type={showPwd ? 'text' : 'password'}
+              placeholder="Nouveau mot de passe"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: '100%',
+                paddingRight: 40,
+                padding: 10
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowPwd(!showPwd)}
+              style={{
+                position: 'absolute',
+                right: 10,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {showPwd ? '🙈' : '👁️'}
+            </button>
+          </div>
 
           <button type="submit" disabled={loading}>
             {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
           </button>
+
         </form>
 
       </div>
