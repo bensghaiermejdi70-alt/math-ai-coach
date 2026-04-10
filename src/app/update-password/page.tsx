@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function UpdatePasswordPage() {
-  const router = useRouter()
   const supabase = createClient()
 
   const [password, setPassword] = useState('')
@@ -13,93 +11,116 @@ export default function UpdatePasswordPage() {
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [validSession, setValidSession] = useState(false)
-  const [errorMsg, setErrorMsg] = useState('')
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const checkSession = async () => {
+    const initSession = async () => {
       try {
-        // Vérifier si on a déjà une session
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session) {
-          setValidSession(true)
-          setChecking(false)
-          return
-        }
-
-        // Récupérer le code de l'URL
         const url = new URL(window.location.href)
+
+        // 🔥 CAS 1 : ?code= (le plus fréquent)
         const code = url.searchParams.get('code')
 
-        if (!code) {
-          setErrorMsg('Lien invalide ou expiré.')
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+
+          if (error) {
+            setError('Lien expiré ou invalide')
+          } else {
+            setValidSession(true)
+          }
+
           setChecking(false)
           return
         }
 
-        // Échanger le code contre une session
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        // 🔥 CAS 2 : #access_token (fallback)
+        const hash = window.location.hash
+        const params = new URLSearchParams(hash.replace('#', ''))
 
-        if (error) {
-          setErrorMsg('Ce lien est expiré ou a déjà été utilisé.')
-          setChecking(false)
-          return
-        }
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
 
-        if (data.session) {
-          setValidSession(true)
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+
+          if (error) {
+            setError('Erreur session')
+          } else {
+            setValidSession(true)
+          }
+        } else {
+          setError('Lien invalide ou expiré')
         }
-      } catch (err) {
-        setErrorMsg('Erreur lors de la vérification')
-      } finally {
-        setChecking(false)
+      } catch (e) {
+        setError('Erreur lors de la vérification')
       }
+
+      setChecking(false)
     }
 
-    checkSession()
+    initSession()
   }, [])
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!validSession) {
+      setError('Session invalide')
+      return
+    }
+
     if (password.length < 6) {
-      setErrorMsg('Le mot de passe doit contenir au moins 6 caractères')
+      setError('Le mot de passe doit contenir au moins 6 caractères')
       return
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.updateUser({ password })
+    setError('')
+    setMessage('')
+
+    const { error } = await supabase.auth.updateUser({
+      password,
+    })
+
     setLoading(false)
 
     if (error) {
-      setErrorMsg(error.message)
+      setError(error.message)
       return
     }
 
-    alert('✅ Mot de passe mis à jour !')
-    router.push('/login')
+    setMessage('✅ Mot de passe mis à jour')
+
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 1500)
   }
 
   if (checking) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: 'white' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>⏳</div>
-          <p>Vérification...</p>
-        </div>
+      <div style={styles.center}>
+        <p>Vérification du lien...</p>
       </div>
     )
   }
 
   if (!validSession) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', padding: 20 }}>
-        <div style={{ background: '#111827', padding: 30, borderRadius: 12, maxWidth: 400, textAlign: 'center', color: 'white' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>❌</div>
+      <div style={styles.center}>
+        <div style={styles.card}>
           <h2>Lien invalide</h2>
-          <p style={{ color: '#ef4444', marginBottom: 20 }}>{errorMsg}</p>
-          <button onClick={() => router.push('/login')} style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6 }}>
-            Retour
+          <p style={{ color: 'red' }}>{error}</p>
+
+          <button
+            onClick={() => (window.location.href = '/login')}
+            style={styles.button}
+          >
+            Retour à la connexion
           </button>
         </div>
       </div>
@@ -107,35 +128,102 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', padding: 20 }}>
-      <div style={{ background: '#111827', padding: 30, borderRadius: 12, width: '100%', maxWidth: 400, color: 'white' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: 20 }}>🔐 Nouveau mot de passe</h1>
-        
-        {errorMsg && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: 12, borderRadius: 8, marginBottom: 15, color: '#ef4444' }}>
-            {errorMsg}
-          </div>
-        )}
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>Changer mot de passe</h1>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {message && <p style={{ color: 'green' }}>{message}</p>}
 
         <form onSubmit={handleUpdatePassword}>
-          <div style={{ position: 'relative', marginBottom: 15 }}>
+          <div style={styles.inputWrapper}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Nouveau mot de passe (min. 6 caractères)"
+              placeholder="Nouveau mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: 12, paddingRight: 40, borderRadius: 6, border: '1px solid #374151', background: '#1f2937', color: 'white' }}
+              style={styles.input}
             />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}>
+
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={styles.eyeButton}
+            >
               {showPassword ? '🙈' : '👁️'}
             </button>
           </div>
 
-          <button type="submit" disabled={loading || !password} style={{ width: '100%', padding: 12, background: '#3b82f6', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+          <button
+            type="submit"
+            disabled={loading || !password}
+            style={styles.button}
+          >
             {loading ? 'Mise à jour...' : 'Mettre à jour'}
           </button>
         </form>
       </div>
     </div>
   )
+}
+
+const styles: any = {
+  container: {
+    display: 'flex',
+    height: '100vh',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: '#0f172a',
+  },
+  center: {
+    display: 'flex',
+    height: '100vh',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: '#0f172a',
+    color: 'white',
+  },
+  card: {
+    background: '#111827',
+    padding: 30,
+    borderRadius: 12,
+    width: 350,
+    color: 'white',
+    textAlign: 'center',
+  },
+  title: {
+    marginBottom: 20,
+    fontSize: 20,
+  },
+  inputWrapper: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    paddingRight: 40,
+    borderRadius: 6,
+    border: '1px solid #374151',
+    background: '#1f2937',
+    color: 'white',
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+  },
+  button: {
+    width: '100%',
+    padding: 10,
+    borderRadius: 6,
+    border: 'none',
+    background: '#3b82f6',
+    color: 'white',
+    cursor: 'pointer',
+  },
 }

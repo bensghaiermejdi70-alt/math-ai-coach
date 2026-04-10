@@ -63,25 +63,28 @@ function LoginPageInner() {
 
   // 🔐 RESET PASSWORD (FIX IMPORTANT)
   async function handleResetPassword() {
-    if (!email) {
-      alert('Entrez votre email')
-      return
-    }
-
-    const supabase = createClient()
-
-    const redirectUrl = `${window.location.origin}/update-password`
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
-    })
-
-    if (error) {
-      alert('Erreur: ' + error.message)
-    } else {
-      alert('Email envoyé 📩 Vérifie ta boîte mail')
-    }
+  if (!email) {
+    alert('Entrez votre email')
+    return
   }
+
+  const supabase = createClient()
+
+  const redirectUrl =
+    process.env.NEXT_PUBLIC_SITE_URL
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`
+      : `${window.location.origin}/update-password`
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: redirectUrl,
+  })
+
+  if (error) {
+    alert('Erreur: ' + error.message)
+  } else {
+    alert('Email envoyé 📩 Vérifie ta boîte')
+  }
+}
 
   // 🔥 UI SI CONNECTÉ
   if (!isLoading && user) {
