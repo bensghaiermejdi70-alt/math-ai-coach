@@ -12,25 +12,35 @@ export default function AuthCallback() {
 
     const handleAuth = async () => {
       try {
-        // 🔥 Récupère la session depuis l'URL (IMPORTANT pour reset password)
-        const { data, error } = await supabase.auth.getSession()
+        // 🔥 Récupérer le code de l'URL (PKCE)
+        const url = new URL(window.location.href)
+        const code = url.searchParams.get('code')
 
-        if (error) {
-          console.error(error)
-          router.push('/login')
-          return
+        if (code) {
+          // Échanger le code contre une session
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          
+          if (error) {
+            console.error('Erreur échange code:', error)
+            router.push('/login?error=invalid_code')
+            return
+          }
         }
 
-        // 🔥 Si reset password → rediriger vers page changement mot de passe
+        // 🔥 Vérifier si c'est une récupération de mot de passe
+        // Supabase met 'type=recovery' dans le hash ou dans les params
         const hash = window.location.hash
+        const isRecovery = hash.includes('type=recovery') || 
+                          url.searchParams.get('type') === 'recovery'
 
-        if (hash.includes('type=recovery')) {
-          router.push('/reset-password') // 👈 IMPORTANT
+        if (isRecovery) {
+          // 👈 Redirige vers TA page update-password
+          router.push('/update-password')
           return
         }
 
-        // 🔥 Sinon login normal (Google etc)
-        router.push('/')
+        // 🔥 Sinon c'est un login normal (Google, etc.)
+        router.push('/dashboard')
 
       } catch (e) {
         console.error(e)
@@ -39,11 +49,14 @@ export default function AuthCallback() {
     }
 
     handleAuth()
-  }, [])
+  }, [router])
 
   return (
-    <div style={{ padding: 40, textAlign: 'center' }}>
-      🔄 Connexion en cours...
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: 'white' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 10 }}>⏳</div>
+        <p>Connexion en cours...</p>
+      </div>
     </div>
   )
 }
