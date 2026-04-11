@@ -10,24 +10,40 @@ export default function AuthCallback() {
   useEffect(() => {
     const supabase = createClient()
 
+    // Timeout de sécurité — si rien ne se passe en 8s, rediriger
+    const timeout = setTimeout(() => {
+      router.push('/login?error=timeout')
+    }, 8000)
+
     const handleAuth = async () => {
       try {
         const url = new URL(window.location.href)
         const code       = url.searchParams.get('code')
         const tokenHash  = url.searchParams.get('token_hash')
-        const type       = url.searchParams.get('type')   // 'recovery', 'signup', etc.
+        const type       = url.searchParams.get('type')
         const hashStr    = window.location.hash
 
-        // ── CAS 1 : token_hash (template email {{ .ConfirmationURL }}) ──
+        // ── CAS 1 : token_hash (email reset via {{ .ConfirmationURL }}) ──
         if (tokenHash) {
+          // type 'recovery' pour reset password, 'email' pour signup/magic link
+          const otpType = type === 'recovery' ? 'recovery' : (type as any) || 'email'
+
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
-            type: (type as any) || 'email',
+            type: otpType,
           })
 
+          clearTimeout(timeout)
+
           if (error) {
-            console.error('verifyOtp error:', error)
-            router.push('/login?error=invalid_link')
+            console.error('verifyOtp error:', error.message)
+            // Lien peut-être déjà utilisé — essayer de récupérer la session active
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session && type === 'recovery') {
+              router.push('/auth/update-password')
+              return
+            }
+            router.push('/login?error=lien_expire')
             return
           }
 
@@ -42,6 +58,7 @@ export default function AuthCallback() {
 
         // ── CAS 2 : code PKCE (Google OAuth, magic link moderne) ──────
         if (code) {
+          clearTimeout(timeout)
           const { error } = await supabase.auth.exchangeCodeForSession(code)
 
           if (error) {
@@ -61,6 +78,7 @@ export default function AuthCallback() {
 
         // ── CAS 3 : hash fragment (ancien flow) ───────────────────────
         if (hashStr) {
+          clearTimeout(timeout)
           const params       = new URLSearchParams(hashStr.replace('#', ''))
           const accessToken  = params.get('access_token')
           const refreshToken = params.get('refresh_token')
@@ -80,11 +98,13 @@ export default function AuthCallback() {
         }
 
         // ── CAS 4 : session déjà active (rechargement) ───────────────
+        clearTimeout(timeout)
         const { data: { session } } = await supabase.auth.getSession()
         router.push(session ? '/' : '/login')
 
       } catch (e) {
         console.error('Auth callback error:', e)
+        clearTimeout(timeout)
         router.push('/login')
       }
     }

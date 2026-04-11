@@ -135,16 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: translateAuthError(error.message), user: null }
     }
 
-    // ✅ CORRECTION : Mettre à jour immédiatement le state
+    // Mettre à jour le state immédiatement
     if (data.user) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
     }
 
-    if (!error) {
-      window.location.href = '/'
-    }
+    // Rediriger vers home
+    window.location.href = '/'
     return { error: null, user: data.user }
   }
 
