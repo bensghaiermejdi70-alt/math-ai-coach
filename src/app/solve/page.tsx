@@ -1256,7 +1256,7 @@ function SolvePageInner() {
 
     // Vérifier quota via AuthContext (Supabase)
     if (!isAdmin && !checkQuota('solver')) {
-      alert(`Quota atteint — ${solverLimit} résolutions/semaine. Renouvellement lundi prochain.\nLe solveur SymPy reste disponible pour les calculs automatiques.\n\nUpgrade vers Sprint Bac pour quota illimité.`)
+      alert(`Quota atteint — ${solverLimit} résolutions/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
       return
     }
 
@@ -1591,7 +1591,7 @@ Structure OBLIGATOIRE :
                   <div style={{ marginTop: 14, padding: '8px 12px', background: isQuotaFull ? 'rgba(239,68,68,0.08)' : 'rgba(99,102,241,0.06)', border: `1px solid ${isQuotaFull ? 'rgba(239,68,68,0.25)' : 'rgba(99,102,241,0.2)'}`, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontSize: 12, color: isQuotaFull ? '#fca5a5' : 'rgba(255,255,255,0.5)' }}>
                       {isQuotaFull
-                        ? <span>Quota atteint — renouvellement lundi · <a href="/abonnement" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 700 }}>Sprint Bac illimité →</a></span>
+                        ? <span>🔒 Quota atteint · <a href="/abonnement" style={{color:'#f59e0b',textDecoration:'none',fontWeight:700}}>🇹🇳 Plans Tunisie →</a> · <a href="/abonnement-france" style={{color:'#60a5fa',textDecoration:'none',fontWeight:700}}>🇫🇷 Plans France →</a></span>
                         : `${quotaRemaining} résolution${quotaRemaining > 1 ? 's' : ''} restante${quotaRemaining > 1 ? 's' : ''} cette semaine`}
                     </div>
                     <span style={{ fontSize: 16, fontWeight: 700, color: isQuotaFull ? '#ef4444' : quotaRemaining <= 10 ? '#f59e0b' : '#10b981' }}>

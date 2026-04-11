@@ -2633,7 +2633,7 @@ function BacBlancInner() {
   const handleInscription = useCallback(async (c: Candidat) => {
     // Vérifier quota simulation via Supabase (admin = illimité)
     if (!isAdmin && !checkQuota('simulations')) {
-      alert('Quota atteint — 2 simulations/semaine. Renouvellement lundi prochain.\nUpgrade vers Sprint Bac pour plus de simulations.')
+      alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
       return
     }
     setCandidat(c); setPhase('generating')

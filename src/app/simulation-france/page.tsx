@@ -2346,7 +2346,7 @@ function PhaseGenerating({ archives, customText, onDone }: {
           {!isAdmin && (
             <div style={{fontSize:12,color:limitReached?'rgba(239,68,68,0.8)':simRemaining<=1?'rgba(245,158,11,0.8)':'rgba(255,255,255,0.4)'}}>
               {limitReached
-                ? <span>🔒 Quota atteint — renouvellement lundi · <a href="/abonnement" style={{color:'#f59e0b',textDecoration:'none',fontWeight:700}}>Sprint Bac →</a></span>
+                ? <span>🔒 Quota atteint · <a href="/abonnement-france" style={{color:'#60a5fa',textDecoration:'none',fontWeight:700}}>🇫🇷 19€ · 29€ · 199€ →</a></span>
                 : isSprint
                   ? `🔥 Sprint Bac — ${simRemaining} simulation${simRemaining>1?'s':''} restante${simRemaining>1?'s':''}`
                   : `${simRemaining} simulation${simRemaining>1?'s':''} restante${simRemaining>1?'s':''} cette semaine`
@@ -4522,4 +4522,3 @@ export default function SimulationFrancePage() {
     </Suspense>
   )
 }
-
