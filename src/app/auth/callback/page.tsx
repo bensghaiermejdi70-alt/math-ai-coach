@@ -35,12 +35,12 @@ export default function AuthCallback() {
 
         if (isRecovery) {
           // 👈 Redirige vers TA page update-password
-          router.push('/update-password')
+          router.push('/auth/update-password')
           return
         }
 
         // 🔥 Sinon c'est un login normal (Google, etc.)
-        router.push('/dashboard')
+        router.push('/')
 
       } catch (e) {
         console.error(e)

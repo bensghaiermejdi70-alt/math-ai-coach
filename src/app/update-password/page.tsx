@@ -100,7 +100,7 @@ export default function UpdatePasswordPage() {
 
     // 🔥 REDIRECTION STABLE
     setTimeout(() => {
-      window.location.href = '/dashboard'
+      window.location.href = '/'
     }, 1500)
   }
 
