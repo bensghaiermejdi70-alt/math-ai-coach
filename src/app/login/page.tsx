@@ -1,13 +1,12 @@
 'use client'
 import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 import Navbar from '@/components/layout/Navbar'
 
+// ── Login sans useAuth — direct Supabase ─────────────────────────
 function LoginInner() {
-  const { signIn, signInWithGoogle, resetPassword } = useAuth()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
 
@@ -16,39 +15,54 @@ function LoginInner() {
   const [showPwd,  setShowPwd]  = useState(false)
   const [loading,  setLoading]  = useState(false)
   const [googleL,  setGoogleL]  = useState(false)
+  const [resetL,   setResetL]   = useState(false)
   const [error,    setError]    = useState('')
   const [message,  setMessage]  = useState('')
 
-  // 🔐 LOGIN EMAIL/MOT DE PASSE
+  const supabase = createClient()
+
+  // 🔐 LOGIN EMAIL/MOT DE PASSE — direct Supabase, pas de useAuth
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError(''); setLoading(true)
-    const { error } = await signIn(email, password)
-    setLoading(false)
-    if (error) { setError(error); return }
-    window.location.href = redirectTo
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+    if (error) {
+      setError(
+        error.message.includes('Invalid login credentials')
+          ? 'Email ou mot de passe incorrect'
+          : error.message
+      )
+      setLoading(false)
+      return
+    }
+
+    // ✅ Redirection immédiate — pas de dépendance à useAuth
+    window.location.replace(redirectTo)
   }
 
-  // 🔵 GOOGLE
+  // 🔵 GOOGLE OAuth
   async function handleGoogle() {
     setGoogleL(true)
-    await signInWithGoogle()
-    setGoogleL(false)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
   }
 
   // 🔁 MOT DE PASSE OUBLIÉ
   async function handleReset() {
-    if (!email) { setError('Entre ton email d\'abord'); return }
-    setError(''); setLoading(true)
-    const { useAuth: _, ...rest } = await import('@/lib/auth/AuthContext')
-    const { createClient } = await import('@/lib/supabase/client')
-    const supabase = createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+    if (!email.trim()) { setError("Entre d'abord ton email"); return }
+    setError(''); setResetL(true)
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
     })
-    setLoading(false)
+
+    setResetL(false)
     if (error) setError(error.message)
-    else setMessage('📩 Email de réinitialisation envoyé — vérifie tes spams')
+    else setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
   }
 
   return (
@@ -60,7 +74,7 @@ function LoginInner() {
           {/* Header */}
           <div style={{ textAlign:'center', marginBottom:32 }}>
             <div style={{ fontSize:36, marginBottom:8 }}>🎓</div>
-            <h1 style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:26, color:'white', margin:0, marginBottom:6 }}>
+            <h1 style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:26, color:'white', margin:'0 0 6px' }}>
               Math<strong style={{ color:'#4f6ef7' }}>Bac</strong>.AI
             </h1>
             <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Connecte-toi à ton espace</p>
@@ -68,7 +82,7 @@ function LoginInner() {
 
           <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, padding:32 }}>
 
-            {/* Messages */}
+            {/* Erreur / succès */}
             {error && (
               <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#fca5a5' }}>
                 ⚠️ {error}
@@ -82,12 +96,17 @@ function LoginInner() {
 
             {/* Google */}
             <button onClick={handleGoogle} disabled={googleL}
-              style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'12px', borderRadius:12, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, fontWeight:600, cursor:'pointer', marginBottom:20, transition:'all 0.2s' }}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(255,255,255,0.1)'}
-              onMouseLeave={e=>e.currentTarget.style.background='rgba(255,255,255,0.06)'}
+              style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'12px', borderRadius:12, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, fontWeight:600, cursor:'pointer', marginBottom:20, transition:'all 0.2s', opacity: googleL ? 0.7 : 1 }}
+              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
+              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.06)'}
             >
-              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-              {googleL ? 'Connexion...' : 'Continuer avec Google'}
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+              {googleL ? 'Redirection...' : 'Continuer avec Google'}
             </button>
 
             {/* Séparateur */}
@@ -101,24 +120,24 @@ function LoginInner() {
             <form onSubmit={handleLogin}>
               <div style={{ marginBottom:14 }}>
                 <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Email</label>
-                <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                   placeholder="ton@email.com"
                   style={{ width:'100%', padding:'11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
-                  onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                  onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
+                  onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
+                  onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
                 />
               </div>
 
               <div style={{ marginBottom:8 }}>
                 <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Mot de passe</label>
                 <div style={{ position:'relative' }}>
-                  <input type={showPwd ? 'text' : 'password'} value={password} onChange={e=>setPassword(e.target.value)} required
+                  <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
                     placeholder="••••••••"
                     style={{ width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
-                    onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                    onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
+                    onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
+                    onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
                   />
-                  <button type="button" onClick={()=>setShowPwd(!showPwd)}
+                  <button type="button" onClick={() => setShowPwd(!showPwd)}
                     style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'rgba(255,255,255,0.4)' }}>
                     {showPwd ? '🙈' : '👁️'}
                   </button>
@@ -127,20 +146,20 @@ function LoginInner() {
 
               {/* Mot de passe oublié */}
               <div style={{ textAlign:'right', marginBottom:20 }}>
-                <button type="button" onClick={handleReset}
-                  style={{ background:'none', border:'none', color:'#4f6ef7', fontSize:12, cursor:'pointer', fontWeight:600 }}>
-                  Mot de passe oublié ?
+                <button type="button" onClick={handleReset} disabled={resetL}
+                  style={{ background:'none', border:'none', color: resetL ? 'rgba(79,110,247,0.5)' : '#4f6ef7', fontSize:12, cursor:'pointer', fontWeight:600 }}>
+                  {resetL ? 'Envoi...' : 'Mot de passe oublié ?'}
                 </button>
               </div>
 
               <button type="submit" disabled={loading}
-                style={{ width:'100%', padding:'13px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:15, fontWeight:800, cursor:loading ? 'not-allowed' : 'pointer', opacity:loading ? 0.7 : 1, transition:'all 0.2s' }}>
+                style={{ width:'100%', padding:'13px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:15, fontWeight:800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, transition:'all 0.2s' }}>
                 {loading ? 'Connexion...' : 'Se connecter →'}
               </button>
             </form>
 
             {/* Lien inscription */}
-            <p style={{ textAlign:'center', marginTop:20, fontSize:13, color:'rgba(255,255,255,0.4)' }}>
+            <p style={{ textAlign:'center', marginTop:20, fontSize:13, color:'rgba(255,255,255,0.4)', margin:'20px 0 0' }}>
               Pas encore de compte ?{' '}
               <Link href="/register" style={{ color:'#4f6ef7', fontWeight:700, textDecoration:'none' }}>
                 S'inscrire gratuitement
