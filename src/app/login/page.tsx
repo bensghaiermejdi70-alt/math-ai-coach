@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth/AuthContext'
 import Navbar from '@/components/layout/Navbar'
 
 function LoginInner() {
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, resetPassword } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
