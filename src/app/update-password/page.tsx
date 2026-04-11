@@ -1,238 +1,124 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function UpdatePasswordPage() {
   const supabase = createClient()
 
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [checking, setChecking] = useState(true)
-  const [validSession, setValidSession] = useState(false)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [password,     setPassword]     = useState('')
+  const [confirm,      setConfirm]      = useState('')
+  const [showPwd,      setShowPwd]      = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [checking,     setChecking]     = useState(true)
+  const [hasSession,   setHasSession]   = useState(false)
+  const [message,      setMessage]      = useState('')
+  const [error,        setError]        = useState('')
 
-  // 🔥 CORRECTION MAJEURE : récupération session via URL
   useEffect(() => {
-    const initSession = async () => {
-      try {
-        const url = new URL(window.location.href)
-
-        // 🔥 CAS 1 : PKCE (code)
-        const code = url.searchParams.get('code')
-
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-          if (error) {
-            setError('Lien expiré ou invalide')
-          } else {
-            setValidSession(true)
-          }
-
-          setChecking(false)
-          return
-        }
-
-        // 🔥 CAS 2 : hash (ancien flow)
-        const hash = window.location.hash
-        const params = new URLSearchParams(hash.replace('#', ''))
-
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
-
-        if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          })
-
-          if (error) {
-            setError('Erreur session')
-          } else {
-            setValidSession(true)
-          }
-        } else {
-          setError('Lien invalide ou expiré')
-        }
-      } catch (e) {
-        setError('Erreur lors de la vérification')
-      }
-
+    const checkSession = async () => {
+      // Supabase a déjà établi la session avant de rediriger ici
+      const { data: { session } } = await supabase.auth.getSession()
+      setHasSession(!!session)
       setChecking(false)
     }
-
-    initSession()
+    checkSession()
   }, [])
 
-  // 🔐 UPDATE PASSWORD
-  const handleUpdatePassword = async (e: React.FormEvent) => {
+  async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
+    setError('')
 
-    if (!validSession) {
-      setError('Session invalide')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Minimum 6 caractères')
-      return
-    }
+    if (password.length < 6) { setError('Minimum 6 caractères'); return }
+    if (password !== confirm) { setError('Les mots de passe ne correspondent pas'); return }
 
     setLoading(true)
-    setError('')
-    setMessage('')
-
-    const { error } = await supabase.auth.updateUser({
-      password,
-    })
-
+    const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
 
-    if (error) {
-      setError(error.message)
-      return
-    }
+    if (error) { setError(error.message); return }
 
-    setMessage('✅ Mot de passe mis à jour')
-
-    // 🔥 REDIRECTION STABLE
-    setTimeout(() => {
-      window.location.href = '/'
-    }, 1500)
+    setMessage('✅ Mot de passe mis à jour avec succès !')
+    setTimeout(() => { window.location.replace('/') }, 2000)
   }
 
-  // ⏳ LOADING
-  if (checking) {
-    return (
-      <div style={styles.center}>
-        <p>Vérification du lien...</p>
-      </div>
-    )
-  }
-
-  // ❌ LIEN INVALIDE
-  if (!validSession) {
-    return (
-      <div style={styles.center}>
-        <div style={styles.card}>
-          <h2>Lien invalide</h2>
-          <p style={{ color: 'red' }}>{error}</p>
-
-          <button
-            onClick={() => (window.location.href = '/login')}
-            style={styles.button}
-          >
-            Retour à la connexion
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ✅ FORMULAIRE
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>🔐 Nouveau mot de passe</h1>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-
-        <form onSubmit={handleUpdatePassword}>
-          <div style={styles.inputWrapper}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Nouveau mot de passe"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={styles.input}
-              required
-            />
-
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
-              {showPassword ? '🙈' : '👁️'}
-            </button>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !password}
-            style={styles.button}
-          >
-            {loading ? 'Mise à jour...' : 'Changer le mot de passe'}
-          </button>
-        </form>
+  if (checking) return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui' }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(79,110,247,0.3)', borderTopColor:'#4f6ef7', animation:'spin 0.8s linear infinite', margin:'0 auto 12px' }} />
+        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13 }}>Vérification...</p>
+        <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
   )
-}
 
-const styles: any = {
-  container: {
-    display: 'flex',
-    height: '100vh',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: '#0f172a',
-  },
-  center: {
-    display: 'flex',
-    height: '100vh',
-    justifyContent: 'center',
-    alignItems: 'center',
-    background: '#0f172a',
-    color: 'white',
-  },
-  card: {
-    background: '#111827',
-    padding: 30,
-    borderRadius: 12,
-    width: 360,
-    color: 'white',
-    textAlign: 'center',
-  },
-  title: {
-    marginBottom: 20,
-    fontSize: 20,
-  },
-  inputWrapper: {
-    position: 'relative',
-    marginBottom: 15,
-  },
-  input: {
-    width: '100%',
-    padding: 12,
-    paddingRight: 40,
-    borderRadius: 6,
-    border: '1px solid #374151',
-    background: '#1f2937',
-    color: 'white',
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 10,
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 16,
-  },
-  button: {
-    width: '100%',
-    padding: 12,
-    borderRadius: 6,
-    border: 'none',
-    background: '#3b82f6',
-    color: 'white',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
+  if (!hasSession) return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui' }}>
+      <div style={{ textAlign:'center', maxWidth:380, padding:32, background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20 }}>
+        <div style={{ fontSize:40, marginBottom:12 }}>⛔</div>
+        <h2 style={{ marginBottom:10 }}>Lien invalide ou expiré</h2>
+        <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, marginBottom:20, lineHeight:1.6 }}>
+          Ce lien a expiré ou a déjà été utilisé.<br/>Demande un nouveau lien de réinitialisation.
+        </p>
+        <button onClick={() => window.location.replace('/login')}
+          style={{ padding:'11px 24px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+          Retour à la connexion
+        </button>
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', padding:'20px', fontFamily:'system-ui' }}>
+      <div style={{ width:'100%', maxWidth:400 }}>
+
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <div style={{ fontSize:36, marginBottom:8 }}>🔐</div>
+          <h1 style={{ color:'white', fontSize:24, fontWeight:900, margin:'0 0 6px' }}>Nouveau mot de passe</h1>
+          <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Choisis un mot de passe sécurisé</p>
+        </div>
+
+        <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, padding:32 }}>
+          {error && (
+            <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#fca5a5' }}>⚠️ {error}</div>
+          )}
+          {message && (
+            <div style={{ background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#6ee7b7' }}>{message}</div>
+          )}
+
+          <form onSubmit={handleUpdate}>
+            <div style={{ marginBottom:14 }}>
+              <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Nouveau mot de passe</label>
+              <div style={{ position:'relative' }}>
+                <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
+                  placeholder="Minimum 6 caractères"
+                  style={{ width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
+                  onBlur={e  => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+                />
+                <button type="button" onClick={() => setShowPwd(!showPwd)}
+                  style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'rgba(255,255,255,0.4)' }}>
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom:24 }}>
+              <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Confirmer le mot de passe</label>
+              <input type={showPwd ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} required
+                placeholder="Répète ton mot de passe"
+                style={{ width:'100%', padding:'11px 14px', borderRadius:10, border:`1px solid ${confirm && confirm !== password ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)'}`, background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
+                onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
+                onBlur={e  => e.target.style.borderColor = confirm && confirm !== password ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)'}
+              />
+            </div>
+
+            <button type="submit" disabled={loading}
+              style={{ width:'100%', padding:'13px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:15, fontWeight:800, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+              {loading ? 'Mise à jour...' : '✅ Changer mon mot de passe'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
 }
