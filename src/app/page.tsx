@@ -109,6 +109,79 @@ function FeatureCard({ f, i }: { f:typeof FEATURES[0]; i:number }) {
 }
 
 // ── Page principale ─────────────────────────────────────────────────
+
+// ── Composant Video Player avec thumbnail cliquable ──────────────
+const VIDEO_ID = '_6atlDlzhwI'
+
+function VideoPlayer() {
+  const [playing, setPlaying] = useState(false)
+
+  return (
+    <div style={{ maxWidth:820, margin:'0 auto', position:'relative', borderRadius:22, overflow:'hidden', boxShadow:'0 40px 100px rgba(0,0,0,0.6)' }}>
+      {!playing ? (
+        /* ── Thumbnail cliquable ── */
+        <div
+          onClick={() => setPlaying(true)}
+          style={{ position:'relative', cursor:'pointer', display:'block', lineHeight:0 }}
+        >
+          {/* Image de couverture */}
+          <img
+            src="/Réussis_ton_Bac_avec_MATHBAC_AI.png"
+            alt="MathBac.AI — Présentation"
+            style={{ width:'100%', display:'block', borderRadius:22 }}
+          />
+          {/* Overlay sombre au hover */}
+          <div style={{
+            position:'absolute', inset:0, borderRadius:22,
+            background:'rgba(0,0,0,0.25)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            transition:'background 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget.style.background='rgba(0,0,0,0.4)')}
+            onMouseLeave={e => (e.currentTarget.style.background='rgba(0,0,0,0.25)')}
+          >
+            {/* Bouton play */}
+            <div style={{
+              width:80, height:80, borderRadius:'50%',
+              background:'rgba(255,255,255,0.95)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              boxShadow:'0 8px 32px rgba(0,0,0,0.4)',
+              transition:'transform 0.2s, box-shadow 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform='scale(1.1)'; e.currentTarget.style.boxShadow='0 12px 40px rgba(0,0,0,0.5)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.4)' }}
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                <path d="M8 5.14v14l11-7-11-7z" fill="#1a1a2e"/>
+              </svg>
+            </div>
+            {/* Badge durée */}
+            <div style={{
+              position:'absolute', bottom:16, right:20,
+              background:'rgba(0,0,0,0.8)', color:'white',
+              fontSize:13, fontWeight:700, padding:'4px 10px', borderRadius:8,
+              fontFamily:'var(--font-mono)',
+            }}>
+              30 min
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ── Iframe YouTube ── */
+        <div style={{ position:'relative', paddingBottom:'56.25%', height:0, background:'#000', borderRadius:22, overflow:'hidden' }}>
+          <iframe
+            style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', border:'none' }}
+            src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
+            title="MathBac.AI — Présentation complète"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function HomePage() {
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -254,16 +327,7 @@ export default function HomePage() {
               Simulation Bac · Correction IA · Bac Blanc national · Programme personnalisé — tout en un.
             </p>
           </div>
-          <div style={{ maxWidth:820, margin:'0 auto', borderRadius:22, overflow:'hidden', border:'1px solid var(--border)', boxShadow:'0 40px 100px rgba(0,0,0,0.5)', background:'var(--surface)' }}>
-            {/* Barre macOS */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'12px 18px', background:'var(--surface2)', borderBottom:'1px solid var(--border)' }}>
-              {['#ff5f57','#febc2e','#28c840'].map((c,i) => <div key={i} style={{ width:12, height:12, borderRadius:'50%', background:c }} />)}
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--muted)', marginLeft:10 }}>MathBac.AI</span>
-            </div>
-            <video controls preload="metadata" style={{ width:'100%', display:'block', maxHeight:460, background:'#000' }}>
-              <source src="/video-bac-ai.mp4" type="video/mp4" />
-            </video>
-          </div>
+          <VideoPlayer />
         </section>
 
         {/* ═══════════════════════════════ 2 PROGRAMMES CÔTE À CÔTE */}
