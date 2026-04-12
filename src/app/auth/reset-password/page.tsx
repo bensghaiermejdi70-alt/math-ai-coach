@@ -21,34 +21,45 @@ export default function ResetPasswordPage() {
     const init = async () => {
       const url       = new URL(window.location.href)
       const tokenHash = url.searchParams.get('token_hash')
-      const type      = url.searchParams.get('type')
       const code      = url.searchParams.get('code')
       const hash      = window.location.hash
 
-      // CAS 1 — token_hash + type=recovery (template Supabase)
+      // Écouter PASSWORD_RECOVERY EN PREMIER (avant tout)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          subscription.unsubscribe()
+          setStatus('ready')
+          return
+        }
+        if (event === 'SIGNED_IN' && session) {
+          subscription.unsubscribe()
+          setStatus('ready')
+          return
+        }
+      })
+
+      // CAS 1 — token_hash (lien email Supabase)
       if (tokenHash) {
-        const { data, error } = await supabase.auth.verifyOtp({
+        const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery',
         })
-        if (!error) { setStatus('ready'); return }
-
-        // Token déjà consommé → vérifier session existante
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) { setStatus('ready'); return }
-
-        setErrMsg('Ce lien a expiré ou a déjà été utilisé.')
-        setStatus('error')
-        return
+        if (!error) {
+          subscription.unsubscribe()
+          setStatus('ready')
+          return
+        }
+        // verifyOtp échoué → session peut déjà exister
       }
 
       // CAS 2 — code PKCE
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) { setStatus('ready'); return }
-        setErrMsg('Lien invalide.')
-        setStatus('error')
-        return
+        if (!error) {
+          subscription.unsubscribe()
+          setStatus('ready')
+          return
+        }
       }
 
       // CAS 3 — hash fragment
@@ -58,23 +69,23 @@ export default function ResetPasswordPage() {
         const rt = p.get('refresh_token')
         if (at && rt) {
           const { error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-          if (!error) { setStatus('ready'); return }
+          if (!error) {
+            subscription.unsubscribe()
+            setStatus('ready')
+            return
+          }
         }
       }
 
       // CAS 4 — session déjà active
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) { setStatus('ready'); return }
+      if (session) {
+        subscription.unsubscribe()
+        setStatus('ready')
+        return
+      }
 
-      // CAS 5 — écouter PASSWORD_RECOVERY event (Supabase classique)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-          subscription.unsubscribe()
-          setStatus('ready')
-        }
-      })
-
-      // Timeout 8 secondes
+      // Timeout 10 secondes
       setTimeout(() => {
         subscription.unsubscribe()
         setStatus(s => {
@@ -84,7 +95,7 @@ export default function ResetPasswordPage() {
           }
           return s
         })
-      }, 8000)
+      }, 10000)
     }
 
     init()
