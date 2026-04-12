@@ -10,11 +10,11 @@ export default function ResetPasswordPage() {
   const [loading,   setLoading]   = useState(false)
   const [status,    setStatus]    = useState<'checking'|'ready'|'error'|'done'>('checking')
   const [errMsg,    setErrMsg]    = useState('')
-  const done = useRef(false)
+  const ran = useRef(false)
 
   useEffect(() => {
-    if (done.current) return
-    done.current = true
+    if (ran.current) return
+    ran.current = true
 
     const supabase = createClient()
 
@@ -23,33 +23,26 @@ export default function ResetPasswordPage() {
       const tokenHash = url.searchParams.get('token_hash')
       const type      = url.searchParams.get('type')
       const code      = url.searchParams.get('code')
+      const hash      = window.location.hash
 
-      // ── CAS 1 : token_hash présent (lien email direct) ──────────
+      // CAS 1 — token_hash + type=recovery (template Supabase)
       if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
+        const { data, error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery',
         })
+        if (!error) { setStatus('ready'); return }
 
-        if (!error) {
-          // Token valide → session recovery établie
-          setStatus('ready')
-          return
-        }
-
-        // Token déjà utilisé → vérifier si session active quand même
+        // Token déjà consommé → vérifier session existante
         const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          setStatus('ready')
-          return
-        }
+        if (session) { setStatus('ready'); return }
 
-        setErrMsg('Ce lien a expiré ou a déjà été utilisé. Demande un nouveau lien.')
+        setErrMsg('Ce lien a expiré ou a déjà été utilisé.')
         setStatus('error')
         return
       }
 
-      // ── CAS 2 : code PKCE ────────────────────────────────────────
+      // CAS 2 — code PKCE
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) { setStatus('ready'); return }
@@ -58,29 +51,40 @@ export default function ResetPasswordPage() {
         return
       }
 
-      // ── CAS 3 : onAuthStateChange (lien Supabase classique) ──────
-      // Supabase établit la session AVANT de rediriger
-      // On attend PASSWORD_RECOVERY event pendant 5 secondes max
-      let resolved = false
-      const timer = setTimeout(() => {
-        if (!resolved) {
-          sub.unsubscribe()
-          // Vérifier session une dernière fois
-          supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) setStatus('ready')
-            else { setErrMsg('Lien invalide ou expiré.'); setStatus('error') }
-          })
+      // CAS 3 — hash fragment
+      if (hash && hash.length > 1) {
+        const p = new URLSearchParams(hash.replace('#', ''))
+        const at = p.get('access_token')
+        const rt = p.get('refresh_token')
+        if (at && rt) {
+          const { error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
+          if (!error) { setStatus('ready'); return }
         }
-      }, 5000)
+      }
 
-      const { data: { subscription: sub } } = supabase.auth.onAuthStateChange((event) => {
+      // CAS 4 — session déjà active
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) { setStatus('ready'); return }
+
+      // CAS 5 — écouter PASSWORD_RECOVERY event (Supabase classique)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
         if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-          resolved = true
-          clearTimeout(timer)
-          sub.unsubscribe()
+          subscription.unsubscribe()
           setStatus('ready')
         }
       })
+
+      // Timeout 8 secondes
+      setTimeout(() => {
+        subscription.unsubscribe()
+        setStatus(s => {
+          if (s === 'checking') {
+            setErrMsg('Lien invalide ou expiré. Demande un nouveau lien.')
+            return 'error'
+          }
+          return s
+        })
+      }, 8000)
     }
 
     init()
@@ -89,7 +93,6 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErrMsg('')
-
     if (password.length < 6) { setErrMsg('Minimum 6 caractères'); return }
     if (password !== confirm)  { setErrMsg('Les mots de passe ne correspondent pas'); return }
 
@@ -98,26 +101,19 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
 
-    if (error) {
-      setErrMsg(error.message)
-      return
-    }
+    if (error) { setErrMsg(error.message); return }
 
-    // Succès — déconnecter et rediriger vers login pour reconnecter
     setStatus('done')
     await supabase.auth.signOut()
     setTimeout(() => { window.location.href = '/login?updated=1' }, 2000)
   }
 
-  // ── États ────────────────────────────────────────────────────────
   if (status === 'done') return (
     <div style={s.page}>
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:56, marginBottom:16 }}>✅</div>
-        <h2 style={{ color:'white', marginBottom:8, fontSize:22 }}>Mot de passe mis à jour !</h2>
-        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>
-          Redirection vers la connexion...
-        </p>
+        <h2 style={{ color:'white', marginBottom:8 }}>Mot de passe mis à jour !</h2>
+        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>Redirection vers la connexion...</p>
       </div>
     </div>
   )
@@ -126,9 +122,7 @@ export default function ResetPasswordPage() {
     <div style={s.page}>
       <div style={{ textAlign:'center' }}>
         <div style={s.spinner} />
-        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:12 }}>
-          Vérification du lien…
-        </p>
+        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:14 }}>Vérification du lien...</p>
         <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
@@ -136,93 +130,59 @@ export default function ResetPasswordPage() {
 
   if (status === 'error') return (
     <div style={s.page}>
-      <div style={{ textAlign:'center', maxWidth:380, ...s.card }}>
+      <div style={{ ...s.card, textAlign:'center', maxWidth:380 }}>
         <div style={{ fontSize:44, marginBottom:12 }}>⛔</div>
         <h2 style={{ color:'white', marginBottom:10, fontSize:20 }}>Lien invalide ou expiré</h2>
-        <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, lineHeight:1.6, marginBottom:20 }}>
-          {errMsg}
-        </p>
+        <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, lineHeight:1.6, marginBottom:20 }}>{errMsg}</p>
         <button onClick={() => window.location.href = '/login'}
-          style={s.btn}>
+          style={{ ...s.btn, width:'100%' }}>
           Retour à la connexion
         </button>
       </div>
     </div>
   )
 
-  // ── Formulaire (status === 'ready') ──────────────────────────────
   return (
     <div style={s.page}>
       <div style={{ width:'100%', maxWidth:400 }}>
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <div style={{ fontSize:36, marginBottom:8 }}>🔐</div>
-          <h1 style={{ color:'white', fontSize:22, fontWeight:900, margin:'0 0 6px' }}>
-            Nouveau mot de passe
-          </h1>
-          <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>
-            Choisis un mot de passe sécurisé
-          </p>
+          <h1 style={{ color:'white', fontSize:22, fontWeight:900, margin:'0 0 6px' }}>Nouveau mot de passe</h1>
+          <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Choisis un mot de passe sécurisé</p>
         </div>
-
         <div style={s.card}>
-          {errMsg && (
-            <div style={s.alert}>⚠️ {errMsg}</div>
-          )}
-
+          {errMsg && <div style={s.alert}>⚠️ {errMsg}</div>}
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom:14 }}>
               <label style={s.label}>Nouveau mot de passe</label>
               <div style={{ position:'relative' }}>
-                <input
-                  type={showPwd ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required minLength={6}
-                  placeholder="Minimum 6 caractères"
-                  style={s.input}
-                  onFocus={e => e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                  onBlur={e  => e.target.style.borderColor='rgba(255,255,255,0.12)'}
+                <input type={showPwd?'text':'password'} value={password}
+                  onChange={e=>setPassword(e.target.value)} required minLength={6}
+                  placeholder="Minimum 6 caractères" style={s.input}
+                  onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
+                  onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
                 />
-                <button type="button" onClick={() => setShowPwd(v => !v)} style={s.eye}>
-                  {showPwd ? '🙈' : '👁️'}
+                <button type="button" onClick={()=>setShowPwd(v=>!v)} style={s.eye}>
+                  {showPwd?'🙈':'👁️'}
                 </button>
               </div>
             </div>
-
             <div style={{ marginBottom:24 }}>
-              <label style={s.label}>Confirmer le mot de passe</label>
-              <input
-                type={showPwd ? 'text' : 'password'}
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                required
+              <label style={s.label}>Confirmer</label>
+              <input type={showPwd?'text':'password'} value={confirm}
+                onChange={e=>setConfirm(e.target.value)} required
                 placeholder="Répète ton mot de passe"
-                style={{
-                  ...s.input,
-                  padding: '11px 14px',
-                  borderColor: confirm && confirm !== password
-                    ? 'rgba(239,68,68,0.5)'
-                    : 'rgba(255,255,255,0.12)',
-                }}
-                onFocus={e => e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                onBlur={e  => e.target.style.borderColor =
-                  confirm && confirm !== password
-                    ? 'rgba(239,68,68,0.5)'
-                    : 'rgba(255,255,255,0.12)'
-                }
+                style={{ ...s.input, padding:'11px 14px',
+                  borderColor: confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)' }}
+                onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
+                onBlur={e=>e.target.style.borderColor=confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)'}
               />
             </div>
-
-            <button type="submit" disabled={loading} style={{
-              ...s.btn,
-              width: '100%',
-              opacity: loading ? 0.7 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}>
-              {loading ? 'Mise à jour...' : '✅ Changer mon mot de passe'}
+            <button type="submit" disabled={loading}
+              style={{ ...s.btn, width:'100%', opacity:loading?0.7:1, cursor:loading?'not-allowed':'pointer' }}>
+              {loading?'Mise à jour...':'✅ Changer mon mot de passe'}
             </button>
           </form>
-
           <div style={{ textAlign:'center', marginTop:16 }}>
             <Link href="/login" style={{ color:'rgba(255,255,255,0.35)', fontSize:12, textDecoration:'none' }}>
               ← Retour à la connexion
