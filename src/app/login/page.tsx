@@ -42,9 +42,9 @@ function LoginInner() {
       return
     }
 
-    // ✅ Délai court pour laisser Supabase finaliser la session
-    await new Promise(r => setTimeout(r, 300))
-    window.location.href = redirectTo
+    // ✅ Hard reload complet pour forcer AuthContext à recharger
+    await new Promise(r => setTimeout(r, 500))
+    window.location.replace(redirectTo)
   }
 
   // 🔵 GOOGLE OAuth
@@ -62,7 +62,7 @@ function LoginInner() {
     setError(''); setResetL(true)
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     })
 
     setResetL(false)

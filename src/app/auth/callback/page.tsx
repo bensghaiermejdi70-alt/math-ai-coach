@@ -31,7 +31,7 @@ export default function AuthCallback() {
           setTimeout(() => { window.location.replace('/login?error=lien_expire') }, 1500)
           return
         }
-        window.location.replace('/auth/update-password')
+        window.location.replace('/auth/reset-password')
         return
       }
 
@@ -47,7 +47,7 @@ export default function AuthCallback() {
         // Supabase met le type dans la session après échange
         // Pour recovery, on vérifie si l'user a un recovery token
         if (type === 'recovery') {
-          window.location.replace('/auth/update-password')
+          window.location.replace('/auth/reset-password')
           return
         }
         window.location.replace('/')
@@ -63,7 +63,7 @@ export default function AuthCallback() {
         if (access_token && refresh_token) {
           await supabase.auth.setSession({ access_token, refresh_token })
           if (hashType === 'recovery') {
-            window.location.replace('/auth/update-password')
+            window.location.replace('/auth/reset-password')
             return
           }
           window.location.replace('/')
