@@ -15,6 +15,66 @@ const PRICE_TO_PLAN: Record<string, string> = {
   "price_1TLNKLERX5ozBo4IelzRW5rG": "mensuel",
 }
 
+
+// ── Notification email client + admin via Resend ─────────────────
+async function sendConfirmationEmails(email: string, planType: string, amount: number) {
+  const RESEND_KEY = process.env.RESEND_API_KEY
+  if (!RESEND_KEY) return
+
+  const planLabels: Record<string,string> = {
+    mensuel: 'MathBac Mensuel — 15h/semaine',
+    sprint:  'Sprint Bac — 30h/semaine · Bac Blanc inclus',
+    annuel:  'MathBac Annuel — tout inclus',
+  }
+
+  // Email au client
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
+    body: JSON.stringify({
+      from: 'MathBac.AI <noreply@mathsbac.com>',
+      to:   [email],
+      subject: '✅ Votre abonnement MathBac.AI est activé !',
+      html: `
+        <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:24px;background:#0a0a1a;color:white;border-radius:12px">
+          <h2 style="color:#4f6ef7;margin-bottom:8px">✅ Abonnement activé !</h2>
+          <p>Bonjour,</p>
+          <p>Votre abonnement <strong>${planLabels[planType] || planType}</strong> est maintenant actif.</p>
+          <p style="font-size:20px;color:#10b981;font-weight:bold">${amount} €</p>
+          <a href="https://app.mathsbac.com" style="display:inline-block;background:#4f6ef7;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0">
+            → Accéder à MathBac.AI
+          </a>
+          <p style="color:#666;font-size:12px;margin-top:24px">
+            Pour toute question : WhatsApp 99 268 970<br/>
+            app.mathsbac.com
+          </p>
+        </div>
+      `,
+    }),
+  }).catch(e => console.error('Email client error:', e))
+
+  // Email à l'admin
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
+    body: JSON.stringify({
+      from: 'MathBac.AI <noreply@mathsbac.com>',
+      to:   ['bensghaiermejdi70@gmail.com'],
+      subject: `💰 Nouveau paiement Stripe — ${planType} · ${amount}€`,
+      html: `
+        <h2>💰 Paiement confirmé</h2>
+        <p><strong>Email :</strong> ${email}</p>
+        <p><strong>Plan :</strong> ${planLabels[planType] || planType}</p>
+        <p><strong>Montant :</strong> ${amount} €</p>
+        <p>L'abonnement a été activé automatiquement.</p>
+        <a href="https://app.mathsbac.com/admin/payments" style="background:#4f6ef7;color:white;padding:10px 20px;border-radius:8px;text-decoration:none">
+          Panel admin →
+        </a>
+      `,
+    }),
+  }).catch(e => console.error('Email admin error:', e))
+}
+
 export async function POST(req: Request) {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
@@ -118,6 +178,9 @@ export async function POST(req: Request) {
         })
 
       if (subErr) console.error("Erreur insert subscriptions:", subErr)
+
+      // Envoyer emails de confirmation
+      await sendConfirmationEmails(email, planType, (session.amount_total || 1500) / 100)
     }
 
     // ── invoice.payment_succeeded (nouveau nom API 2025) ──────────
