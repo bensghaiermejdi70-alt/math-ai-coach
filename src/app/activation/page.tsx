@@ -244,6 +244,24 @@ function ActivationInner() {
         payment_screenshot_url: screenshotUrl,
       })
       if (dbErr) throw dbErr
+
+      // ── Notification WhatsApp / Email vers admin ──────────────
+      try {
+        await fetch('/api/notify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            plan:       planLabel,
+            price:      `${price} DT`,
+            method:     info.title,
+            reference:  ref.trim(),
+            phone:      phone || 'non renseigné',
+            email:      user?.email || ref.trim(),
+            screenshot: screenshotUrl || 'aucune',
+          }),
+        })
+      } catch (_) { /* notification non bloquante */ }
+
       if (user) await refreshSubscription()
       setSuccess(true)
     } catch (err: any) {
