@@ -17,7 +17,11 @@ function LoginInner() {
   const [googleL,  setGoogleL]  = useState(false)
   const [resetL,   setResetL]   = useState(false)
   const [error,    setError]    = useState('')
-  const [message,  setMessage]  = useState('')
+  const [message,  setMessage]  = useState(
+    typeof window !== 'undefined' && new URL(window.location.href).searchParams.get('updated') === '1'
+      ? '✅ Mot de passe mis à jour ! Connecte-toi avec ton nouveau mot de passe.'
+      : ''
+  )
 
   const supabase = createClient()
 
@@ -38,8 +42,9 @@ function LoginInner() {
       return
     }
 
-    // ✅ Redirection immédiate — pas de dépendance à useAuth
-    window.location.replace(redirectTo)
+    // ✅ Délai court pour laisser Supabase finaliser la session
+    await new Promise(r => setTimeout(r, 300))
+    window.location.href = redirectTo
   }
 
   // 🔵 GOOGLE OAuth
