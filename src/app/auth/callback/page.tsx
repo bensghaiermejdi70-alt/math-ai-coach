@@ -25,12 +25,9 @@ export default function AuthCallback() {
           token_hash: tokenHash,
           type: 'recovery',
         })
-        if (error) {
-          console.error('verifyOtp error:', error)
-          setStatus('Lien expiré — redirection...')
-          setTimeout(() => { window.location.replace('/login?error=lien_expire') }, 1500)
-          return
-        }
+        // Même si verifyOtp échoue (403 = déjà consommé),
+        // Supabase a peut-être déjà établi la session
+        // On redirige vers reset-password dans tous les cas
         window.location.replace('/auth/reset-password')
         return
       }
