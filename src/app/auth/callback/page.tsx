@@ -19,15 +19,17 @@ export default function AuthCallback() {
       console.log('Callback params:', { code: !!code, tokenHash: !!tokenHash, type, hash: hash.slice(0,50) })
 
       // ── token_hash (email template avec .TokenHash) ───────────────
-      if (tokenHash && type === 'recovery') {
+      if (tokenHash) {
         setStatus('Vérification du lien...')
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery',
         })
-        // Même si verifyOtp échoue (403 = déjà consommé),
-        // Supabase a peut-être déjà établi la session
-        // On redirige vers reset-password dans tous les cas
+        if (error) {
+          console.error('verifyOtp error:', error)
+          window.location.replace('/login?error=lien_expire')
+          return
+        }
         window.location.replace('/auth/reset-password')
         return
       }
