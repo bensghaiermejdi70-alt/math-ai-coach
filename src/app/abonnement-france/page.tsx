@@ -111,11 +111,31 @@ export default function AbonnementFrancePage() {
 
   const handleStripeRedirect = (plan: typeof PLANS[0]) => {
     setLoading(plan.id)
-    // Ajouter l'email utilisateur en paramètre si disponible
     const url = user?.email
       ? `${plan.stripeUrl}?prefilled_email=${encodeURIComponent(user.email)}`
       : plan.stripeUrl
     window.location.href = url
+  }
+
+  // Portail Stripe — gérer/annuler abonnement
+  const [portalLoading, setPortalLoading] = useState(false)
+  const handlePortal = async () => {
+    if (!user?.id) return
+    setPortalLoading(true)
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
+      const { url, error } = await res.json()
+      if (url) window.location.href = url
+      else alert(error || 'Erreur portail Stripe')
+    } catch (e) {
+      alert('Erreur connexion portail')
+    } finally {
+      setPortalLoading(false)
+    }
   }
 
   return (
@@ -129,23 +149,19 @@ export default function AbonnementFrancePage() {
 
           {/* CORRECTION : profile est maintenant disponible */}
           {hasActiveSubscription && profile && (
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                background: 'rgba(6,214,160,0.1)',
-                border: '1px solid rgba(6,214,160,0.3)',
-                borderRadius: 100,
-                padding: '6px 16px',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 12,
-                color: 'var(--teal)',
-                marginBottom: 16
-              }}
-            >
-              {/* CORRECTION : plan_type existe maintenant sur Profile */}
-              ✅ Abonnement actif — {profile.plan_type}
+            <div style={{ marginBottom:16, display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)' }}>
+                ✅ Abonnement actif — {profile.plan_type} · {daysRemaining ?? 0}j restants
+              </div>
+              {profile?.stripe_customer_id && (
+                <button onClick={handlePortal} disabled={portalLoading}
+                  style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'9px 20px', borderRadius:12, border:'1px solid rgba(59,130,246,0.3)', background:'rgba(59,130,246,0.08)', color:'#60a5fa', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.background='rgba(59,130,246,0.18)'}
+                  onMouseLeave={e => e.currentTarget.style.background='rgba(59,130,246,0.08)'}
+                >
+                  {portalLoading ? '⏳ Chargement...' : '⚙️ Gérer · Modifier · Annuler mon abonnement →'}
+                </button>
+              )}
             </div>
           )}
 
