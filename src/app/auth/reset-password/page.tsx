@@ -19,83 +19,39 @@ export default function ResetPasswordPage() {
     const supabase = createClient()
 
     const init = async () => {
-      const url       = new URL(window.location.href)
-      const tokenHash = url.searchParams.get('token_hash')
-      const code      = url.searchParams.get('code')
-      const hash      = window.location.hash
-
-      // Écouter PASSWORD_RECOVERY EN PREMIER
+      // Supabase gère la vérification via {{ .ConfirmationURL }}
+      // et établit la session PASSWORD_RECOVERY avant de rediriger ici
+      
+      // Écouter l'event PASSWORD_RECOVERY
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'PASSWORD_RECOVERY') {
+        console.log('Auth event:', event, session?.user?.email)
+        if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
           subscription.unsubscribe()
           setStatus('ready')
-          return
-        }
-        if (event === 'SIGNED_IN' && session) {
-          subscription.unsubscribe()
-          setStatus('ready')
-          return
         }
       })
 
-      // CAS 1 — token_hash
-      if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
-        if (!error) {
-          subscription.unsubscribe()
-          setStatus('ready')
-          return
-        }
-        // verifyOtp échoué → session peut déjà exister
-      }
-
-      // CAS 2 — code PKCE
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
-          subscription.unsubscribe()
-          setStatus('ready')
-          return
-        }
-      }
-
-      // CAS 3 — hash fragment
-      if (hash && hash.length > 1) {
-        const p = new URLSearchParams(hash.replace('#', ''))
-        const at = p.get('access_token')
-        const rt = p.get('refresh_token')
-        if (at && rt) {
-          const { error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-          if (!error) {
-            subscription.unsubscribe()
-            setStatus('ready')
-            return
-          }
-        }
-      }
-
-      // CAS 4 — session déjà active
+      // Vérifier si session déjà active (cas normal avec ConfirmationURL)
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('Session initiale:', session?.user?.email, session?.user?.aud)
+      
       if (session) {
         subscription.unsubscribe()
         setStatus('ready')
         return
       }
 
-      // Timeout 10 secondes
+      // Timeout 8 secondes
       setTimeout(() => {
         subscription.unsubscribe()
-        setStatus(s => {
-          if (s === 'checking') {
+        setStatus(prev => {
+          if (prev === 'checking') {
             setErrMsg('Lien invalide ou expiré. Demande un nouveau lien.')
             return 'error'
           }
-          return s
+          return prev
         })
-      }, 10000)
+      }, 8000)
     }
 
     init()
