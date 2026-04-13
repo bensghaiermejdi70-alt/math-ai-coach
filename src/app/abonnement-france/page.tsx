@@ -7,35 +7,6 @@ import Footer from '../../components/layout/Footer'
 
 // ── Plans Stripe France ────────────────────────────────────────────
 const PLANS = [
-  // ── PLAN TEST SANDBOX ───────────────────────────────────────────
-  {
-    id: 'test',
-    name: '🧪 Test Mensuel',
-    icon: '🧪',
-    price: 15,
-    period: 'mois',
-    hours: 'Sandbox test',
-    hoursColor: '#10b981',
-    description: "Plan test Stripe Sandbox — ne pas utiliser en production",
-    badge: '🧪 SANDBOX TEST',
-    borderColor: 'rgba(16,185,129,0.5)',
-    shadowColor: 'rgba(16,185,129,0.15)',
-    priceColor: '#10b981',
-    stripeUrl: 'https://buy.stripe.com/test_dRmaEXfgq4iMcg70J553O00',
-    priceId: 'price_1TLNKLERX5ozBo4IelzRW5rG',
-    productId: 'prod_UK1NH5E28AzhSI',
-    quotas: [
-      { label:'Simulation Bac',        val:'2 / sem' },
-      { label:'Chat IA Professeur',    val:'20 / sem' },
-      { label:'Solveur étape/étape',  val:'20 / sem' },
-      { label:'Remédiation IA',        val:'10 / sem' },
-      { label:'Analyses performance',  val:'5 / sem' },
-      { label:'Cours officiels',       val:'♾️ Illimité' },
-      { label:'Programme personnalisé',val:'✅ Inclus' },
-      { label:'Bac Blanc',             val:'❌ Non inclus' },
-    ],
-  },
-  // ────────────────────────────────────────────────────────────────
   {
     id: 'mensuel',
     name: 'MathBac Mensuel',
