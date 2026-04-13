@@ -153,7 +153,7 @@ export default function AbonnementFrancePage() {
               <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)' }}>
                 ✅ Abonnement actif — {profile.plan_type} · {daysRemaining ?? 0}j restants
               </div>
-              {profile?.stripe_customer_id && (
+              {(profile as any)?.stripe_customer_id && (
                 <button onClick={handlePortal} disabled={portalLoading}
                   style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'9px 20px', borderRadius:12, border:'1px solid rgba(59,130,246,0.3)', background:'rgba(59,130,246,0.08)', color:'#60a5fa', fontSize:13, fontWeight:700, cursor:'pointer', transition:'all 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background='rgba(59,130,246,0.18)'}
