@@ -1,5 +1,6 @@
 'use client'
 import { useState, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -7,6 +8,7 @@ import Navbar from '@/components/layout/Navbar'
 
 // ── Login sans useAuth — direct Supabase ─────────────────────────
 function LoginInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
 
@@ -42,9 +44,10 @@ function LoginInner() {
       return
     }
 
-    // ✅ Hard reload complet pour forcer AuthContext à recharger
-    await new Promise(r => setTimeout(r, 500))
-    window.location.replace(redirectTo)
+    // ✅ router.push garde AuthContext en mémoire — pas de hard reload
+    await new Promise(r => setTimeout(r, 300))
+    router.push(redirectTo)
+    router.refresh()
   }
 
   // 🔵 GOOGLE OAuth

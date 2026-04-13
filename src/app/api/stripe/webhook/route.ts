@@ -32,7 +32,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
     body: JSON.stringify({
-      from: 'MathBac.AI <onboarding@resend.dev>',
+      from: 'MathBac.AI <noreply@mathsbac.com>',
       to:   [email],
       subject: '✅ Votre abonnement MathBac.AI est activé !',
       html: `
@@ -58,7 +58,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
     body: JSON.stringify({
-      from: 'MathBac.AI <onboarding@resend.dev>',
+      from: 'MathBac.AI <noreply@mathsbac.com>',
       to:   ['bensghaiermejdi70@gmail.com'],
       subject: `💰 Nouveau paiement Stripe — ${planType} · ${amount}€`,
       html: `

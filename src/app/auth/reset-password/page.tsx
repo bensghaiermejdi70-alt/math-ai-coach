@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
 
     setStatus('done')
     await supabase.auth.signOut()
-    setTimeout(() => { window.location.href = '/login?updated=1' }, 2000)
+    setTimeout(() => { window.location.href = '/' }, 2000)
   }
 
   if (status === 'done') return (
