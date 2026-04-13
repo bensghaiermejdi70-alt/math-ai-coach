@@ -328,21 +328,21 @@ export default function AbonnementFrancePage() {
               <div>
                 <div style={{ fontWeight:700, color:'var(--text)', marginBottom:4 }}>📚 MathBac Mensuel</div>
                 <div style={{ color:'var(--muted)', lineHeight:1.7 }}>
-                  29 €/mois · 30h/sem<br/>
+                 19 €/mois · 30h/sem<br/>
                   <span style={{ color:'var(--text2)' }}>Hors mai–juin</span>
                 </div>
               </div>
               <div style={{ borderLeft:'1px solid var(--border)', borderRight:'1px solid var(--border)' }}>
                 <div style={{ fontWeight:700, color:'var(--gold)', marginBottom:4 }}>🚀 Sprint Bac</div>
                 <div style={{ color:'var(--muted)', lineHeight:1.7 }}>
-                  49 €/mois · 60h/sem<br/>
+                 29 €/mois · 60h/sem<br/>
                   <span style={{ color:'var(--text2)' }}>Mai + Juin · Bac Blanc inclus</span>
                 </div>
               </div>
               <div>
                 <div style={{ fontWeight:700, color:'var(--accent)', marginBottom:4 }}>🎓 MathBac Annuel</div>
                 <div style={{ color:'var(--muted)', lineHeight:1.7 }}>
-                  299 €/an · tout inclus<br/>
+                  199 €/an · tout inclus<br/>
                   <span style={{ color:'var(--teal)' }}>Sprint Bac automatique</span>
                 </div>
               </div>

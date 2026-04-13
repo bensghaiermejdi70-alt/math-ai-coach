@@ -269,7 +269,7 @@ export default function AbonnementPage() {
                   <div style={{ height:1, background:'var(--border)', margin:'4px 0' }} />
                   <div style={{ display:'flex', justifyContent:'space-between', color:'var(--text)', fontWeight:800 }}>
                     <span>Total annuel</span>
-                    <span style={{ fontFamily:'var(--font-mono)' }}>700 DT</span>
+                    <span style={{ fontFamily:'var(--font-mono)' }}>600 DT</span>
                   </div>
                 </div>
               </div>
