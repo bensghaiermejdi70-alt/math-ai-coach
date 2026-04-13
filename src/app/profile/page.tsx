@@ -1,4 +1,3 @@
-
 'use client'
 // src/app/profile/page.tsx
 
@@ -60,7 +59,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ display:'flex', gap:10 }}>
                 {isAdmin && (
-                  <Link href="/admin" className="btn btn-gold btn-sm">⚙️ Admin</Link>
+                  <Link href="/admin/payments" className="btn btn-gold btn-sm">⚙️ Admin</Link>
                 )}
                 <button onClick={signOut} className="btn btn-ghost btn-sm">Déconnexion</button>
               </div>
@@ -116,9 +115,14 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <Link href="/abonnement" className="btn btn-ghost btn-sm" style={{ width:'100%', justifyContent:'center' }}>
-                      Renouveler / Upgrade →
-                    </Link>
+                    <div style={{ display:'flex', gap:8 }}>
+                      <Link href="/abonnement" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                        🇹🇳 Tunisie
+                      </Link>
+                      <Link href="/abonnement-france" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                        🇫🇷 France
+                      </Link>
+                    </div>
                   </>
 
                 ) : (
@@ -126,9 +130,14 @@ export default function ProfilePage() {
                     <div style={{ fontSize:36, marginBottom:12 }}>💳</div>
                     <p style={{ fontWeight:600, color:'var(--text)', marginBottom:6 }}>Aucun abonnement actif</p>
                     <p style={{ fontSize:12, color:'var(--muted)', marginBottom:20 }}>Accès limité aux fonctionnalités gratuites</p>
-                    <Link href="/abonnement" className="btn btn-primary" style={{ width:'100%', justifyContent:'center' }}>
-                      Voir les abonnements →
-                    </Link>
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      <Link href="/abonnement" className="btn btn-primary" style={{ width:'100%', justifyContent:'center' }}>
+                        🇹🇳 Abonnement Tunisie →
+                      </Link>
+                      <Link href="/abonnement-france" className="btn btn-ghost btn-sm" style={{ width:'100%', justifyContent:'center' }}>
+                        🇫🇷 Abonnement France →
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -174,9 +183,14 @@ export default function ProfilePage() {
                     })}
 
                     {!hasActiveSubscription && (
-                      <Link href="/abonnement" className="btn btn-primary btn-sm" style={{ width:'100%', justifyContent:'center', marginTop:4 }}>
-                        Débloquer tous les quotas →
-                      </Link>
+                      <div style={{ display:'flex', gap:8, marginTop:4 }}>
+                        <Link href="/abonnement" className="btn btn-primary btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                          🇹🇳 Tunisie
+                        </Link>
+                        <Link href="/abonnement-france" className="btn btn-primary btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                          🇫🇷 France
+                        </Link>
+                      </div>
                     )}
                   </div>
                 )}
