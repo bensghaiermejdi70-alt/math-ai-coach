@@ -291,7 +291,7 @@ export default function AdminPaymentsPage() {
                     )}
                     {s.status === 'active' && (
                       <button onClick={() => deactivate(s)} disabled={isAct}
-                        style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
+                        style={{ padding:'7px 14px', borderRadius:8, cursor:'pointer',
                           background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)',
                           color:'#f87171', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
                         {isAct ? '⏳...' : '🚫 Désactiver'}
