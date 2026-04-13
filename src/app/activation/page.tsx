@@ -210,33 +210,34 @@ function ActivationInner() {
     setLoading(true)
     try {
       let screenshotUrl = null
-      // Upload capture uniquement si pas espèces et si bucket disponible
-      if (screenshot && user && method !== 'especes') {
-        try {
-          const ext  = screenshot.name.split('.').pop()
-          const path = `screenshots/${user.id}/${Date.now()}.${ext}`
-          const { data: up, error: upErr } = await supabase.storage
-            .from('payment-screenshots').upload(path, screenshot)
-          if (!upErr && up) {
-            const { data: { publicUrl } } = supabase.storage
-              .from('payment-screenshots').getPublicUrl(path)
-            screenshotUrl = publicUrl
-          }
-        } catch (_) {
-          // Upload échoue → on continue sans screenshot
+      if (screenshot && user) {
+        const ext  = screenshot.name.split('.').pop()
+        const path = `screenshots/${user.id}/${Date.now()}.${ext}`
+        const { data: up, error: upErr } = await supabase.storage
+          .from('payment-screenshots').upload(path, screenshot)
+        if (!upErr && up) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('payment-screenshots').getPublicUrl(path)
+          screenshotUrl = publicUrl
         }
       }
-      const { error: dbErr } = await supabase.from('subscriptions').insert({
-        user_id:               user?.id || null,
-        plan_type:             planParam,
-        status:                method === 'especes' ? 'pending_cash' : 'pending',
-        price_paid:            price,
-        payment_method:        method,
-        payment_reference:     ref.trim(),
-        payment_phone:         phone || null,
-        payment_screenshot_url: screenshotUrl,
+      // Passer par l'API route pour contourner RLS Supabase
+      const activateRes = await fetch('/api/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id:               user?.id || null,
+          plan_type:             planParam,
+          status:                method === 'especes' ? 'pending_cash' : 'pending',
+          price_paid:            price,
+          payment_method:        method,
+          payment_reference:     ref.trim(),
+          payment_phone:         phone || null,
+          payment_screenshot_url: screenshotUrl,
+        }),
       })
-      if (dbErr) throw dbErr
+      const activateData = await activateRes.json()
+      if (!activateRes.ok) throw new Error(activateData.error || 'Erreur enregistrement')
 
       // ── Notification WhatsApp / Email vers admin ──────────────
       try {

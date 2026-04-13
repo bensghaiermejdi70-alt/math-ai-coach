@@ -53,25 +53,14 @@ export default function AdminPaymentsPage() {
 
   async function loadAll() {
     setLoading(true)
-    const { data } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (data) {
-      const enriched = await Promise.all(data.map(async (s) => {
-        if (s.user_id) {
-          const { data: p } = await supabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('id', s.user_id)
-            .single()
-          return { ...s, email: p?.email, full_name: p?.full_name }
-        }
-        return s
-      }))
-      setSubs(enriched)
-      setFiltered(enriched)
+    try {
+      const res = await fetch('/api/admin/subscriptions')
+      const { data, error } = await res.json()
+      if (error) throw new Error(error)
+      setSubs(data || [])
+      setFiltered(data || [])
+    } catch (err: any) {
+      console.error('loadAll error:', err)
     }
     setLoading(false)
   }
@@ -101,16 +90,17 @@ export default function AdminPaymentsPage() {
       if (s.plan_type === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
       else endDate.setMonth(endDate.getMonth() + 1)
 
-      await supabase.from('subscriptions').update({
-        status: 'active', ends_at: endDate.toISOString()
-      }).eq('id', s.id)
-
-      if (s.user_id) {
-        await supabase.from('profiles').update({
-          is_active: true, plan_type: s.plan_type,
-          subscription_end: endDate.toISOString()
-        }).eq('id', s.user_id)
-      }
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: s.id, status: 'active',
+          user_id: s.user_id, plan_type: s.plan_type,
+          ends_at: endDate.toISOString(),
+        }),
+      })
+      const { error } = await res.json()
+      if (error) throw new Error(error)
       setMsg(`✅ Abonnement activé pour ${s.email || s.id}`)
       await loadAll()
     } catch (err: any) {
@@ -121,10 +111,17 @@ export default function AdminPaymentsPage() {
   async function deactivate(s: Sub) {
     setActivating(s.id); setMsg('')
     try {
-      await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('id', s.id)
-      if (s.user_id) {
-        await supabase.from('profiles').update({ is_active: false, plan_type: null }).eq('id', s.user_id)
-      }
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: s.id, status: 'cancelled',
+          user_id: s.user_id, plan_type: s.plan_type,
+          ends_at: null,
+        }),
+      })
+      const { error } = await res.json()
+      if (error) throw new Error(error)
       setMsg(`🚫 Abonnement désactivé pour ${s.email || s.id}`)
       await loadAll()
     } catch (err: any) {
