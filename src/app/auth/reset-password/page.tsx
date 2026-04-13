@@ -18,77 +18,38 @@ export default function ResetPasswordPage() {
 
     const supabase = createClient()
 
-    const run = async () => {
-      const url       = new URL(window.location.href)
-      const tokenHash = url.searchParams.get('token_hash')
-      const type      = url.searchParams.get('type')
-      const code      = url.searchParams.get('code')
-      const hash      = window.location.hash
-
-      // ── CAS 1 : hash fragment #access_token (ConfirmationURL) ──
-      if (hash && hash.includes('access_token')) {
-        const p  = new URLSearchParams(hash.replace('#', ''))
-        const at = p.get('access_token')
-        const rt = p.get('refresh_token')
-        if (at && rt) {
-          const { error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-          if (!error) { setStatus('ready'); return }
-        }
-      }
-
-      // ── CAS 2 : token_hash dans URL ─────────────────────────────
-      if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
-        if (!error) { setStatus('ready'); return }
-
-        // verifyOtp 403 = token déjà consommé par Supabase
-        // La session peut déjà être active
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) { setStatus('ready'); return }
-
-        // Rien ne marche → erreur
-        setErrMsg('Ce lien a expiré. Demande un nouveau lien depuis la page connexion.')
-        setStatus('error')
-        return
-      }
-
-      // ── CAS 3 : code PKCE ────────────────────────────────────────
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) { setStatus('ready'); return }
-        setErrMsg('Lien invalide.')
-        setStatus('error')
-        return
-      }
-
-      // ── CAS 4 : session déjà active ─────────────────────────────
+    const check = async () => {
+      // Le callback a déjà établi la session via setSession()
+      // On vérifie juste que la session est active
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) { setStatus('ready'); return }
+      
+      if (session) {
+        setStatus('ready')
+        return
+      }
 
-      // ── CAS 5 : écouter PASSWORD_RECOVERY ───────────────────────
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Attendre onAuthStateChange au cas où session arrive en retard
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
           subscription.unsubscribe()
           setStatus('ready')
         }
       })
 
+      // Timeout 5 secondes
       setTimeout(() => {
         subscription.unsubscribe()
         setStatus(prev => {
           if (prev === 'checking') {
-            setErrMsg('Lien invalide ou expiré. Demande un nouveau lien.')
+            setErrMsg('Session expirée. Demande un nouveau lien.')
             return 'error'
           }
           return prev
         })
-      }, 6000)
+      }, 5000)
     }
 
-    run()
+    check()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -113,7 +74,7 @@ export default function ResetPasswordPage() {
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:56, marginBottom:16 }}>✅</div>
         <h2 style={{ color:'white', marginBottom:8 }}>Mot de passe mis à jour !</h2>
-        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>Redirection...</p>
+        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:14 }}>Redirection vers la connexion...</p>
       </div>
     </div>
   )
@@ -171,8 +132,8 @@ export default function ResetPasswordPage() {
             <div style={{ marginBottom:24 }}>
               <label style={s.label}>Confirmer</label>
               <input type={showPwd?'text':'password'} value={confirm}
-                onChange={e=>setConfirm(e.target.value)}
-                required placeholder="Répète ton mot de passe"
+                onChange={e=>setConfirm(e.target.value)} required
+                placeholder="Répète ton mot de passe"
                 style={{ ...s.input, padding:'11px 14px',
                   borderColor:confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)' }}
                 onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
