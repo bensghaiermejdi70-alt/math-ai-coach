@@ -4,69 +4,59 @@
 import { useState, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '../../lib/auth/AuthContext'
-import { createClient } from '../../lib/supabase/client'
-import Navbar from '../../components/layout/Navbar'
-import Footer from '../../components/layout/Footer'
+import { useAuth } from '@/lib/auth/AuthContext'
+import { createClient } from '@/lib/supabase/client'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 
 // ── Plans & prix ──────────────────────────────────────────────────
 const PLAN_PRICES: Record<string, number> = {
-  mensuel:        60,
-  sprint:         90,
-  annuel:        600,
+  mensuel: 60, sprint: 90, annuel: 600,
 }
-
 const PLAN_LABELS: Record<string, string> = {
-  mensuel: 'MathBac Mensuel',
-  sprint:  'Sprint Bac',
-  annuel:  'MathBac Annuel',
+  mensuel: 'MathBac Mensuel', sprint: 'Sprint Bac', annuel: 'MathBac Annuel',
 }
 
-// ── Méthodes de paiement ──────────────────────────────────────────
-const PAYMENT_INFO = {
+// ── 2 méthodes uniquement ─────────────────────────────────────────
+const METHODS = {
   d17: {
-    icon:'🏛️', title:'D17 / La Poste',
-    steps:[
+    icon: '🏛️',
+    title: 'D17 / La Poste',
+    color: '#4f6ef7',
+    steps: [
       "Ouvrir l'app D17 ou e-Dinar",
       "Aller dans 'Transfert d'argent'",
       "Envoyer le montant EXACT vers : 99 268 970",
       "Copier la référence de transaction",
-      "Remplir le formulaire ci-contre",
+      "Remplir le formulaire et soumettre",
     ],
-    ref_label:'Référence transaction D17',
-    ref_placeholder:'Ex: TRF20240515XXXX',
-    phone: true,
-  },
-
-  recharge_mobile: {
-    icon:'📞', title:'Recharge mobile',
-    steps:[
-      "Recharger votre téléphone",
-      "Transférer vers D17 : *165*1*[montant]*PIN#",
-      "Depuis D17, envoyer à : 99 268 970",
-      "Copier la référence de la transaction",
-    ],
-    ref_label:'Référence transaction',
-    ref_placeholder:'Référence de la transaction',
-    phone: true,
+    ref_label: 'Référence transaction D17 *',
+    ref_placeholder: 'Ex: TRF20240515XXXX',
+    ref_type: 'text' as const,
+    show_phone: true,
+    show_screenshot: true,
+    show_contact: false,
   },
   especes: {
-    icon:'💵', title:'Espèces (versement espece ou virement compte ccp mejdi ben sghaier 17000000000046507174)',
-    steps:[
-      "Appeler ou WhatsApp : 99 268 970",
-      "Convenir d'un rendez-vous ou d'un envoi",
-      "Remettre le montant exact en espèces",
-      "Préciser votre email MathBac.AI dans la note ci-contre",
+    icon: '💵',
+    title: 'Versement espèces / Virement CCP',
+    color: '#25d366',
+    steps: [
+      "Contacter par téléphone ou WhatsApp : 99 268 970",
+      "Convenir du mode de remise (en main propre ou virement CCP)",
+      "N° CCP : 17000000000046507174 — Mejdi Ben Sghaier",
+      "Envoyer le montant exact puis entrer votre email ci-contre",
     ],
-    ref_label:'Votre email MathBac.AI',
-    ref_placeholder:'votre-email@exemple.com',
-    phone: false,
+    ref_label: 'Votre email MathBac.AI *',
+    ref_placeholder: 'votre@email.com',
+    ref_type: 'email' as const,
+    show_phone: false,
+    show_screenshot: true,
+    show_contact: true,
   },
-} as const
+}
 
-const ADMIN_EMAIL = 'bensghaiermejdi70@gmail.com'
-
-// ── Panel admin — activation manuelle par email ──────────────────
+// ── Panel admin ───────────────────────────────────────────────────
 function AdminPanel() {
   const { user, isAdmin } = useAuth()
   const supabase = createClient()
@@ -82,98 +72,56 @@ function AdminPanel() {
     if (!emailTarget.trim()) return
     setLoading(true); setMsg('')
     try {
-      // Récupérer le user_id par email
-      const { data: profile, error: pErr } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', emailTarget.trim().toLowerCase())
-        .single()
-      if (pErr || !profile) throw new Error(`Aucun compte trouvé pour ${emailTarget}`)
-
-      const endDate = new Date()
-      if (planTarget === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
-      else endDate.setMonth(endDate.getMonth() + 1)
-
-      const { error: subErr } = await supabase.from('subscriptions').insert({
-        user_id:          profile.id,
-        plan_type:        planTarget,
-        status:           'active',
-        price_paid:       PLAN_PRICES[planTarget],
-        payment_method:   'especes',
-        payment_reference:'ADMIN_ESPECES',
-        starts_at:        new Date().toISOString(),
-        ends_at:          endDate.toISOString(),
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email_target: emailTarget.trim().toLowerCase(),
+          plan_type: planTarget,
+          status: 'active',
+          action: 'activate_by_email',
+        }),
       })
-      if (subErr) throw subErr
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
       setMsg(`✅ Abonnement ${PLAN_LABELS[planTarget]} activé pour ${emailTarget}`)
       setEmailTarget('')
     } catch (err: any) {
       setMsg(`❌ ${err.message}`)
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
-    <div style={{
-      background:'linear-gradient(135deg,rgba(245,200,66,0.08),rgba(245,158,11,0.04))',
-      border:'1px solid rgba(245,200,66,0.3)', borderRadius:20, padding:'28px 32px', marginBottom:40,
-    }}>
-      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-        <span style={{ fontSize:22 }}>⚙️</span>
-        <div>
-          <h3 style={{ margin:0, fontFamily:'var(--font-display)', fontSize:17, color:'var(--gold)' }}>Panel Admin — Activation espèces</h3>
-          <p style={{ margin:0, fontSize:11, color:'var(--muted)' }}>Réservé à {ADMIN_EMAIL}</p>
-        </div>
+    <div style={{ background:'linear-gradient(135deg,rgba(245,200,66,0.08),rgba(245,158,11,0.04))', border:'1px solid rgba(245,200,66,0.3)', borderRadius:20, padding:'24px 28px', marginBottom:36 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
+        <span style={{ fontSize:20 }}>⚙️</span>
+        <h3 style={{ margin:0, fontSize:16, color:'var(--gold)' }}>Panel Admin — Activation manuelle</h3>
       </div>
-
-      <form onSubmit={handleActivate} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:12, alignItems:'end' }}>
+      <form onSubmit={handleActivate} style={{ display:'grid', gridTemplateColumns:'1fr 1fr auto', gap:10, alignItems:'end' }}>
         <div>
-          <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>Email du client</label>
-          <input
-            type="email"
-            value={emailTarget}
-            onChange={e => setEmailTarget(e.target.value)}
-            placeholder="client@exemple.com"
-            required
-            className="input"
-            style={{ borderRadius:10, borderColor:'rgba(245,200,66,0.3)' }}
-          />
+          <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:5, fontWeight:600 }}>Email client</label>
+          <input type="email" value={emailTarget} onChange={e => setEmailTarget(e.target.value)} required
+            placeholder="client@email.com" className="input" style={{ borderRadius:9 }} />
         </div>
         <div>
-          <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>Plan à activer</label>
-          <select
-            value={planTarget}
-            onChange={e => setPlanTarget(e.target.value)}
-            className="input"
-            style={{ borderRadius:10, borderColor:'rgba(245,200,66,0.3)', background:'var(--surface)', color:'var(--text)', cursor:'pointer' }}
-          >
+          <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:5, fontWeight:600 }}>Plan</label>
+          <select value={planTarget} onChange={e => setPlanTarget(e.target.value)}
+            className="input" style={{ borderRadius:9, background:'var(--surface)', color:'var(--text)', cursor:'pointer' }}>
             <option value="mensuel">MathBac Mensuel — 60 DT</option>
             <option value="sprint">Sprint Bac — 90 DT</option>
             <option value="annuel">MathBac Annuel — 600 DT</option>
           </select>
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding:'10px 20px', borderRadius:10, border:'none', cursor:'pointer',
-            background:'linear-gradient(135deg,#f59e0b,#f97316)',
-            color:'#0a0a1a', fontWeight:800, fontSize:14,
-            opacity: loading ? 0.7 : 1, whiteSpace:'nowrap',
-          }}
-        >
-          {loading ? '⏳...' : '✅ Activer'}
+        <button type="submit" disabled={loading}
+          style={{ padding:'10px 18px', borderRadius:9, border:'none', cursor:'pointer', background:'linear-gradient(135deg,#f59e0b,#f97316)', color:'#0a0a1a', fontWeight:800, fontSize:13, opacity:loading?0.7:1 }}>
+          {loading ? '⏳' : '✅ Activer'}
         </button>
       </form>
-
       {msg && (
-        <div style={{
-          marginTop:14, padding:'10px 14px', borderRadius:10, fontSize:13, fontWeight:600,
+        <div style={{ marginTop:12, padding:'9px 14px', borderRadius:9, fontSize:13, fontWeight:600,
           background: msg.startsWith('✅') ? 'rgba(6,214,160,0.1)' : 'rgba(239,68,68,0.1)',
           border: `1px solid ${msg.startsWith('✅') ? 'rgba(6,214,160,0.3)' : 'rgba(239,68,68,0.3)'}`,
-          color: msg.startsWith('✅') ? 'var(--teal)' : 'var(--red)',
-        }}>
+          color: msg.startsWith('✅') ? 'var(--teal)' : 'var(--red)' }}>
           {msg}
         </div>
       )}
@@ -184,45 +132,47 @@ function AdminPanel() {
 // ── Page principale ───────────────────────────────────────────────
 function ActivationInner() {
   const searchParams = useSearchParams()
-  const planParam   = searchParams.get('plan')   || 'mensuel'
-  const methodParam = searchParams.get('method') || 'd17'
+  const planParam   = searchParams.get('plan') || 'mensuel'
 
-  const { user, profile, isAdmin, refreshSubscription } = useAuth()
-  const supabase = createClient()
-  const fileRef  = useRef<HTMLInputElement>(null)
+  const { user, isAdmin, refreshSubscription } = useAuth()
+  const fileRef = useRef<HTMLInputElement>(null)
 
-  const [method,     setMethod]     = useState(methodParam)
+  const [method,     setMethod]     = useState<'d17'|'especes'>('d17')
   const [ref,        setRef]        = useState('')
-  const [phone,      setPhone]      = useState(profile?.phone || '')
+  const [phone,      setPhone]      = useState('')
   const [screenshot, setScreenshot] = useState<File | null>(null)
   const [loading,    setLoading]    = useState(false)
   const [success,    setSuccess]    = useState(false)
   const [error,      setError]      = useState('')
 
-  const price     = PLAN_PRICES[planParam] || PLAN_PRICES.mensuel
+  const price     = PLAN_PRICES[planParam] || 60
   const planLabel = PLAN_LABELS[planParam] || 'MathBac Mensuel'
-  const info      = PAYMENT_INFO[method as keyof typeof PAYMENT_INFO] || PAYMENT_INFO.d17
+  const info      = METHODS[method]
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!ref.trim()) return setError('Ce champ est requis.')
+    if (!ref.trim()) { setError('Ce champ est requis.'); return }
     setLoading(true)
+
     try {
+      // Upload capture si fournie
       let screenshotUrl = null
       if (screenshot && user) {
-        const ext  = screenshot.name.split('.').pop()
-        const path = `screenshots/${user.id}/${Date.now()}.${ext}`
-        const { data: up, error: upErr } = await supabase.storage
-          .from('payment-screenshots').upload(path, screenshot)
-        if (!upErr && up) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('payment-screenshots').getPublicUrl(path)
-          screenshotUrl = publicUrl
-        }
+        try {
+          const supabase = createClient()
+          const ext  = screenshot.name.split('.').pop()
+          const path = `screenshots/${user.id}/${Date.now()}.${ext}`
+          const { data: up } = await supabase.storage.from('payment-screenshots').upload(path, screenshot)
+          if (up) {
+            const { data: { publicUrl } } = createClient().storage.from('payment-screenshots').getPublicUrl(path)
+            screenshotUrl = publicUrl
+          }
+        } catch (_) {}
       }
-      // Passer par l'API route pour contourner RLS Supabase
-      const activateRes = await fetch('/api/activate', {
+
+      // Insert via API route (contourne RLS)
+      const res = await fetch('/api/activate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -236,35 +186,34 @@ function ActivationInner() {
           payment_screenshot_url: screenshotUrl,
         }),
       })
-      const activateData = await activateRes.json()
-      if (!activateRes.ok) throw new Error(activateData.error || 'Erreur enregistrement')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Erreur enregistrement')
 
-      // ── Notification WhatsApp / Email vers admin ──────────────
+      // Notification admin
       try {
         await fetch('/api/notify-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            plan:       planLabel,
-            price:      `${price} DT`,
-            method:     info.title,
-            reference:  ref.trim(),
-            phone:      phone || 'non renseigné',
-            email:      user?.email || ref.trim(),
+            plan: planLabel, price: `${price} DT`,
+            method: info.title, reference: ref.trim(),
+            phone: phone || 'non renseigné',
+            email: user?.email || ref.trim(),
             screenshot: screenshotUrl || 'aucune',
           }),
         })
-      } catch (_) { /* notification non bloquante */ }
+      } catch (_) {}
 
       if (user) await refreshSubscription()
       setSuccess(true)
     } catch (err: any) {
-      setError(err.message || 'Erreur. Veuillez réessayer.')
+      setError(err.message || 'Erreur. Réessayez.')
     } finally {
       setLoading(false)
     }
   }
 
+  // ── Succès ────────────────────────────────────────────────────
   if (success) return (
     <>
       <Navbar />
@@ -276,33 +225,25 @@ function ActivationInner() {
           </h2>
           <p style={{ fontSize:14, color:'var(--text2)', lineHeight:1.7, marginBottom:24 }}>
             {method === 'especes'
-              ? "Votre demande par espèces a été enregistrée. Vous serez contacté par l'équipe MathBac.AI dans les plus brefs délais."
-              : "Votre paiement est en cours de vérification. Activation en moins de 5 minutes."}
+              ? "Demande enregistrée. Notre équipe vous contactera pour confirmation."
+              : "Paiement en cours de vérification. Activation dans les plus brefs délais."}
           </p>
           <div className="card" style={{ textAlign:'left', marginBottom:24 }}>
-            {[
-              ['Plan',     planLabel],
-              ['Montant',  `${price} DT`],
-              ['Méthode',  info.title],
-              ['Référence', ref],
-            ].map(([k, v]) => (
+            {[['Plan', planLabel], ['Montant', `${price} DT`], ['Méthode', info.title], ['Référence', ref]].map(([k, v]) => (
               <div key={k} style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid var(--border)', fontSize:13 }}>
                 <span style={{ color:'var(--muted)' }}>{k}</span>
-                <span style={{ color:'var(--text)', fontFamily: k === 'Référence' ? 'var(--font-mono)' : 'inherit', fontWeight:600 }}>{v}</span>
+                <span style={{ color:'var(--text)', fontWeight:600 }}>{v}</span>
               </div>
             ))}
           </div>
           <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-            <Link href={user ? '/profile' : '/login'} className="btn btn-primary btn-lg">
-              {user ? 'Voir mon profil →' : 'Se connecter →'}
-            </Link>
-            <a href="https://wa.me/21699268970" target="_blank" rel="noopener" style={{
-              display:'inline-flex', alignItems:'center', gap:6, padding:'12px 20px',
-              background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.3)',
-              borderRadius:12, color:'#25d366', fontSize:14, fontWeight:700, textDecoration:'none',
-            }}>
-              💬 WhatsApp →
-            </a>
+            <Link href="/" className="btn btn-primary">← Retour au site</Link>
+            {method === 'especes' && (
+              <a href="https://wa.me/21699268970" target="_blank" rel="noopener"
+                style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'11px 20px', borderRadius:12, background:'rgba(37,211,102,0.1)', border:'1px solid rgba(37,211,102,0.3)', color:'#25d366', fontSize:14, fontWeight:700, textDecoration:'none' }}>
+                💬 WhatsApp
+              </a>
+            )}
           </div>
         </div>
       </main>
@@ -310,199 +251,221 @@ function ActivationInner() {
     </>
   )
 
+  // ── Formulaire principal ──────────────────────────────────────
   return (
     <>
       <Navbar />
-      <main style={{ position:'relative', zIndex:1 }}>
-        <section style={{ padding:'100px clamp(20px,5vw,60px) 40px', textAlign:'center' }}>
-          <span className="label">Activation</span>
-          <h1 style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:'clamp(22px,3.5vw,38px)', marginBottom:10 }}>
+      <main style={{ position:'relative', zIndex:1, paddingBottom:60 }}>
+        {/* Header */}
+        <section style={{ padding:'90px clamp(20px,5vw,60px) 32px', textAlign:'center' }}>
+          <span className="label">Activation abonnement</span>
+          <h1 style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:'clamp(22px,3.5vw,36px)', marginBottom:8 }}>
             Activer mon abonnement
           </h1>
           <p style={{ fontSize:15, color:'var(--text2)' }}>
-            <strong style={{ color:'var(--text)', fontSize:18 }}>{price} DT</strong>
+            <strong style={{ color:'var(--text)', fontSize:20 }}>{price} DT</strong>
             {' · '}{planLabel}
-            {' · '}Activation {'<'}5 min
           </p>
         </section>
 
-        <div className="container" style={{ maxWidth:960, paddingBottom:60 }}>
-
-          {/* Panel admin */}
+        <div className="container" style={{ maxWidth:880 }}>
           {isAdmin && <AdminPanel />}
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:32, alignItems:'start' }}>
+          {/* ── Choix méthode ── */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:32 }}>
 
-            {/* ── Colonne gauche : méthodes + instructions */}
-            <div>
-              <h3 style={{ fontFamily:'var(--font-display)', fontSize:15, marginBottom:14, color:'var(--text)' }}>Choisir la méthode de paiement</h3>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:28 }}>
-                {Object.entries(PAYMENT_INFO).map(([key, pm]) => (
-                  <button key={key} onClick={() => setMethod(key)}
-                    style={{
-                      padding:'12px 10px', borderRadius:12, cursor:'pointer',
-                      textAlign:'center', transition:'all 0.2s',
-                      background: method === key
-                        ? (key === 'especes' ? 'rgba(37,211,102,0.1)' : 'rgba(79,110,247,0.12)')
-                        : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${method === key
-                        ? (key === 'especes' ? 'rgba(37,211,102,0.4)' : 'rgba(79,110,247,0.4)')
-                        : 'var(--border)'}`,
-                    }}>
-                    <div style={{ fontSize:22, marginBottom:5 }}>{pm.icon}</div>
-                    <div style={{ fontSize:11, fontWeight:700,
-                      color: method === key
-                        ? (key === 'especes' ? '#25d366' : 'var(--accent)')
-                        : 'var(--text2)' }}>
-                      {pm.title}
-                    </div>
-                  </button>
-                ))}
+            {/* D17 */}
+            <button onClick={() => { setMethod('d17'); setRef(''); setError('') }}
+              style={{
+                padding:'24px 20px', borderRadius:18, cursor:'pointer', textAlign:'left',
+                transition:'all 0.25s',
+                background: method === 'd17'
+                  ? 'linear-gradient(135deg,rgba(79,110,247,0.15),rgba(79,110,247,0.05))'
+                  : 'rgba(255,255,255,0.03)',
+                border: `2px solid ${method === 'd17' ? '#4f6ef7' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: method === 'd17' ? '0 8px 32px rgba(79,110,247,0.2)' : 'none',
+              }}>
+              <div style={{ fontSize:32, marginBottom:10 }}>🏛️</div>
+              <div style={{ fontWeight:800, fontSize:16, color: method === 'd17' ? '#4f6ef7' : 'var(--text)', marginBottom:4 }}>
+                D17 / La Poste
               </div>
-
-              {/* Instructions méthode sélectionnée */}
-              <div className="card" style={{ padding:24 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:18 }}>
-                  <span style={{ fontSize:24 }}>{info.icon}</span>
-                  <h4 style={{ fontFamily:'var(--font-display)', color:'var(--text)', margin:0 }}>{info.title}</h4>
-                </div>
-
-                {/* Alerte espèces */}
-                {method === 'especes' && (
-                  <div style={{ background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:12, padding:'12px 16px', marginBottom:18 }}>
-                    <div style={{ display:'flex', gap:12, alignItems:'center', marginBottom:8 }}>
-                      <span style={{ fontSize:22 }}>📞</span>
-                      <div>
-                        <div style={{ fontWeight:800, color:'#25d366', fontSize:14 }}>Contacter avant de payer</div>
-                        <div style={{ fontSize:12, color:'var(--muted)' }}>Appeler ou WhatsApp pour convenir du paiement</div>
-                      </div>
-                    </div>
-                    <div style={{ display:'flex', gap:10 }}>
-                      <a href="tel:+21699268970" style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:8, background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.3)', color:'#25d366', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-                        📞 99 268 970
-                      </a>
-                      <a href="https://wa.me/21699268970" target="_blank" rel="noopener" style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'7px 14px', borderRadius:8, background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.3)', color:'#25d366', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-                        💬 WhatsApp
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display:'flex', flexDirection:'column', gap:11, marginBottom:method === 'especes' ? 0 : 20 }}>
-                  {info.steps.map((step, i) => (
-                    <div key={i} style={{ display:'flex', gap:11, alignItems:'flex-start' }}>
-                      <div style={{ width:23, height:23, background:'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'white', fontWeight:800, flexShrink:0, marginTop:1 }}>{i+1}</div>
-                      <p style={{ fontSize:13, color:'var(--text2)', lineHeight:1.6, margin:0 }}>{step}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {method !== 'especes' && (
-                  <div style={{ background:'rgba(79,110,247,0.08)', border:'1px solid rgba(79,110,247,0.2)', borderRadius:10, padding:'12px 16px', marginTop:18 }}>
-                    <p style={{ margin:0, fontSize:13, color:'var(--text2)' }}>
-                      <strong style={{ color:'var(--text)' }}>Numéro de réception :</strong>{' '}
-                      <span style={{ fontFamily:'var(--font-mono)', color:'var(--accent)', fontSize:16, fontWeight:700, letterSpacing:'0.05em' }}>99 268 970</span>
-                    </p>
-                  </div>
-                )}
+              <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.5 }}>
+                Transfert via app D17 ou e-Dinar vers le numéro 99 268 970
               </div>
+              {method === 'd17' && (
+                <div style={{ marginTop:12, fontSize:11, fontWeight:700, color:'#4f6ef7', letterSpacing:'0.05em' }}>
+                  ✓ SÉLECTIONNÉ
+                </div>
+              )}
+            </button>
+
+            {/* Espèces / Virement */}
+            <button onClick={() => { setMethod('especes'); setRef(''); setError('') }}
+              style={{
+                padding:'24px 20px', borderRadius:18, cursor:'pointer', textAlign:'left',
+                transition:'all 0.25s',
+                background: method === 'especes'
+                  ? 'linear-gradient(135deg,rgba(37,211,102,0.15),rgba(37,211,102,0.05))'
+                  : 'rgba(255,255,255,0.03)',
+                border: `2px solid ${method === 'especes' ? '#25d366' : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: method === 'especes' ? '0 8px 32px rgba(37,211,102,0.2)' : 'none',
+              }}>
+              <div style={{ fontSize:32, marginBottom:10 }}>💵</div>
+              <div style={{ fontWeight:800, fontSize:16, color: method === 'especes' ? '#25d366' : 'var(--text)', marginBottom:4 }}>
+                Versement espèces / Virement CCP
+              </div>
+              <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.5 }}>
+                En main propre ou virement CCP · N° 17000000000046507174
+              </div>
+              {method === 'especes' && (
+                <div style={{ marginTop:12, fontSize:11, fontWeight:700, color:'#25d366', letterSpacing:'0.05em' }}>
+                  ✓ SÉLECTIONNÉ
+                </div>
+              )}
+            </button>
+          </div>
+
+          {/* ── Formulaire unifié ── */}
+          <div style={{ background:'rgba(255,255,255,0.03)', border:`1px solid ${info.color}30`, borderRadius:20, padding:32 }}>
+            <h3 style={{ fontFamily:'var(--font-display)', fontSize:18, marginBottom:24, color:'var(--text)',
+              borderBottom:`2px solid ${info.color}40`, paddingBottom:12 }}>
+              {info.icon} {method === 'd17' ? 'Instructions D17' : 'Versement / Virement CCP'}
+            </h3>
+
+            {/* Étapes */}
+            <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:24 }}>
+              {info.steps.map((step, i) => (
+                <div key={i} style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+                  <div style={{ width:26, height:26, borderRadius:8, flexShrink:0, marginTop:1, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:900, color:'white',
+                    background: method === 'especes'
+                      ? 'linear-gradient(135deg,#25d366,#059669)'
+                      : 'linear-gradient(135deg,var(--accent),var(--accent2))' }}>
+                    {i + 1}
+                  </div>
+                  <p style={{ fontSize:13, color:'var(--text2)', lineHeight:1.6, margin:0 }}>{step}</p>
+                </div>
+              ))}
             </div>
 
-            {/* ── Colonne droite : formulaire */}
-            <div className="card" style={{ padding:28 }}>
-              <h3 style={{ fontFamily:'var(--font-display)', fontSize:16, marginBottom:20, color:'var(--text)' }}>
-                {method === 'especes' ? 'Enregistrer ma demande' : "Formulaire d'activation"}
-              </h3>
+            {/* Contacts pour espèces */}
+            {info.show_contact && (
+              <div style={{ background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:12, padding:'14px 18px', marginBottom:24, display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
+                <span style={{ fontSize:13, color:'var(--text2)', fontWeight:600 }}>Contacter :</span>
+                <a href="tel:+21699268970"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.3)', color:'#25d366', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                  📞 99 268 970
+                </a>
+                <a href="https://wa.me/21699268970" target="_blank" rel="noopener"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:10, background:'rgba(37,211,102,0.12)', border:'1px solid rgba(37,211,102,0.3)', color:'#25d366', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                  💬 WhatsApp
+                </a>
+              </div>
+            )}
+
+            {/* Numéro D17 */}
+            {method === 'd17' && (
+              <div style={{ background:'rgba(79,110,247,0.08)', border:'1px solid rgba(79,110,247,0.2)', borderRadius:10, padding:'12px 16px', marginBottom:24 }}>
+                <span style={{ fontSize:13, color:'var(--text2)' }}>
+                  <strong style={{ color:'var(--text)' }}>Numéro D17 :</strong>{' '}
+                  <span style={{ fontFamily:'var(--font-mono)', color:'var(--accent)', fontSize:17, fontWeight:700, letterSpacing:'0.06em' }}>99 268 970</span>
+                </span>
+              </div>
+            )}
+
+            {/* ── Formulaire ── */}
+            <div style={{ borderTop:`1px solid rgba(255,255,255,0.08)`, paddingTop:24, marginTop:4 }}>
+              <h4 style={{ fontSize:15, fontWeight:700, marginBottom:18, color:'var(--text)' }}>
+                📝 {method === 'especes' ? 'Enregistrer ma demande' : "Formulaire d'activation"}
+              </h4>
 
               {error && (
-                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'11px 14px', marginBottom:16, fontSize:13, color:'var(--red)' }}>⚠️ {error}</div>
+                <div style={{ background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'var(--red)' }}>
+                  ⚠️ {error}
+                </div>
               )}
 
               <form onSubmit={handleSubmit}>
-                {(info as any).phone && (
+                {/* Téléphone (D17 seulement) */}
+                {info.show_phone && (
                   <div style={{ marginBottom:14 }}>
-                    <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:600 }}>Téléphone utilisé pour le paiement</label>
-                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="2X XXX XXX" className="input" style={{ borderRadius:10 }} />
+                    <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
+                      Téléphone utilisé pour le paiement
+                    </label>
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                      placeholder="2X XXX XXX" className="input" style={{ borderRadius:10 }} />
                   </div>
                 )}
 
+                {/* Référence / Email */}
                 <div style={{ marginBottom:14 }}>
-                  <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:600 }}>{info.ref_label} *</label>
-                  <input type={method === 'especes' ? 'email' : 'text'}
-                    value={ref} onChange={e => setRef(e.target.value)} required
+                  <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
+                    {info.ref_label}
+                  </label>
+                  <input type={info.ref_type} value={ref}
+                    onChange={e => setRef(e.target.value)} required
                     placeholder={info.ref_placeholder}
-                    className={`input${method !== 'especes' ? ' input-mono' : ''}`}
+                    className={`input${method === 'd17' ? ' input-mono' : ''}`}
                     style={{ borderRadius:10 }}
                   />
                   {method === 'especes' && (
-                    <p style={{ fontSize:11, color:'var(--muted)', marginTop:5 }}>Votre email sera utilisé pour activer votre abonnement après vérification.</p>
+                    <p style={{ fontSize:11, color:'var(--muted)', marginTop:5 }}>
+                      Votre email sera utilisé pour activer votre abonnement après vérification.
+                    </p>
                   )}
                 </div>
 
-                {/* Upload capture (pas pour espèces) */}
-                {method !== 'especes' && (
-                  <div style={{ marginBottom:20 }}>
-                    <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:600 }}>Capture d'écran (recommandé)</label>
-                    <div onClick={() => fileRef.current?.click()}
-                      style={{ border:'2px dashed var(--border)', borderRadius:10, padding:16, textAlign:'center', cursor:'pointer', transition:'border-color 0.2s' }}
-                      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(79,110,247,0.4)')}
-                      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
-                      {screenshot
-                        ? <p style={{ color:'var(--teal)', fontSize:13, margin:0 }}>✅ {screenshot.name}</p>
-                        : <div><div style={{ fontSize:22, marginBottom:5 }}>📎</div><p style={{ fontSize:12, color:'var(--muted)', margin:0 }}>Cliquer pour ajouter</p></div>
-                      }
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={e => setScreenshot(e.target.files?.[0] || null)} />
+                {/* Capture d'écran */}
+                <div style={{ marginBottom:20 }}>
+                  <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
+                    Capture d'écran (recommandé)
+                  </label>
+                  <div onClick={() => fileRef.current?.click()}
+                    style={{ border:'2px dashed var(--border)', borderRadius:10, padding:16, textAlign:'center', cursor:'pointer', transition:'border-color 0.2s' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = `${info.color}60`)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
+                    {screenshot
+                      ? <p style={{ color:'var(--teal)', fontSize:13, margin:0 }}>✅ {screenshot.name}</p>
+                      : <div><div style={{ fontSize:22, marginBottom:5 }}>📎</div><p style={{ fontSize:12, color:'var(--muted)', margin:0 }}>Cliquer pour ajouter</p></div>
+                    }
                   </div>
-                )}
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }}
+                    onChange={e => setScreenshot(e.target.files?.[0] || null)} />
+                </div>
 
-                {/* Récapitulatif */}
+                {/* Récap */}
                 <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:10, padding:'14px 16px', marginBottom:20 }}>
-                  {[
-                    ['Plan',     planLabel],
-                    ['Montant',  `${price} DT`],
-                    ['Méthode',  info.title],
-                  ].map(([k, v]) => (
+                  {[['Plan', planLabel], ['Montant', `${price} DT`], ['Méthode', info.title]].map(([k, v]) => (
                     <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:13, padding:'5px 0' }}>
                       <span style={{ color:'var(--muted)' }}>{k}</span>
-                      <span style={{ color: k === 'Montant' ? 'var(--accent)' : 'var(--text)', fontWeight: k === 'Montant' ? 800 : 600, fontFamily: k === 'Montant' ? 'var(--font-mono)' : 'inherit', fontSize: k === 'Montant' ? 15 : 13 }}>{v}</span>
+                      <span style={{ color: k === 'Montant' ? 'var(--accent)' : 'var(--text)', fontWeight: k === 'Montant' ? 800 : 600, fontSize: k === 'Montant' ? 15 : 13 }}>{v}</span>
                     </div>
                   ))}
                 </div>
 
                 <button type="submit" disabled={loading}
-                  className="btn btn-primary btn-lg"
-                  style={{ width:'100%', justifyContent:'center', opacity: loading ? 0.7 : 1,
-                    background: method === 'especes' ? 'linear-gradient(135deg,#059669,#10b981)' : undefined }}>
-                  {loading
-                    ? <><span style={{ width:16, height:16, border:'2px solid rgba(255,255,255,0.3)', borderTopColor:'white', borderRadius:'50%', animation:'spin 0.8s linear infinite', display:'inline-block' }} /> Envoi...</>
-                    : method === 'especes'
-                      ? '💵 Enregistrer ma demande espèces'
-                      : '✅ Activer mon abonnement'
-                  }
+                  style={{ width:'100%', padding:'13px', borderRadius:12, border:'none',
+                    background: method === 'especes'
+                      ? 'linear-gradient(135deg,#25d366,#059669)'
+                      : 'linear-gradient(135deg,#4f6ef7,#7c3aed)',
+                    color:'white', fontSize:15, fontWeight:800,
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.7 : 1 }}>
+                  {loading ? '⏳ Envoi en cours...' :
+                    method === 'especes' ? '💵 Enregistrer ma demande' : '✅ Activer mon abonnement'}
                 </button>
               </form>
             </div>
-
           </div>
         </div>
       </main>
       <Footer />
-      <style suppressHydrationWarning>{`
-        @keyframes spin { to { transform:rotate(360deg) } }
-        @keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-      `}</style>
     </>
   )
 }
 
 export default function ActivationPage() {
   return (
-    <Suspense fallback={
-      <div style={{ minHeight:'100vh', background:'#0a0a1a', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(255,255,255,0.4)', fontFamily:'system-ui' }}>
-        Chargement…
-      </div>
-    }>
+    <Suspense fallback={<div style={{ minHeight:'100vh', background:'#0a0a1a' }} />}>
       <ActivationInner />
     </Suspense>
   )
