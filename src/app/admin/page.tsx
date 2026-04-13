@@ -55,14 +55,20 @@ export default function AdminPage() {
     const now  = new Date()
     const end  = new Date(now.getTime() + days*86400000)
     const { error } = await supabase.from('subscriptions').update({
-      status:'active', is_active:true,
-      subscription_start: now.toISOString(),
-      subscription_end:   end.toISOString(),
-      activated_by: user?.id,
-      activated_at: now.toISOString(),
-      notes: notes[sub.id] || null,
+      status:     'active',
+      starts_at:  now.toISOString(),
+      ends_at:    end.toISOString(),
     }).eq('id', sub.id)
-    if (!error) {
+    // Mettre à jour le profil utilisateur
+    if (!error && sub.user_id) {
+      await supabase.from('profiles').update({
+        is_active:        true,
+        plan_type:        sub.plan_type,
+        subscription_end: end.toISOString(),
+      }).eq('id', sub.user_id)
+    }
+    const fakeError = error
+    if (!fakeError) {
       await supabase.from('admin_logs').insert({ admin_id:user?.id, action:'activate_subscription', target_user_id:sub.user_id, details:{ subscription_id:sub.id, plan:sub.plan_type, days } })
       try {
         const { data: prof } = await supabase.from('profiles').select('email,full_name').eq('id', sub.user_id).single()

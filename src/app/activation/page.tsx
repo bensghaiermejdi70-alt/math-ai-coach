@@ -37,19 +37,7 @@ const PAYMENT_INFO = {
     ref_placeholder:'Ex: TRF20240515XXXX',
     phone: true,
   },
-  flouci: {
-    icon:'📱', title:'Flouci',
-    steps:[
-      "Ouvrir l'app Flouci",
-      "Envoyer le montant EXACT vers : 99 268 970",
-      "Mettre 'MathBac' dans la note",
-      "Copier la référence du virement",
-      "Remplir le formulaire ci-contre",
-    ],
-    ref_label:'Référence Flouci',
-    ref_placeholder:'Ex: FLC_2024XXXXXX',
-    phone: true,
-  },
+
   recharge_mobile: {
     icon:'📞', title:'Recharge mobile',
     steps:[
@@ -222,15 +210,20 @@ function ActivationInner() {
     setLoading(true)
     try {
       let screenshotUrl = null
-      if (screenshot && user) {
-        const ext  = screenshot.name.split('.').pop()
-        const path = `screenshots/${user.id}/${Date.now()}.${ext}`
-        const { data: up, error: upErr } = await supabase.storage
-          .from('payment-screenshots').upload(path, screenshot)
-        if (!upErr && up) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('payment-screenshots').getPublicUrl(path)
-          screenshotUrl = publicUrl
+      // Upload capture uniquement si pas espèces et si bucket disponible
+      if (screenshot && user && method !== 'especes') {
+        try {
+          const ext  = screenshot.name.split('.').pop()
+          const path = `screenshots/${user.id}/${Date.now()}.${ext}`
+          const { data: up, error: upErr } = await supabase.storage
+            .from('payment-screenshots').upload(path, screenshot)
+          if (!upErr && up) {
+            const { data: { publicUrl } } = supabase.storage
+              .from('payment-screenshots').getPublicUrl(path)
+            screenshotUrl = publicUrl
+          }
+        } catch (_) {
+          // Upload échoue → on continue sans screenshot
         }
       }
       const { error: dbErr } = await supabase.from('subscriptions').insert({
