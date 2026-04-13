@@ -1,11 +1,15 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('Vérification...')
+  const ran = useRef(false)
 
   useEffect(() => {
+    if (ran.current) return
+    ran.current = true
+
     const supabase = createClient()
 
     const run = async () => {
