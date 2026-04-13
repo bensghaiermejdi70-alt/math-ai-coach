@@ -417,7 +417,7 @@ function ActivationInner() {
                 {/* Capture d'écran */}
                 <div style={{ marginBottom:20 }}>
                   <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:6, fontWeight:600 }}>
-                    Capture d'écran (recommandé)
+                    Capture d'écran (optionnel)
                   </label>
                   <div onClick={() => fileRef.current?.click()}
                     style={{ border:'2px dashed var(--border)', borderRadius:10, padding:16, textAlign:'center', cursor:'pointer', transition:'border-color 0.2s' }}
@@ -430,6 +430,9 @@ function ActivationInner() {
                   </div>
                   <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }}
                     onChange={e => setScreenshot(e.target.files?.[0] || null)} />
+                  <p style={{ fontSize:11, color:'var(--muted)', marginTop:6 }}>
+                    💬 Ou envoyez la capture sur WhatsApp : <a href="https://wa.me/21699268970" target="_blank" rel="noopener" style={{ color:'#25d366' }}>99 268 970</a>
+                  </p>
                 </div>
 
                 {/* Récap */}
