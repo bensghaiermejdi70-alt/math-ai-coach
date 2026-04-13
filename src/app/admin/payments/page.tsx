@@ -1,15 +1,14 @@
 'use client'
 // src/app/admin/payments/page.tsx
-// Panel admin — voir et activer les paiements en attente
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { createClient } from '@/lib/supabase/client'
-import Navbar from '@/components/layout/Navbar'
+import Link from 'next/link'
 
 const ADMIN_EMAIL = 'bensghaiermejdi70@gmail.com'
 
-interface Payment {
+interface Sub {
   id: string
   user_id: string | null
   plan_type: string
@@ -19,275 +18,311 @@ interface Payment {
   payment_reference: string
   payment_phone: string | null
   payment_screenshot_url: string | null
+  stripe_customer_id: string | null
   created_at: string
+  ends_at: string | null
   email?: string
+  full_name?: string
 }
 
 const PLAN_LABELS: Record<string,string> = {
-  mensuel:'MathBac Mensuel', sprint:'Sprint Bac', annuel:'MathBac Annuel'
+  mensuel:'Mensuel', sprint:'Sprint Bac', annuel:'Annuel'
 }
 const METHOD_ICONS: Record<string,string> = {
-  d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵'
+  d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵', stripe:'💳'
+}
+const STATUS_COLORS: Record<string,string> = {
+  active:       '#10b981',
+  pending:      '#f59e0b',
+  pending_cash: '#f59e0b',
+  cancelled:    '#ef4444',
+  expired:      '#6b7280',
 }
 
 export default function AdminPaymentsPage() {
   const { user, isAdmin } = useAuth()
   const supabase = createClient()
 
-  const [payments,  setPayments]  = useState<Payment[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [activating, setActivating] = useState<string | null>(null)
-  const [msg,       setMsg]       = useState('')
+  const [subs,       setSubs]       = useState<Sub[]>([])
+  const [filtered,   setFiltered]   = useState<Sub[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [msg,        setMsg]        = useState('')
+  const [activating, setActivating] = useState<string|null>(null)
 
-  // ── Charger les paiements en attente ─────────────────────────
-  async function loadPayments() {
+  async function loadAll() {
     setLoading(true)
     const { data } = await supabase
       .from('subscriptions')
       .select('*')
-      .in('status', ['pending', 'pending_cash'])
       .order('created_at', { ascending: false })
 
     if (data) {
-      // Enrichir avec les emails
-      const enriched = await Promise.all(data.map(async (p) => {
-        if (p.user_id) {
-          const { data: prof } = await supabase
+      const enriched = await Promise.all(data.map(async (s) => {
+        if (s.user_id) {
+          const { data: p } = await supabase
             .from('profiles')
-            .select('email')
-            .eq('id', p.user_id)
+            .select('email, full_name')
+            .eq('id', s.user_id)
             .single()
-          return { ...p, email: prof?.email }
+          return { ...s, email: p?.email, full_name: p?.full_name }
         }
-        return p
+        return s
       }))
-      setPayments(enriched)
+      setSubs(enriched)
+      setFiltered(enriched)
     }
     setLoading(false)
   }
 
-  useEffect(() => { loadPayments() }, [])
+  useEffect(() => { loadAll() }, [])
 
-  // ── Activer un abonnement ─────────────────────────────────────
-  async function activate(p: Payment, targetEmail?: string) {
-    setActivating(p.id)
-    setMsg('')
+  // Filtrage
+  useEffect(() => {
+    let result = subs
+    if (filterStatus !== 'all') result = result.filter(s => s.status === filterStatus)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(s =>
+        s.email?.toLowerCase().includes(q) ||
+        s.full_name?.toLowerCase().includes(q) ||
+        s.payment_reference?.toLowerCase().includes(q) ||
+        s.plan_type?.toLowerCase().includes(q)
+      )
+    }
+    setFiltered(result)
+  }, [search, filterStatus, subs])
+
+  async function activate(s: Sub) {
+    setActivating(s.id); setMsg('')
     try {
-      // Trouver le user_id si pas dans la subscription
-      let userId = p.user_id
-      if (!userId && targetEmail) {
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', targetEmail.toLowerCase())
-          .single()
-        userId = prof?.id || null
-      }
-      if (!userId) throw new Error('Utilisateur introuvable')
-
       const endDate = new Date()
-      if (p.plan_type === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
+      if (s.plan_type === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
       else endDate.setMonth(endDate.getMonth() + 1)
 
-      // Mettre à jour le statut
-      const { error: subErr } = await supabase
-        .from('subscriptions')
-        .update({
-          status:    'active',
-          starts_at: new Date().toISOString(),
-          ends_at:   endDate.toISOString(),
-        })
-        .eq('id', p.id)
-      if (subErr) throw subErr
+      await supabase.from('subscriptions').update({
+        status: 'active', ends_at: endDate.toISOString()
+      }).eq('id', s.id)
 
-      // Mettre à jour le profil
-      await supabase
-        .from('profiles')
-        .update({
-          plan_type:        p.plan_type,
-          is_active:        true,
-          subscription_end: endDate.toISOString(),
-        })
-        .eq('id', userId)
-
-      setMsg(`✅ Abonnement ${PLAN_LABELS[p.plan_type] || p.plan_type} activé !`)
-      await loadPayments()
+      if (s.user_id) {
+        await supabase.from('profiles').update({
+          is_active: true, plan_type: s.plan_type,
+          subscription_end: endDate.toISOString()
+        }).eq('id', s.user_id)
+      }
+      setMsg(`✅ Abonnement activé pour ${s.email || s.id}`)
+      await loadAll()
     } catch (err: any) {
       setMsg(`❌ ${err.message}`)
-    } finally {
-      setActivating(null)
-    }
+    } finally { setActivating(null) }
+  }
+
+  async function deactivate(s: Sub) {
+    setActivating(s.id); setMsg('')
+    try {
+      await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('id', s.id)
+      if (s.user_id) {
+        await supabase.from('profiles').update({ is_active: false, plan_type: null }).eq('id', s.user_id)
+      }
+      setMsg(`🚫 Abonnement désactivé pour ${s.email || s.id}`)
+      await loadAll()
+    } catch (err: any) {
+      setMsg(`❌ ${err.message}`)
+    } finally { setActivating(null) }
   }
 
   if (!isAdmin) return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white' }}>
+    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui' }}>
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:40, marginBottom:12 }}>🔒</div>
         <p>Accès réservé à l'administrateur</p>
+        <Link href="/" style={{ color:'#4f6ef7', fontSize:13 }}>← Retour</Link>
       </div>
     </div>
   )
 
-  return (
-    <>
-      <Navbar />
-      <main style={{ minHeight:'100vh', background:'#0a0a1a', color:'white', padding:'100px 24px 60px', fontFamily:'system-ui' }}>
-        <div style={{ maxWidth:900, margin:'0 auto' }}>
+  // Stats
+  const stats = {
+    total:   subs.length,
+    active:  subs.filter(s => s.status === 'active').length,
+    pending: subs.filter(s => s.status.includes('pending')).length,
+    revenue: subs.filter(s => s.status === 'active').reduce((a,s) => a + (s.price_paid||0), 0),
+  }
 
-          {/* Header */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:32, flexWrap:'wrap', gap:12 }}>
-            <div>
-              <h1 style={{ fontWeight:900, fontSize:26, margin:'0 0 4px' }}>⚙️ Panel Admin — Paiements</h1>
-              <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>
-                {payments.length} paiement{payments.length !== 1 ? 's' : ''} en attente
-              </p>
-            </div>
-            <button onClick={loadPayments}
-              style={{ padding:'8px 18px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', cursor:'pointer', fontSize:13, fontWeight:600 }}>
+  return (
+    <div style={{ minHeight:'100vh', background:'#0a0a1a', color:'white', fontFamily:'system-ui', padding:'80px 20px 60px' }}>
+      <div style={{ maxWidth:1100, margin:'0 auto' }}>
+
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:32, flexWrap:'wrap', gap:12 }}>
+          <div>
+            <h1 style={{ fontWeight:900, fontSize:24, margin:'0 0 4px' }}>⚙️ Panel Admin</h1>
+            <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Gérer tous les abonnements</p>
+          </div>
+          <div style={{ display:'flex', gap:10 }}>
+            <Link href="/admin/payments" style={{ padding:'8px 16px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, fontWeight:600, textDecoration:'none' }}>
+              💳 Paiements
+            </Link>
+            <button onClick={loadAll}
+              style={{ padding:'8px 16px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>
               🔄 Rafraîchir
             </button>
           </div>
-
-          {/* Message */}
-          {msg && (
-            <div style={{ padding:'12px 16px', borderRadius:12, marginBottom:20, fontSize:14, fontWeight:600,
-              background: msg.startsWith('✅') ? 'rgba(6,214,160,0.1)' : 'rgba(239,68,68,0.1)',
-              border: `1px solid ${msg.startsWith('✅') ? 'rgba(6,214,160,0.3)' : 'rgba(239,68,68,0.3)'}`,
-              color: msg.startsWith('✅') ? '#6ee7b7' : '#fca5a5',
-            }}>
-              {msg}
-            </div>
-          )}
-
-          {/* Liste paiements */}
-          {loading ? (
-            <div style={{ textAlign:'center', padding:60, color:'rgba(255,255,255,0.4)' }}>Chargement...</div>
-          ) : payments.length === 0 ? (
-            <div style={{ textAlign:'center', padding:60, color:'rgba(255,255,255,0.4)' }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>✅</div>
-              <p>Aucun paiement en attente</p>
-            </div>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-              {payments.map(p => (
-                <PaymentCard
-                  key={p.id}
-                  payment={p}
-                  activating={activating === p.id}
-                  onActivate={activate}
-                />
-              ))}
-            </div>
-          )}
         </div>
-      </main>
-    </>
-  )
-}
 
-// ── Carte paiement ─────────────────────────────────────────────
-function PaymentCard({ payment: p, activating, onActivate }: {
-  payment: Payment
-  activating: boolean
-  onActivate: (p: Payment, email?: string) => void
-}) {
-  const [emailInput, setEmailInput] = useState(p.email || '')
-
-  const date = new Date(p.created_at).toLocaleString('fr-TN', {
-    day:'2-digit', month:'2-digit', year:'numeric',
-    hour:'2-digit', minute:'2-digit'
-  })
-
-  const isCash = p.payment_method === 'especes' || p.status === 'pending_cash'
-
-  return (
-    <div style={{
-      background: isCash ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.04)',
-      border: `1px solid ${isCash ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.1)'}`,
-      borderRadius:16, padding:'20px 24px',
-    }}>
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-
-        {/* Info paiement */}
-        <div style={{ flex:1, minWidth:220 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
-            <span style={{ fontSize:22 }}>{METHOD_ICONS[p.payment_method] || '💳'}</span>
-            <div>
-              <div style={{ fontWeight:800, fontSize:16, color:'white' }}>
-                {PLAN_LABELS[p.plan_type] || p.plan_type}
-                <span style={{ marginLeft:8, fontSize:16, color:'#10b981', fontFamily:'monospace' }}>
-                  {p.price_paid} DT
-                </span>
-              </div>
-              <div style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{date}</div>
+        {/* Stats */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:28 }}>
+          {[
+            { label:'Total', val: stats.total, color:'#4f6ef7' },
+            { label:'Actifs', val: stats.active, color:'#10b981' },
+            { label:'En attente', val: stats.pending, color:'#f59e0b' },
+            { label:'Revenus actifs', val: `${stats.revenue} DT/€`, color:'#a78bfa' },
+          ].map((s,i) => (
+            <div key={i} style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, padding:'16px 20px' }}>
+              <div style={{ fontSize:22, fontWeight:900, color:s.color }}>{s.val}</div>
+              <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginTop:2 }}>{s.label}</div>
             </div>
-            <span style={{
-              fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20,
-              background: isCash ? 'rgba(245,158,11,0.2)' : 'rgba(79,110,247,0.2)',
-              color: isCash ? '#fbbf24' : '#a5b4fc',
-            }}>
-              {isCash ? '💵 ESPÈCES' : '🔄 EN ATTENTE'}
-            </span>
+          ))}
+        </div>
+
+        {/* Message */}
+        {msg && (
+          <div style={{ padding:'11px 16px', borderRadius:10, marginBottom:16, fontSize:13, fontWeight:600,
+            background: msg.startsWith('✅') ? 'rgba(6,214,160,0.1)' : 'rgba(239,68,68,0.1)',
+            border: `1px solid ${msg.startsWith('✅') ? 'rgba(6,214,160,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            color: msg.startsWith('✅') ? '#6ee7b7' : '#fca5a5',
+          }}>
+            {msg}
           </div>
+        )}
 
-          {/* Détails */}
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4px 16px', fontSize:12, color:'rgba(255,255,255,0.6)' }}>
-            <div>📧 {p.email || <em>email non lié</em>}</div>
-            <div>📞 {p.payment_phone || '—'}</div>
-            <div style={{ fontFamily:'monospace', color:'rgba(255,255,255,0.8)' }}>
-              🔖 {p.payment_reference || '—'}
-            </div>
-            <div>💳 {p.payment_method}</div>
+        {/* Filtres */}
+        <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap', alignItems:'center' }}>
+          <input
+            type="text" placeholder="🔍 Rechercher email, nom, référence..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{ flex:1, minWidth:240, padding:'9px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, outline:'none' }}
+          />
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding:'9px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'#1a1a2e', color:'white', fontSize:13, cursor:'pointer' }}>
+            <option value="all">Tous les statuts</option>
+            <option value="active">✅ Actifs</option>
+            <option value="pending">⏳ En attente</option>
+            <option value="pending_cash">💵 Espèces</option>
+            <option value="cancelled">🚫 Annulés</option>
+          </select>
+          <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>{filtered.length} résultat{filtered.length!==1?'s':''}</span>
+        </div>
+
+        {/* Tableau */}
+        {loading ? (
+          <div style={{ textAlign:'center', padding:60, color:'rgba(255,255,255,0.4)' }}>Chargement...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign:'center', padding:60, color:'rgba(255,255,255,0.4)' }}>
+            <div style={{ fontSize:32, marginBottom:8 }}>📭</div>
+            <p>Aucun abonnement trouvé</p>
           </div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {filtered.map(s => {
+              const date = new Date(s.created_at).toLocaleDateString('fr-FR')
+              const end  = s.ends_at ? new Date(s.ends_at).toLocaleDateString('fr-FR') : '—'
+              const isAct = activating === s.id
+              return (
+                <div key={s.id} style={{
+                  background:'rgba(255,255,255,0.03)',
+                  border:`1px solid ${s.status==='active'?'rgba(16,185,129,0.2)':s.status.includes('pending')?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.08)'}`,
+                  borderRadius:14, padding:'16px 20px',
+                  display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto', gap:16, alignItems:'center',
+                }}>
+                  {/* Colonne 1 — User */}
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14, color:'white', marginBottom:2 }}>
+                      {s.full_name || '—'}
+                    </div>
+                    <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)' }}>{s.email || '—'}</div>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:2 }}>📅 {date}</div>
+                  </div>
 
-          {/* Capture d'écran */}
-          {p.payment_screenshot_url && (
-            <a href={p.payment_screenshot_url} target="_blank" rel="noopener"
-              style={{ display:'inline-flex', alignItems:'center', gap:6, marginTop:10, fontSize:12, color:'#60a5fa', textDecoration:'none' }}>
-              📎 Voir la capture d'écran →
-            </a>
-          )}
-        </div>
+                  {/* Colonne 2 — Plan */}
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14, color:'white', marginBottom:3 }}>
+                      {METHOD_ICONS[s.payment_method]||'💳'} {PLAN_LABELS[s.plan_type]||s.plan_type}
+                    </div>
+                    <div style={{ fontSize:13, color:'#10b981', fontWeight:700 }}>{s.price_paid} DT/€</div>
+                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:2 }}>Fin : {end}</div>
+                  </div>
 
-        {/* Activation */}
-        <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:200 }}>
-          {!p.email && (
-            <div>
-              <label style={{ fontSize:11, color:'rgba(255,255,255,0.4)', display:'block', marginBottom:4 }}>
-                Email du client
-              </label>
-              <input
-                type="email"
-                value={emailInput}
-                onChange={e => setEmailInput(e.target.value)}
-                placeholder="client@email.com"
-                style={{ width:'100%', padding:'8px 10px', borderRadius:8, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, outline:'none', boxSizing:'border-box' as any }}
-              />
-            </div>
-          )}
-          <button
-            onClick={() => onActivate(p, emailInput)}
-            disabled={activating || (!p.email && !emailInput)}
-            style={{
-              padding:'10px 20px', borderRadius:10, border:'none', cursor:'pointer',
-              background: activating ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#10b981,#059669)',
-              color:'white', fontWeight:800, fontSize:14,
-              opacity: activating ? 0.6 : 1,
-            }}>
-            {activating ? '⏳ Activation...' : '✅ Activer'}
-          </button>
+                  {/* Colonne 3 — Status + Ref */}
+                  <div>
+                    <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20,
+                      background:`${STATUS_COLORS[s.status]||'#6b7280'}20`,
+                      color: STATUS_COLORS[s.status]||'#6b7280',
+                      border:`1px solid ${STATUS_COLORS[s.status]||'#6b7280'}40`,
+                    }}>
+                      {s.status === 'active' ? '✅ Actif' :
+                       s.status === 'pending' ? '⏳ En attente' :
+                       s.status === 'pending_cash' ? '💵 Espèces' :
+                       s.status === 'cancelled' ? '🚫 Annulé' : s.status}
+                    </span>
+                    {s.payment_reference && (
+                      <div style={{ fontSize:10, fontFamily:'monospace', color:'rgba(255,255,255,0.3)', marginTop:6 }}>
+                        {s.payment_reference.slice(0,24)}...
+                      </div>
+                    )}
+                    {s.payment_screenshot_url && (
+                      <a href={s.payment_screenshot_url} target="_blank" rel="noopener"
+                        style={{ fontSize:11, color:'#60a5fa', textDecoration:'none', display:'block', marginTop:4 }}>
+                        📎 Capture
+                      </a>
+                    )}
+                  </div>
 
-          {/* Lien WhatsApp */}
-          {p.payment_phone && (
-            <a
-              href={`https://wa.me/216${p.payment_phone.replace(/\s/g,'')}?text=Bonjour%20!%20Votre%20abonnement%20MathBac.AI%20${PLAN_LABELS[p.plan_type]||p.plan_type}%20est%20activé%20✅`}
-              target="_blank" rel="noopener"
-              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:6, padding:'8px 16px', borderRadius:10, border:'1px solid rgba(37,211,102,0.3)', background:'rgba(37,211,102,0.08)', color:'#25d366', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-              💬 Confirmer WhatsApp
-            </a>
-          )}
-        </div>
+                  {/* Colonne 4 — Actions */}
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, minWidth:120 }}>
+                    {s.status !== 'active' && (
+                      <button onClick={() => activate(s)} disabled={isAct}
+                        style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
+                          background:'linear-gradient(135deg,#10b981,#059669)',
+                          color:'white', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
+                        {isAct ? '⏳...' : '✅ Activer'}
+                      </button>
+                    )}
+                    {s.status === 'active' && (
+                      <button onClick={() => deactivate(s)} disabled={isAct}
+                        style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
+                          background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)',
+                          color:'#f87171', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
+                        {isAct ? '⏳...' : '🚫 Désactiver'}
+                      </button>
+                    )}
+                    {s.payment_phone && (
+                      <a href={`https://wa.me/216${s.payment_phone.replace(/\s/g,'')}?text=Bonjour%20!%20Votre%20abonnement%20MathBac.AI%20est%20activé%20✅`}
+                        target="_blank" rel="noopener"
+                        style={{ padding:'6px 14px', borderRadius:8, textAlign:'center',
+                          background:'rgba(37,211,102,0.1)', border:'1px solid rgba(37,211,102,0.25)',
+                          color:'#25d366', fontSize:12, fontWeight:600, textDecoration:'none' }}>
+                        💬 WhatsApp
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
+      <style suppressHydrationWarning>{`
+        @media(max-width:900px){
+          div[style*="repeat(4,1fr)"]{ grid-template-columns:1fr 1fr!important }
+          div[style*="1fr 1fr 1fr auto"]{ grid-template-columns:1fr 1fr!important }
+        }
+        @media(max-width:600px){
+          div[style*="repeat(4,1fr)"]{ grid-template-columns:1fr 1fr!important }
+          div[style*="1fr 1fr 1fr auto"]{ grid-template-columns:1fr!important }
+        }
+      `}</style>
     </div>
   )
 }

@@ -528,8 +528,7 @@ export default function Navbar() {
                     </div>
                     {[
                       {href:'/profile',    label:'Mon profil',  icon:'👤'},
-                      {href:'/abonnement', label:'Abonnements', icon:'💳'},
-                      ...(isAdmin ? [{href:'/admin',label:'Admin Panel',icon:'⚙️'}] : []),
+                      ...(isAdmin ? [{href:'/admin/payments',label:'Admin Panel',icon:'⚙️'}] : []),
                     ].map(item=>(
                       <Link key={item.href} href={item.href} onClick={()=>setProfileOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',fontSize:13,color:'var(--text2)',textDecoration:'none',transition:'background 0.15s'}}
                         onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.05)')}
@@ -537,6 +536,20 @@ export default function Navbar() {
                         {item.icon} {item.label}
                       </Link>
                     ))}
+                    {/* Abonnements — 2 options TN + FR */}
+                    <div style={{borderTop:'1px solid var(--border)', padding:'6px 0'}}>
+                      <div style={{fontSize:10,color:'var(--muted)',padding:'4px 16px',textTransform:'uppercase',letterSpacing:'0.06em'}}>💳 Abonnements</div>
+                      <Link href="/abonnement" onClick={()=>setProfileOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 16px',fontSize:13,color:'var(--text2)',textDecoration:'none',transition:'background 0.15s'}}
+                        onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.05)')}
+                        onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                        🇹🇳 Plan Tunisie
+                      </Link>
+                      <Link href="/abonnement-france" onClick={()=>setProfileOpen(false)} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 16px',fontSize:13,color:'var(--text2)',textDecoration:'none',transition:'background 0.15s'}}
+                        onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,0.05)')}
+                        onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                        🇫🇷 Plan France
+                      </Link>
+                    </div>
                     <button onClick={async()=>{setProfileOpen(false);await signOut?.()}} style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'10px 16px',fontSize:13,color:'var(--red)',background:'transparent',border:'none',borderTop:'1px solid var(--border)',cursor:'pointer',transition:'background 0.15s'}}
                       onMouseEnter={e=>(e.currentTarget.style.background='rgba(239,68,68,0.08)')}
                       onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
