@@ -61,7 +61,7 @@ function LoginInner() {
     setError(''); setResetL(true)
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: 'https://app.mathsbac.com/api/auth/reset-confirm',
     })
 
     setResetL(false)

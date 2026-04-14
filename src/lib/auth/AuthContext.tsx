@@ -184,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔑 RESET PASSWORD
   async function resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: 'https://app.mathsbac.com/api/auth/reset-confirm',
     })
 
     if (error)
