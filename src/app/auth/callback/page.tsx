@@ -39,12 +39,23 @@ export default function AuthCallback() {
         return
       }
 
-      // ── Google OAuth via code PKCE ────────────────────────────
+      // ── Code PKCE (Google OAuth OU Reset Password) ───────────
       if (code) {
-        setStatus('Finalisation connexion Google...')
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        setStatus('Vérification...')
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          window.location.replace('/login?error=google')
+          window.location.replace('/login?error=callback')
+          return
+        }
+        // Détecter si c'est un reset password
+        // Supabase met amr=['otp'] dans les métadonnées pour recovery
+        const amr = (data.session as any)?.amr
+        const isRecovery = type === 'recovery' ||
+          (amr && Array.isArray(amr) && amr.some((a: any) => a.method === 'otp')) ||
+          data.user?.email_confirmed_at === null
+        
+        if (isRecovery || type === 'recovery') {
+          window.location.replace('/auth/reset-password')
           return
         }
         window.location.replace(next)
