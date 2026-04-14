@@ -1,4 +1,5 @@
 'use client'
+// src/app/auth/callback/page.tsx
 // Gère Google OAuth ET reset password
 // Redirige vers /auth/update-password pour le reset
 
@@ -17,60 +18,39 @@ export default function AuthCallback() {
     const run = async () => {
       const url  = new URL(window.location.href)
       const code = url.searchParams.get('code')
-      const type = url.searchParams.get('type')
-      const token_hash = url.searchParams.get('token_hash')
       const hash = window.location.hash
 
-      // ── 1. Recovery avec token_hash (depuis l'email) ─────────
-      if (token_hash && type === 'recovery') {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: 'recovery',
-        })
+      // ── Code PKCE ─────────────────────────────────────────────
+      if (code) {
+        const type = url.searchParams.get('type')
         
-        if (error) {
-          console.error('Recovery error:', error)
-          window.location.replace('/login?error=recovery_failed')
+        // Si type=recovery dans l'URL → c'est un reset password
+        if (type === 'recovery') {
+          const { error } = await supabase.auth.exchangeCodeForSession(code)
+          if (error) {
+            window.location.replace('/login?error=lien_expire')
+            return
+          }
+          window.location.replace('/auth/update-password')
           return
         }
-        
-        // ✅ Redirection vers la page de mise à jour du mot de passe
-        window.location.replace('/auth/update-password')
-        return
-      }
 
-      // ── 2. Code PKCE (Google OAuth OU reset password moderne) ─
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        // Sinon → Google OAuth
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          console.error('Code exchange error:', error)
           window.location.replace('/login')
           return
         }
-
-        // Vérifier si c'est un recovery (mot de passe oublié)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-          if (event === 'PASSWORD_RECOVERY') {
-            subscription.unsubscribe()
-            window.location.replace('/auth/update-password')
-          }
-        })
-
-        // Timeout 2s → si pas PASSWORD_RECOVERY c'est Google ou login normal → home
-        setTimeout(() => {
-          subscription.unsubscribe()
-          window.location.replace('/')
-        }, 2000)
+        window.location.replace('/')
         return
       }
 
-      // ── 3. Hash fragment (ancien flow access_token) ───────────
+      // ── Hash fragment (access_token) ──────────────────────────
       if (hash && hash.includes('access_token')) {
         const p    = new URLSearchParams(hash.replace('#', ''))
         const at   = p.get('access_token')
         const rt   = p.get('refresh_token')
         const type = p.get('type')
-        
         if (at && rt) {
           await supabase.auth.setSession({ access_token: at, refresh_token: rt })
           if (type === 'recovery') {
@@ -82,7 +62,7 @@ export default function AuthCallback() {
         }
       }
 
-      // ── 4. Session existante ─────────────────────────────────
+      // ── Session existante ─────────────────────────────────────
       const { data: { session } } = await supabase.auth.getSession()
       window.location.replace(session ? '/' : '/login')
     }
