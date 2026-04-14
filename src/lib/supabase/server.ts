@@ -1,20 +1,18 @@
 // src/lib/supabase/server.ts
-// Client Supabase côté serveur (requis pour la route /auth/confirm)
 
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+// ── Client standard (cookies) ─────────────────────────────────────
 export async function createClient() {
   const cookieStore = await cookies()
-
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
+        getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
@@ -24,5 +22,33 @@ export async function createClient() {
         },
       },
     }
+  )
+}
+
+// ── Alias synchrone pour compatibilité ───────────────────────────
+export function createServerSupabaseClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          try {
+            const { cookies } = require('next/headers')
+            return cookies().getAll()
+          } catch { return [] }
+        },
+        setAll() {},
+      },
+    }
+  )
+}
+
+// ── Client admin (service_role) ───────────────────────────────────
+export function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }
