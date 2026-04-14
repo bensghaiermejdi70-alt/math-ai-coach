@@ -299,16 +299,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // Refresh profil au focus fenêtre
-    const handleFocus = async () => {
+    // Vérification session unique + refresh profil au focus
+    const verifySession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) await loadProfile(session.user.id)
+      if (!session?.user) return
+
+      const currentUser = session.user
+      const isAdminUser = currentUser.email === 'bensghaiermejdi70@gmail.com'
+      if (isAdminUser) return
+
+      await loadProfile(currentUser.id)
+
+      const localSessionId = localStorage.getItem('session_id')
+      if (!localSessionId) return
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('current_session_id, is_active')
+        .eq('id', currentUser.id)
+        .single()
+
+      if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localSessionId) {
+        // Session révoquée — quelqu'un d'autre s'est connecté
+        setUser(null); setProfile(null); setQuotas(null)
+        localStorage.removeItem('session_id')
+        await supabase.auth.signOut()
+        window.location.href = '/login?error=session_dupliquee'
+      }
     }
-    window.addEventListener('focus', handleFocus)
+
+    window.addEventListener('focus', verifySession)
+    // Vérifier toutes les 30 secondes
+    const interval = setInterval(verifySession, 30000)
 
     return () => {
       subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('focus', verifySession)
+      clearInterval(interval)
     }
   }, [])
 
