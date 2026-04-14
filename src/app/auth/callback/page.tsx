@@ -12,21 +12,31 @@ export default function AuthCallback() {
     const supabase = createClient()
 
     const run = async () => {
-      const url        = new URL(window.location.href)
-      const tokenHash  = url.searchParams.get('token_hash')
-      const type       = url.searchParams.get('type')
-      const code       = url.searchParams.get('code')
-      const hash       = window.location.hash
+      const url       = new URL(window.location.href)
+      const tokenHash = url.searchParams.get('token_hash')
+      const type      = url.searchParams.get('type')
+      const code      = url.searchParams.get('code')
+      const hash      = window.location.hash
 
-      // ── Reset password via token_hash ─────────────────────────
+      // ── Reset password : token_hash commence par "pkce_" ─────
       if (tokenHash && type === 'recovery') {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
-        if (error) {
-          window.location.replace('/login?error=lien_expire')
-          return
+        if (tokenHash.startsWith('pkce_')) {
+          // Code PKCE → exchangeCodeForSession
+          const { error } = await supabase.auth.exchangeCodeForSession(tokenHash)
+          if (error) {
+            window.location.replace('/login?error=lien_expire')
+            return
+          }
+        } else {
+          // OTP classique → verifyOtp
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          })
+          if (error) {
+            window.location.replace('/login?error=lien_expire')
+            return
+          }
         }
         window.location.replace('/auth/update-password')
         return
@@ -45,10 +55,10 @@ export default function AuthCallback() {
 
       // ── Hash fragment ─────────────────────────────────────────
       if (hash && hash.includes('access_token')) {
-        const p    = new URLSearchParams(hash.replace('#', ''))
-        const at   = p.get('access_token')
-        const rt   = p.get('refresh_token')
-        const ht   = p.get('type')
+        const p  = new URLSearchParams(hash.replace('#', ''))
+        const at = p.get('access_token')
+        const rt = p.get('refresh_token')
+        const ht = p.get('type')
         if (at && rt) {
           await supabase.auth.setSession({ access_token: at, refresh_token: rt })
           window.location.replace(ht === 'recovery' ? '/auth/update-password' : '/')
