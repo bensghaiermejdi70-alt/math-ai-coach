@@ -8,7 +8,8 @@ import {
   UserQuotas,
   ADMIN_EMAIL,
   getQuotaLimits,
-  PlanQuotas
+  PlanQuotas,
+  PlanType
 } from '@/lib/types/monetisation'
 
 export type QuotaType =
@@ -69,17 +70,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ? new Date(profile.subscription_end)
     : null
 
+  const isAdminUser =
+    profile?.role === 'admin' || user?.email === ADMIN_EMAIL
+
   const hasActiveSubscription =
-    isAdmin ||
-    (profile?.is_active === true &&
+    isAdminUser ||
+    (
+      profile?.is_active === true &&
+      profile?.plan_type != null &&
       subscriptionEnd !== null &&
-      subscriptionEnd.getTime() > Date.now())
+      subscriptionEnd.getTime() > Date.now()
+    )
 
   const isSprint =
     profile?.plan_type === 'sprint_bac' && hasActiveSubscription
 
+  // Quotas : utiliser le plan_type du profil si abonnement actif
   const quotaLimits = hasActiveSubscription
-    ? getQuotaLimits(profile?.plan_type ?? null, isSprint)
+    ? getQuotaLimits((profile?.plan_type as PlanType) ?? null, isSprint)
     : getQuotaLimits(null)
 
   const daysRemaining =
@@ -142,8 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await loadQuotas(data.user.id)
     }
 
-    // Rediriger vers home
-    window.location.href = '/'
     return { error: null, user: data.user }
   }
 
@@ -240,28 +246,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
+
         setUser(currentUser)
+
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
         }
+
         setIsLoading(false)
       }
     )
 
-    // 🔄 Refresh profil quand la fenêtre reprend le focus
-    const handleFocus = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await loadProfile(session.user.id)
-      }
-    }
-    window.addEventListener('focus', handleFocus)
-
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
