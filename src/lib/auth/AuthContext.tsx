@@ -212,12 +212,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
-
     if (!quotas || !quotaLimits) return false
 
-    const used = (quotas as any)[type] || 0
-    const limit = (quotaLimits as any)[type] || 0
-
+    const limitKey: Record<QuotaType, string> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    const usedKey: Record<QuotaType, string> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
+    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
+    const used  = (quotas as any)[usedKey[type]] as number ?? 0
+    if (limit === -1) return true
     return used < limit
   }
 
@@ -240,19 +253,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
-
         setUser(currentUser)
-
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
         }
-
         setIsLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    const handleFocus = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) await loadProfile(session.user.id)
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   return (

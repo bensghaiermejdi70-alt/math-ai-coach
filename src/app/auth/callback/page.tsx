@@ -18,31 +18,28 @@ export default function AuthCallback() {
       const code      = url.searchParams.get('code')
       const hash      = window.location.hash
 
-      // ── Reset password : token_hash commence par "pkce_" ─────
+      // ── Reset password ────────────────────────────────────────
       if (tokenHash && type === 'recovery') {
-        if (tokenHash.startsWith('pkce_')) {
-          // Code PKCE → exchangeCodeForSession
-          const { error } = await supabase.auth.exchangeCodeForSession(tokenHash)
-          if (error) {
-            window.location.replace('/login?error=lien_expire')
-            return
-          }
-        } else {
-          // OTP classique → verifyOtp
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash,
-            type: 'recovery',
-          })
-          if (error) {
-            window.location.replace('/login?error=lien_expire')
-            return
-          }
+        // Nettoyer le préfixe pkce_ si présent
+        const cleanHash = tokenHash.startsWith('pkce_')
+          ? tokenHash.slice(5)
+          : tokenHash
+
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: cleanHash,
+          type: 'recovery',
+        })
+
+        if (error) {
+          console.error('verifyOtp error:', error.message)
+          window.location.replace('/login?error=lien_expire')
+          return
         }
         window.location.replace('/auth/update-password')
         return
       }
 
-      // ── Google OAuth via code PKCE ────────────────────────────
+      // ── Google OAuth ──────────────────────────────────────────
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
