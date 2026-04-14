@@ -100,6 +100,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(data)
   }
 
+  // 🔒 SESSION UNIQUE — vérifie que c'est bien la session active
+  async function checkSessionUnique(userId: string, sessionId: string) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('active_session_id')
+      .eq('id', userId)
+      .single()
+
+    if (!profile) return
+
+    // Si aucune session enregistrée → enregistrer celle-ci
+    if (!profile.active_session_id) {
+      await supabase.from('profiles')
+        .update({ active_session_id: sessionId })
+        .eq('id', userId)
+      return
+    }
+
+    // Si session différente → déconnecter cet utilisateur
+    if (profile.active_session_id !== sessionId) {
+      await supabase.auth.signOut()
+      window.location.href = '/login?error=session_dupliquee'
+    }
+  }
+
   // 📦 LOAD QUOTAS
   async function loadQuotas(userId: string) {
     const weekStart = getWeekStart()
@@ -127,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🔐 LOGIN - CORRIGÉ : Retourne l'utilisateur immédiatement
+  // 🔐 LOGIN
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -135,15 +160,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: translateAuthError(error.message), user: null }
     }
 
-    // Mettre à jour le state immédiatement
-    if (data.user) {
+    // Mettre à jour le state + enregistrer session active
+    if (data.user && data.session) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
+      // Enregistrer cette session comme la session active
+      await supabase.from('profiles')
+        .update({ active_session_id: data.session.access_token.slice(-20) })
+        .eq('id', data.user.id)
     }
 
-    // Rediriger vers home
-    window.location.href = '/'
     return { error: null, user: data.user }
   }
 
@@ -212,28 +239,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
+
     if (!quotas || !quotaLimits) return false
 
-    // Mapping QuotaType → clés correctes dans PlanQuotas / UserQuotas
-    const limitKey: Record<QuotaType, string> = {
-      simulations: 'simulations_per_week',
-      chat:        'chat_per_week',
-      solver:      'solver_per_week',
-      remediation: 'remediation_per_week',
-      analyses:    'analyses_per_week',
-    }
-    const usedKey: Record<QuotaType, string> = {
-      simulations: 'simulations_used',
-      chat:        'chat_used',
-      solver:      'solver_used',
-      remediation: 'remediation_used',
-      analyses:    'analyses_used',
-    }
+    const used = (quotas as any)[type] || 0
+    const limit = (quotaLimits as any)[type] || 0
 
-    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
-    const used  = (quotas as any)[usedKey[type]] as number ?? 0
-
-    if (limit === -1) return true  // illimité (sprint)
     return used < limit
   }
 
@@ -256,26 +267,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
+
         setUser(currentUser)
+
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
+          // Vérifier session unique
+          if (session?.access_token) {
+            await checkSessionUnique(currentUser.id, session.access_token.slice(-20))
+          }
         }
+
         setIsLoading(false)
       }
     )
 
-    // Refresh profil quand la fenêtre reprend le focus
-    const handleFocus = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) await loadProfile(session.user.id)
-    }
-    window.addEventListener('focus', handleFocus)
-
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
