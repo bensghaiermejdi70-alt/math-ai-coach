@@ -8,8 +8,7 @@ import {
   UserQuotas,
   ADMIN_EMAIL,
   getQuotaLimits,
-  PlanQuotas,
-  PlanType
+  PlanQuotas
 } from '@/lib/types/monetisation'
 
 export type QuotaType =
@@ -80,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile?.plan_type === 'sprint_bac' && hasActiveSubscription
 
   const quotaLimits = hasActiveSubscription
-    ? getQuotaLimits((profile?.plan_type as PlanType) ?? null, isSprint)
+    ? getQuotaLimits(profile?.plan_type ?? null, isSprint)
     : getQuotaLimits(null)
 
   const daysRemaining =
@@ -213,12 +212,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
-
+    if (!hasActiveSubscription) return false
     if (!quotas || !quotaLimits) return false
 
-    const used = (quotas as any)[type] || 0
-    const limit = (quotaLimits as any)[type] || 0
+    // Mapper QuotaType → clé dans PlanQuotas
+    const QUOTA_MAP: Record<QuotaType, keyof PlanQuotas> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    // Mapper QuotaType → clé dans UserQuotas
+    const USED_MAP: Record<QuotaType, keyof UserQuotas> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
 
+    const limit = quotaLimits[QUOTA_MAP[type]] as number
+    const used  = quotas[USED_MAP[type]] as number || 0
+
+    if (limit === -1) return true  // illimité
     return used < limit
   }
 
@@ -241,28 +258,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
+
         setUser(currentUser)
+
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
         }
+
         setIsLoading(false)
       }
     )
 
-    // 🔄 Refresh profil quand la fenêtre reprend le focus
-    const handleFocus = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await loadProfile(session.user.id)
-      }
-    }
-    window.addEventListener('focus', handleFocus)
-
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
