@@ -20,21 +20,21 @@ export default function AuthCallback() {
 
       // ── Reset password ────────────────────────────────────────
       if (tokenHash && type === 'recovery') {
-        // Nettoyer le préfixe pkce_ si présent
-        const cleanHash = tokenHash.startsWith('pkce_')
-          ? tokenHash.slice(5)
-          : tokenHash
-
+        // ❌ SUPPRIMÉ : Le nettoyage pkce_ n'est pas nécessaire et corrompt le token
+        // Utiliser le token_hash directement comme envoyé par Supabase
         const { error } = await supabase.auth.verifyOtp({
-          token_hash: cleanHash,
+          token_hash: tokenHash,  // Utilisé tel quel
           type: 'recovery',
         })
 
         if (error) {
           console.error('verifyOtp error:', error.message)
-          window.location.replace('/login?error=lien_expire')
+          // Redirection vers login avec message d'erreur explicite
+          window.location.replace(`/login?error=${encodeURIComponent('Lien expiré ou invalide. Veuillez réessayer.')}`)
           return
         }
+        
+        // ✅ SUCCÈS : Redirection vers la page de mise à jour
         window.location.replace('/auth/update-password')
         return
       }
@@ -43,6 +43,7 @@ export default function AuthCallback() {
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
+          console.error('OAuth error:', error)
           window.location.replace('/login')
           return
         }
@@ -50,7 +51,7 @@ export default function AuthCallback() {
         return
       }
 
-      // ── Hash fragment ─────────────────────────────────────────
+      // ── Hash fragment (fallback ancien flow) ─────────────────
       if (hash && hash.includes('access_token')) {
         const p  = new URLSearchParams(hash.replace('#', ''))
         const at = p.get('access_token')
@@ -74,7 +75,7 @@ export default function AuthCallback() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui', gap:16 }}>
       <div style={{ width:44, height:44, borderRadius:'50%', border:'3px solid rgba(79,110,247,0.25)', borderTopColor:'#4f6ef7', animation:'spin 0.8s linear infinite' }} />
-      <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, margin:0 }}>Connexion en cours...</p>
+      <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, margin:0 }}>Traitement en cours...</p>
       <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
