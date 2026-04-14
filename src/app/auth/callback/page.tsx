@@ -1,9 +1,12 @@
 'use client'
+// src/app/auth/callback/page.tsx
+// Gère : Google OAuth + reset password via token_hash
+
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AuthCallback() {
-  const [status, setStatus] = useState('Vérification...')
+  const [status, setStatus] = useState('Connexion en cours...')
   const ran = useRef(false)
 
   useEffect(() => {
@@ -17,55 +20,47 @@ export default function AuthCallback() {
       const code      = url.searchParams.get('code')
       const tokenHash = url.searchParams.get('token_hash')
       const type      = url.searchParams.get('type')
-      const hash      = window.location.hash
+      const next      = url.searchParams.get('next') || '/'
 
-      // Log pour debug
-      console.log('Callback params:', { code: !!code, tokenHash: !!tokenHash, type, hash: hash.slice(0,50) })
-
-      // ── token_hash (email template avec .TokenHash) ───────────────
-      if (tokenHash) {
+      // ── Reset password via token_hash ─────────────────────────
+      if (tokenHash && type === 'recovery') {
         setStatus('Vérification du lien...')
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'recovery',
         })
         if (error) {
-          console.error('verifyOtp error:', error)
-          window.location.replace('/login?error=lien_expire')
+          console.error('verifyOtp:', error.message)
+          // Même si erreur → tenter redirect (token peut être déjà consommé)
+          window.location.replace('/auth/reset-password')
           return
         }
         window.location.replace('/auth/reset-password')
         return
       }
 
-      // ── code PKCE (Google + reset password moderne) ───────────────
+      // ── Google OAuth via code PKCE ────────────────────────────
       if (code) {
-        setStatus('Connexion en cours...')
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+        setStatus('Finalisation connexion Google...')
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          console.error('exchangeCode error:', error)
-          window.location.replace('/login?error=invalid_code')
+          window.location.replace('/login?error=google')
           return
         }
-        // Supabase met le type dans la session après échange
-        // Pour recovery, on vérifie si l'user a un recovery token
-        if (type === 'recovery') {
-          window.location.replace('/auth/reset-password')
-          return
-        }
-        window.location.replace('/')
+        window.location.replace(next)
         return
       }
 
-      // ── hash fragment ─────────────────────────────────────────────
-      if (hash && hash.length > 1) {
-        const p = new URLSearchParams(hash.replace('#', ''))
-        const access_token  = p.get('access_token')
-        const refresh_token = p.get('refresh_token')
-        const hashType      = p.get('type')
-        if (access_token && refresh_token) {
-          await supabase.auth.setSession({ access_token, refresh_token })
-          if (hashType === 'recovery') {
+      // ── Hash fragment (ancien flow Supabase) ──────────────────
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token')) {
+        const p    = new URLSearchParams(hash.replace('#', ''))
+        const at   = p.get('access_token')
+        const rt   = p.get('refresh_token')
+        const htype = p.get('type')
+        if (at && rt) {
+          await supabase.auth.setSession({ access_token: at, refresh_token: rt })
+          if (htype === 'recovery') {
             window.location.replace('/auth/reset-password')
             return
           }
@@ -74,14 +69,14 @@ export default function AuthCallback() {
         }
       }
 
-      // ── Vérifier session existante ────────────────────────────────
+      // ── Session existante ──────────────────────────────────────
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         window.location.replace('/')
-      } else {
-        setStatus('Aucune session — redirection...')
-        setTimeout(() => { window.location.replace('/login') }, 1500)
+        return
       }
+
+      window.location.replace('/login')
     }
 
     run()

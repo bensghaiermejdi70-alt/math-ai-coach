@@ -1,47 +1,56 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+// src/app/auth/reset-password/page.tsx
+// Architecture : PKCE flow via /auth/confirm API route
+// Pas de verifyOtp côté client — tout géré côté serveur
+
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('')
-  const [confirm,  setConfirm]  = useState('')
-  const [showPwd,  setShowPwd]  = useState(false)
-  const [loading,  setLoading]  = useState(false)
-  const [ready,    setReady]    = useState(false)
-  const [errMsg,   setErrMsg]   = useState('')
-  const [done,     setDone]     = useState(false)
-  const ran = useRef(false)
+  const [password,  setPassword]  = useState('')
+  const [confirm,   setConfirm]   = useState('')
+  const [showPwd,   setShowPwd]   = useState(false)
+  const [loading,   setLoading]   = useState(false)
+  const [status,    setStatus]    = useState<'checking'|'ready'|'error'|'done'>('checking')
+  const [errMsg,    setErrMsg]    = useState('')
 
   useEffect(() => {
-    if (ran.current) return
-    ran.current = true
-
     const supabase = createClient()
 
-    // Écouter PASSWORD_RECOVERY en TOUT PREMIER
-    // Supabase émet cet event automatiquement quand le lien est valide
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'PASSWORD_RECOVERY') {
+    // Lire le hash fragment immédiatement
+    const hash = window.location.hash
+    
+    if (hash && hash.includes('access_token')) {
+      // Supabase a redirigé avec #access_token=...
+      // Le SDK Supabase détecte automatiquement ce hash
+      // et établit la session — on attend l'event
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
           subscription.unsubscribe()
-          setReady(true)
+          setStatus('ready')
         }
-      }
-    )
+      })
 
-    // Nettoyage après 30 secondes
-    const timer = setTimeout(() => {
-      subscription.unsubscribe()
-      if (!ready) {
-        setErrMsg('Lien expiré. Demande un nouveau lien.')
-      }
-    }, 30000)
+      // Timeout 5s
+      const t = setTimeout(() => {
+        subscription.unsubscribe()
+        // Essayer getSession comme fallback
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) setStatus('ready')
+          else { setErrMsg('Lien expiré. Demande un nouveau lien.'); setStatus('error') }
+        })
+      }, 5000)
 
-    return () => {
-      clearTimeout(timer)
-      subscription.unsubscribe()
+      return () => { clearTimeout(t); subscription.unsubscribe() }
     }
+
+    // Pas de hash → vérifier session existante
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) { setStatus('ready'); return }
+      setErrMsg('Lien invalide. Demande un nouveau lien depuis la connexion.')
+      setStatus('error')
+    })
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,12 +65,11 @@ export default function ResetPasswordPage() {
     setLoading(false)
 
     if (error) { setErrMsg(error.message); return }
-
-    setDone(true)
-    setTimeout(() => { window.location.href = '/login?updated=1' }, 2000)
+    setStatus('done')
+    setTimeout(() => { window.location.href = '/login?updated=1' }, 1500)
   }
 
-  if (done) return (
+  if (status === 'done') return (
     <div style={s.page}>
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:56, marginBottom:16 }}>✅</div>
@@ -71,11 +79,21 @@ export default function ResetPasswordPage() {
     </div>
   )
 
-  if (errMsg && !ready) return (
+  if (status === 'checking') return (
+    <div style={s.page}>
+      <div style={{ textAlign:'center' }}>
+        <div style={s.spinner} />
+        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:14 }}>Vérification...</p>
+        <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    </div>
+  )
+
+  if (status === 'error') return (
     <div style={s.page}>
       <div style={{ ...s.card, textAlign:'center', maxWidth:380 }}>
         <div style={{ fontSize:44, marginBottom:12 }}>⛔</div>
-        <h2 style={{ color:'white', marginBottom:10, fontSize:20 }}>Lien expiré</h2>
+        <h2 style={{ color:'white', marginBottom:10, fontSize:20 }}>Lien invalide</h2>
         <p style={{ color:'rgba(255,255,255,0.5)', fontSize:14, marginBottom:20 }}>{errMsg}</p>
         <button onClick={() => window.location.href = '/login'}
           style={{ ...s.btn, width:'100%' }}>
@@ -85,26 +103,12 @@ export default function ResetPasswordPage() {
     </div>
   )
 
-  if (!ready) return (
-    <div style={s.page}>
-      <div style={{ textAlign:'center' }}>
-        <div style={s.spinner} />
-        <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:14 }}>
-          Vérification du lien...
-        </p>
-        <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    </div>
-  )
-
   return (
     <div style={s.page}>
       <div style={{ width:'100%', maxWidth:400 }}>
         <div style={{ textAlign:'center', marginBottom:28 }}>
           <div style={{ fontSize:36, marginBottom:8 }}>🔐</div>
-          <h1 style={{ color:'white', fontSize:22, fontWeight:900, margin:'0 0 6px' }}>
-            Nouveau mot de passe
-          </h1>
+          <h1 style={{ color:'white', fontSize:22, fontWeight:900, margin:'0 0 6px' }}>Nouveau mot de passe</h1>
         </div>
         <div style={s.card}>
           {errMsg && <div style={s.alert}>⚠️ {errMsg}</div>}
@@ -113,9 +117,8 @@ export default function ResetPasswordPage() {
               <label style={s.label}>Nouveau mot de passe</label>
               <div style={{ position:'relative' }}>
                 <input type={showPwd?'text':'password'} value={password}
-                  onChange={e=>setPassword(e.target.value)}
-                  required minLength={6} placeholder="Minimum 6 caractères"
-                  style={s.input}
+                  onChange={e=>setPassword(e.target.value)} required minLength={6}
+                  placeholder="Minimum 6 caractères" style={s.input}
                   onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
                   onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
                 />
@@ -152,12 +155,12 @@ export default function ResetPasswordPage() {
 }
 
 const s: any = {
-  page:  { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui', padding:'20px' },
-  card:  { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, padding:32 },
-  spinner:{ width:40, height:40, borderRadius:'50%', border:'3px solid rgba(79,110,247,0.3)', borderTopColor:'#4f6ef7', animation:'spin 0.8s linear infinite', margin:'0 auto' },
-  label: { display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' },
-  input: { width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' },
-  eye:   { position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'rgba(255,255,255,0.4)' },
-  btn:   { padding:'12px 24px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:14, fontWeight:700, cursor:'pointer' },
-  alert: { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#fca5a5' },
+  page:    { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui', padding:'20px' },
+  card:    { background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:20, padding:32 },
+  spinner: { width:40, height:40, borderRadius:'50%', border:'3px solid rgba(79,110,247,0.3)', borderTopColor:'#4f6ef7', animation:'spin 0.8s linear infinite', margin:'0 auto' },
+  label:   { display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' },
+  input:   { width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' },
+  eye:     { position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'rgba(255,255,255,0.4)' },
+  btn:     { padding:'12px 24px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:14, fontWeight:700, cursor:'pointer' },
+  alert:   { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#fca5a5' },
 }
