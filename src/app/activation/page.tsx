@@ -43,7 +43,7 @@ const METHODS = {
     color: '#25d366',
     steps: [
       "Contacter par téléphone ou WhatsApp : 99 268 970",
-      "Convenir du mode de remise (en main propre ou virement CCP)",
+      "Convenir du mode de remise (versement espece  ou virement CCP)",
       "N° CCP : 17000000000046507174 — Mejdi Ben Sghaier",
       "Envoyer le montant exact puis entrer votre email ci-contre",
     ],

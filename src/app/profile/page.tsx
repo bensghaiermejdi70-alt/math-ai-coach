@@ -1,13 +1,19 @@
 'use client'
 // src/app/profile/page.tsx
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
 export default function ProfilePage() {
-  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut } = useAuth()
+  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut, refreshSubscription } = useAuth()
+
+  // Recharger le profil à chaque visite de la page
+  useEffect(() => {
+    if (user) refreshSubscription()
+  }, [user])
 
   const QUOTA_BARS = [
     { icon:'🎯', label:'Simulations Bac',    used: quotas?.simulations_used || 0, limit: quotaLimits.simulations_per_week },
