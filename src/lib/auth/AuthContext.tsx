@@ -265,22 +265,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
 
-          // ── Vérification session unique ───────────────────
-          const localSessionId = localStorage.getItem('session_id')
-          if (localSessionId) {
+          // ── Vérification session unique (abonnés seulement) ─
+          const isAdminUser = currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bensghaiermejdi70@gmail.com'
+          if (!isAdminUser) {
+            const localSessionId = localStorage.getItem('session_id')
             const { data: prof } = await supabase
               .from('profiles')
-              .select('current_session_id')
+              .select('current_session_id, is_active')
               .eq('id', currentUser.id)
               .single()
 
-            if (prof?.current_session_id && prof.current_session_id !== localSessionId) {
-              // Quelqu'un s'est connecté ailleurs → déconnecter
-              setUser(null); setProfile(null); setQuotas(null)
-              localStorage.removeItem('session_id')
-              await supabase.auth.signOut()
-              window.location.href = '/login?error=session_dupliquee'
-              return
+            if (prof?.is_active) {
+              if (!localSessionId) {
+                // Pas de session locale → enregistrer ce device
+                const newId = crypto.randomUUID()
+                localStorage.setItem('session_id', newId)
+                await supabase.from('profiles')
+                  .update({ current_session_id: newId })
+                  .eq('id', currentUser.id)
+              } else if (prof?.current_session_id && prof.current_session_id !== localSessionId) {
+                // Session différente → quelqu'un s'est connecté ailleurs
+                setUser(null); setProfile(null); setQuotas(null)
+                localStorage.removeItem('session_id')
+                await supabase.auth.signOut()
+                window.location.href = '/login?error=session_dupliquee'
+                return
+              }
             }
           }
         }
