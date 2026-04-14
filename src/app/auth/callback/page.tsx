@@ -1,8 +1,4 @@
 'use client'
-// src/app/auth/callback/page.tsx
-// Gère Google OAuth ET reset password
-// Redirige vers /auth/update-password pour le reset
-
 import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -16,26 +12,28 @@ export default function AuthCallback() {
     const supabase = createClient()
 
     const run = async () => {
-      const url  = new URL(window.location.href)
-      const code = url.searchParams.get('code')
-      const hash = window.location.hash
+      const url        = new URL(window.location.href)
+      const tokenHash  = url.searchParams.get('token_hash')
+      const type       = url.searchParams.get('type')
+      const code       = url.searchParams.get('code')
+      const hash       = window.location.hash
 
-      // ── Code PKCE ─────────────────────────────────────────────
-      if (code) {
-        const type = url.searchParams.get('type')
-        
-        // Si type=recovery dans l'URL → c'est un reset password
-        if (type === 'recovery') {
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error) {
-            window.location.replace('/login?error=lien_expire')
-            return
-          }
-          window.location.replace('/auth/update-password')
+      // ── Reset password via token_hash ─────────────────────────
+      if (tokenHash && type === 'recovery') {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: 'recovery',
+        })
+        if (error) {
+          window.location.replace('/login?error=lien_expire')
           return
         }
+        window.location.replace('/auth/update-password')
+        return
+      }
 
-        // Sinon → Google OAuth
+      // ── Google OAuth via code PKCE ────────────────────────────
+      if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
           window.location.replace('/login')
@@ -45,19 +43,15 @@ export default function AuthCallback() {
         return
       }
 
-      // ── Hash fragment (access_token) ──────────────────────────
+      // ── Hash fragment ─────────────────────────────────────────
       if (hash && hash.includes('access_token')) {
         const p    = new URLSearchParams(hash.replace('#', ''))
         const at   = p.get('access_token')
         const rt   = p.get('refresh_token')
-        const type = p.get('type')
+        const ht   = p.get('type')
         if (at && rt) {
           await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-          if (type === 'recovery') {
-            window.location.replace('/auth/update-password')
-            return
-          }
-          window.location.replace('/')
+          window.location.replace(ht === 'recovery' ? '/auth/update-password' : '/')
           return
         }
       }
