@@ -276,14 +276,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .single()
 
             if (prof?.is_active) {
-              if (!localSessionId) {
-                // Pas de session locale → enregistrer ce device
-                const newId = crypto.randomUUID()
-                localStorage.setItem('session_id', newId)
-                await supabase.from('profiles')
-                  .update({ current_session_id: newId })
-                  .eq('id', currentUser.id)
-              } else if (prof?.current_session_id && prof.current_session_id !== localSessionId) {
+              if (localSessionId && prof?.current_session_id && prof.current_session_id !== localSessionId) {
                 // Session différente → quelqu'un s'est connecté ailleurs
                 setUser(null); setProfile(null); setQuotas(null)
                 localStorage.removeItem('session_id')
@@ -291,6 +284,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 window.location.href = '/login?error=session_dupliquee'
                 return
               }
+              // Si pas de localSessionId → page reload normal, pas d'action
             }
           }
         }
