@@ -47,18 +47,20 @@ export default function AuthCallback() {
           window.location.replace('/login?error=callback')
           return
         }
-        // Détecter si c'est un reset password
-        // Supabase met amr=['otp'] dans les métadonnées pour recovery
-        const amr = (data.session as any)?.amr
-        const isRecovery = type === 'recovery' ||
-          (amr && Array.isArray(amr) && amr.some((a: any) => a.method === 'otp')) ||
-          data.user?.email_confirmed_at === null
-        
-        if (isRecovery || type === 'recovery') {
-          window.location.replace('/auth/reset-password')
-          return
-        }
-        window.location.replace(next)
+        // Après échange, Supabase émet PASSWORD_RECOVERY si c'est un reset
+        // On écoute l'event pendant 2 secondes
+        let redirected = false
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+          if (event === 'PASSWORD_RECOVERY' && !redirected) {
+            redirected = true
+            subscription.unsubscribe()
+            window.location.replace('/auth/reset-password')
+          }
+        })
+        setTimeout(() => {
+          subscription.unsubscribe()
+          if (!redirected) window.location.replace(next)
+        }, 2000)
         return
       }
 
