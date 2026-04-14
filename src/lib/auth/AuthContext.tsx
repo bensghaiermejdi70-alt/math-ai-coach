@@ -100,31 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(data)
   }
 
-  // 🔒 SESSION UNIQUE — vérifie que c'est bien la session active
-  async function checkSessionUnique(userId: string, sessionId: string) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('active_session_id')
-      .eq('id', userId)
-      .single()
-
-    if (!profile) return
-
-    // Si aucune session enregistrée → enregistrer celle-ci
-    if (!profile.active_session_id) {
-      await supabase.from('profiles')
-        .update({ active_session_id: sessionId })
-        .eq('id', userId)
-      return
-    }
-
-    // Si session différente → déconnecter cet utilisateur
-    if (profile.active_session_id !== sessionId) {
-      await supabase.auth.signOut()
-      window.location.href = '/login?error=session_dupliquee'
-    }
-  }
-
   // 📦 LOAD QUOTAS
   async function loadQuotas(userId: string) {
     const weekStart = getWeekStart()
@@ -160,14 +135,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: translateAuthError(error.message), user: null }
     }
 
-    // Mettre à jour le state + enregistrer session active
-    if (data.user && data.session) {
+    if (data.user) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
-      // Enregistrer cette session comme la session active
+
+      // ── Session unique ────────────────────────────────────
+      const sessionId = crypto.randomUUID()
+      localStorage.setItem('session_id', sessionId)
       await supabase.from('profiles')
-        .update({ active_session_id: data.session.access_token.slice(-20) })
+        .update({ current_session_id: sessionId })
         .eq('id', data.user.id)
     }
 
@@ -218,15 +195,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 🚪 LOGOUT
   async function signOut() {
-    setUser(null)
-    setProfile(null)
-    setQuotas(null)
-
-    await supabase.auth.signOut()
-
-    if (typeof window !== 'undefined') {
-      window.location.href = '/'
+    // Nettoyer session unique
+    if (user) {
+      localStorage.removeItem('session_id')
+      await supabase.from('profiles')
+        .update({ current_session_id: null })
+        .eq('id', user.id)
     }
+    setUser(null); setProfile(null); setQuotas(null)
+    await supabase.auth.signOut()
+    if (typeof window !== 'undefined') window.location.href = '/'
   }
 
   // 🔄 REFRESH
@@ -239,12 +217,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
-
     if (!quotas || !quotaLimits) return false
 
-    const used = (quotas as any)[type] || 0
-    const limit = (quotaLimits as any)[type] || 0
-
+    // Mapping correct QuotaType → PlanQuotas keys
+    const limitKey: Record<QuotaType, string> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    const usedKey: Record<QuotaType, string> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
+    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
+    const used  = (quotas as any)[usedKey[type]] as number ?? 0
+    if (limit === -1) return true
     return used < limit
   }
 
@@ -267,15 +259,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
-
         setUser(currentUser)
 
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
-          // Vérifier session unique
-          if (session?.access_token) {
-            await checkSessionUnique(currentUser.id, session.access_token.slice(-20))
+
+          // ── Vérification session unique ───────────────────
+          const localSessionId = localStorage.getItem('session_id')
+          if (localSessionId) {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('current_session_id')
+              .eq('id', currentUser.id)
+              .single()
+
+            if (prof?.current_session_id && prof.current_session_id !== localSessionId) {
+              // Quelqu'un s'est connecté ailleurs → déconnecter
+              setUser(null); setProfile(null); setQuotas(null)
+              localStorage.removeItem('session_id')
+              await supabase.auth.signOut()
+              window.location.href = '/login?error=session_dupliquee'
+              return
+            }
           }
         }
 
@@ -283,7 +289,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Refresh profil au focus fenêtre
+    const handleFocus = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) await loadProfile(session.user.id)
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   return (
