@@ -265,71 +265,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
 
-          // ── Vérification session unique (abonnés seulement) ─
-          const isAdminUser = currentUser.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'bensghaiermejdi70@gmail.com'
-          if (!isAdminUser) {
-            const localSessionId = localStorage.getItem('session_id')
-            const { data: prof } = await supabase
-              .from('profiles')
-              .select('current_session_id, is_active')
-              .eq('id', currentUser.id)
-              .single()
-
-            if (prof?.is_active) {
-              if (localSessionId && prof?.current_session_id && prof.current_session_id !== localSessionId) {
-                // Session différente → quelqu'un s'est connecté ailleurs
-                setUser(null); setProfile(null); setQuotas(null)
-                localStorage.removeItem('session_id')
-                await supabase.auth.signOut()
-                window.location.href = '/login?error=session_dupliquee'
-                return
-              }
-              // Si pas de localSessionId → page reload normal, pas d'action
-            }
-          }
+          // Session unique — temporairement désactivé
         }
 
         setIsLoading(false)
       }
     )
 
-    // Vérification session unique + refresh profil au focus
-    const verifySession = async () => {
+    // Refresh profil au focus
+    const handleFocus = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) return
-
-      const currentUser = session.user
-      const isAdminUser = currentUser.email === 'bensghaiermejdi70@gmail.com'
-      if (isAdminUser) return
-
-      await loadProfile(currentUser.id)
-
-      const localSessionId = localStorage.getItem('session_id')
-      if (!localSessionId) return
-
-      const { data: prof } = await supabase
-        .from('profiles')
-        .select('current_session_id, is_active')
-        .eq('id', currentUser.id)
-        .single()
-
-      if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localSessionId) {
-        // Session révoquée — quelqu'un d'autre s'est connecté
-        setUser(null); setProfile(null); setQuotas(null)
-        localStorage.removeItem('session_id')
-        await supabase.auth.signOut()
-        window.location.href = '/login?error=session_dupliquee'
-      }
+      if (session?.user) await loadProfile(session.user.id)
     }
-
-    window.addEventListener('focus', verifySession)
-    // Vérifier toutes les 30 secondes
-    const interval = setInterval(verifySession, 30000)
+    window.addEventListener('focus', handleFocus)
 
     return () => {
       subscription.unsubscribe()
-      window.removeEventListener('focus', verifySession)
-      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
     }
   }, [])
 
