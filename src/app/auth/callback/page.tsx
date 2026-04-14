@@ -1,12 +1,12 @@
 'use client'
 // src/app/auth/callback/page.tsx
-// Gère : Google OAuth + reset password via token_hash
+// Gère Google OAuth ET reset password
+// Redirige vers /auth/update-password pour le reset
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function AuthCallback() {
-  const [status, setStatus] = useState('Connexion en cours...')
   const ran = useRef(false)
 
   useEffect(() => {
@@ -16,65 +16,42 @@ export default function AuthCallback() {
     const supabase = createClient()
 
     const run = async () => {
-      const url       = new URL(window.location.href)
-      const code      = url.searchParams.get('code')
-      const tokenHash = url.searchParams.get('token_hash')
-      const type      = url.searchParams.get('type')
-      const next      = url.searchParams.get('next') || '/'
+      const url  = new URL(window.location.href)
+      const code = url.searchParams.get('code')
+      const hash = window.location.hash
 
-      // ── Reset password via token_hash ─────────────────────────
-      if (tokenHash && type === 'recovery') {
-        setStatus('Vérification du lien...')
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: tokenHash,
-          type: 'recovery',
-        })
-        if (error) {
-          console.error('verifyOtp:', error.message)
-          // Même si erreur → tenter redirect (token peut être déjà consommé)
-          window.location.replace('/auth/reset-password')
-          return
-        }
-        window.location.replace('/auth/reset-password')
-        return
-      }
-
-      // ── Code PKCE (Google OAuth OU Reset Password) ───────────
+      // ── Code PKCE (Google OAuth OU reset password) ────────────
       if (code) {
-        setStatus('Vérification...')
         const { data, error } = await supabase.auth.exchangeCodeForSession(code)
         if (error) {
-          window.location.replace('/login?error=callback')
+          window.location.replace('/login')
           return
         }
-        // Après échange, Supabase émet PASSWORD_RECOVERY si c'est un reset
-        // On écoute l'event pendant 2 secondes
-        let redirected = false
+        // Écouter PASSWORD_RECOVERY pour détecter reset password
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-          if (event === 'PASSWORD_RECOVERY' && !redirected) {
-            redirected = true
+          if (event === 'PASSWORD_RECOVERY') {
             subscription.unsubscribe()
-            window.location.replace('/auth/reset-password')
+            window.location.replace('/auth/update-password')
           }
         })
+        // Timeout 2s → si pas PASSWORD_RECOVERY c'est Google → home
         setTimeout(() => {
           subscription.unsubscribe()
-          if (!redirected) window.location.replace(next)
+          window.location.replace('/')
         }, 2000)
         return
       }
 
-      // ── Hash fragment (ancien flow Supabase) ──────────────────
-      const hash = window.location.hash
+      // ── Hash fragment (access_token) ──────────────────────────
       if (hash && hash.includes('access_token')) {
         const p    = new URLSearchParams(hash.replace('#', ''))
         const at   = p.get('access_token')
         const rt   = p.get('refresh_token')
-        const htype = p.get('type')
+        const type = p.get('type')
         if (at && rt) {
           await supabase.auth.setSession({ access_token: at, refresh_token: rt })
-          if (htype === 'recovery') {
-            window.location.replace('/auth/reset-password')
+          if (type === 'recovery') {
+            window.location.replace('/auth/update-password')
             return
           }
           window.location.replace('/')
@@ -82,14 +59,9 @@ export default function AuthCallback() {
         }
       }
 
-      // ── Session existante ──────────────────────────────────────
+      // ── Session existante ─────────────────────────────────────
       const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        window.location.replace('/')
-        return
-      }
-
-      window.location.replace('/login')
+      window.location.replace(session ? '/' : '/login')
     }
 
     run()
@@ -98,7 +70,7 @@ export default function AuthCallback() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0a0a1a', color:'white', fontFamily:'system-ui', gap:16 }}>
       <div style={{ width:44, height:44, borderRadius:'50%', border:'3px solid rgba(79,110,247,0.25)', borderTopColor:'#4f6ef7', animation:'spin 0.8s linear infinite' }} />
-      <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, margin:0 }}>{status}</p>
+      <p style={{ color:'rgba(255,255,255,0.45)', fontSize:14, margin:0 }}>Connexion en cours...</p>
       <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )

@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🔐 LOGIN
+  // 🔐 LOGIN - CORRIGÉ : Retourne l'utilisateur immédiatement
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -135,19 +135,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: translateAuthError(error.message), user: null }
     }
 
+    // Mettre à jour le state immédiatement
     if (data.user) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
-
-      // ── Session unique ────────────────────────────────────
-      const sessionId = crypto.randomUUID()
-      localStorage.setItem('session_id', sessionId)
-      await supabase.from('profiles')
-        .update({ current_session_id: sessionId })
-        .eq('id', data.user.id)
     }
 
+    // Rediriger vers home
+    window.location.href = '/'
     return { error: null, user: data.user }
   }
 
@@ -184,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔑 RESET PASSWORD
   async function resetPassword(email: string) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://app.mathsbac.com/api/auth/reset-confirm',
+      redirectTo: 'https://app.mathsbac.com/auth/callback',
     })
 
     if (error)
@@ -195,16 +191,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // 🚪 LOGOUT
   async function signOut() {
-    // Nettoyer session unique
-    if (user) {
-      localStorage.removeItem('session_id')
-      await supabase.from('profiles')
-        .update({ current_session_id: null })
-        .eq('id', user.id)
-    }
-    setUser(null); setProfile(null); setQuotas(null)
+    setUser(null)
+    setProfile(null)
+    setQuotas(null)
+
     await supabase.auth.signOut()
-    if (typeof window !== 'undefined') window.location.href = '/'
+
+    if (typeof window !== 'undefined') {
+      window.location.href = '/'
+    }
   }
 
   // 🔄 REFRESH
@@ -217,26 +212,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
+
     if (!quotas || !quotaLimits) return false
 
-    // Mapping correct QuotaType → PlanQuotas keys
-    const limitKey: Record<QuotaType, string> = {
-      simulations: 'simulations_per_week',
-      chat:        'chat_per_week',
-      solver:      'solver_per_week',
-      remediation: 'remediation_per_week',
-      analyses:    'analyses_per_week',
-    }
-    const usedKey: Record<QuotaType, string> = {
-      simulations: 'simulations_used',
-      chat:        'chat_used',
-      solver:      'solver_used',
-      remediation: 'remediation_used',
-      analyses:    'analyses_used',
-    }
-    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
-    const used  = (quotas as any)[usedKey[type]] as number ?? 0
-    if (limit === -1) return true
+    const used = (quotas as any)[type] || 0
+    const limit = (quotaLimits as any)[type] || 0
+
     return used < limit
   }
 
@@ -259,30 +240,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
+
         setUser(currentUser)
 
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
-
-          // Session unique — temporairement désactivé
         }
 
         setIsLoading(false)
       }
     )
 
-    // Refresh profil au focus
-    const handleFocus = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) await loadProfile(session.user.id)
-    }
-    window.addEventListener('focus', handleFocus)
-
-    return () => {
-      subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
