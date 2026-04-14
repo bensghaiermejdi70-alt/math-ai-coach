@@ -1,8 +1,4 @@
 'use client'
-// src/app/auth/update-password/page.tsx
-// Page pour changer le mot de passe après reset
-// La session est établie par /auth/callback
-
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
@@ -23,42 +19,66 @@ export default function UpdatePasswordPage() {
 
     const supabase = createClient()
 
-    // Vérifier session active
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) { setReady(true); return }
-
-      // Attendre PASSWORD_RECOVERY
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') && session) {
-          subscription.unsubscribe()
+    const checkSession = async () => {
+      // Avec @supabase/ssr, les cookies peuvent prendre un peu de temps
+      // On essaie plusieurs fois sur 3 secondes
+      let attempts = 0
+      const maxAttempts = 15  // 15 x 200ms = 3 secondes
+      
+      while (attempts < maxAttempts) {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('getSession error:', error)
+        }
+        
+        if (session) {
+          console.log('✅ Session trouvée dans update-password')
           setReady(true)
+          return
         }
-      })
+        
+        console.log(`⏳ Tentative ${attempts + 1}/${maxAttempts}...`)
+        await new Promise(resolve => setTimeout(resolve, 200))
+        attempts++
+      }
+      
+      // Si après 3 secondes rien
+      console.error('❌ Session non trouvée après attente')
+      setErrMsg('Session expirée ou lien invalide. Veuillez recommencer.')
+      setReady(true)
+    }
 
-      setTimeout(() => {
-        subscription.unsubscribe()
-        if (!ready) {
-          setErrMsg('Session expirée. Demande un nouveau lien.')
-          setReady(true) // montrer le formulaire avec erreur
-        }
-      }, 5000)
-    })
+    checkSession()
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErrMsg('')
-    if (password.length < 6) { setErrMsg('Minimum 6 caractères'); return }
-    if (password !== confirm) { setErrMsg('Les mots de passe ne correspondent pas'); return }
+    
+    if (password.length < 6) { 
+      setErrMsg('Minimum 6 caractères'); 
+      return 
+    }
+    if (password !== confirm) { 
+      setErrMsg('Les mots de passe ne correspondent pas'); 
+      return 
+    }
 
     setLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
     setLoading(false)
 
-    if (error) { setErrMsg(error.message); return }
+    if (error) { 
+      setErrMsg(error.message)
+      return 
+    }
+    
     setDone(true)
-    setTimeout(() => { window.location.href = '/login?updated=1' }, 1500)
+    setTimeout(() => { 
+      window.location.href = '/login?updated=1' 
+    }, 2000)
   }
 
   if (!ready) return (
@@ -93,40 +113,66 @@ export default function UpdatePasswordPage() {
             Choisis un mot de passe sécurisé
           </p>
         </div>
+        
         <div style={s.card}>
-          {errMsg && <div style={s.alert}>⚠️ {errMsg}</div>}
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom:14 }}>
-              <label style={s.label}>Nouveau mot de passe</label>
-              <div style={{ position:'relative' }}>
-                <input type={showPwd?'text':'password'} value={password}
-                  onChange={e=>setPassword(e.target.value)}
-                  required minLength={6} placeholder="Minimum 6 caractères"
-                  style={s.input}
-                  onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                  onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
-                />
-                <button type="button" onClick={()=>setShowPwd(v=>!v)} style={s.eye}>
-                  {showPwd?'🙈':'👁️'}
-                </button>
+          {errMsg && (
+            <div style={{ ...s.alert, marginBottom:16 }}>
+              ⚠️ {errMsg}
+              <div style={{ marginTop:8 }}>
+                <Link href="/login" style={{ color:'#4f6ef7', textDecoration:'none', fontSize:12 }}>
+                  ← Retour à la connexion
+                </Link>
               </div>
             </div>
-            <div style={{ marginBottom:24 }}>
-              <label style={s.label}>Confirmer</label>
-              <input type={showPwd?'text':'password'} value={confirm}
-                onChange={e=>setConfirm(e.target.value)} required
-                placeholder="Répète le mot de passe"
-                style={{ ...s.input, padding:'11px 14px',
-                  borderColor:confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)' }}
-                onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                onBlur={e=>e.target.style.borderColor=confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)'}
-              />
-            </div>
-            <button type="submit" disabled={loading}
-              style={{ ...s.btn, width:'100%', opacity:loading?0.7:1, cursor:loading?'not-allowed':'pointer' }}>
-              {loading?'Mise à jour...':'✅ Changer mon mot de passe'}
-            </button>
-          </form>
+          )}
+          
+          {!errMsg && (
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom:14 }}>
+                <label style={s.label}>Nouveau mot de passe</label>
+                <div style={{ position:'relative' }}>
+                  <input 
+                    type={showPwd?'text':'password'} 
+                    value={password}
+                    onChange={e=>setPassword(e.target.value)}
+                    required 
+                    minLength={6} 
+                    placeholder="Minimum 6 caractères"
+                    style={s.input}
+                    onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
+                    onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
+                  />
+                  <button type="button" onClick={()=>setShowPwd(v=>!v)} style={s.eye}>
+                    {showPwd?'🙈':'👁️'}
+                  </button>
+                </div>
+              </div>
+              
+              <div style={{ marginBottom:24 }}>
+                <label style={s.label}>Confirmer</label>
+                <input 
+                  type={showPwd?'text':'password'} 
+                  value={confirm}
+                  onChange={e=>setConfirm(e.target.value)} 
+                  required
+                  placeholder="Répète le mot de passe"
+                  style={{ ...s.input, padding:'11px 14px',
+                    borderColor:confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)' }}
+                  onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
+                  onBlur={e=>e.target.style.borderColor=confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)'}
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ ...s.btn, width:'100%', opacity:loading?0.7:1, cursor:loading?'not-allowed':'pointer' }}
+              >
+                {loading?'Mise à jour...':'✅ Changer mon mot de passe'}
+              </button>
+            </form>
+          )}
+          
           <div style={{ textAlign:'center', marginTop:16 }}>
             <Link href="/login" style={{ color:'rgba(255,255,255,0.35)', fontSize:12, textDecoration:'none' }}>
               ← Retour connexion
@@ -146,5 +192,5 @@ const s: any = {
   input:   { width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' },
   eye:     { position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'rgba(255,255,255,0.4)' },
   btn:     { padding:'12px 24px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:14, fontWeight:700, cursor:'pointer' },
-  alert:   { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#fca5a5' },
+  alert:   { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:10, padding:'10px 14px', fontSize:13, color:'#fca5a5' },
 }
