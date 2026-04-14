@@ -240,19 +240,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
-
         setUser(currentUser)
-
         if (currentUser) {
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
         }
-
         setIsLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    // 🔄 Refresh profil quand la fenêtre reprend le focus
+    const handleFocus = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        await loadProfile(session.user.id)
+      }
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   return (
