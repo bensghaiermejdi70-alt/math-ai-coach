@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+const ADMIN_EMAIL = 'bensghaiermejdi70@gmail.com'
 
 const PUBLIC_ROUTES = [
   '/',
@@ -13,14 +13,17 @@ const PUBLIC_ROUTES = [
   '/bac-blanc',
   '/examens',
   '/bac',
+  '/bac-france',
+  '/solve', // Solveur accessible sans login
 ]
 
 const PROTECTED_ROUTES = [
   '/chat',
   '/profile',
   '/simulation',
-  '/solve',
-  '/app'
+  '/app',
+  '/dashboard',
+  '/settings',
 ]
 
 export async function middleware(request: NextRequest) {
@@ -57,13 +60,21 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith(route)
   )
 
-  // 🔥 1. ADMIN BYPASS
+  const isPublic = PUBLIC_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
+  )
+
+  // 🔥 1. ADMIN BYPASS - Aucune restriction pour l'admin
   if (email && email === ADMIN_EMAIL) {
+    // 🔥 6. BLOQUER LOGIN SI CONNECTÉ (même pour admin)
+    if (pathname === '/login' || pathname === '/register') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
     return response
   }
 
-  // 🔥 2. PUBLIC ROUTES
-  if (PUBLIC_ROUTES.includes(pathname)) {
+  // 🔥 2. PUBLIC ROUTES - Pas besoin de vérifier
+  if (isPublic) {
     return response
   }
 
@@ -74,11 +85,11 @@ export async function middleware(request: NextRequest) {
     )
   }
 
-  // 🔥 4. CONNECTÉ → CHECK SUBSCRIPTION
+  // 🔥 4. CONNECTÉ → CHECK SUBSCRIPTION + SESSION UNIQUE
   if (user && isProtected) {
     const { data: profile, error } = await supabase
-      .from('profiles') // ✅ FIX IMPORTANT
-      .select('is_active, subscription_end, country')
+      .from('profiles')
+      .select('is_active, subscription_end, country, current_session_id')
       .eq('id', user.id)
       .single()
 
@@ -101,15 +112,25 @@ export async function middleware(request: NextRequest) {
     const hasAccess =
       profile.is_active === true && !isExpired
 
-    // 🔥 5. BLOQUAGE GLOBAL ACCÈS
+    // 🔥 5. BLOQUAGE GLOBAL ACCÈS (pas d'abonnement actif)
     if (!hasAccess) {
       return NextResponse.redirect(
         new URL('/abonnement', request.url)
       )
     }
+
+    // 🔒 6. VÉRIFICATION SESSION UNIQUE
+    // Note: Le middleware ne peut pas lire localStorage (côté serveur)
+    // Cette vérification est faite côté client dans AuthContext
+    // Mais on peut vérifier si current_session_id existe (session créée)
+    // Si pas de session_id mais abonnement actif = problème de sync
+    if (hasAccess && !profile.current_session_id) {
+      // Première connexion ou reset, on laisse passer
+      // Le AuthContext va créer la session côté client
+    }
   }
 
-  // 🔥 6. BLOQUER LOGIN SI CONNECTÉ
+  // 🔥 7. BLOQUER LOGIN SI CONNECTÉ
   if (user && (pathname === '/login' || pathname === '/register')) {
     return NextResponse.redirect(new URL('/', request.url))
   }

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
@@ -183,6 +184,46 @@ function VideoPlayer() {
 }
 
 export default function HomePage() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  // 🔒 Vérification session unique - déconnexion si session dupliquée
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) return
+
+      const user = session.user
+      
+      // Admin exempt
+      if (user.email === 'bensghaiermejdi70@gmail.com') return
+
+      const localId = localStorage.getItem('mathbac_session_id')
+      if (!localId) return
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('current_session_id, is_active')
+        .eq('id', user.id)
+        .single()
+
+      // Si session différente ET utilisateur a un abonnement actif → kick
+      if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
+        localStorage.removeItem('mathbac_session_id')
+        await supabase.auth.signOut()
+        window.location.href = '/login?error=session_dupliquee'
+      }
+    }
+
+    checkSession()
+    
+    // Vérifier aussi toutes les 10 secondes sur la homepage
+    const interval = setInterval(checkSession, 10000)
+    return () => clearInterval(interval)
+  }, [supabase])
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       e => e.forEach(x => x.isIntersecting && (x.target as HTMLElement).classList.add('visible')),
