@@ -193,11 +193,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
-    if (user && user.email !== 'bensghaiermejdi70@gmail.com') {
-      localStorage.removeItem('mathbac_session_id')
-      await supabase.from('profiles')
-        .update({ current_session_id: null })
-        .eq('id', user.id)
+    // Nettoyer session avant déconnexion
+    localStorage.removeItem('mathbac_session_id')
+    if (user) {
+      try {
+        await supabase.from('profiles')
+          .update({ current_session_id: null })
+          .eq('id', user.id)
+      } catch (_) {}
     }
     setUser(null); setProfile(null); setQuotas(null)
     await supabase.auth.signOut()
@@ -260,15 +263,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // ── Refresh profil + vérification session unique ──────────
+    // ── Refresh profil au focus ───────────────────────────────
+    let signingOut = false
+
     const verifySingleSession = async () => {
+      if (signingOut) return
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user) return
 
       const currentUser = session.user
       await loadProfile(currentUser.id)
 
-      // Admin exempt de la vérification session unique
+      // Admin TOUJOURS exempt
       if (currentUser.email === 'bensghaiermejdi70@gmail.com') return
 
       const localId = localStorage.getItem('mathbac_session_id')
@@ -280,7 +286,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', currentUser.id)
         .single()
 
+      // Vérifier seulement si abonné actif ET session différente
       if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
+        signingOut = true
         localStorage.removeItem('mathbac_session_id')
         setUser(null); setProfile(null); setQuotas(null)
         await supabase.auth.signOut()
