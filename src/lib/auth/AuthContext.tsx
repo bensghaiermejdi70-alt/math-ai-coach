@@ -131,18 +131,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (data.user) {
-      setUser(data.user)
-      await loadProfile(data.user.id)
-      await loadQuotas(data.user.id)
-
-      // Enregistrer session unique (admin exempt)
-      if (data.user.email !== 'bensghaiermejdi70@gmail.com') {
+      // 🔒 VÉRIFICATION SESSION UNIQUE AU MOMENT DE LA CONNEXION
+      const isUserAdmin = data.user.email === 'bensghaiermejdi70@gmail.com'
+      
+      if (!isUserAdmin) {
+        // Vérifier si une session existe déjà
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('current_session_id, is_active')
+          .eq('id', data.user.id)
+          .single()
+        
+        // Si l'utilisateur a un abonnement actif ET une session active → refuser
+        if (prof?.is_active && prof?.current_session_id) {
+          // Déconnecter immédiatement
+          await supabase.auth.signOut()
+          return { 
+            error: 'Ce compte est déjà connecté sur un autre appareil. Déconnectez-vous d\'abord.', 
+            user: null 
+          }
+        }
+        
+        // Créer nouvelle session
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
         await supabase.from('profiles')
           .update({ current_session_id: sessionId })
           .eq('id', data.user.id)
       }
+      
+      setUser(data.user)
+      await loadProfile(data.user.id)
+      await loadQuotas(data.user.id)
     }
 
     window.location.href = '/'
@@ -169,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signInWithGoogle() {
+    // 🔒 Pour Google OAuth, on vérifie après le callback dans useEffect
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -254,27 +275,66 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         const currentUser = session?.user ?? null
-        setUser(currentUser)
+        
         if (currentUser) {
+          // 🔒 Vérification session unique pour OAuth/callback
+          const isUserAdmin = currentUser.email === 'bensghaiermejdi70@gmail.com'
+          
+          if (!isUserAdmin) {
+            const localId = localStorage.getItem('mathbac_session_id')
+            
+            // Vérifier en base si session différente
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('current_session_id, is_active')
+              .eq('id', currentUser.id)
+              .single()
+            
+            // Si pas de localId mais session en base existe → nouvelle connexion OAuth
+            if (!localId && prof?.current_session_id) {
+              // Première connexion OAuth sur ce device
+              const newSessionId = crypto.randomUUID()
+              localStorage.setItem('mathbac_session_id', newSessionId)
+              await supabase.from('profiles')
+                .update({ current_session_id: newSessionId })
+                .eq('id', currentUser.id)
+            }
+            // Si localId différent de celui en base → session dupliquée
+            else if (localId && prof?.current_session_id && prof.current_session_id !== localId) {
+              // Déconnexion forcée
+              localStorage.removeItem('mathbac_session_id')
+              setUser(null); setProfile(null); setQuotas(null)
+              await supabase.auth.signOut()
+              window.location.href = '/login?error=session_dupliquee'
+              return
+            }
+          }
+          
+          setUser(currentUser)
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
+        } else {
+          setUser(null)
+          setProfile(null)
+          setQuotas(null)
         }
+        
         setIsLoading(false)
       }
     )
 
-    // ── Refresh profil au focus ───────────────────────────────
+    // ── Vérification périodique ───────────────────────────────
     let signingOut = false
 
     const verifySingleSession = async () => {
       if (signingOut) return
+      
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user) return
 
       const currentUser = session.user
-      await loadProfile(currentUser.id)
-
-      // Admin TOUJOURS exempt
+      
+      // Admin exempt
       if (currentUser.email === 'bensghaiermejdi70@gmail.com') return
 
       const localId = localStorage.getItem('mathbac_session_id')
@@ -286,7 +346,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', currentUser.id)
         .single()
 
-      // Vérifier seulement si abonné actif ET session différente
+      // Vérifier si session différente ET utilisateur a un abonnement actif
       if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
         signingOut = true
         localStorage.removeItem('mathbac_session_id')
@@ -304,7 +364,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('focus', verifySingleSession)
       clearInterval(interval)
     }
-  }, [])
+  }, [supabase])
 
   return (
     <AuthContext.Provider
@@ -361,3 +421,4 @@ function translateAuthError(msg: string): string {
     return 'Cet email est déjà utilisé'
   return msg
 }
+
