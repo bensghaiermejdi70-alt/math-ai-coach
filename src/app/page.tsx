@@ -600,6 +600,70 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ═══════════════════════════════════════ CONTACT */}
+        <section id="contact" style={{ padding:'clamp(60px,10vh,100px) clamp(20px,5vw,60px)', position:'relative' }}>
+          <div aria-hidden style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:600, height:300, background:'radial-gradient(ellipse,rgba(79,110,247,0.1) 0%,transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }} />
+          <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center', position:'relative' }}>
+
+            {/* Badge */}
+            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(79,110,247,0.1)', border:'1px solid rgba(79,110,247,0.25)', borderRadius:100, padding:'6px 16px', fontSize:12, color:'#818cf8', marginBottom:24 }}>
+              📬 Contactez-nous
+            </div>
+
+            <h2 style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:'clamp(22px,3vw,36px)', marginBottom:12, letterSpacing:'-0.02em' }}>
+              Une question ? On vous répond.
+            </h2>
+            <p style={{ fontSize:15, color:'var(--text2)', marginBottom:40, lineHeight:1.7 }}>
+              Support pédagogique, abonnements, partenariats —<br/>
+              disponible 7j/7 via WhatsApp ou email.
+            </p>
+
+            {/* Cards contact */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, maxWidth:560, margin:'0 auto' }}>
+
+              {/* WhatsApp */}
+              <a href="https://wa.me/21699268970" target="_blank" rel="noopener noreferrer"
+                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'28px 20px', borderRadius:18, background:'rgba(37,211,102,0.07)', border:'1px solid rgba(37,211,102,0.25)', textDecoration:'none', transition:'all 0.25s', cursor:'pointer' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(37,211,102,0.14)';e.currentTarget.style.borderColor='rgba(37,211,102,0.5)';e.currentTarget.style.transform='translateY(-3px)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(37,211,102,0.07)';e.currentTarget.style.borderColor='rgba(37,211,102,0.25)';e.currentTarget.style.transform='none'}}
+              >
+                <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(37,211,102,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>
+                  💬
+                </div>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:15, color:'#25d366', marginBottom:4 }}>WhatsApp</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontFamily:'var(--font-mono)' }}>+216 99 268 970</div>
+                </div>
+                <div style={{ fontSize:11, color:'rgba(37,211,102,0.7)', fontWeight:600 }}>Réponse rapide →</div>
+              </a>
+
+              {/* Email */}
+              <a href="mailto:bensghaiermejdi70@gmail.com"
+                style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, padding:'28px 20px', borderRadius:18, background:'rgba(79,110,247,0.07)', border:'1px solid rgba(79,110,247,0.2)', textDecoration:'none', transition:'all 0.25s', cursor:'pointer' }}
+                onMouseEnter={e=>{e.currentTarget.style.background='rgba(79,110,247,0.14)';e.currentTarget.style.borderColor='rgba(79,110,247,0.5)';e.currentTarget.style.transform='translateY(-3px)'}}
+                onMouseLeave={e=>{e.currentTarget.style.background='rgba(79,110,247,0.07)';e.currentTarget.style.borderColor='rgba(79,110,247,0.2)';e.currentTarget.style.transform='none'}}
+              >
+                <div style={{ width:52, height:52, borderRadius:'50%', background:'rgba(79,110,247,0.15)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>
+                  ✉️
+                </div>
+                <div>
+                  <div style={{ fontWeight:800, fontSize:15, color:'#818cf8', marginBottom:4 }}>Email</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.6)', fontFamily:'var(--font-mono)' }}>bensghaiermejdi70@gmail.com</div>
+                </div>
+                <div style={{ fontSize:11, color:'rgba(79,110,247,0.7)', fontWeight:600 }}>Réponse sous 24h →</div>
+              </a>
+
+            </div>
+
+            {/* Info horaires */}
+            <div style={{ marginTop:28, padding:'14px 24px', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:12, display:'inline-flex', alignItems:'center', gap:10, fontSize:13, color:'var(--muted)' }}>
+              <span>🕐</span>
+              <span>Disponible <strong style={{ color:'var(--text)' }}>7j/7</strong> · Réponse WhatsApp en moins de <strong style={{ color:'var(--text)' }}>2h</strong></span>
+            </div>
+
+          </div>
+        </section>
+
       </main>
       <Footer />
 

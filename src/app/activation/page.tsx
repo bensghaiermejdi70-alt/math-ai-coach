@@ -315,7 +315,7 @@ function ActivationInner() {
                 Versement espèces / Virement CCP
               </div>
               <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.5 }}>
-                En main propre ou virement CCP · N° 17000000000046507174
+                versement espece ou virement CCP · N° 17000000000046507174
               </div>
               {method === 'especes' && (
                 <div style={{ marginTop:12, fontSize:11, fontWeight:700, color:'#25d366', letterSpacing:'0.05em' }}>

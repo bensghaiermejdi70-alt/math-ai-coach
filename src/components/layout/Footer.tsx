@@ -46,6 +46,7 @@ export default function Footer() {
           { href: '/bac', l: 'Programme Bac' },
           { href: '/examens', l: 'Examens' },
           { href: '/chat', l: 'Chat IA' },
+          { href: '/#contact', l: 'Contact' },
         ].map(({ href, l }) => (
           <Link
             key={href}
