@@ -159,6 +159,7 @@ function LoginInner() {
               <div style={{ marginBottom:14 }}>
                 <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Email</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
+                  autoComplete="email"
                   placeholder="ton@email.com"
                   style={{ width:'100%', padding:'11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
                   onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
@@ -170,6 +171,7 @@ function LoginInner() {
                 <label style={{ display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>Mot de passe</label>
                 <div style={{ position:'relative' }}>
                   <input type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     style={{ width:'100%', padding:'11px 44px 11px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:14, outline:'none', boxSizing:'border-box' as any }}
                     onFocus={e => e.target.style.borderColor = 'rgba(79,110,247,0.6)'}
@@ -215,4 +217,3 @@ export default function LoginPage() {
     </Suspense>
   )
 }
-
