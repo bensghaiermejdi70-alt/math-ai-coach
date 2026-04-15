@@ -11,8 +11,13 @@ export default function UpdatePasswordPage() {
   const [ready,    setReady]    = useState(false)
   const [done,     setDone]     = useState(false)
   const [errMsg,   setErrMsg]   = useState('')
-  const [debug,    setDebug]    = useState('') // Pour déboguer
+  const [debug,    setDebug]    = useState<string[]>([])
   const ran = useRef(false)
+
+  const addDebug = (msg: string) => {
+    setDebug(prev => [...prev, msg])
+    console.log(msg)
+  }
 
   useEffect(() => {
     if (ran.current) return
@@ -21,35 +26,46 @@ export default function UpdatePasswordPage() {
     const supabase = createClient()
 
     const checkSession = async () => {
-      setDebug('Vérification de la session...')
+      addDebug('Démarrage vérification...')
       
-      // Essayer immédiatement d'abord
-      const { data: { session }, error } = await supabase.auth.getSession()
+      // Essayer de récupérer la session immédiatement
+      let { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
-        console.error('getSession error:', error)
-        setDebug('Erreur: ' + error.message)
+        addDebug('Erreur getSession: ' + error.message)
       }
 
       if (session) {
-        console.log('✅ Session found immediately')
-        setDebug('Session trouvée !')
+        addDebug('✅ Session trouvée immédiatement')
         setReady(true)
         return
       }
 
-      // Si pas de session immédiatement, attendre avec retry
-      setDebug('Attente de la session...')
+      addDebug('⏳ Session non trouvée, attente...')
+
+      // Essayer de refresh la session
+      addDebug('Tentative refreshSession...')
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession()
+      
+      if (refreshError) {
+        addDebug('❌ refreshSession error: ' + refreshError.message)
+      } else if (refreshData.session) {
+        addDebug('✅ Session refreshée')
+        setReady(true)
+        return
+      }
+
+      // Attendre avec retry
       let attempts = 0
-      const maxAttempts = 20  // 4 secondes
+      const maxAttempts = 20
       
       while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise(resolve => setTimeout(resolve, 300))
         
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          console.log('✅ Session found after', attempts, 'attempts')
-          setDebug('Session trouvée après ' + (attempts * 200) + 'ms')
+        const { data: { session: retrySession } } = await supabase.auth.getSession()
+        
+        if (retrySession) {
+          addDebug(`✅ Session trouvée après ${attempts + 1} tentatives`)
           setReady(true)
           return
         }
@@ -57,9 +73,8 @@ export default function UpdatePasswordPage() {
         attempts++
       }
       
-      console.error('❌ Session not found after waiting')
-      setDebug('Session non trouvée après 4s')
-      setErrMsg('Lien expiré ou invalide. Veuillez demander un nouveau lien de réinitialisation.')
+      addDebug('❌ Échec après 20 tentatives')
+      setErrMsg('Session non trouvée. Le lien a peut-être expiré ou les cookies sont bloqués.')
       setReady(true)
     }
 
@@ -82,23 +97,18 @@ export default function UpdatePasswordPage() {
     setLoading(true)
     const supabase = createClient()
     
-    try {
-      const { error } = await supabase.auth.updateUser({ password })
-      
-      if (error) { 
-        setErrMsg(error.message)
-        setLoading(false)
-        return 
-      }
-      
-      setDone(true)
-      setTimeout(() => { 
-        window.location.href = '/login?updated=1' 
-      }, 2000)
-    } catch (err) {
-      setErrMsg('Erreur lors de la mise à jour')
-      setLoading(false)
+    const { error } = await supabase.auth.updateUser({ password })
+    setLoading(false)
+
+    if (error) { 
+      setErrMsg(error.message)
+      return 
     }
+    
+    setDone(true)
+    setTimeout(() => { 
+      window.location.href = '/login?updated=1' 
+    }, 2000)
   }
 
   if (!ready) return (
@@ -106,7 +116,12 @@ export default function UpdatePasswordPage() {
       <div style={{ textAlign:'center' }}>
         <div style={s.spinner} />
         <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:14 }}>Vérification...</p>
-        <p style={{ color:'rgba(255,255,255,0.3)', fontSize:11, marginTop:8 }}>{debug}</p>
+        <div style={{ marginTop:20, textAlign:'left', maxWidth: 350, background:'rgba(0,0,0,0.3)', padding:10, borderRadius:8 }}>
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:10, margin:0 }}>Debug:</p>
+          {debug.map((d, i) => (
+            <p key={i} style={{ color:'rgba(255,255,255,0.4)', fontSize:9, margin:'2px 0' }}>{d}</p>
+          ))}
+        </div>
         <style suppressHydrationWarning>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
@@ -162,8 +177,6 @@ export default function UpdatePasswordPage() {
                       placeholder="Minimum 6 caractères"
                       style={s.input}
                       autoComplete="new-password"
-                      onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                      onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.12)'}
                     />
                     <button type="button" onClick={()=>setShowPwd(v=>!v)} style={s.eye}>
                       {showPwd?'🙈':'👁️'}
@@ -182,8 +195,6 @@ export default function UpdatePasswordPage() {
                     style={{ ...s.input, padding:'11px 14px',
                       borderColor:confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)' }}
                     autoComplete="new-password"
-                    onFocus={e=>e.target.style.borderColor='rgba(79,110,247,0.6)'}
-                    onBlur={e=>e.target.style.borderColor=confirm&&confirm!==password?'rgba(239,68,68,0.5)':'rgba(255,255,255,0.12)'}
                   />
                 </div>
                 
