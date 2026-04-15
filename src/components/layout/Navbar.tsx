@@ -391,8 +391,8 @@ function AbonnementDropdown({ pathname }: { pathname: string }) {
                 <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,rgba(220,38,38,0.2),rgba(234,88,12,0.15))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>🇹🇳</div>
                 <div>
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>Abonnement Tunisie</div>
-                  <div style={{ fontSize:11, color:'var(--muted)' }}>70 DT · 100 DT · 700 DT/an</div>
-                  <div style={{ fontSize:10, color:'var(--gold)', fontWeight:600, marginTop:1 }}>Paiement D17 · Flouci · Recharge</div>
+                  <div style={{ fontSize:11, color:'var(--muted)' }}>60 DT · 90 DT · 600 DT/an</div>
+                  <div style={{ fontSize:10, color:'var(--gold)', fontWeight:600, marginTop:1 }}>Paiement D17 · versement espece . virement </div>
                 </div>
               </div>
             </Link>
@@ -411,7 +411,7 @@ function AbonnementDropdown({ pathname }: { pathname: string }) {
                 <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(99,102,241,0.15))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>🇫🇷</div>
                 <div>
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>Abonnement France</div>
-                  <div style={{ fontSize:11, color:'var(--muted)' }}>29€ · 49€ · 299€/an</div>
+                  <div style={{ fontSize:11, color:'var(--muted)' }}>19€ · 29€ · 199€/an</div>
                   <div style={{ fontSize:10, color:'#60a5fa', fontWeight:600, marginTop:1 }}>Paiement sécurisé Stripe · Carte bancaire</div>
                 </div>
               </div>
