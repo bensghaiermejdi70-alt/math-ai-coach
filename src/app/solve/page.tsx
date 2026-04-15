@@ -1084,6 +1084,7 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(async (file: File) => {
     setError(''); setFileName(file.name); setLoading(true)
@@ -1124,42 +1125,48 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
         📎 Importer un exercice
       </div>
+
+      {/* ── Bouton photo caméra mobile ─────────────────────── */}
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+      <button
+        onClick={() => !loading && cameraRef.current?.click()}
+        disabled={loading}
+        style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'12px', borderRadius:12, marginBottom:10, border:'1px solid rgba(6,214,160,0.35)', background:'rgba(6,214,160,0.08)', color: loading ? 'rgba(255,255,255,0.3)' : '#06d6a0', fontSize:14, fontWeight:700, cursor: loading ? 'not-allowed' : 'pointer', transition:'all 0.2s', fontFamily:'inherit' }}
+        onMouseEnter={e => { if(!loading){e.currentTarget.style.background='rgba(6,214,160,0.15)';e.currentTarget.style.borderColor='rgba(6,214,160,0.6)'}}}
+        onMouseLeave={e => {e.currentTarget.style.background='rgba(6,214,160,0.08)';e.currentTarget.style.borderColor='rgba(6,214,160,0.35)'}}
+      >
+        <span style={{ fontSize:20 }}>📸</span>
+        {loading ? 'Analyse en cours...' : "Prendre une photo de l'exercice"}
+      </button>
+
+      {/* ── Zone drag & drop fichier ───────────────────────── */}
       <div
         onClick={() => !loading && inputRef.current?.click()}
         onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
-        style={{ border: `2px dashed ${dragging ? '#4f6ef7' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, padding: '22px 16px', textAlign: 'center', cursor: loading ? 'wait' : 'pointer', background: dragging ? 'rgba(79,110,247,0.08)' : 'rgba(255,255,255,0.03)', transition: 'all 0.2s' }}>
-        <input ref={inputRef} type="file" accept=".txt,.md,.pdf,.png,.jpg,.jpeg,.webp" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+        style={{ border:`2px dashed ${dragging ? '#4f6ef7' : 'rgba(255,255,255,0.12)'}`, borderRadius:12, padding:'16px', textAlign:'center', cursor: loading ? 'wait' : 'pointer', background: dragging ? 'rgba(79,110,247,0.08)' : 'rgba(255,255,255,0.03)', transition:'all 0.2s' }}>
+        <input ref={inputRef} type="file" accept=".txt,.md,.pdf,.png,.jpg,.jpeg,.webp" style={{ display:'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
         {loading ? (
-          <div style={{ color: '#818cf8', fontSize: 13 }}>
-            <div style={{ fontSize: 22, marginBottom: 4, display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</div>
+          <div style={{ color:'#818cf8', fontSize:13 }}>
+            <div style={{ fontSize:22, marginBottom:4, display:'inline-block', animation:'spin 1s linear infinite' }}>⟳</div>
             <div>Extraction OCR...</div>
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 28, marginBottom: 6 }}>{fileName ? '✅' : '📎'}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: fileName ? '#06d6a0' : 'rgba(255,255,255,0.6)', marginBottom: 4 }}>
-              {fileName || 'Dépose ton exercice ici'}
+            <div style={{ fontSize:24, marginBottom:4 }}>{fileName ? '✅' : '📁'}</div>
+            <div style={{ fontSize:13, fontWeight:600, color: fileName ? '#06d6a0' : 'rgba(255,255,255,0.5)', marginBottom:3 }}>
+              {fileName || 'Ou dépose un fichier ici'}
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>.txt · .pdf · .png · .jpg · .webp</div>
+            <div style={{ fontSize:11, color:'rgba(255,255,255,0.25)' }}>.txt · .pdf · .png · .jpg · .webp</div>
           </>
         )}
       </div>
       {error && (
-        <div style={{ marginTop: 8, fontSize: 11, color: '#ef4444', background: 'rgba(239,68,68,0.08)', padding: '6px 10px', borderRadius: 8 }}>
+        <div style={{ marginTop:8, fontSize:11, color:'#ef4444', background:'rgba(239,68,68,0.08)', padding:'6px 10px', borderRadius:8 }}>
           ⚠️ {error}
         </div>
       )}
-      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {[['📄', '.txt .md', 'Texte brut'], ['🖼️', '.jpg .png .webp', 'OCR auto'], ['📋', '.pdf', 'Document PDF']].map(([icon, ext, label]) => (
-          <div key={ext} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}>{icon}</span>
-            <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#4f6ef7', minWidth: 80 }}>{ext}</span>
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -1322,11 +1329,14 @@ COMBINAISON (plusieurs formes dans un seul graphique) :
   {"type":"dimension","x1":0,"y1":0,"x2":0,"y2":3,"label":"3","color":"#10b981"}
 ]}]
 
-QUAND UTILISER :
-- Fonction, courbe, limite, suite → type "function"
-- Triangle, cercle, géométrie plane → type "geometry" avec les formes appropriées
-- Vecteurs, repère → type "geometry" avec "axes" + "vector"
-- Exercice mixte → un graphique "function" ET un graphique "geometry" séparés`
+QUAND UTILISER — OBLIGATOIRE :
+- Exercice sur une FONCTION (f(x), étude, dérivée, extremum, convexité) → TOUJOURS un graphique "function" avec la courbe de f ET f' si dérivée étudiée
+- LIMITE (x→+∞, x→0) → graphique "function" montrant le comportement asymptotique
+- INTÉGRALE → graphique "function" avec l'aire entre les bornes
+- SUITE → graphique "function" des premiers termes
+- TRIANGLE, cercle, géométrie → TOUJOURS type "geometry" avec axes + grille + toutes les formes
+- VECTEURS, repère → type "geometry" avec "axes" + "vector"
+- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle ou des vecteurs → un graphique DOIT apparaître`
 
     const prompt = mode === 'solve'
       ? `Résous cet exercice de mathématiques (programme Bac Tunisie) de façon COMPLÈTE et PÉDAGOGIQUE.

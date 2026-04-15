@@ -36,9 +36,6 @@ function LoginInner() {
     e.preventDefault()
     setError(''); setLoading(true)
 
-    // 🔒 VÉRIFICATION PRÉALABLE: Empêcher la connexion si déjà connecté ailleurs
-    // Note: Cette vérification est aussi faite côté AuthContext, mais on la redondance ici pour UX rapide
-    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
@@ -55,23 +52,8 @@ function LoginInner() {
       const isUserAdmin = data.user.email === 'bensghaiermejdi70@gmail.com'
       
       if (!isUserAdmin) {
-        // Vérifier si session existe déjà AVANT de créer la nouvelle
-        const { data: prof } = await supabase
-          .from('profiles')
-          .select('current_session_id, is_active')
-          .eq('id', data.user.id)
-          .single()
-        
-        // 🔒 BLOCAGE: Si abonnement actif ET session existe = déjà connecté ailleurs
-        if (prof?.is_active && prof?.current_session_id) {
-          // Déconnecter immédiatement de Supabase
-          await supabase.auth.signOut()
-         setError("🔒 Ce compte est déjà connecté sur un autre appareil.\n\nDéconnectez-vous d'abord de l'autre session pour pouvoir vous connecter ici.")
-          setLoading(false)
-          return
-        }
-        
-        // Créer la nouvelle session
+        // 🔧 CORRECTION: Créer TOUJOURS une nouvelle session au login
+        // Cela écrase l'ancienne session (l'ancien appareil sera déconnecté au prochain check)
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
         await supabase.from('profiles')
@@ -87,8 +69,7 @@ function LoginInner() {
   async function handleGoogle() {
     setGoogleL(true)
     
-    // 🔒 Pour Google: la vérification se fera dans AuthContext après le callback
-    // car on ne peut pas vérifier avant la redirection OAuth
+    // Pour Google OAuth, la session sera créée dans AuthContext après le callback
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
@@ -137,17 +118,15 @@ function LoginInner() {
 
             {error && (
               <div style={{ 
-                background: error.includes('🔒') ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.1)', 
-                border: error.includes('🔒') ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(239,68,68,0.3)', 
+                background:'rgba(239,68,68,0.1)', 
+                border:'1px solid rgba(239,68,68,0.3)', 
                 borderRadius:10, 
-                padding:'12px 16px', 
+                padding:'10px 14px', 
                 marginBottom:16, 
                 fontSize:13, 
-                color: error.includes('🔒') ? '#fbbf24' : '#fca5a5',
-                whiteSpace: 'pre-line'
+                color:'#fca5a5'
               }}>
-                {error.includes('🔒') ? '🔒 ' : '⚠️ '}
-                {error.replace('🔒 ', '')}
+                ⚠️ {error}
               </div>
             )}
             {message && (
