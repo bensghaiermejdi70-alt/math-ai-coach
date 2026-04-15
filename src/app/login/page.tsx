@@ -62,17 +62,26 @@ function LoginInner() {
   }
 
   async function handleReset() {
-    if (!email.trim()) { setError("Entre d'abord ton email"); return }
-    setError(''); setResetL(true)
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback`,  // Doit correspondre à l'URL autorisée dans Supabase
-    })
-
-    setResetL(false)
-    if (error) setError(error.message)
-    else setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
+  if (!email.trim()) { 
+    setError("Entre d'abord ton email"); 
+    return 
   }
+  
+  setError(''); 
+  setResetL(true)
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: 'https://app.mathsbac.com/auth/callback',
+  })
+
+  setResetL(false)
+  
+  if (error) {
+    setError(error.message)
+  } else {
+    setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
+  }
+}
 
   return (
     <>
