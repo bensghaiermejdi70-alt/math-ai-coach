@@ -60,11 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [quotas, setQuotas] = useState<UserQuotas | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // 🔐 ADMIN
   const isAdmin =
     profile?.role === 'admin' || user?.email === ADMIN_EMAIL
 
-  // 🔥 SUBSCRIPTION SAFE CHECK
   const subscriptionEnd = profile?.subscription_end
     ? new Date(profile.subscription_end)
     : null
@@ -89,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         )
       : null
 
-  // 📦 LOAD PROFILE
   async function loadProfile(userId: string) {
     const { data } = await supabase
       .from('profiles')
@@ -100,7 +97,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(data)
   }
 
-  // 📦 LOAD QUOTAS
   async function loadQuotas(userId: string) {
     const weekStart = getWeekStart()
 
@@ -127,7 +123,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🔐 LOGIN - CORRIGÉ : Retourne l'utilisateur immédiatement
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -135,19 +130,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: translateAuthError(error.message), user: null }
     }
 
-    // Mettre à jour le state immédiatement
     if (data.user) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
     }
 
-    // Rediriger vers home
     window.location.href = '/'
     return { error: null, user: data.user }
   }
 
-  // 🧾 REGISTER
   async function signUp(data: SignUpData) {
     const { error } = await supabase.auth.signUp({
       email: data.email,
@@ -167,7 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null }
   }
 
-  // 🔵 GOOGLE LOGIN
   async function signInWithGoogle() {
     return await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -177,10 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  // 🔑 RESET PASSWORD
   async function resetPassword(email: string) {
+    const redirectUrl = typeof window !== 'undefined' 
+      ? `${window.location.origin}/auth/callback`
+      : 'https://app.mathsbac.com/auth/callback'
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://app.mathsbac.com/auth/callback',
+      redirectTo: redirectUrl,
     })
 
     if (error)
@@ -189,7 +183,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null }
   }
 
-  // 🚪 LOGOUT
   async function signOut() {
     setUser(null)
     setProfile(null)
@@ -202,14 +195,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🔄 REFRESH
   async function refreshSubscription() {
     if (!user) return
     await loadProfile(user.id)
     await loadQuotas(user.id)
   }
 
-  // 🔥 QUOTA CHECK (SAFE VERSION)
   function checkQuota(type: QuotaType): boolean {
     if (isAdmin) return true
     if (!quotas || !quotaLimits) return false
@@ -234,7 +225,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return used < limit
   }
 
-  // 🔥 QUOTA INCREMENT
   async function incrementQuota(type: QuotaType) {
     if (!user || !quotas) return
 
@@ -246,7 +236,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
-  // 🔐 AUTH LISTENER
   useEffect(() => {
     const {
       data: { subscription }
@@ -312,7 +301,6 @@ export function useAuth() {
   return ctx
 }
 
-// 🔧 HELPERS
 function getWeekStart(): string {
   const now = new Date()
   const day = now.getDay()

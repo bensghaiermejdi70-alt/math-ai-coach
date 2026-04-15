@@ -9,12 +9,12 @@ export default function UpdatePasswordPage() {
 
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
 
-  // ✅ Vérifier qu'une session existe bien (recovery)
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -29,7 +29,7 @@ export default function UpdatePasswordPage() {
     checkSession()
   }, [])
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setMessage('')
@@ -113,31 +113,41 @@ export default function UpdatePasswordPage() {
             </div>
           )}
 
-          <form onSubmit={handleUpdate}>
+          <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 16 }}>
               <label style={styles.label}>Nouveau mot de passe</label>
-              <input
-                type="password"
-                placeholder="Minimum 6 caractères"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                style={styles.input}
-                autoComplete="new-password"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPwd ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="Minimum 6 caractères"
+                  style={styles.input}
+                  autoComplete="new-password"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPwd(!showPwd)}
+                  style={styles.eye}
+                >
+                  {showPwd ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={styles.label}>Confirmer</label>
+              <label style={styles.label}>Confirmer le mot de passe</label>
               <input
-                type="password"
-                placeholder="Répète le mot de passe"
+                type={showPwd ? 'text' : 'password'}
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
+                placeholder="Répète le mot de passe"
                 style={{
                   ...styles.input,
+                  padding: '11px 14px',
                   borderColor: confirm && confirm !== password 
                     ? 'rgba(239,68,68,0.5)' 
                     : 'rgba(255,255,255,0.12)'
@@ -207,7 +217,7 @@ const styles: any = {
   },
   input: {
     width: '100%',
-    padding: '11px 14px',
+    padding: '11px 44px 11px 14px',
     borderRadius: 10,
     border: '1px solid rgba(255,255,255,0.12)',
     background: 'rgba(255,255,255,0.06)',
@@ -215,6 +225,17 @@ const styles: any = {
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box'
+  },
+  eye: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.4)'
   },
   button: {
     width: '100%',

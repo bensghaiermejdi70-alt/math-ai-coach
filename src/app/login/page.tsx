@@ -1,5 +1,5 @@
 'use client'
-import { useState, Suspense, useEffect } from 'react'  // Ajout useEffect
+import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -22,12 +22,10 @@ function LoginInner() {
       : ''
   )
 
-  // ✅ AJOUT : Gestion des erreurs depuis l'URL (venant du callback)
   useEffect(() => {
     const urlError = searchParams.get('error')
     if (urlError) {
       setError(decodeURIComponent(urlError))
-      // Nettoyer l'URL
       window.history.replaceState({}, '', '/login')
     }
   }, [searchParams])
@@ -62,26 +60,28 @@ function LoginInner() {
   }
 
   async function handleReset() {
-  if (!email.trim()) { 
-    setError("Entre d'abord ton email"); 
-    return 
-  }
-  
-  setError(''); 
-  setResetL(true)
+    if (!email.trim()) { 
+      setError("Entre d'abord ton email"); 
+      return 
+    }
+    
+    setError(''); 
+    setResetL(true)
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-    redirectTo: 'https://app.mathsbac.com/auth/callback',
-  })
+    const redirectUrl = `${window.location.origin}/auth/callback`
 
-  setResetL(false)
-  
-  if (error) {
-    setError(error.message)
-  } else {
-    setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: redirectUrl,
+    })
+
+    setResetL(false)
+    
+    if (error) {
+      setError(error.message)
+    } else {
+      setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
+    }
   }
-}
 
   return (
     <>

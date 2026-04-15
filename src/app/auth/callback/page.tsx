@@ -14,24 +14,32 @@ export default function AuthCallback() {
     const handle = async () => {
       try {
         const url = new URL(window.location.href)
-        let token_hash = url.searchParams.get('token_hash')
+        const token_hash = url.searchParams.get('token_hash')
         const type = url.searchParams.get('type')
         const code = url.searchParams.get('code')
 
         console.log('🔍 URL:', window.location.href)
-        console.log('🔍 Token brut:', token_hash?.slice(0, 30))
+        console.log('🔍 Token:', token_hash?.slice(0, 40))
+        console.log('🔍 Type:', type)
+        console.log('🔍 Code:', code?.slice(0, 10))
 
         // ── Recovery password ─────────────────────────────────────
         if (type === 'recovery' && token_hash) {
+          console.log('🔄 Recovery flow')
           
-          // ✅ CORRECTION : Retirer le préfixe pkce_ si présent
-          if (token_hash.startsWith('pkce_')) {
-            token_hash = token_hash.slice(5)
-            console.log('✂️ Token nettoyé:', token_hash.slice(0, 30))
+          // Vérifier si session déjà active (detectSessionInUrl)
+          const { data: { session: existingSession } } = await supabase.auth.getSession()
+          
+          if (existingSession) {
+            console.log('✅ Session already active')
+            router.push('/auth/update-password')
+            return
           }
-
+          
+          // Essayer verifyOtp avec le token tel quel (avec pkce_)
+          console.log('📝 Calling verifyOtp...')
           const { error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash,
+            token_hash: token_hash,
             type: 'recovery',
           })
 
@@ -46,8 +54,8 @@ export default function AuthCallback() {
 
           console.log('✅ OTP verified')
           
-          // Attendre un peu pour la persistance
-          await new Promise(r => setTimeout(r, 300))
+          // Attendre la persistance des cookies
+          await new Promise(r => setTimeout(r, 500))
           
           router.push('/auth/update-password')
           return
@@ -55,8 +63,10 @@ export default function AuthCallback() {
 
         // ── Google OAuth ────────────────────────────────────────
         if (code) {
+          console.log('🔄 OAuth flow')
           const { error: oauthError } = await supabase.auth.exchangeCodeForSession(code)
           if (oauthError) {
+            console.error('❌ OAuth error:', oauthError)
             router.push('/login')
             return
           }
@@ -69,7 +79,7 @@ export default function AuthCallback() {
         router.push(session ? '/' : '/login')
 
       } catch (err) {
-        console.error('💥 Error:', err)
+        console.error('💥 Unexpected error:', err)
         router.push('/login?error=erreur_systeme')
       }
     }
