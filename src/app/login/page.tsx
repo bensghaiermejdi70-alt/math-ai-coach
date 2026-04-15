@@ -87,26 +87,16 @@ function LoginInner() {
 
     const redirectUrl = `${window.location.origin}/auth/callback`
 
-    try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: redirectUrl,
-      })
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: redirectUrl,
+    })
 
-      // 🔍 DEBUG: Afficher la réponse complète
-      console.log('🔍 [ResetPassword] Data:', data)
-      console.log('🔍 [ResetPassword] Error:', error)
-      
-      if (error) {
-        console.error('❌ [ResetPassword] Erreur:', error.message, error)
-        setError("Erreur: " + error.message)
-      } else {
-        setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
-      }
-    } catch (e) {
-      console.error('💥 [ResetPassword] Exception:', e)
-      setError('Erreur technique')
-    } finally {
-      setResetL(false)
+    setResetL(false)
+    
+    if (error) {
+      setError(error.message)
+    } else {
+      setMessage('📩 Email envoyé ! Clique le lien dans ta boîte mail (vérifie aussi les spams)')
     }
   }
 
