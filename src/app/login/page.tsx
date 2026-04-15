@@ -48,6 +48,15 @@ function LoginInner() {
       return
     }
 
+    // ── Session unique (admin exempt) ────────────────────────
+    if (data.user && data.user.email !== 'bensghaiermejdi70@gmail.com') {
+      const sessionId = crypto.randomUUID()
+      localStorage.setItem('mathbac_session_id', sessionId)
+      await supabase.from('profiles')
+        .update({ current_session_id: sessionId })
+        .eq('id', data.user.id)
+    }
+
     window.location.href = '/'
   }
 
