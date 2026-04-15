@@ -134,6 +134,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user)
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
+
+      // Enregistrer session unique (admin exempt)
+      if (data.user.email !== 'bensghaiermejdi70@gmail.com') {
+        const sessionId = crypto.randomUUID()
+        localStorage.setItem('mathbac_session_id', sessionId)
+        await supabase.from('profiles')
+          .update({ current_session_id: sessionId })
+          .eq('id', data.user.id)
+      }
     }
 
     window.location.href = '/'
@@ -184,15 +193,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
-    setUser(null)
-    setProfile(null)
-    setQuotas(null)
-
-    await supabase.auth.signOut()
-
-    if (typeof window !== 'undefined') {
-      window.location.href = '/'
+    if (user && user.email !== 'bensghaiermejdi70@gmail.com') {
+      localStorage.removeItem('mathbac_session_id')
+      await supabase.from('profiles')
+        .update({ current_session_id: null })
+        .eq('id', user.id)
     }
+    setUser(null); setProfile(null); setQuotas(null)
+    await supabase.auth.signOut()
+    if (typeof window !== 'undefined') window.location.href = '/'
   }
 
   async function refreshSubscription() {
@@ -251,15 +260,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    const handleFocus = async () => {
+    // ── Refresh profil + vérification session unique ──────────
+    const verifySingleSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) await loadProfile(session.user.id)
+      if (!session?.user) return
+
+      const currentUser = session.user
+      await loadProfile(currentUser.id)
+
+      // Admin exempt de la vérification session unique
+      if (currentUser.email === 'bensghaiermejdi70@gmail.com') return
+
+      const localId = localStorage.getItem('mathbac_session_id')
+      if (!localId) return
+
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('current_session_id, is_active')
+        .eq('id', currentUser.id)
+        .single()
+
+      if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
+        localStorage.removeItem('mathbac_session_id')
+        setUser(null); setProfile(null); setQuotas(null)
+        await supabase.auth.signOut()
+        window.location.href = '/login?error=session_dupliquee'
+      }
     }
-    window.addEventListener('focus', handleFocus)
+
+    window.addEventListener('focus', verifySingleSession)
+    const interval = setInterval(verifySingleSession, 30000)
 
     return () => {
       subscription.unsubscribe()
-      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('focus', verifySingleSession)
+      clearInterval(interval)
     }
   }, [])
 
