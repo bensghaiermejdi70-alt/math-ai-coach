@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -59,6 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [quotas, setQuotas] = useState<UserQuotas | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  
+  // REF pour tracker le changement d'utilisateur
+  const previousUserId = useRef<string | null>(null)
 
   const isAdmin =
     profile?.role === 'admin' || user?.email === ADMIN_EMAIL
@@ -95,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single()
 
     if (error) {
-      console.error('❌ [AuthContext] Erreur chargement profil:', error)
+      console.error('Erreur chargement profil:', error)
       setProfile(null)
       return
     }
@@ -129,6 +132,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // FONCTION: Nettoyer completement le state
+  function clearState() {
+    setUser(null)
+    setProfile(null)
+    setQuotas(null)
+    previousUserId.current = null
+  }
+
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -139,19 +150,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       const isUserAdmin = data.user.email === 'bensghaiermejdi70@gmail.com'
       
+      // Si changement d'utilisateur, nettoyer d'abord
+      if (previousUserId.current && previousUserId.current !== data.user.id) {
+        console.log('Changement d utilisateur detecte:', previousUserId.current, '->', data.user.id)
+        clearState()
+      }
+      
       if (!isUserAdmin) {
-        // 🔧 CORRECTION CLÉ: Toujours créer une nouvelle session
-        // Même si une existe déjà (écrase l'ancienne)
+        // Toujours creer une nouvelle session
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
         
-        // Met à jour en base (écrase l'ancienne session)
         await supabase.from('profiles')
           .update({ current_session_id: sessionId })
           .eq('id', data.user.id)
       }
       
       setUser(data.user)
+      previousUserId.current = data.user.id
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
       
@@ -214,7 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq('id', user.id)
       } catch (_) {}
     }
-    setUser(null); setProfile(null); setQuotas(null)
+    clearState()
     await supabase.auth.signOut()
     if (typeof window !== 'undefined') window.location.href = '/'
   }
@@ -264,16 +280,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
         const currentUser = session?.user ?? null
         
         if (currentUser) {
           const isUserAdmin = currentUser.email === 'bensghaiermejdi70@gmail.com'
           
+          // Detecter changement d'utilisateur
+          if (previousUserId.current && previousUserId.current !== currentUser.id) {
+            console.log('AuthStateChange: Changement d utilisateur')
+            clearState()
+          }
+          
           if (!isUserAdmin) {
             const localId = localStorage.getItem('mathbac_session_id')
             
-            // 🔧 CORRECTION: Si pas de localId, créer une nouvelle session
             if (!localId) {
               const newSessionId = crypto.randomUUID()
               localStorage.setItem('mathbac_session_id', newSessionId)
@@ -281,17 +302,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .update({ current_session_id: newSessionId })
                 .eq('id', currentUser.id)
             } else {
-              // Vérifier si notre session est toujours valide
               const { data: prof } = await supabase
                 .from('profiles')
                 .select('current_session_id, is_active')
                 .eq('id', currentUser.id)
                 .single()
               
-              // 🔒 Seulement si session différente ET active = vraie duplication
               if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
                 localStorage.removeItem('mathbac_session_id')
-                setUser(null); setProfile(null); setQuotas(null)
+                clearState()
                 await supabase.auth.signOut()
                 window.location.href = '/login?error=session_dupliquee'
                 return
@@ -300,19 +319,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           setUser(currentUser)
+          previousUserId.current = currentUser.id
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
         } else {
-          setUser(null)
-          setProfile(null)
-          setQuotas(null)
+          clearState()
         }
         
         setIsLoading(false)
       }
     )
 
-    // ── Vérification périodique ───────────────────────────────
+    // Verification periodique
     let signingOut = false
 
     const verifySingleSession = async () => {
@@ -323,12 +341,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const currentUser = session.user
       
-      // Admin exempt
       if (currentUser.email === 'bensghaiermejdi70@gmail.com') return
 
       const localId = localStorage.getItem('mathbac_session_id')
       
-      // 🔧 CORRECTION: Si pas de localId, créer une nouvelle session
       if (!localId) {
         const newSessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', newSessionId)
@@ -344,7 +360,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', currentUser.id)
         .single()
 
-      // Si pas de session en base = OK (première connexion ou reset)
       if (!prof?.current_session_id) {
         const newSessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', newSessionId)
@@ -354,14 +369,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       
-      // Si session en base = notre localId = OK (même appareil)
       if (prof.current_session_id === localId) return
       
-      // 🔒 Seulement si session différente ET active = vraie duplication
       if (prof?.is_active && prof.current_session_id !== localId) {
         signingOut = true
         localStorage.removeItem('mathbac_session_id')
-        setUser(null); setProfile(null); setQuotas(null)
+        clearState()
         await supabase.auth.signOut()
         window.location.href = '/login?error=session_dupliquee'
       }
@@ -429,6 +442,7 @@ function translateAuthError(msg: string): string {
   if (msg.includes('Email not confirmed'))
     return 'Veuillez confirmer votre email'
   if (msg.includes('User already registered'))
-    return 'Cet email est déjà utilisé'
+    return 'Cet email est deja utilise'
   return msg
 }
+

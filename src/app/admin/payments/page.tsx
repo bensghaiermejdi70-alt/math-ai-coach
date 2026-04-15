@@ -50,6 +50,8 @@ export default function AdminPaymentsPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [msg,        setMsg]        = useState('')
   const [activating, setActivating] = useState<string|null>(null)
+  const [sortBy,     setSortBy]     = useState<'date_asc'|'date_desc'|'expiry_asc'|'expiry_desc'>('date_desc')
+  const [filterDate, setFilterDate] = useState('')
 
   async function loadAll() {
     setLoading(true)
@@ -80,8 +82,22 @@ export default function AdminPaymentsPage() {
         s.plan_type?.toLowerCase().includes(q)
       )
     }
+    // Tri
+    result = [...result].sort((a, b) => {
+      if (sortBy === 'date_asc')    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      if (sortBy === 'date_desc')   return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      if (sortBy === 'expiry_asc')  return (a.ends_at ? new Date(a.ends_at).getTime() : Infinity) - (b.ends_at ? new Date(b.ends_at).getTime() : Infinity)
+      if (sortBy === 'expiry_desc') return (b.ends_at ? new Date(b.ends_at).getTime() : 0) - (a.ends_at ? new Date(a.ends_at).getTime() : 0)
+      return 0
+    })
+
+    // Filtre par date d'échéance (jour précis)
+    if (filterDate) {
+      result = result.filter(s => s.ends_at && s.ends_at.slice(0, 10) === filterDate)
+    }
+
     setFiltered(result)
-  }, [search, filterStatus, subs])
+  }, [search, filterStatus, sortBy, filterDate, subs])
 
   async function activate(s: Sub) {
     setActivating(s.id); setMsg('')
@@ -209,6 +225,31 @@ export default function AdminPaymentsPage() {
             <option value="pending_cash">💵 Espèces</option>
             <option value="cancelled">🚫 Annulés</option>
           </select>
+          {/* Tri par date */}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
+            style={{ padding:'9px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'#1a1a2e', color:'white', fontSize:13, cursor:'pointer' }}>
+            <option value="date_desc">📅 Plus récent d'abord</option>
+            <option value="date_asc">📅 Plus ancien d'abord</option>
+            <option value="expiry_asc">⏰ Échéance proche → lointaine</option>
+            <option value="expiry_desc">⏰ Échéance lointaine → proche</option>
+          </select>
+
+          {/* Filtre par jour d'échéance */}
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={e => setFilterDate(e.target.value)}
+              style={{ padding:'9px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.12)', background:'#1a1a2e', color:'white', fontSize:13, cursor:'pointer', colorScheme:'dark' }}
+            />
+            {filterDate && (
+              <button onClick={() => setFilterDate('')}
+                style={{ padding:'9px 12px', borderRadius:10, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.1)', color:'#f87171', fontSize:12, cursor:'pointer', fontWeight:700 }}>
+                ✕
+              </button>
+            )}
+          </div>
+
           <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)' }}>{filtered.length} résultat{filtered.length!==1?'s':''}</span>
         </div>
 
@@ -248,7 +289,15 @@ export default function AdminPaymentsPage() {
                       {METHOD_ICONS[s.payment_method]||'💳'} {PLAN_LABELS[s.plan_type]||s.plan_type}
                     </div>
                     <div style={{ fontSize:13, color:'#10b981', fontWeight:700 }}>{s.price_paid} DT/€</div>
-                    <div style={{ fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:2 }}>Fin : {end}</div>
+                    <div style={{ fontSize:11, marginTop:2, display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ color:'rgba(255,255,255,0.3)' }}>Fin : {end}</span>
+                      {s.ends_at && (() => {
+                        const days = Math.ceil((new Date(s.ends_at).getTime() - Date.now()) / 86400000)
+                        if (days <= 3 && days >= 0 && s.status === 'active') return <span style={{ background:'rgba(239,68,68,0.2)', color:'#f87171', fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:20, border:'1px solid rgba(239,68,68,0.4)' }}>⚠️ J-{days}</span>
+                        if (days <= 7 && days > 3 && s.status === 'active') return <span style={{ background:'rgba(245,158,11,0.2)', color:'#fbbf24', fontSize:10, fontWeight:700, padding:'1px 7px', borderRadius:20, border:'1px solid rgba(245,158,11,0.4)' }}>⏰ J-{days}</span>
+                        return null
+                      })()}
+                    </div>
                   </div>
 
                   {/* Colonne 3 — Status + Ref */}

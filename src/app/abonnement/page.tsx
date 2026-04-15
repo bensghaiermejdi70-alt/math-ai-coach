@@ -42,7 +42,7 @@ const QUOTAS_ANNUEL = [
 
 const PAYMENT_METHODS = [
   { id:'d17',             icon:'🏛️', name:'D17 / La Poste' },
-  { id:'flouci',          icon:'📱', name:'Flouci' },
+  { id:'espece',          icon:'📱', name:'virement / versement' },
   { id:'recharge_mobile', icon:'📞', name:'Recharge mobile' },
 ]
 
