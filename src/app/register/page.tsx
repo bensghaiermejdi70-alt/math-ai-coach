@@ -4,14 +4,6 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { ADMIN_EMAIL } from '@/lib/types/monetisation'
 
-const SECTIONS = [
-  { value:'math',    label:'🧮 Mathématiques' },
-  { value:'science', label:'🔬 Sciences Exp.' },
-  { value:'tech',    label:'⚙️ Sciences Tech.' },
-  { value:'info',    label:'💻 Informatique' },
-  { value:'eco',     label:'📊 Éco-Gestion' },
-]
-
 export default function RegisterPage() {
   const { signUp } = useAuth()
   const [form, setForm] = useState({
@@ -134,24 +126,6 @@ export default function RegisterPage() {
                 <div style={{ marginBottom:14 }}>
                   <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:500 }}>Téléphone</label>
                   <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="2X XXX XXX" className="input" style={{ borderRadius:10 }} />
-                </div>
-
-                {/* Section Bac */}
-                <div style={{ marginBottom:14 }}>
-                  <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:500 }}>Section Bac</label>
-                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
-                    {SECTIONS.map(s => (
-                      <button key={s.value} type="button" onClick={() => set('section_bac', s.value)}
-                        style={{
-                          padding:'8px 6px', borderRadius:10, fontSize:11, fontWeight:600, cursor:'pointer', transition:'all 0.2s',
-                          background: form.section_bac === s.value ? 'rgba(79,110,247,0.18)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${form.section_bac === s.value ? 'rgba(79,110,247,0.5)' : 'var(--border)'}`,
-                          color: form.section_bac === s.value ? 'var(--accent)' : 'var(--text2)',
-                        }}>
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </>
             )}
