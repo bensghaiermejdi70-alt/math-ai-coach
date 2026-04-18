@@ -924,7 +924,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
     <div class="header-left">
       <div class="brand">∑ Bac.AI Tunisie · Solveur IA</div>
       <div class="htitle">${icon} ${modeLabel}</div>
-      <div class="hsub">Programme officiel CNP · Bac Tunisie</div>
+      <div class="hsub">Programme officiel · Bac Tunisie & France</div>
     </div>
     <div class="header-right">
       <strong>Date :</strong> ${date}<br>
@@ -948,7 +948,7 @@ ${bodyLines}
   <!-- PIED DE PAGE -->
   <div class="footer">
     <span><strong>Bac.AI Tunisie</strong> — Solveur IA · Programme CNP officiel</span>
-    <span>Session Bac Tunisie ${new Date().getFullYear()}</span>
+    <span>Session Bac Tunisie & France ${new Date().getFullYear()}</span>
     <span>Page 1/1</span>
   </div>
 
@@ -1101,15 +1101,15 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
           if (ext === 'pdf') {
             const r = await fetch('/api/solve', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Extrais uniquement le texte de cet exercice de mathématiques. Garde tous les symboles. Pas de commentaires.' }] }] })
+              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Extrais uniquement le texte de cet exercice (mathématiques, physique-chimie ou SVT). Garde tous les symboles, unités et formules. Pas de commentaires.' }] }] })
             })
             const d = await r.json()
             text = d.content?.map((c: any) => c.text || '').join('') || ''
           } else {
             const mediaType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
             text = await askClaudeWithImage(
-              'Transcris exactement le texte de cet exercice de mathématiques. Garde tous les symboles. Retourne UNIQUEMENT le texte, sans commentaire.',
-              'Tu es un OCR mathématique précis.', base64, mediaType, 1500
+              'Transcris exactement le texte de cet exercice (maths, physique-chimie ou SVT). Garde tous les symboles, unités et formules. Retourne UNIQUEMENT le texte, sans commentaire.',
+              'Tu es un OCR précis spécialisé en mathématiques, physique-chimie et SVT.', base64, mediaType, 1500
             )
           }
           onExtracted(text.trim())
@@ -1269,21 +1269,44 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
 
-    const system = `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
+    const system = `Tu es un professeur expert du Bac Tunisie ET du Bac France, spécialiste en mathématiques, physique-chimie et sciences de la vie et de la Terre (SVT).
 Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
 Structure : ## pour les grandes parties, ### pour les sous-questions.
 **gras** pour les résultats clés, > pour les encadrés importants.
 
+═══════════════════════════════════════════
+DÉTECTION AUTOMATIQUE DE LA MATIÈRE
+═══════════════════════════════════════════
+Tu détectes automatiquement la matière selon les mots-clés de l'exercice :
+
+MATHÉMATIQUES → fonction, dérivée, intégrale, limite, suite, vecteur, complexe, probabilité, équation, matrice, logarithme, exponentielle
+
+PHYSIQUE-CHIMIE → force, vitesse, accélération, énergie, tension, courant, résistance, onde, fréquence, concentration, réaction, pH, oxydant, réducteur, noyau, radioactivité, satellite, fluide, pression, enthalpie, thermodynamique, circuit, condensateur, Doppler, interférence, diffraction, Newton, Bernoulli
+
+SVT → cellule, ADN, ARN, protéine, gène, chromosome, mitose, méiose, photosynthèse, respiration, neurone, hormone, enzyme, écosystème, évolution, mutation, génotype, phénotype, immunité, digestion, reproduction
+
 NOTATION MATHÉMATIQUE OBLIGATOIRE — LaTeX strict :
 - Toutes les formules DOIVENT être en LaTeX : $formule$ pour inline, $$formule$$ pour centré
-- JAMAIS écrire "frac(2,5)" ou "2/5" brut — TOUJOURS $\\frac{2}{5}$
-- JAMAIS écrire "E(X) = -2/5" — TOUJOURS $E(X) = -\\frac{2}{5}$
-- Fractions : $\\frac{num}{den}$ · Racines : $\\sqrt{x}$ · Puissances : $x^{2}$ · Indices : $x_{n}$
-- Intégrales : $\\int_{a}^{b} f(x)\\,dx$ · Sommes : $\\sum_{i=1}^{n}$ · Limites : $\\lim_{x \\to 0}$
-- Probabilités : $P(X = k)$, $\\binom{n}{k}$, $\\frac{1}{10}$
+- JAMAIS écrire "frac(2,5)" ou "2/5" brut — TOUJOURS $\frac{2}{5}$
+- JAMAIS écrire "E(X) = -2/5" — TOUJOURS $E(X) = -\frac{2}{5}$
+- Fractions : $\frac{num}{den}$ · Racines : $\sqrt{x}$ · Puissances : $x^{2}$ · Indices : $x_{n}$
+- Intégrales : $\int_{a}^{b} f(x)\,dx$ · Sommes : $\sum_{i=1}^{n}$ · Limites : $\lim_{x \to 0}$
+- Probabilités : $P(X = k)$, $\binom{n}{k}$, $\frac{1}{10}$
 - Résultats encadrés : > **Résultat :** $$formule$$
-- Les tableaux de loi de probabilité avec | xi | ... | p(xi) | ... |
+
+NOTATION PHYSIQUE-CHIMIE :
+- Unités TOUJOURS précisées : m/s, mol/L, J·mol⁻¹, Pa, K, Bq
+- Vecteurs : $\vec{F}$, $\vec{v}$, $\vec{a}$
+- Équations chimiques avec flèches et états physiques
+- Notation nucléaire : $^{A}_{Z}X$
+- Formules clés : $\sum \vec{F} = m\vec{a}$, $PV = nRT$, $N(t) = N_0 e^{-\lambda t}$, $v = \lambda f$, $\Delta U = W + Q$
+
+NOTATION SVT :
+- Vocabulaire scientifique précis : ADN, ARNm, ribosome, etc.
+- Schémas décrits en texte structuré avec légende étape par étape
+- Tableaux de génétique formatés en markdown
+- Cycles biologiques décrits avec → entre les étapes
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
 
@@ -1329,6 +1352,13 @@ COMBINAISON (plusieurs formes dans un seul graphique) :
   {"type":"dimension","x1":0,"y1":0,"x2":0,"y2":3,"label":"3","color":"#10b981"}
 ]}]
 
+GRAPHIQUES PHYSIQUE-CHIMIE — OBLIGATOIRE :
+- Exercice sur une FONCTION f(t), v(t), [A](t), u_C(t) → TOUJOURS un graphique "function"
+- Exemples :
+  * Décroissance radioactive → [GRAPH: {"type":"function","expressions":["Math.exp(-0.05*x)"],"xMin":0,"xMax":60,"labels":["N(t)/N₀"],"title":"Décroissance radioactive"}]
+  * Circuit RC → [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)","Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["Charge","Décharge"],"title":"u_C(t)/E en fonction de t/τ"}]
+  * Cinétique → [GRAPH: {"type":"function","expressions":["1/(1+x)","x/(1+x)"],"xMin":0,"xMax":5,"labels":["[Réactif]","[Produit]"],"title":"Évolution des concentrations"}]
+
 QUAND UTILISER — OBLIGATOIRE :
 - Exercice sur une FONCTION (f(x), étude, dérivée, extremum, convexité) → TOUJOURS un graphique "function" avec la courbe de f ET f' si dérivée étudiée
 - LIMITE (x→+∞, x→0) → graphique "function" montrant le comportement asymptotique
@@ -1336,31 +1366,35 @@ QUAND UTILISER — OBLIGATOIRE :
 - SUITE → graphique "function" des premiers termes
 - TRIANGLE, cercle, géométrie → TOUJOURS type "geometry" avec axes + grille + toutes les formes
 - VECTEURS, repère → type "geometry" avec "axes" + "vector"
-- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle ou des vecteurs → un graphique DOIT apparaître`
+- PHYSIQUE : toute grandeur qui varie dans le temps → graphique "function"
+- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle, des vecteurs, ou une grandeur physique variable → un graphique DOIT apparaître`
 
     const prompt = mode === 'solve'
-      ? `Résous cet exercice de mathématiques (programme Bac Tunisie) de façon COMPLÈTE et PÉDAGOGIQUE.
+      ? `Résous cet exercice (programme Bac Tunisie ou Bac France — Mathématiques, Physique-Chimie ou SVT) de façon COMPLÈTE et PÉDAGOGIQUE.
 
 EXERCICE :
 ${input}
 
-Structure OBLIGATOIRE :
+Structure OBLIGATOIRE (adapte selon la matière détectée) :
 
-## Analyse du problème
-[Type d'exercice, outils mathématiques nécessaires, stratégie de résolution]
+## Identification de la matière et du chapitre
+[Matière : Maths / Physique-Chimie / SVT — Chapitre concerné — Programme Tunisie ou France]
+
+## Rappel du cours (formules et théorèmes utiles)
+[Les 2-3 formules ou définitions clés nécessaires pour résoudre cet exercice]
 
 ## Résolution complète
 [Pour chaque question — ne saute AUCUNE étape :
 ### Question X
 **Méthode :** [Théorème/formule appliqué et POURQUOI]
 **Calculs :**
-- Étape 1 : [calcul complet] → [résultat intermédiaire]
+- Étape 1 : [calcul complet avec UNITÉS pour la physique] → [résultat intermédiaire]
 - Étape 2 : ...
-> **Résultat :** [réponse finale encadrée]
+> **Résultat :** [réponse finale encadrée avec unité SI]
 ]
 
-## Synthèse
-[Résultats finals + formules clés à retenir + erreur classique à éviter sur ce type]`
+## Synthèse & Points clés
+[Résultats finals + formules clés à retenir + erreur classique à éviter sur ce type d'exercice]`
 
       : `Vérifie et corrige la solution de cet élève.
 
@@ -1413,7 +1447,7 @@ Structure OBLIGATOIRE :
 
       // Questions similaires en arrière-plan (ne compte pas dans le quota)
       askClaude(
-        `Exercice : "${input.slice(0, 200)}"\nGénère 3 exercices similaires de difficulté légèrement croissante pour Bac Tunisie.\nRéponds UNIQUEMENT en JSON : ["question1","question2","question3"]`,
+        `Exercice : "${input.slice(0, 200)}"\nGénère 3 exercices similaires de difficulté légèrement croissante pour Bac Tunisie ou Bac France (même matière : Maths, Physique-Chimie ou SVT).\nRéponds UNIQUEMENT en JSON : ["question1","question2","question3"]`,
         'Tu génères des exercices. Réponds UNIQUEMENT en JSON valide.', 500
       ).then(raw => {
         try {
@@ -1793,7 +1827,7 @@ Structure OBLIGATOIRE :
           )}
 
           <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 36 }}>
-            Solveur alimenté par Claude AI · Programme Bac Tunisie 2026
+            Solveur alimenté par Claude AI · Programme Bac Tunisie & France 2026
           </div>
         </div>
       </main>

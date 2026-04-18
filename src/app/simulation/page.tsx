@@ -146,8 +146,9 @@ async function generateOneExam(
   const section = archives[0]?.section ?? 'Mathématiques'
   const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel) ET du Baccalauréat France (Éducation Nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
+Tu adaptes la matière selon la section détectée : Mathématiques, Physique-Chimie, ou SVT.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
@@ -186,6 +187,29 @@ RÈGLES ABSOLUES :
 - Exercice géométrie : champ "graph" OBLIGATOIRE avec la figure complète
 - Exercice complexes : champ "graph" avec le plan complexe et les affixes
 - Dans "statement", écrire : "Soit f la fonction représentée ci-dessous. [voir graphique] 1) ..."
+
+RÈGLES SELON LA MATIÈRE DÉTECTÉE (via le champ "section") :
+
+SI PHYSIQUE-CHIMIE :
+- Exercice 1 (6pts) : Mécanique — Newton, satellites, projectile, fluides
+- Exercice 2 (6pts) : Chimie — cinétique, équilibres, dosage, radioactivité, thermodynamique
+- Exercice 3 (4pts) : Électricité/Ondes — RC, RLC, interférences, Doppler, optique
+- Exercice 4 (4pts) : Chimie organique ou synthèse OU autre thème non couvert
+- Graphiques physique : [GRAPH: {"type":"function","expressions":["Math.exp(-0.3*x)"],"xMin":0,"xMax":20,"labels":["N(t)/N₀"],"title":"Décroissance radioactive"}]
+- Graphiques cinétique : [GRAPH: {"type":"function","expressions":["1/(1+x)","x/(1+x)"],"xMin":0,"xMax":5,"labels":["[Réactif]","[Produit]"],"title":"Évolution des concentrations"}]
+- Graphiques RC : [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/E"],"title":"Charge d'un condensateur"}]
+- UNITÉS OBLIGATOIRES dans les énoncés : m, kg, s, N, J, W, Pa, mol, L, K, Bq, Hz
+
+SI SVT :
+- Exercice 1 (6pts) : Génétique — transmission héréditaire, génotype/phénotype, lois de Mendel
+- Exercice 2 (6pts) : Physiologie — photosynthèse, respiration, système nerveux, hormones, immunité
+- Exercice 3 (4pts) : Évolution et phylogénie OU écologie
+- Exercice 4 (4pts) : Géologie — tectonique, séismes, datation
+- Tableaux de génétique formatés en texte : | Génotype | Phénotype |
+- Schémas décrits textuellement avec légende numérotée
+
+SI MATHÉMATIQUES :
+- Appliquer les règles initiales (analyse, complexes, géométrie, probas, etc.)
 
 Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
 {
@@ -245,11 +269,16 @@ async function correctOneExercise(
   studentWork: string,
   examTitle: string
 ): Promise<string> {
-  const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
+  const system = `Tu es un professeur correcteur du Baccalaureat tunisien ET du Baccalaureat France, expert en mathematiques, physique-chimie et SVT.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
 Utilise markdown : ### pour les parties, **gras** pour les resultats, > pour les points importants.
+
+ADAPTATION SELON LA MATIÈRE :
+- Mathématiques : notation LaTeX, graphiques function/geometry
+- Physique-Chimie : unités SI obligatoires (m, kg, s, N, J, Pa, mol, K, Bq), vecteurs en LaTeX $\vec{F}$, formules physique expliquées
+- SVT : vocabulaire scientifique précis, tableaux de génétique markdown, cycles biologiques décrits étape par étape
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
 
@@ -410,7 +439,7 @@ async function analyzeOneExerciseSim(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const system = `Tu es un expert en pédagogie scolaire (mathématiques, physique-chimie, SVT). Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de simulation Bac.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
@@ -444,7 +473,7 @@ JSON requis :
 async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.
+  const system = `Tu es un expert en pédagogie scolaire (mathématiques, physique-chimie, SVT) et remédiation.
 Tu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
@@ -502,7 +531,7 @@ async function correctRemediationExercise(
   exercise: AnalysisResult['remediationExercises'][number],
   studentAnswer: string
 ): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.
+  const system = `Tu es un tuteur bienveillant mais exigeant, expert en mathématiques, physique-chimie et SVT.
 Tu corriges les réponses d'élèves sur des exercices de remédiation.
 Sois précis, encourageant, et identifie exactement ce qui manque.`
 
@@ -522,7 +551,7 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
   breakdown: {title:string;pts:number;max:number;reason:string}[]
 }> {
   const hasWork = studentWork.trim().length > 10
-  const system = `Tu es un correcteur du Baccalaureat tunisien. Tu donnes une note RAPIDE et JUSTE.
+  const system = `Tu es un correcteur du Baccalaureat tunisien ET France (Maths, Physique-Chimie, SVT). Tu donnes une note RAPIDE et JUSTE.
 Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
 
   const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${e.statement.slice(0,180)}`).join(' | ')
@@ -1840,8 +1869,9 @@ async function generateChapterExam(
   const totalPts = 20
   const nEx = Math.max(chapitres.length, 3)
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel) ET du Baccalauréat France (Éducation Nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
+Tu adaptes la matière selon la section détectée : Mathématiques, Physique-Chimie, ou SVT.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée un sujet de Bac ORIGINAL variante ${idx+1} centré sur CES CHAPITRES PRÉCIS :
@@ -3103,7 +3133,7 @@ function PageAnalyseExercice({
     if (remLoading[rem.id] || remFeedback[rem.id]) return
     setRemLoading(p => ({ ...p, [rem.id]: true }))
     try {
-      const sys = `Tu es un tuteur mathématiques bienveillant. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
+      const sys = `Tu es un tuteur bienveillant expert en mathématiques, physique-chimie et SVT. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
       const prompt = `Exercice : ${rem.statement}\n\nRéponse de l'élève : ${remAnswers[rem.id] || '(Aucune réponse)'}\n\nCorrection officielle : ${rem.officialCorrection}\n\nFournis une correction commentée et encourageante :`
       const text = await askClaude(prompt, sys, 2500)
       setRemFeedback(p => ({ ...p, [rem.id]: text }))
