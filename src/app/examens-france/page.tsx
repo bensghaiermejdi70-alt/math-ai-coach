@@ -5739,8 +5739,8 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
       <div style={{background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.3)',
         borderRadius:12,padding:'14px 18px',marginBottom:24,fontSize:13}}>
         ℹ️ <strong>Pas d'examen national en Première</strong> — Ces exercices proviennent des livrets
-        officiels du <strong>Lycée MathBac</strong> (Paris, 2024) et de <strong>MathBac &amp; MathBac</strong> (MathBac 2022),
-        couvrant tout le programme de Première Spécialité. Choisissez un chapitre ci-dessous.
+        officiels du <strong>
+        Choisissez un chapitre ci-dessous.
       </div>
 
       {/* GRILLE CHAPITRES */}
