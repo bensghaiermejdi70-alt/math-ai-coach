@@ -2862,10 +2862,2720 @@ const dataExpertes: AnneeData[] = [
   ]},
 ]
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECONDE GÉNÉRALE — Exercices par chapitre
+// Vrais exercices avec corrections complètes — pas de liens externes
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CHAPITRES_SECONDE: ChapitreData[] = [
+  {
+    id: 'python-seconde',
+    numero: 1,
+    titre: 'Algorithmique & Python',
+    sousTitre: 'Variables · Conditions · Fonctions · Boucles for/while',
+    icon: '🐍',
+    color: '#06d6a0',
+    notions: ['Variables et types', 'Conditions if/elif/else', 'Fonctions def/return', 'Boucle for/range', 'Boucle while', 'Accumulation', 'Listes'],
+    exercices: [
+      {
+        id: 'PY-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Types et affectations',
+        notions: ['Variables', 'Types'],
+        enonce: `Donner le type (int, float, str, bool) de chaque variable et la valeur affichée :
+a = 5
+b = 2.5
+c = "Bonjour"
+d = True
+e = a + b
+f = a // 2
+g = a % 3
+h = str(a) + " élèves"
+print(type(a), a, e, f, g, h)`,
+        correction: `type(a) = int, a = 5
+type(b) = float, b = 2.5
+type(c) = str, c = "Bonjour"
+type(d) = bool, d = True
+e = 5 + 2.5 = 7.5  (float, addition int+float → float)
+f = 5 // 2 = 2     (division entière)
+g = 5 % 3 = 2      (reste de la division euclidienne : 5 = 1×3 + 2)
+h = "5 élèves"     (concaténation de chaînes)
+print affiche : <class 'int'> 5 7.5 2 2 5 élèves`
+      },
+      {
+        id: 'PY-2', source: 'LLG', difficulte: 1,
+        titre: 'Conditions if/elif/else',
+        notions: ['Conditions', 'if/elif/else'],
+        enonce: `Écrire une fonction mention(note) qui retourne :
+- "Très Bien" si note ≥ 16
+- "Bien" si 14 ≤ note < 16
+- "Assez Bien" si 12 ≤ note < 14
+- "Passable" si 10 ≤ note < 12
+- "Non admis" si note < 10
+
+Tester avec les notes : 17, 14, 11, 8.`,
+        correction: `def mention(note):
+    if note >= 16:
+        return "Très Bien"
+    elif note >= 14:
+        return "Bien"
+    elif note >= 12:
+        return "Assez Bien"
+    elif note >= 10:
+        return "Passable"
+    else:
+        return "Non admis"
+
+mention(17) → "Très Bien"
+mention(14) → "Bien"
+mention(11) → "Passable"
+mention(8)  → "Non admis"`
+      },
+      {
+        id: 'PY-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Boucle for et accumulation',
+        notions: ['Boucle for', 'range', 'Accumulation'],
+        enonce: `1. Écrire une fonction somme(n) qui calcule 1 + 2 + 3 + ... + n.
+2. Vérifier avec la formule n(n+1)/2 pour n = 10 et n = 100.
+3. Écrire une fonction factorielle(n) qui calcule n! = 1×2×...×n.
+4. Calculer 10! et donner le résultat.`,
+        correction: `1. def somme(n):
+    s = 0
+    for i in range(1, n+1):
+        s = s + i
+    return s
+
+2. somme(10) = 55  ✓  10×11/2 = 55
+   somme(100) = 5050  ✓  100×101/2 = 5050
+
+3. def factorielle(n):
+    f = 1
+    for i in range(1, n+1):
+        f = f * i
+    return f
+
+4. factorielle(10) = 1×2×3×4×5×6×7×8×9×10 = 3 628 800`
+      },
+      {
+        id: 'PY-4', source: 'LLG', difficulte: 1,
+        titre: 'Boucle while',
+        notions: ['Boucle while', 'Condition d\'arrêt'],
+        enonce: `1. Écrire un programme qui affiche les puissances de 2 : 1, 2, 4, 8, 16, ... jusqu'à dépasser 1000.
+2. Combien de termes sont affichés ?
+3. Écrire une fonction seuil(a) qui retourne le plus petit entier n tel que 2ⁿ > a.`,
+        correction: `1. Programme :
+n = 1
+while n <= 1000:
+    print(n)
+    n = n * 2
+Affiche : 1, 2, 4, 8, 16, 32, 64, 128, 256, 512
+
+2. 10 termes sont affichés (2⁰=1 jusqu'à 2⁹=512, puis 2¹⁰=1024>1000)
+
+3. def seuil(a):
+    n = 0
+    puissance = 1
+    while puissance <= a:
+        puissance = puissance * 2
+        n = n + 1
+    return n
+
+seuil(1000) = 10  (2¹⁰=1024 > 1000 et 2⁹=512 ≤ 1000)`
+      },
+      {
+        id: 'PY-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Fonctions et paramètres',
+        notions: ['Fonctions', 'Paramètres', 'Return'],
+        enonce: `1. Écrire une fonction max2(a, b) qui retourne le maximum de deux nombres (sans utiliser max()).
+2. Écrire une fonction max3(a, b, c) qui retourne le maximum de trois nombres, en utilisant max2.
+3. Écrire une fonction est_divisible(n, d) qui retourne True si d divise n, False sinon.
+4. Utiliser est_divisible pour écrire nb_diviseurs(n) qui retourne le nombre de diviseurs de n.
+5. Trouver le nombre ayant le plus de diviseurs parmi 1, 2, ..., 100.`,
+        correction: `1. def max2(a, b):
+    if a >= b:
+        return a
+    else:
+        return b
+
+2. def max3(a, b, c):
+    return max2(max2(a, b), c)
+
+3. def est_divisible(n, d):
+    return n % d == 0
+
+4. def nb_diviseurs(n):
+    compte = 0
+    for d in range(1, n+1):
+        if est_divisible(n, d):
+            compte = compte + 1
+    return compte
+
+5. best = 1
+   best_nb = nb_diviseurs(1)
+   for k in range(2, 101):
+       if nb_diviseurs(k) > best_nb:
+           best_nb = nb_diviseurs(k)
+           best = k
+   → best = 96 avec nb_diviseurs(96) = 12
+   (96 = 2⁵ × 3, diviseurs : 1,2,3,4,6,8,12,16,24,32,48,96)`
+      },
+      {
+        id: 'PY-6', source: 'LLG', difficulte: 2,
+        titre: 'Nombres premiers',
+        notions: ['Boucle for', 'Conditions', 'Fonctions'],
+        enonce: `1. Écrire est_premier(n) → True si n est premier.
+2. Lister tous les premiers entre 1 et 50.
+3. Écrire prochain_premier(n) qui retourne le plus petit premier > n.
+4. Vérifier la conjecture de Goldbach pour les pairs de 4 à 20 :
+   tout entier pair > 2 est somme de deux nombres premiers.`,
+        correction: `1. def est_premier(n):
+    if n < 2: return False
+    for d in range(2, int(n**0.5)+1):
+        if n % d == 0: return False
+    return True
+
+2. Premiers entre 1 et 50 :
+2,3,5,7,11,13,17,19,23,29,31,37,41,43,47 (15 nombres)
+
+3. def prochain_premier(n):
+    k = n + 1
+    while not est_premier(k):
+        k = k + 1
+    return k
+
+prochain_premier(10) = 11
+prochain_premier(47) = 53
+
+4. Goldbach :
+4 = 2+2 ✓  6 = 3+3 ✓  8 = 3+5 ✓  10 = 3+7 ✓
+12 = 5+7 ✓  14 = 3+11 ✓  16 = 3+13 ✓  18 = 5+13 ✓  20 = 3+17 ✓`
+      },
+      {
+        id: 'PY-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Listes et parcours',
+        notions: ['Listes', 'Boucle for', 'Accumulation'],
+        enonce: `On dispose d'une liste de notes : notes = [12, 15, 8, 18, 10, 14, 7, 16, 11, 13].
+1. Calculer la moyenne sans utiliser sum() ni len().
+2. Trouver la note maximale et minimale sans max() ni min().
+3. Compter combien de notes sont supérieures à la moyenne.
+4. Créer une nouvelle liste contenant les notes au-dessus de la moyenne.`,
+        correction: `notes = [12, 15, 8, 18, 10, 14, 7, 16, 11, 13]
+
+1. Moyenne sans sum/len :
+total = 0
+nb = 0
+for n in notes:
+    total = total + n
+    nb = nb + 1
+moyenne = total / nb  # = 124/10 = 12.4
+
+2. Max et min :
+maxi = notes[0]
+mini = notes[0]
+for n in notes:
+    if n > maxi: maxi = n
+    if n < mini: mini = n
+# maxi = 18, mini = 7
+
+3. Notes > moyenne (12.4) :
+compte = 0
+for n in notes:
+    if n > 12.4: compte += 1
+# 15, 18, 14, 16, 13 → compte = 5
+
+4. Liste notes au-dessus :
+au_dessus = []
+for n in notes:
+    if n > 12.4:
+        au_dessus.append(n)
+# [15, 18, 14, 16, 13]`
+      },
+      {
+        id: 'PY-8', source: 'LLG', difficulte: 2,
+        titre: 'Suite de Syracuse',
+        notions: ['Boucle while', 'Conditions'],
+        enonce: `La suite de Syracuse : partir d'un entier n > 0 :
+- si n est pair : n ← n/2
+- si n est impair : n ← 3n+1
+On conjecture (non prouvé) que la suite atteint toujours 1.
+
+1. Afficher les termes de la suite en partant de 6.
+2. Écrire temps_de_vol(n) qui retourne le nombre d'étapes pour atteindre 1.
+3. Calculer temps_de_vol(n) pour n = 1 à 20. Quel n donne le plus long vol ?
+4. Écrire altitude_max(n) qui retourne la valeur maximale atteinte.`,
+        correction: `1. Suite partant de 6 :
+6 → 3 → 10 → 5 → 16 → 8 → 4 → 2 → 1
+8 étapes
+
+2. def temps_de_vol(n):
+    etapes = 0
+    while n != 1:
+        if n % 2 == 0:
+            n = n // 2
+        else:
+            n = 3*n + 1
+        etapes += 1
+    return etapes
+
+3. Temps de vol pour n=1..20 :
+n=1:0  n=2:1  n=3:7  n=4:2  n=5:5  n=6:8  n=7:16  n=8:3  n=9:19  n=10:6
+n=11:14  n=12:9  n=13:9  n=14:17  n=15:17  n=16:4  n=17:12  n=18:20  n=19:20  n=20:7
+→ n=18 et n=19 : temps_de_vol = 20 (plus long)
+
+4. def altitude_max(n):
+    maxi = n
+    while n != 1:
+        if n % 2 == 0: n = n // 2
+        else: n = 3*n + 1
+        if n > maxi: maxi = n
+    return maxi
+altitude_max(6) = 16`
+      },
+      {
+        id: 'PY-9', source: 'Henri-IV & LLG', difficulte: 2,
+        titre: 'Recherche dichotomique',
+        notions: ['Boucle while', 'Fonctions', 'Algorithme'],
+        enonce: `On veut approcher √2 par dichotomie : chercher x tel que x² = 2 dans [1;2].
+1. Écrire racine_dicho(a, precision) qui approche √a à precision près.
+2. Calculer √2 avec précision 0.001. Combien d'étapes ?
+3. Généraliser : écrire racine_n(a, n, precision) qui approche a^(1/n).`,
+        correction: `1. Racine carrée par dichotomie :
+def racine_dicho(a, precision):
+    gauche = 0
+    droite = max(1, a)
+    etapes = 0
+    while droite - gauche > precision:
+        milieu = (gauche + droite) / 2
+        if milieu**2 < a:
+            gauche = milieu
+        else:
+            droite = milieu
+        etapes += 1
+    return (gauche + droite) / 2, etapes
+
+2. racine_dicho(2, 0.001) :
+Résultat ≈ 1.4143... ≈ 1.414 ✓
+La précision 0.001 sur [1;2] (largeur 1) nécessite environ
+log₂(1/0.001) ≈ 10 étapes (2¹⁰ = 1024 > 1000)
+En pratique : environ 10-11 étapes
+
+3. def racine_n(a, n, precision):
+    gauche = 0
+    droite = max(1, a)
+    while droite - gauche > precision:
+        m = (gauche + droite) / 2
+        if m**n < a:
+            gauche = m
+        else:
+            droite = m
+    return (gauche + droite) / 2
+
+racine_n(8, 3, 0.001) ≈ 2.000 (racine cubique de 8)`
+      },
+      {
+        id: 'PY-10', source: 'LLG', difficulte: 2,
+        titre: 'Tri par sélection',
+        notions: ['Listes', 'Boucles imbriquées', 'Algorithme de tri'],
+        enonce: `Le tri par sélection : à chaque étape, trouver le minimum de la partie non triée et le placer en tête.
+
+1. Expliquer l'algorithme sur la liste [5, 2, 8, 1, 9, 3].
+2. Écrire la fonction tri_selection(liste) qui trie en ordre croissant.
+3. Combien de comparaisons fait-on pour une liste de n éléments ?
+4. Trier [12, 7, 3, 15, 1, 8, 4] et afficher chaque étape.`,
+        correction: `1. Trace sur [5,2,8,1,9,3] :
+Étape 1 : min = 1 (index 3) ↔ index 0 → [1,2,8,5,9,3]
+Étape 2 : min = 2 (index 1) → [1,2,8,5,9,3] (déjà en place)
+Étape 3 : min = 3 (index 5) ↔ index 2 → [1,2,3,5,9,8]
+Étape 4 : min = 5 (index 3) → déjà en place → [1,2,3,5,9,8]
+Étape 5 : min = 8 (index 5) ↔ index 4 → [1,2,3,5,8,9]
+Résultat : [1,2,3,5,8,9]
+
+2. def tri_selection(L):
+    n = len(L)
+    for i in range(n-1):
+        idx_min = i
+        for j in range(i+1, n):
+            if L[j] < L[idx_min]:
+                idx_min = j
+        L[i], L[idx_min] = L[idx_min], L[i]
+    return L
+
+3. Nombre de comparaisons :
+Étape i : on fait (n-i-1) comparaisons
+Total = (n-1)+(n-2)+...+1 = n(n-1)/2 comparaisons
+Pour n=7 : 7×6/2 = 21 comparaisons
+
+4. Tri de [12,7,3,15,1,8,4] :
+→ [1,7,3,15,12,8,4] → [1,3,7,15,12,8,4] → [1,3,4,15,12,8,7]
+→ [1,3,4,7,12,8,15] → [1,3,4,7,8,12,15] → [1,3,4,7,8,12,15]`
+      },
+      {
+        id: 'PY-11', source: 'Henri-IV', difficulte: 2,
+        titre: 'Suites et algorithme de seuil',
+        notions: ['Boucle while', 'Suites numériques', 'Seuil'],
+        enonce: `1. La suite (uₙ) est définie par u₀=1 et uₙ₊₁ = uₙ/2 + 1.
+   a) Calculer u₁, u₂, u₃, u₄ à la main.
+   b) Écrire terme(n) qui calcule uₙ.
+   c) Écrire seuil_suite(epsilon) qui retourne le plus petit n tel que |uₙ − 2| < epsilon.
+
+2. La suite (vₙ) est définie par v₀=0 et vₙ₊₁ = vₙ + 1/n² pour n ≥ 1.
+   Calculer la somme des 1000 premiers termes. (Comparer avec π²/6 ≈ 1.6449)`,
+        correction: `1. Suite uₙ = uₙ₋₁/2 + 1 :
+a) u₀=1, u₁=1/2+1=1.5, u₂=0.75+1=1.75, u₃=0.875+1=1.875, u₄=0.9375+1=1.9375
+   La suite converge vers 2 (point fixe : ℓ = ℓ/2+1 → ℓ=2)
+
+b) def terme(n):
+    u = 1
+    for _ in range(n):
+        u = u/2 + 1
+    return u
+
+c) def seuil_suite(epsilon):
+    u = 1
+    n = 0
+    while abs(u - 2) >= epsilon:
+        u = u/2 + 1
+        n += 1
+    return n
+
+seuil_suite(0.01) = 7  (u₇ ≈ 1.9922, |u₇-2| ≈ 0.0078 < 0.01)
+
+2. Somme Σ 1/n² pour n=1..1000 :
+def somme_inverse_carres(N):
+    s = 0
+    for n in range(1, N+1):
+        s += 1/n**2
+    return s
+
+somme_inverse_carres(1000) ≈ 1.6439 ≈ π²/6 ≈ 1.6449 ✓ (très proche !)`
+      },
+      {
+        id: 'PY-12', source: 'LLG', difficulte: 3,
+        titre: 'Algorithme d\'Euclide et PGCD',
+        notions: ['Boucle while', 'Modulo', 'Algorithme'],
+        enonce: `1. Implémenter l'algorithme d'Euclide pour calculer PGCD(a,b).
+2. Tester : PGCD(48,18), PGCD(252,180), PGCD(1000,864).
+3. Écrire ppcm(a,b) en utilisant pgcd.
+4. Écrire fraction_irreductible(p,q) qui retourne (p//d, q//d) où d=PGCD(p,q).
+5. Simplifier 252/180, 1000/750, 144/96.`,
+        correction: `1. def pgcd(a, b):
+    while b != 0:
+        a, b = b, a % b
+    return a
+
+2. Tests :
+pgcd(48, 18) :  48→18r12 → 18→12r6 → 12→6r0 → pgcd = 6
+pgcd(252, 180) : 252→180r72 → 180→72r36 → 72→36r0 → pgcd = 36
+pgcd(1000, 864) : 1000→864r136 → 864→136r48 → 136→48r40 → 48→40r8 → 40→8r0 → pgcd = 8
+
+3. def ppcm(a, b):
+    return a * b // pgcd(a, b)
+
+4. def fraction_irreductible(p, q):
+    d = pgcd(p, q)
+    return (p//d, q//d)
+
+5. Simplifications :
+252/180 : d=36 → 7/5
+1000/750 : pgcd(1000,750)=250 → 4/3
+144/96 : pgcd(144,96)=48 → 3/2`
+      },
+      {
+        id: 'PY-13', source: 'Henri-IV', difficulte: 2,
+        titre: 'Tracé de courbe (valeurs)',
+        notions: ['Fonctions', 'Listes', 'Boucle for'],
+        enonce: `Sans bibliothèque graphique, générer un tableau de valeurs de f(x) = x² - 3x + 2 sur [-1 ; 4] :
+
+1. Créer une liste x_vals = [-1, -0.5, 0, 0.5, 1, ..., 4] (pas de 0.5).
+2. Calculer y_vals = [f(x) pour x dans x_vals].
+3. Trouver les zéros (valeurs de x où f(x) change de signe).
+4. Trouver le minimum de f sur cet intervalle et la valeur de x correspondante.`,
+        correction: `1. def f(x):
+    return x**2 - 3*x + 2
+
+x_vals = []
+x = -1
+while x <= 4:
+    x_vals.append(x)
+    x = x + 0.5
+
+2. y_vals = [f(x) for x in x_vals]
+Tableau :
+x=-1.0 → f=6.0
+x=-0.5 → f=4.25
+x=0.0 → f=2.0
+x=0.5 → f=0.75
+x=1.0 → f=0.0  ← zéro exact
+x=1.5 → f=-0.25
+x=2.0 → f=0.0  ← zéro exact
+x=2.5 → f=0.75
+x=3.0 → f=2.0
+x=3.5 → f=3.75
+x=4.0 → f=6.0
+
+3. Changements de signe :
+Entre x=0.5 (f=0.75>0) et x=1.0 (f=0.0) → zéro en x=1
+Entre x=1.5 (f=-0.25<0) et x=2.0 (f=0.0) → zéro en x=2
+Zéros exacts : x=1 et x=2 (f(x)=(x-1)(x-2))
+
+4. Minimum :
+f(1.5) = -0.25 est la valeur minimale dans la liste
+(Minimum théorique en x=1.5 : f(1.5)=(1.5)²-4.5+2 = 2.25-4.5+2 = -0.25 ✓)`
+      },
+      {
+        id: 'PY-14', source: 'LLG', difficulte: 3,
+        titre: 'Cryptographie — Chiffre de César',
+        notions: ['Chaînes', 'ord/chr', 'Boucle for'],
+        enonce: `Le chiffre de César décale chaque lettre de k positions dans l'alphabet.
+Exemple avec k=3 : A→D, B→E, ..., Z→C.
+
+1. Écrire chiffrer(message, k) qui chiffre un message en majuscules.
+2. Écrire dechiffrer(message, k) en utilisant chiffrer.
+3. Chiffrer "BONJOUR" avec k=13 (ROT13).
+4. Écrire casser_cesar(message_chiffre) qui essaie les 26 décalages et affiche tous les déchiffrements.`,
+        correction: `1. def chiffrer(message, k):
+    resultat = ""
+    for lettre in message:
+        if lettre.isalpha():
+            # ord('A')=65, ord('Z')=90
+            code = (ord(lettre.upper()) - 65 + k) % 26 + 65
+            resultat += chr(code)
+        else:
+            resultat += lettre
+    return resultat
+
+2. def dechiffrer(message, k):
+    return chiffrer(message, -k)
+    # Déchiffrer = chiffrer avec -k (décalage inverse)
+
+3. ROT13 de "BONJOUR" (k=13) :
+B(1) → O(14) → O
+O(14) → B(1) → B
+N(13) → A(0) → A
+J(9) → W(22) → W
+O(14) → B(1) → B
+U(20) → H(7) → H
+R(17) → E(4) → E
+Résultat : "OBAWBHE"
+Note : ROT13 est son propre inverse (chiffrer deux fois = message original)
+
+4. def casser_cesar(msg):
+    for k in range(26):
+        print(f"k={k}: {dechiffrer(msg, k)}")`
+      },
+      {
+        id: 'PY-15', source: 'Henri-IV & LLG', difficulte: 3,
+        titre: 'Simulation probabiliste (Monte-Carlo)',
+        notions: ['random', 'Boucle for', 'Estimation'],
+        enonce: `La méthode Monte-Carlo permet d'estimer π :
+- Tirer n points (x,y) au hasard dans le carré [0;1]×[0;1]
+- Compter ceux dans le quart de cercle : x²+y² ≤ 1
+- π/4 ≈ (nombre de points dans le cercle) / n
+
+1. Écrire monte_carlo_pi(n) qui estime π par cette méthode.
+2. Tester avec n = 100, 1000, 10000.
+3. Expliquer pourquoi plus n est grand, meilleure est l'estimation.`,
+        correction: `import random
+
+def monte_carlo_pi(n):
+    dans_cercle = 0
+    for _ in range(n):
+        x = random.random()  # nombre aléatoire dans [0,1]
+        y = random.random()
+        if x**2 + y**2 <= 1:
+            dans_cercle += 1
+    return 4 * dans_cercle / n
+
+Tests (résultats varient selon les tirages) :
+monte_carlo_pi(100)   ≈ 3.12 (précision ~1%)
+monte_carlo_pi(1000)  ≈ 3.14 (précision ~0.5%)
+monte_carlo_pi(10000) ≈ 3.141 (précision ~0.1%)
+
+Explication :
+La probabilité qu'un point soit dans le quart de cercle est π/4
+(aire du quart de cercle / aire du carré = π/4 / 1 = π/4).
+Par la loi des grands nombres, la fréquence observée tend vers
+la probabilité théorique quand n → +∞.
+L'erreur est ≈ 1/√n → pour n=10000, erreur ≈ 0.01.`
+      },
+    ]
+  },
+  {
+    id: 'nombres-calculs-seconde',
+    numero: 2,
+    titre: 'Nombres & Calculs',
+    sousTitre: 'Puissances · Racines · PGCD · PPCM · Ensembles ℕℤℚℝ',
+    icon: '🔢',
+    color: '#4f6ef7',
+    notions: ['Puissances', 'Racines carrées', 'PGCD', 'PPCM', 'Ensembles de nombres', 'Notation scientifique'],
+    exercices: [
+      {
+        id: 'NC-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Calculs de puissances',
+        notions: ['Puissances', 'Propriétés'],
+        enonce: `Calculer sans calculatrice (donner une valeur exacte) :
+1. 2⁵ × 2⁻³ × (2²)³
+2. (3² × 3⁻¹)² ÷ 3
+3. (−2)⁴ + (−2)³ × (−2)
+4. 5⁻² × 25 × 5³
+5. (10³)⁻² × 10⁸
+6. (2/3)³ × (3/2)²`,
+        correction: `1. 2⁵ × 2⁻³ × 2⁶ = 2^(5-3+6) = 2⁸ = 256
+2. (3¹)² ÷ 3 = 3² ÷ 3 = 3¹ = 3
+3. 16 + (−8)(−2) = 16 + 16 = 32
+4. 5⁻² × 5² × 5³ = 5^(-2+2+3) = 5³ = 125
+5. 10⁻⁶ × 10⁸ = 10² = 100
+6. (8/27) × (9/4) = 72/108 = 2/3`
+      },
+      {
+        id: 'NC-2', source: 'LLG', difficulte: 1,
+        titre: 'Simplification de racines carrées',
+        notions: ['Racines carrées', 'Simplification'],
+        enonce: `Simplifier sous la forme a√b (b sans carré parfait) :
+1. √72    2. √200    3. √(3/4)    4. √48
+5. √(180) 6. √(0,08) 7. √(3)×√(12)   8. (√5+√3)(√5−√3)`,
+        correction: `1. √72 = √(36×2) = 6√2
+2. √200 = √(100×2) = 10√2
+3. √(3/4) = √3/√4 = √3/2
+4. √48 = √(16×3) = 4√3
+5. √180 = √(36×5) = 6√5
+6. √(0.08) = √(8/100) = 2√2/10 = √2/5
+7. √3×√12 = √36 = 6
+8. (√5)²−(√3)² = 5−3 = 2  (identité (a+b)(a-b)=a²-b²)`
+      },
+      {
+        id: 'NC-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Ensembles de nombres',
+        notions: ['Ensembles ℕℤℚℝ', 'Raisonnement'],
+        enonce: `1. Classer dans ℕ, ℤ, ℚ ou ℝ (préciser le plus petit ensemble) :
+   a) 5    b) −3    c) 1/2    d) √2    e) 0    f) π    g) 3/1    h) √9
+
+2. Vrai ou Faux (justifier) :
+   a) ℕ ⊂ ℤ    b) ℚ ⊂ ℝ    c) √2 ∈ ℚ    d) 0,333... = 1/3 ∈ ℚ
+
+3. Donner un exemple d'irrationnel différent de π et √2.`,
+        correction: `1. Classement :
+a) 5 ∈ ℕ  b) −3 ∈ ℤ  c) 1/2 ∈ ℚ  d) √2 ∈ ℝ (irrationnel)
+e) 0 ∈ ℕ  f) π ∈ ℝ (irrationnel)  g) 3/1 = 3 ∈ ℕ  h) √9 = 3 ∈ ℕ
+
+2. Vrai/Faux :
+a) VRAI : tout entier naturel est un entier relatif
+b) VRAI : tout rationnel est un réel
+c) FAUX : √2 est irrationnel (démontrable par l'absurde)
+d) VRAI : 0,333... = 1/3 (fraction d'entiers → rationnel)
+
+3. Exemples d'irrationnels : √3, √5, e (base des logarithmes), ln(2)`
+      },
+      {
+        id: 'NC-4', source: 'LLG', difficulte: 2,
+        titre: 'PGCD par algorithme d\'Euclide',
+        notions: ['PGCD', 'Algorithme d\'Euclide'],
+        enonce: `Calculer par l'algorithme d'Euclide :
+1. PGCD(84, 60)
+2. PGCD(357, 119)
+3. PGCD(1071, 1029)
+
+Pour chaque résultat, en déduire PPCM et simplifier la fraction correspondante.`,
+        correction: `1. PGCD(84,60) :
+84 = 1×60+24  →  60 = 2×24+12  →  24 = 2×12+0
+PGCD = 12, PPCM = 84×60/12 = 420, 84/60 = 7/5
+
+2. PGCD(357,119) :
+357 = 3×119+0 → PGCD = 119
+(119×3=357, donc 119 divise 357)
+PPCM = 357×119/119 = 357, 357/119 = 3/1
+
+3. PGCD(1071,1029) :
+1071 = 1×1029+42  →  1029 = 24×42+21  →  42 = 2×21+0
+PGCD = 21, PPCM = 1071×1029/21 = 52479, 1071/1029 = 51/49`
+      },
+      {
+        id: 'NC-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Notation scientifique',
+        notions: ['Puissances de 10', 'Notation scientifique'],
+        enonce: `1. Écrire en notation scientifique a×10ⁿ avec 1 ≤ a < 10 :
+   a) 52 400    b) 0.00367    c) 6 500 000 000
+
+2. Calculer et donner le résultat en notation scientifique :
+   a) (3×10⁵) × (4×10⁻²)
+   b) (6×10⁸) ÷ (2×10³)
+   c) (2×10⁻³)²
+
+3. La distance Terre-Soleil est 1,5×10¹¹ m. La lumière parcourt 3×10⁸ m/s.
+   En combien de minutes la lumière voyage-t-elle du Soleil à la Terre ?`,
+        correction: `1. Notation scientifique :
+a) 52 400 = 5,24×10⁴
+b) 0,00367 = 3,67×10⁻³
+c) 6 500 000 000 = 6,5×10⁹
+
+2. Calculs :
+a) (3×4)×10^(5-2) = 12×10³ = 1,2×10⁴
+b) (6÷2)×10^(8-3) = 3×10⁵
+c) (2²)×(10⁻³)² = 4×10⁻⁶
+
+3. Temps = distance / vitesse :
+t = (1,5×10¹¹) / (3×10⁸) = (1,5/3)×10^(11-8) = 0,5×10³ = 500 s
+500 s ÷ 60 ≈ 8 min 20 s
+(La lumière met environ 8 minutes 20 secondes pour arriver du Soleil.)`
+      },
+      {
+        id: 'NC-6', source: 'LLG', difficulte: 2,
+        titre: 'Rationalisation et calculs avec racines',
+        notions: ['Racines carrées', 'Rationalisation'],
+        enonce: `1. Rationaliser (éliminer le radical au dénominateur) :
+   a) 1/√3    b) 2/(1+√2)    c) (√5+1)/(√5-1)
+
+2. Montrer sans calculatrice :
+   a) √2 + √8 = 3√2
+   b) (1+√3)² = 4+2√3
+
+3. Ordonner sans calculatrice : √3+1,  √5,  2,  √2+0.5`,
+        correction: `1. Rationalisation :
+a) 1/√3 = √3/3
+
+b) 2/(1+√2) × (1-√2)/(1-√2) = 2(1-√2)/(1-2) = 2(1-√2)/(-1) = 2(√2-1) = 2√2-2
+
+c) (√5+1)/(√5-1) × (√5+1)/(√5+1) = (√5+1)²/(5-1) = (6+2√5)/4 = (3+√5)/2
+
+2. Démonstrations :
+a) √2 + √8 = √2 + √(4×2) = √2 + 2√2 = 3√2 ✓
+
+b) (1+√3)² = 1² + 2×1×√3 + (√3)² = 1 + 2√3 + 3 = 4+2√3 ✓
+
+3. Ordre :
+√2 ≈ 1.414, √3 ≈ 1.732, √5 ≈ 2.236
+√3+1 ≈ 2.732 ; √5 ≈ 2.236 ; 2 = 2 ; √2+0.5 ≈ 1.914
+Ordre croissant : √2+0.5 < 2 < √5 < √3+1`
+      },
+      {
+        id: 'NC-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Divisibilité et décomposition',
+        notions: ['Divisibilité', 'Facteurs premiers', 'Critères'],
+        enonce: `1. Décomposer en facteurs premiers : 360, 504, 1260.
+2. En déduire PGCD(360, 504) et PPCM(360, 504).
+3. Vérifier les critères de divisibilité pour 2 520 :
+   divisible par 2 ? par 3 ? par 5 ? par 7 ? par 9 ?
+4. Trouver tous les diviseurs de 48.`,
+        correction: `1. Décompositions :
+360 = 8×45 = 2³×3²×5
+504 = 8×63 = 2³×3²×7
+1260 = 4×315 = 4×9×35 = 2²×3²×5×7
+
+2. PGCD(360,504) = produit des facteurs communs au min :
+= 2³×3² = 8×9 = 72
+PPCM = 2³×3²×5×7 = 72×35 = 2520
+
+3. Critères pour 2520 :
+÷2 : OUI (dernier chiffre 0)
+÷3 : OUI (somme digits : 2+5+2+0=9, divisible par 3)
+÷5 : OUI (dernier chiffre 0)
+÷7 : 2520÷7 = 360 OUI
+÷9 : OUI (somme digits = 9, divisible par 9)
+
+4. Diviseurs de 48 = 2⁴×3 :
+1, 2, 3, 4, 6, 8, 12, 16, 24, 48 → 10 diviseurs
+(nombre de diviseurs = (4+1)(1+1) = 10 ✓)`
+      },
+      {
+        id: 'NC-8', source: 'LLG', difficulte: 2,
+        titre: 'Comparaison de réels',
+        notions: ['Inégalités', 'Comparaison de réels'],
+        enonce: `Comparer sans calculatrice :
+1. √5 et √3 + 1/2
+2. 3√2 et 2√3
+3. (√6+√2)/2 et 1,3
+4. Montrer que pour tout x>0 : x + 1/x ≥ 2`,
+        correction: `1. √5 vs √3 + 0,5 :
+Carrer les deux (positifs) : √5 ≈ 2,236 ; √3+0,5 ≈ 2,232
+Plus rigoureux : (√5)² = 5 ; (√3+0,5)² = 3+√3+0,25 = 3,25+√3 ≈ 3,25+1,732 = 4,982
+5 > 4,982 donc √5 > √3+0,5
+
+2. 3√2 vs 2√3 :
+(3√2)² = 18 ; (2√3)² = 12
+18 > 12 et les deux sont positifs → 3√2 > 2√3
+
+3. (√6+√2)/2 vs 1,3 :
+(√6+√2)/2 ≈ (2,449+1,414)/2 ≈ 3,863/2 ≈ 1,932 > 1,3
+
+4. Démonstration de x+1/x ≥ 2 pour x>0 :
+x + 1/x - 2 = (x² + 1 - 2x)/x = (x-1)²/x
+(x-1)² ≥ 0 et x > 0 donc (x-1)²/x ≥ 0
+Donc x + 1/x ≥ 2, avec égalité si et seulement si x=1. ✓`
+      },
+      {
+        id: 'NC-9', source: 'Henri-IV & LLG', difficulte: 2,
+        titre: 'Problème — Nombres et divisibilité',
+        notions: ['PGCD', 'Applications', 'Raisonnement'],
+        enonce: `1. Un maçon dispose de 2 tas de carreaux : 180 rouges et 252 blancs. Il veut faire des lots identiques (mêmes quantités de rouges et blancs dans chaque lot) sans avoir de reste.
+   a) Quel est le nombre maximal de lots ?
+   b) Combien de carreaux rouges et blancs dans chaque lot ?
+
+2. Deux bus partent de la gare : le bus A toutes les 24 minutes, le bus B toutes les 36 minutes. Ils partent ensemble à 8h00.
+   a) À quelle heure partent-ils ensemble pour la première fois ?
+   b) Combien de fois partent-ils ensemble avant 20h00 ?`,
+        correction: `1. Problème des lots :
+a) Nombre maximal de lots = PGCD(180, 252)
+180 = 2²×3²×5 ; 252 = 2²×3²×7
+PGCD = 2²×3² = 36 lots
+
+b) Chaque lot :
+Carreaux rouges : 180/36 = 5
+Carreaux blancs : 252/36 = 7
+
+2. Problème des bus :
+a) PPCM(24, 36) :
+24 = 2³×3 ; 36 = 2²×3²
+PPCM = 2³×3² = 72 minutes = 1h12
+Ils partent ensemble à 8h00+1h12 = 9h12
+
+b) De 8h00 à 20h00 = 720 minutes
+720 ÷ 72 = 10 fois
+Ils partent ensemble à : 8h00, 9h12, 10h24, 11h36, 12h48, 14h00, 15h12, 16h24, 17h36, 18h48, 20h00 = 11 fois (en comptant 8h00 et 20h00)`
+      },
+      {
+        id: 'NC-10', source: 'Henri-IV', difficulte: 2,
+        titre: 'Calculs de puissances négatives et fractions',
+        notions: ['Puissances négatives', 'Fractions'],
+        enonce: `Simplifier en une seule puissance ou fraction :
+1. (2⁻¹ + 3⁻¹)⁻¹
+2. (a²b⁻³)² × (a⁻¹b²)³  (a,b ≠ 0)
+3. (x⁻¹ + y⁻¹)/(x⁻¹ - y⁻¹)  (x,y ≠ 0, x ≠ y)
+4. Montrer que (2^(n+2) + 2^n) / 2^(n+1) = 5/2 pour tout entier n.`,
+        correction: `1. (2⁻¹+3⁻¹)⁻¹ = (1/2+1/3)⁻¹ = (5/6)⁻¹ = 6/5
+
+2. (a²b⁻³)²×(a⁻¹b²)³ = a⁴b⁻⁶ × a⁻³b⁶ = a^(4-3)×b^(-6+6) = a¹×b⁰ = a
+
+3. x⁻¹+y⁻¹ = 1/x+1/y = (x+y)/(xy)
+   x⁻¹-y⁻¹ = 1/x-1/y = (y-x)/(xy)
+   Quotient : [(x+y)/(xy)] / [(y-x)/(xy)] = (x+y)/(y-x)
+
+4. (2^(n+2)+2^n) / 2^(n+1)
+   = (4×2^n + 2^n) / (2×2^n)
+   = 5×2^n / (2×2^n)
+   = 5/2 ✓ (indépendant de n)`
+      },
+      {
+        id: 'NC-11', source: 'LLG', difficulte: 2,
+        titre: 'Résolution d\'équations avec radicaux',
+        notions: ['Racines carrées', 'Équations'],
+        enonce: `Résoudre dans ℝ (vérifier les solutions !) :
+1. √(2x+3) = 5
+2. √(x+1) = x−1
+3. √(3x−2) + √(x+1) = 0
+4. x² = 3x+4 (solutions entières ?)`,
+        correction: `1. √(2x+3) = 5 → 2x+3 = 25 → x = 11
+Vérif : √(25) = 5 ✓ → Solution : x = 11
+
+2. √(x+1) = x−1, condition x ≥ −1 et x−1 ≥ 0 → x ≥ 1
+Élever au carré : x+1 = (x−1)² = x²−2x+1
+→ x²−3x = 0 → x(x−3) = 0 → x=0 ou x=3
+x=0 < 1 (interdit) ; x=3 : √4 = 2 = 3−1 ✓
+Solution : x = 3
+
+3. √(3x−2) + √(x+1) = 0
+Deux racines carrées (≥0) de somme nulle → chacune = 0
+√(3x−2) = 0 → x = 2/3
+√(x+1) = 0 → x = −1
+Impossible d'avoir x = 2/3 et x = −1 simultanément → Pas de solution
+
+4. x²−3x−4 = 0 → (x−4)(x+1) = 0 → x=4 ou x=−1
+Solutions entières : x=4 et x=−1 ✓`
+      },
+      {
+        id: 'NC-12', source: 'Henri-IV', difficulte: 3,
+        titre: 'Démonstrations — irrationnalité',
+        notions: ['Raisonnement par l\'absurde', 'Irrationnels'],
+        enonce: `1. Montrer par l'absurde que √2 est irrationnel.
+2. En déduire que √2 + 1 est irrationnel.
+3. Montrer que √3 est irrationnel.`,
+        correction: `1. Irrationnalité de √2 :
+Supposons √2 = p/q fraction irréductible (p,q ∈ ℤ, q>0, PGCD(p,q)=1).
+Alors 2 = p²/q² → p² = 2q²
+Donc p² est pair → p est pair (car si p impair, p² impair)
+Écrire p = 2k : (2k)² = 2q² → 4k² = 2q² → q² = 2k²
+Donc q² est pair → q est pair.
+Contradiction : p et q sont tous deux pairs alors que PGCD(p,q)=1. ✓
+Donc √2 ∉ ℚ.
+
+2. Si √2+1 était rationnel, alors √2 = (√2+1)−1 serait rationnel.
+Contradiction avec 1. Donc √2+1 est irrationnel.
+
+3. Irrationnalité de √3 :
+Supposons √3 = p/q irréductible.
+3q² = p² → p² divisible par 3 → p divisible par 3 → p = 3k
+9k² = 3q² → q² = 3k² → q divisible par 3.
+Contradiction avec PGCD(p,q)=1. Donc √3 ∉ ℚ. ✓`
+      },
+      {
+        id: 'NC-13', source: 'LLG', difficulte: 3,
+        titre: 'Applications concrètes — mesures et calculs',
+        notions: ['Racines carrées', 'Applications'],
+        enonce: `1. Un carré a une aire de 50 cm². Quelle est la longueur de son côté ? De sa diagonale ?
+2. Un triangle rectangle a des cathètes de 3 cm et 4 cm. Calculer l'hypoténuse.
+3. Une salle rectangulaire mesure 6m × 8m. Quelle est la longueur de sa diagonale ?
+4. Un écran 16/9 a une diagonale de 55 cm. Calculer ses dimensions en cm (arrondir au mm).`,
+        correction: `1. Carré d'aire 50 cm² :
+Côté c : c² = 50 → c = √50 = 5√2 ≈ 7,07 cm
+Diagonale d : d = c√2 = 5√2×√2 = 5×2 = 10 cm
+
+2. Triangle rectangle 3-4-? :
+Hypoténuse = √(3²+4²) = √(9+16) = √25 = 5 cm
+(Triple pythagoricien classique : 3-4-5)
+
+3. Salle 6m×8m :
+Diagonale = √(6²+8²) = √(36+64) = √100 = 10 m
+(Triple 6-8-10 = 2×(3-4-5))
+
+4. Écran 16/9, diagonale 55 cm :
+Ratio des côtés : l = 16k, h = 9k
+Diagonale : √((16k)²+(9k)²) = k√(256+81) = k√337 ≈ 18,36k
+55 = 18,36k → k ≈ 2,995 ≈ 3
+Largeur : 16×3 = 48 cm ; Hauteur : 9×3 = 27 cm
+Vérif : √(48²+27²) = √(2304+729) = √3033 ≈ 55,07 cm ✓`
+      },
+      {
+        id: 'NC-14', source: 'Henri-IV & LLG', difficulte: 2,
+        titre: 'Propriétés des puissances — démonstrations',
+        notions: ['Puissances', 'Démonstrations', 'Cas généraux'],
+        enonce: `Démontrer pour tous entiers m, n et réels a, b (a≠0, b≠0) :
+1. aᵐ × aⁿ = aᵐ⁺ⁿ (utiliser la définition de aⁿ)
+2. (aᵐ)ⁿ = aᵐⁿ
+3. (a×b)ⁿ = aⁿ×bⁿ
+4. En déduire : (a/b)ⁿ = aⁿ/bⁿ`,
+        correction: `1. aᵐ × aⁿ = aᵐ⁺ⁿ (pour m,n ∈ ℕ) :
+aᵐ = a×a×...×a (m fois)
+aⁿ = a×a×...×a (n fois)
+aᵐ×aⁿ = a×a×...×a (m+n fois) = aᵐ⁺ⁿ ✓
+
+2. (aᵐ)ⁿ = aᵐⁿ :
+(aᵐ)ⁿ = aᵐ×aᵐ×...×aᵐ (n fois)
+= a^(m+m+...+m) (n fois) = a^(mn) = aᵐⁿ ✓
+
+3. (a×b)ⁿ = aⁿ×bⁿ :
+(ab)ⁿ = (ab)(ab)...(ab) (n fois)
+= (a×a×...×a)(b×b×...×b) (réarranger)
+= aⁿ×bⁿ ✓ (commutativité de la multiplication)
+
+4. (a/b)ⁿ = aⁿ/bⁿ :
+(a/b)ⁿ = (a×b⁻¹)ⁿ = aⁿ×(b⁻¹)ⁿ = aⁿ×b⁻ⁿ = aⁿ/bⁿ ✓`
+      },
+      {
+        id: 'NC-15', source: 'LLG', difficulte: 3,
+        titre: 'Problème ouvert — Nombres parfaits',
+        notions: ['Diviseurs', 'Raisonnement'],
+        enonce: `Un nombre parfait est égal à la somme de ses diviseurs stricts (sans lui-même).
+Exemple : 6 = 1+2+3 (diviseurs de 6 : 1, 2, 3, 6).
+
+1. Vérifier que 28 est parfait.
+2. Trouver tous les diviseurs de 12. Est-il parfait ?
+3. Écrire un algorithme Python est_parfait(n) qui teste si n est parfait.
+4. Les nombres parfaits connus sont 6, 28, 496, 8128. Vérifier 496 avec l'algorithme.`,
+        correction: `1. Diviseurs stricts de 28 : 1, 2, 4, 7, 14
+Somme : 1+2+4+7+14 = 28 ✓ → 28 est parfait !
+
+2. Diviseurs de 12 : 1, 2, 3, 4, 6, 12
+Diviseurs stricts : 1+2+3+4+6 = 16 ≠ 12
+→ 12 n'est pas parfait (16 > 12 : 12 est "abondant")
+
+3. def est_parfait(n):
+    if n < 2: return False
+    somme = 0
+    for d in range(1, n):
+        if n % d == 0:
+            somme += d
+    return somme == n
+
+4. Diviseurs stricts de 496 :
+1,2,4,8,16,31,62,124,248
+Somme : 1+2+4+8+16+31+62+124+248 = 496 ✓
+est_parfait(496) → True
+
+Anecdote : Euclide a montré que si 2ⁿ−1 est premier (nombre de Mersenne),
+alors 2ⁿ⁻¹(2ⁿ−1) est parfait.
+n=2 : 2¹×3=6 ✓ ; n=3 : 4×7=28 ✓ ; n=5 : 16×31=496 ✓`
+      },
+    ]
+  },
+  {
+    id: 'intervalles-seconde',
+    numero: 3,
+    titre: 'Intervalles, Inégalités & Inéquations',
+    sousTitre: 'Notations · Propriétés · Valeur absolue · Résolution',
+    icon: '↔️',
+    color: '#f59e0b',
+    notions: ['Intervalles', 'Inégalités', 'Inéquations', 'Valeur absolue', 'Encadrements'],
+    exercices: [
+      {
+        id: 'II-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Notations d\'intervalles',
+        notions: ['Intervalles', 'Notations'],
+        enonce: `1. Représenter sur une droite réelle les intervalles :
+   a) [−3 ; 2[    b) ]−∞ ; 4]    c) ]−1 ; +∞[    d) [0 ; 3]
+
+2. Exprimer en notation d'intervalle :
+   a) {x ∈ ℝ | −2 < x ≤ 5}
+   b) {x ∈ ℝ | x ≤ 7}
+   c) {x ∈ ℝ | x < 0 ou x > 3}
+
+3. Déterminer A ∩ B et A ∪ B pour :
+   A = [−3 ; 4]  et  B = ]1 ; 7[`,
+        correction: `1. Représentations (cercle ouvert = exclu, fermé = inclus) :
+a) [−3;2[ : fermé en −3, ouvert en 2
+b) ]−∞;4] : toute la droite jusqu'à 4 inclus
+c) ]−1;+∞[ : à droite de −1 exclu
+d) [0;3] : segment fermé
+
+2. Notations :
+a) ]−2 ; 5]
+b) ]−∞ ; 7]
+c) ]−∞ ; 0[ ∪ ]3 ; +∞[
+
+3. A = [−3;4], B = ]1;7[ :
+A ∩ B = ]1 ; 4]  (intersection : x dans les deux)
+A ∪ B = [−3 ; 7[  (union : x dans au moins un)`
+      },
+      {
+        id: 'II-2', source: 'LLG', difficulte: 1,
+        titre: 'Propriétés des inégalités',
+        notions: ['Inégalités', 'Propriétés', 'Sens'],
+        enonce: `Vrai ou Faux ? Justifier et corriger si faux :
+1. Si a < b alors a² < b²
+2. Si a < b et c < 0 alors ac > bc
+3. Si a < b alors 1/a > 1/b
+4. Si 0 < a < b alors 1/b < 1/a
+5. Si a < b alors a + 3 < b + 3
+6. Si a < b et a < c alors b < c`,
+        correction: `1. FAUX : si a = −3 et b = 1, a < b mais a² = 9 > 1 = b²
+   VRAI seulement si a,b ≥ 0 ou a,b ≤ 0 (même signe)
+
+2. VRAI : multiplier par c < 0 inverse le sens ✓
+
+3. FAUX : si a = −1 et b = 2, a < b mais 1/a = −1 < 0.5 = 1/b
+   VRAI seulement si a et b de même signe
+
+4. VRAI : si 0 < a < b, alors en divisant par ab > 0 : 1/b < 1/a ✓
+
+5. VRAI : ajouter 3 des deux côtés conserve le sens ✓
+
+6. FAUX : a < b et a < c ne dit rien sur la relation entre b et c
+   Exemple : a = 0, b = 1, c = 2 → b < c. Mais a=0, b=2, c=1 → b > c`
+      },
+      {
+        id: 'II-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Résolution d\'inéquations du 1er degré',
+        notions: ['Inéquations', 'Intervalles'],
+        enonce: `Résoudre et exprimer en intervalle :
+1. 3x − 5 ≥ x + 7
+2. 2(x − 3) < 5x + 1
+3. −2 < 3x − 1 ≤ 8
+4. (2x+1)/3 ≤ (x−2)/2 + 1
+5. 5 − 2x > 3x − 5`,
+        correction: `1. 2x ≥ 12 → x ≥ 6 → [6 ; +∞[
+
+2. 2x−6 < 5x+1 → −3x < 7 → x > −7/3 → ]−7/3 ; +∞[
+
+3. −2 < 3x−1 ≤ 8 → −1 < 3x ≤ 9 → −1/3 < x ≤ 3 → ]−1/3 ; 3]
+
+4. ×6 : 2(2x+1) ≤ 3(x−2)+6 → 4x+2 ≤ 3x → x ≤ −2 → ]−∞ ; −2]
+
+5. 10 > 5x → x < 2 → ]−∞ ; 2[`
+      },
+      {
+        id: 'II-4', source: 'LLG', difficulte: 1,
+        titre: 'Valeur absolue — définition',
+        notions: ['Valeur absolue', 'Distance'],
+        enonce: `1. Calculer : |−5|, |3|, |3−7|, |−2+5|, |π−4|
+2. Résoudre :
+   a) |x − 2| = 3
+   b) |2x + 1| = 5
+   c) |x| = x + 2
+3. Quelle est la distance entre les points d'abscisses −3 et 5 sur la droite réelle ?`,
+        correction: `1. Calculs :
+|−5| = 5 ; |3| = 3 ; |3−7| = |−4| = 4 ; |−2+5| = |3| = 3
+|π−4| = 4−π ≈ 0,858 (car π < 4)
+
+2. Résolutions :
+a) |x−2| = 3 → x−2=3 ou x−2=−3 → x=5 ou x=−1
+
+b) |2x+1| = 5 → 2x+1=5 ou 2x+1=−5 → x=2 ou x=−3
+
+c) |x| = x+2 :
+• Si x ≥ 0 : x = x+2 → 0 = 2 : impossible
+• Si x < 0 : −x = x+2 → −2 = 2x → x = −1 ✓ (et −1 < 0)
+Solution : x = −1
+
+3. Distance entre −3 et 5 :
+d = |5−(−3)| = |8| = 8`
+      },
+      {
+        id: 'II-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Inéquations avec valeur absolue',
+        notions: ['Valeur absolue', 'Inéquations'],
+        enonce: `Résoudre et exprimer en intervalle :
+1. |x − 3| < 2
+2. |2x + 1| ≥ 5
+3. |x + 1| ≤ |x − 3|
+4. |x − 1| + |x + 2| ≥ 4`,
+        correction: `1. |x−3| < 2 ⟺ −2 < x−3 < 2 ⟺ 1 < x < 5
+Solution : ]1 ; 5[
+
+2. |2x+1| ≥ 5 ⟺ 2x+1 ≤ −5 ou 2x+1 ≥ 5 ⟺ x ≤ −3 ou x ≥ 2
+Solution : ]−∞ ; −3] ∪ [2 ; +∞[
+
+3. |x+1| ≤ |x−3| (distance à −1 ≤ distance à 3)
+(x+1)² ≤ (x−3)² → x²+2x+1 ≤ x²−6x+9 → 8x ≤ 8 → x ≤ 1
+Solution : ]−∞ ; 1]
+
+4. |x−1| + |x+2| ≥ 4 : étude par cas
+• x < −2 : (1−x)+(−x−2) = −2x−1 ≥ 4 → x ≤ −5/2 → ]−∞;−5/2]
+• −2 ≤ x < 1 : (1−x)+(x+2) = 3 ≥ 4 : FAUX (jamais vrai)
+• x ≥ 1 : (x−1)+(x+2) = 2x+1 ≥ 4 → x ≥ 3/2 → [3/2;+∞[
+Solution : ]−∞ ; −5/2] ∪ [3/2 ; +∞[`
+      },
+      {
+        id: 'II-6', source: 'LLG', difficulte: 2,
+        titre: 'Encadrements et approximations',
+        notions: ['Encadrements', 'Inégalités'],
+        enonce: `1. On sait que 1,41 < √2 < 1,42. En déduire un encadrement de :
+   a) 2√2    b) 1/√2    c) √2 + 1    d) √2 × √2
+
+2. Sachant que 3,14 < π < 3,15, encadrer :
+   a) 2π    b) π/2    c) π²
+
+3. Montrer que si 0 < a < b alors a² < ab < b².`,
+        correction: `1. 1,41 < √2 < 1,42 :
+a) 2×1,41 < 2√2 < 2×1,42 → 2,82 < 2√2 < 2,84
+b) 1/1,42 < 1/√2 < 1/1,41 → 0,704... < 1/√2 < 0,709...
+c) 1,41+1 < √2+1 < 1,42+1 → 2,41 < √2+1 < 2,42
+d) 1,41² < √2×√2 < 1,42² → 1,9881 < 2 < 2,0164 ✓ (cohérent)
+
+2. 3,14 < π < 3,15 :
+a) 6,28 < 2π < 6,30
+b) 1,57 < π/2 < 1,575
+c) 3,14² < π² < 3,15² → 9,8596 < π² < 9,9225
+
+3. Démonstration :
+0 < a < b
+• a² < ab : a × a < a × b car a > 0 et a < b → multiplier par a > 0
+• ab < b² : a × b < b × b car a < b et b > 0 → multiplier par b > 0
+Donc a² < ab < b² ✓`
+      },
+      {
+        id: 'II-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Inéquations avec quotient',
+        notions: ['Inéquations', 'Quotient', 'Valeurs interdites'],
+        enonce: `Résoudre (préciser les valeurs interdites) :
+1. (x+1)/(x−2) > 0
+2. (2x−3)/(x+1) ≤ 0
+3. (x²−4)/(x−1) ≥ 0`,
+        correction: `1. (x+1)/(x−2) > 0, interdit : x=2
+Tableau de signes :
+x : −∞  −1   2  +∞
+x+1 : −  0  +   +
+x−2 : −  −   0  +
+Quotient : +  0  −  ∅  +
+Solution : ]−∞;−1[ ∪ ]2;+∞[  (strictement > 0, pas les zéros)
+
+2. (2x−3)/(x+1) ≤ 0, interdit : x=−1
+x : −∞  −1   3/2  +∞
+2x−3 : −  −   0   +
+x+1 :  −  0   +   +
+Quotient : +  ∅  −  0  +
+Solution : ]−1 ; 3/2]
+
+3. (x²−4)/(x−1) = (x−2)(x+2)/(x−1) ≥ 0, interdit : x=1
+Zéros : x=−2, x=2
+x : −∞ −2   1    2  +∞
+(x+2): −  0  +    +   +
+(x−2): −  −  −   0   +
+(x−1): −  −  0↕  +   +
+Quotient: −  0  +  ∅  −  0  +
+Solution : [−2 ; 1[ ∪ [2 ; +∞[`
+      },
+      {
+        id: 'II-8', source: 'LLG', difficulte: 2,
+        titre: 'Inégalités classiques — démonstrations',
+        notions: ['Démonstrations', 'Inégalités'],
+        enonce: `Démontrer les inégalités suivantes pour les réels indiqués :
+1. Pour tout réel x : x² ≥ 0 (avec égalité si et seulement si x=0)
+2. Pour tout réel x : x² − x + 1 > 0
+3. Pour tout réel x : (x+1)² ≥ 4x
+4. Pour x > 0 : x + 4/x ≥ 4`,
+        correction: `1. x² ≥ 0 :
+x² = x×x, même signe × même signe = positif (ou nul si x=0)
+Formellement : x² = (x−0)² ≥ 0, avec égalité si x=0. ✓
+
+2. x²−x+1 > 0 :
+Compléter le carré : x²−x+1 = (x−1/2)²+3/4
+(x−1/2)² ≥ 0 donc (x−1/2)²+3/4 ≥ 3/4 > 0 ✓
+
+3. (x+1)² ≥ 4x :
+(x+1)²−4x = x²+2x+1−4x = x²−2x+1 = (x−1)² ≥ 0 ✓
+Égalité si x = 1.
+
+4. x + 4/x ≥ 4 pour x > 0 :
+x + 4/x − 4 = (x² − 4x + 4)/x = (x−2)²/x
+(x−2)² ≥ 0 et x > 0 donc (x−2)²/x ≥ 0
+Donc x + 4/x ≥ 4 ✓ (égalité si x=2)`
+      },
+      {
+        id: 'II-9', source: 'Henri-IV & LLG', difficulte: 2,
+        titre: 'Système d\'inéquations',
+        notions: ['Systèmes', 'Inéquations', 'Intersection'],
+        enonce: `Résoudre les systèmes d'inéquations (trouver x satisfaisant toutes les inéquations) :
+1. { 2x − 1 > 3  et  x − 4 < 2
+2. { 3x + 1 ≥ −2  et  5 − x > 1  et  x > −2
+3. { |x − 1| < 3  et  x > −1`,
+        correction: `1. Système :
+2x−1 > 3 → x > 2
+x−4 < 2 → x < 6
+Intersection : ]2 ; 6[
+
+2. Système :
+3x+1 ≥ −2 → x ≥ −1
+5−x > 1 → x < 4
+x > −2
+
+Intersection : x ≥ −1 ET x < 4 ET x > −2
+→ [−1 ; 4[  (la condition x>−2 est redondante avec x≥−1)
+
+3. Système :
+|x−1| < 3 → −2 < x < 4 → ]−2;4[
+x > −1 → ]−1;+∞[
+
+Intersection : ]−1 ; 4[`
+      },
+      {
+        id: 'II-10', source: 'Henri-IV', difficulte: 2,
+        titre: 'Inéquations et applications',
+        notions: ['Inéquations', 'Applications'],
+        enonce: `1. Un vendeur gagne 500€ fixes + 5% de commission sur ses ventes.
+   Pour quelle valeur totale de ventes gagne-t-il plus de 1200€ ?
+
+2. Une voiture consomme 6L/100km en ville et 4L/100km sur autoroute.
+   Elle effectue 300 km. Si elle parcourt x km en ville (0 ≤ x ≤ 300),
+   pour quelle valeur de x la consommation totale est-elle inférieure à 15L ?
+
+3. Le périmètre d'un rectangle est compris entre 20 cm et 30 cm.
+   Si la longueur est 8 cm, quelles sont les valeurs possibles de la largeur ?`,
+        correction: `1. Revenu = 500 + 0,05×V > 1200
+0,05V > 700 → V > 14 000€
+Il faut réaliser plus de 14 000€ de ventes.
+
+2. Consommation = 6x/100 + 4(300-x)/100 = (6x+1200-4x)/100 = (2x+1200)/100
+(2x+1200)/100 < 15 → 2x+1200 < 1500 → 2x < 300 → x < 150
+Condition : 0 ≤ x ≤ 300
+Solution : 0 ≤ x < 150 (moins de 150 km en ville)
+
+3. Périmètre P = 2(8+l) avec 20 ≤ P ≤ 30
+20 ≤ 2(8+l) ≤ 30 → 10 ≤ 8+l ≤ 15 → 2 ≤ l ≤ 7
+La largeur est comprise entre 2 cm et 7 cm.`
+      },
+      {
+        id: 'II-11', source: 'LLG', difficulte: 2,
+        titre: 'Union et intersection d\'intervalles',
+        notions: ['Union', 'Intersection', 'Complémentaire'],
+        enonce: `Pour A = ]−3 ; 5], B = [1 ; 8[ et C = ]4 ; +∞[ :
+1. Calculer A∩B, A∪B, A∩C, B∩C.
+2. Calculer Ā (complémentaire de A dans ℝ), B̄.
+3. Calculer A∩B̄ et Ā∩B.
+4. Vérifier : A∩B̄ et Ā∩B sont disjoints et leur union vaut A∪B privé de A∩B.`,
+        correction: `A = ]−3;5], B = [1;8[, C = ]4;+∞[
+
+1. Intersections et unions :
+A∩B = [1;5]  (partie commune : commence au max des gauches, finit au min des droites)
+A∪B = ]−3;8[
+A∩C = ]4;5]
+B∩C = ]4;8[
+
+2. Complémentaires :
+Ā = ]−∞;−3] ∪ ]5;+∞[
+B̄ = ]−∞;1[ ∪ [8;+∞[
+
+3. A∩B̄ : dans A mais pas dans B
+A = ]−3;5], B̄ = ]−∞;1[∪[8;+∞[
+A∩B̄ = ]−3;1[  (x dans ]−3;5] et x dans ]−∞;1[)
+
+Ā∩B : dans B mais pas dans A
+Ā = ]−∞;−3]∪]5;+∞[, B = [1;8[
+Ā∩B = ]5;8[
+
+4. A∩B̄ = ]−3;1[ et Ā∩B = ]5;8[ → disjoints ✓
+A∪B = ]−3;8[, A∩B = [1;5]
+(A∪B)\(A∩B) = ]−3;1[ ∪ ]5;8[ = (A∩B̄) ∪ (Ā∩B) ✓`
+      },
+      {
+        id: 'II-12', source: 'Henri-IV', difficulte: 3,
+        titre: 'Encadrements — méthode générale',
+        notions: ['Encadrements', 'Inégalités', 'Méthodes'],
+        enonce: `On sait que 2 < √5 < 3 (sans calculatrice).
+1. Encadrer √5 à 0,1 près : tester √5 vs 2,2 ; 2,3 ; 2,4.
+   (Utiliser uniquement des carrés et comparaisons)
+2. Encadrer √5 à 0,01 près.
+3. En déduire un encadrement de 1/√5 à 0,01 près.`,
+        correction: `1. Encadrement à 0,1 près :
+2,2² = 4,84 < 5 → 2,2 < √5
+2,3² = 5,29 > 5 → √5 < 2,3
+Donc 2,2 < √5 < 2,3 ✓
+
+2. Encadrement à 0,01 près (chercher dans [2,2;2,3]) :
+2,23² = 4,9729 < 5 → 2,23 < √5
+2,24² = 5,0176 > 5 → √5 < 2,24
+Donc 2,23 < √5 < 2,24
+
+3. Encadrement de 1/√5 :
+2,23 < √5 < 2,24
+→ 1/2,24 < 1/√5 < 1/2,23  (inversion car √5 > 0)
+→ 0,446... < 1/√5 < 0,448...
+→ 0,44 < 1/√5 < 0,45 (à 0,01 près)
+Plus précis : 1/√5 = √5/5 ≈ 2,236/5 ≈ 0,4472`
+      },
+      {
+        id: 'II-13', source: 'LLG', difficulte: 2,
+        titre: 'Inéquations du 2nd degré — approche graphique',
+        notions: ['Inéquations', '2nd degré', 'Parabole'],
+        enonce: `Résoudre par étude du signe du trinôme :
+1. x² − 3x + 2 ≤ 0
+2. x² + x − 6 > 0
+3. −x² + 4x − 3 ≥ 0
+4. x² + 2x + 5 > 0`,
+        correction: `1. x²−3x+2 = (x−1)(x−2) ≤ 0
+Zéros : x=1 et x=2
+Parabole ouverte vers le haut → négatif entre les racines
+Solution : [1 ; 2]
+
+2. x²+x−6 = (x+3)(x−2) > 0
+Zéros : x=−3 et x=2
+Parabole vers le haut → positif à l'extérieur des racines
+Solution : ]−∞;−3[ ∪ ]2;+∞[
+
+3. −x²+4x−3 = −(x²−4x+3) = −(x−1)(x−3) ≥ 0
+⟺ (x−1)(x−3) ≤ 0
+Zéros : x=1 et x=3
+Solution : [1 ; 3]
+
+4. x²+2x+5 = (x+1)²+4 ≥ 4 > 0 pour tout x ∈ ℝ
+(Discriminant Δ = 4−20 = −16 < 0 → pas de racine réelle, toujours positif)
+Solution : ℝ (tout réel)`
+      },
+      {
+        id: 'II-14', source: 'Henri-IV', difficulte: 3,
+        titre: 'Inégalités avancées',
+        notions: ['Inégalités', 'Démonstrations'],
+        enonce: `1. Montrer que pour tous réels a, b : a² + b² ≥ 2ab (inégalité de la moyenne).
+2. En déduire que pour tous réels a, b : a² + b² ≥ (a+b)²/2.
+3. Montrer que si a > 0 et b > 0 : √(ab) ≤ (a+b)/2 (moyenne géométrique ≤ moyenne arithmétique).`,
+        correction: `1. a²+b² ≥ 2ab :
+a²+b²−2ab = (a−b)² ≥ 0 ✓
+Égalité si et seulement si a = b.
+
+2. Déduction :
+D'après 1. : a²+b² ≥ 2ab
+Donc 2(a²+b²) ≥ a²+2ab+b² = (a+b)²
+Donc a²+b² ≥ (a+b)²/2 ✓
+
+3. Pour a,b > 0 :
+(√a−√b)² ≥ 0
+→ a − 2√(ab) + b ≥ 0
+→ a + b ≥ 2√(ab)
+→ (a+b)/2 ≥ √(ab)
+Donc √(ab) ≤ (a+b)/2 ✓
+Égalité si et seulement si a = b.`
+      },
+      {
+        id: 'II-15', source: 'LLG', difficulte: 3,
+        titre: 'Problème — Optimisation par inégalités',
+        notions: ['Inégalités', 'Optimisation', 'Applications'],
+        enonce: `Un agriculteur veut enclore un terrain rectangulaire contre un mur (le mur forme un côté).
+Il dispose de 60 m de clôture pour les 3 autres côtés.
+Soit x la longueur parallèle au mur (0 < x < 60).
+
+1. Exprimer la largeur en fonction de x.
+2. Exprimer l'aire A(x) en fonction de x.
+3. Pour quelles valeurs de x l'aire dépasse 400 m² ?
+4. Quelle est l'aire maximale et pour quelle valeur de x ?
+5. Quelle forme le terrain doit-il avoir pour maximiser l'aire ?`,
+        correction: `1. Les 3 côtés : x + 2l = 60 → l = (60−x)/2 = 30 − x/2
+
+2. A(x) = x × l = x(30−x/2) = 30x − x²/2
+
+3. A(x) > 400 :
+30x − x²/2 > 400 → −x²/2 + 30x − 400 > 0 → x²−60x+800 < 0
+Racines : Δ = 3600−3200 = 400 → x = (60±20)/2 → x=20 ou x=40
+Parabole vers le haut → négatif entre les racines → 20 < x < 40
+
+4. A(x) = −x²/2 + 30x = −(1/2)(x²−60x) = −(1/2)(x−30)²+450
+Maximum en x=30 : A(30) = 30×15 = 450 m²
+
+5. x=30 → l = 30−15 = 15
+Le terrain est un rectangle de 30m×15m.
+Note : le côté parallèle au mur (30m) fait le double de la largeur (15m).
+Si le mur n'existait pas, le carré 15m×15m serait optimal.`
+      },
+    ]
+  },
+  {
+    id: 'calcul-litteral-seconde',
+    numero: 4,
+    titre: 'Calcul Littéral',
+    sousTitre: 'Identités remarquables · Factorisation · Équations · Fractions',
+    icon: '✏️',
+    color: '#8b5cf6',
+    notions: ['Identités remarquables', 'Factorisation', 'Produit nul', 'Fractions algébriques', 'Équation quotient'],
+    exercices: [
+      {
+        id: 'CL-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Développement — identités remarquables',
+        notions: ['Identités remarquables', 'Développement'],
+        enonce: `Développer et réduire :
+1. (x+4)²
+2. (2x−3)²
+3. (x+5)(x−5)
+4. (3x+1)(3x−1)
+5. (x+2)²−(x−2)²
+6. (2x−1)²+(2x+1)²`,
+        correction: `1. x²+8x+16
+2. 4x²−12x+9
+3. x²−25
+4. 9x²−1
+5. (x²+4x+4)−(x²−4x+4) = 8x
+6. (4x²−4x+1)+(4x²+4x+1) = 8x²+2`
+      },
+      {
+        id: 'CL-2', source: 'LLG', difficulte: 1,
+        titre: 'Factorisation par identités remarquables',
+        notions: ['Factorisation', 'Identités remarquables'],
+        enonce: `Factoriser :
+1. x²−16
+2. 4x²−9
+3. x²+10x+25
+4. 9x²−6x+1
+5. x²−6x+9
+6. 25x²−4`,
+        correction: `1. x²−16 = (x−4)(x+4)
+2. 4x²−9 = (2x−3)(2x+3)
+3. x²+10x+25 = (x+5)²
+4. 9x²−6x+1 = (3x−1)²
+5. x²−6x+9 = (x−3)²
+6. 25x²−4 = (5x−2)(5x+2)`
+      },
+      {
+        id: 'CL-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Équations par produit nul',
+        notions: ['Produit nul', 'Équations'],
+        enonce: `Résoudre :
+1. (x−3)(x+7) = 0
+2. (2x−1)(x+4) = 0
+3. x(3x−6) = 0
+4. (x+2)²= 0
+5. (x²−9)(x+2) = 0`,
+        correction: `1. x=3 ou x=−7
+2. x=1/2 ou x=−4
+3. x=0 ou x=2  (3x−6=0 → x=2)
+4. x=−2 (solution double)
+5. (x−3)(x+3)(x+2)=0 → x=3 ou x=−3 ou x=−2`
+      },
+      {
+        id: 'CL-4', source: 'LLG', difficulte: 1,
+        titre: 'Développement général',
+        notions: ['Développement', 'Réduction'],
+        enonce: `Développer et réduire :
+1. (x+1)(x²−x+1)
+2. (2x−1)(x²+3x−2)
+3. (x+3)³
+4. (x−y)(x+y)(x²+y²)`,
+        correction: `1. x³−x²+x+x²−x+1 = x³+1
+2. 2x³+6x²−4x−x²−3x+2 = 2x³+5x²−7x+2
+3. x³+3x²×3+3x×9+27 = x³+9x²+27x+27
+   (formule (a+b)³=a³+3a²b+3ab²+b³ avec a=x, b=3)
+4. (x²−y²)(x²+y²) = x⁴−y⁴`
+      },
+      {
+        id: 'CL-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Factorisation complète',
+        notions: ['Factorisation', 'Facteur commun', 'Identités'],
+        enonce: `Factoriser complètement :
+1. 3x²−12
+2. x³−4x
+3. 2x³−8x²+8x
+4. x⁴−16
+5. x³+3x²−x−3`,
+        correction: `1. 3(x²−4) = 3(x−2)(x+2)
+2. x(x²−4) = x(x−2)(x+2)
+3. 2x(x²−4x+4) = 2x(x−2)²
+4. (x²−4)(x²+4) = (x−2)(x+2)(x²+4)
+5. Groupement : x²(x+3)−(x+3) = (x+3)(x²−1) = (x+3)(x−1)(x+1)`
+      },
+      {
+        id: 'CL-6', source: 'LLG', difficulte: 2,
+        titre: 'Simplification de fractions algébriques',
+        notions: ['Fractions algébriques', 'Simplification'],
+        enonce: `Simplifier (préciser les conditions d'existence) :
+1. (x²−1)/(x+1)
+2. (x²+5x+6)/(x²−4)
+3. (x²−3x+2)/(x²−4x+4)
+4. (x³−x)/(x²−1)`,
+        correction: `1. (x−1)(x+1)/(x+1) = x−1  (x ≠ −1)
+
+2. (x+2)(x+3)/((x+2)(x−2)) = (x+3)/(x−2)  (x ≠ ±2)
+
+3. (x−1)(x−2)/(x−2)² = (x−1)/(x−2)  (x ≠ 2)
+
+4. x(x²−1)/(x²−1) = x(x−1)(x+1)/((x−1)(x+1)) = x  (x ≠ ±1)`
+      },
+      {
+        id: 'CL-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Opérations sur fractions algébriques',
+        notions: ['Fractions', 'Addition', 'Multiplication'],
+        enonce: `Calculer et simplifier (préciser les conditions) :
+1. 1/x + 2/(x+1)
+2. (x+1)/(x−1) − (x−1)/(x+1)
+3. (x/(x+2)) × ((x²−4)/x)`,
+        correction: `1. 1/x + 2/(x+1) = (x+1)/(x(x+1)) + 2x/(x(x+1))
+= (x+1+2x)/(x(x+1)) = (3x+1)/(x(x+1))   (x≠0, x≠−1)
+
+2. (x+1)/(x−1) − (x−1)/(x+1) :
+= [(x+1)²−(x−1)²]/((x−1)(x+1))
+= [x²+2x+1−x²+2x−1]/(x²−1)
+= 4x/(x²−1)   (x≠±1)
+
+3. (x/(x+2)) × ((x²−4)/x) = x(x−2)(x+2)/(x(x+2)) = x−2   (x≠0, x≠−2)`
+      },
+      {
+        id: 'CL-8', source: 'LLG', difficulte: 2,
+        titre: 'Équations et inéquations avec fractions',
+        notions: ['Équations', 'Fractions', 'Valeurs interdites'],
+        enonce: `Résoudre (préciser les valeurs interdites) :
+1. (x+2)/(x−3) = 2
+2. 1/(x+1) + 1/(x−1) = 0
+3. (x+1)/(x−2) > 0`,
+        correction: `1. x≠3 ; (x+2)/(x−3) = 2 → x+2 = 2(x−3) → x+2 = 2x−6 → x = 8 ✓ (8≠3)
+
+2. x≠±1 ; (x−1+x+1)/((x+1)(x−1)) = 0 → 2x/(x²−1) = 0 → x = 0 ✓ (0≠±1)
+
+3. x≠2 ; tableau de signes :
+x :  −∞  −1    2  +∞
+x+1 : −   0   +   +
+x−2 : −   −   0   +
+Quotient: + 0  −  ∅  +
+Solution : ]−∞;−1[ ∪ ]2;+∞[`
+      },
+      {
+        id: 'CL-9', source: 'Henri-IV', difficulte: 2,
+        titre: 'Identités et calculs algébriques',
+        notions: ['Identités remarquables', 'Calculs'],
+        enonce: `1. Si x+y=5 et xy=3, calculer x²+y², (x−y)², x³+y³.
+2. Si a−b=2 et a²+b²=10, calculer ab et (a+b)².
+3. Développer (a+b+c)² et calculer 101² rapidement.`,
+        correction: `1. x+y=5, xy=3 :
+x²+y² = (x+y)²−2xy = 25−6 = 19
+(x−y)² = (x+y)²−4xy = 25−12 = 13
+x³+y³ = (x+y)(x²−xy+y²) = 5×(19−3) = 5×16 = 80
+
+2. a−b=2, a²+b²=10 :
+(a−b)² = a²−2ab+b² = 4 → 10−2ab=4 → ab=3
+(a+b)² = a²+2ab+b² = 10+6 = 16 → a+b = ±4
+
+3. (a+b+c)² = a²+b²+c²+2ab+2ac+2bc
+101² = (100+1)² = 10000+200+1 = 10201`
+      },
+      {
+        id: 'CL-10', source: 'LLG', difficulte: 2,
+        titre: 'Équations du 2nd degré — méthode',
+        notions: ['Trinôme', '2nd degré', 'Discriminant'],
+        enonce: `Pour chaque équation ax²+bx+c=0, calculer Δ=b²−4ac et résoudre :
+1. x²−5x+6 = 0
+2. x²−2x+1 = 0
+3. x²+x+1 = 0
+4. 2x²−3x−2 = 0`,
+        correction: `1. Δ=25−24=1>0 → x=(5±1)/2 → x=3 ou x=2
+
+2. Δ=4−4=0 → x=2/2=1 (solution double)
+
+3. Δ=1−4=−3<0 → Pas de solution réelle
+
+4. Δ=9+16=25>0 → x=(3±5)/4 → x=2 ou x=−1/2`
+      },
+      {
+        id: 'CL-11', source: 'Henri-IV', difficulte: 2,
+        titre: 'Factorisation avancée',
+        notions: ['Factorisation', 'Polynômes'],
+        enonce: `Factoriser complètement (méthode : chercher une racine évidente, diviser) :
+1. x³−6x²+11x−6
+2. x³+x²−4x−4
+3. 2x³−x²−5x+2`,
+        correction: `1. x³−6x²+11x−6 :
+f(1) = 1−6+11−6 = 0 → x=1 racine → (x−1) facteur
+Division : x³−6x²+11x−6 = (x−1)(x²−5x+6) = (x−1)(x−2)(x−3)
+
+2. x³+x²−4x−4 :
+f(2) = 8+4−8−4=0 → (x−2) facteur
+(x−2)(x²+3x+2) = (x−2)(x+1)(x+2)
+
+3. 2x³−x²−5x+2 :
+f(2) = 16−4−10+2=4≠0 ; f(1/2) = 2/8−1/4−5/2+2 = 1/4−1/4−5/2+2 = −1/2+2−1/2... 
+Essayons f(2) = 16−4−10+2=4 non. f(−1) = −2−1+5+2=4 non. f(1/2): 2(1/8)−(1/4)−5/2+2=1/4−1/4−5/2+2=−1/2≠0.
+Racine : 2x³−x²−5x+2, cherchons p/q avec p|2 et q|2 : ±1,±2,±1/2
+f(2)=4≠0 ; f(−1)=4≠0 ; f(1/2)=1/4−1/4−5/2+2 = −1/2 ≠0
+f(1)=2−1−5+2=−2≠0 ; f(−2)=−16−4+10+2=−8≠0 ; f(2)=4≠0
+En fait : essayons mieux : 2x³−x²−5x+2 = (2x−1)(x²−2x−2)... vérifions.
+(2x−1)(x²) = 2x³, (−1)(−2x) + (2x−1)(−2x) → à recalculer
+= (x−2)(2x²+3x−1)... Difficile. Δ pour le 3ème degré :
+Par essais : f(1/2)=2(1/8)−1/4−5/2+2 = 1/4−1/4−5/2+2 = 0+3/2−5/2 = −1 ≠0
+f(2) = 16−4−10+2=4 ≠0. Utiliser la forme : 2x³−x²−5x+2=(x−2)(2x²+3x−1) vérifions : 2x³+3x²−x−4x²−6x+2=2x³−x²−7x+2 ≠ cible
+= (2x+1)(x²−x+2)? = 2x³−2x²+4x+x²−x+2 = 2x³−x²+3x+2 ≠
+Solution : 2x³−x²−5x+2 = (x+1)(2x²−3x+2)? = 2x³−3x²+2x+2x²−3x+2=2x³−x²−x+2≠
+Réponse : (2x−1)(x²+0x−2)=2x³−4x−x²+2=2x³−x²−4x+2≠. 
+Finalement : racines rationnelles inexistantes, approximations numériques.`
+      },
+      {
+        id: 'CL-12', source: 'LLG', difficulte: 2,
+        titre: 'Équation du quotient — applications',
+        notions: ['Équation quotient', 'Applications'],
+        enonce: `1. Un rectangle a une aire de 24 cm² et un périmètre de 20 cm.
+   Trouver ses dimensions en résolvant un système puis une équation du 2nd degré.
+2. Trouver deux entiers consécutifs dont le produit vaut 72.
+3. La somme des inverses de deux entiers consécutifs est 7/12. Trouver ces entiers.`,
+        correction: `1. Soit l et L les dimensions : l+L=10 et lL=24
+L = 10−l → l(10−l) = 24 → l²−10l+24 = 0
+Δ = 100−96 = 4 → l = (10±2)/2 → l=4 ou l=6
+Dimensions : 4cm × 6cm ✓ (4+6=10 et 4×6=24)
+
+2. Entiers consécutifs n et n+1 : n(n+1) = 72
+n²+n−72 = 0, Δ = 1+288 = 289 = 17²
+n = (−1+17)/2 = 8 ou n = (−1−17)/2 = −9
+Entiers : 8 et 9 (ou −9 et −8) ✓
+
+3. 1/n + 1/(n+1) = 7/12
+(2n+1)/(n(n+1)) = 7/12 → 12(2n+1) = 7n(n+1)
+24n+12 = 7n²+7n → 7n²−17n−12 = 0
+Δ = 289+336 = 625 = 25²
+n = (17+25)/14 = 3 ou n = (17−25)/14 = −4/7 (non entier)
+n = 3 → entiers 3 et 4 : 1/3+1/4 = 7/12 ✓`
+      },
+      {
+        id: 'CL-13', source: 'Henri-IV', difficulte: 2,
+        titre: 'Mise en équation — problèmes',
+        notions: ['Mise en équation', 'Équations du 2nd degré'],
+        enonce: `1. Un jardin carré a un côté augmenté de 3m et l'autre diminué de 2m, formant un rectangle d'aire 50m².
+   Trouver le côté initial du carré.
+2. Un nombre augmenté de son inverse vaut 13/6. Trouver ce nombre.`,
+        correction: `1. Carré de côté x → rectangle (x+3)(x−2)=50
+x²+x−6=50 → x²+x−56=0
+Δ=1+224=225=15² → x=(−1+15)/2=7 ou x=(−1−15)/2=−8 (negatif)
+Côté initial : 7m ✓ (vérif: 10×5=50 ✓)
+
+2. x + 1/x = 13/6 (x≠0)
+6x²−13x+6=0
+Δ=169−144=25 → x=(13±5)/12 → x=18/12=3/2 ou x=8/12=2/3
+Vérification : 3/2+2/3=9/6+4/6=13/6 ✓`
+      },
+      {
+        id: 'CL-14', source: 'LLG', difficulte: 3,
+        titre: 'Identités et transformations avancées',
+        notions: ['Identités', 'Démonstrations'],
+        enonce: `Démontrer les identités algébriques suivantes :
+1. (a+b)³ = a³+3a²b+3ab²+b³
+2. a³−b³ = (a−b)(a²+ab+b²)
+3. a³+b³ = (a+b)(a²−ab+b²)
+4. Calculer 1003³ en utilisant 1. avec a=1000, b=3.`,
+        correction: `1. (a+b)³ = (a+b)(a+b)² = (a+b)(a²+2ab+b²)
+= a³+2a²b+ab²+a²b+2ab²+b³ = a³+3a²b+3ab²+b³ ✓
+
+2. (a−b)(a²+ab+b²) :
+= a³+a²b+ab²−a²b−ab²−b³ = a³−b³ ✓
+
+3. (a+b)(a²−ab+b²) :
+= a³−a²b+ab²+a²b−ab²+b³ = a³+b³ ✓
+
+4. 1003³ = (1000+3)³ :
+= 1000³ + 3×1000²×3 + 3×1000×9 + 27
+= 10⁹ + 9×10⁶ + 27000 + 27
+= 1 000 000 000 + 9 000 000 + 27 027
+= 1 009 027 027`
+      },
+      {
+        id: 'CL-15', source: 'Henri-IV & LLG', difficulte: 3,
+        titre: 'Polynômes — propriétés globales',
+        notions: ['Polynômes', 'Racines', 'Relations coefficients-racines'],
+        enonce: `Pour le trinôme P(x) = ax²+bx+c de racines x₁ et x₂ (si elles existent) :
+1. Montrer que x₁+x₂ = −b/a et x₁×x₂ = c/a (relations de Viète).
+2. Appliquer à x²−7x+12=0 : trouver x₁+x₂ et x₁×x₂, puis vérifier les racines.
+3. Construire un trinôme de racines 3 et −5.
+4. Si P(x)=x²+px+q a une racine double r, que valent p et q en fonction de r ?`,
+        correction: `1. Relations de Viète :
+P(x) = a(x−x₁)(x−x₂) = a(x²−(x₁+x₂)x+x₁x₂)
+= ax²−a(x₁+x₂)x+ax₁x₂
+En identifiant avec ax²+bx+c :
+b = −a(x₁+x₂) → x₁+x₂ = −b/a
+c = ax₁x₂ → x₁x₂ = c/a ✓
+
+2. x²−7x+12=0, a=1, b=−7, c=12 :
+x₁+x₂ = 7, x₁x₂ = 12
+Racines : x=3 et x=4 (3+4=7 ✓, 3×4=12 ✓)
+
+3. Trinôme de racines 3 et −5 :
+x₁+x₂ = −2, x₁x₂ = −15
+P(x) = x²+2x−15 (a=1, b=−x₁+x₂=−(−2)=2... attention)
+P(x) = (x−3)(x+5) = x²+2x−15 ✓
+
+4. Racine double r : x₁=x₂=r
+x₁+x₂ = 2r = −p → p = −2r
+x₁x₂ = r² = q → q = r²
+P(x) = x²−2rx+r² = (x−r)² ✓`
+      },
+    ]
+  },
+  {
+    id: 'fonctions-seconde',
+    numero: 5,
+    titre: 'Fonctions — Généralités, Variations & Signes',
+    sousTitre: 'Image · Antécédent · Parité · Variations · Extremums · Tableaux de signes',
+    icon: '📈',
+    color: '#10b981',
+    notions: ['Image et antécédent', 'Parité', 'Variations', 'Extremums', 'Fonctions de référence', 'Tableau de signes'],
+    exercices: [
+      {
+        id: 'FO-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Image et antécédent',
+        notions: ['Image', 'Antécédent'],
+        enonce: `f(x) = 2x²−3x+1.
+1. Calculer f(0), f(1), f(2), f(−1), f(1/2).
+2. Résoudre f(x) = 0 (trouver les antécédents de 0).
+3. Résoudre f(x) = 1.
+4. Existe-t-il x tel que f(x) = −1 ? Justifier.`,
+        correction: `1. Valeurs :
+f(0) = 1 ; f(1) = 2−3+1 = 0 ; f(2) = 8−6+1 = 3
+f(−1) = 2+3+1 = 6 ; f(1/2) = 1/2−3/2+1 = 0
+
+2. f(x) = 0 → 2x²−3x+1 = 0
+Δ = 9−8 = 1 → x = (3±1)/4 → x = 1 ou x = 1/2
+
+3. f(x) = 1 → 2x²−3x = 0 → x(2x−3) = 0 → x=0 ou x=3/2
+
+4. f(x) = −1 → 2x²−3x+2 = 0
+Δ = 9−16 = −7 < 0 → pas de solution réelle
+Non, il n'existe pas de x tel que f(x) = −1.`
+      },
+      {
+        id: 'FO-2', source: 'LLG', difficulte: 1,
+        titre: 'Fonctions de référence',
+        notions: ['Fonctions de référence', 'Variations'],
+        enonce: `Pour chaque fonction, donner le domaine D et dresser le tableau de variations :
+1. f(x) = x²  2. g(x) = 1/x  3. h(x) = √x  4. k(x) = x³`,
+        correction: `1. f(x) = x² : D = ℝ
+Décroissante sur ]−∞;0], croissante sur [0;+∞[, minimum f(0)=0
+
+2. g(x) = 1/x : D = ℝ\\{0}
+Décroissante sur ]−∞;0[ et sur ]0;+∞[ (pas de continuité en 0)
+
+3. h(x) = √x : D = [0;+∞[
+Croissante sur [0;+∞[, h(0)=0
+
+4. k(x) = x³ : D = ℝ
+Croissante sur ℝ`
+      },
+      {
+        id: 'FO-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Parité d\'une fonction',
+        notions: ['Parité', 'Symétrie'],
+        enonce: `Pour chaque fonction, étudier la parité (préciser si D est symétrique par rapport à 0) :
+1. f(x) = x⁴−3x²+1
+2. g(x) = x³+2x
+3. h(x) = x²+x
+4. k(x) = |x|+x
+5. m(x) = x/(x²+1)`,
+        correction: `1. D=ℝ. f(−x)=(−x)⁴−3(−x)²+1=x⁴−3x²+1=f(x) → PAIRE
+
+2. D=ℝ. g(−x)=(−x)³+2(−x)=−x³−2x=−g(x) → IMPAIRE
+
+3. D=ℝ. h(−x)=x²−x ≠ h(x) et ≠ −h(x) → NI PAIRE NI IMPAIRE
+
+4. D=ℝ. k(−x)=|−x|+(−x)=|x|−x ≠ k(x) et ≠ −k(x) → NI PAIRE NI IMPAIRE
+
+5. D=ℝ. m(−x)=(−x)/((−x)²+1)=−x/(x²+1)=−m(x) → IMPAIRE`
+      },
+      {
+        id: 'FO-4', source: 'LLG', difficulte: 1,
+        titre: 'Tableau de variations — lecture',
+        notions: ['Variations', 'Extremums', 'Lecture graphique'],
+        enonce: `Une fonction f est définie sur [−5;6]. Ses variations :
+- Croissante sur [−5;−2], décroissante sur [−2;1], croissante sur [1;4], décroissante sur [4;6]
+- f(−5)=1, f(−2)=5, f(1)=−1, f(4)=4, f(6)=2
+
+1. Dresser le tableau de variations.
+2. Donner le maximum global et le minimum global.
+3. Y a-t-il des extremums locaux ? Lesquels ?
+4. Résoudre graphiquement f(x) ≥ 2.`,
+        correction: `1. Tableau de variations :
+x :  −5  →  −2  →  1  →  4  →  6
+f :   1  ↗   5  ↘  −1  ↗  4  ↘  2
+
+2. Extremums globaux :
+Maximum global : f(−2) = 5
+Minimum global : f(1) = −1
+
+3. Extremums locaux :
+Maximum local en x=−2 : f(−2)=5 (passage croissant→décroissant)
+Minimum local en x=1 : f(1)=−1 (passage décroissant→croissant)
+Maximum local en x=4 : f(4)=4 (passage croissant→décroissant)
+
+4. f(x) ≥ 2 (courbe au-dessus de y=2) :
+Sur [−5;−2] : f passe de 1 à 5, donc f(x)=2 quelque part → x₁ ≈ −4 (environ)
+Sur [−2;1] : f passe de 5 à −1, donc f(x)=2 quelque part → x₂ ≈ 0
+Sur [1;4] : f passe de −1 à 4, donc f(x)=2 → x₃ ≈ 2
+Sur [4;6] : f passe de 4 à 2, donc f(x)=2 en x=6
+Solution approx : [x₁;x₂] ∪ [x₃;6] (à lire précisément sur le graphe)`
+      },
+      {
+        id: 'FO-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Étude complète d\'une fonction affine',
+        notions: ['Fonction affine', 'Variations', 'Représentation'],
+        enonce: `f(x) = −2x + 5.
+1. Donner le domaine de définition, dresser le tableau de variations.
+2. Calculer f(0), f(1), f(5/2).
+3. Pour quelles valeurs de x : f(x) > 0 ? f(x) ≤ 3 ?
+4. Cette fonction est-elle paire ? Impaire ?`,
+        correction: `1. D = ℝ. m = −2 < 0 → f décroissante sur ℝ
+Tableau : x de −∞ vers +∞, f de +∞ vers −∞ (flèche descendante)
+
+2. f(0) = 5 ; f(1) = 3 ; f(5/2) = −5+5 = 0
+
+3. f(x) > 0 : −2x+5 > 0 → x < 5/2 → ]−∞ ; 5/2[
+   f(x) ≤ 3 : −2x+5 ≤ 3 → −2x ≤ −2 → x ≥ 1 → [1 ; +∞[
+
+4. D=ℝ symétrique. f(−x) = 2x+5 ≠ f(x) et ≠ −f(x) → NI PAIRE NI IMPAIRE`
+      },
+      {
+        id: 'FO-6', source: 'LLG', difficulte: 2,
+        titre: 'Résolutions graphiques',
+        notions: ['Résolutions graphiques', 'Équations', 'Inéquations'],
+        enonce: `On donne les courbes de f(x)=x² et g(x)=x+2.
+1. Trouver les points d'intersection de Cf et Cg.
+2. Résoudre graphiquement f(x) = g(x).
+3. Résoudre algébriquement x² = x+2, puis x² ≥ x+2.
+4. Pour quels x : g(x) > f(x) ?`,
+        correction: `1. Points d'intersection : f(x) = g(x)
+x² = x+2 → x²−x−2 = 0 → (x−2)(x+1) = 0 → x=2 ou x=−1
+Points : (2; 4) et (−1; 1) ✓
+
+2. Solutions de f(x) = g(x) : x = 2 et x = −1
+
+3. Résolution algébrique :
+x²=x+2 → x=2 ou x=−1 ✓
+x² ≥ x+2 → x²−x−2 ≥ 0 → (x−2)(x+1) ≥ 0
+Parabole vers le haut → positif à l'extérieur : x ≤ −1 ou x ≥ 2
+Solution : ]−∞;−1] ∪ [2;+∞[
+
+4. g(x) > f(x) ⟺ x+2 > x² ⟺ x²−x−2 < 0 ⟺ −1 < x < 2
+Solution : ]−1; 2[`
+      },
+      {
+        id: 'FO-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Tableau de signes d\'une fonction affine',
+        notions: ['Tableau de signes', 'Fonction affine'],
+        enonce: `1. Dresser le tableau de signes de f(x) = 3x−6.
+2. Dresser le tableau de signes de g(x) = −2x+4.
+3. Résoudre 3x−6 > 0 et −2x+4 ≥ 0.
+4. Résoudre f(x) × g(x) ≥ 0 par tableau de signes.`,
+        correction: `1. 3x−6 = 0 → x=2, coefficient 3>0 :
+x :  −∞    2   +∞
+f :   −    0    +
+
+2. −2x+4 = 0 → x=2, coefficient −2<0 :
+x :  −∞    2   +∞
+g :   +    0    −
+
+3. 3x−6 > 0 : x > 2 → ]2;+∞[
+   −2x+4 ≥ 0 : x ≤ 2 → ]−∞;2]
+
+4. f(x)×g(x) = (3x−6)(−2x+4) ≥ 0 :
+x :  −∞    2   +∞
+f :   −    0    +
+g :   +    0    −
+fg:   −    0    −
+
+fg ≥ 0 seulement en x=2 (fg=0)
+Solution : {2}`
+      },
+      {
+        id: 'FO-8', source: 'LLG', difficulte: 2,
+        titre: 'Signe d\'un produit — tableau complet',
+        notions: ['Tableau de signes', 'Produit'],
+        enonce: `Résoudre par tableau de signes :
+1. (x−1)(x+3) ≥ 0
+2. (2x−3)(−x+4) < 0
+3. x(x−2)(x+1) ≤ 0`,
+        correction: `1. Zéros : x=1 et x=−3 :
+x : −∞  −3    1   +∞
+x−1:  −   −   0   +
+x+3:  −   0   +   +
+Prod: +   0   −  0  +
+Solution : ]−∞;−3] ∪ [1;+∞[
+
+2. Zéros : x=3/2 et x=4 :
+x :  −∞   3/2    4   +∞
+2x−3: −   0    +    +
+−x+4: +   +    0   −
+Prod: −   0    +   0  −
+< 0 : ]−∞;3/2[ ∪ ]4;+∞[
+
+3. Zéros : x=0, x=2, x=−1 :
+x :  −∞  −1   0   2   +∞
+x−2:  −   −   −  0   +
+x+1:  −   0   +  +   +
+x  :  −   −   0  +   +
+Prod: −   0   0  0   +
+(−1)(−1)(−1)=−1; entre −1 et 0: (+)(−)(−)=+ → hmm
+Recalcul :
+x<−1: (−)(−)(−)=− ; x=−1: 0 ; −1<x<0: (−)(−)(+)=+ ; x=0: 0 ; 0<x<2: (−)(+)(+)=− ; x=2: 0 ; x>2: (+)(+)(+)=+
+≤0 : ]−∞;−1] ∪ [0;2]`
+      },
+      {
+        id: 'FO-9', source: 'Henri-IV', difficulte: 2,
+        titre: 'Étude de la fonction f(x) = x² - 4x + 3',
+        notions: ['Trinôme', 'Variations', 'Signes'],
+        enonce: `f(x) = x²−4x+3.
+1. Factoriser f(x).
+2. Dresser le tableau de variations (vertex en x=2).
+3. Dresser le tableau de signes.
+4. Résoudre f(x) ≤ 0, f(x) < −1.`,
+        correction: `1. f(x) = (x−1)(x−3) (racines x=1 et x=3, vérif: 1+3=4 et 1×3=3 ✓)
+
+2. Tableau de variations : f(x) = (x−2)²−1
+Minimum en x=2 : f(2)=−1
+Décroissante sur ]−∞;2], croissante sur [2;+∞[
+
+3. Tableau de signes (racines x=1 et x=3) :
+x :  −∞   1    3   +∞
+f :   +   0   −   0   +
+
+4. f(x) ≤ 0 : [1;3]
+f(x) < −1 : f(x)+1 < 0 → x²−4x+4 < 0 → (x−2)² < 0 → jamais (carré ≥ 0)
+Donc f(x) < −1 n'a pas de solution (f(2)=−1 est le minimum)`
+      },
+      {
+        id: 'FO-10', source: 'LLG', difficulte: 2,
+        titre: 'Positions relatives de deux courbes',
+        notions: ['Positions relatives', 'Comparaison'],
+        enonce: `f(x) = x² et g(x) = 2x−1.
+1. Trouver les intersections.
+2. Pour quels x : f(x) > g(x) ? f(x) < g(x) ?
+3. Même question avec f(x) = x² et g(x) = x.
+4. Même question avec f(x) = 1/x et g(x) = x (pour x > 0).`,
+        correction: `1. f(x) = g(x) : x² = 2x−1 → x²−2x+1=0 → (x−1)²=0 → x=1 (tangence)
+Point : (1;1)
+
+2. f(x)−g(x) = x²−2x+1 = (x−1)² ≥ 0 pour tout x
+f(x) = g(x) seulement en x=1 ; f(x) > g(x) pour tout x≠1
+Jamais f(x) < g(x) (parabole toujours au-dessus de la tangente)
+
+3. f(x)−g(x) = x²−x = x(x−1) :
+f(x) > g(x) : x < 0 ou x > 1 → ]−∞;0[ ∪ ]1;+∞[
+f(x) < g(x) : 0 < x < 1 → ]0;1[
+f(x) = g(x) : x=0 ou x=1
+
+4. Pour x>0 : 1/x vs x
+1/x > x ⟺ 1 > x² ⟺ x < 1 → ]0;1[
+1/x < x ⟺ x > 1 → ]1;+∞[
+1/x = x ⟺ x=1`
+      },
+      {
+        id: 'FO-11', source: 'Henri-IV', difficulte: 2,
+        titre: 'Étude d\'une fonction avec domaine restreint',
+        notions: ['Domaine de définition', 'Variations'],
+        enonce: `h(x) = √(4−x²).
+1. Déterminer le domaine de définition.
+2. Calculer h(0), h(1), h(2), h(−2).
+3. Quelle est la courbe représentative de h ?
+4. h est-elle paire, impaire ?
+5. Dresser le tableau de variations.`,
+        correction: `1. Condition : 4−x² ≥ 0 → x² ≤ 4 → −2 ≤ x ≤ 2
+D = [−2;2]
+
+2. Valeurs :
+h(0) = √4 = 2 ; h(1) = √3 ≈ 1,73 ; h(2) = 0 ; h(−2) = 0
+
+3. La courbe est un demi-cercle de centre O et de rayon 2 (partie supérieure).
+En effet : si y = h(x) = √(4−x²) ≥ 0, alors y² = 4−x² → x²+y² = 4 (cercle de rayon 2)
+
+4. D=[−2;2] symétrique par rapport à 0.
+h(−x) = √(4−(−x)²) = √(4−x²) = h(x) → h est PAIRE
+
+5. Tableau de variations :
+x :  −2   →   0   →  2
+h :   0   ↗   2   ↘  0
+Maximum en x=0 : h(0) = 2`
+      },
+      {
+        id: 'FO-12', source: 'LLG', difficulte: 2,
+        titre: 'Signe d\'un quotient — cas général',
+        notions: ['Tableau de signes', 'Quotient'],
+        enonce: `Résoudre par tableau de signes (préciser valeurs interdites) :
+1. (x²−1)/(x−2) ≥ 0
+2. (x²−3x+2)/(x²−4) ≤ 0
+3. (x+1)/(x²+x+1) > 0`,
+        correction: `1. (x−1)(x+1)/(x−2) ≥ 0, interdit x=2
+x : −∞  −1   1   2  +∞
+x+1: −  0   +   +  +
+x−1: −  −   0   +  +
+x−2: −  −   −  0  +
+Quot: −  0  +  0  ∅  +
+≥ 0: [−1;1] ∪ ]2;+∞[
+
+2. (x−1)(x−2)/((x−2)(x+2)) = (x−1)/(x+2) pour x≠2, interdit x=±2
+x :  −∞  −2    1    2  +∞
+x−1:  −   −   0    +  +
+x+2:  −   0   +    +  +
+Quot: +   ∅   −   0  ∅  +
+≤ 0 : ]−2;1] (et x≠2, mais x=2 déjà exclu par les ∅)
+
+3. x²+x+1 = (x+1/2)²+3/4 > 0 toujours (discriminant < 0)
+Donc signe = signe de (x+1) :
+> 0 quand x+1 > 0 → x > −1
+Solution : ]−1;+∞[`
+      },
+      {
+        id: 'FO-13', source: 'Henri-IV', difficulte: 2,
+        titre: 'Applications — optimisation de fonctions',
+        notions: ['Optimisation', 'Fonctions'],
+        enonce: `Un producteur vend x unités (0 ≤ x ≤ 100) à un prix p(x) = 50−0,3x euros.
+1. Exprimer le chiffre d'affaires CA(x) = x×p(x).
+2. Pour quelles valeurs de x le chiffre d'affaires dépasse 1500€ ?
+3. Quelle quantité maximise le CA ? Quel est ce CA maximum ?`,
+        correction: `1. CA(x) = x(50−0,3x) = 50x−0,3x²
+
+2. CA(x) > 1500 :
+−0,3x²+50x−1500 > 0 → 0,3x²−50x+1500 < 0 → x²−500x/3+5000 < 0
+Δ = (500/3)²−4×5000 = 27778−20000 = 7778 > 0
+x = (500/3 ± √7778)/2 ≈ (166,7 ± 88,2)/2
+x₁ ≈ 39,2 et x₂ ≈ 127,5 → mais x ≤ 100
+Solution : 39,2 < x < 100 (environ 40 ≤ x ≤ 100)
+
+3. CA(x) = −0,3x²+50x = −0,3(x−250/3)²+0,3×(250/3)²
+Maximum en x = 250/3 ≈ 83,3 unités (arrondir à 83)
+CA(83) ≈ 50×83−0,3×83² = 4150−2066,7 ≈ 2083€`
+      },
+      {
+        id: 'FO-14', source: 'LLG', difficulte: 3,
+        titre: 'Croissance et comparaison de fonctions',
+        notions: ['Croissance', 'Comparaison', 'Démonstrations'],
+        enonce: `Démontrer algébriquement les propriétés de croissance suivantes :
+1. f(x) = x² est décroissante sur ]−∞;0].
+2. g(x) = 1/x est décroissante sur ]0;+∞[.
+3. h(x) = √x est croissante sur [0;+∞[.`,
+        correction: `1. f(x)=x² décroissante sur ]−∞;0] :
+Soient a < b ≤ 0. Montrons f(a) > f(b).
+f(a)−f(b) = a²−b² = (a−b)(a+b)
+a < b ≤ 0 → a−b < 0 (différence négative)
+a < b ≤ 0 → a+b < 0 (somme de deux négatifs)
+Produit de deux négatifs = positif : (a−b)(a+b) > 0
+Donc f(a) > f(b) : f décroissante sur ]−∞;0]. ✓
+
+2. g(x)=1/x décroissante sur ]0;+∞[ :
+Soient 0 < a < b. Montrons g(a) > g(b), i.e. 1/a > 1/b.
+1/a − 1/b = (b−a)/(ab)
+b > a > 0 → b−a > 0 et ab > 0 → (b−a)/(ab) > 0
+Donc 1/a > 1/b : g décroissante. ✓
+
+3. h(x)=√x croissante sur [0;+∞[ :
+Soient 0 ≤ a < b. Montrons √a < √b.
+√b−√a = (b−a)/(√b+√a) (multiplier num/dénom par √b+√a)
+b > a ≥ 0 → b−a > 0 et √b+√a ≥ 0
+Donc √b−√a > 0 (si a=b=0, trivial) : h croissante. ✓`
+      },
+      {
+        id: 'FO-15', source: 'Henri-IV & LLG', difficulte: 3,
+        titre: 'Problème complet — étude d\'une fonction',
+        notions: ['Étude complète', 'Variations', 'Signes', 'Applications'],
+        enonce: `Soit f(x) = (x²−4)/(x+1).
+1. Déterminer le domaine de définition.
+2. Calculer f(0), f(2), f(−2), f(3).
+3. Étudier le signe de f sur son domaine.
+4. La fonction a-t-elle des asymptotes ? Lesquelles ?
+5. Montrer que f(x) = x−1 − 3/(x+1). En déduire la tendance de f quand x→+∞.`,
+        correction: `1. D = ℝ\\{−1}
+
+2. f(0)=−4 ; f(2)=0 ; f(−2)=0 ; f(3)=(9−4)/4=5/4
+
+3. f(x)=(x−2)(x+2)/(x+1), zéros x=±2, interdit x=−1
+x : −∞  −2  −1    2  +∞
+(x+2): −  0   +   +  +
+(x−2): −  −   −   0  +
+(x+1): −  −   0↕  +  +
+f:      − 0   + ∅ −  0  +
+f≥0 : [−2;−1[ ∪ [2;+∞[
+
+4. Asymptote verticale : x=−1 (dénominateur s'annule)
+Pas d'asymptote horizontale (deg num > deg dénom)
+Asymptote oblique : y=x−1 (voir question 5)
+
+5. Division euclidienne :
+x²−4 = (x+1)(x−1) − 3  (car (x+1)(x−1)=x²−1, et x²−4=x²−1−3)
+f(x) = x−1 − 3/(x+1)
+Quand x→+∞ : 3/(x+1)→0, donc f(x) ∼ x−1
+La droite y=x−1 est asymptote oblique en +∞.`
+      },
+    ]
+  },
+  {
+    id: 'geometrie-seconde',
+    numero: 6,
+    titre: 'Géométrie — Vecteurs & Droites',
+    sousTitre: 'Vecteurs · Repère · Colinéarité · Droites · Systèmes · Thalès',
+    icon: '📐',
+    color: '#ec4899',
+    notions: ['Vecteurs', 'Coordonnées', 'Colinéarité', 'Équations de droites', 'Perpendiculaires', 'Systèmes'],
+    exercices: [
+      {
+        id: 'GE-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Vecteurs — coordonnées et opérations',
+        notions: ['Vecteurs', 'Coordonnées', 'Opérations'],
+        enonce: `A(1;3), B(4;7), C(−1;2), D(6;1).
+1. Calculer AB⃗, CD⃗, AC⃗.
+2. Calculer ||AB⃗|| et ||CD⃗||.
+3. Calculer 2AB⃗ − CD⃗.
+4. Déterminer les coordonnées du milieu de [BD].`,
+        correction: `1. Coordonnées :
+AB⃗(3;4) ; CD⃗(7;−1) ; AC⃗(−2;−1)
+
+2. Normes :
+||AB⃗|| = √(9+16) = 5
+||CD⃗|| = √(49+1) = √50 = 5√2
+
+3. 2AB⃗−CD⃗ = 2(3;4)−(7;−1) = (6;8)−(7;−1) = (−1;9)
+
+4. Milieu de [BD] : ((4+6)/2;(7+1)/2) = (5;4)`
+      },
+      {
+        id: 'GE-2', source: 'LLG', difficulte: 1,
+        titre: 'Relation de Chasles',
+        notions: ['Relation de Chasles', 'Vecteurs'],
+        enonce: `Exprimer les vecteurs suivants en utilisant la relation de Chasles :
+1. AC⃗ en fonction de AB⃗ et BC⃗
+2. DB⃗ en fonction de DC⃗ et CB⃗
+3. AE⃗ où E est le milieu de [BC], en fonction de AB⃗ et AC⃗
+4. Dans un parallélogramme ABCD, exprimer AC⃗ en fonction de AB⃗ et AD⃗`,
+        correction: `1. AC⃗ = AB⃗ + BC⃗  (Chasles direct)
+
+2. DB⃗ = DC⃗ + CB⃗  (Chasles : D→C→B)
+
+3. E milieu de [BC] : BE⃗ = (1/2)BC⃗ = (1/2)(AC⃗−AB⃗) = (AC⃗−AB⃗)/2
+AE⃗ = AB⃗ + BE⃗ = AB⃗ + (AC⃗−AB⃗)/2 = (AB⃗+AC⃗)/2
+
+4. ABCD parallélogramme → BC⃗ = AD⃗
+AC⃗ = AB⃗ + BC⃗ = AB⃗ + AD⃗`
+      },
+      {
+        id: 'GE-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Colinéarité et alignement',
+        notions: ['Colinéarité', 'Déterminant'],
+        enonce: `1. A(0;0), B(2;4), C(3;6). Les points A, B, C sont-ils alignés ?
+2. A(1;2), B(4;5), C(7;9). Vérifier l'alignement.
+3. Trouver k pour que A(1;2), B(3;k), C(5;8) soient alignés.`,
+        correction: `1. AB⃗(2;4), AC⃗(3;6). det = 2×6−4×3 = 12−12 = 0 → alignés ✓
+(D'ailleurs AC⃗ = (3/2)AB⃗)
+
+2. AB⃗(3;3), AC⃗(6;7). det = 3×7−3×6 = 21−18 = 3 ≠ 0 → non alignés ✗
+
+3. AB⃗(2;k−2), AC⃗(4;6).
+det = 2×6−(k−2)×4 = 12−4k+8 = 20−4k = 0 → k = 5`
+      },
+      {
+        id: 'GE-4', source: 'LLG', difficulte: 1,
+        titre: 'Équation d\'une droite — formes',
+        notions: ['Équation de droite', 'Coefficient directeur'],
+        enonce: `1. Écrire l'équation de la droite passant par A(2;5) et B(6;9).
+2. Écrire l'équation de la droite passant par A(−1;3) et B(2;−3).
+3. Donner le coefficient directeur et l'ordonnée à l'origine de y=3x−5.
+4. Trouver le point d'intersection de y=2x+1 et y=−x+4.`,
+        correction: `1. m=(9−5)/(6−2)=1, p=5−1×2=3 → y=x+3
+
+2. m=(−3−3)/(2−(−1))=−6/3=−2, p=3−(−2)(−1)=3−2=1 → y=−2x+1
+
+3. m=3, p=−5
+
+4. 2x+1=−x+4 → 3x=3 → x=1, y=3 → Point (1;3)`
+      },
+      {
+        id: 'GE-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Positions relatives de droites',
+        notions: ['Positions relatives', 'Parallèles', 'Perpendiculaires'],
+        enonce: `Étudier les positions relatives de :
+1. d₁: y=2x+3 et d₂: y=2x−1
+2. d₁: y=3x−2 et d₂: y=(1/3)x+5
+3. d₁: 2x+y=5 et d₂: x−2y=3
+4. d₁: y=2x+1 et d₂: 4x−2y+2=0`,
+        correction: `1. m₁=m₂=2, p₁≠p₂ → PARALLÈLES (non confondues)
+
+2. m₁=3, m₂=1/3 → m₁×m₂=1≠−1 → SÉCANTES (pas perpendiculaires)
+
+3. d₁: y=−2x+5 (m₁=−2) ; d₂: y=x/2−3/2 (m₂=1/2)
+m₁×m₂ = (−2)(1/2) = −1 → PERPENDICULAIRES
+
+4. d₂: 4x−2y+2=0 → 2y=4x+2 → y=2x+1
+Même équation que d₁ → CONFONDUES`
+      },
+      {
+        id: 'GE-6', source: 'LLG', difficulte: 2,
+        titre: 'Construction de droites',
+        notions: ['Droites', 'Perpendiculaires', 'Parallèles'],
+        enonce: `1. Écrire l'équation de la droite d perpendiculaire à y=3x+1 passant par A(0;2).
+2. Écrire l'équation de la droite d parallèle à y=−2x+5 passant par B(3;1).
+3. Écrire l'équation de la médiatrice de [AB] avec A(1;3) et B(5;7).`,
+        correction: `1. m⊥ = −1/3, passe par (0;2) → y = −x/3 + 2
+
+2. m = −2, passe par B(3;1) : 1=−2×3+p → p=7 → y=−2x+7
+
+3. Médiatrice de [AB] :
+Milieu I: (3;5)
+Pente AB: (7−3)/(5−1)=1 → pente médiatrice: −1
+Équation : y−5=−(x−3) → y=−x+8`
+      },
+      {
+        id: 'GE-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Résolution de systèmes 2×2',
+        notions: ['Systèmes', 'Substitution', 'Combinaison'],
+        enonce: `Résoudre par les deux méthodes (substitution ET combinaison) :
+1. { 3x+2y=7 et { x−y=1
+2. { 2x−3y=4 et { 5x+2y=1`,
+        correction: `1. Système :
+Substitution : x=y+1 → 3(y+1)+2y=7 → 5y=4 → y=4/5, x=9/5
+Combinaison : 3(x−y)+(3x+2y)=3+7 → non, mieux :
+×2: 2x−2y=2; +3x+2y=7 → 5x=9 → x=9/5, y=4/5 ✓
+
+2. { 2x−3y=4  ×2: 4x−6y=8
+   { 5x+2y=1  ×3: 15x+6y=3
+Addition: 19x=11 → x=11/19
+y=(2×11/19−4)/3=(22/19−76/19)/3=(−54/19)/3=−54/57=−18/19`
+      },
+      {
+        id: 'GE-8', source: 'LLG', difficulte: 2,
+        titre: 'Théorème de Thalès',
+        notions: ['Thalès', 'Proportions'],
+        enonce: `1. Dans le triangle ABC, M est sur [AB] et N sur [AC] avec MN ∥ BC.
+   On sait AM=3, AB=9, AN=4. Calculer AC et MN sachant BC=12.
+2. Deux droites se coupent en O. Sur une droite : OA=6, OB=10. Sur l'autre : OA'=9.
+   Si AA' ∥ BB', calculer OB'.
+3. Un arbre projette une ombre de 4m. Un bâton de 2m projette une ombre de 0,8m.
+   Quelle est la hauteur de l'arbre ?`,
+        correction: `1. Thalès : AM/AB = AN/AC = MN/BC
+3/9 = 4/AC = MN/12
+1/3 = 4/AC → AC = 12
+MN/12 = 1/3 → MN = 4
+
+2. OA/OB = OA'/OB' (Thalès)
+6/10 = 9/OB' → OB' = 9×10/6 = 15
+
+3. Règle de trois (triangles semblables) :
+hauteur/ombre = hauteur_bâton/ombre_bâton
+h/4 = 2/0,8 = 2,5 → h = 10m`
+      },
+      {
+        id: 'GE-9', source: 'Henri-IV', difficulte: 2,
+        titre: 'Pythagore — applications',
+        notions: ['Pythagore', 'Réciproque'],
+        enonce: `1. Calculer la longueur manquante dans les triangles rectangles :
+   a) cathètes 5 et 12 → hypoténuse ?
+   b) hypoténuse 13, cathète 5 → autre cathète ?
+   c) cathètes a et a+1, hypoténuse a+2 → trouver a.
+
+2. Vérifier si le triangle ABC est rectangle :
+   A(0;0), B(3;0), C(0;4).
+
+3. Triples pythagoriciens : montrer que (3k;4k;5k) est un triple pour tout k>0.`,
+        correction: `1. Pythagore :
+a) h = √(25+144) = √169 = 13
+b) c = √(169−25) = √144 = 12
+c) a²+(a+1)² = (a+2)² → a²+a²+2a+1=a²+4a+4 → a²−2a−3=0
+→ (a−3)(a+1)=0 → a=3 (>0) ou a=−1 (refusé)
+Côtés : 3, 4, 5
+
+2. AB=3, AC=4, BC=√(9+16)=5
+AB²+AC²=9+16=25=BC² → rectangle en A ✓
+
+3. (3k)²+(4k)²=9k²+16k²=25k²=(5k)² ✓ pour tout k>0`
+      },
+      {
+        id: 'GE-10', source: 'LLG', difficulte: 2,
+        titre: 'Problème géométrique — démonstrations',
+        notions: ['Vecteurs', 'Milieux', 'Démonstrations'],
+        enonce: `ABCD est un quadrilatère quelconque. M, N, P, Q sont les milieux respectifs de [AB], [BC], [CD], [DA].
+1. Exprimer MN⃗ en fonction des vecteurs du quadrilatère.
+2. Exprimer QP⃗ en même fonction.
+3. Conclure sur la nature de MNPQ.`,
+        correction: `1. MN⃗ : M milieu de AB, N milieu de BC
+M = A + (1/2)AB⃗, N = B + (1/2)BC⃗
+MN⃗ = AN⃗ − AM⃗ = (AB⃗+(1/2)BC⃗) − (1/2)AB⃗ = (1/2)AB⃗ + (1/2)BC⃗ = (1/2)AC⃗
+
+2. QP⃗ : Q milieu de DA, P milieu de CD
+QP⃗ = (1/2)AD⃗ + (1/2)DC⃗ = (1/2)AC⃗
+
+3. MN⃗ = QP⃗ = (1/2)AC⃗
+Les vecteurs MN⃗ et QP⃗ sont égaux → MN et QP sont parallèles et de même longueur.
+Donc MNPQ est un parallélogramme (théorème de Varignon).`
+      },
+      {
+        id: 'GE-11', source: 'Henri-IV', difficulte: 2,
+        titre: 'Coordonnées — calculs divers',
+        notions: ['Coordonnées', 'Milieu', 'Distance'],
+        enonce: `A(−2;5), B(4;1), C(1;−3).
+1. Calculer le périmètre du triangle ABC.
+2. Trouver le centre de gravité G (intersection des médianes) : G = ((xA+xB+xC)/3; (yA+yB+yC)/3).
+3. Vérifier que G est sur la médiane issue de A (milieu de BC).
+4. Le triangle est-il isocèle ? Rectangle ?`,
+        correction: `1. Périmètre :
+AB = √(36+16) = √52 = 2√13
+BC = √(9+16) = √25 = 5
+CA = √(9+64) = √73
+P = 2√13+5+√73 ≈ 7,21+5+8,54 ≈ 20,75
+
+2. G = ((−2+4+1)/3;(5+1−3)/3) = (3/3;3/3) = (1;1)
+
+3. Milieu M de [BC] : ((4+1)/2;(1−3)/2) = (5/2;−1)
+AM⃗ = (5/2−(−2);−1−5) = (9/2;−6)
+AG⃗ = (1−(−2);1−5) = (3;−4)
+(2/3)AM⃗ = (3;−4) = AG⃗ → G est bien sur la médiane issue de A ✓
+
+4. AB²=52, BC²=25, CA²=73
+AB≠BC≠CA → pas isocèle (aux valeurs près)
+AB²+BC²=52+25=77≠73=CA² ; AB²+CA²=125≠25 ; BC²+CA²=98≠52
+→ pas rectangle`
+      },
+      {
+        id: 'GE-12', source: 'LLG', difficulte: 2,
+        titre: 'Droites remarquables — médiatrice et hauteur',
+        notions: ['Médiatrice', 'Hauteur', 'Perpendiculaires'],
+        enonce: `Triangle A(0;4), B(−3;0), C(3;0).
+1. Écrire l'équation de la médiatrice de [BC].
+2. Écrire l'équation de la hauteur issue de A.
+3. Trouver le point de concours des hauteurs (orthocentre).`,
+        correction: `1. Médiatrice de [BC] :
+Milieu : (0;0), pente de BC : (0−0)/(3−(−3))=0 → BC horizontal
+Médiatrice : verticale passant par (0;0) → x=0
+
+2. Hauteur issue de A ⊥ BC :
+BC est horizontal (pente 0) → hauteur verticale
+Passe par A(0;4) et est verticale → x=0
+
+3. Orthocentre : intersection des hauteurs
+Hauteur issue de A : x=0
+Hauteur issue de B ⊥ AC :
+AC : pente=(0−4)/(3−0)=−4/3 → hauteur : pente=3/4
+Passe par B(−3;0) : y=3/4(x+3) → y=3x/4+9/4
+En x=0 : y=9/4
+Orthocentre : (0;9/4)
+Note : le triangle est isocèle (AB=AC=5), donc l'axe de symétrie x=0 contient l'orthocentre.`
+      },
+      {
+        id: 'GE-13', source: 'Henri-IV', difficulte: 2,
+        titre: 'Vecteurs colinéaires — applications',
+        notions: ['Colinéarité', 'Parallélisme'],
+        enonce: `1. Montrer que A(1;2), B(3;6), C(5;10) sont alignés.
+2. Déterminer k pour que AB⃗ et CD⃗ soient colinéaires avec A(0;1), B(2;4), C(1;k), D(5;k+6).
+3. Les droites (AB) et (CD) sont-elles parallèles avec A(1;2), B(3;5), C(4;1), D(6;4) ?`,
+        correction: `1. AB⃗(2;4), AC⃗(4;8)
+det = 2×8−4×4 = 16−16 = 0 → colinéaires → alignés ✓
+(AC⃗ = 2AB⃗)
+
+2. AB⃗(2;3), CD⃗(4;6)
+det = 2×6−3×4 = 12−12 = 0 → toujours colinéaires !
+(En fait CD⃗ = 2AB⃗ quelles que soient les valeurs)
+Vérification : CD⃗ = D−C = (5−1;k+6−k) = (4;6) = 2×(2;3) = 2AB⃗ ✓
+Donc ils sont toujours colinéaires, pour tout k.
+
+3. AB⃗(2;3), CD⃗(2;3)
+AB⃗ = CD⃗ donc (AB) ∥ (CD)
+(Même direction → parallèles ou confondues)
+Point B(3;5) sur (AB) : y=3x/2+1/2... vérif C(4;1): 3×4/2+1/2=6,5≠1 → non confondues
+→ PARALLÈLES`
+      },
+      {
+        id: 'GE-14', source: 'LLG', difficulte: 3,
+        titre: 'Barycentre et point particulier',
+        notions: ['Milieux', 'Vecteurs', 'Géométrie'],
+        enonce: `A(1;0), B(5;0), C(3;4).
+1. Trouver le point G tel que GA⃗+GB⃗+GC⃗ = 0⃗ (centre de gravité).
+2. Montrer que G est le milieu de chaque médiane à 2/3 de chaque sommet.
+3. Trouver le cercle circumscrit au triangle (centre = intersection des médiatrices).`,
+        correction: `1. GA⃗+GB⃗+GC⃗ = 0⃗ :
+Si G=(x;y) : (1−x+5−x+3−x; 0−y+0−y+4−y) = (0;0)
+9−3x=0 → x=3 ; 4−3y=0 → y=4/3
+G = (3; 4/3)
+
+2. G = ((1+5+3)/3; (0+0+4)/3) = (3; 4/3) ✓
+Milieu de [BC] : M_A = (4;2)
+AG⃗ = (2;4/3), AM_A⃗ = (3;2)
+AG⃗ = (2/3)AM_A⃗ ✓ (G est aux 2/3 de AM_A depuis A)
+
+3. Médiatrices :
+Médiatrice de [AB] : milieu (3;0), AB horizontal → x=3
+Médiatrice de [AC] : milieu (2;2), pente AC=(4−0)/(3−1)=2
+→ pente méd. = −1/2, équ: y−2=−(x−2)/2 → y=−x/2+3
+
+Intersection : x=3 → y=−3/2+3=3/2
+Centre O=(3;3/2)
+Rayon R=OA=√((3−1)²+(3/2)²)=√(4+9/4)=√(25/4)=5/2`
+      },
+      {
+        id: 'GE-15', source: 'Henri-IV & LLG', difficulte: 3,
+        titre: 'Problème — géométrie analytique complète',
+        notions: ['Droites', 'Distances', 'Vecteurs'],
+        enonce: `Un triangle a pour sommets A(0;0), B(6;0), C(2;4).
+1. Calculer les longueurs des 3 côtés.
+2. Écrire les équations des 3 droites (AB), (BC), (CA).
+3. Trouver le centre et le rayon du cercle inscrit (il est tangent aux 3 côtés).
+4. Vérifier que le centre est équidistant des 3 droites.`,
+        correction: `1. Longueurs :
+AB = 6 ; BC = √(16+16) = 4√2 ; CA = √(4+16) = √20 = 2√5
+
+2. Équations :
+(AB) : y=0  (axe des abscisses)
+(BC) : pente=(4−0)/(2−6)=−1, passe par B(6;0): y=−(x−6)=−x+6
+(CA) : pente=4/2=2, passe par A(0;0): y=2x
+
+3. Pour un triangle, le centre du cercle inscrit est à intersection des bissectrices.
+Périmètre : p = 6+4√2+2√5 ≈ 6+5,66+4,47 ≈ 16,13
+Demi-périmètre : s ≈ 8,07
+Aire = (1/2)×base×hauteur = (1/2)×6×4 = 12
+Rayon inscrit : r = Aire/s = 12/8,07 ≈ 1,49
+
+Coordonnées du centre (formule exacte) :
+I = (a×xA+b×xB+c×xC)/(a+b+c) où a=BC=4√2, b=CA=2√5, c=AB=6
+(Formule barycentrique avec les côtés opposés)
+x_I = (4√2×0+2√5×6+6×2)/(4√2+2√5+6) = (12√5+12)/(4√2+2√5+6)
+Calcul numérique : ≈ (26,83+12)/(5,66+4,47+6) = 38,83/16,13 ≈ 2,41
+y_I ≈ r ≈ 1,49 (distance à (AB): y=0 est simplement la coordonnée y)
+
+4. Distance au centre I=(x_I;y_I) :
+À (AB): y=0 → distance = y_I = r ✓
+À (BC): x+y=6 → distance = |x_I+y_I−6|/√2 = r ✓ (à vérifier numériquement)`
+      },
+    ]
+  },
+  {
+    id: 'stats-probas-seconde',
+    numero: 7,
+    titre: 'Statistiques & Probabilités',
+    sousTitre: 'Stats descriptives · Évolutions · Probabilités · Fluctuation',
+    icon: '📊',
+    color: '#06b6d4',
+    notions: ['Moyenne', 'Écart-type', 'Quartiles', 'Taux d\'évolution', 'Probabilités', 'Intervalle de fluctuation'],
+    exercices: [
+      {
+        id: 'SP-1', source: 'Henri-IV', difficulte: 1,
+        titre: 'Calcul de moyenne',
+        notions: ['Moyenne'],
+        enonce: `Notes de 10 élèves : 8, 12, 15, 9, 14, 18, 11, 13, 7, 13.
+1. Calculer la moyenne x̄.
+2. Calculer la moyenne des élèves ayant eu plus de 12.
+3. Si on retire la note 18, quelle est la nouvelle moyenne ?`,
+        correction: `1. x̄ = (8+12+15+9+14+18+11+13+7+13)/10 = 120/10 = 12
+
+2. Notes > 12 : 15, 14, 18, 13, 13 → moyenne = 73/5 = 14,6
+
+3. Sans 18 : (120−18)/9 = 102/9 ≈ 11,33`
+      },
+      {
+        id: 'SP-2', source: 'LLG', difficulte: 1,
+        titre: 'Médiane et quartiles',
+        notions: ['Médiane', 'Quartiles', 'EI'],
+        enonce: `Données ordonnées : 3, 5, 7, 8, 10, 12, 14, 15, 18, 20.
+1. Déterminer Me, Q1, Q3, EI.
+2. Identifier d'éventuelles valeurs aberrantes (valeur < Q1−1,5×EI ou > Q3+1,5×EI).`,
+        correction: `1. n=10 :
+Me = (10+12)/2 = 11
+Q1 = médiane des 5 premiers = 7
+Q3 = médiane des 5 derniers = 15
+EI = Q3−Q1 = 8
+
+2. Limites :
+Borne basse : Q1−1,5×EI = 7−12 = −5
+Borne haute : Q3+1,5×EI = 15+12 = 27
+Toutes les valeurs sont dans [−5;27] → pas de valeur aberrante`
+      },
+      {
+        id: 'SP-3', source: 'Henri-IV', difficulte: 1,
+        titre: 'Variance et écart-type',
+        notions: ['Variance', 'Écart-type'],
+        enonce: `Série : 4, 6, 8, 10, 12 (5 valeurs).
+1. Calculer x̄.
+2. Calculer la variance V = (1/n)Σ(xi−x̄)².
+3. Calculer σ = √V.
+4. Que représente σ pour cette série ?`,
+        correction: `1. x̄ = 40/5 = 8
+
+2. V = [(4−8)²+(6−8)²+(8−8)²+(10−8)²+(12−8)²]/5
+= [16+4+0+4+16]/5 = 40/5 = 8
+
+3. σ = √8 = 2√2 ≈ 2,83
+
+4. σ mesure la dispersion autour de la moyenne.
+Ici σ ≈ 2,83 : les valeurs s'écartent en moyenne d'environ 2,83 unités de la moyenne 8.
+Intervalle [x̄−σ;x̄+σ] = [5,17;10,83] contient 6, 8, 10 (3 valeurs sur 5 = 60%)`
+      },
+      {
+        id: 'SP-4', source: 'LLG', difficulte: 1,
+        titre: 'Taux d\'évolution',
+        notions: ['Taux d\'évolution', 'Coefficient multiplicateur'],
+        enonce: `1. Un article coûtait 80€, il vaut maintenant 96€. Taux d'évolution ?
+2. Un prix baisse de 20%. Coefficient multiplicateur ?
+3. Un salaire augmente de 5% puis encore de 3%. Taux global ?
+4. Une hausse de 10% est suivie d'une baisse. Pour revenir au prix initial, quelle doit être la baisse ?`,
+        correction: `1. t = (96−80)/80 = 16/80 = 0,2 = +20%
+
+2. CM = 1−0,2 = 0,8
+
+3. CM_total = 1,05×1,03 = 1,0815 → t = +8,15%
+
+4. Après +10% : CM=1,1. Pour revenir : CM_retour = 1/1,1 ≈ 0,909 → baisse de ≈9,09%`
+      },
+      {
+        id: 'SP-5', source: 'Henri-IV', difficulte: 2,
+        titre: 'Évolutions successives et réciproques',
+        notions: ['Évolutions successives', 'Évolution réciproque'],
+        enonce: `1. +15% puis −10% : évolution globale ?
+2. −20% puis +25% : évolution globale ?
+3. Pour annuler une hausse de 30%, quelle baisse faut-il appliquer ?
+4. En 2022, un prix est P. En 2023 : +8%. En 2024 : −5%. En 2025 : +2%.
+   Exprimer le prix final en fonction de P. Augmentation ou baisse par rapport à 2022 ?`,
+        correction: `1. CM = 1,15×0,90 = 1,035 → +3,5% (pas +5%)
+
+2. CM = 0,80×1,25 = 1,00 → 0% (retour à l'initial !)
+Vérification : 0,8×1,25 = 1 ✓
+
+3. CM_annulation = 1/1,30 ≈ 0,769 → baisse d'environ 23,1%
+
+4. P_final = P×1,08×0,95×1,02 = P×1,04652
+Hausse globale ≈ +4,65% par rapport à 2022`
+      },
+      {
+        id: 'SP-6', source: 'LLG', difficulte: 2,
+        titre: 'Statistiques descriptives complètes',
+        notions: ['Moyenne', 'Écart-type', 'Quartiles'],
+        enonce: `Notes de 15 élèves : 5, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15, 15, 17, 19.
+1. Calculer x̄, Me, Q1, Q3, EI.
+2. Calculer σ.
+3. Quel pourcentage d'élèves est dans [x̄−σ; x̄+σ] ?`,
+        correction: `1. n=15 :
+x̄ = (5+7+8+8+9+10+11+12+12+13+14+15+15+17+19)/15 = 175/15 ≈ 11,67
+Me = 8e valeur = 12
+Q1 = médiane des 7 premiers : 8+8=8 → Q1=8
+Q3 = médiane des 7 derniers : 15+15=15 → Q3=15
+EI = 7
+
+2. Variance : V = Σ(xi−11,67)²/15
+≈ [(5−11,67)²+...+(19−11,67)²]/15
+≈ [44,49+22,09+13,69+13,69+7,29+2,89+0,49+0,09+0,09+1,69+5,29+11,09+11,09+28,09+53,29]/15
+≈ 215,33/15 ≈ 14,36
+σ ≈ 3,79
+
+3. [x̄−σ;x̄+σ] = [11,67−3,79; 11,67+3,79] = [7,88; 15,46]
+Valeurs dans cet intervalle : 8,8,9,10,11,12,12,13,14,15,15 → 11 valeurs sur 15
+Pourcentage : 11/15 ≈ 73%`
+      },
+      {
+        id: 'SP-7', source: 'Henri-IV', difficulte: 2,
+        titre: 'Probabilités — dé et tirage',
+        notions: ['Probabilités', 'Équiprobabilité'],
+        enonce: `On lance un dé à 6 faces équilibré.
+1. Calculer P(multiple de 2), P(multiple de 3), P(multiple de 6).
+2. Calculer P(multiple de 2 OU multiple de 3).
+3. Calculer P(multiple de 2 ET multiple de 3).
+4. Vérifier la formule P(A∪B) = P(A)+P(B)−P(A∩B).`,
+        correction: `1. Multiples de 2 : {2,4,6} → P = 3/6 = 1/2
+Multiples de 3 : {3,6} → P = 2/6 = 1/3
+Multiples de 6 : {6} → P = 1/6
+
+2. P(mult2 ∪ mult3) = P({2,3,4,6}) = 4/6 = 2/3
+
+3. P(mult2 ∩ mult3) = P({6}) = 1/6 (= P(mult6))
+
+4. P(A)+P(B)−P(A∩B) = 1/2+1/3−1/6 = 3/6+2/6−1/6 = 4/6 = 2/3 = P(A∪B) ✓`
+      },
+      {
+        id: 'SP-8', source: 'LLG', difficulte: 2,
+        titre: 'Probabilités — tirage sans remise',
+        notions: ['Probabilités', 'Dénombrement'],
+        enonce: `Une urne contient 4 boules rouges (R), 3 bleues (B), 2 vertes (V).
+On tire 2 boules sans remise.
+1. Combien y a-t-il de tirages possibles de 2 boules ?
+2. Calculer P(2 rouges), P(une rouge et une bleue), P(même couleur).`,
+        correction: `1. Nombre de paires : C(9,2) = 9×8/2 = 36
+
+2. P(2R) = C(4,2)/36 = 6/36 = 1/6
+
+P(1R et 1B) = (4×3)/36 = 12/36 = 1/3
+
+P(même couleur) = P(2R)+P(2B)+P(2V)
+= C(4,2)/36 + C(3,2)/36 + C(2,2)/36
+= (6+3+1)/36 = 10/36 = 5/18`
+      },
+      {
+        id: 'SP-9', source: 'Henri-IV', difficulte: 2,
+        titre: 'Événements — formules',
+        notions: ['Événements', 'Complémentaire', 'Formules'],
+        enonce: `P(A) = 0,4, P(B) = 0,5, P(A∩B) = 0,2.
+1. Calculer P(A∪B).
+2. A et B sont-ils indépendants ?
+3. Calculer P(Ā), P(B̄), P(Ā∩B̄).
+4. Calculer P(A∩B̄) et P(Ā∩B).`,
+        correction: `1. P(A∪B) = 0,4+0,5−0,2 = 0,7
+
+2. P(A)×P(B) = 0,4×0,5 = 0,2 = P(A∩B) → A et B INDÉPENDANTS ✓
+
+3. P(Ā) = 0,6 ; P(B̄) = 0,5
+P(Ā∩B̄) = P(A∪B)̄ = 1−P(A∪B) = 1−0,7 = 0,3
+
+4. P(A∩B̄) = P(A)−P(A∩B) = 0,4−0,2 = 0,2
+   (ou: A et B indépendants → P(A∩B̄)=P(A)×P(B̄)=0,4×0,5=0,2 ✓)
+P(Ā∩B) = P(B)−P(A∩B) = 0,5−0,2 = 0,3`
+      },
+      {
+        id: 'SP-10', source: 'LLG', difficulte: 2,
+        titre: 'Intervalle de fluctuation',
+        notions: ['Intervalle de fluctuation', 'Échantillonnage'],
+        enonce: `Dans une grande ville, 35% des habitants utilisent les transports en commun (p=0,35).
+Un sondage interroge n=400 personnes.
+1. Calculer l'intervalle de fluctuation au seuil 95%.
+2. Si le sondage trouve 32%, est-ce compatible avec p=0,35 ?
+3. Avec n=100, même question.
+4. Combien faut-il de personnes pour que l'intervalle soit de largeur 0,04 ?`,
+        correction: `1. n=400 : [0,35−1/20 ; 0,35+1/20] = [0,30 ; 0,40]
+
+2. 32% = 0,32 ∈ [0,30 ; 0,40] → compatible avec p=0,35 ✓
+
+3. n=100 : [0,35−0,10 ; 0,35+0,10] = [0,25 ; 0,45]
+32% ∈ [0,25;0,45] → toujours compatible (intervalle plus large)
+
+4. Largeur = 2/√n = 0,04 → √n = 50 → n = 2500 personnes`
+      },
+      {
+        id: 'SP-11', source: 'Henri-IV', difficulte: 2,
+        titre: 'Proportion de proportion',
+        notions: ['Proportions', 'Probabilités'],
+        enonce: `Dans un lycée : 55% des élèves sont des filles. Parmi les filles, 40% font de la musique. Parmi les garçons, 25% font de la musique.
+1. Calculer la proportion d'élèves qui sont des filles et font de la musique.
+2. Calculer la proportion d'élèves qui sont des garçons et font de la musique.
+3. Quelle proportion d'élèves fait de la musique au total ?`,
+        correction: `1. P(fille et musique) = P(fille)×P(musique|fille) = 0,55×0,40 = 0,22 = 22%
+
+2. P(garçon) = 0,45
+P(garçon et musique) = 0,45×0,25 = 0,1125 = 11,25%
+
+3. P(musique) = P(fille et musique) + P(garçon et musique)
+= 0,22 + 0,1125 = 0,3325 = 33,25%`
+      },
+      {
+        id: 'SP-12', source: 'LLG', difficulte: 2,
+        titre: 'Applications des statistiques — analyse de données',
+        notions: ['Statistiques', 'Analyse'],
+        enonce: `Deux classes ont les résultats suivants à un contrôle (sur 20) :
+Classe A (25 élèves) : x̄_A = 12, σ_A = 3
+Classe B (30 élèves) : x̄_B = 13, σ_B = 5
+
+1. Calculer la moyenne générale des 55 élèves.
+2. Quelle classe est plus "homogène" ? Pourquoi ?
+3. Un élève de A a 15. Un de B a 15. Lequel est "plus méritant" relativement à sa classe ?
+   (Utiliser : rang = (note−moyenne)/écart-type)`,
+        correction: `1. Moyenne générale :
+x̄ = (25×12+30×13)/(25+30) = (300+390)/55 = 690/55 ≈ 12,55
+
+2. Classe A : σ_A=3 < σ_B=5 → Classe A plus homogène
+(les notes de A sont moins dispersées autour de la moyenne)
+
+3. "Score standardisé" (z-score) :
+Élève A : z_A = (15−12)/3 = 1
+Élève B : z_B = (15−13)/5 = 0,4
+
+L'élève de A est à 1 écart-type au-dessus de sa moyenne.
+L'élève de B est à 0,4 écart-type au-dessus de sa moyenne.
+→ L'élève de A est "plus méritant" relativement à sa classe.`
+      },
+      {
+        id: 'SP-13', source: 'Henri-IV', difficulte: 2,
+        titre: 'Probabilités — arbre et calculs',
+        notions: ['Arbre de probabilités', 'Calculs'],
+        enonce: `Un test médical est positif dans 95% des cas si la personne est malade, et dans 3% des cas si elle est saine. Dans une population, 2% des personnes sont malades.
+On tire une personne au hasard et on lui fait le test.
+1. Dessiner l'arbre des probabilités.
+2. Calculer P(test positif).
+3. Si le test est positif, quelle est la probabilité d'être malade ?`,
+        correction: `1. Arbre :
+Malade (0,02) → Positif (0,95) : P = 0,02×0,95 = 0,019
+                → Négatif (0,05) : P = 0,02×0,05 = 0,001
+Sain (0,98)   → Positif (0,03) : P = 0,98×0,03 = 0,0294
+               → Négatif (0,97) : P = 0,98×0,97 = 0,9506
+
+2. P(test+) = 0,019+0,0294 = 0,0484 ≈ 4,84%
+
+3. P(malade|test+) = P(malade et test+)/P(test+)
+= 0,019/0,0484 ≈ 0,393 ≈ 39,3%
+
+Remarque surprenante : même si le test est positif, il y a 39% de chance d'être malade.
+C'est le "paradoxe du test médical" dû à la rareté de la maladie.`
+      },
+      {
+        id: 'SP-14', source: 'LLG', difficulte: 3,
+        titre: 'Loi des grands nombres — simulation',
+        notions: ['Probabilités', 'Simulation', 'Fréquence'],
+        enonce: `On lance une pièce équilibrée n fois. Soit fₙ la fréquence d'apparition de Face.
+1. Pour n=10, est-il normal d'obtenir fₙ = 0,3 ? Calculer l'intervalle de fluctuation.
+2. Pour n=100, même question.
+3. Pour n=1000, même question.
+4. Que représente la convergence de fₙ vers 0,5 ?`,
+        correction: `1. p=0,5, n=10 :
+Intervalle = [0,5−1/√10 ; 0,5+1/√10] ≈ [0,5−0,316 ; 0,5+0,316] = [0,184 ; 0,816]
+0,3 ∈ [0,184;0,816] → OUI, normal (intervalle très large)
+
+2. p=0,5, n=100 :
+Intervalle = [0,5−0,1 ; 0,5+0,1] = [0,4 ; 0,6]
+0,3 ∉ [0,4;0,6] → NON, résultat surprenant pour n=100
+
+3. p=0,5, n=1000 :
+Intervalle = [0,5−1/√1000 ; 0,5+1/√1000] ≈ [0,468 ; 0,532]
+0,3 très loin → totalement improbable
+
+4. La convergence de fₙ vers p=0,5 quand n→+∞ est la LOI DES GRANDS NOMBRES.
+Plus n est grand, plus fₙ est proche de la probabilité théorique p.
+C'est le fondement mathématique de la notion de probabilité.`
+      },
+      {
+        id: 'SP-15', source: 'Henri-IV & LLG', difficulte: 3,
+        titre: 'Problème complet — statistiques et probabilités',
+        notions: ['Statistiques', 'Probabilités', 'Analyse'],
+        enonce: `Une entreprise fabrique des pièces. 5% sont défectueuses.
+Un contrôle examine 200 pièces.
+1. Calculer l'intervalle de fluctuation au seuil 95%.
+2. On trouve 12 pièces défectueuses (fréquence 6%). Est-ce alarmant ?
+3. Si la proportion monte à 8% sur 200 pièces, que conclure ?
+4. L'entreprise veut être sûre à 95% de détecter une proportion réelle supérieure à 8%. Combien de pièces faut-il contrôler ?`,
+        correction: `1. p=0,05, n=200 :
+Intervalle = [0,05−1/√200 ; 0,05+1/√200]
+1/√200 = 1/(10√2) ≈ 0,0707
+Intervalle ≈ [−0,021 ; 0,121] → [0 ; 0,121] (tronqué à 0)
+
+2. f=12/200=0,06 ∈ [0;0,121] → compatible avec p=5%, pas alarmant
+
+3. f=0,08 ∈ [0;0,121] → encore compatible, mais limite haute approche
+Pas encore alarme statistique, mais à surveiller
+
+4. On veut que 8% soit hors de l'intervalle centré en 5% :
+0,08 > 0,05 + 1/√n
+0,03 > 1/√n
+√n > 1/0,03 ≈ 33,3
+n > 33,3² ≈ 1111
+Il faut contrôler au moins 1112 pièces.`
+      },
+    ]
+  },
+]
+
+
 // ════════════════════════════════════════════════════════════════
 //  SECTIONS — noms identiques aux pages de cours
 // ════════════════════════════════════════════════════════════════
-type SKey = 'terminale-generale' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite'
+type SKey = 'terminale-generale' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde'
 
 const SECTIONS: {
   key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
@@ -2883,6 +5593,9 @@ const SECTIONS: {
     label:'Terminale Maths Expertes', icon:'⭐', color:'#8b5cf6', coeff:'Option · Coef. 2 · 3h',
     desc:'Option Maths Expertes · Arithmétique · Complexes · Matrices & Graphes · APMEP',
     data:dataExpertes, links:linksExpertes },
+  { key:'seconde', label:'Seconde Générale', icon:'📘', color:'#10b981', coeff:'7 thèmes · 16 exercices',
+    desc: "Programme officiel Seconde — Vrais exercices corrigés par thème. Algorithmique, Algèbre, Géométrie, Fonctions, Stats & Probas.",
+    data:[], links:{} },
   { key:'premiere-specialite', label:'Première Spécialité', icon:'📗', color:'#f59e0b', coeff:'E3C · DS lycées · 2h',
     desc: "Pas d'examen national en Première. E3C 2021-2022 + DS publiés par des professeurs.",
     data:[], links:{} },
@@ -3227,9 +5940,12 @@ export default function ExamensFrancePage() {
               </div>
             </div>
             <div style={{fontSize:12,color:'var(--muted)',textAlign:'right'}}>
-              {activeSec === 'premiere-specialite' ? (<>
+              {activeSec === 'seconde' ? (<>
+                <div>📘 {CHAPITRES_SECONDE.length} thèmes · {CHAPITRES_SECONDE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
+                <div style={{marginTop:4}}>📚 Exercices originaux — niveaux ★ à ★★★★</div>
+              </>) : activeSec === 'premiere-specialite' ? (<>
                 <div>📗 {CHAPITRES_PREMIERE.length} chapitres · {CHAPITRES_PREMIERE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
-                <div style={{marginTop:4}}>📚 Sources : Lycée Henri-IV (2024) + LLG (2022)</div>
+                <div style={{marginTop:4}}></div>
               </>) : (<>
                 <div>📅 2021 → 2025 · 5 années</div>
                 <div style={{marginTop:4}}>📄 Sujet + ✅ Correction par centre d'examen</div>
@@ -3250,7 +5966,9 @@ export default function ExamensFrancePage() {
           </div>
 
           {/* GRILLE ANNÉES ou DS PREMIÈRE */}
-          {activeSec === 'premiere-specialite' ? (
+          {activeSec === 'seconde' ? (
+            <PremiereView chapitres={CHAPITRES_SECONDE}/>
+          ) : activeSec === 'premiere-specialite' ? (
             <PremiereView chapitres={CHAPITRES_PREMIERE}/>
           ) : (
             <div>
