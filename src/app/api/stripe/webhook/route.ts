@@ -40,10 +40,17 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
           <h2 style="color:#4f6ef7;margin-bottom:8px">✅ Abonnement activé !</h2>
           <p>Bonjour,</p>
           <p>Votre abonnement <strong>${planLabels[planType] || planType}</strong> est maintenant actif.</p>
-          <p style="font-size:20px;color:#10b981;font-weight:bold">${amount} €</p>
-          <a href="https://app.mathsbac.com" style="display:inline-block;background:#4f6ef7;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;margin:16px 0">
-            → Accéder à MathBac.AI
+          <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin:16px 0;border:1px solid #4f6ef7">
+            <p style="margin:0 0 8px;color:#aaa;font-size:14px">Récapitulatif :</p>
+            <p style="margin:0;color:#4f6ef7;font-weight:bold">${planLabels[planType] || planType}</p>
+            <p style="margin:4px 0 0;color:#10b981;font-size:20px;font-weight:bold">${amount} €/mois</p>
+          </div>
+          <a href="https://app.mathsbac.com/profile" style="display:inline-block;background:#4f6ef7;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:8px 0;font-size:16px">
+            ✅ Voir mon abonnement actif →
           </a>
+          <p style="color:#aaa;font-size:13px;margin-top:8px">
+            Connectez-vous avec l'email : <strong style="color:white">${email}</strong>
+          </p>
           <p style="color:#666;font-size:12px;margin-top:24px">
             Pour toute question : WhatsApp 99 268 970<br/>
             app.mathsbac.com
@@ -86,9 +93,6 @@ export async function POST(req: Request) {
 
     const sig  = req.headers.get("stripe-signature")!
     const body = await req.text()
-    console.log("🔐 Webhook secret:", process.env.STRIPE_WEBHOOK_SECRET)
-    console.log("📩 Signature:", sig)
-    console.log("📦 Body length:", body.length)
 
     const event = stripe.webhooks.constructEvent(
       body,
@@ -160,7 +164,23 @@ export async function POST(req: Request) {
         if (profErr) console.error("Erreur update profiles:", profErr)
         else console.log(`✅ Profile activé: ${email} → ${planType}`)
       } else {
-        console.log(`⚠️ Profil non trouvé pour ${email} — abonnement enregistré sans user_id`)
+        // Chercher dans auth.users par email (cas insensible)
+        const { data: { users }, error: authErr } = await supabase.auth.admin.listUsers()
+        const authUser = users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+        if (authUser) {
+          // Créer le profil si absent
+          await supabase.from("profiles").upsert({
+            id: authUser.id,
+            email: email.toLowerCase(),
+            is_active: true,
+            plan_type: planType,
+            subscription_end: endDate.toISOString(),
+            stripe_customer_id: customerId,
+          }, { onConflict: 'id' })
+          console.log(`✅ Profil créé/mis à jour via auth.users: ${email}`)
+        } else {
+          console.log(`⚠️ Profil non trouvé pour ${email} — abonnement enregistré sans user_id`)
+        }
       }
 
       // Insérer dans subscriptions
