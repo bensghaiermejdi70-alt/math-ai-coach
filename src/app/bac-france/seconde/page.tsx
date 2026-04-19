@@ -3,547 +3,140 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 
+// ══════════════════════════════════════════════════════════════════════
+// SECONDE — Index des 13 chapitres
+// Route : /bac-france/seconde
+// ══════════════════════════════════════════════════════════════════════
+
 const CHAPITRES = [
-  {
-    id: 'python-algorithmique',
-    num: '1',
-    titre: 'Algorithmique & Python',
-    couleur: '#06d6a0',
-    icone: '🐍',
-    tag: 'Informatique',
-    souschap: [
-      {
-        titre: '1.1 Variables et affectation',
-        notions: ['Variables numériques, chaînes, booléens','Affectation : a = 5','Opérateurs arithmétiques +, −, ×, ÷, %','Fonctions print(), input(), type()'],
-      },
-      {
-        titre: '1.2 Instructions conditionnelles',
-        notions: ['if, else, elif','Comparaisons : ==, !=, <, >, <=, >=','Opérateurs logiques : and, or, not','Blocs d\'indentation'],
-      },
-      {
-        titre: '1.3 Fonctions',
-        notions: ['Définition : def nom(paramètres):','Instruction return','Paramètres et arguments','Portée des variables'],
-      },
-      {
-        titre: '1.4 Boucles',
-        notions: ['Boucle bornée : for i in range(n):','Boucle conditionnelle : while condition:','Accumulation de résultats','break et continue'],
-      },
-    ],
-  },
-  {
-    id: 'nombres-calculs',
-    num: '2',
-    titre: 'Nombres & Calculs',
-    couleur: '#4f6ef7',
-    icone: '🔢',
-    tag: 'Algèbre',
-    souschap: [
-      {
-        titre: '2.1 Puissances entières relatives',
-        notions: ['aⁿ avec n entier relatif','a⁻ⁿ = 1/aⁿ','aᵐ × aⁿ = aᵐ⁺ⁿ','(aᵐ)ⁿ = aᵐⁿ','aᵐ / aⁿ = aᵐ⁻ⁿ'],
-        formules: [
-          { f: 'aᵐ × aⁿ = aᵐ⁺ⁿ', desc: 'Produit de puissances' },
-          { f: '(aᵐ)ⁿ = aᵐⁿ', desc: 'Puissance d\'une puissance' },
-          { f: 'a⁻ⁿ = 1/aⁿ', desc: 'Puissance négative' },
-        ],
-      },
-      {
-        titre: '2.2 Racine carrée',
-        notions: ['√a définie pour a ≥ 0','√(a²) = |a|','√(a×b) = √a × √b','√(a/b) = √a / √b','Simplification et rationalisation'],
-        formules: [
-          { f: '(√a)² = a', desc: 'Définition' },
-          { f: '√(ab) = √a·√b', desc: 'Produit sous racine' },
-        ],
-      },
-      {
-        titre: '2.3 Multiples, diviseurs & nombres premiers',
-        notions: ['Divisibilité : a divise b si b = k×a','PGCD et algorithme d\'Euclide','PPCM : PPCM(a,b) = a×b / PGCD(a,b)','Décomposition en facteurs premiers','Critères de divisibilité (2, 3, 5, 9)'],
-        formules: [
-          { f: 'PGCD × PPCM = a × b', desc: 'Relation PGCD/PPCM' },
-        ],
-      },
-      {
-        titre: '2.4 Ensembles de nombres',
-        notions: ['ℕ ⊂ ℤ ⊂ D ⊂ ℚ ⊂ ℝ','Irrationnels : √2, π, e…','Écriture décimale finie ou infinie périodique','Densité de ℚ dans ℝ'],
-      },
-    ],
-  },
-  {
-    id: 'intervalles-inequations',
-    num: '3',
-    titre: 'Intervalles, Inégalités & Inéquations',
-    couleur: '#f59e0b',
-    icone: '↔️',
-    tag: 'Algèbre',
-    souschap: [
-      {
-        titre: '3.1 Intervalles',
-        notions: ['[a ; b], ]a ; b[, [a ; +∞[, ]−∞ ; b]','Union A∪B et intersection A∩B','Notation ensembliste','Complémentaire d\'un intervalle'],
-        formules: [
-          { f: '[a;b] = {x ∈ ℝ | a ≤ x ≤ b}', desc: 'Intervalle fermé' },
-        ],
-      },
-      {
-        titre: '3.2 Inégalités et inéquations',
-        notions: ['Propriétés des inégalités','Addition/soustraction : conserve le sens','Multiplication par un réel positif : conserve le sens','Multiplication par un réel négatif : inverse le sens','Résolution d\'inéquations du 1er degré'],
-        formules: [
-          { f: 'Si a < b et c < 0 → ac > bc', desc: 'Inversion du sens' },
-        ],
-      },
-      {
-        titre: '3.3 Valeur absolue',
-        notions: ['|x| = x si x ≥ 0, |x| = −x si x < 0','|x| = distance de x à 0 sur la droite réelle','|x − a| = distance de x à a','|x| < r ⟺ −r < x < r','|x| > r ⟺ x < −r ou x > r'],
-        formules: [
-          { f: '|x−a| < r ⟺ a−r < x < a+r', desc: 'Inéquation valeur absolue' },
-          { f: '|a·b| = |a|·|b|', desc: 'Produit' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'calcul-litteral',
-    num: '4',
-    titre: 'Calcul Littéral',
-    couleur: '#8b5cf6',
-    icone: '✏️',
-    tag: 'Algèbre',
-    souschap: [
-      {
-        titre: '4.1 Distributivité & Identités remarquables',
-        notions: ['Développement : k(a+b) = ka + kb','(a+b)² = a² + 2ab + b²','(a−b)² = a² − 2ab + b²','(a+b)(a−b) = a² − b²','Factorisation : reconnaître les identités'],
-        formules: [
-          { f: '(a+b)² = a²+2ab+b²', desc: 'Carré d\'une somme' },
-          { f: '(a−b)² = a²−2ab+b²', desc: 'Carré d\'une différence' },
-          { f: '(a+b)(a−b) = a²−b²', desc: 'Produit de conjugués' },
-        ],
-      },
-      {
-        titre: '4.2 Équation produit nul',
-        notions: ['A × B = 0 ⟺ A = 0 ou B = 0','Factorisation avant résolution','Équations de la forme (ax+b)(cx+d) = 0','Vérification des solutions'],
-        formules: [
-          { f: 'A·B = 0 ⟺ A=0 ou B=0', desc: 'Propriété du produit nul' },
-        ],
-      },
-      {
-        titre: '4.3 Fractions algébriques',
-        notions: ['Simplification de fractions','Conditions d\'existence (dénominateur ≠ 0)','Opérations sur les fractions algébriques','Mise au même dénominateur'],
-      },
-      {
-        titre: '4.4 Équation quotient',
-        notions: ['A/B = 0 ⟺ A = 0 et B ≠ 0','Résolution d\'inéquations avec fraction','Tableau de signes d\'un quotient'],
-        formules: [
-          { f: 'A/B = 0 ⟺ A=0 et B≠0', desc: 'Équation quotient' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'geometrie-non-reperee',
-    num: '5',
-    titre: 'Géométrie non Repérée & Vecteurs',
-    couleur: '#ec4899',
-    icone: '📐',
-    tag: 'Géométrie',
-    souschap: [
-      {
-        titre: '5.1 Rappels géométrie',
-        notions: ['Triangles : angles, côtés, Pythagore, trigonométrie','Quadrilatères : parallélogramme, rectangle, losange, carré','Cercles : rayon, diamètre, arc, angle inscrit','Théorème de Thalès et réciproque'],
-        formules: [
-          { f: 'a² = b² + c² (angle droit en A)', desc: 'Pythagore' },
-          { f: 'cos α = adj/hyp, sin α = opp/hyp', desc: 'Trigonométrie' },
-        ],
-      },
-      {
-        titre: '5.2 Translations et vecteurs',
-        notions: ['Vecteur AB⃗ : direction, sens, norme','Égalité de vecteurs : AB⃗ = CD⃗','Translation de vecteur u⃗','Vecteur nul 0⃗'],
-        formules: [
-          { f: '‖AB⃗‖ = AB (distance)', desc: 'Norme d\'un vecteur' },
-        ],
-      },
-      {
-        titre: '5.3 Opérations sur les vecteurs',
-        notions: ['Addition : u⃗ + v⃗ (règle du parallélogramme)','Relation de Chasles : AC⃗ = AB⃗ + BC⃗','Vecteur opposé : −u⃗','Multiplication par un scalaire : ku⃗'],
-        formules: [
-          { f: 'AC⃗ = AB⃗ + BC⃗', desc: 'Relation de Chasles' },
-          { f: 'AA⃗ = 0⃗', desc: 'Vecteur nul' },
-        ],
-      },
-      {
-        titre: '5.4 Colinéarité',
-        notions: ['u⃗ et v⃗ colinéaires ⟺ u⃗ = k·v⃗','Condition de colinéarité ⟺ droites parallèles ou confondues','Application : alignement de trois points'],
-        formules: [
-          { f: 'u⃗ = k·v⃗ ⟺ colinéaires', desc: 'Colinéarité' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'vecteurs-repere',
-    num: '6',
-    titre: 'Vecteurs & Repère',
-    couleur: '#06b6d4',
-    icone: '🗺️',
-    tag: 'Géométrie',
-    souschap: [
-      {
-        titre: '6.1 Base et repère',
-        notions: ['Repère (O ; i⃗, j⃗) : origine + base','Coordonnées d\'un point M(x ; y)','Coordonnées d\'un vecteur u⃗(a ; b) = (x_B−x_A ; y_B−y_A)','Opérations en coordonnées'],
-        formules: [
-          { f: 'AB⃗(x_B−x_A ; y_B−y_A)', desc: 'Coordonnées d\'un vecteur' },
-          { f: 'u⃗+v⃗ = (a+a\' ; b+b\')', desc: 'Addition en coordonnées' },
-        ],
-      },
-      {
-        titre: '6.2 Milieu et distance',
-        notions: ['Milieu I de [AB] : coordonnées = moyennes','Distance AB = norme de AB⃗','Norme : ‖u⃗‖ = √(a²+b²)'],
-        formules: [
-          { f: 'I = ((xA+xB)/2 ; (yA+yB)/2)', desc: 'Milieu' },
-          { f: 'AB = √((xB−xA)²+(yB−yA)²)', desc: 'Distance' },
-          { f: '‖u⃗‖ = √(a²+b²)', desc: 'Norme' },
-        ],
-      },
-      {
-        titre: '6.3 Condition de colinéarité',
-        notions: ['u⃗(a;b) et v⃗(a\';b\') colinéaires ⟺ ab\'−a\'b = 0','Déterminant = ab\'−a\'b','Application : trois points alignés','Application : deux droites parallèles'],
-        formules: [
-          { f: 'det(u⃗,v⃗) = ab\'−a\'b = 0', desc: 'Colinéarité en coordonnées' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'droites-systemes',
-    num: '7',
-    titre: 'Droites du Plan & Systèmes',
-    couleur: '#f97316',
-    icone: '📏',
-    tag: 'Géométrie',
-    souschap: [
-      {
-        titre: '7.1 Équations de droite',
-        notions: ['Équation cartésienne : ax + by + c = 0','Équation réduite : y = mx + p','m = coefficient directeur (pente)','p = ordonnée à l\'origine','Vecteur directeur d⃗ compatible avec (a;b)'],
-        formules: [
-          { f: 'y = mx + p', desc: 'Équation réduite' },
-          { f: 'm = (yB−yA)/(xB−xA)', desc: 'Coefficient directeur' },
-        ],
-      },
-      {
-        titre: '7.2 Positions relatives de deux droites',
-        notions: ['Droites parallèles : même coefficient directeur (m)','Droites confondues : même équation','Droites sécantes : m ≠ m\'','Droites perpendiculaires : m × m\' = −1'],
-        formules: [
-          { f: 'd₁ ∥ d₂ ⟺ m₁ = m₂', desc: 'Droites parallèles' },
-          { f: 'd₁ ⊥ d₂ ⟺ m₁·m₂ = −1', desc: 'Droites perpendiculaires' },
-        ],
-      },
-      {
-        titre: '7.3 Systèmes d\'équations',
-        notions: ['Système de 2 équations à 2 inconnues','Méthode par substitution','Méthode par combinaison linéaire','Point d\'intersection = solution du système','Interprétation graphique'],
-        formules: [
-          { f: '{ax+by=e | cx+dy=f', desc: 'Forme générale' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'fonctions-generalites',
-    num: '8',
-    titre: 'Fonctions — Généralités',
-    couleur: '#10b981',
-    icone: '📈',
-    tag: 'Fonctions',
-    souschap: [
-      {
-        titre: '8.1 Notion de fonction',
-        notions: ['Fonction f : D → ℝ','Ensemble de définition D','Image : f(x) = y (y = image de x par f)','Antécédent : x est antécédent de y si f(x) = y','Notation f(x), courbe représentative C_f'],
-      },
-      {
-        titre: '8.2 Fonctions de référence',
-        notions: ['f(x) = x² (parabole, paire)','f(x) = x³ (cubique, impaire)','f(x) = 1/x (hyperbole, impaire, x ≠ 0)','f(x) = √x (racine carrée, x ≥ 0)','Tableaux de variations et courbes à connaître'],
-        formules: [
-          { f: 'f(x) = x² : D = ℝ, décroissante sur ]−∞;0], croissante sur [0;+∞[', desc: 'Carré' },
-          { f: 'f(x) = 1/x : D = ℝ\\ {0}, décroissante sur ]−∞;0[ et ]0;+∞[', desc: 'Inverse' },
-        ],
-      },
-      {
-        titre: '8.3 Parité',
-        notions: ['Fonction paire : f(−x) = f(x) ∀x ∈ D — symétrie axe Oy','Fonction impaire : f(−x) = −f(x) ∀x ∈ D — symétrie par rapport à O','Lecture graphique de la parité'],
-        formules: [
-          { f: 'f paire ⟺ f(−x) = f(x)', desc: 'Parité' },
-          { f: 'f impaire ⟺ f(−x) = −f(x)', desc: 'Imparité' },
-        ],
-      },
-      {
-        titre: '8.4 Résolutions graphiques',
-        notions: ['f(x) = k : abscisses des intersections avec y = k','f(x) = g(x) : abscisses des intersections des courbes','f(x) > k : x pour lesquels la courbe est AU-DESSUS de y = k'],
-      },
-    ],
-  },
-  {
-    id: 'variations-extremums',
-    num: '9',
-    titre: 'Variations & Extremums',
-    couleur: '#4f6ef7',
-    icone: '📊',
-    tag: 'Fonctions',
-    souschap: [
-      {
-        titre: '9.1 Variations d\'une fonction',
-        notions: ['Croissante sur I : a < b ⟹ f(a) < f(b)','Décroissante sur I : a < b ⟹ f(a) > f(b)','Constante sur I : f(a) = f(b) ∀a,b ∈ I','Tableau de variations : synthèse des variations'],
-      },
-      {
-        titre: '9.2 Fonctions affines',
-        notions: ['f(x) = mx + p','m > 0 : croissante sur ℝ','m < 0 : décroissante sur ℝ','m = 0 : constante (f(x) = p)'],
-        formules: [
-          { f: 'm > 0 → croissante, m < 0 → décroissante', desc: 'Variations affine' },
-        ],
-      },
-      {
-        titre: '9.3 Maximum et minimum',
-        notions: ['Maximum global : f(a) ≥ f(x) pour tout x ∈ D','Minimum global : f(a) ≤ f(x) pour tout x ∈ D','Extremum local : maximum ou minimum sur un intervalle','Lecture graphique des extremums'],
-      },
-    ],
-  },
-  {
-    id: 'signe-fonction',
-    num: '10',
-    titre: 'Signe d\'une Fonction',
-    couleur: '#8b5cf6',
-    icone: '±',
-    tag: 'Fonctions',
-    souschap: [
-      {
-        titre: '10.1 Tableau de signes',
-        notions: ['Signe de f(x) selon les valeurs de x','Zéro d\'une fonction : f(x₀) = 0','Le signe change au passage par un zéro (si la fonction change de signe)','Signe d\'une fonction affine ax + b','Racine : x₀ = −b/a'],
-        formules: [
-          { f: 'ax+b > 0 ⟺ x > −b/a (si a>0)', desc: 'Signe affine' },
-        ],
-      },
-      {
-        titre: '10.2 Signe d\'un produit ou quotient',
-        notions: ['Règle des signes : (+)(+)=+, (+)(−)=−, (−)(−)=+','Tableau de signes d\'un produit ou d\'un quotient','Factoriser avant de dresser le tableau','Attention : quotient nul ⟺ numérateur nul ET dénominateur ≠ 0'],
-        formules: [
-          { f: 'sgn(A·B) = sgn(A)·sgn(B)', desc: 'Règle des signes produit' },
-          { f: 'sgn(A/B) = sgn(A)·sgn(B) avec B≠0', desc: 'Règle des signes quotient' },
-        ],
-      },
-      {
-        titre: '10.3 Inéquations',
-        notions: ['f(x) ≥ 0 : chercher les x où f est positive ou nulle','f(x) ≤ g(x) ⟺ f(x)−g(x) ≤ 0','Positions relatives de courbes','Utiliser le tableau de signes pour conclure'],
-      },
-    ],
-  },
-  {
-    id: 'proportions-evolutions',
-    num: '11',
-    titre: 'Proportions & Évolutions',
-    couleur: '#06b6d4',
-    icone: '📉',
-    tag: 'Stats',
-    souschap: [
-      {
-        titre: '11.1 Proportion et proportion de proportion',
-        notions: ['Proportion : p = (partie / total) × 100%','Proportion de proportion : p₁ × p₂','Exemple : 30% de 40% d\'une population = 12%'],
-        formules: [
-          { f: 'p = (n_A / n_total) × 100', desc: 'Proportion en %' },
-          { f: 'p(A∩B) = p(A) × p(B/A)', desc: 'Proportion de proportion' },
-        ],
-      },
-      {
-        titre: '11.2 Évolutions et coefficient multiplicateur',
-        notions: ['Taux d\'évolution t = (V_finale − V_initiale) / V_initiale','Coefficient multiplicateur : CM = 1 + t (si t en décimal)','Hausse de 20% → CM = 1,20','Baisse de 15% → CM = 0,85','Évolution en pourcentage ⟺ multiplication par CM'],
-        formules: [
-          { f: 'CM = 1 + t', desc: 'CM à partir du taux' },
-          { f: 't = CM − 1', desc: 'Taux à partir du CM' },
-          { f: 'V_f = V_i × CM', desc: 'Valeur finale' },
-        ],
-      },
-      {
-        titre: '11.3 Évolutions successives et réciproques',
-        notions: ['Évolutions successives : CM_total = CM₁ × CM₂','Évolution réciproque (inverse) : CM\' = 1/CM','Exemple : +20% puis −20% ≠ 0% (CM = 1,20 × 0,80 = 0,96 → −4%)'],
-        formules: [
-          { f: 'CM_total = CM₁ × CM₂', desc: 'Évolutions successives' },
-          { f: 'CM_inverse = 1/CM', desc: 'Évolution réciproque' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'statistiques-descriptives',
-    num: '12',
-    titre: 'Statistiques Descriptives',
-    couleur: '#f59e0b',
-    icone: '📋',
-    tag: 'Stats',
-    souschap: [
-      {
-        titre: '12.1 Moyenne',
-        notions: ['Moyenne simple : x̄ = (Σxᵢ)/n','Moyenne pondérée : x̄ = (Σnᵢxᵢ)/(Σnᵢ)','Linéarité : ȳ = ax̄ + b si y = ax + b'],
-        formules: [
-          { f: 'x̄ = (x₁+x₂+…+xₙ)/n', desc: 'Moyenne simple' },
-          { f: 'x̄_pond = Σ(nᵢxᵢ)/Σnᵢ', desc: 'Moyenne pondérée' },
-          { f: 'ȳ = aẋ+b si y = ax+b', desc: 'Linéarité de la moyenne' },
-        ],
-      },
-      {
-        titre: '12.2 Écart-type',
-        notions: ['Variance : V = (1/n)Σ(xᵢ−x̄)²','Écart-type : σ = √V','σ mesure la dispersion autour de la moyenne','σ = 0 : toutes les valeurs sont égales à x̄'],
-        formules: [
-          { f: 'V = (1/n)Σ(xᵢ−x̄)²', desc: 'Variance' },
-          { f: 'σ = √V', desc: 'Écart-type' },
-        ],
-      },
-      {
-        titre: '12.3 Quartiles et médiane',
-        notions: ['Médiane Me : 50% des données de chaque côté','Quartile Q₁ : 25% des données en dessous','Quartile Q₃ : 75% des données en dessous','Écart interquartile : EI = Q₃ − Q₁','Boîte à moustaches'],
-        formules: [
-          { f: 'EI = Q₃ − Q₁', desc: 'Écart interquartile' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'probabilites-echantillonnage',
-    num: '13',
-    titre: 'Probabilités & Échantillonnage',
-    couleur: '#ec4899',
-    icone: '🎲',
-    tag: 'Probabilités',
-    souschap: [
-      {
-        titre: '13.1 Loi de probabilité',
-        notions: ['Univers Ω : ensemble de tous les résultats possibles','Événement : sous-ensemble de Ω','Probabilité P : 0 ≤ P(A) ≤ 1 et P(Ω) = 1','Équiprobabilité : P(A) = card(A)/card(Ω)'],
-        formules: [
-          { f: 'P(A) = card(A)/card(Ω)', desc: 'Équiprobabilité' },
-          { f: '0 ≤ P(A) ≤ 1', desc: 'Encadrement' },
-        ],
-      },
-      {
-        titre: '13.2 Opérations sur les événements',
-        notions: ['Événement contraire : Ā, P(Ā) = 1 − P(A)','Événements incompatibles : A∩B = ∅','Événements indépendants : P(A∩B) = P(A)×P(B)','Formule de la réunion : P(A∪B) = P(A)+P(B)−P(A∩B)'],
-        formules: [
-          { f: 'P(Ā) = 1 − P(A)', desc: 'Événement contraire' },
-          { f: 'P(A∪B) = P(A)+P(B)−P(A∩B)', desc: 'Réunion' },
-          { f: 'P(A∩B) = P(A)·P(B) (indépendants)', desc: 'Indépendance' },
-        ],
-      },
-      {
-        titre: '13.3 Échantillonnage et fluctuation',
-        notions: ['Échantillon de taille n d\'une population de proportion p','Fréquence observée f dans l\'échantillon','Fluctuation d\'échantillonnage : f varie autour de p','Intervalle de fluctuation au seuil 95% :','[p − 1/√n ; p + 1/√n]'],
-        formules: [
-          { f: '[p−1/√n ; p+1/√n]', desc: 'Intervalle de fluctuation 95%' },
-        ],
-      },
-    ],
-  },
+  { slug:'python-algorithmique',   num:'01', titre:'Algorithmique & Python',                badge:'Informatique',  color:'#06d6a0', section:'Partie 1', desc:'Variables, conditions, fonctions, boucles for/while' },
+  { slug:'nombres-calculs',        num:'02', titre:'Nombres & Calculs',                     badge:'Algèbre',       color:'#4f6ef7', section:'Partie 2', desc:'Puissances, racines carrées, PGCD, ensembles ℕℤℚℝ' },
+  { slug:'intervalles-inequations',num:'03', titre:'Intervalles, Inégalités & Inéquations', badge:'Algèbre',       color:'#f59e0b', section:'Partie 2', desc:'Notations intervalles, propriétés inégalités, valeur absolue' },
+  { slug:'calcul-litteral',        num:'04', titre:'Calcul Littéral',                       badge:'Algèbre',       color:'#8b5cf6', section:'Partie 2', desc:'Identités remarquables, factorisation, produit nul' },
+  { slug:'geometrie-non-reperee',  num:'05', titre:'Géométrie & Vecteurs',                  badge:'Géométrie',     color:'#ec4899', section:'Partie 3', desc:'Vecteurs, Chasles, colinéarité, Thalès, Pythagore' },
+  { slug:'vecteurs-repere',        num:'06', titre:'Vecteurs & Repère',                     badge:'Géométrie',     color:'#06b6d4', section:'Partie 3', desc:'Coordonnées, milieu, distance, déterminant' },
+  { slug:'droites-systemes',       num:'07', titre:'Droites du Plan & Systèmes',            badge:'Géométrie',     color:'#f97316', section:'Partie 3', desc:'Équations de droite, positions relatives, systèmes 2×2' },
+  { slug:'fonctions-generalites',  num:'08', titre:'Fonctions — Généralités',               badge:'Fonctions',     color:'#10b981', section:'Partie 4', desc:'Image, antécédent, parité, fonctions de référence' },
+  { slug:'variations-extremums',   num:'09', titre:'Variations & Extremums',                badge:'Fonctions',     color:'#4f6ef7', section:'Partie 4', desc:'Croissance, décroissance, tableau de variations, extremums' },
+  { slug:'signe-fonction',         num:'10', titre:"Signe d'une Fonction",                  badge:'Fonctions',     color:'#8b5cf6', section:'Partie 4', desc:'Tableau de signes, produit, quotient, inéquations' },
+  { slug:'proportions-evolutions', num:'11', titre:'Proportions & Évolutions',              badge:'Stats & Probas',color:'#06b6d4', section:'Partie 5', desc:'Pourcentages, taux évolution, coefficient multiplicateur' },
+  { slug:'statistiques-descriptives',num:'12',titre:'Statistiques Descriptives',            badge:'Stats & Probas',color:'#f59e0b', section:'Partie 5', desc:'Moyenne, écart-type, médiane, quartiles, boîte à moustaches' },
+  { slug:'probabilites-echantillonnage',num:'13',titre:'Probabilités & Échantillonnage',   badge:'Stats & Probas',color:'#ec4899', section:'Partie 5', desc:'Événements, probabilités, intervalle de fluctuation 95%' },
 ]
 
-export default function MathsSecondePage() {
-  const TAGS: Record<string, string> = {
-    'Informatique': '#06d6a0', 'Algèbre': '#4f6ef7', 'Géométrie': '#ec4899',
-    'Fonctions': '#10b981', 'Stats': '#f59e0b', 'Probabilités': '#8b5cf6',
-  }
+const SECTIONS = [
+  { label:'Partie 1 — Algorithmique', color:'#06d6a0' },
+  { label:'Partie 2 — Nombres et calculs', color:'#4f6ef7' },
+  { label:'Partie 3 — Géométrie', color:'#ec4899' },
+  { label:'Partie 4 — Fonctions', color:'#10b981' },
+  { label:'Partie 5 — Statistiques et probabilités', color:'#f59e0b' },
+]
 
+export default function SecondeIndexPage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight:'100vh', background:'var(--bg)', color:'var(--text)' }}>
+      <main style={{position:'relative',zIndex:1,paddingTop:80}}>
+        {/* Fil d'Ariane */}
+        <div style={{borderBottom:'1px solid var(--border)',padding:'14px clamp(20px,5vw,60px)',display:'flex',gap:8,fontSize:13,color:'var(--muted)',alignItems:'center',flexWrap:'wrap'}}>
+          <Link href="/bac-france" style={{color:'var(--muted)',textDecoration:'none'}}>Bac France</Link>
+          <span>›</span>
+          <Link href="/bac-france/maths" style={{color:'var(--muted)',textDecoration:'none'}}>Mathématiques</Link>
+          <span>›</span>
+          <span style={{color:'#10b981',fontWeight:600}}>Seconde</span>
+        </div>
 
-        {/* Hero */}
-        <section style={{ padding:'90px clamp(20px,5vw,60px) 40px', position:'relative', textAlign:'center' }}>
-          <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:700, height:320, background:'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)', pointerEvents:'none' }} />
-          <div style={{ display:'flex', alignItems:'center', gap:10, justifyContent:'center', marginBottom:16 }}>
-            <Link href="/bac-france/maths" style={{ fontSize:13, color:'var(--muted)', textDecoration:'none' }}>← Mathématiques France</Link>
-            <span style={{ color:'var(--border)' }}>›</span>
-            <span style={{ fontSize:13, color:'var(--text2)' }}>Seconde</span>
-          </div>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(16,185,129,0.1)', border:'1px solid rgba(16,185,129,0.3)', borderRadius:100, padding:'5px 16px', fontSize:12, color:'#10b981', marginBottom:16, fontWeight:700 }}>
-            📐 Mathématiques · Classe de Seconde Générale
-          </div>
-          <h1 style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:'clamp(28px,4vw,52px)', lineHeight:1.1, marginBottom:12 }}>
-            Programme Maths{' '}
-            <span style={{ background:'linear-gradient(90deg,#10b981,#06b6d4)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>Seconde</span>
-          </h1>
-          <p style={{ fontSize:15, color:'var(--text2)', maxWidth:560, margin:'0 auto 8px' }}>
-            13 chapitres · Programme officiel Éducation Nationale · Cours complets avec définitions, théorèmes et exercices
-          </p>
-          <p style={{ fontSize:12, color:'var(--muted)' }}>
-            Algorithmique · Algèbre · Géométrie · Fonctions · Statistiques & Probabilités
-          </p>
-        </section>
+        <div className="container" style={{paddingTop:40,paddingBottom:80}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 260px',gap:32,alignItems:'start'}}>
 
-        <div className="container" style={{ maxWidth:1100, paddingBottom:80 }}>
-
-          {/* Progression */}
-          <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid var(--border)', borderRadius:14, padding:'16px 24px', marginBottom:36 }}>
-            <div style={{ fontSize:12, color:'var(--muted)', marginBottom:10, fontWeight:600 }}>📅 PROGRESSION PÉDAGOGIQUE</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, fontSize:12 }}>
-              <div>
-                <div style={{ color:'var(--accent)', fontWeight:700, marginBottom:6 }}>Semestre 1</div>
-                <div style={{ color:'var(--text2)', lineHeight:2 }}>
-                  Ch.1 Python · Ch.2 Nombres · Ch.3 Intervalles<br/>
-                  Ch.4 Calcul littéral · Ch.5 Géométrie · Ch.6 Vecteurs · Ch.7 Droites
+            {/* Contenu principal */}
+            <div>
+              {/* Header */}
+              <div style={{marginBottom:36}}>
+                <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap'}}>
+                  <span style={{fontFamily:'var(--font-mono)',fontSize:12,background:'var(--surface2)',color:'var(--muted)',padding:'3px 10px',borderRadius:8}}>Seconde Générale</span>
+                  <span style={{fontSize:12,background:'rgba(16,185,129,0.15)',color:'#10b981',padding:'3px 10px',borderRadius:12,fontWeight:600}}>13 chapitres · Programme complet</span>
+                  <span style={{fontSize:11,background:'rgba(16,185,129,0.1)',color:'#34d399',padding:'3px 10px',borderRadius:12}}>Maths · 4h/semaine</span>
+                </div>
+                <h1 style={{fontSize:'clamp(24px,3.5vw,38px)',marginBottom:8}}>Mathématiques — Seconde</h1>
+                <p style={{color:'var(--text2)',fontSize:14,lineHeight:1.65,maxWidth:620,marginBottom:16}}>
+                  Programme officiel Éducation Nationale · 13 chapitres complets avec cours, théorèmes, formules et exercices corrigés.
+                  Algorithmique · Algèbre · Géométrie · Fonctions · Statistiques & Probabilités.
+                </p>
+                <div style={{display:'flex',gap:20,fontSize:12,color:'var(--muted)',flexWrap:'wrap'}}>
+                  <span>📚 13 chapitres</span><span>·</span>
+                  <span>📊 52+ théorèmes</span><span>·</span>
+                  <span>📝 39+ exercices corrigés</span><span>·</span>
+                  <span>🤖 Solveur IA intégré</span>
                 </div>
               </div>
-              <div style={{ borderLeft:'1px solid var(--border)', paddingLeft:16 }}>
-                <div style={{ color:'#10b981', fontWeight:700, marginBottom:6 }}>Semestre 2</div>
-                <div style={{ color:'var(--text2)', lineHeight:2 }}>
-                  Ch.8 Fonctions · Ch.9 Variations · Ch.10 Signes<br/>
-                  Ch.11 Évolutions · Ch.12 Statistiques · Ch.13 Probabilités
+
+              {/* Liste des 13 chapitres */}
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {CHAPITRES.map((ch,i) => (
+                  <Link key={ch.slug} href={'/bac-france/seconde/'+ch.slug} style={{textDecoration:'none'}}>
+                    <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:'16px 20px',transition:'transform 0.15s, box-shadow 0.15s',borderLeft:`3px solid ${ch.color}`,display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap'}}
+                      onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 8px 24px ${ch.color}18`}}
+                      onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow=''}}>
+                      <div style={{display:'flex',gap:14,alignItems:'center'}}>
+                        <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--muted)',background:'var(--surface2)',padding:'2px 8px',borderRadius:6,flexShrink:0}}>CH {ch.num}</div>
+                        <div>
+                          <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:4,flexWrap:'wrap'}}>
+                            <span style={{fontWeight:700,fontSize:15,color:'var(--text)'}}>{ch.titre}</span>
+                            <span style={{fontSize:10,padding:'2px 8px',borderRadius:10,background:`${ch.color}18`,color:ch.color,fontWeight:600}}>{ch.badge}</span>
+                          </div>
+                          <div style={{fontSize:12,color:'var(--text2)'}}>{ch.desc}</div>
+                        </div>
+                      </div>
+                      <span style={{color:ch.color,fontWeight:700,fontSize:13,flexShrink:0}}>Ouvrir →</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* CTA Solveur */}
+              <div style={{marginTop:32,background:'rgba(79,110,247,0.07)',border:'1px solid rgba(79,110,247,0.2)',borderRadius:14,padding:'20px 24px',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+                <div>
+                  <div style={{fontWeight:700,marginBottom:4}}>🤖 Besoin d'aide sur un exercice ?</div>
+                  <div style={{fontSize:13,color:'var(--muted)'}}>Le solveur IA résout pas à pas tous vos exercices de Seconde</div>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <Link href="/solve" className="btn btn-primary" style={{fontSize:12}}>🧮 Solveur IA</Link>
+                  <Link href="/chat" className="btn btn-secondary" style={{fontSize:12}}>💬 Chat Prof</Link>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Grille chapitres */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', gap:20 }}>
-            {CHAPITRES.map(ch => (
-              <div key={ch.id} className="card" style={{ padding:24, position:'relative', borderLeft:`3px solid ${ch.couleur}` }}>
-
-                {/* Header */}
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <div style={{ width:40, height:40, background:`${ch.couleur}18`, border:`1px solid ${ch.couleur}40`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>
-                      {ch.icone}
-                    </div>
-                    <div>
-                      <div style={{ fontSize:10, color:'var(--muted)', fontFamily:'var(--font-mono)', fontWeight:700 }}>CHAPITRE {ch.num}</div>
-                      <div style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:15, lineHeight:1.2, color:'var(--text)' }}>{ch.titre}</div>
-                    </div>
+            {/* Sidebar */}
+            <aside style={{position:'sticky',top:88}}>
+              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:14}}>
+                <div style={{padding:'11px 15px',borderBottom:'1px solid var(--border)',fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em'}}>📘 Programme Seconde</div>
+                {SECTIONS.map(sec => (
+                  <div key={sec.label} style={{padding:'10px 15px',borderBottom:'1px solid var(--border)'}}>
+                    <div style={{fontSize:10,color:sec.color,fontWeight:700,marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>{sec.label}</div>
+                    {CHAPITRES.filter(c => c.section === sec.label.split(' — ')[0]).map(ch => (
+                      <Link key={ch.slug} href={'/bac-france/seconde/'+ch.slug} style={{textDecoration:'none',display:'block'}}>
+                        <div style={{fontSize:11,color:'var(--text2)',padding:'3px 0',display:'flex',gap:6,alignItems:'center'}}
+                          onMouseEnter={e=>e.currentTarget.style.color=ch.color}
+                          onMouseLeave={e=>e.currentTarget.style.color='var(--text2)'}>
+                          <span style={{fontSize:9,color:'var(--muted)',fontFamily:'var(--font-mono)'}}>CH{ch.num}</span>
+                          {ch.titre}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                  <span style={{ fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:20, background:`${TAGS[ch.tag] || ch.couleur}18`, color: TAGS[ch.tag] || ch.couleur, border:`1px solid ${TAGS[ch.tag] || ch.couleur}30`, flexShrink:0 }}>
-                    {ch.tag}
-                  </span>
-                </div>
-
-                {/* Sous-chapitres */}
-                <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
-                  {ch.souschap.slice(0, 3).map((s, i) => (
-                    <div key={i} style={{ fontSize:11, color:'var(--text2)', display:'flex', alignItems:'flex-start', gap:6 }}>
-                      <span style={{ color: ch.couleur, fontWeight:700, flexShrink:0, marginTop:1 }}>›</span>
-                      <span>{s.titre}</span>
-                    </div>
-                  ))}
-                  {ch.souschap.length > 3 && (
-                    <div style={{ fontSize:11, color:'var(--muted)' }}>+ {ch.souschap.length - 3} autre(s) partie(s)</div>
-                  )}
-                </div>
-
-                {/* Formules clés aperçu */}
-                {(ch.souschap[0] as any).formules?.length > 0 && (
-                  <div style={{ background:'rgba(255,255,255,0.03)', borderRadius:8, padding:'8px 10px', marginBottom:14, fontSize:11 }}>
-                    <div style={{ color:'var(--muted)', marginBottom:4 }}>Formule clé :</div>
-                    <div style={{ fontFamily:'var(--font-mono)', color: ch.couleur, fontWeight:700 }}>
-                      {(ch.souschap[0] as any).formules[0].f}
-                    </div>
-                  </div>
-                )}
-
-                <Link href={`/bac-france/maths/seconde/${ch.id}`}
-                  style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, color: ch.couleur, textDecoration:'none', fontWeight:700 }}>
-                  📖 Voir le cours complet →
-                </Link>
+                ))}
               </div>
-            ))}
+              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:13,padding:'14px'}}>
+                <div style={{fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Autres niveaux</div>
+                <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                  <Link href="/bac-france/premiere" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>📗 Première Spécialité</Link>
+                  <Link href="/bac-france/terminale-generale" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>🎓 Terminale Générale</Link>
+                  <Link href="/simulation-france" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>📋 Simulation Bac</Link>
+                </div>
+              </div>
+            </aside>
+
           </div>
         </div>
       </main>
