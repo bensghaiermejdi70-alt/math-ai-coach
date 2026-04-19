@@ -12,10 +12,10 @@ const PLANS = [
     name: 'MathBac Essentiel',
     icon: '📚',
     price: 19,
-    period: 'mois*',
+    period: 'mois',
     hours: '15h / semaine',
     hoursColor: '#4f6ef7',
-    description: "Engagement annuel · Prélevé 19 €/mois · 12 versements",
+    description: "Résiliable à tout moment · Actif toute l'année",
     badge: null,
     borderColor: 'var(--border)',
     shadowColor: 'transparent',
@@ -39,11 +39,11 @@ const PLANS = [
     name: 'MathBac sprint bac',
     icon: '🚀',
     price: 29,
-    period: 'mois*',
+    period: 'mois',
     hours: '30h / semaine',
     hoursColor: '#f59e0b',
-    description: "Engagement annuel · Prélevé 29 €/mois · 12 versements",
-    badge: '🔥 TOUT INCLUS',
+    description: "Résiliable à tout moment · Quotas boostés · Bac Blanc inclus",
+    badge: '🔥 MODE INTENSIF',
     borderColor: 'rgba(245,200,66,0.6)',
     shadowColor: 'rgba(245,200,66,0.15)',
     priceColor: '#fbbf24',
@@ -178,8 +178,11 @@ export default function AbonnementFrancePage() {
             Coach IA pour le Bac France · Terminale, Première, STMG, Maths Expertes
           </p>
           <p style={{ fontSize:12, color:'var(--muted)', maxWidth:460, margin:'0 auto' }}>
-            Paiement sécurisé par carte bancaire via Stripe · Facturation mensuelle ou annuelle
+            Paiement sécurisé par carte bancaire via Stripe · Sans engagement · Résiliable à tout moment
           </p>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginTop:16, background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:12, padding:'10px 18px', fontSize:12, color:'#fbbf24', maxWidth:520 }}>
+            💡 <span><strong>En mai–juin :</strong> passez au plan Intensif (29 €) pour les quotas boostés + Bac Blanc. Résiliable à tout moment.</span>
+          </div>
         </section>
 
         <div className="container" style={{ maxWidth:1140, paddingBottom:60 }}>
@@ -317,7 +320,7 @@ export default function AbonnementFrancePage() {
 
                 <div style={{ textAlign:'center', marginTop:10, fontSize:11, color:'var(--muted)', lineHeight:1.6 }}>
                   🔒 Paiement sécurisé Stripe<br/>
-                  {plan.id !== 'annuel' ? '* Engagement annuel · 12 versements mensuels' : 'Paiement unique · Accès 12 mois'}
+                  {plan.id !== 'annuel' ? 'Sans engagement · Résiliable à tout moment' : 'Paiement unique · Accès 12 mois'}
                 </div>
               </div>
             ))}
@@ -330,15 +333,15 @@ export default function AbonnementFrancePage() {
               <div>
                 <div style={{ fontWeight:700, color:'var(--text)', marginBottom:4 }}>📚 MathBac Essentiel</div>
                 <div style={{ color:'var(--muted)', lineHeight:1.7 }}>
-                 19 €/mois* · 15h/sem<br/>
-                  <span style={{ color:'var(--text2)' }}>Engagement annuel · 12 mois</span>
+                 19 €/mois · 15h/sem<br/>
+                  <span style={{ color:'var(--text2)' }}>Sans engagement · Toute l'année</span>
                 </div>
               </div>
               <div style={{ borderLeft:'1px solid var(--border)', borderRight:'1px solid var(--border)' }}>
                 <div style={{ fontWeight:700, color:'var(--gold)', marginBottom:4 }}>🚀 MathBac Intensif</div>
                 <div style={{ color:'var(--muted)', lineHeight:1.7 }}>
-                 29 €/mois* · 30h/sem<br/>
-                  <span style={{ color:'var(--text2)' }}>Engagement annuel · Bac Blanc inclus</span>
+                 29 €/mois · 30h/sem<br/>
+                  <span style={{ color:'var(--text2)' }}>Sans engagement · Bac Blanc inclus</span>
                 </div>
               </div>
               <div>
@@ -356,7 +359,7 @@ export default function AbonnementFrancePage() {
             <h2 style={{ textAlign:'center', marginBottom:24, fontFamily:'var(--font-display)', fontSize:22 }}>Questions fréquentes</h2>
             {[
               { q:'Comment fonctionne le paiement Stripe ?', a:'Vous êtes redirigé vers la page de paiement sécurisée Stripe. Entrez vos coordonnées bancaires (Visa, Mastercard, Amex). Le paiement est traité immédiatement et votre abonnement est activé automatiquement.' },
-              { q:'Puis-je annuler mon abonnement ?', a:'Les plans Essentiel et Intensif sont des engagements annuels prélevés mensuellement. Vous pouvez annuler depuis votre profil (bouton Gérer mon abonnement) ou via l\'email Stripe reçu à la souscription. L\'annulation prend effet à la fin de la période annuelle en cours. Le plan Annuel (199 €) est un paiement unique non remboursable.' },
+              { q:'Puis-je annuler mon abonnement ?', a:'Oui, à tout moment sans engagement. Cliquez sur "Gérer mon abonnement" dans votre profil. L\'annulation prend effet à la fin de la période mensuelle en cours. En mai-juin, nous vous recommandons de passer au plan Intensif (29 €) pour profiter des quotas boostés et du Bac Blanc.' },
               { q:'L\'abonnement Annuel inclut-il le Sprint Bac ?', a:'Oui ! Les 199 €/an incluent automatiquement MathBac Essentiel (15h/sem) et le mode intensif en mai-juin (quotas boostés + Bac Blanc). Vous passez automatiquement en mode intensif en mai et juin.' },
               { q:'Quelle est la différence Essentiel / Intensif ?', a:'MathBac Essentiel (19 €/mois) : 15h/semaine, programme complet toute l\'année. MathBac Intensif (29 €/mois) : 30h/semaine, quotas boostés, Bac Blanc inclus toute l\'année, idéal pour les élèves qui veulent s\'entraîner intensément.' },
               { q:'Mon abonnement est lié à quel compte ?', a:'À votre adresse email de connexion. L\'abonnement est personnel et non partageable. Contactez le support si vous changez d\'email.' },
