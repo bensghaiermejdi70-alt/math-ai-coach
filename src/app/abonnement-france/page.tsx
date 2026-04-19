@@ -36,7 +36,7 @@ const PLANS = [
   },
   {
     id: 'sprint',
-    name: 'MathBac sprint bac',
+    name: 'MathBac srint bac',
     icon: '🚀',
     price: 29,
     period: 'mois',
@@ -53,7 +53,7 @@ const PLANS = [
     quotas: [
       { label:'Simulation Bac',        val:'5 / sem' },
       { label:'Chat IA Professeur',    val:'30 / sem' },
-      { label:'Solveur étape/étape',  val:'♾️ Illimité' },
+      { label:'Solveur étape/étape',  val:'40 / sem' },
       { label:'Remédiation IA',        val:'20 / sem' },
       { label:'Analyses performance',  val:'10 / sem' },
       { label:'Cours officiels',       val:'♾️ Illimité' },
@@ -80,7 +80,7 @@ const PLANS = [
     quotas: [
       { label:'Simulation Bac',        val:'2→5 / sem' },
       { label:'Chat IA Professeur',    val:'20→30 / sem' },
-      { label:'Solveur étape/étape',  val:'20/sem → ♾️' },
+      { label:'Solveur étape/étape',  val:'40 / sem' },
       { label:'Remédiation IA',        val:'10→20 / sem' },
       { label:'Analyses performance',  val:'5→10 / sem' },
       { label:'Cours officiels',       val:'♾️ Illimité' },

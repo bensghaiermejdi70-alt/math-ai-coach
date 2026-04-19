@@ -15,11 +15,12 @@ export interface Profile {
   device_fingerprint: string | null
   created_at: string
   updated_at: string
-  // AJOUTÉ : Propriétés d'abonnement (stockées dans la table profiles)
   plan_type?: PlanType | null
   is_active?: boolean
   subscription_end?: string | null
   subscription_start?: string | null
+  stripe_customer_id?: string | null
+  current_session_id?: string | null
 }
 
 export interface Subscription {
@@ -77,60 +78,70 @@ export interface Plan {
 }
 
 // ============================================================
-// PLAN DEFINITIONS (côté client, sans base de données)
+// PLAN DEFINITIONS
 // ============================================================
 
 export const PLAN_DEFINITIONS: Record<PlanType, {
   label: string
-  price: string
-  priceNum: number
+  // Tunisie
+  price_tn: string
+  priceNum_tn: number
+  // France
+  price_fr: string
+  priceNum_fr: number
   description: string
   quotas: PlanQuotas
   badge?: string
 }> = {
   mensuel: {
-    label: 'Mensuel',
-    price: '80 DT/mois',
-    priceNum: 80,
+    label: 'MathBac Essentiel',
+    price_tn: '60 DT/mois',
+    priceNum_tn: 60,
+    price_fr: '19 €/mois',
+    priceNum_fr: 19,
     description: 'Résiliable à tout moment',
     quotas: {
       simulations_per_week: 2,
-      chat_per_week: 35,
-      solver_per_week: 30,
+      chat_per_week: 20,
+      solver_per_week: 20,      // ← 20/sem (was illimité)
       remediation_per_week: 10,
-      analyses_per_week: 2,
+      analyses_per_week: 5,
       courses_unlimited: true,
-      bac_blanc: true,
+      bac_blanc: false,
     },
   },
   annuel: {
-    label: 'Annuel',
-    price: '750 DT/an',
-    priceNum: 750,
-    description: 'Payé en une fois · Économisez 210 DT',
-    badge: 'Meilleure valeur',
+    label: 'MathBac Annuel',
+    price_tn: '600 DT/an',
+    priceNum_tn: 600,
+    price_fr: '199 €',
+    priceNum_fr: 199,
+    description: 'Paiement unique · Accès 12 mois',
+    badge: '⭐ Meilleure valeur',
     quotas: {
       simulations_per_week: 2,
-      chat_per_week: 35,
-      solver_per_week: 30,
+      chat_per_week: 20,
+      solver_per_week: 40,      // ← 40/sem (was illimité)
       remediation_per_week: 10,
-      analyses_per_week: 2,
+      analyses_per_week: 5,
       courses_unlimited: true,
       bac_blanc: true,
     },
   },
   sprint_bac: {
-    label: 'Sprint Bac',
-    price: '+120 DT/mois',
-    priceNum: 120,
-    description: 'Avril + Mai uniquement · Option add-on',
-    badge: '🔥 Boost',
+    label: 'MathBac sprint bac',
+    price_tn: '90 DT/mois',
+    priceNum_tn: 90,
+    price_fr: '29 €/mois',
+    priceNum_fr: 29,
+    description: 'Résiliable à tout moment · Quotas boostés',
+    badge: '🔥 Mode Intensif',
     quotas: {
       simulations_per_week: 5,
-      chat_per_week: 50,
-      solver_per_week: -1,
-      remediation_per_week: 25,
-      analyses_per_week: 5,
+      chat_per_week: 30,
+      solver_per_week: 40,      // ← 40/sem (was illimité)
+      remediation_per_week: 20,
+      analyses_per_week: 10,
       courses_unlimited: true,
       bac_blanc: true,
       weekly_report: true,
@@ -145,11 +156,11 @@ export const PLAN_DEFINITIONS: Record<PlanType, {
 
 export function getQuotaLimits(planType: PlanType | null, isSprint: boolean = false): PlanQuotas {
   if (!planType) {
-    // Utilisateur non abonné - accès limité gratuit
+    // Utilisateur non abonné — accès gratuit limité
     return {
       simulations_per_week: 0,
       chat_per_week: 3,
-      solver_per_week: 5,
+      solver_per_week: 3,
       remediation_per_week: 0,
       analyses_per_week: 0,
       courses_unlimited: false,
