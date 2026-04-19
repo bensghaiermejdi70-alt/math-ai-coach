@@ -36,7 +36,7 @@ const PLANS = [
   },
   {
     id: 'sprint',
-    name: 'MathBac sprint bac',
+    name: 'MathBac intensif',
     icon: '🚀',
     price: 29,
     period: 'mois',
