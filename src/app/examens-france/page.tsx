@@ -27,7 +27,6 @@ const SD = 'https://www.sujetdebac.fr/annales-pdf'
 
 type Exercice = {
   id: string
-  source: 'Henri-IV' | 'LLG' | 'Henri-IV & LLG'
   difficulte: 1 | 2 | 3 | 4  // ★ à ★★★★
   titre: string
   enonce: string
@@ -59,7 +58,7 @@ const chapI: ChapitreData = {
   notions: ['Développement', 'Factorisation', 'Fractions algébriques', 'Équations du 2nd degré', 'Discriminant', 'Tableaux de signes', 'Inéquations'],
   exercices: [
     {
-      id: 'I-1', source: 'Henri-IV', difficulte: 1,
+      id: 'I-1', difficulte: 1,
       titre: 'Développement et factorisation',
       enonce: `Développer puis factoriser les polynômes suivants :
 
@@ -89,7 +88,7 @@ const chapI: ChapitreData = {
       notions: ['Développement', 'Factorisation', 'Identités remarquables']
     },
     {
-      id: 'I-2', source: 'Henri-IV', difficulte: 1,
+      id: 'I-2', difficulte: 1,
       titre: 'Simplification de fractions',
       enonce: `Simplifier les expressions algébriques suivantes (écrire sous forme d'une fraction unique, sans racine au dénominateur) :
 
@@ -112,7 +111,7 @@ const chapI: ChapitreData = {
       notions: ['Fractions algébriques', 'Simplification', 'Dénominateur commun']
     },
     {
-      id: 'I-3', source: 'Henri-IV', difficulte: 1,
+      id: 'I-3', difficulte: 1,
       titre: 'Tableau de signes',
       enonce: `Dresser le tableau de signes des expressions suivantes :
 
@@ -137,7 +136,7 @@ const chapI: ChapitreData = {
       notions: ['Tableau de signes', 'Fractions rationnelles', 'Factorisation']
     },
     {
-      id: 'I-4', source: 'Henri-IV', difficulte: 2,
+      id: 'I-4', difficulte: 2,
       titre: 'Polynôme du 2nd degré avec paramètre',
       enonce: `Soit m un réel et (Eₘ) l'équation d'inconnue x :
 **(Eₘ) : 2x² + (3m+1)x − m(m−1) = 0**
@@ -165,7 +164,7 @@ const chapI: ChapitreData = {
       notions: ['Discriminant', 'Paramètre', 'Polynôme 2nd degré', 'Relations de Viète']
     },
     {
-      id: 'I-5', source: 'Henri-IV', difficulte: 1,
+      id: 'I-5', difficulte: 1,
       titre: 'Problème : Le professeur préféré',
       enonce: `Des élèves décident d'offrir un cadeau à leur professeur de maths coûtant 600 €.
 S'il y avait 10 élèves de moins, chacun devrait payer 3 € de plus.
@@ -185,7 +184,7 @@ Vérif : avec 40 élèves → 600/40 = 15 = 12+3 ✓`,
       notions: ['Équation du 2nd degré', 'Mise en équation', 'Résolution']
     },
     {
-      id: 'I-6', source: 'LLG', difficulte: 2,
+      id: 'I-6', difficulte: 2,
       titre: 'Inégalité triangulaire et puissances',
       enonce: `Soient a, b, c les longueurs des côtés d'un triangle rectangle dont le plus grand côté est c.
 Démontrer que pour tout entier n > 2 : **cⁿ > aⁿ + bⁿ**`,
@@ -208,7 +207,7 @@ Donc cⁿ > aⁿ + bⁿ. ∎`,
       notions: ['Inégalités', 'Puissances', 'Triangle rectangle', 'Raisonnement']
     },
     {
-      id: 'I-7', source: 'Henri-IV', difficulte: 2,
+      id: 'I-7', difficulte: 2,
       titre: 'Équations trigonométriques',
       enonce: `Résoudre dans l'intervalle I donné :
 
@@ -237,7 +236,7 @@ Donc cⁿ > aⁿ + bⁿ. ∎`,
       notions: ['Trigonométrie', 'Équations', 'Cercle trigonométrique']
     },
     {
-      id: 'I-8', source: 'LLG', difficulte: 2,
+      id: 'I-8', difficulte: 2,
       titre: 'Somme et produit des racines (Viète)',
       enonce: `Soit P(x) = x³ − 6x² + 11x − 6.
 
@@ -259,7 +258,7 @@ Donc cⁿ > aⁿ + bⁿ. ∎`,
       notions: ['Polynômes', 'Racines', 'Relations de Viète', 'Factorisation']
     },
     {
-      id: 'I-9', source: 'Henri-IV', difficulte: 1,
+      id: 'I-9', difficulte: 1,
       titre: 'Problème : Bleu-Blanc-Rouge',
       enonce: `Une boîte contient 60 tickets : des rouges, des bleus et des blancs.
 - Si tous les tickets rouges étaient remplacés par des bleus, il y aurait deux fois plus de tickets bleus que de blancs.
@@ -287,7 +286,7 @@ r = 15, b = 2(20)−15 = 25
       notions: ["Système d'équations", 'Substitution', 'Équation du 2nd degré']
     },
     {
-      id: 'I-10', source: 'LLG', difficulte: 3,
+      id: 'I-10', difficulte: 3,
       titre: 'Défi : racine de √2 + √3',
       enonce: `Déterminer un polynôme **non nul à coefficients entiers** admettant pour racine α = √2 + √3.`,
       correction: `α = √2 + √3
@@ -305,7 +304,7 @@ P(√2+√3) = 49+20√6 − 50−20√6 + 1 = 0 ✓`,
       notions: ['Polynômes à coefficients entiers', 'Racines irrationnelles', 'Conjugaison']
     },
     {
-      id: "I-11", source: "Henri-IV", difficulte: 1,
+      id: "I-11", difficulte: 1,
       titre: "Systèmes d'équations",
       enonce: `Résoudre les systèmes suivants :
 
@@ -331,7 +330,7 @@ P(√2+√3) = 49+20√6 − 50−20√6 + 1 = 0 ✓`,
       notions: ['Système', 'Substitution', 'Équation du 2nd degré']
     },
     {
-      id: "I-12", source: "LLG", difficulte: 2,
+      id: "I-12", difficulte: 2,
       titre: "Inégalité arithmético-géométrique",
       enonce: `Pour tous réels a, b ≥ 0, montrer que : √(ab) ≤ (a+b)/2.
 
@@ -353,7 +352,7 @@ Preuve directe : par récurrence ou par la méthode de Cauchy (hors programme).`
       notions: ['Inégalité AM-GM', 'Démonstration', 'Égalité']
     },
     {
-      id: "I-13", source: "Henri-IV", difficulte: 2,
+      id: "I-13", difficulte: 2,
       titre: "Valeur absolue et distance",
       enonce: `1. Résoudre |2x−3| = 5.
 2. Résoudre |x+1| < |x−2|.
@@ -377,7 +376,7 @@ Preuve directe : par récurrence ou par la méthode de Cauchy (hors programme).`
       notions: ['Valeur absolue', 'Inégalité triangulaire', 'Résolution']
     },
     {
-      id: "I-14", source: "LLG", difficulte: 2,
+      id: "I-14", difficulte: 2,
       titre: "Polynômes — division euclidienne",
       enonce: `1. Effectuer la division euclidienne de P(x) = x⁴+2x³−x+3 par D(x) = x²+x−1.
 2. En déduire le reste de la division de P(x) par (x²+x−1).
@@ -403,7 +402,7 @@ Preuve directe : par récurrence ou par la méthode de Cauchy (hors programme).`
       notions: ['Division euclidienne', 'Polynômes', 'Reste']
     },
     {
-      id: "I-15", source: "Henri-IV", difficulte: 1,
+      id: "I-15", difficulte: 1,
       titre: "Cryptarithmie — SOLEIL+SABLE=BIKINI",
       enonce: `Chaque lettre représente un chiffre distinct (0-9). Résoudre :
      S O L E I L
@@ -444,7 +443,7 @@ const chapII: ChapitreData = {
   notions: ['Suite arithmétique', 'Suite géométrique', 'Récurrence', 'Convergence', 'Suite auxiliaire', 'Raisonnement par récurrence'],
   exercices: [
     {
-      id: 'II-1', source: 'Henri-IV', difficulte: 1,
+      id: 'II-1', difficulte: 1,
       titre: 'Suites arithmétiques — calculs de base',
       enonce: `(uₙ)ₙ∈ℕ est une suite arithmétique de raison r. On pose Sₙ = Σₖ₌₀ⁿ uₖ.
 
@@ -477,7 +476,7 @@ const chapII: ChapitreData = {
       notions: ['Suite arithmétique', 'Raison', 'Somme de termes']
     },
     {
-      id: 'II-2', source: 'Henri-IV', difficulte: 1,
+      id: 'II-2', difficulte: 1,
       titre: 'Suites géométriques',
       enonce: `(uₙ) est une suite géométrique de raison q. Sₙ = Σₖ₌₀ⁿ uₖ.
 
@@ -498,7 +497,7 @@ const chapII: ChapitreData = {
       notions: ['Suite géométrique', 'Raison', 'Somme de termes géométrique']
     },
     {
-      id: 'II-3', source: 'Henri-IV', difficulte: 2,
+      id: 'II-3', difficulte: 2,
       titre: 'Suite définie par récurrence linéaire',
       enonce: `Soit (uₙ) définie par u₀ = 1 et pour tout n ∈ ℕ : uₙ₊₁ = (3/5)uₙ + 2.
 
@@ -523,7 +522,7 @@ const chapII: ChapitreData = {
       notions: ['Récurrence', 'Suite auxiliaire', 'Convergence', 'Somme de termes']
     },
     {
-      id: 'II-4', source: 'Henri-IV', difficulte: 2,
+      id: 'II-4', difficulte: 2,
       titre: 'Suite définie par une relation de récurrence non-linéaire',
       enonce: `(uₙ) est définie par u₀ = 2 et uₙ₊₁ = uₙ/(uₙ+1). On pose vₙ = 1/uₙ.
 
@@ -544,7 +543,7 @@ const chapII: ChapitreData = {
       notions: ['Récurrence', 'Suite auxiliaire', 'Suite arithmétique', 'Monotonie']
     },
     {
-      id: 'II-5', source: 'Henri-IV', difficulte: 2,
+      id: 'II-5', difficulte: 2,
       titre: "Suite récurrente d\'ordre 2",
       enonce: `(uₙ) est définie par u₀ = −1, u₁ = 1/2 et pour tout n ∈ ℕ : uₙ₊₂ = uₙ₊₁ − (1/4)uₙ.
 
@@ -568,7 +567,7 @@ const chapII: ChapitreData = {
       notions: ["Suite d'ordre 2", 'Suite auxiliaire', 'Raisonnement', 'Expressions explicites']
     },
     {
-      id: 'II-6', source: 'Henri-IV', difficulte: 2,
+      id: 'II-6', difficulte: 2,
       titre: 'Système de deux suites couplées',
       enonce: `Soient (uₙ) et (vₙ) définies par u₁=12, v₁=1 et pour tout n ∈ ℕ* :
 uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
@@ -595,7 +594,7 @@ uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
       notions: ['Système de suites', 'Suite géométrique', 'Suite constante', 'Résolution']
     },
     {
-      id: 'II-7', source: 'Henri-IV', difficulte: 2,
+      id: 'II-7', difficulte: 2,
       titre: 'Suite encadrée et limite',
       enonce: `La suite (uₙ) est définie sur ℕ* par : uₙ = √(n+1) − √n.
 
@@ -616,7 +615,7 @@ uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
       notions: ['Encadrement', 'Théorème des gendarmes', 'Somme télescopique', 'Limite']
     },
     {
-      id: 'II-8', source: 'Henri-IV', difficulte: 3,
+      id: 'II-8', difficulte: 3,
       titre: 'Suite à croissance plus rapide',
       enonce: `(uₙ) est définie par u₀ = 2 et uₙ₊₁ = u²ₙ+uₙ, avec −1 < a < 0 pour u₀ = a.
 
@@ -636,7 +635,7 @@ uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
       notions: ['Monotonie', 'Récurrence', 'Convergence', 'Point fixe']
     },
     {
-      id: 'II-9', source: 'LLG', difficulte: 2,
+      id: 'II-9', difficulte: 2,
       titre: 'Suite liée à exp et ln',
       enonce: `Soit (uₙ) arithmétique de raison r. On pose vₙ = eᵘⁿ.
 
@@ -650,7 +649,7 @@ uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
       notions: ['Suite arithmétique', 'Suite géométrique', 'Exponentielle', 'Logarithme']
     },
     {
-      id: 'II-10', source: 'Henri-IV', difficulte: 2,
+      id: 'II-10', difficulte: 2,
       titre: 'Suite récurrente avec étude graphique',
       enonce: `(uₙ) est définie par u₀ = 1 et uₙ₊₁ = (uₙ+8)/(2uₙ+1).
 
@@ -677,7 +676,7 @@ uₙ₊₁ = (uₙ+2vₙ)/3 et vₙ₊₁ = (uₙ+3vₙ)/4
       notions: ['Récurrence', 'Suite auxiliaire', 'Géométrique', 'Convergence', 'Représentation graphique']
     },
     {
-      id: "II-11", source: "LLG", difficulte: 2,
+      id: "II-11", difficulte: 2,
       titre: "Suite de Fibonacci — rapport",
       enonce: `(Fₙ) est la suite de Fibonacci : F₀=0, F₁=1, Fₙ₊₂=Fₙ₊₁+Fₙ.
 Soit rₙ = Fₙ₊₁/Fₙ pour n ≥ 1.
@@ -696,7 +695,7 @@ Soit rₙ = Fₙ₊₁/Fₙ pour n ≥ 1.
       notions: ['Fibonacci', 'Convergence', "Nombre d'or", 'Équation']
     },
     {
-      id: "II-12", source: "Henri-IV", difficulte: 2,
+      id: "II-12", difficulte: 2,
       titre: "Suites imbriquées",
       enonce: `Soit (uₙ) définie par u₀=1 et uₙ₊₁ = √(2+uₙ).
 
@@ -719,7 +718,7 @@ Soit rₙ = Fₙ₊₁/Fₙ pour n ≥ 1.
       notions: ['Récurrence', 'Monotonie', 'Convergence', 'Point fixe']
     },
     {
-      id: "II-13", source: "LLG", difficulte: 3,
+      id: "II-13", difficulte: 3,
       titre: "Somme des carrés et série arithmétique",
       enonce: `1. En utilisant Σ(k=1 à n) k = n(n+1)/2, calculer Σ k².
 2. Calculer Σ(k=1 à n) k·(k+1).
@@ -738,7 +737,7 @@ Soit rₙ = Fₙ₊₁/Fₙ pour n ≥ 1.
       notions: ['Sommes', 'Récurrence', 'Calcul algébrique']
     },
     {
-      id: "II-14", source: "Henri-IV", difficulte: 2,
+      id: "II-14", difficulte: 2,
       titre: "Suite et inégalité exponentielle",
       enonce: `Soit uₙ = (1+1/n)ⁿ pour n ≥ 1.
 
@@ -763,7 +762,7 @@ Soit rₙ = Fₙ₊₁/Fₙ pour n ≥ 1.
       notions: ['Croissance', 'Majorant', 'Convergence', 'Nombre e']
     },
     {
-      id: "II-15", source: "LLG", difficulte: 2,
+      id: "II-15", difficulte: 2,
       titre: "Suite récurrente d'ordre 1 — cas général",
       enonce: `Soit f une fonction et (uₙ) définie par u₀ et uₙ₊₁ = f(uₙ).
 Si f admet un point fixe α (f(α)=α) et |f'(α)| < 1, alors uₙ→α.
@@ -805,7 +804,7 @@ const chapIII: ChapitreData = {
   notions: ['Probabilités conditionnelles', 'Formule de Bayes', 'Formule des probabilités totales', 'Variable aléatoire', 'Loi binomiale', 'Espérance'],
   exercices: [
     {
-      id: 'III-1', source: 'Henri-IV', difficulte: 1,
+      id: 'III-1', difficulte: 1,
       titre: 'Probabilités totales — prothèses',
       enonce: `Un chirurgien commande des prothèses chez trois fabricants A, B, C.
 - 1/3 de A, 30% de B, reste de C.
@@ -824,7 +823,7 @@ P(D) = 0.001 + 0.0018 + 0.001167 ≈ **0.00497 ≈ 0.5%**`,
       notions: ['Probabilités totales', 'Arbre de probabilités']
     },
     {
-      id: 'III-2', source: 'Henri-IV', difficulte: 1,
+      id: 'III-2', difficulte: 1,
       titre: 'Test de dépistage — Bayes',
       enonce: `1% de la population est atteinte d'une maladie M. Test de dépistage :
 - Si malade → positif dans 90% des cas.
@@ -848,7 +847,7 @@ P(D) = 0.001 + 0.0018 + 0.001167 ≈ **0.00497 ≈ 0.5%**`,
       notions: ['Bayes', 'Probabilités conditionnelles', 'Formule des probabilités totales']
     },
     {
-      id: 'III-3', source: 'Henri-IV', difficulte: 2,
+      id: 'III-3', difficulte: 2,
       titre: 'Clés et portes — probabilités sans remise',
       enonce: `Un professeur a 5 clés : 3 ouvrent la porte, 2 sont défectueuses. Il les teste une à une au hasard et sans remise.
 
@@ -872,7 +871,7 @@ P(D) = 0.001 + 0.0018 + 0.001167 ≈ **0.00497 ≈ 0.5%**`,
       notions: ['Probabilités conditionnelles', 'Sans remise', 'Dénombrement']
     },
     {
-      id: 'III-4', source: 'Henri-IV', difficulte: 2,
+      id: 'III-4', difficulte: 2,
       titre: 'Chaîne de Markov — victoires et défaites',
       enonce: `Juliette joue une série de parties. P(G₁) = P(P₁) = 1/2.
 - Si elle gagne, P(gagner la suivante) = 0.6
@@ -903,7 +902,7 @@ Poser xₙ = P(Gₙ), yₙ = P(Pₙ).
       notions: ['Chaîne de Markov', 'Probabilités totales', 'Suite géométrique', 'Limite']
     },
     {
-      id: 'III-5', source: 'LLG', difficulte: 2,
+      id: 'III-5', difficulte: 2,
       titre: 'Loi binomiale et espérance',
       enonce: `On lance n fois une pièce biaisée avec P(Pile) = p. X compte le nombre de Piles.
 
@@ -928,7 +927,7 @@ Poser xₙ = P(Gₙ), yₙ = P(Pₙ).
       notions: ['Loi binomiale', 'Espérance', 'Calcul de probabilités']
     },
     {
-      id: 'III-6', source: 'LLG', difficulte: 2,
+      id: 'III-6', difficulte: 2,
       titre: 'Variable aléatoire — espérance et variance',
       enonce: `X est une variable aléatoire prenant les valeurs 0, 1, 2, 3 avec :
 P(X=0)=1/8, P(X=1)=3/8, P(X=2)=3/8, P(X=3)=1/8.
@@ -948,7 +947,7 @@ P(X=0)=1/8, P(X=1)=3/8, P(X=2)=3/8, P(X=3)=1/8.
       notions: ['Variable aléatoire', 'Espérance', 'Variance', 'Loi binomiale']
     },
     {
-      id: 'III-7', source: 'Henri-IV', difficulte: 2,
+      id: 'III-7', difficulte: 2,
       titre: 'Dénombrement et probabilités',
       enonce: `On tire 3 cartes au hasard sans remise dans un jeu de 32 cartes (8 valeurs, 4 couleurs).
 
@@ -969,7 +968,7 @@ P(X=0)=1/8, P(X=1)=3/8, P(X=2)=3/8, P(X=3)=1/8.
       notions: ['Dénombrement', 'Combinaisons', 'Probabilités']
     },
     {
-      id: 'III-8', source: 'LLG', difficulte: 2,
+      id: 'III-8', difficulte: 2,
       titre: "Répétition d'épreuves indépendantes",
       enonce: `Un archer réussit chaque tir avec probabilité p = 0.7, indépendamment des autres.
 Il effectue n tirs. Soit X le nombre de réussites.
@@ -991,7 +990,7 @@ Il effectue n tirs. Soit X le nombre de réussites.
       notions: ['Loi binomiale', 'Événement contraire', 'Logarithme']
     },
     {
-      id: 'III-9', source: 'Henri-IV', difficulte: 3,
+      id: 'III-9', difficulte: 3,
       titre: 'Problème : le sondage incohérent',
       enonce: `Un sondage décrit des lecteurs avec les données suivantes :
 31.2% hommes, 47% mariés, 52.5% étudiants, 4.2% étudiants masculins, 14.7% étudiants mariés, 8.6% hommes mariés, 2.5% étudiants masculins mariés.
@@ -1008,7 +1007,7 @@ Or P(A∪B∪C) ≤ 1 toujours. **Contradiction → sondage incohérent.** ∎`,
       notions: ['Inclusion-exclusion', 'Probabilités', 'Raisonnement']
     },
     {
-      id: 'III-10', source: 'LLG', difficulte: 2,
+      id: 'III-10', difficulte: 2,
       titre: "Espérance d'une somme de variables aléatoires",
       enonce: `On lance n fois un dé équilibré. Soit Xᵢ le résultat du i-ème lancer et S = X₁+X₂+···+Xₙ.
 
@@ -1030,7 +1029,7 @@ Or P(A∪B∪C) ≤ 1 toujours. **Contradiction → sondage incohérent.** ∎`,
     },
 
     {
-      id: "III-11", source: "LLG", difficulte: 1,
+      id: "III-11", difficulte: 1,
       titre: "Arbre de probabilités — maladie et test",
       enonce: `Une urne contient 4 boules rouges et 6 boules noires. On tire successivement 2 boules sans remise.
 
@@ -1052,7 +1051,7 @@ Or P(A∪B∪C) ≤ 1 toujours. **Contradiction → sondage incohérent.** ∎`,
       notions: ['Arbre', 'Probabilités conditionnelles', 'Sans remise']
     },
     {
-      id: "III-12", source: "Henri-IV", difficulte: 2,
+      id: "III-12", difficulte: 2,
       titre: "Variable aléatoire — gain d'un jeu",
       enonce: `On lance un dé (1 à 6). Si on obtient 6 on gagne 5€. Si on obtient 1 on perd 2€. Sinon, rien.
 Soit G le gain algébrique.
@@ -1076,7 +1075,7 @@ Soit G le gain algébrique.
       notions: ['Variable aléatoire', 'Loi', 'Espérance', 'Jeu équitable']
     },
     {
-      id: "III-13", source: "LLG", difficulte: 2,
+      id: "III-13", difficulte: 2,
       titre: "Loi géométrique — premier succès",
       enonce: `On répète des épreuves de Bernoulli (succès prob. p) jusqu'au premier succès.
 Soit X le rang du premier succès.
@@ -1099,7 +1098,7 @@ Soit X le rang du premier succès.
       notions: ['Loi géométrique', 'Série géométrique', 'Espérance']
     },
     {
-      id: "III-14", source: "Henri-IV", difficulte: 2,
+      id: "III-14", difficulte: 2,
       titre: "Indépendance et conditionnement",
       enonce: `Deux événements A et B sont indépendants si P(A∩B) = P(A)·P(B).
 
@@ -1118,7 +1117,7 @@ Soit X le rang du premier succès.
       notions: ['Indépendance', 'Conditionnement', 'Calcul de probabilités']
     },
     {
-      id: "III-15", source: "LLG", difficulte: 3,
+      id: "III-15", difficulte: 3,
       titre: "Marche aléatoire — ruine du joueur",
       enonce: `Un joueur a n jetons. À chaque étape il gagne 1 jeton (prob. p) ou perd 1 jeton (prob. q=1−p).
 Il s'arrête quand il a 0 ou N jetons (N > n).
@@ -1159,7 +1158,7 @@ const chapIV: ChapitreData = {
   notions: ['Dérivée', 'Tableau de variations', 'Limites', 'Extremums', 'Fonctions composées', 'Étude complète'],
   exercices: [
     {
-      id: 'IV-1', source: 'Henri-IV', difficulte: 1,
+      id: 'IV-1', difficulte: 1,
       titre: 'Calcul de dérivées — catalogue',
       enonce: `Calculer les dérivées des fonctions suivantes :
 
@@ -1192,7 +1191,7 @@ const chapIV: ChapitreData = {
       notions: ['Dérivée', 'Quotient', 'Composée', 'Exponentielle']
     },
     {
-      id: 'IV-2', source: 'Henri-IV', difficulte: 1,
+      id: 'IV-2', difficulte: 1,
       titre: 'Tableaux de variations',
       enonce: `Dresser le tableau de variations des fonctions :
 
@@ -1217,7 +1216,7 @@ const chapIV: ChapitreData = {
       notions: ['Dérivée', 'Tableau de variations', 'Extremums', 'Asymptotes']
     },
     {
-      id: 'IV-3', source: 'Henri-IV', difficulte: 1,
+      id: 'IV-3', difficulte: 1,
       titre: 'Limites de fonctions rationnelles',
       enonce: `Calculer, si elles existent, les limites suivantes :
 
@@ -1244,7 +1243,7 @@ const chapIV: ChapitreData = {
       notions: ['Limites', 'Formes indéterminées', 'Factorisation', 'Rationalisation']
     },
     {
-      id: 'IV-4', source: 'LLG', difficulte: 2,
+      id: 'IV-4', difficulte: 2,
       titre: 'Étude complète de fonction',
       enonce: `Soit f(x) = x·e^(−x) définie sur ℝ.
 
@@ -1274,7 +1273,7 @@ const chapIV: ChapitreData = {
       notions: ['Étude complète', 'Exponentielle', 'Dérivée', 'Limites', 'Extremum']
     },
     {
-      id: 'IV-5', source: 'LLG', difficulte: 2,
+      id: 'IV-5', difficulte: 2,
       titre: "Démonstration d\'inégalité par dérivation",
       enonce: `Démontrer les inégalités suivantes :
 
@@ -1296,7 +1295,7 @@ const chapIV: ChapitreData = {
       notions: ['Inégalités', 'Dérivée', 'Variations', 'Exponentielle', 'Logarithme']
     },
     {
-      id: 'IV-6', source: 'Henri-IV', difficulte: 1,
+      id: 'IV-6', difficulte: 1,
       titre: "Limites à l'infini",
       enonce: `Déterminer les limites en ±∞ :
 
@@ -1317,7 +1316,7 @@ const chapIV: ChapitreData = {
       notions: ['Limites', 'Infini', 'Croissance comparée', 'Rationalisation']
     },
     {
-      id: 'IV-7', source: 'LLG', difficulte: 2,
+      id: 'IV-7', difficulte: 2,
       titre: 'Tangente et approximation linéaire',
       enonce: `Soit f(x) = √(1+x) définie sur ]−1,+∞[.
 
@@ -1341,7 +1340,7 @@ const chapIV: ChapitreData = {
       notions: ['Tangente', 'Dérivée', 'Inégalité', 'Approximation']
     },
     {
-      id: 'IV-8', source: 'Henri-IV', difficulte: 2,
+      id: 'IV-8', difficulte: 2,
       titre: 'Étude de fonction avec paramètre',
       enonce: `Soit fₐ(x) = x² − a·ln(x) définie sur ]0,+∞[, avec a ∈ ℝ.
 
@@ -1367,7 +1366,7 @@ const chapIV: ChapitreData = {
       notions: ['Paramètre', 'Dérivée', 'Logarithme', 'Extremum', 'Équation']
     },
     {
-      id: 'IV-9', source: 'LLG', difficulte: 2,
+      id: 'IV-9', difficulte: 2,
       titre: "Équation différentielle y'=λy",
       enonce: `1. Montrer que les solutions de y' = λy (λ ∈ ℝ) sont les fonctions x ↦ C·eλˣ (C ∈ ℝ).
 2. Résoudre y' = 2y avec y(0) = 3.
@@ -1386,7 +1385,7 @@ const chapIV: ChapitreData = {
       notions: ['Équation différentielle', 'Exponentielle', 'Conditions initiales']
     },
     {
-      id: 'IV-10', source: 'Henri-IV', difficulte: 2,
+      id: 'IV-10', difficulte: 2,
       titre: "Convexité et point d'inflexion",
       enonce: `Soit f(x) = x³ − 6x² + 9x + 1.
 
@@ -1412,7 +1411,7 @@ const chapIV: ChapitreData = {
     },
 
     {
-      id: "IV-11", source: "Henri-IV", difficulte: 2,
+      id: "IV-11", difficulte: 2,
       titre: "Théorème des valeurs intermédiaires",
       enonce: `1. Énoncer le TVI.
 2. Montrer que x³ + 2x − 5 = 0 a une solution dans ]1, 2[.
@@ -1433,7 +1432,7 @@ const chapIV: ChapitreData = {
       notions: ['TVI', 'Continuité', 'Existence', 'Unicité']
     },
     {
-      id: "IV-12", source: "LLG", difficulte: 2,
+      id: "IV-12", difficulte: 2,
       titre: "Primitive et aire",
       enonce: `1. Calculer les primitives de : x³, 1/x², √x, e^(2x), sin(3x).
 2. Calculer ∫₀¹ (x²+2x+1)dx.
@@ -1454,7 +1453,7 @@ const chapIV: ChapitreData = {
       notions: ['Primitive', 'Intégrale', 'Aire', 'Changement de variable']
     },
     {
-      id: "IV-13", source: "Henri-IV", difficulte: 2,
+      id: "IV-13", difficulte: 2,
       titre: "Suite définie par une intégrale",
       enonce: `Soit Iₙ = ∫₀¹ xⁿ·e^x dx pour n ≥ 0.
 
@@ -1479,7 +1478,7 @@ const chapIV: ChapitreData = {
       notions: ['Intégrale', 'IPP', 'Récurrence', 'Encadrement']
     },
     {
-      id: "IV-14", source: "LLG", difficulte: 3,
+      id: "IV-14", difficulte: 3,
       titre: "Méthode de Newton — approximation de racines",
       enonce: `Pour approcher une racine de f(x)=0, la méthode de Newton donne :
 xₙ₊₁ = xₙ − f(xₙ)/f'(xₙ).
@@ -1500,7 +1499,7 @@ xₙ₊₁ = xₙ − f(xₙ)/f'(xₙ).
       notions: ['Newton', 'Approximation', 'Convergence quadratique', 'Tangente']
     },
     {
-      id: "IV-15", source: "Henri-IV", difficulte: 2,
+      id: "IV-15", difficulte: 2,
       titre: "Fonctions convexes et inégalité de Jensen",
       enonce: `f est convexe sur I si pour tous x, y ∈ I et t ∈ [0,1] :
 f(tx+(1−t)y) ≤ tf(x)+(1−t)f(y).
@@ -1541,7 +1540,7 @@ const chapV: ChapitreData = {
   notions: ['Cercle trigonométrique', 'Valeurs exactes', "Formules d'addition"],
   exercices: [
     {
-      id: 'V-1', source: 'LLG', difficulte: 1,
+      id: 'V-1', difficulte: 1,
       titre: "Formules d\'addition — preuves et applications",
       enonce: `1. Prouver que cos(a+b) = cos a·cos b − sin a·sin b à partir du produit scalaire.
 2. En déduire : sin(a+b), cos(2a), sin(2a).
@@ -1569,7 +1568,7 @@ const chapV: ChapitreData = {
       notions: ["Formules d'addition", 'Duplication', 'Valeurs exactes']
     },
     {
-      id: 'V-2', source: 'Henri-IV', difficulte: 2,
+      id: 'V-2', difficulte: 2,
       titre: 'Inéquations trigonométriques',
       enonce: `Résoudre dans ]−π, π] :
 
@@ -1600,7 +1599,7 @@ const chapV: ChapitreData = {
       notions: ['Inéquations trigonométriques', 'Cercle trigonométrique', 'Résolution']
     },
     {
-      id: 'V-3', source: 'LLG', difficulte: 2,
+      id: 'V-3', difficulte: 2,
       titre: 'Transformation en produit',
       enonce: `Exprimer a·cos x + b·sin x sous la forme R·cos(x + φ).
 Application : résoudre cos x + √3·sin x = 1.`,
@@ -1619,7 +1618,7 @@ x + π/3 = ±π/3 + 2kπ
       notions: ['Forme trigonométrique', 'Équation', 'Module et argument']
     },
     {
-      id: 'V-4', source: 'Henri-IV', difficulte: 1,
+      id: 'V-4', difficulte: 1,
       titre: 'Valeurs exactes — tableau des angles',
       enonce: `Calculer exactement (sans calculatrice) :
 1. sin(5π/6), cos(5π/6), tan(5π/6)
@@ -1645,7 +1644,7 @@ x + π/3 = ±π/3 + 2kπ
       notions: ['Cercle trigonométrique', 'Valeurs exactes', "Formules d'addition"]
     },
     {
-      id: 'V-5', source: 'LLG', difficulte: 2,
+      id: 'V-5', difficulte: 2,
       titre: 'Calcul de cos(3x) et sin(3x)',
       enonce: `1. Exprimer cos(3x) en fonction de cos(x) uniquement.
 2. Exprimer sin(3x) en fonction de sin(x) uniquement.
@@ -1667,7 +1666,7 @@ x + π/3 = ±π/3 + 2kπ
       notions: ['Formules trigonométriques', 'Polynômes', 'Formules de duplication']
     },
     {
-      id: 'V-6', source: 'Henri-IV', difficulte: 2,
+      id: 'V-6', difficulte: 2,
       titre: 'Étude de la fonction cosinus sur [0, π]',
       enonce: `1. Montrer que cos est strictement décroissante sur [0,π].
 2. En déduire que l'équation cos(x) = a pour a ∈ ]−1,1[ a une unique solution dans [0,π].
@@ -1690,7 +1689,7 @@ x + π/3 = ±π/3 + 2kπ
       notions: ['Monotonie', 'Cosinus', 'Équations', 'TVI']
     },
     {
-      id: 'V-7', source: 'LLG', difficulte: 2,
+      id: 'V-7', difficulte: 2,
       titre: 'Identités remarquables trigonométriques',
       enonce: `Démontrer les identités suivantes :
 1. cos²x = (1+cos(2x))/2
@@ -1715,7 +1714,7 @@ Application : calculer ∫₀^π cos²(x)dx.`,
       notions: ['Identités trigonométriques', 'Duplication', 'Intégration']
     },
     {
-      id: 'V-8', source: 'Henri-IV', difficulte: 3,
+      id: 'V-8', difficulte: 3,
       titre: 'Problème de géométrie — évariste et blaise',
       enonce: `On considère trois carrés adjacents. Soient α, β, γ les angles indiqués dans la figure.
 Évariste pense que α > β+γ, Blaise pense que α < β+γ. Qui a raison ?
@@ -1739,7 +1738,7 @@ Ni Évariste ni Blaise n'a raison — ils sont **égaux** !
     },
 
     {
-      id: "V-9", source: "Henri-IV", difficulte: 2,
+      id: "V-9", difficulte: 2,
       titre: "Produit scalaire et angles",
       enonce: `Dans un repère orthonormé, A(1,0), B(0,1), C(−1,0).
 
@@ -1761,7 +1760,7 @@ Ni Évariste ni Blaise n'a raison — ils sont **égaux** !
       notions: ['Produit scalaire', 'Angle', 'Triangle', 'Aire']
     },
     {
-      id: "V-10", source: "LLG", difficulte: 2,
+      id: "V-10", difficulte: 2,
       titre: "Équation du type a·cos + b·sin = c",
       enonce: `Résoudre dans ℝ :
 1. 3cos(x) + 4sin(x) = 5
@@ -1784,7 +1783,7 @@ Ni Évariste ni Blaise n'a raison — ils sont **égaux** !
       notions: ['Forme trigonométrique', 'Équation', 'Module et argument']
     },
     {
-      id: "V-11", source: "Henri-IV", difficulte: 2,
+      id: "V-11", difficulte: 2,
       titre: "Périodicité et graphes",
       enonce: `1. La fonction f(x) = cos(2x) est-elle périodique ? De quelle période ?
 2. Tracer f sur [0, 2π].
@@ -1804,7 +1803,7 @@ Ni Évariste ni Blaise n'a raison — ils sont **égaux** !
       notions: ['Périodicité', 'Équation trigonométrique', 'Inéquation', 'Graphe']
     },
     {
-      id: "V-12", source: "LLG", difficulte: 3,
+      id: "V-12", difficulte: 3,
       titre: "Polynômes de Tchebychev",
       enonce: `On définit Tₙ par cos(n·θ) = Tₙ(cos θ) pour tout θ.
 
@@ -1824,7 +1823,7 @@ Ni Évariste ni Blaise n'a raison — ils sont **égaux** !
       notions: ['Tchebychev', 'Récurrence', 'Formules trigonométriques', 'Polynômes']
     },
     {
-      id: "V-13", source: "Henri-IV", difficulte: 2,
+      id: "V-13", difficulte: 2,
       titre: "Cercle trigonométrique — angles associés",
       enonce: `Sans calculatrice, placer et calculer :
 1. cos(7π/6) et sin(7π/6)
@@ -1864,7 +1863,7 @@ const chapVI: ChapitreData = {
   notions: ['Fonction exponentielle', 'Logarithme', 'Croissance comparée', 'Équations exponentielles'],
   exercices: [
     {
-      id: 'VI-1', source: 'LLG', difficulte: 1,
+      id: 'VI-1', difficulte: 1,
       titre: 'Équations et inéquations exponentielles',
       enonce: `Résoudre :
 1. e^(2x) − 3e^x + 2 = 0
@@ -1894,7 +1893,7 @@ const chapVI: ChapitreData = {
       notions: ['Équations exponentielles', 'Logarithme', 'Changement de variable']
     },
     {
-      id: 'VI-2', source: 'LLG', difficulte: 2,
+      id: 'VI-2', difficulte: 2,
       titre: 'Croissance comparée',
       enonce: `1. Montrer que lim(x→+∞) xⁿ/eˣ = 0 pour tout n ∈ ℕ.
 2. Montrer que lim(x→+∞) (ln x)/x = 0.
@@ -1914,7 +1913,7 @@ const chapVI: ChapitreData = {
       notions: ['Croissance comparée', 'Limites', 'Exponentielle']
     },
     {
-      id: 'VI-3', source: 'Henri-IV', difficulte: 1,
+      id: 'VI-3', difficulte: 1,
       titre: 'Propriétés de ln et exp',
       enonce: `Simplifier (sans calculatrice) :
 1. ln(e³) − 2ln(e)
@@ -1930,7 +1929,7 @@ const chapVI: ChapitreData = {
       notions: ['Logarithme', 'Exponentielle', 'Propriétés algébriques']
     },
     {
-      id: 'VI-4', source: 'LLG', difficulte: 2,
+      id: 'VI-4', difficulte: 2,
       titre: 'Étude de f(x) = x·ln(x)',
       enonce: `Soit f(x) = x·ln(x) définie sur ]0, +∞[.
 
@@ -1957,7 +1956,7 @@ const chapVI: ChapitreData = {
       notions: ['Étude de fonction', 'Logarithme', 'Limite', 'Minimum']
     },
     {
-      id: 'VI-5', source: 'Henri-IV', difficulte: 2,
+      id: 'VI-5', difficulte: 2,
       titre: 'Inégalité fondamentale du ln',
       enonce: `1. Montrer que ln(1+x) ≤ x pour tout x > −1.
 2. En déduire ln(1+x) ≥ x/(1+x) pour tout x > −1.
@@ -1978,7 +1977,7 @@ const chapVI: ChapitreData = {
       notions: ['Inégalité', 'Logarithme', 'Dérivée', 'Série harmonique']
     },
     {
-      id: 'VI-6', source: 'LLG', difficulte: 2,
+      id: 'VI-6', difficulte: 2,
       titre: 'Calcul de primitives — exponentielle et ln',
       enonce: `Calculer les primitives suivantes :
 1. ∫ e^(3x) dx
@@ -2000,7 +1999,7 @@ const chapVI: ChapitreData = {
       notions: ['Primitives', 'Exponentielle', 'Logarithme', 'Intégration par parties']
     },
     {
-      id: 'VI-7', source: 'Henri-IV', difficulte: 3,
+      id: 'VI-7', difficulte: 3,
       titre: 'Modèle de croissance exponentielle',
       enonce: `Une population de bactéries évolue selon N(t) = N₀·e^(kt) où t est en heures.
 
@@ -2025,7 +2024,7 @@ const chapVI: ChapitreData = {
     },
 
     {
-      id: "VI-8", source: "Henri-IV", difficulte: 1,
+      id: "VI-8", difficulte: 1,
       titre: "Logarithme décimal et calculs pratiques",
       enonce: `1. Sans calculatrice : log₁₀(1000), log₁₀(0.01), log₁₀(√10).
 2. Résoudre 10^x = 50.
@@ -2044,7 +2043,7 @@ const chapVI: ChapitreData = {
       notions: ['Logarithme décimal', 'Propriétés', 'Équations']
     },
     {
-      id: "VI-9", source: "LLG", difficulte: 2,
+      id: "VI-9", difficulte: 2,
       titre: "Fonction logarithme — étude complète",
       enonce: `Étudier f(x) = ln(x²−x+1) sur ℝ.
 
@@ -2067,7 +2066,7 @@ const chapVI: ChapitreData = {
       notions: ['Logarithme', 'Étude complète', 'Symétrie', 'Minimum']
     },
     {
-      id: "VI-10", source: "Henri-IV", difficulte: 2,
+      id: "VI-10", difficulte: 2,
       titre: "Intégrale du logarithme",
       enonce: `1. Calculer ∫₁ᵉ ln(x)dx par IPP.
 2. Calculer ∫₁ᵉ x·ln(x)dx.
@@ -2087,7 +2086,7 @@ const chapVI: ChapitreData = {
       notions: ['IPP', 'Logarithme', 'Intégrale', 'Techniques de calcul']
     },
     {
-      id: "VI-11", source: "LLG", difficulte: 2,
+      id: "VI-11", difficulte: 2,
       titre: "Suites et logarithme",
       enonce: `Soit uₙ = Σₖ₌₁ⁿ 1/(n+k).
 
@@ -2107,7 +2106,7 @@ const chapVI: ChapitreData = {
       notions: ['Somme de Riemann', 'Intégrale', 'Logarithme', 'Convergence']
     },
     {
-      id: "VI-12", source: "Henri-IV", difficulte: 2,
+      id: "VI-12", difficulte: 2,
       titre: "Equation différentielle — modèle logistique",
       enonce: `On modélise une population par : N'(t) = r·N(t)·(1 − N(t)/K), où r, K > 0.
 
@@ -2144,7 +2143,7 @@ const chapVII: ChapitreData = {
   notions: ['Récurrence', 'Absurde', 'Analyse-synthèse', 'Contraposée', 'Quantificateurs'],
   exercices: [
     {
-      id: 'VII-1', source: 'LLG', difficulte: 1,
+      id: 'VII-1', difficulte: 1,
       titre: 'Raisonnement par récurrence — sommes classiques',
       enonce: `Démontrer par récurrence pour tout n ≥ 1 :
 
@@ -2168,7 +2167,7 @@ const chapVII: ChapitreData = {
       notions: ['Récurrence', 'Sommes', 'Initialisation', 'Hérédité']
     },
     {
-      id: 'VII-2', source: 'LLG', difficulte: 2,
+      id: 'VII-2', difficulte: 2,
       titre: "Raisonnement par l\'absurde — irrationalité",
       enonce: `1. Démontrer que √2 est irrationnel.
 2. Démontrer que √2 + √3 est irrationnel.
@@ -2189,7 +2188,7 @@ const chapVII: ChapitreData = {
       notions: ['Absurde', 'Irrationalité', 'Divisibilité', 'Nombres premiers']
     },
     {
-      id: 'VII-3', source: 'LLG', difficulte: 2,
+      id: 'VII-3', difficulte: 2,
       titre: 'Inégalité de Bernoulli et généralisation',
       enonce: `1. Montrer par récurrence que (1+x)ⁿ ≥ 1+nx pour tout x > −1, n ∈ ℕ.
 2. En déduire que (1+1/n)ⁿ est croissante.
@@ -2210,7 +2209,7 @@ const chapVII: ChapitreData = {
       notions: ['Récurrence', 'Bernoulli', 'Inégalités', 'Croissance comparée']
     },
     {
-      id: 'VII-4', source: 'LLG', difficulte: 2,
+      id: 'VII-4', difficulte: 2,
       titre: 'Contraposée et équivalence',
       enonce: `1. Énoncer la contraposée de "Si n² est pair alors n est pair".
 2. Démontrer que n est pair ⟺ n² est pair.
@@ -2229,7 +2228,7 @@ const chapVII: ChapitreData = {
       notions: ['Contraposée', 'Parité', "Raisonnement par l'absurde", 'Irrationalité']
     },
     {
-      id: 'VII-5', source: 'LLG', difficulte: 2,
+      id: 'VII-5', difficulte: 2,
       titre: "Analyse-synthèse : existence et unicité",
       enonce: `Montrer qu'il existe un unique réel x ∈ ]0, +∞[ tel que eˣ = 2x.
 
@@ -2256,7 +2255,7 @@ Pour x ∈ ℝ : f(0)=1>0, f(−1)=e^(−1)+2≈2.37>0... f(x)→+∞ partout...
       notions: ['Analyse-synthèse', 'TVI', 'Unicité', 'Étude de fonction']
     },
     {
-      id: 'VII-6', source: 'Henri-IV', difficulte: 2,
+      id: 'VII-6', difficulte: 2,
       titre: 'Récurrence forte',
       enonce: `Soit (uₙ) définie par u₀=0, u₁=1 et uₙ₊₂ = uₙ₊₁ + uₙ (suite de Fibonacci).
 
@@ -2279,7 +2278,7 @@ Pour x ∈ ℝ : f(0)=1>0, f(−1)=e^(−1)+2≈2.37>0... f(x)→+∞ partout...
       notions: ['Récurrence forte', 'Fibonacci', 'Inégalités', 'Initialisation']
     },
     {
-      id: 'VII-7', source: 'LLG', difficulte: 3,
+      id: 'VII-7', difficulte: 3,
       titre: 'Dénombrement — principe des tiroirs',
       enonce: `1. Dans un groupe de 13 personnes, montrer qu'au moins 2 sont nées le même mois.
 2. Dans un groupe de n personnes, quelle est la probabilité qu'au moins 2 aient le même anniversaire (365 jours) ?
@@ -2302,7 +2301,7 @@ Pour x ∈ ℝ : f(0)=1>0, f(−1)=e^(−1)+2≈2.37>0... f(x)→+∞ partout...
       notions: ['Principe des tiroirs', 'Dénombrement', 'Probabilités', 'Paradoxe']
     },
     {
-      id: 'VII-8', source: 'LLG', difficulte: 2,
+      id: 'VII-8', difficulte: 2,
       titre: "Raisonnement par l'absurde — infini de nombres premiers",
       enonce: `Démontrer qu'il existe une infinité de nombres premiers. (Preuve d'Euclide)`,
       correction: `**Par l'absurde :** Supposons qu"il n'existe qu"un nombre fini de premiers p₁, p₂, ..., pₙ.
@@ -2324,7 +2323,7 @@ Donc pᵢ divise 1, ce qui est impossible car pᵢ ≥ 2.
     },
 
     {
-      id: "VII-9", source: "LLG", difficulte: 2,
+      id: "VII-9", difficulte: 2,
       titre: "PGCD et algorithme d'Euclide",
       enonce: `1. Calculer PGCD(252, 180) par l'algorithme d'Euclide.
 2. Trouver u, v entiers tels que 252u + 180v = PGCD(252,180) (Bézout).
@@ -2345,7 +2344,7 @@ Donc pᵢ divise 1, ce qui est impossible car pᵢ ≥ 2.
       notions: ['PGCD', 'Euclide', 'Bézout', 'Équation diophantienne']
     },
     {
-      id: "VII-10", source: "Henri-IV", difficulte: 2,
+      id: "VII-10", difficulte: 2,
       titre: "Congruences et arithmétique modulaire",
       enonce: `1. Calculer 2²⁰ mod 7.
 2. Quel est le reste de 3¹⁰⁰ dans la division par 4 ?
@@ -2364,7 +2363,7 @@ Donc pᵢ divise 1, ce qui est impossible car pᵢ ≥ 2.
       notions: ['Congruences', 'Arithmétique modulaire', 'Divisibilité', 'Récurrence']
     },
     {
-      id: "VII-11", source: "LLG", difficulte: 2,
+      id: "VII-11", difficulte: 2,
       titre: "Dénombrement — arrangements et combinaisons",
       enonce: `1. Combien de façons d'arranger 5 livres différents sur une étagère ?
 2. Combien de mots de 4 lettres distinctes peut-on former avec l'alphabet (26 lettres) ?
@@ -2381,7 +2380,7 @@ Donc pᵢ divise 1, ce qui est impossible car pᵢ ≥ 2.
       notions: ['Dénombrement', 'Arrangements', 'Combinaisons', 'Factorielles']
     },
     {
-      id: "VII-12", source: "Henri-IV", difficulte: 2,
+      id: "VII-12", difficulte: 2,
       titre: "Triangle de Pascal et binôme",
       enonce: `1. Montrer C(n,k) + C(n,k+1) = C(n+1,k+1) (relation de Pascal).
 2. Développer (a+b)⁴ avec le binôme de Newton.
@@ -2402,7 +2401,7 @@ Donc pᵢ divise 1, ce qui est impossible car pᵢ ≥ 2.
       notions: ['Pascal', 'Binôme de Newton', 'Combinatoire', 'Développement']
     },
     {
-      id: "VII-13", source: "LLG", difficulte: 3,
+      id: "VII-13", difficulte: 3,
       titre: "Nombre de solutions d'une équation — analyse-synthèse",
       enonce: `Déterminer le nombre de solutions réelles de eˣ = x + 2.
 
@@ -2879,7 +2878,7 @@ const CHAPITRES_SECONDE: ChapitreData[] = [
     notions: ['Variables et types', 'Conditions if/elif/else', 'Fonctions def/return', 'Boucle for/range', 'Boucle while', 'Accumulation', 'Listes'],
     exercices: [
       {
-        id: 'PY-1', source: 'Henri-IV', difficulte: 1,
+        id: 'PY-1', difficulte: 1,
         titre: 'Types et affectations',
         notions: ['Variables', 'Types'],
         enonce: `Donner le type (int, float, str, bool) de chaque variable et la valeur affichée :
@@ -2903,7 +2902,7 @@ h = "5 élèves"     (concaténation de chaînes)
 print affiche : <class 'int'> 5 7.5 2 2 5 élèves`
       },
       {
-        id: 'PY-2', source: 'LLG', difficulte: 1,
+        id: 'PY-2', difficulte: 1,
         titre: 'Conditions if/elif/else',
         notions: ['Conditions', 'if/elif/else'],
         enonce: `Écrire une fonction mention(note) qui retourne :
@@ -2932,7 +2931,7 @@ mention(11) → "Passable"
 mention(8)  → "Non admis"`
       },
       {
-        id: 'PY-3', source: 'Henri-IV', difficulte: 1,
+        id: 'PY-3', difficulte: 1,
         titre: 'Boucle for et accumulation',
         notions: ['Boucle for', 'range', 'Accumulation'],
         enonce: `1. Écrire une fonction somme(n) qui calcule 1 + 2 + 3 + ... + n.
@@ -2957,7 +2956,7 @@ mention(8)  → "Non admis"`
 4. factorielle(10) = 1×2×3×4×5×6×7×8×9×10 = 3 628 800`
       },
       {
-        id: 'PY-4', source: 'LLG', difficulte: 1,
+        id: 'PY-4', difficulte: 1,
         titre: 'Boucle while',
         notions: ['Boucle while', 'Condition d\'arrêt'],
         enonce: `1. Écrire un programme qui affiche les puissances de 2 : 1, 2, 4, 8, 16, ... jusqu'à dépasser 1000.
@@ -2983,7 +2982,7 @@ Affiche : 1, 2, 4, 8, 16, 32, 64, 128, 256, 512
 seuil(1000) = 10  (2¹⁰=1024 > 1000 et 2⁹=512 ≤ 1000)`
       },
       {
-        id: 'PY-5', source: 'Henri-IV', difficulte: 2,
+        id: 'PY-5', difficulte: 2,
         titre: 'Fonctions et paramètres',
         notions: ['Fonctions', 'Paramètres', 'Return'],
         enonce: `1. Écrire une fonction max2(a, b) qui retourne le maximum de deux nombres (sans utiliser max()).
@@ -3020,7 +3019,7 @@ seuil(1000) = 10  (2¹⁰=1024 > 1000 et 2⁹=512 ≤ 1000)`
    (96 = 2⁵ × 3, diviseurs : 1,2,3,4,6,8,12,16,24,32,48,96)`
       },
       {
-        id: 'PY-6', source: 'LLG', difficulte: 2,
+        id: 'PY-6', difficulte: 2,
         titre: 'Nombres premiers',
         notions: ['Boucle for', 'Conditions', 'Fonctions'],
         enonce: `1. Écrire est_premier(n) → True si n est premier.
@@ -3051,7 +3050,7 @@ prochain_premier(47) = 53
 12 = 5+7 ✓  14 = 3+11 ✓  16 = 3+13 ✓  18 = 5+13 ✓  20 = 3+17 ✓`
       },
       {
-        id: 'PY-7', source: 'Henri-IV', difficulte: 2,
+        id: 'PY-7', difficulte: 2,
         titre: 'Listes et parcours',
         notions: ['Listes', 'Boucle for', 'Accumulation'],
         enonce: `On dispose d'une liste de notes : notes = [12, 15, 8, 18, 10, 14, 7, 16, 11, 13].
@@ -3091,7 +3090,7 @@ for n in notes:
 # [15, 18, 14, 16, 13]`
       },
       {
-        id: 'PY-8', source: 'LLG', difficulte: 2,
+        id: 'PY-8', difficulte: 2,
         titre: 'Suite de Syracuse',
         notions: ['Boucle while', 'Conditions'],
         enonce: `La suite de Syracuse : partir d'un entier n > 0 :
@@ -3132,7 +3131,7 @@ n=11:14  n=12:9  n=13:9  n=14:17  n=15:17  n=16:4  n=17:12  n=18:20  n=19:20  n=
 altitude_max(6) = 16`
       },
       {
-        id: 'PY-9', source: 'Henri-IV & LLG', difficulte: 2,
+        id: 'PY-9', difficulte: 2,
         titre: 'Recherche dichotomique',
         notions: ['Boucle while', 'Fonctions', 'Algorithme'],
         enonce: `On veut approcher √2 par dichotomie : chercher x tel que x² = 2 dans [1;2].
@@ -3173,7 +3172,7 @@ En pratique : environ 10-11 étapes
 racine_n(8, 3, 0.001) ≈ 2.000 (racine cubique de 8)`
       },
       {
-        id: 'PY-10', source: 'LLG', difficulte: 2,
+        id: 'PY-10', difficulte: 2,
         titre: 'Tri par sélection',
         notions: ['Listes', 'Boucles imbriquées', 'Algorithme de tri'],
         enonce: `Le tri par sélection : à chaque étape, trouver le minimum de la partie non triée et le placer en tête.
@@ -3210,7 +3209,7 @@ Pour n=7 : 7×6/2 = 21 comparaisons
 → [1,3,4,7,12,8,15] → [1,3,4,7,8,12,15] → [1,3,4,7,8,12,15]`
       },
       {
-        id: 'PY-11', source: 'Henri-IV', difficulte: 2,
+        id: 'PY-11', difficulte: 2,
         titre: 'Suites et algorithme de seuil',
         notions: ['Boucle while', 'Suites numériques', 'Seuil'],
         enonce: `1. La suite (uₙ) est définie par u₀=1 et uₙ₊₁ = uₙ/2 + 1.
@@ -3250,7 +3249,7 @@ def somme_inverse_carres(N):
 somme_inverse_carres(1000) ≈ 1.6439 ≈ π²/6 ≈ 1.6449 ✓ (très proche !)`
       },
       {
-        id: 'PY-12', source: 'LLG', difficulte: 3,
+        id: 'PY-12', difficulte: 3,
         titre: 'Algorithme d\'Euclide et PGCD',
         notions: ['Boucle while', 'Modulo', 'Algorithme'],
         enonce: `1. Implémenter l'algorithme d'Euclide pour calculer PGCD(a,b).
@@ -3281,7 +3280,7 @@ pgcd(1000, 864) : 1000→864r136 → 864→136r48 → 136→48r40 → 48→40r8 
 144/96 : pgcd(144,96)=48 → 3/2`
       },
       {
-        id: 'PY-13', source: 'Henri-IV', difficulte: 2,
+        id: 'PY-13', difficulte: 2,
         titre: 'Tracé de courbe (valeurs)',
         notions: ['Fonctions', 'Listes', 'Boucle for'],
         enonce: `Sans bibliothèque graphique, générer un tableau de valeurs de f(x) = x² - 3x + 2 sur [-1 ; 4] :
@@ -3323,7 +3322,7 @@ f(1.5) = -0.25 est la valeur minimale dans la liste
 (Minimum théorique en x=1.5 : f(1.5)=(1.5)²-4.5+2 = 2.25-4.5+2 = -0.25 ✓)`
       },
       {
-        id: 'PY-14', source: 'LLG', difficulte: 3,
+        id: 'PY-14', difficulte: 3,
         titre: 'Cryptographie — Chiffre de César',
         notions: ['Chaînes', 'ord/chr', 'Boucle for'],
         enonce: `Le chiffre de César décale chaque lettre de k positions dans l'alphabet.
@@ -3364,7 +3363,7 @@ Note : ROT13 est son propre inverse (chiffrer deux fois = message original)
         print(f"k={k}: {dechiffrer(msg, k)}")`
       },
       {
-        id: 'PY-15', source: 'Henri-IV & LLG', difficulte: 3,
+        id: 'PY-15', difficulte: 3,
         titre: 'Simulation probabiliste (Monte-Carlo)',
         notions: ['random', 'Boucle for', 'Estimation'],
         enonce: `La méthode Monte-Carlo permet d'estimer π :
@@ -3410,7 +3409,7 @@ L'erreur est ≈ 1/√n → pour n=10000, erreur ≈ 0.01.`
     notions: ['Puissances', 'Racines carrées', 'PGCD', 'PPCM', 'Ensembles de nombres', 'Notation scientifique'],
     exercices: [
       {
-        id: 'NC-1', source: 'Henri-IV', difficulte: 1,
+        id: 'NC-1', difficulte: 1,
         titre: 'Calculs de puissances',
         notions: ['Puissances', 'Propriétés'],
         enonce: `Calculer sans calculatrice (donner une valeur exacte) :
@@ -3428,7 +3427,7 @@ L'erreur est ≈ 1/√n → pour n=10000, erreur ≈ 0.01.`
 6. (8/27) × (9/4) = 72/108 = 2/3`
       },
       {
-        id: 'NC-2', source: 'LLG', difficulte: 1,
+        id: 'NC-2', difficulte: 1,
         titre: 'Simplification de racines carrées',
         notions: ['Racines carrées', 'Simplification'],
         enonce: `Simplifier sous la forme a√b (b sans carré parfait) :
@@ -3444,7 +3443,7 @@ L'erreur est ≈ 1/√n → pour n=10000, erreur ≈ 0.01.`
 8. (√5)²−(√3)² = 5−3 = 2  (identité (a+b)(a-b)=a²-b²)`
       },
       {
-        id: 'NC-3', source: 'Henri-IV', difficulte: 1,
+        id: 'NC-3', difficulte: 1,
         titre: 'Ensembles de nombres',
         notions: ['Ensembles ℕℤℚℝ', 'Raisonnement'],
         enonce: `1. Classer dans ℕ, ℤ, ℚ ou ℝ (préciser le plus petit ensemble) :
@@ -3467,7 +3466,7 @@ d) VRAI : 0,333... = 1/3 (fraction d'entiers → rationnel)
 3. Exemples d'irrationnels : √3, √5, e (base des logarithmes), ln(2)`
       },
       {
-        id: 'NC-4', source: 'LLG', difficulte: 2,
+        id: 'NC-4', difficulte: 2,
         titre: 'PGCD par algorithme d\'Euclide',
         notions: ['PGCD', 'Algorithme d\'Euclide'],
         enonce: `Calculer par l'algorithme d'Euclide :
@@ -3490,7 +3489,7 @@ PPCM = 357×119/119 = 357, 357/119 = 3/1
 PGCD = 21, PPCM = 1071×1029/21 = 52479, 1071/1029 = 51/49`
       },
       {
-        id: 'NC-5', source: 'Henri-IV', difficulte: 2,
+        id: 'NC-5', difficulte: 2,
         titre: 'Notation scientifique',
         notions: ['Puissances de 10', 'Notation scientifique'],
         enonce: `1. Écrire en notation scientifique a×10ⁿ avec 1 ≤ a < 10 :
@@ -3519,7 +3518,7 @@ t = (1,5×10¹¹) / (3×10⁸) = (1,5/3)×10^(11-8) = 0,5×10³ = 500 s
 (La lumière met environ 8 minutes 20 secondes pour arriver du Soleil.)`
       },
       {
-        id: 'NC-6', source: 'LLG', difficulte: 2,
+        id: 'NC-6', difficulte: 2,
         titre: 'Rationalisation et calculs avec racines',
         notions: ['Racines carrées', 'Rationalisation'],
         enonce: `1. Rationaliser (éliminer le radical au dénominateur) :
@@ -3548,7 +3547,7 @@ b) (1+√3)² = 1² + 2×1×√3 + (√3)² = 1 + 2√3 + 3 = 4+2√3 ✓
 Ordre croissant : √2+0.5 < 2 < √5 < √3+1`
       },
       {
-        id: 'NC-7', source: 'Henri-IV', difficulte: 2,
+        id: 'NC-7', difficulte: 2,
         titre: 'Divisibilité et décomposition',
         notions: ['Divisibilité', 'Facteurs premiers', 'Critères'],
         enonce: `1. Décomposer en facteurs premiers : 360, 504, 1260.
@@ -3577,7 +3576,7 @@ PPCM = 2³×3²×5×7 = 72×35 = 2520
 (nombre de diviseurs = (4+1)(1+1) = 10 ✓)`
       },
       {
-        id: 'NC-8', source: 'LLG', difficulte: 2,
+        id: 'NC-8', difficulte: 2,
         titre: 'Comparaison de réels',
         notions: ['Inégalités', 'Comparaison de réels'],
         enonce: `Comparer sans calculatrice :
@@ -3603,7 +3602,7 @@ x + 1/x - 2 = (x² + 1 - 2x)/x = (x-1)²/x
 Donc x + 1/x ≥ 2, avec égalité si et seulement si x=1. ✓`
       },
       {
-        id: 'NC-9', source: 'Henri-IV & LLG', difficulte: 2,
+        id: 'NC-9', difficulte: 2,
         titre: 'Problème — Nombres et divisibilité',
         notions: ['PGCD', 'Applications', 'Raisonnement'],
         enonce: `1. Un maçon dispose de 2 tas de carreaux : 180 rouges et 252 blancs. Il veut faire des lots identiques (mêmes quantités de rouges et blancs dans chaque lot) sans avoir de reste.
@@ -3633,7 +3632,7 @@ b) De 8h00 à 20h00 = 720 minutes
 Ils partent ensemble à : 8h00, 9h12, 10h24, 11h36, 12h48, 14h00, 15h12, 16h24, 17h36, 18h48, 20h00 = 11 fois (en comptant 8h00 et 20h00)`
       },
       {
-        id: 'NC-10', source: 'Henri-IV', difficulte: 2,
+        id: 'NC-10', difficulte: 2,
         titre: 'Calculs de puissances négatives et fractions',
         notions: ['Puissances négatives', 'Fractions'],
         enonce: `Simplifier en une seule puissance ou fraction :
@@ -3655,7 +3654,7 @@ Ils partent ensemble à : 8h00, 9h12, 10h24, 11h36, 12h48, 14h00, 15h12, 16h24, 
    = 5/2 ✓ (indépendant de n)`
       },
       {
-        id: 'NC-11', source: 'LLG', difficulte: 2,
+        id: 'NC-11', difficulte: 2,
         titre: 'Résolution d\'équations avec radicaux',
         notions: ['Racines carrées', 'Équations'],
         enonce: `Résoudre dans ℝ (vérifier les solutions !) :
@@ -3682,7 +3681,7 @@ Impossible d'avoir x = 2/3 et x = −1 simultanément → Pas de solution
 Solutions entières : x=4 et x=−1 ✓`
       },
       {
-        id: 'NC-12', source: 'Henri-IV', difficulte: 3,
+        id: 'NC-12', difficulte: 3,
         titre: 'Démonstrations — irrationnalité',
         notions: ['Raisonnement par l\'absurde', 'Irrationnels'],
         enonce: `1. Montrer par l'absurde que √2 est irrationnel.
@@ -3707,7 +3706,7 @@ Supposons √3 = p/q irréductible.
 Contradiction avec PGCD(p,q)=1. Donc √3 ∉ ℚ. ✓`
       },
       {
-        id: 'NC-13', source: 'LLG', difficulte: 3,
+        id: 'NC-13', difficulte: 3,
         titre: 'Applications concrètes — mesures et calculs',
         notions: ['Racines carrées', 'Applications'],
         enonce: `1. Un carré a une aire de 50 cm². Quelle est la longueur de son côté ? De sa diagonale ?
@@ -3734,7 +3733,7 @@ Largeur : 16×3 = 48 cm ; Hauteur : 9×3 = 27 cm
 Vérif : √(48²+27²) = √(2304+729) = √3033 ≈ 55,07 cm ✓`
       },
       {
-        id: 'NC-14', source: 'Henri-IV & LLG', difficulte: 2,
+        id: 'NC-14', difficulte: 2,
         titre: 'Propriétés des puissances — démonstrations',
         notions: ['Puissances', 'Démonstrations', 'Cas généraux'],
         enonce: `Démontrer pour tous entiers m, n et réels a, b (a≠0, b≠0) :
@@ -3760,7 +3759,7 @@ aᵐ×aⁿ = a×a×...×a (m+n fois) = aᵐ⁺ⁿ ✓
 (a/b)ⁿ = (a×b⁻¹)ⁿ = aⁿ×(b⁻¹)ⁿ = aⁿ×b⁻ⁿ = aⁿ/bⁿ ✓`
       },
       {
-        id: 'NC-15', source: 'LLG', difficulte: 3,
+        id: 'NC-15', difficulte: 3,
         titre: 'Problème ouvert — Nombres parfaits',
         notions: ['Diviseurs', 'Raisonnement'],
         enonce: `Un nombre parfait est égal à la somme de ses diviseurs stricts (sans lui-même).
@@ -3806,7 +3805,7 @@ n=2 : 2¹×3=6 ✓ ; n=3 : 4×7=28 ✓ ; n=5 : 16×31=496 ✓`
     notions: ['Intervalles', 'Inégalités', 'Inéquations', 'Valeur absolue', 'Encadrements'],
     exercices: [
       {
-        id: 'II-1', source: 'Henri-IV', difficulte: 1,
+        id: 'II-1', difficulte: 1,
         titre: 'Notations d\'intervalles',
         notions: ['Intervalles', 'Notations'],
         enonce: `1. Représenter sur une droite réelle les intervalles :
@@ -3835,7 +3834,7 @@ A ∩ B = ]1 ; 4]  (intersection : x dans les deux)
 A ∪ B = [−3 ; 7[  (union : x dans au moins un)`
       },
       {
-        id: 'II-2', source: 'LLG', difficulte: 1,
+        id: 'II-2', difficulte: 1,
         titre: 'Propriétés des inégalités',
         notions: ['Inégalités', 'Propriétés', 'Sens'],
         enonce: `Vrai ou Faux ? Justifier et corriger si faux :
@@ -3861,7 +3860,7 @@ A ∪ B = [−3 ; 7[  (union : x dans au moins un)`
    Exemple : a = 0, b = 1, c = 2 → b < c. Mais a=0, b=2, c=1 → b > c`
       },
       {
-        id: 'II-3', source: 'Henri-IV', difficulte: 1,
+        id: 'II-3', difficulte: 1,
         titre: 'Résolution d\'inéquations du 1er degré',
         notions: ['Inéquations', 'Intervalles'],
         enonce: `Résoudre et exprimer en intervalle :
@@ -3881,7 +3880,7 @@ A ∪ B = [−3 ; 7[  (union : x dans au moins un)`
 5. 10 > 5x → x < 2 → ]−∞ ; 2[`
       },
       {
-        id: 'II-4', source: 'LLG', difficulte: 1,
+        id: 'II-4', difficulte: 1,
         titre: 'Valeur absolue — définition',
         notions: ['Valeur absolue', 'Distance'],
         enonce: `1. Calculer : |−5|, |3|, |3−7|, |−2+5|, |π−4|
@@ -3908,7 +3907,7 @@ Solution : x = −1
 d = |5−(−3)| = |8| = 8`
       },
       {
-        id: 'II-5', source: 'Henri-IV', difficulte: 2,
+        id: 'II-5', difficulte: 2,
         titre: 'Inéquations avec valeur absolue',
         notions: ['Valeur absolue', 'Inéquations'],
         enonce: `Résoudre et exprimer en intervalle :
@@ -3933,7 +3932,7 @@ Solution : ]−∞ ; 1]
 Solution : ]−∞ ; −5/2] ∪ [3/2 ; +∞[`
       },
       {
-        id: 'II-6', source: 'LLG', difficulte: 2,
+        id: 'II-6', difficulte: 2,
         titre: 'Encadrements et approximations',
         notions: ['Encadrements', 'Inégalités'],
         enonce: `1. On sait que 1,41 < √2 < 1,42. En déduire un encadrement de :
@@ -3961,7 +3960,7 @@ c) 3,14² < π² < 3,15² → 9,8596 < π² < 9,9225
 Donc a² < ab < b² ✓`
       },
       {
-        id: 'II-7', source: 'Henri-IV', difficulte: 2,
+        id: 'II-7', difficulte: 2,
         titre: 'Inéquations avec quotient',
         notions: ['Inéquations', 'Quotient', 'Valeurs interdites'],
         enonce: `Résoudre (préciser les valeurs interdites) :
@@ -3993,7 +3992,7 @@ Quotient: −  0  +  ∅  −  0  +
 Solution : [−2 ; 1[ ∪ [2 ; +∞[`
       },
       {
-        id: 'II-8', source: 'LLG', difficulte: 2,
+        id: 'II-8', difficulte: 2,
         titre: 'Inégalités classiques — démonstrations',
         notions: ['Démonstrations', 'Inégalités'],
         enonce: `Démontrer les inégalités suivantes pour les réels indiqués :
@@ -4019,7 +4018,7 @@ x + 4/x − 4 = (x² − 4x + 4)/x = (x−2)²/x
 Donc x + 4/x ≥ 4 ✓ (égalité si x=2)`
       },
       {
-        id: 'II-9', source: 'Henri-IV & LLG', difficulte: 2,
+        id: 'II-9', difficulte: 2,
         titre: 'Système d\'inéquations',
         notions: ['Systèmes', 'Inéquations', 'Intersection'],
         enonce: `Résoudre les systèmes d'inéquations (trouver x satisfaisant toutes les inéquations) :
@@ -4046,7 +4045,7 @@ x > −1 → ]−1;+∞[
 Intersection : ]−1 ; 4[`
       },
       {
-        id: 'II-10', source: 'Henri-IV', difficulte: 2,
+        id: 'II-10', difficulte: 2,
         titre: 'Inéquations et applications',
         notions: ['Inéquations', 'Applications'],
         enonce: `1. Un vendeur gagne 500€ fixes + 5% de commission sur ses ventes.
@@ -4072,7 +4071,7 @@ Solution : 0 ≤ x < 150 (moins de 150 km en ville)
 La largeur est comprise entre 2 cm et 7 cm.`
       },
       {
-        id: 'II-11', source: 'LLG', difficulte: 2,
+        id: 'II-11', difficulte: 2,
         titre: 'Union et intersection d\'intervalles',
         notions: ['Union', 'Intersection', 'Complémentaire'],
         enonce: `Pour A = ]−3 ; 5], B = [1 ; 8[ et C = ]4 ; +∞[ :
@@ -4105,7 +4104,7 @@ A∪B = ]−3;8[, A∩B = [1;5]
 (A∪B)\(A∩B) = ]−3;1[ ∪ ]5;8[ = (A∩B̄) ∪ (Ā∩B) ✓`
       },
       {
-        id: 'II-12', source: 'Henri-IV', difficulte: 3,
+        id: 'II-12', difficulte: 3,
         titre: 'Encadrements — méthode générale',
         notions: ['Encadrements', 'Inégalités', 'Méthodes'],
         enonce: `On sait que 2 < √5 < 3 (sans calculatrice).
@@ -4131,7 +4130,7 @@ Donc 2,23 < √5 < 2,24
 Plus précis : 1/√5 = √5/5 ≈ 2,236/5 ≈ 0,4472`
       },
       {
-        id: 'II-13', source: 'LLG', difficulte: 2,
+        id: 'II-13', difficulte: 2,
         titre: 'Inéquations du 2nd degré — approche graphique',
         notions: ['Inéquations', '2nd degré', 'Parabole'],
         enonce: `Résoudre par étude du signe du trinôme :
@@ -4159,7 +4158,7 @@ Solution : [1 ; 3]
 Solution : ℝ (tout réel)`
       },
       {
-        id: 'II-14', source: 'Henri-IV', difficulte: 3,
+        id: 'II-14', difficulte: 3,
         titre: 'Inégalités avancées',
         notions: ['Inégalités', 'Démonstrations'],
         enonce: `1. Montrer que pour tous réels a, b : a² + b² ≥ 2ab (inégalité de la moyenne).
@@ -4183,7 +4182,7 @@ Donc √(ab) ≤ (a+b)/2 ✓
 Égalité si et seulement si a = b.`
       },
       {
-        id: 'II-15', source: 'LLG', difficulte: 3,
+        id: 'II-15', difficulte: 3,
         titre: 'Problème — Optimisation par inégalités',
         notions: ['Inégalités', 'Optimisation', 'Applications'],
         enonce: `Un agriculteur veut enclore un terrain rectangulaire contre un mur (le mur forme un côté).
@@ -4224,7 +4223,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
     notions: ['Identités remarquables', 'Factorisation', 'Produit nul', 'Fractions algébriques', 'Équation quotient'],
     exercices: [
       {
-        id: 'CL-1', source: 'Henri-IV', difficulte: 1,
+        id: 'CL-1', difficulte: 1,
         titre: 'Développement — identités remarquables',
         notions: ['Identités remarquables', 'Développement'],
         enonce: `Développer et réduire :
@@ -4242,7 +4241,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 6. (4x²−4x+1)+(4x²+4x+1) = 8x²+2`
       },
       {
-        id: 'CL-2', source: 'LLG', difficulte: 1,
+        id: 'CL-2', difficulte: 1,
         titre: 'Factorisation par identités remarquables',
         notions: ['Factorisation', 'Identités remarquables'],
         enonce: `Factoriser :
@@ -4260,7 +4259,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 6. 25x²−4 = (5x−2)(5x+2)`
       },
       {
-        id: 'CL-3', source: 'Henri-IV', difficulte: 1,
+        id: 'CL-3', difficulte: 1,
         titre: 'Équations par produit nul',
         notions: ['Produit nul', 'Équations'],
         enonce: `Résoudre :
@@ -4276,7 +4275,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 5. (x−3)(x+3)(x+2)=0 → x=3 ou x=−3 ou x=−2`
       },
       {
-        id: 'CL-4', source: 'LLG', difficulte: 1,
+        id: 'CL-4', difficulte: 1,
         titre: 'Développement général',
         notions: ['Développement', 'Réduction'],
         enonce: `Développer et réduire :
@@ -4291,7 +4290,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 4. (x²−y²)(x²+y²) = x⁴−y⁴`
       },
       {
-        id: 'CL-5', source: 'Henri-IV', difficulte: 2,
+        id: 'CL-5', difficulte: 2,
         titre: 'Factorisation complète',
         notions: ['Factorisation', 'Facteur commun', 'Identités'],
         enonce: `Factoriser complètement :
@@ -4307,7 +4306,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 5. Groupement : x²(x+3)−(x+3) = (x+3)(x²−1) = (x+3)(x−1)(x+1)`
       },
       {
-        id: 'CL-6', source: 'LLG', difficulte: 2,
+        id: 'CL-6', difficulte: 2,
         titre: 'Simplification de fractions algébriques',
         notions: ['Fractions algébriques', 'Simplification'],
         enonce: `Simplifier (préciser les conditions d'existence) :
@@ -4324,7 +4323,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 4. x(x²−1)/(x²−1) = x(x−1)(x+1)/((x−1)(x+1)) = x  (x ≠ ±1)`
       },
       {
-        id: 'CL-7', source: 'Henri-IV', difficulte: 2,
+        id: 'CL-7', difficulte: 2,
         titre: 'Opérations sur fractions algébriques',
         notions: ['Fractions', 'Addition', 'Multiplication'],
         enonce: `Calculer et simplifier (préciser les conditions) :
@@ -4342,7 +4341,7 @@ Si le mur n'existait pas, le carré 15m×15m serait optimal.`
 3. (x/(x+2)) × ((x²−4)/x) = x(x−2)(x+2)/(x(x+2)) = x−2   (x≠0, x≠−2)`
       },
       {
-        id: 'CL-8', source: 'LLG', difficulte: 2,
+        id: 'CL-8', difficulte: 2,
         titre: 'Équations et inéquations avec fractions',
         notions: ['Équations', 'Fractions', 'Valeurs interdites'],
         enonce: `Résoudre (préciser les valeurs interdites) :
@@ -4361,7 +4360,7 @@ Quotient: + 0  −  ∅  +
 Solution : ]−∞;−1[ ∪ ]2;+∞[`
       },
       {
-        id: 'CL-9', source: 'Henri-IV', difficulte: 2,
+        id: 'CL-9', difficulte: 2,
         titre: 'Identités et calculs algébriques',
         notions: ['Identités remarquables', 'Calculs'],
         enonce: `1. Si x+y=5 et xy=3, calculer x²+y², (x−y)², x³+y³.
@@ -4380,7 +4379,7 @@ x³+y³ = (x+y)(x²−xy+y²) = 5×(19−3) = 5×16 = 80
 101² = (100+1)² = 10000+200+1 = 10201`
       },
       {
-        id: 'CL-10', source: 'LLG', difficulte: 2,
+        id: 'CL-10', difficulte: 2,
         titre: 'Équations du 2nd degré — méthode',
         notions: ['Trinôme', '2nd degré', 'Discriminant'],
         enonce: `Pour chaque équation ax²+bx+c=0, calculer Δ=b²−4ac et résoudre :
@@ -4397,7 +4396,7 @@ x³+y³ = (x+y)(x²−xy+y²) = 5×(19−3) = 5×16 = 80
 4. Δ=9+16=25>0 → x=(3±5)/4 → x=2 ou x=−1/2`
       },
       {
-        id: 'CL-11', source: 'Henri-IV', difficulte: 2,
+        id: 'CL-11', difficulte: 2,
         titre: 'Factorisation avancée',
         notions: ['Factorisation', 'Polynômes'],
         enonce: `Factoriser complètement (méthode : chercher une racine évidente, diviser) :
@@ -4429,7 +4428,7 @@ Réponse : (2x−1)(x²+0x−2)=2x³−4x−x²+2=2x³−x²−4x+2≠.
 Finalement : racines rationnelles inexistantes, approximations numériques.`
       },
       {
-        id: 'CL-12', source: 'LLG', difficulte: 2,
+        id: 'CL-12', difficulte: 2,
         titre: 'Équation du quotient — applications',
         notions: ['Équation quotient', 'Applications'],
         enonce: `1. Un rectangle a une aire de 24 cm² et un périmètre de 20 cm.
@@ -4454,7 +4453,7 @@ n = (17+25)/14 = 3 ou n = (17−25)/14 = −4/7 (non entier)
 n = 3 → entiers 3 et 4 : 1/3+1/4 = 7/12 ✓`
       },
       {
-        id: 'CL-13', source: 'Henri-IV', difficulte: 2,
+        id: 'CL-13', difficulte: 2,
         titre: 'Mise en équation — problèmes',
         notions: ['Mise en équation', 'Équations du 2nd degré'],
         enonce: `1. Un jardin carré a un côté augmenté de 3m et l'autre diminué de 2m, formant un rectangle d'aire 50m².
@@ -4471,7 +4470,7 @@ Côté initial : 7m ✓ (vérif: 10×5=50 ✓)
 Vérification : 3/2+2/3=9/6+4/6=13/6 ✓`
       },
       {
-        id: 'CL-14', source: 'LLG', difficulte: 3,
+        id: 'CL-14', difficulte: 3,
         titre: 'Identités et transformations avancées',
         notions: ['Identités', 'Démonstrations'],
         enonce: `Démontrer les identités algébriques suivantes :
@@ -4495,7 +4494,7 @@ Vérification : 3/2+2/3=9/6+4/6=13/6 ✓`
 = 1 009 027 027`
       },
       {
-        id: 'CL-15', source: 'Henri-IV & LLG', difficulte: 3,
+        id: 'CL-15', difficulte: 3,
         titre: 'Polynômes — propriétés globales',
         notions: ['Polynômes', 'Racines', 'Relations coefficients-racines'],
         enonce: `Pour le trinôme P(x) = ax²+bx+c de racines x₁ et x₂ (si elles existent) :
@@ -4536,7 +4535,7 @@ P(x) = x²−2rx+r² = (x−r)² ✓`
     notions: ['Image et antécédent', 'Parité', 'Variations', 'Extremums', 'Fonctions de référence', 'Tableau de signes'],
     exercices: [
       {
-        id: 'FO-1', source: 'Henri-IV', difficulte: 1,
+        id: 'FO-1', difficulte: 1,
         titre: 'Image et antécédent',
         notions: ['Image', 'Antécédent'],
         enonce: `f(x) = 2x²−3x+1.
@@ -4558,7 +4557,7 @@ f(−1) = 2+3+1 = 6 ; f(1/2) = 1/2−3/2+1 = 0
 Non, il n'existe pas de x tel que f(x) = −1.`
       },
       {
-        id: 'FO-2', source: 'LLG', difficulte: 1,
+        id: 'FO-2', difficulte: 1,
         titre: 'Fonctions de référence',
         notions: ['Fonctions de référence', 'Variations'],
         enonce: `Pour chaque fonction, donner le domaine D et dresser le tableau de variations :
@@ -4576,7 +4575,7 @@ Croissante sur [0;+∞[, h(0)=0
 Croissante sur ℝ`
       },
       {
-        id: 'FO-3', source: 'Henri-IV', difficulte: 1,
+        id: 'FO-3', difficulte: 1,
         titre: 'Parité d\'une fonction',
         notions: ['Parité', 'Symétrie'],
         enonce: `Pour chaque fonction, étudier la parité (préciser si D est symétrique par rapport à 0) :
@@ -4596,7 +4595,7 @@ Croissante sur ℝ`
 5. D=ℝ. m(−x)=(−x)/((−x)²+1)=−x/(x²+1)=−m(x) → IMPAIRE`
       },
       {
-        id: 'FO-4', source: 'LLG', difficulte: 1,
+        id: 'FO-4', difficulte: 1,
         titre: 'Tableau de variations — lecture',
         notions: ['Variations', 'Extremums', 'Lecture graphique'],
         enonce: `Une fonction f est définie sur [−5;6]. Ses variations :
@@ -4628,7 +4627,7 @@ Sur [4;6] : f passe de 4 à 2, donc f(x)=2 en x=6
 Solution approx : [x₁;x₂] ∪ [x₃;6] (à lire précisément sur le graphe)`
       },
       {
-        id: 'FO-5', source: 'Henri-IV', difficulte: 2,
+        id: 'FO-5', difficulte: 2,
         titre: 'Étude complète d\'une fonction affine',
         notions: ['Fonction affine', 'Variations', 'Représentation'],
         enonce: `f(x) = −2x + 5.
@@ -4647,7 +4646,7 @@ Tableau : x de −∞ vers +∞, f de +∞ vers −∞ (flèche descendante)
 4. D=ℝ symétrique. f(−x) = 2x+5 ≠ f(x) et ≠ −f(x) → NI PAIRE NI IMPAIRE`
       },
       {
-        id: 'FO-6', source: 'LLG', difficulte: 2,
+        id: 'FO-6', difficulte: 2,
         titre: 'Résolutions graphiques',
         notions: ['Résolutions graphiques', 'Équations', 'Inéquations'],
         enonce: `On donne les courbes de f(x)=x² et g(x)=x+2.
@@ -4671,7 +4670,7 @@ Solution : ]−∞;−1] ∪ [2;+∞[
 Solution : ]−1; 2[`
       },
       {
-        id: 'FO-7', source: 'Henri-IV', difficulte: 2,
+        id: 'FO-7', difficulte: 2,
         titre: 'Tableau de signes d\'une fonction affine',
         notions: ['Tableau de signes', 'Fonction affine'],
         enonce: `1. Dresser le tableau de signes de f(x) = 3x−6.
@@ -4699,7 +4698,7 @@ fg ≥ 0 seulement en x=2 (fg=0)
 Solution : {2}`
       },
       {
-        id: 'FO-8', source: 'LLG', difficulte: 2,
+        id: 'FO-8', difficulte: 2,
         titre: 'Signe d\'un produit — tableau complet',
         notions: ['Tableau de signes', 'Produit'],
         enonce: `Résoudre par tableau de signes :
@@ -4732,7 +4731,7 @@ x<−1: (−)(−)(−)=− ; x=−1: 0 ; −1<x<0: (−)(−)(+)=+ ; x=0: 0 ; 0
 ≤0 : ]−∞;−1] ∪ [0;2]`
       },
       {
-        id: 'FO-9', source: 'Henri-IV', difficulte: 2,
+        id: 'FO-9', difficulte: 2,
         titre: 'Étude de la fonction f(x) = x² - 4x + 3',
         notions: ['Trinôme', 'Variations', 'Signes'],
         enonce: `f(x) = x²−4x+3.
@@ -4755,7 +4754,7 @@ f(x) < −1 : f(x)+1 < 0 → x²−4x+4 < 0 → (x−2)² < 0 → jamais (carré
 Donc f(x) < −1 n'a pas de solution (f(2)=−1 est le minimum)`
       },
       {
-        id: 'FO-10', source: 'LLG', difficulte: 2,
+        id: 'FO-10', difficulte: 2,
         titre: 'Positions relatives de deux courbes',
         notions: ['Positions relatives', 'Comparaison'],
         enonce: `f(x) = x² et g(x) = 2x−1.
@@ -4781,7 +4780,7 @@ f(x) = g(x) : x=0 ou x=1
 1/x = x ⟺ x=1`
       },
       {
-        id: 'FO-11', source: 'Henri-IV', difficulte: 2,
+        id: 'FO-11', difficulte: 2,
         titre: 'Étude d\'une fonction avec domaine restreint',
         notions: ['Domaine de définition', 'Variations'],
         enonce: `h(x) = √(4−x²).
@@ -4808,7 +4807,7 @@ h :   0   ↗   2   ↘  0
 Maximum en x=0 : h(0) = 2`
       },
       {
-        id: 'FO-12', source: 'LLG', difficulte: 2,
+        id: 'FO-12', difficulte: 2,
         titre: 'Signe d\'un quotient — cas général',
         notions: ['Tableau de signes', 'Quotient'],
         enonce: `Résoudre par tableau de signes (préciser valeurs interdites) :
@@ -4836,7 +4835,7 @@ Donc signe = signe de (x+1) :
 Solution : ]−1;+∞[`
       },
       {
-        id: 'FO-13', source: 'Henri-IV', difficulte: 2,
+        id: 'FO-13', difficulte: 2,
         titre: 'Applications — optimisation de fonctions',
         notions: ['Optimisation', 'Fonctions'],
         enonce: `Un producteur vend x unités (0 ≤ x ≤ 100) à un prix p(x) = 50−0,3x euros.
@@ -4857,7 +4856,7 @@ Maximum en x = 250/3 ≈ 83,3 unités (arrondir à 83)
 CA(83) ≈ 50×83−0,3×83² = 4150−2066,7 ≈ 2083€`
       },
       {
-        id: 'FO-14', source: 'LLG', difficulte: 3,
+        id: 'FO-14', difficulte: 3,
         titre: 'Croissance et comparaison de fonctions',
         notions: ['Croissance', 'Comparaison', 'Démonstrations'],
         enonce: `Démontrer algébriquement les propriétés de croissance suivantes :
@@ -4885,7 +4884,7 @@ b > a ≥ 0 → b−a > 0 et √b+√a ≥ 0
 Donc √b−√a > 0 (si a=b=0, trivial) : h croissante. ✓`
       },
       {
-        id: 'FO-15', source: 'Henri-IV & LLG', difficulte: 3,
+        id: 'FO-15', difficulte: 3,
         titre: 'Problème complet — étude d\'une fonction',
         notions: ['Étude complète', 'Variations', 'Signes', 'Applications'],
         enonce: `Soit f(x) = (x²−4)/(x+1).
@@ -4928,7 +4927,7 @@ La droite y=x−1 est asymptote oblique en +∞.`
     notions: ['Vecteurs', 'Coordonnées', 'Colinéarité', 'Équations de droites', 'Perpendiculaires', 'Systèmes'],
     exercices: [
       {
-        id: 'GE-1', source: 'Henri-IV', difficulte: 1,
+        id: 'GE-1', difficulte: 1,
         titre: 'Vecteurs — coordonnées et opérations',
         notions: ['Vecteurs', 'Coordonnées', 'Opérations'],
         enonce: `A(1;3), B(4;7), C(−1;2), D(6;1).
@@ -4948,7 +4947,7 @@ AB⃗(3;4) ; CD⃗(7;−1) ; AC⃗(−2;−1)
 4. Milieu de [BD] : ((4+6)/2;(7+1)/2) = (5;4)`
       },
       {
-        id: 'GE-2', source: 'LLG', difficulte: 1,
+        id: 'GE-2', difficulte: 1,
         titre: 'Relation de Chasles',
         notions: ['Relation de Chasles', 'Vecteurs'],
         enonce: `Exprimer les vecteurs suivants en utilisant la relation de Chasles :
@@ -4967,7 +4966,7 @@ AE⃗ = AB⃗ + BE⃗ = AB⃗ + (AC⃗−AB⃗)/2 = (AB⃗+AC⃗)/2
 AC⃗ = AB⃗ + BC⃗ = AB⃗ + AD⃗`
       },
       {
-        id: 'GE-3', source: 'Henri-IV', difficulte: 1,
+        id: 'GE-3', difficulte: 1,
         titre: 'Colinéarité et alignement',
         notions: ['Colinéarité', 'Déterminant'],
         enonce: `1. A(0;0), B(2;4), C(3;6). Les points A, B, C sont-ils alignés ?
@@ -4982,7 +4981,7 @@ AC⃗ = AB⃗ + BC⃗ = AB⃗ + AD⃗`
 det = 2×6−(k−2)×4 = 12−4k+8 = 20−4k = 0 → k = 5`
       },
       {
-        id: 'GE-4', source: 'LLG', difficulte: 1,
+        id: 'GE-4', difficulte: 1,
         titre: 'Équation d\'une droite — formes',
         notions: ['Équation de droite', 'Coefficient directeur'],
         enonce: `1. Écrire l'équation de la droite passant par A(2;5) et B(6;9).
@@ -4998,7 +4997,7 @@ det = 2×6−(k−2)×4 = 12−4k+8 = 20−4k = 0 → k = 5`
 4. 2x+1=−x+4 → 3x=3 → x=1, y=3 → Point (1;3)`
       },
       {
-        id: 'GE-5', source: 'Henri-IV', difficulte: 2,
+        id: 'GE-5', difficulte: 2,
         titre: 'Positions relatives de droites',
         notions: ['Positions relatives', 'Parallèles', 'Perpendiculaires'],
         enonce: `Étudier les positions relatives de :
@@ -5017,7 +5016,7 @@ m₁×m₂ = (−2)(1/2) = −1 → PERPENDICULAIRES
 Même équation que d₁ → CONFONDUES`
       },
       {
-        id: 'GE-6', source: 'LLG', difficulte: 2,
+        id: 'GE-6', difficulte: 2,
         titre: 'Construction de droites',
         notions: ['Droites', 'Perpendiculaires', 'Parallèles'],
         enonce: `1. Écrire l'équation de la droite d perpendiculaire à y=3x+1 passant par A(0;2).
@@ -5033,7 +5032,7 @@ Pente AB: (7−3)/(5−1)=1 → pente médiatrice: −1
 Équation : y−5=−(x−3) → y=−x+8`
       },
       {
-        id: 'GE-7', source: 'Henri-IV', difficulte: 2,
+        id: 'GE-7', difficulte: 2,
         titre: 'Résolution de systèmes 2×2',
         notions: ['Systèmes', 'Substitution', 'Combinaison'],
         enonce: `Résoudre par les deux méthodes (substitution ET combinaison) :
@@ -5050,7 +5049,7 @@ Addition: 19x=11 → x=11/19
 y=(2×11/19−4)/3=(22/19−76/19)/3=(−54/19)/3=−54/57=−18/19`
       },
       {
-        id: 'GE-8', source: 'LLG', difficulte: 2,
+        id: 'GE-8', difficulte: 2,
         titre: 'Théorème de Thalès',
         notions: ['Thalès', 'Proportions'],
         enonce: `1. Dans le triangle ABC, M est sur [AB] et N sur [AC] avec MN ∥ BC.
@@ -5072,7 +5071,7 @@ hauteur/ombre = hauteur_bâton/ombre_bâton
 h/4 = 2/0,8 = 2,5 → h = 10m`
       },
       {
-        id: 'GE-9', source: 'Henri-IV', difficulte: 2,
+        id: 'GE-9', difficulte: 2,
         titre: 'Pythagore — applications',
         notions: ['Pythagore', 'Réciproque'],
         enonce: `1. Calculer la longueur manquante dans les triangles rectangles :
@@ -5097,7 +5096,7 @@ AB²+AC²=9+16=25=BC² → rectangle en A ✓
 3. (3k)²+(4k)²=9k²+16k²=25k²=(5k)² ✓ pour tout k>0`
       },
       {
-        id: 'GE-10', source: 'LLG', difficulte: 2,
+        id: 'GE-10', difficulte: 2,
         titre: 'Problème géométrique — démonstrations',
         notions: ['Vecteurs', 'Milieux', 'Démonstrations'],
         enonce: `ABCD est un quadrilatère quelconque. M, N, P, Q sont les milieux respectifs de [AB], [BC], [CD], [DA].
@@ -5116,7 +5115,7 @@ Les vecteurs MN⃗ et QP⃗ sont égaux → MN et QP sont parallèles et de mêm
 Donc MNPQ est un parallélogramme (théorème de Varignon).`
       },
       {
-        id: 'GE-11', source: 'Henri-IV', difficulte: 2,
+        id: 'GE-11', difficulte: 2,
         titre: 'Coordonnées — calculs divers',
         notions: ['Coordonnées', 'Milieu', 'Distance'],
         enonce: `A(−2;5), B(4;1), C(1;−3).
@@ -5143,7 +5142,7 @@ AB²+BC²=52+25=77≠73=CA² ; AB²+CA²=125≠25 ; BC²+CA²=98≠52
 → pas rectangle`
       },
       {
-        id: 'GE-12', source: 'LLG', difficulte: 2,
+        id: 'GE-12', difficulte: 2,
         titre: 'Droites remarquables — médiatrice et hauteur',
         notions: ['Médiatrice', 'Hauteur', 'Perpendiculaires'],
         enonce: `Triangle A(0;4), B(−3;0), C(3;0).
@@ -5168,7 +5167,7 @@ Orthocentre : (0;9/4)
 Note : le triangle est isocèle (AB=AC=5), donc l'axe de symétrie x=0 contient l'orthocentre.`
       },
       {
-        id: 'GE-13', source: 'Henri-IV', difficulte: 2,
+        id: 'GE-13', difficulte: 2,
         titre: 'Vecteurs colinéaires — applications',
         notions: ['Colinéarité', 'Parallélisme'],
         enonce: `1. Montrer que A(1;2), B(3;6), C(5;10) sont alignés.
@@ -5191,7 +5190,7 @@ Point B(3;5) sur (AB) : y=3x/2+1/2... vérif C(4;1): 3×4/2+1/2=6,5≠1 → non 
 → PARALLÈLES`
       },
       {
-        id: 'GE-14', source: 'LLG', difficulte: 3,
+        id: 'GE-14', difficulte: 3,
         titre: 'Barycentre et point particulier',
         notions: ['Milieux', 'Vecteurs', 'Géométrie'],
         enonce: `A(1;0), B(5;0), C(3;4).
@@ -5218,7 +5217,7 @@ Centre O=(3;3/2)
 Rayon R=OA=√((3−1)²+(3/2)²)=√(4+9/4)=√(25/4)=5/2`
       },
       {
-        id: 'GE-15', source: 'Henri-IV & LLG', difficulte: 3,
+        id: 'GE-15', difficulte: 3,
         titre: 'Problème — géométrie analytique complète',
         notions: ['Droites', 'Distances', 'Vecteurs'],
         enonce: `Un triangle a pour sommets A(0;0), B(6;0), C(2;4).
@@ -5263,7 +5262,7 @@ y_I ≈ r ≈ 1,49 (distance à (AB): y=0 est simplement la coordonnée y)
     notions: ['Moyenne', 'Écart-type', 'Quartiles', 'Taux d\'évolution', 'Probabilités', 'Intervalle de fluctuation'],
     exercices: [
       {
-        id: 'SP-1', source: 'Henri-IV', difficulte: 1,
+        id: 'SP-1', difficulte: 1,
         titre: 'Calcul de moyenne',
         notions: ['Moyenne'],
         enonce: `Notes de 10 élèves : 8, 12, 15, 9, 14, 18, 11, 13, 7, 13.
@@ -5277,7 +5276,7 @@ y_I ≈ r ≈ 1,49 (distance à (AB): y=0 est simplement la coordonnée y)
 3. Sans 18 : (120−18)/9 = 102/9 ≈ 11,33`
       },
       {
-        id: 'SP-2', source: 'LLG', difficulte: 1,
+        id: 'SP-2', difficulte: 1,
         titre: 'Médiane et quartiles',
         notions: ['Médiane', 'Quartiles', 'EI'],
         enonce: `Données ordonnées : 3, 5, 7, 8, 10, 12, 14, 15, 18, 20.
@@ -5295,7 +5294,7 @@ Borne haute : Q3+1,5×EI = 15+12 = 27
 Toutes les valeurs sont dans [−5;27] → pas de valeur aberrante`
       },
       {
-        id: 'SP-3', source: 'Henri-IV', difficulte: 1,
+        id: 'SP-3', difficulte: 1,
         titre: 'Variance et écart-type',
         notions: ['Variance', 'Écart-type'],
         enonce: `Série : 4, 6, 8, 10, 12 (5 valeurs).
@@ -5315,7 +5314,7 @@ Ici σ ≈ 2,83 : les valeurs s'écartent en moyenne d'environ 2,83 unités de l
 Intervalle [x̄−σ;x̄+σ] = [5,17;10,83] contient 6, 8, 10 (3 valeurs sur 5 = 60%)`
       },
       {
-        id: 'SP-4', source: 'LLG', difficulte: 1,
+        id: 'SP-4', difficulte: 1,
         titre: 'Taux d\'évolution',
         notions: ['Taux d\'évolution', 'Coefficient multiplicateur'],
         enonce: `1. Un article coûtait 80€, il vaut maintenant 96€. Taux d'évolution ?
@@ -5331,7 +5330,7 @@ Intervalle [x̄−σ;x̄+σ] = [5,17;10,83] contient 6, 8, 10 (3 valeurs sur 5 =
 4. Après +10% : CM=1,1. Pour revenir : CM_retour = 1/1,1 ≈ 0,909 → baisse de ≈9,09%`
       },
       {
-        id: 'SP-5', source: 'Henri-IV', difficulte: 2,
+        id: 'SP-5', difficulte: 2,
         titre: 'Évolutions successives et réciproques',
         notions: ['Évolutions successives', 'Évolution réciproque'],
         enonce: `1. +15% puis −10% : évolution globale ?
@@ -5350,7 +5349,7 @@ Vérification : 0,8×1,25 = 1 ✓
 Hausse globale ≈ +4,65% par rapport à 2022`
       },
       {
-        id: 'SP-6', source: 'LLG', difficulte: 2,
+        id: 'SP-6', difficulte: 2,
         titre: 'Statistiques descriptives complètes',
         notions: ['Moyenne', 'Écart-type', 'Quartiles'],
         enonce: `Notes de 15 élèves : 5, 7, 8, 8, 9, 10, 11, 12, 12, 13, 14, 15, 15, 17, 19.
@@ -5375,7 +5374,7 @@ Valeurs dans cet intervalle : 8,8,9,10,11,12,12,13,14,15,15 → 11 valeurs sur 1
 Pourcentage : 11/15 ≈ 73%`
       },
       {
-        id: 'SP-7', source: 'Henri-IV', difficulte: 2,
+        id: 'SP-7', difficulte: 2,
         titre: 'Probabilités — dé et tirage',
         notions: ['Probabilités', 'Équiprobabilité'],
         enonce: `On lance un dé à 6 faces équilibré.
@@ -5394,7 +5393,7 @@ Multiples de 6 : {6} → P = 1/6
 4. P(A)+P(B)−P(A∩B) = 1/2+1/3−1/6 = 3/6+2/6−1/6 = 4/6 = 2/3 = P(A∪B) ✓`
       },
       {
-        id: 'SP-8', source: 'LLG', difficulte: 2,
+        id: 'SP-8', difficulte: 2,
         titre: 'Probabilités — tirage sans remise',
         notions: ['Probabilités', 'Dénombrement'],
         enonce: `Une urne contient 4 boules rouges (R), 3 bleues (B), 2 vertes (V).
@@ -5412,7 +5411,7 @@ P(même couleur) = P(2R)+P(2B)+P(2V)
 = (6+3+1)/36 = 10/36 = 5/18`
       },
       {
-        id: 'SP-9', source: 'Henri-IV', difficulte: 2,
+        id: 'SP-9', difficulte: 2,
         titre: 'Événements — formules',
         notions: ['Événements', 'Complémentaire', 'Formules'],
         enonce: `P(A) = 0,4, P(B) = 0,5, P(A∩B) = 0,2.
@@ -5432,7 +5431,7 @@ P(Ā∩B̄) = P(A∪B)̄ = 1−P(A∪B) = 1−0,7 = 0,3
 P(Ā∩B) = P(B)−P(A∩B) = 0,5−0,2 = 0,3`
       },
       {
-        id: 'SP-10', source: 'LLG', difficulte: 2,
+        id: 'SP-10', difficulte: 2,
         titre: 'Intervalle de fluctuation',
         notions: ['Intervalle de fluctuation', 'Échantillonnage'],
         enonce: `Dans une grande ville, 35% des habitants utilisent les transports en commun (p=0,35).
@@ -5451,7 +5450,7 @@ Un sondage interroge n=400 personnes.
 4. Largeur = 2/√n = 0,04 → √n = 50 → n = 2500 personnes`
       },
       {
-        id: 'SP-11', source: 'Henri-IV', difficulte: 2,
+        id: 'SP-11', difficulte: 2,
         titre: 'Proportion de proportion',
         notions: ['Proportions', 'Probabilités'],
         enonce: `Dans un lycée : 55% des élèves sont des filles. Parmi les filles, 40% font de la musique. Parmi les garçons, 25% font de la musique.
@@ -5467,7 +5466,7 @@ P(garçon et musique) = 0,45×0,25 = 0,1125 = 11,25%
 = 0,22 + 0,1125 = 0,3325 = 33,25%`
       },
       {
-        id: 'SP-12', source: 'LLG', difficulte: 2,
+        id: 'SP-12', difficulte: 2,
         titre: 'Applications des statistiques — analyse de données',
         notions: ['Statistiques', 'Analyse'],
         enonce: `Deux classes ont les résultats suivants à un contrôle (sur 20) :
@@ -5493,7 +5492,7 @@ L'élève de B est à 0,4 écart-type au-dessus de sa moyenne.
 → L'élève de A est "plus méritant" relativement à sa classe.`
       },
       {
-        id: 'SP-13', source: 'Henri-IV', difficulte: 2,
+        id: 'SP-13', difficulte: 2,
         titre: 'Probabilités — arbre et calculs',
         notions: ['Arbre de probabilités', 'Calculs'],
         enonce: `Un test médical est positif dans 95% des cas si la personne est malade, et dans 3% des cas si elle est saine. Dans une population, 2% des personnes sont malades.
@@ -5516,7 +5515,7 @@ Remarque surprenante : même si le test est positif, il y a 39% de chance d'êtr
 C'est le "paradoxe du test médical" dû à la rareté de la maladie.`
       },
       {
-        id: 'SP-14', source: 'LLG', difficulte: 3,
+        id: 'SP-14', difficulte: 3,
         titre: 'Loi des grands nombres — simulation',
         notions: ['Probabilités', 'Simulation', 'Fréquence'],
         enonce: `On lance une pièce équilibrée n fois. Soit fₙ la fréquence d'apparition de Face.
@@ -5541,7 +5540,7 @@ Plus n est grand, plus fₙ est proche de la probabilité théorique p.
 C'est le fondement mathématique de la notion de probabilité.`
       },
       {
-        id: 'SP-15', source: 'Henri-IV & LLG', difficulte: 3,
+        id: 'SP-15', difficulte: 3,
         titre: 'Problème complet — statistiques et probabilités',
         notions: ['Statistiques', 'Probabilités', 'Analyse'],
         enonce: `Une entreprise fabrique des pièces. 5% sont défectueuses.
@@ -5740,7 +5739,7 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
       <div style={{background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.3)',
         borderRadius:12,padding:'14px 18px',marginBottom:24,fontSize:13}}>
         ℹ️ <strong>Pas d'examen national en Première</strong> — Ces exercices proviennent des livrets
-        officiels du <strong>Lycée Henri-IV</strong> (Paris, 2024) et de <strong>Louis-le-Grand &amp; Henri-IV</strong> (LLG 2022),
+        officiels du <strong>Lycée MathBac</strong> (Paris, 2024) et de <strong>MathBac &amp; MathBac</strong> (MathBac 2022),
         couvrant tout le programme de Première Spécialité. Choisissez un chapitre ci-dessous.
       </div>
 
@@ -5826,7 +5825,6 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
                       </div>
                       <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                         <span style={{fontSize:10,color:diffColor,fontWeight:700}}>{stars} (niv. {ex.difficulte})</span>
-                        <span style={{fontSize:10,color:'var(--muted)'}}>📚 {ex.source}</span>
                         {ex.notions.slice(0,2).map(n=>(
                           <span key={n} style={{fontSize:10,background:'var(--surface)',color:'var(--muted)',
                             border:'1px solid var(--border)',padding:'1px 6px',borderRadius:10}}>{n}</span>
@@ -5945,7 +5943,7 @@ export default function ExamensFrancePage() {
                 <div style={{marginTop:4}}>📚 Exercices originaux — niveaux ★ à ★★★★</div>
               </>) : activeSec === 'premiere-specialite' ? (<>
                 <div>📗 {CHAPITRES_PREMIERE.length} chapitres · {CHAPITRES_PREMIERE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
-                <div style={{marginTop:4}}></div>
+                <div style={{marginTop:4}}>📚 Exercices originaux</div>
               </>) : (<>
                 <div>📅 2021 → 2025 · 5 années</div>
                 <div style={{marginTop:4}}>📄 Sujet + ✅ Correction par centre d'examen</div>
