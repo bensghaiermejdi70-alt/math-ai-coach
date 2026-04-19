@@ -181,7 +181,7 @@ export default function AbonnementFrancePage() {
             Paiement sécurisé par carte bancaire via Stripe · Sans engagement · Résiliable à tout moment
           </p>
           <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginTop:16, background:'rgba(245,158,11,0.08)', border:'1px solid rgba(245,158,11,0.25)', borderRadius:12, padding:'10px 18px', fontSize:12, color:'#fbbf24', maxWidth:520 }}>
-            💡 <span><strong>En mai–juin :</strong> passez au plan Intensif (29 €) pour les quotas boostés + Bac Blanc. Résiliable à tout moment.</span>
+            💡 <span><strong>En mai–juin :</strong> pour programme 19 eur passer au plan sprint bac pour les quotas boostés au mois de mai et juin  + Bac Blanc. Résiliable à tout moment.</span>
           </div>
         </section>
 
