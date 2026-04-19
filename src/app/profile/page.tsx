@@ -1,7 +1,7 @@
 'use client'
 // src/app/profile/page.tsx
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
 import Navbar from '@/components/layout/Navbar'
@@ -9,6 +9,29 @@ import Footer from '@/components/layout/Footer'
 
 export default function ProfilePage() {
   const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut, refreshSubscription } = useAuth()
+
+  // ── Portail Stripe (désabonnement France) ──
+  const [portalLoading, setPortalLoading] = useState(false)
+  const [portalError, setPortalError] = useState('')
+  const handlePortal = async () => {
+    if (!user?.id) return
+    setPortalLoading(true)
+    setPortalError('')
+    try {
+      const res = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      })
+      const { url, error } = await res.json()
+      if (url) window.location.href = url
+      else setPortalError(error || 'Erreur portail Stripe')
+    } catch {
+      setPortalError('Erreur de connexion au portail')
+    } finally {
+      setPortalLoading(false)
+    }
+  }
 
   // Recharger le profil à chaque visite de la page
   useEffect(() => {
@@ -121,13 +144,43 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <div style={{ display:'flex', gap:8 }}>
-                      <Link href="/abonnement" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
-                        🇹🇳 Tunisie
-                      </Link>
-                      <Link href="/abonnement-france" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
-                        🇫🇷 France
-                      </Link>
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      <div style={{ display:'flex', gap:8 }}>
+                        <Link href="/abonnement" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                          🇹🇳 Tunisie
+                        </Link>
+                        <Link href="/abonnement-france" className="btn btn-ghost btn-sm" style={{ flex:1, justifyContent:'center' }}>
+                          🇫🇷 France
+                        </Link>
+                      </div>
+
+                      {/* Portail Stripe — Gérer / Désabonner */}
+                      <button
+                        onClick={handlePortal}
+                        disabled={portalLoading}
+                        style={{
+                          width:'100%', padding:'10px', borderRadius:10, border:'1px solid rgba(239,68,68,0.3)',
+                          background:'rgba(239,68,68,0.06)', color:'#f87171', fontSize:13, fontWeight:700,
+                          cursor: portalLoading ? 'not-allowed' : 'pointer', transition:'all 0.2s',
+                          display:'flex', alignItems:'center', justifyContent:'center', gap:8,
+                          opacity: portalLoading ? 0.7 : 1,
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.12)'}
+                        onMouseLeave={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'}
+                      >
+                        {portalLoading
+                          ? <><span style={{ width:14, height:14, border:'2px solid rgba(248,113,113,0.3)', borderTopColor:'#f87171', borderRadius:'50%', animation:'spin 0.7s linear infinite', display:'inline-block' }} /> Chargement...</>
+                          : '⚙️ Gérer · Modifier · Résilier mon abonnement France'
+                        }
+                      </button>
+                      {portalError && (
+                        <div style={{ fontSize:12, color:'#f87171', textAlign:'center', padding:'4px 0' }}>
+                          ⚠️ {portalError}
+                        </div>
+                      )}
+                      <div style={{ fontSize:11, color:'var(--muted)', textAlign:'center' }}>
+                        Portail sécurisé Stripe · Abonnement Tunisie → contacter le support
+                      </div>
                     </div>
                   </>
 
@@ -206,6 +259,10 @@ export default function ProfilePage() {
         </section>
       </main>
       <Footer />
+      <style suppressHydrationWarning>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.5 } }
+      `}</style>
     </>
   )
 }
