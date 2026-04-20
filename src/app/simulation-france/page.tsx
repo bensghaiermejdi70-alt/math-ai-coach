@@ -42,7 +42,7 @@ const SECTION_CONFIGS = [
   { key:'premiere',  label:'Première-Spécialité', color:'#4f6ef7', icon:'📗',
     themes:['Suites numériques','Second degré','Dérivation','Exponentielle','Trigonométrie','Produit scalaire','Géométrie repérée','Probabilités conditionnelles','Variables aléatoires'] },
   { key:'seconde',   label:'Seconde-Générale', color:'#10b981', icon:'📘',
-    themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Signe d'une fonction','Géométrie & Vecteurs','Droites & Systèmes','Statistiques & Probabilités'] },
+    themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Signe fonction','Géométrie & Vecteurs','Droites & Systèmes','Statistiques & Probabilités'] },
   { key:'techno',    label:'Terminale-techno-STMG / STI2D', color:'#10b981', icon:'📊',
     themes:['Fonctions & Suites (STMG)','Stats 2 var. (STMG)','Probas & Finance (STMG)','Suites & Expo/Ln (STI2D)','Intégration & Probas (STI2D)','Géométrie espace (STI2D)'] },
   { key:'expertes',  label:'Maths-Expertes', color:'#8b5cf6', icon:'★',
