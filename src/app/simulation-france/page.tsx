@@ -45,6 +45,8 @@ const SECTION_CONFIGS = [
     themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Signe fonction','Géométrie & Vecteurs','Droites & Systèmes','Statistiques & Probabilités'] },
   { key:'techno',    label:'Terminale-techno-STMG / STI2D', color:'#10b981', icon:'📊',
     themes:['Fonctions & Suites (STMG)','Stats 2 var. (STMG)','Probas & Finance (STMG)','Suites & Expo/Ln (STI2D)','Intégration & Probas (STI2D)','Géométrie espace (STI2D)'] },
+  { key:'seconde',   label:'Seconde-Générale', color:'#06d6a0', icon:'📘',
+    themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Signe fonction','Géométrie & Vecteurs','Droites & Systèmes','Probabilités & Statistiques'] },
   { key:'expertes',  label:'Maths-Expertes', color:'#8b5cf6', icon:'★',
     themes:['Arithmétique (PGCD, Bézout, Fermat)','Complexes (Moivre, racines n-ièmes)','Graphes & Matrices','Chaînes de Markov'] },
 ]
@@ -236,6 +238,10 @@ Ex1=Suites ou Fonctions (7 pts), Ex2=Probabilités (6 pts), Ex3=Analyse STI2D ex
 
 Si section Maths Expertes → 3 exercices (7+7+6=20) :
 Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6 pts)
+
+Si section Seconde Générale → 4 exercices de 5 pts chacun (4×5=20) :
+Ex1=Algorithmique & Python (boucles, fonctions, listes — niveau Seconde), Ex2=Fonctions & Variations (étude fonction, tableau variations, signe — PAS de dérivée formelle), Ex3=Géométrie & Vecteurs (vecteurs, colinéarité, droites, systèmes), Ex4=Statistiques & Probabilités (probabilités, moyenne, écart-type, intervalle fluctuation)
+NIVEAU SECONDE UNIQUEMENT : pas de dérivation, pas d'intégration, pas de complexes, pas de logarithme.
 
 Si section Seconde Générale → 4 exercices de 5 pts chacun (4×5=20) :
 Ex1=Algorithmique & Python (programme, boucles, fonctions), Ex2=Fonctions & Variations (étude de fonction, tableau de variations, signe), Ex3=Géométrie & Vecteurs (vecteurs, droites, systèmes, colinéarité), Ex4=Probabilités & Statistiques (calcul de probabilités, moyenne, écart-type, intervalle de fluctuation)
@@ -1878,6 +1884,23 @@ const CHAPITRES_PAR_SECTION: Record<string, {
       { slug:'theorie-graphes',     titre:'Theorie des graphes',                     badge:'Graphes',     desc:'Vocabulaire (sommets, aretes, degres), graphes orientes et non orientes, chaines euleriennes, matrice d adjacence, graphes probabilistes.' },
       { slug:'calcul-matriciel',    titre:'Calcul matriciel',                         badge:'Matrices',   desc:'Matrices carrees ordre 2 et 3, addition, multiplication, matrice identite I, matrice inverse A inverse (ordre 2), puissances M^n, transformations.' },
       { slug:'chaines-markov',      titre:'Chaines de Markov',                       badge:'Graphes',     desc:'Matrice de transition, evolution P(n+1)=P(n)*M, calcul P(n)=P0*M^n, etat stable pi=pi*M, convergence vers l etat stationnaire.' },
+    ],
+  },
+
+,
+
+  // ─── Seconde Générale — 9 thèmes (source: /bac-france/seconde/[slug]) ───
+  seconde: { key:'seconde', label:'Seconde Générale', color:'#06d6a0', icon:'📘',
+    chapitres: [
+      { slug:'python-algorithmique', titre:'Algorithmique & Python',             badge:'Informatique', desc:'Variables, types, conditions if/elif/else, fonctions def/return, boucles for/while, listes, algorithmes de tri, dichotomie, Monte-Carlo.' },
+      { slug:'nombres-calculs',      titre:'Nombres & Calculs',                  badge:'Algèbre',      desc:'Puissances et propriétés, racines carrées simplification, PGCD algorithme Euclide, PPCM, ensembles ℕℤℚℝ, notation scientifique, irrationnels.' },
+      { slug:'intervalles-inequations', titre:'Intervalles, Inégalités & Inéquations', badge:'Algèbre', desc:'Notations intervalles ouverts/fermés, propriétés inégalités, résolution inéquations 1er degré, valeur absolue, encadrements, systèmes.' },
+      { slug:'calcul-litteral',      titre:'Calcul Littéral',                    badge:'Algèbre',      desc:'Identités remarquables (a+b)², (a-b)², (a+b)(a-b), factorisation, produit nul, fractions algébriques, équations 2nd degré, discriminant.' },
+      { slug:'fonctions-generalites', titre:'Fonctions — Généralités & Variations', badge:'Fonctions', desc:'Image et antécédent, lecture graphique, parité (paire/impaire), tableau de variations, extremums, fonctions de référence x², 1/x, √x.' },
+      { slug:'signe-fonction',       titre:'Signe & Positions relatives',        badge:'Fonctions',    desc:'Tableau de signes, produit et quotient de fonctions affines, résolution inéquations graphiques, positions relatives de deux courbes.' },
+      { slug:'geometrie-vecteurs',   titre:'Géométrie & Vecteurs',               badge:'Géométrie',    desc:'Vecteurs coordonnées, relation de Chasles, colinéarité det=0, milieu, distance, théorème de Thalès et réciproque, Pythagore.' },
+      { slug:'droites-systemes',     titre:'Droites du Plan & Systèmes',         badge:'Géométrie',    desc:'Équation y=ax+b, coefficient directeur, parallèles/perpendiculaires, médiatrice, hauteur, résolution systèmes 2×2 substitution/combinaison.' },
+      { slug:'stats-probas',         titre:'Statistiques & Probabilités',         badge:'Stats',        desc:'Moyenne, médiane, quartiles, écart-type, taux évolution, probabilités P(A∪B), arbre, indépendance, intervalle fluctuation 95% [p±1/√n].' },
     ],
   },
 
