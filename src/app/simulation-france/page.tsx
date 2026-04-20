@@ -1887,8 +1887,6 @@ const CHAPITRES_PAR_SECTION: Record<string, {
     ],
   },
 
-,
-
   // ─── Seconde Générale — 9 thèmes (source: /bac-france/seconde/[slug]) ───
   seconde: { key:'seconde', label:'Seconde Générale', color:'#06d6a0', icon:'📘',
     chapitres: [
