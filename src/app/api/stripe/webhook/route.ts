@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     const event = stripe.webhooks.constructEvent(
       body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET!.trim()
     )
 
     console.log(`Webhook: ${event.type}`)
@@ -181,6 +181,18 @@ export async function POST(req: Request) {
         } else {
           console.log(`⚠️ Profil non trouvé pour ${email} — abonnement enregistré sans user_id`)
         }
+      }
+
+      // Vérifier si abonnement déjà existant pour cette session
+      const { data: existingSub } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("payment_reference", session.id)
+        .single()
+
+      if (existingSub) {
+        console.log(`⚠️ Abonnement déjà existant pour session ${session.id} — skip`)
+        return NextResponse.json({ received: true })
       }
 
       // Insérer dans subscriptions
