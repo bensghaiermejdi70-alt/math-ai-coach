@@ -41,6 +41,8 @@ const SECTION_CONFIGS = [
     themes:['Suites & Complexes','Limites & Continuité','Dérivation avancée','Logarithme','Intégration','Éq. différentielles','Géométrie espace','Probabilités & Loi normale','Algorithmique'] },
   { key:'premiere',  label:'Première-Spécialité', color:'#4f6ef7', icon:'📗',
     themes:['Suites numériques','Second degré','Dérivation','Exponentielle','Trigonométrie','Produit scalaire','Géométrie repérée','Probabilités conditionnelles','Variables aléatoires'] },
+  { key:'seconde',   label:'Seconde-Générale', color:'#10b981', icon:'📘',
+    themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Signe d'une fonction','Géométrie & Vecteurs','Droites & Systèmes','Statistiques & Probabilités'] },
   { key:'techno',    label:'Terminale-techno-STMG / STI2D', color:'#10b981', icon:'📊',
     themes:['Fonctions & Suites (STMG)','Stats 2 var. (STMG)','Probas & Finance (STMG)','Suites & Expo/Ln (STI2D)','Intégration & Probas (STI2D)','Géométrie espace (STI2D)'] },
   { key:'expertes',  label:'Maths-Expertes', color:'#8b5cf6', icon:'★',
@@ -234,6 +236,10 @@ Ex1=Suites ou Fonctions (7 pts), Ex2=Probabilités (6 pts), Ex3=Analyse STI2D ex
 
 Si section Maths Expertes → 3 exercices (7+7+6=20) :
 Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6 pts)
+
+Si section Seconde Générale → 4 exercices de 5 pts chacun (4×5=20) :
+Ex1=Algorithmique & Python (programme, boucles, fonctions), Ex2=Fonctions & Variations (étude de fonction, tableau de variations, signe), Ex3=Géométrie & Vecteurs (vecteurs, droites, systèmes, colinéarité), Ex4=Probabilités & Statistiques (calcul de probabilités, moyenne, écart-type, intervalle de fluctuation)
+Niveau adapté Seconde : pas de dérivation formelle, pas d'intégration, pas de complexes — programme officiel Seconde seulement.
 
 {
   "title": "${section} — Simulation IA Variante ${idx+1}",
