@@ -924,7 +924,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
     <div class="header-left">
       <div class="brand">∑ Bac.AI Tunisie · Solveur IA</div>
       <div class="htitle">${icon} ${modeLabel}</div>
-      <div class="hsub">Programme officiel · Bac Tunisie & France</div>
+      <div class="hsub">Programme officiel CNP · Bac Tunisie</div>
     </div>
     <div class="header-right">
       <strong>Date :</strong> ${date}<br>
@@ -948,7 +948,7 @@ ${bodyLines}
   <!-- PIED DE PAGE -->
   <div class="footer">
     <span><strong>Bac.AI Tunisie</strong> — Solveur IA · Programme CNP officiel</span>
-    <span>Session Bac Tunisie & France ${new Date().getFullYear()}</span>
+    <span>Session Bac Tunisie ${new Date().getFullYear()}</span>
     <span>Page 1/1</span>
   </div>
 
@@ -1101,15 +1101,15 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
           if (ext === 'pdf') {
             const r = await fetch('/api/solve', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Extrais uniquement le texte de cet exercice (mathématiques, physique-chimie ou SVT). Garde tous les symboles, unités et formules. Pas de commentaires.' }] }] })
+              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Extrais uniquement le texte de cet exercice de mathématiques. Garde tous les symboles. Pas de commentaires.' }] }] })
             })
             const d = await r.json()
             text = d.content?.map((c: any) => c.text || '').join('') || ''
           } else {
             const mediaType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
             text = await askClaudeWithImage(
-              'Transcris exactement le texte de cet exercice (maths, physique-chimie ou SVT). Garde tous les symboles, unités et formules. Retourne UNIQUEMENT le texte, sans commentaire.',
-              'Tu es un OCR précis spécialisé en mathématiques, physique-chimie et SVT.', base64, mediaType, 1500
+              'Transcris exactement le texte de cet exercice de mathématiques. Garde tous les symboles. Retourne UNIQUEMENT le texte, sans commentaire.',
+              'Tu es un OCR mathématique précis.', base64, mediaType, 1500
             )
           }
           onExtracted(text.trim())
@@ -1218,6 +1218,13 @@ function SolvePageInner() {
     return q ? decodeURIComponent(q) : ''
   })
   const [myAnswer, setMyAnswer] = useState('')
+  // Matière détectée depuis ?subject= (physique | informatique | maths)
+  const [subject] = useState<'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature'>(() => {
+    if (typeof window === 'undefined') return 'maths'
+    const s = new URLSearchParams(window.location.search).get('subject') || ''
+    const valid = ['physique','informatique','svt','anglais','litterature']
+    return valid.includes(s) ? s as any : 'maths'
+  })
   const [phase, setPhase] = useState<Phase>('input')
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
@@ -1230,12 +1237,29 @@ function SolvePageInner() {
 
   // Auto-scroll et focus si exercice pré-rempli depuis une page chapitre
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q')
-    if (q && textareaRef.current) {
+    const params = new URLSearchParams(window.location.search)
+    const q    = params.get('q')
+    const year = params.get('year')
+    const sess = params.get('session')
+    const subj = params.get('subject')
+    if ((q || year) && textareaRef.current) {
       setTimeout(() => {
         textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         textareaRef.current?.focus()
       }, 300)
+    }
+    // Remplir automatiquement si year+session fournis (depuis page examens)
+    if (year && sess && subj && !q) {
+      const label = subj === 'physique' ? 'Physique-Chimie' : subj === 'informatique' ? 'Informatique' : 'Maths'
+      const section = params.get('section') || ''
+      const sectionLabel = section.includes('exp') ? 'Sciences Expérimentales' : section.includes('tech') ? 'Sciences Techniques' : section.includes('info') ? 'Informatique' : section.includes('math') ? 'Mathématiques' : section
+      const msg = 'Corrige l\'examen de ' + label
+        + ' — Bac Tunisie ' + year
+        + ' — ' + (sess === 'principale' ? 'Session Principale' : 'Session de Contrôle')
+        + (sectionLabel ? ' — Section ' + sectionLabel : '')
+        + '.\n\nVeuillez consulter le sujet officiel sur bacweb.tn :\nhttp://www.bacweb.tn/bac/' + year + '/' + sess + '/' + section.replace('-phys','').replace('-math','') + '/physique.pdf'
+        + '\n\nEnsuite, corrigez chaque exercice de façon complète et détaillée.'
+      setInput(msg)
     }
   }, [])
   const solutionRef = useRef<HTMLDivElement>(null)
@@ -1269,44 +1293,32 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
 
-    const system = `Tu es un professeur expert du Bac Tunisie ET du Bac France, spécialiste en mathématiques, physique-chimie et sciences de la vie et de la Terre (SVT).
+    // ─── Détecter la matière depuis URL ?subject= ──────────────────────
+    const urlSubj = typeof window !== 'undefined'
+      ? (new URLSearchParams(window.location.search).get('subject') || subject)
+      : subject
+    const VALID_SUBJECTS = ['physique','informatique','svt','anglais','litterature']
+    const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature' =
+      VALID_SUBJECTS.includes(urlSubj) ? urlSubj as any : 'maths'
+
+    // ─── Infixe commun aux 3 system prompts ─────────────────────────────────
+    const COMMON_FORMAT = `
+Structure : ## pour les grandes parties, ### pour les sous-questions.
+**gras** pour les résultats clés, > pour les encadrés importants.`
+
+    const SYSTEM_MATHS = `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
 Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
-Structure : ## pour les grandes parties, ### pour les sous-questions.
-**gras** pour les résultats clés, > pour les encadrés importants.
-
-═══════════════════════════════════════════
-DÉTECTION AUTOMATIQUE DE LA MATIÈRE
-═══════════════════════════════════════════
-Tu détectes automatiquement la matière selon les mots-clés de l'exercice :
-
-MATHÉMATIQUES → fonction, dérivée, intégrale, limite, suite, vecteur, complexe, probabilité, équation, matrice, logarithme, exponentielle
-
-PHYSIQUE-CHIMIE → force, vitesse, accélération, énergie, tension, courant, résistance, onde, fréquence, concentration, réaction, pH, oxydant, réducteur, noyau, radioactivité, satellite, fluide, pression, enthalpie, thermodynamique, circuit, condensateur, Doppler, interférence, diffraction, Newton, Bernoulli
-
-SVT → cellule, ADN, ARN, protéine, gène, chromosome, mitose, méiose, photosynthèse, respiration, neurone, hormone, enzyme, écosystème, évolution, mutation, génotype, phénotype, immunité, digestion, reproduction
-
+${COMMON_FORMAT}
 NOTATION MATHÉMATIQUE OBLIGATOIRE — LaTeX strict :
 - Toutes les formules DOIVENT être en LaTeX : $formule$ pour inline, $$formule$$ pour centré
-- JAMAIS écrire "frac(2,5)" ou "2/5" brut — TOUJOURS $\frac{2}{5}$
-- JAMAIS écrire "E(X) = -2/5" — TOUJOURS $E(X) = -\frac{2}{5}$
-- Fractions : $\frac{num}{den}$ · Racines : $\sqrt{x}$ · Puissances : $x^{2}$ · Indices : $x_{n}$
-- Intégrales : $\int_{a}^{b} f(x)\,dx$ · Sommes : $\sum_{i=1}^{n}$ · Limites : $\lim_{x \to 0}$
-- Probabilités : $P(X = k)$, $\binom{n}{k}$, $\frac{1}{10}$
+- JAMAIS écrire "frac(2,5)" ou "2/5" brut — TOUJOURS $\\frac{2}{5}$
+- JAMAIS écrire "E(X) = -2/5" — TOUJOURS $E(X) = -\\frac{2}{5}$
+- Fractions : $\\frac{num}{den}$ · Racines : $\\sqrt{x}$ · Puissances : $x^{2}$ · Indices : $x_{n}$
+- Intégrales : $\\int_{a}^{b} f(x)\\,dx$ · Sommes : $\\sum_{i=1}^{n}$ · Limites : $\\lim_{x \\to 0}$
+- Probabilités : $P(X = k)$, $\\binom{n}{k}$, $\\frac{1}{10}$
 - Résultats encadrés : > **Résultat :** $$formule$$
-
-NOTATION PHYSIQUE-CHIMIE :
-- Unités TOUJOURS précisées : m/s, mol/L, J·mol⁻¹, Pa, K, Bq
-- Vecteurs : $\vec{F}$, $\vec{v}$, $\vec{a}$
-- Équations chimiques avec flèches et états physiques
-- Notation nucléaire : $^{A}_{Z}X$
-- Formules clés : $\sum \vec{F} = m\vec{a}$, $PV = nRT$, $N(t) = N_0 e^{-\lambda t}$, $v = \lambda f$, $\Delta U = W + Q$
-
-NOTATION SVT :
-- Vocabulaire scientifique précis : ADN, ARNm, ribosome, etc.
-- Schémas décrits en texte structuré avec légende étape par étape
-- Tableaux de génétique formatés en markdown
-- Cycles biologiques décrits avec → entre les étapes
+- Les tableaux de loi de probabilité avec | xi | ... | p(xi) | ... |
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
 
@@ -1352,13 +1364,6 @@ COMBINAISON (plusieurs formes dans un seul graphique) :
   {"type":"dimension","x1":0,"y1":0,"x2":0,"y2":3,"label":"3","color":"#10b981"}
 ]}]
 
-GRAPHIQUES PHYSIQUE-CHIMIE — OBLIGATOIRE :
-- Exercice sur une FONCTION f(t), v(t), [A](t), u_C(t) → TOUJOURS un graphique "function"
-- Exemples :
-  * Décroissance radioactive → [GRAPH: {"type":"function","expressions":["Math.exp(-0.05*x)"],"xMin":0,"xMax":60,"labels":["N(t)/N₀"],"title":"Décroissance radioactive"}]
-  * Circuit RC → [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)","Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["Charge","Décharge"],"title":"u_C(t)/E en fonction de t/τ"}]
-  * Cinétique → [GRAPH: {"type":"function","expressions":["1/(1+x)","x/(1+x)"],"xMin":0,"xMax":5,"labels":["[Réactif]","[Produit]"],"title":"Évolution des concentrations"}]
-
 QUAND UTILISER — OBLIGATOIRE :
 - Exercice sur une FONCTION (f(x), étude, dérivée, extremum, convexité) → TOUJOURS un graphique "function" avec la courbe de f ET f' si dérivée étudiée
 - LIMITE (x→+∞, x→0) → graphique "function" montrant le comportement asymptotique
@@ -1366,35 +1371,238 @@ QUAND UTILISER — OBLIGATOIRE :
 - SUITE → graphique "function" des premiers termes
 - TRIANGLE, cercle, géométrie → TOUJOURS type "geometry" avec axes + grille + toutes les formes
 - VECTEURS, repère → type "geometry" avec "axes" + "vector"
-- PHYSIQUE : toute grandeur qui varie dans le temps → graphique "function"
-- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle, des vecteurs, ou une grandeur physique variable → un graphique DOIT apparaître`
+- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle ou des vecteurs → un graphique DOIT apparaître`
+
+    const SYSTEM_PHYSIQUE = `Tu es un professeur expert du Bac (Tunisie ET France), spécialiste en PHYSIQUE-CHIMIE.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+
+NOTATION SCIENTIFIQUE — LaTeX strict :
+- Formules : $formule$ inline, $$formule$$ centré
+- Unités SI : $\\mathrm{mol \\cdot L^{-1}}$, $\\mathrm{m \\cdot s^{-2}}$, $\\mathrm{V}$, $\\mathrm{\\Omega}$, $\\mathrm{Hz}$, $\\mathrm{J}$
+- Constantes : $k_a$, $K_e = 10^{-14}$, $\\lambda$, $\\omega_0$, $T_{1/2}$, $\\tau$, $\\tau_f$
+- Vecteurs : $\\vec{F}$, $\\vec{a}$, $\\vec{v}$, $\\vec{p}$ — Dérivées : $\\frac{dq}{dt}$, $\\frac{d^2x}{dt^2}$
+- Résultats encadrés : > **Résultat :** $$valeur\ \\mathrm{unité}$$
+
+PROGRAMME COMPLET PHYSIQUE-CHIMIE (Bac Tunisie + Bac France) :
+**Chimie :** cinétique (vitesse, ordre, Ka, Arrhenius), acide-base (pH, pKa, tampons, titrage), oxydoréduction (pile, Nernst, électrolyse, Faraday), équilibres (Kéq, Qr, Le Chatelier), chimie organique (estérification, polymères, groupes fonctionnels).
+**Physique Électricité :** condensateur (q=Cu, Ec=½Cu²), dipôles RC/RL (τ=RC, τ=L/R), RLC libre/forcé (ω₀=1/√LC, résonance, Q), induction (Faraday, Lenz).
+**Physique Mécanique :** 2ème loi de Newton (ΣF=ma), plan incliné, pendule (T=2π√(l/g)), ressort (T=2π√(m/k)), énergie cinétique/potentielle, satellites.
+**Physique Ondes :** propagation (v=λf), ondes sonores, Doppler, diffraction (θ≈λ/a), interférences (Young i=λD/a), optique géométrique (lentilles, Snell-Descartes).
+**Physique Nucléaire :** désintégrations α,β,γ, loi N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc².
+**Thermodynamique :** transferts thermiques, Q=mcΔT, rendement, bilan énergétique.
+
+GRAPHIQUES PHYSIQUE — OBLIGATOIRE :
+Tu DOIS générer des graphiques pour :
+- Circuit RC : courbe u_C(t) charge/décharge avec τ marqué
+- Oscillations RLC : courbe sinusoïdale amortie
+- Dosage : courbe pH=f(V) avec point équivalent
+- Cinétique : courbe [A]=f(t) décroissante
+- Mécanique : trajectoire, vecteurs forces sur schéma
+- Ondes : courbe sinusoïdale y=A·sin(ωt)
+- Pendule/ressort : schéma avec vecteurs
+
+FORMAT GRAPHIQUE (utilise exactement ce format) :
+Courbe RC charge : [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/E"],"title":"Charge condensateur RC","xLabel":"t/τ","yLabel":"u_C/E"}]
+Courbe RC décharge : [GRAPH: {"type":"function","expressions":["Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/U₀"],"title":"Décharge condensateur RC","xLabel":"t/τ","yLabel":"u_C/U₀"}]
+Oscillations LC : [GRAPH: {"type":"function","expressions":["Math.cos(x)","Math.exp(-0.3*x)*Math.cos(x)"],"xMin":0,"xMax":20,"labels":["LC non amorti","RLC amorti"],"title":"Oscillations électriques libres","xLabel":"t (s)","yLabel":"u_C (V)"}]
+Dosage pH : [GRAPH: {"type":"function","expressions":["14/(1+Math.exp(-0.6*(x-15)))"],"xMin":0,"xMax":30,"labels":["pH=f(V)"],"title":"Courbe de dosage pH-métrique","xLabel":"V titrant (mL)","yLabel":"pH"}]
+Cinétique [A](t) : [GRAPH: {"type":"function","expressions":["Math.exp(-0.3*x)"],"xMin":0,"xMax":15,"labels":["[A]=f(t)"],"title":"Évolution concentration ordre 1","xLabel":"t (min)","yLabel":"[A] (mol/L)"}]
+Ondes sinusoïdales : [GRAPH: {"type":"function","expressions":["Math.sin(x)","Math.sin(x-1.5)"],"xMin":0,"xMax":10,"labels":["source","récepteur (retard τ)"],"title":"Ondes progressives","xLabel":"t (s)","yLabel":"y (m)"}]
+
+MÉTHODE OBLIGATOIRE pour chaque question :
+1. Identifier la loi/formule et justifier son choix
+2. Poser l'équation avec toutes les grandeurs nommées et leurs unités
+3. Substituer les valeurs numériques avec unités
+4. Calculer et encadrer le résultat
+5. Tracer le graphique correspondant si pertinent`
+
+    const SYSTEM_INFO = `Tu es un professeur expert du Bac Tunisie ET un ingénieur informatique IA.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+
+PROGRAMME BAC INFORMATIQUE TUNISIE — tu maîtrises TOUT :
+Algorithmique : tableaux, tri (bulles, insertion, sélection), recherche (séquentielle, dichotomique), récursivité
+Langages : Pascal (syntaxe exacte, déclarations var/type, procédures, fonctions) ET Python (indentation, listes, def, return)
+Structures : enregistrements, fichiers séquentiels, listes chaînées
+Bases de données : modèle E/A, algèbre relationnelle (σ, π, ⋈), SQL complet (SELECT/FROM/WHERE/JOIN/GROUP BY/ORDER BY/HAVING)
+Réseaux : modèle OSI/TCP-IP, adressage IP, sous-réseaux CIDR, protocoles (HTTP, FTP, SMTP, DNS)
+Logique : tables de vérité, algèbre de Boole, portes logiques, simplification (Karnaugh)
+
+FORMAT CODE OBLIGATOIRE :
+- Toujours dans des blocs \`\`\`pascal ... \`\`\` ou \`\`\`python ... \`\`\` ou \`\`\`sql ... \`\`\`
+- Pour algorithmique : donner l'algo EN PASCAL et EN PYTHON
+- Pour SQL : requête complète + explication clause par clause + tableau résultat attendu
+- Pour tableaux d'évolution : | iter | var1 | var2 | ... | avec les valeurs pas à pas
+- Pour réseaux : calculs sous-réseaux détaillés, tables de routage commentées
+- Pour logique booléenne : table de vérité complète + simplification algébrique + schéma portes`
+
+    const SYSTEM_SVT = `Tu es un professeur expert du Bac (Tunisie ET France), spécialiste en SVT — Sciences de la Vie et de la Terre.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+
+PROGRAMME SVT COMPLET :
+**Biologie cellulaire :** ADN (double hélice, bases azotées A-T-G-C), réplication semi-conservative, transcription (ARNm), traduction (ribosomes, code génétique, ARNt), mitose (4 phases : prophase, métaphase, anaphase, télophase), méiose (2 divisions, crossing-over, gamètes haploïdes).
+**Génétique :** lois de Mendel (ségrégation, assortiment indépendant), hérédité liée au sexe (chromosomes X et Y), groupes sanguins (ABO, Rh), arbres généalogiques (dominant/récessif, autosomique/gonosomique), mutations, génie génétique (PCR, électrophorèse).
+**Immunologie :** immunité innée (phagocytose, inflammation), immunité adaptative (lymphocytes B → anticorps, lymphocytes T cytotoxiques), mémoire immunitaire, vaccins (actifs/passifs), greffes (compatibilité HLA, rejet), SIDA (VIH, CD4, trithérapie).
+**Physiologie végétale :** photosynthèse (phase claire ATP+NADPH, phase sombre cycle Calvin), nutrition minérale, transpiration, géotropisme/phototropisme, hormones végétales.
+**Physiologie humaine :** digestion (enzymes, bile, absorption), respiration (hématose, échanges gazeux, capacités pulmonaires), circulation (cœur, pression artérielle, électrocardiogramme), système nerveux (neurone, synapse, réflexe, SNC/SNP), hormones (insuline, glucagon, hormones sexuelles), reproduction.
+**Géologie :** tectonique des plaques (subduction, collision, dorsales), séismes (épicentre, ondes P/S), roches (magmatiques, sédimentaires, métamorphiques), évolution (sélection naturelle, spéciation, phylogénèse), datation (relative, radiométrique).
+
+MÉTHODE SVT OBLIGATOIRE :
+- Définir les termes scientifiques dès leur apparition
+- Schémas légendés : bilan cellulaire, synapse, chaîne alimentaire, arbre généalogique
+- Exploiter les documents expérimentaux (courbes, expériences, témoin/test)
+- Conclure avec l'intégration dans le contexte biologique global`
+
+    const SYSTEM_ANGLAIS = `You are an expert English teacher for Bac students (Tunisia AND France).
+You write EXHAUSTIVE, ULTRA-DETAILED and PEDAGOGICAL corrections.
+NEVER summarize. Develop EVERYTHING. Use all your tokens entirely.
+${COMMON_FORMAT}
+
+ALWAYS RESPOND IN ENGLISH when the question is in English.
+RESPOND IN FRENCH only if the student explicitly asks in French.
+
+COMPLETE ENGLISH PROGRAMME — BAC TUNISIA & FRANCE :
+
+GRAMMAR (full programme) :
+- Tenses : Present Simple/Continuous/Perfect/Perfect Continuous, Past Simple/Continuous/Perfect, Future (will/going to/present continuous for future)
+- Modals : can/could (ability/possibility), may/might (probability), must/have to (obligation), should/ought to (advice), would (conditional/habit), need/dare
+- Conditionals : Zero (If+present,present), First (If+present,will+V), Second (If+past,would+V), Third (If+past perfect,would have+PP), Mixed
+- Passive Voice : all tenses, impersonal passive, get-passive
+- Reported Speech : statement/question/command, backshift, pronoun changes
+- Relative Clauses : defining (no commas, that/which/who), non-defining (commas, which/who/whose)
+- Participle Clauses : present (-ing), past (-ed), perfect (having+PP)
+- Subjunctive : wish+past/past perfect, if only, it's time, would rather
+- Articles : a/an/the/zero article rules and exceptions
+- Quantifiers : some/any/much/many/few/little/a few/a little + exceptions
+
+WRITING SKILLS :
+- Argumentative essay : Introduction (hook + context + clear thesis) → Body (3 paragraphs with topic sentence + argument + example + analysis) → Conclusion (restate thesis + broader implications)
+- Synthesis (Bac France) : read multiple documents → extract key ideas → reformulate neutrally → no personal opinion
+- Formal email/letter : salutation, purpose, body, closing
+- Article/Blog : engaging title, subheadings, direct address to reader
+- Report : executive summary, findings, recommendations
+- Connectors : addition (furthermore, moreover, in addition), contrast (however, nevertheless, on the other hand), cause (because of, due to, as a result of), concession (although, despite, even though)
+
+READING COMPREHENSION :
+- Skimming (global understanding), Scanning (specific information)
+- Inference : deduce meaning from context, identify tone/attitude
+- Text types : article, extract, speech, interview, advertising
+
+BAC FRANCE — 8 THEMATIC AXES (Première & Terminale) :
+- AXE 1 Identities & Exchanges : cultural identity, migration, globalization, American Dream, Brexit
+- AXE 2 Private & Public Sphere : social media, surveillance, freedom of expression, digital identity
+- AXE 3 Art & Power : engaged art, propaganda, censorship, soft power, protest art
+- AXE 4 Citizenship & Virtual Worlds : fake news, digital democracy, AI influence, cybersecurity
+- AXE 5 Fictions & Realities : dystopia (1984, Brave New World), storytelling, film adaptation
+- AXE 6 Scientific Innovation & Responsibility : AI ethics, climate change, biotechnology
+- AXE 7 Diversity & Inclusion : gender equality, minorities, Black Lives Matter, social justice
+- AXE 8 Territory & Memory : war memory, colonization, heritage, historical narratives
+
+LLCER WORKS : Fahrenheit 451 (Bradbury), Lord of the Flies (Golding), To Kill a Mockingbird (Lee), A.I. (film, Spielberg)
+AMC : Living together, Changing world, Global relations
+
+LITERARY ANALYSIS (English) :
+- Figures of speech : metaphor, simile, alliteration, assonance, onomatopoeia, personification, hyperbole, irony, oxymoron, paradox
+- Narrative : narrator (1st/3rd person), focalization, stream of consciousness, unreliable narrator
+- Prose structure : setting, plot, character (protagonist/antagonist/foil), conflict, climax, resolution
+- Poetry : rhythm, rhyme scheme (ABAB/ABBA/AABB), iambic pentameter, free verse, sonnet, ode
+- Drama : stage directions, soliloquy, dialogue, dramatic irony, catharsis`
+
+    const SYSTEM_LITTERATURE = `Tu es un professeur expert de Littérature Française et de Français, spécialiste du Bac France.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+
+PROGRAMME LITTÉRATURE FRANÇAISE COMPLET :
+
+FIGURES DE STYLE :
+- Comparaison : "comme" ou "tel" — comparé + outil + comparant
+- Métaphore : comparaison sans outil comparatif (ex: "Le vent est un cheval")
+- Personnification : attributs humains à non-humain
+- Hyperbole : exagération stylistique (ex: "pleurer un torrent de larmes")
+- Litote : dire moins pour exprimer plus (ex: "Ce n'est pas mal")
+- Euphémisme : atténuer une réalité dure (ex: "il nous a quittés")
+- Anaphore : répétition en début de vers/phrase ("J'ai rêvé..., J'ai rêvé...")
+- Chiasme : inversion croisée AB/BA ("L'homme mange pour vivre, non vivre pour manger")
+- Oxymore : termes contradictoires ("obscure clarté", "douce violence")
+- Antithèse : opposition de deux idées sans fusion
+- Allégorie : représentation abstraite par concret (ex: Marianne = France)
+- Périphrase : désignation par développement (ex: "l'astre du jour" = le soleil)
+- Synecdoque, métonymie, ironie, para­doxe, syllepse
+
+VERSIFICATION :
+- Mesure : alexandrin (12), décasyllabe (10), octosyllabe (8), heptasyllabe (7)
+- Rime : plate (AABB), croisée (ABAB), embrassée (ABBA)
+- Formes fixes : sonnet (2 quatrains + 2 tercets), ode, ballade, rondeau
+- Phénomènes : diérèse/synérèse, enjambement, rejet, contre-rejet, césure
+
+ANALYSE NARRATIVE :
+- Point de vue/focalisation : interne (je), externe (œil de caméra), omniscient (zéro)
+- Narrateur : autodiégétique, homodiégétique, hétérodiégétique
+- Temps du récit : ellipse, pause, scène, sommaire, analepse, prolepse
+- Schéma actanciel (Greimas) : sujet, objet, destinateur, destinataire, adjuvant, opposant
+- Registres : comique, tragique, lyrique, épique, fantastique, satirique, pathétique, polémique
+
+EXERCICES BAC :
+1. **Commentaire composé** : Accroche (citer le titre/auteur/genre) → Problématique ("En quoi ce texte...?") → Annonce du plan (2-3 axes) → Développement (chaque axe : sous-partie + exemple textuel cité + analyse de l'effet produit) → Conclusion (bilan + ouverture)
+2. **Dissertation** : Thèse → Antithèse → Synthèse, avec exemples d'œuvres précis (auteur + titre + passage)
+3. **Contraction de texte** : 1/4 de la longueur, même progression d'idées, neutralité de ton, PAS de citations directes
+4. **Écriture d'invention** : respecter genre (roman, théâtre, poème), registre, style de l'auteur, cohérence narrative
+5. **Essai** : prise de position argumentée, 3 arguments + 3 exemples littéraires, connecteurs logiques
+
+GRANDS AUTEURS ET ŒUVRES :
+XVIIe : Molière (Tartuffe, Dom Juan, Le Misanthrope, L'Avare), Racine (Phèdre, Andromaque, Britannicus), Corneille (Le Cid), La Fontaine (Fables), La Bruyère (Les Caractères), Pascal (Pensées)
+XVIIIe : Voltaire (Candide, Zadig, Micromégas, Lettres philosophiques), Rousseau (Confessions, Du Contrat Social, Émile), Diderot (Encyclopédie, Le Neveu de Rameau), Montesquieu (L'Esprit des lois, Lettres persanes), Beaumarchais (Le Mariage de Figaro)
+XIXe : Hugo (Les Misérables, Notre-Dame de Paris, Hernani, Les Contemplations), Balzac (Père Goriot, Illusions perdues, Eugénie Grandet), Stendhal (Le Rouge et le Noir, La Chartreuse de Parme), Flaubert (Madame Bovary, L'Éducation sentimentale), Baudelaire (Les Fleurs du Mal, Le Spleen de Paris), Verlaine, Rimbaud (Une Saison en enfer), Zola (Germinal, Nana, L'Assommoir), Maupassant
+XXe : Proust (À la Recherche du temps perdu), Camus (L'Étranger, La Peste, Le Mythe de Sisyphe), Sartre (La Nausée, Les Mouches, Huis Clos), Simone de Beauvoir (Le Deuxième Sexe), Ionesco (La Cantatrice Chauve, Rhinocéros), Beckett (En attendant Godot), Anouilh (Antigone), Prévert (Paroles), Apollinaire (Alcools)
+
+MOUVEMENTS LITTÉRAIRES :
+- Humanisme (XVIe) : Rabelais, Montaigne — valorisation de l'homme et du savoir
+- Baroque (fin XVIe-XVIIe) : instabilité, mouvement, illusion, trompe-l'œil
+- Classicisme (XVIIe) : règles (bienséance, vraisemblance, 3 unités au théâtre), raison, universalité
+- Lumières (XVIIIe) : raison, progrès, tolérance, critique de l'absolutisme
+- Romantisme (XIXe) : moi lyrique, nature, mélancolie, engagement (Hugo)
+- Réalisme/Naturalisme (XIXe) : observation sociale, milieu déterministe, Zola
+- Symbolisme (fin XIXe) : musique, suggestion, symboles, Mallarmé
+- Surréalisme (XXe) : inconscient, rêve, hasard objectif, Breton
+- Existentialisme (XXe) : liberté, responsabilité, absurde, engagement
+- Nouveau Roman (XXe) : refus de l'intrigue traditionnelle, Robbe-Grillet, Sarraute`
+
+    const system = activeSubj === 'physique' ? SYSTEM_PHYSIQUE
+                 : activeSubj === 'informatique' ? SYSTEM_INFO
+                 : activeSubj === 'svt' ? SYSTEM_SVT
+                 : activeSubj === 'anglais' ? SYSTEM_ANGLAIS
+                 : activeSubj === 'litterature' ? SYSTEM_LITTERATURE
+                 : SYSTEM_MATHS
 
     const prompt = mode === 'solve'
-      ? `Résous cet exercice (programme Bac Tunisie ou Bac France — Mathématiques, Physique-Chimie ou SVT) de façon COMPLÈTE et PÉDAGOGIQUE.
+      ? `Résous cet exercice de ${activeSubj === 'physique' ? 'physique-chimie' : activeSubj === 'informatique' ? 'informatique' : activeSubj === 'svt' ? 'SVT' : activeSubj === 'anglais' ? 'English' : activeSubj === 'litterature' ? 'littérature française' : 'mathématiques'} (programme Bac Tunisie / France) de façon COMPLÈTE et PÉDAGOGIQUE.
 
 EXERCICE :
 ${input}
 
-Structure OBLIGATOIRE (adapte selon la matière détectée) :
+Structure OBLIGATOIRE :
 
-## Identification de la matière et du chapitre
-[Matière : Maths / Physique-Chimie / SVT — Chapitre concerné — Programme Tunisie ou France]
-
-## Rappel du cours (formules et théorèmes utiles)
-[Les 2-3 formules ou définitions clés nécessaires pour résoudre cet exercice]
+## Analyse du problème
+[Type d'exercice, outils mathématiques nécessaires, stratégie de résolution]
 
 ## Résolution complète
 [Pour chaque question — ne saute AUCUNE étape :
 ### Question X
 **Méthode :** [Théorème/formule appliqué et POURQUOI]
 **Calculs :**
-- Étape 1 : [calcul complet avec UNITÉS pour la physique] → [résultat intermédiaire]
+- Étape 1 : [calcul complet] → [résultat intermédiaire]
 - Étape 2 : ...
-> **Résultat :** [réponse finale encadrée avec unité SI]
+> **Résultat :** [réponse finale encadrée]
 ]
 
-## Synthèse & Points clés
-[Résultats finals + formules clés à retenir + erreur classique à éviter sur ce type d'exercice]`
+## Synthèse
+[Résultats finals + formules clés à retenir + erreur classique à éviter sur ce type]`
 
       : `Vérifie et corrige la solution de cet élève.
 
@@ -1447,7 +1655,7 @@ Structure OBLIGATOIRE :
 
       // Questions similaires en arrière-plan (ne compte pas dans le quota)
       askClaude(
-        `Exercice : "${input.slice(0, 200)}"\nGénère 3 exercices similaires de difficulté légèrement croissante pour Bac Tunisie ou Bac France (même matière : Maths, Physique-Chimie ou SVT).\nRéponds UNIQUEMENT en JSON : ["question1","question2","question3"]`,
+        `Exercice : "${input.slice(0, 200)}"\nGénère 3 exercices similaires de difficulté légèrement croissante pour Bac Tunisie.\nRéponds UNIQUEMENT en JSON : ["question1","question2","question3"]`,
         'Tu génères des exercices. Réponds UNIQUEMENT en JSON valide.', 500
       ).then(raw => {
         try {
@@ -1506,12 +1714,14 @@ Structure OBLIGATOIRE :
           {/* ── HEADER ── */}
           <div style={{ marginBottom: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#4f6ef7', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 7 }}>🧮 Solveur IA</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: subject==='physique'?'#06d6a0':subject==='informatique'?'#6366f1':'#4f6ef7', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 7 }}>
+                {subject==='physique'?'⚗️ Solveur Physique-Chimie IA':subject==='informatique'?'💻 Solveur Informatique IA':subject==='svt'?'🧬 Solveur SVT IA':subject==='anglais'?'🇬🇧 Solveur Anglais IA':subject==='litterature'?'📚 Solveur Littérature IA':'🧮 Solveur Maths IA'}
+              </div>
               <h1 style={{ fontSize: 'clamp(22px,3vw,34px)', fontWeight: 800, color: '#e2e8f0', margin: '0 0 6px' }}>
                 Résolution étape par étape
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 14, margin: 0 }}>
-                Résous · Vérifie ta solution · Graphiques · PDF imprimable
+                {subject==='physique'?'Physique-Chimie · Bac Tunisie/France · Correction IA + graphiques':subject==='informatique'?'Algo · SQL · Réseaux · Pascal · Python · Correction IA':subject==='svt'?'Génétique · Immunologie · Physiologie · Géologie · Correction IA':subject==='anglais'?'Grammar · Writing · Essay · Literature · Full English correction':subject==='litterature'?'Commentaire · Dissertation · Contraction · Auteurs · Correction IA':'Résous · Vérifie ta solution · Graphiques · PDF imprimable'}
               </p>
             </div>
             <button
@@ -1606,7 +1816,7 @@ Structure OBLIGATOIRE :
                     </div>
                     <textarea
                       value={myAnswer} onChange={e => setMyAnswer(e.target.value)}
-                      placeholder="Écris ici tes calculs, ta démarche et ton résultat…"
+                      placeholder={subject==='physique'?'Colle ici l\'exercice de physique-chimie ou décris le problème…':subject==='informatique'?'Colle ici l\'énoncé de l\'exercice d\'informatique (algo, SQL, réseau, Pascal…)':subject==='svt'?'Colle ici l\'exercice de SVT ou décris le schéma/expérience…':subject==='anglais'?'Paste your English exercise or question here (grammar, essay, text analysis…)':subject==='litterature'?'Colle ici le texte à analyser ou la question de dissertation / contraction…':'Écris ici tes calculs, ta démarche et ton résultat…'}
                       rows={5}
                       style={{ width: '100%', borderRadius: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(16,185,129,0.25)', color: '#e2e8f0', fontSize: 14, fontFamily: 'monospace', padding: '12px 14px', resize: 'vertical', outline: 'none', lineHeight: 1.7, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
                       onFocus={e => e.target.style.borderColor = '#06d6a0'}
@@ -1827,7 +2037,7 @@ Structure OBLIGATOIRE :
           )}
 
           <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 36 }}>
-            Solveur alimenté par Claude AI · Programme Bac Tunisie & France 2026
+            Solveur alimenté par Claude AI · Programme Bac Tunisie 2026
           </div>
         </div>
       </main>

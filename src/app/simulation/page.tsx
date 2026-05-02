@@ -61,6 +61,193 @@ const ARCHIVES: Archive[] = YEARS.flatMap(y =>
   ])
 )
 
+
+// ════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE — Configs sections et archives
+// ════════════════════════════════════════════════════════════════
+const SECTION_CONFIGS_PHYS = [
+  {
+    key:'scexp-phys',
+    label:'Sciences-Expérimentales',
+    color:'#06d6a0',
+    icon:'🔬',
+    folder:'sciences_ex',
+    file:'physique.pdf', // ✅ AJOUT
+    themes:['Cinétique chimique','Acide-base & pH','Oxydoréduction','Oscillations RLC','Mécanique Newton','Ondes']
+  },
+  {
+    key:'sctech-phys',
+    label:'Sciences-Techniques',
+    color:'#f59e0b',
+    icon:'⚙️',
+    folder:'technique',
+    file:'physique.pdf', // ✅ AJOUT
+    themes:['Chimie & pH','Électricité','Mécanique','Ondes','Optique','Nucléaire']
+  },
+  {
+    key:'maths-phys',
+    label:'Bac-Mathématiques',
+    color:'#4f6ef7',
+    icon:'🧮',
+    folder:'math',
+    file:'physique.pdf', // ✅ AJOUT
+    themes:['Cinétique chimique','Acide-base','Oxydoréduction','Circuits RC/RL/RLC','Mécanique','Ondes']
+  },
+  {
+    key:'info-phys',
+    label:'Informatique',
+    color:'#8b5cf6',
+    icon:'💻',
+    folder:'informatique',
+    file:'physique.pdf', // ✅ AJOUT
+    themes:['Chimie','Physique','Circuits','Mécanique','Ondes','Nucléaire']
+  },
+]
+
+const bwPhys = (y: number, session: 'principale'|'controle', folder: string) =>
+  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/physique.pdf`
+
+const ARCHIVES_PHYS: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_PHYS.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwPhys(y,'principale',sc.folder), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwPhys(y,'controle',sc.folder), themes:sc.themes },
+  ])
+)
+
+// ── Chapitres Physique-Chimie ─────────────────────────────────────────────────
+const CHAPITRES_PHYS: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+
+  // ══ BAC SCIENCES EXPÉRIMENTALES ══════════════════════════════════════════
+  // Source: BAC_SC_EXP_PHYS_DATA (examens-tunisie) + mathinfo.tn/physique/p4sc.php
+  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Mécanique,Chimie T2) T3(Ondes,Optique,Chimie T3+Nucléaire)
+  'scexp-phys': {
+    key:'scexp-phys', label:'Sciences Expérimentales', color:'#06d6a0', icon:'🔬',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'condensateur',      titre:"Condensateur",                         badge:"Physique T1", desc:"Charge et décharge du condensateur, capacité C, relation q=Cu_C, énergie électrostatique Ec=½Cu_C², condensateur plan, constante de temps préliminaire." },
+      { slug:'dipole-rc',         titre:"Dipôle RC",                            badge:"Physique T1", desc:"Condensateur, charge et décharge, constante de temps τ=RC, régime transitoire, réponse indicielle, énergie Ec=½Cu²." },
+      { slug:'dipole-rl',         titre:"Dipôle RL",                            badge:"Physique T1", desc:"Bobine, auto-induction, constante de temps τ=L/R, établissement et rupture du courant, énergie Em=½Li²." },
+      { slug:'rlc-libre',         titre:"Oscillations Libres RLC",              badge:"Physique T1", desc:"Oscillations libres non amorties et amorties, pseudo-période T≈T₀=2π√(LC), décrément logarithmique, échanges Ec↔Em, résistance critique." },
+      { slug:'rlc-force',         titre:"Oscillations Forcées RLC",             badge:"Physique T2", desc:"Résonance en courant et tension, fréquence propre f₀=1/(2π√LC), facteur de qualité Q=L/(R√LC), bande passante Δf=f₀/Q." },
+      { slug:'oscillateurs-mecaniques', titre:"Oscillateurs Mécaniques",        badge:"Physique T2", desc:"Pendule simple T=2π√(l/g), pendule pesant, ressort horizontal/vertical T=2π√(m/k), énergie mécanique, amortissement, analogie électromécanique." },
+      { slug:'ondes-mecaniques',  titre:"Ondes Mécaniques Progressives",        badge:"Physique T2", desc:"Propagation, célérité v=λf, retard temporel τ=d/v, ondes stationnaires, cordes vibrantes fn=nv/(2L), tuyaux sonores, ultrason." },
+      { slug:'effet-doppler',     titre:"Effet Doppler — Ondes Sonores",        badge:"Physique T2", desc:"Décalage fréquentiel Δf/f=v/c, application médicale (échocardiographie), radar, mesure de vitesses." },
+      { slug:'ondes-lumineuses',  titre:"Ondes Lumineuses — Diffraction & Interférences", badge:"Physique T3", desc:"Diffraction (fentes, obstacle), interfé­rences (fentes d'Young), réseau de diffraction nλ=d·sinθ, longueur d'onde, spectre visible." },
+      { slug:'optique',           titre:"Optique Géométrique",                  badge:"Physique T3", desc:"Lentilles minces convergentes/divergentes, relation de conjugaison 1/v-1/u=1/f, grandissement γ=v/u, instruments optiques." },
+      { slug:'mecanique-newton',  titre:"Mécanique — 2ème Loi de Newton",      badge:"Physique T3", desc:"ΣF⃗=ma⃗, translation, plan incliné, frein, frottement, énergie cinétique Ec=½mv², travail W=F·d·cosθ, puissance P=W/t." },
+      { slug:'mecanique-avancee', titre:"Mécanique Avancée — Rotation & Gravitation", badge:"Physique T3", desc:"Moment cinétique, moment d'inertie, satellite: T²/R³=cste (Kepler 3), vitesse cosmique v=√(GM/R), énergie potentielle de gravitation." },
+      { slug:'induction',         titre:"Induction Électromagnétique",          badge:"Physique T3", desc:"Loi de Faraday e=-dΦ/dt, loi de Lenz, force de Laplace F=BIl, auto-induction e=-L·di/dt, transformateur, moteur électrique." },
+      { slug:'nucleaire',         titre:"Radioactivité & Réactions Nucléaires", badge:"Physique T3", desc:"Désintégrations α, β⁻, β⁺, γ, loi de décroissance N(t)=N₀·e^(-λt), demi-vie t₁/₂=ln2/λ, énergie de liaison, défaut de masse, fission/fusion." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'avancement',        titre:"Avancement & Vitesse de Réaction",     badge:"Chimie T1", desc:"Tableau d'avancement, taux de conversion τ=xf/xmax, vitesse volumique v=-(1/V)dn/dt, facteurs cinétiques (T, concentration, catalyseur)." },
+      { slug:'loi-moderation',    titre:"Équilibres — Loi de Modération",       badge:"Chimie T1", desc:"Quotient de réaction Qr, constante d'équilibre Kéq, loi de modération (Le Chatelier), déplacement d'équilibre, taux d'avancement final τf." },
+      { slug:'acide-base',        titre:"Acide-Base & pH",                      badge:"Chimie T2", desc:"Constante d'acidité Ka, pKa=-log(Ka), calcul du pH, acides/bases faibles et forts, diagramme de prédominance, solutions tampons." },
+      { slug:'dosage-acidobase',  titre:"Dosages Acide-Base",                   badge:"Chimie T2", desc:"Titrage pH-métrique, conductimétrique, colorimétrique. Courbe de titrage, point d'équivalence, indicateurs colorés, Beer-Lambert (spectrophotométrie)." },
+      { slug:'redox',             titre:"Oxydoréduction",                       badge:"Chimie T2", desc:"Couples rédox Ox/Red, équilibrage demi-équations, pile électrochimique (f.e.m., potentiel), formule de Nernst E=E°+(0.06/n)log([Ox]/[Red])." },
+      { slug:'electrolyse',       titre:"Électrolyse & Loi de Faraday",         badge:"Chimie T2", desc:"Électrolyse (cathode/anode, réactions), loi de Faraday m=M·I·t/(n·F), applications industrielles (galvanoplastie, production d'aluminium)." },
+      { slug:'transformations',   titre:"Transformations Chimiques",             badge:"Chimie T3", desc:"Estérification (acide + alcool ⇌ ester + eau), formation d'amides, réversibilité, taux de conversion τ=xf/xmax, rendement, distillation." },
+      { slug:'organique',         titre:"Chimie Organique",                     badge:"Chimie T3", desc:"Composés carbonylés (aldéhydes, cétones), acides carboxyliques, esters, amines, amides, polymères (polyaddition, polycondensation)." },
+    ],
+  },
+
+  // ══ BAC SCIENCES TECHNIQUES ══════════════════════════════════════════════
+  // Source: BAC_SC_TECH_PHYS_DATA + mathinfo.tn/physique/p4t.php
+  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Filtres,Mécanique,Chimie T2) T3(Ondes,Chimie T3)
+  'sctech-phys': {
+    key:'sctech-phys', label:'Sciences Techniques', color:'#f59e0b', icon:'⚙️',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'condensateur',      titre:"Condensateur",                         badge:"Physique T1", desc:"Charge et décharge, capacité C, q=Cu_C, énergie Ec=½Cu_C², applications (filtrage, flash)." },
+      { slug:'dipole-rc',         titre:"Dipôle RC",                            badge:"Physique T1", desc:"Condensateur, charge/décharge, constante τ=RC, régime transitoire, énergie Ec=½Cu²." },
+      { slug:'dipole-rl',         titre:"Dipôle RL",                            badge:"Physique T1", desc:"Bobine, auto-induction, constante τ=L/R, établissement/rupture du courant, énergie Em=½Li²." },
+      { slug:'rlc-libre',         titre:"Oscillations Libres RLC",              badge:"Physique T1", desc:"Oscillations non amorties et amorties, pseudo-période, échanges Ec↔Em, résistance critique." },
+      { slug:'rlc-force',         titre:"Oscillations Forcées RLC",             badge:"Physique T2", desc:"Résonance, fréquence propre f₀=1/(2π√LC), facteur de qualité Q, bande passante." },
+      { slug:'filtres',           titre:"Filtres Électriques",                  badge:"Physique T2", desc:"Filtre passe-bas et passe-haut (RC, RL), fonction de transfert H(f), fréquence de coupure fc=1/(2πRC), diagramme de Bode simplifié." },
+      { slug:'oscillateurs-mecaniques', titre:"Oscillateurs Mécaniques",        badge:"Physique T2", desc:"Pendule simple/pesant, ressort, analogie électromécanique, amortissement, énergie mécanique." },
+      { slug:'ondes-mecaniques',  titre:"Ondes Mécaniques & Sonores",           badge:"Physique T2", desc:"Propagation, célérité v=λf, ultrasons, effet Doppler, cordes vibrantes, tuyaux sonores." },
+      { slug:'mecanique-newton',  titre:"Mécanique — 2ème Loi de Newton",      badge:"Physique T3", desc:"ΣF⃗=ma⃗, plan incliné, énergie, travail, puissance, lancement de projectile, satellites." },
+      { slug:'induction',         titre:"Induction Électromagnétique",          badge:"Physique T3", desc:"Loi de Faraday, loi de Lenz, force de Laplace, auto-induction, transformateur." },
+      { slug:'optique',           titre:"Optique — Lentilles & Réfraction",     badge:"Physique T3", desc:"Réfraction (Snell-Descartes), lentilles minces, relation de conjugaison, grandissement, instruments optiques." },
+      { slug:'nucleaire',         titre:"Radioactivité & Nucléaire",            badge:"Physique T3", desc:"Désintégrations radioactives, loi N(t)=N₀e^(-λt), t₁/₂, énergie de liaison, fission/fusion, applications médicales." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'avancement',        titre:"Avancement & Vitesse de Réaction",     badge:"Chimie T1", desc:"Tableau d'avancement, taux de conversion, vitesse volumique, facteurs cinétiques." },
+      { slug:'loi-moderation',    titre:"Équilibres Chimiques",                 badge:"Chimie T1", desc:"Quotient Qr, constante Kéq, loi de modération, déplacement d'équilibre." },
+      { slug:'acide-base',        titre:"Acide-Base & pH",                      badge:"Chimie T2", desc:"Ka, pKa, pH, diagramme de prédominance, solutions tampons." },
+      { slug:'dosage',            titre:"Dosages & Titrages",                   badge:"Chimie T2", desc:"Titrage pH-métrique, conductimétrique, colorimétrique, point d'équivalence, Beer-Lambert." },
+      { slug:'redox',             titre:"Oxydoréduction",                       badge:"Chimie T2", desc:"Couples rédox, pile électrochimique, formule de Nernst, f.e.m." },
+      { slug:'electrolyse',       titre:"Électrolyse & Faraday",                badge:"Chimie T3", desc:"Électrolyse, loi de Faraday m=MIt/(nF), applications industrielles." },
+      { slug:'transformations',   titre:"Transformations Chimiques",             badge:"Chimie T3", desc:"Estérification, formation d'amides, réversibilité, taux de conversion τ, rendement." },
+      { slug:'organique',         titre:"Chimie Organique",                     badge:"Chimie T3", desc:"Groupes fonctionnels, aldéhydes, cétones, acides carboxyliques, polymères industriels." },
+    ],
+  },
+
+  // ══ BAC MATHÉMATIQUES ════════════════════════════════════════════════════
+  // Source: BAC_MATH_PHYS_DATA + mathinfo.tn/physique/p4m.php
+  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Ondes,Mécanique,Chimie T2) T3(Nucléaire,Chimie T3)
+  'maths-phys': {
+    key:'maths-phys', label:'Bac Mathématiques', color:'#4f6ef7', icon:'🧮',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'condensateur',      titre:"Condensateur",                         badge:"Physique T1", desc:"Charge et décharge, capacité C, énergie Ec=½Cu_C², condensateur plan, applications." },
+      { slug:'dipole-rc',         titre:"Dipôle RC",                            badge:"Physique T1", desc:"Condensateur, charge/décharge, constante τ=RC, régime transitoire, énergie Ec=½Cu²." },
+      { slug:'dipole-rl',         titre:"Dipôle RL",                            badge:"Physique T1", desc:"Bobine, auto-induction, constante τ=L/R, établissement/rupture, énergie Em=½Li²." },
+      { slug:'rlc-libre',         titre:"Oscillations Libres RLC",              badge:"Physique T1", desc:"Oscillations libres amorties/non-amorties, pseudo-période T≈T₀, échanges Ec↔Em." },
+      { slug:'rlc-force',         titre:"Oscillations Forcées RLC",             badge:"Physique T2", desc:"Résonance, f₀=1/(2π√LC), facteur de qualité Q, bande passante, courbes de réponse." },
+      { slug:'oscillateurs-mecaniques', titre:"Oscillateurs Mécaniques",        badge:"Physique T2", desc:"Pendule simple/pesant, ressort, T=2π√(m/k), amortissement, analogie électromécanique." },
+      { slug:'ondes-mecaniques',  titre:"Ondes Mécaniques & Sonores",           badge:"Physique T2", desc:"Propagation, célérité, longueur d'onde, ondes stationnaires, son, ultrasons, Doppler." },
+      { slug:'ondes-lumineuses',  titre:"Ondes Lumineuses & Optique",           badge:"Physique T2", desc:"Diffraction, interférences (fentes d'Young), réseau nλ=d·sinθ, optique géométrique, lentilles." },
+      { slug:'mecanique-newton',  titre:"Mécanique — 2ème Loi de Newton",      badge:"Physique T3", desc:"ΣF⃗=ma⃗, translation, plan incliné, lancement projectile, énergie cinétique, travail, puissance." },
+      { slug:'mecanique-avancee', titre:"Mécanique — Satellites & Rotation",   badge:"Physique T3", desc:"Satellite: T²/R³=cste, vitesse cosmique, moment cinétique, moment d'inertie, rotation." },
+      { slug:'induction',         titre:"Induction Électromagnétique",          badge:"Physique T3", desc:"Loi de Faraday e=-dΦ/dt, loi de Lenz, force de Laplace F=BIl, auto-induction, transformateur." },
+      { slug:'nucleaire',         titre:"Radioactivité & Nucléaire",            badge:"Physique T3", desc:"α, β, γ, loi N(t)=N₀e^(-λt), t₁/₂=ln2/λ, énergie de liaison Eb, fission/fusion nucléaire." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'avancement-vitesse', titre:"Avancement & Cinétique Chimique",     badge:"Chimie T1", desc:"Tableau d'avancement, taux de conversion, vitesse volumique, facteurs cinétiques, loi de vitesse, ordre de réaction, énergie d'activation, Arrhenius." },
+      { slug:'loi-moderation',    titre:"Équilibres — Loi de Modération",       badge:"Chimie T1", desc:"Quotient Qr, constante Kéq, loi de modération, τf, déplacement d'équilibre." },
+      { slug:'acide-base',        titre:"Acide-Base & pH",                      badge:"Chimie T2", desc:"Ka, pKa, pH acides/bases faibles/forts, diagramme de prédominance, tampon, titrage pH-métrique." },
+      { slug:'dosage',            titre:"Dosages — Spectrophotométrie & Titrage", badge:"Chimie T2", desc:"Beer-Lambert (absorbance A=εlc), spectrophotométrie, titrage conductimétrique, courbe dérivée, point équivalence." },
+      { slug:'redox',             titre:"Oxydoréduction & Pile Électrochimique", badge:"Chimie T2", desc:"Couples rédox, pile Daniell, f.e.m., potentiel standard, formule de Nernst E=E°+(RT/nF)ln(Q)." },
+      { slug:'electrolyse',       titre:"Électrolyse & Loi de Faraday",         badge:"Chimie T3", desc:"Électrolyse, cathode/anode, loi m=MIt/(nF), quantité d'électricité Q=It, applications." },
+      { slug:'transformations',   titre:"Transformations Chimiques",             badge:"Chimie T3", desc:"Estérification (acide + alcool ⇌ ester + eau), formation d'amides, taux de conversion τ=xf/xmax." },
+      { slug:'organique',         titre:"Chimie Organique",                     badge:"Chimie T3", desc:"Composés carbonylés, acides carboxyliques, esters, polymères (polyaddition, polycondensation nylon/polyester)." },
+    ],
+  },
+
+  // ══ BAC INFORMATIQUE ════════════════════════════════════════════════════
+  // Source: BAC_INFO_PHYS_DATA + mathinfo.tn/physique/p4si.php
+  // Programme: T1(RC,RL,RLC libre,Dosage) T2(RLC forcé,Ondes,Pile) T3(Mécanique,Nucléaire)
+  'info-phys': {
+    key:'info-phys', label:'Informatique', color:'#8b5cf6', icon:'💻',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'condensateur',      titre:"Condensateur",                         badge:"Physique T1", desc:"Charge et décharge, capacité C, q=Cu_C, énergie Ec=½Cu_C², applications numériques (mémoire, flash)." },
+      { slug:'dipole-rc',         titre:"Dipôle RC",                            badge:"Physique T1", desc:"Condensateur, charge/décharge, τ=RC, régime transitoire, énergie Ec=½Cu²." },
+      { slug:'dipole-rl',         titre:"Dipôle RL",                            badge:"Physique T1", desc:"Bobine, auto-induction, τ=L/R, établissement/rupture, énergie Em=½Li²." },
+      { slug:'rlc-libre',         titre:"Oscillations Libres RLC",              badge:"Physique T1", desc:"Oscillations libres amorties/non-amorties, pseudo-période, échanges Ec↔Em." },
+      { slug:'rlc-force',         titre:"Oscillations Forcées RLC",             badge:"Physique T2", desc:"Résonance, f₀=1/(2π√LC), facteur Q, bande passante." },
+      { slug:'ondes-mecaniques',  titre:"Ondes Mécaniques & Sonores",           badge:"Physique T2", desc:"Propagation, v=λf, ultrasons, effet Doppler, cordes vibrantes, tuyaux sonores." },
+      { slug:'ondes-lumineuses',  titre:"Ondes Lumineuses",                     badge:"Physique T2", desc:"Diffraction, interférences, réseau de diffraction nλ=d·sinθ, longueur d'onde." },
+      { slug:'mecanique-newton',  titre:"Mécanique — 2ème Loi de Newton",      badge:"Physique T3", desc:"ΣF⃗=ma⃗, translation, énergie cinétique, travail, puissance, satellites." },
+      { slug:'induction',         titre:"Induction Électromagnétique",          badge:"Physique T3", desc:"Loi de Faraday, loi de Lenz, force de Laplace, auto-induction, transformateur." },
+      { slug:'nucleaire',         titre:"Radioactivité & Nucléaire",            badge:"Physique T3", desc:"Désintégrations, N(t)=N₀e^(-λt), t₁/₂, énergie de liaison, fission/fusion." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'dosage',            titre:"Dosage — Détermination Quantité Matière", badge:"Chimie T1", desc:"Conductimétrie, spectrophotométrie (Beer-Lambert), titrage, point d'équivalence, concentrations." },
+      { slug:'avancement',        titre:"Avancement & Vitesse de Réaction",     badge:"Chimie T1", desc:"Tableau d'avancement, taux de conversion, vitesse volumique, facteurs cinétiques." },
+      { slug:'pile',              titre:"Pile Électrochimique",                 badge:"Chimie T2", desc:"Couples rédox, pile Daniell, f.e.m., cathode/anode, réactions d'électrode, sens du courant." },
+      { slug:'electrolyse',       titre:"Électrolyse & Loi de Faraday",         badge:"Chimie T2", desc:"Électrolyse, m=MIt/(nF), quantité d'électricité Q=It, applications industrielles." },
+      { slug:'acide-base',        titre:"Acide-Base & pH",                      badge:"Chimie T2", desc:"Ka, pKa, pH, acides/bases faibles et forts, dosage pH-métrique, solutions tampons." },
+      { slug:'loi-moderation',    titre:"Équilibres Chimiques",                 badge:"Chimie T3", desc:"Quotient Qr, constante Kéq, loi de modération, taux d'avancement τf." },
+      { slug:'organique',         titre:"Chimie Organique",                     badge:"Chimie T3", desc:"Fonctions organiques, estérification, formation d'amides, polymères (polyaddition, polycondensation)." },
+    ],
+  },
+}
+
 // ── Types ──────────────────────────────────────────────────────────
 interface GeneratedExam {
   id: string; index: number; title: string; section: string
@@ -146,10 +333,24 @@ async function generateOneExam(
   const section = archives[0]?.section ?? 'Mathématiques'
   const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel) ET du Baccalauréat France (Éducation Nationale).
-Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
-Tu adaptes la matière selon la section détectée : Mathématiques, Physique-Chimie, ou SVT.
+  // Détecter si c'est un examen physique-chimie (sectionKey contient 'phys')
+  const isPhysExam = archives[0]?.sectionKey?.includes('phys') ?? false
+
+  const system = isPhysExam
+    ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques et des contextes scientifiques précis.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+
+  const physExtraRules = isPhysExam ? `
+RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
+- Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
+- Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
+- Notation : utiliser LaTeX pour formules chimiques et physiques
+- Unités SI obligatoires : mol·L⁻¹, V, Ω, m·s⁻², Hz, J
+- Structure : Chimie (exercices 1-2) + Physique (exercices 3-4)` : ''
 
   const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
@@ -162,6 +363,7 @@ Règles STRICTES :
 - Données numériques précises et réalistes
 - Totale : ${totalPts} points répartis sur 4 exercices
 - Niveau Bac : au moins 1 exercice avec une courbe ou figure géométrique à étudier
+${physExtraRules}
 
 GRAPHIQUES DANS LES ÉNONCÉS — RÈGLES ABSOLUES :
 
@@ -187,29 +389,6 @@ RÈGLES ABSOLUES :
 - Exercice géométrie : champ "graph" OBLIGATOIRE avec la figure complète
 - Exercice complexes : champ "graph" avec le plan complexe et les affixes
 - Dans "statement", écrire : "Soit f la fonction représentée ci-dessous. [voir graphique] 1) ..."
-
-RÈGLES SELON LA MATIÈRE DÉTECTÉE (via le champ "section") :
-
-SI PHYSIQUE-CHIMIE :
-- Exercice 1 (6pts) : Mécanique — Newton, satellites, projectile, fluides
-- Exercice 2 (6pts) : Chimie — cinétique, équilibres, dosage, radioactivité, thermodynamique
-- Exercice 3 (4pts) : Électricité/Ondes — RC, RLC, interférences, Doppler, optique
-- Exercice 4 (4pts) : Chimie organique ou synthèse OU autre thème non couvert
-- Graphiques physique : [GRAPH: {"type":"function","expressions":["Math.exp(-0.3*x)"],"xMin":0,"xMax":20,"labels":["N(t)/N₀"],"title":"Décroissance radioactive"}]
-- Graphiques cinétique : [GRAPH: {"type":"function","expressions":["1/(1+x)","x/(1+x)"],"xMin":0,"xMax":5,"labels":["[Réactif]","[Produit]"],"title":"Évolution des concentrations"}]
-- Graphiques RC : [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/E"],"title":"Charge d'un condensateur"}]
-- UNITÉS OBLIGATOIRES dans les énoncés : m, kg, s, N, J, W, Pa, mol, L, K, Bq, Hz
-
-SI SVT :
-- Exercice 1 (6pts) : Génétique — transmission héréditaire, génotype/phénotype, lois de Mendel
-- Exercice 2 (6pts) : Physiologie — photosynthèse, respiration, système nerveux, hormones, immunité
-- Exercice 3 (4pts) : Évolution et phylogénie OU écologie
-- Exercice 4 (4pts) : Géologie — tectonique, séismes, datation
-- Tableaux de génétique formatés en texte : | Génotype | Phénotype |
-- Schémas décrits textuellement avec légende numérotée
-
-SI MATHÉMATIQUES :
-- Appliquer les règles initiales (analyse, complexes, géométrie, probas, etc.)
 
 Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
 {
@@ -269,16 +448,11 @@ async function correctOneExercise(
   studentWork: string,
   examTitle: string
 ): Promise<string> {
-  const system = `Tu es un professeur correcteur du Baccalaureat tunisien ET du Baccalaureat France, expert en mathematiques, physique-chimie et SVT.
+  const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
 Utilise markdown : ### pour les parties, **gras** pour les resultats, > pour les points importants.
-
-ADAPTATION SELON LA MATIÈRE :
-- Mathématiques : notation LaTeX, graphiques function/geometry
-- Physique-Chimie : unités SI obligatoires (m, kg, s, N, J, Pa, mol, K, Bq), vecteurs en LaTeX $\vec{F}$, formules physique expliquées
-- SVT : vocabulaire scientifique précis, tableaux de génétique markdown, cycles biologiques décrits étape par étape
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
 
@@ -439,7 +613,7 @@ async function analyzeOneExerciseSim(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie scolaire (mathématiques, physique-chimie, SVT). Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const system = `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de simulation Bac.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
@@ -473,7 +647,7 @@ JSON requis :
 async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie scolaire (mathématiques, physique-chimie, SVT) et remédiation.
+  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.
 Tu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
@@ -531,7 +705,7 @@ async function correctRemediationExercise(
   exercise: AnalysisResult['remediationExercises'][number],
   studentAnswer: string
 ): Promise<string> {
-  const system = `Tu es un tuteur bienveillant mais exigeant, expert en mathématiques, physique-chimie et SVT.
+  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.
 Tu corriges les réponses d'élèves sur des exercices de remédiation.
 Sois précis, encourageant, et identifie exactement ce qui manque.`
 
@@ -551,7 +725,7 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
   breakdown: {title:string;pts:number;max:number;reason:string}[]
 }> {
   const hasWork = studentWork.trim().length > 10
-  const system = `Tu es un correcteur du Baccalaureat tunisien ET France (Maths, Physique-Chimie, SVT). Tu donnes une note RAPIDE et JUSTE.
+  const system = `Tu es un correcteur du Baccalaureat tunisien. Tu donnes une note RAPIDE et JUSTE.
 Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
 
   const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${e.statement.slice(0,180)}`).join(' | ')
@@ -1869,9 +2043,8 @@ async function generateChapterExam(
   const totalPts = 20
   const nEx = Math.max(chapitres.length, 3)
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel) ET du Baccalauréat France (Éducation Nationale).
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
-Tu adaptes la matière selon la section détectée : Mathématiques, Physique-Chimie, ou SVT.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée un sujet de Bac ORIGINAL variante ${idx+1} centré sur CES CHAPITRES PRÉCIS :
@@ -1921,16 +2094,24 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
+  archives?: Archive[]
+  chapitresParSection?: typeof CHAPITRES_PAR_SECTION
+  sectionConfigs?: typeof SECTION_CONFIGS
+  matiere?: 'maths'|'physique'
 }) {
+  // Utiliser les props passés ou les valeurs par défaut (maths)
+  const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
+  const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
+  const SEC_CONFIGS_ACTIVE = scProp       ?? SECTION_CONFIGS
   const [tab, setTab] = useState<'archive'|'chapitre'|'import'>('archive')
   const searchParams = useSearchParams()
 
   // ── Onglet Archives ──
   const [filterSection, setFilterSection] = useState(() => {
     const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco' }
+    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco','sc-exp-phys':'scexp-phys','sc-tech-phys':'sctech-phys','math-phys':'maths-phys','info-phys':'info-phys' }
     return sec && map[sec] ? map[sec] : 'all'
   })
   const [filterYear, setFilterYear]       = useState('all')
@@ -1943,12 +2124,12 @@ function PhaseSelect({ onStart }: {
   // ── Onglet Par Chapitre ──
   const [chapSection, setChapSection] = useState<string>(() => {
     const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco' }
+    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco','sc-exp-phys':'scexp-phys','sc-tech-phys':'sctech-phys','math-phys':'maths-phys','info-phys':'info-phys' }
     return sec && map[sec] ? map[sec] : 'maths'
   })
   const [selectedChaps, setSelectedChaps] = useState<{slug:string;titre:string;badge:string;desc:string}[]>([])
 
-  const filtered = ARCHIVES.filter(a=>
+  const filtered = ARCHIVES_ACTIVE.filter(a=>
     (filterSection==='all'||a.sectionKey===filterSection) &&
     (filterYear==='all'||a.year===Number(filterYear)) &&
     (filterSession==='all'||a.session===filterSession)
@@ -1978,7 +2159,7 @@ function PhaseSelect({ onStart }: {
 
   const canStartArchive = selected.length>0 || customText.trim().length>20
   const canStartChap    = selectedChaps.length>=1 && selectedChaps.length<=3
-  const currentSecData  = CHAPITRES_PAR_SECTION[chapSection]
+  const currentSecData  = CHAPITRES_ACTIVE[chapSection]
 
   const BADGE_COLORS: Record<string,string> = {
     'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
@@ -2033,7 +2214,7 @@ function PhaseSelect({ onStart }: {
             </div>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
               {([
-                ['filterSection','Section',['all',...SECTION_CONFIGS.map(s=>s.key)],['Toutes',...SECTION_CONFIGS.map(s=>s.label.split(' ')[0])]],
+                ['filterSection','Section',['all',...SEC_CONFIGS_ACTIVE.map(s=>s.key)],['Toutes',...SEC_CONFIGS_ACTIVE.map(s=>s.label.split(' ')[0])]],
                 ['filterYear','Année',['all',...YEARS.map(String)],['Toutes',...YEARS.map(String)]],
                 ['filterSession','Session',['all','Principale','Contrôle'],['Les 2','Principale','Contrôle']],
               ] as [string,string,string[],string[]][]).map(([id,,vals,labels])=>(
@@ -2100,7 +2281,7 @@ function PhaseSelect({ onStart }: {
               1 — Choisir la section
             </p>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {Object.values(CHAPITRES_PAR_SECTION).map(sec=>(
+              {Object.values(CHAPITRES_ACTIVE).map(sec=>(
                 <button key={sec.key} onClick={()=>{setChapSection(sec.key);setSelectedChaps([])}}
                   style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:10,cursor:'pointer',fontWeight:600,fontSize:13,transition:'all 0.2s',fontFamily:'inherit',
                     background:chapSection===sec.key?`${sec.color}25`:'rgba(255,255,255,0.04)',
@@ -3133,7 +3314,7 @@ function PageAnalyseExercice({
     if (remLoading[rem.id] || remFeedback[rem.id]) return
     setRemLoading(p => ({ ...p, [rem.id]: true }))
     try {
-      const sys = `Tu es un tuteur bienveillant expert en mathématiques, physique-chimie et SVT. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
+      const sys = `Tu es un tuteur mathématiques bienveillant. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
       const prompt = `Exercice : ${rem.statement}\n\nRéponse de l'élève : ${remAnswers[rem.id] || '(Aucune réponse)'}\n\nCorrection officielle : ${rem.officialCorrection}\n\nFournis une correction commentée et encourageante :`
       const text = await askClaude(prompt, sys, 2500)
       setRemFeedback(p => ({ ...p, [rem.id]: text }))
@@ -4309,6 +4490,12 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 }
 
 function SimulationIAPageInner() {
+  // ── Matière active : maths ou physique (lu depuis ?subject=) ──
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
+    if (typeof window === 'undefined') return 'maths'
+    const s = new URLSearchParams(window.location.search).get('subject')
+    return s === 'physique' ? 'physique' : 'maths'
+  })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
   const [customText, setCustomText] = useState('')
@@ -4387,6 +4574,7 @@ function SimulationIAPageInner() {
     setPhase('select'); setArchives([]); setCustomText(''); setGeneratedExams([])
     setActiveExam(null); setStudentAnswers(''); setCorrectionText(''); setGradeResult(null)
     setAnalysisResult(null); setChapitresMode(false); setSelectedChapitres([])
+    // Ne pas réinitialiser activeMatiere — l'élève reste sur la même matière
   },[])
 
   return (
@@ -4402,20 +4590,20 @@ function SimulationIAPageInner() {
         <div style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'40px 24px 80px'}}>
 
           {/* HEADER */}
-          <div style={{marginBottom:36}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:'rgba(99,102,241,0.15)',border:'1px solid rgba(99,102,241,0.3)',borderRadius:20,marginBottom:14}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:'#6366f1',animation:'pulse 2s ease infinite'}}/>
-              <span style={{fontSize:11,fontWeight:700,color:'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : 'Simulation Bac Tunisie'}
+          <div style={{marginBottom:28}}>
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':'#6366f1',animation:'pulse 2s ease infinite'}}/>
+              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
+                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : '🧮 Simulation Mathématiques'}
               </span>
             </div>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
               Simulation Intelligente<br/>
-              <span style={{background: chapitresMode
+              <span style={{background: activeMatiere==='physique'
                 ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)'
-                : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
+                : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : 'Personnalisée par l\'IA'}
+                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : 'Personnalisée par l\'IA'}
               </span>
             </h1>
             <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
@@ -4426,11 +4614,38 @@ function SimulationIAPageInner() {
             </p>
           </div>
 
+          {/* ── ONGLETS MATIÈRE : MATHS / PHYSIQUE-CHIMIE ── */}
+          {phase === 'select' && (
+            <div style={{display:'flex',gap:8,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
+              {([
+                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1' },
+                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+              ]).map(m => (
+                <button key={m.key} onClick={() => { setActiveMatiere(m.key); setChapitresMode(false); setSelectedChapitres([]) }}
+                  style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
+                    background:activeMatiere===m.key?m.color:'transparent',
+                    color:activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
+                    boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
+                  <span style={{fontSize:18}}>{m.icon}</span>
+                  <span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <PhaseTimeline phase={phase}/>
 
           <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:24,padding:'30px 32px',backdropFilter:'blur(10px)'}}>
 
-            {phase==='select'&&<PhaseSelect onStart={handleStart}/>}
+            {phase==='select'&&(
+              <PhaseSelect
+                onStart={handleStart}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : SECTION_CONFIGS}
+                matiere={activeMatiere}
+              />
+            )}
 
             {phase==='generating'&&(
               chapitresMode

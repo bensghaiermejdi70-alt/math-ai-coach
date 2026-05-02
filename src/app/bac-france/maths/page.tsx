@@ -126,7 +126,7 @@ export default function MathsFrancePage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 14 }}>
               Mathématiques France<br />
               <span style={{ background: 'linear-gradient(90deg,#f59e0b,#f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Première & Terminale
+                Seconde · Première & Terminale
               </span>
             </h1>
             <p style={{ maxWidth: 600, color: 'var(--text2)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>

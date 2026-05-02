@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
-// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════      
 //  PAGE EXAMENS FRANCE — Annales officielles Bac 2021–2025
 //  Route : /examens-france
 //
@@ -17,8 +17,10 @@ import Footer from '@/components/layout/Footer'
 //  Noms de fichiers trouvés dans les résultats de recherche Google
 // ════════════════════════════════════════════════════════════════
 
-const AP = 'https://www.apmep.fr/IMG/pdf'
-const SD = 'https://www.sujetdebac.fr/annales-pdf'
+const AP  = 'https://www.apmep.fr/IMG/pdf'
+const SD  = 'https://www.sujetdebac.fr/annales-pdf'
+const SDB = 'https://www.sujetdebac.fr/annales-pdf'
+const LLY = 'https://www.labolycee.org'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PREMIÈRE SPÉCIALITÉ MATHS — Exercices par chapitre
@@ -27,6 +29,7 @@ const SD = 'https://www.sujetdebac.fr/annales-pdf'
 
 type Exercice = {
   id: string
+  source?: string
   difficulte: 1 | 2 | 3 | 4  // ★ à ★★★★
   titre: string
   enonce: string
@@ -2666,34 +2669,34 @@ const linksGenerale: Record<number, AnneeLinks> = {
 // ════════════════════════════════════════════════════════════════
 const dataGenerale: AnneeData[] = [
   { year:2025, note:'🆕', exercices:[
-    {titre:'Ex 1 — Analyse · ln', theme:'f(x)=x[2(lnx)²−3lnx+2] : dérivée, convexité, tangente. Python : seuil sur suite récurrente. Modèle posidonie (bactéries marines).', pts:5},
-    {titre:'Ex 2 — Probabilités',theme:'Loi binomiale B(100;0,0714), espérance 7,14. Inégalité de Bienaymé-Tchebychev. Détermination rang N minimal.', pts:5},
-    {titre:'Ex 3 — Géo. espace',theme:"Droites de l\'espace, positions relatives. Plan P : x−y+z+1=0. Distance C(2;−1;2) au plan. Affirmations vrai/faux justifiées.", pts:5},
-    {titre:'Ex 4 — Suites',      theme:'Modèle discret (posidonie marine). Suite récurrente, croissance bornée, limite. Python : boucle while.', pts:5},
+    {titre:"Ex 1 — Analyse · ln", theme:'f(x)=x[2(lnx)²−3lnx+2] : dérivée, convexité, tangente. Python : seuil sur suite récurrente. Modèle posidonie (bactéries marines).', pts:5},
+    {titre:"Ex 2 — Probabilités",theme:'Loi binomiale B(100;0,0714), espérance 7,14. Inégalité de Bienaymé-Tchebychev. Détermination rang N minimal.', pts:5},
+    {titre:"Ex 3 — Géo. espace",theme:"Droites de l\'espace, positions relatives. Plan P : x−y+z+1=0. Distance C(2;−1;2) au plan. Affirmations vrai/faux justifiées.", pts:5},
+    {titre:"Ex 4 — Suites",      theme:'Modèle discret (posidonie marine). Suite récurrente, croissance bornée, limite. Python : boucle while.', pts:5},
   ]},
   { year:2024, exercices:[
     {titre:'Ex 1 — Éq. diff.',   theme:"(E) y\'+y=e⁻ˣ. Solution particulière u(x)=xe⁻ˣ, générale, condition initiale f(0)=2. Étude fₖ(x)=(x+k)e⁻ˣ.", pts:5},
-    {titre:'Ex 2 — Intégration', theme:'Suite Iₙ=∫₀¹xⁿeˣdx, IPP, relation Iₙ₊₁=e−(n+1)Iₙ. Python (mystere). Gendarmes : lim Iₙ=0.', pts:5},
-    {titre:'Ex 3 — Probabilités',theme:'Épreuve 2 parties (Q1/Q2). Arbres, proba. totales. Variables X, Y, Z. Espérance, variance, Bienaymé-Tchebychev.', pts:5},
-    {titre:'Ex 4 — Géo. espace', theme:'Prisme ABFEDCGH, vecteur normal plan (ABG). Droites parallèles, base espace, décomposition AG⃗, volume.', pts:5},
+    {titre:"Ex 2 — Intégration", theme:'Suite Iₙ=∫₀¹xⁿeˣdx, IPP, relation Iₙ₊₁=e−(n+1)Iₙ. Python (mystere). Gendarmes : lim Iₙ=0.', pts:5},
+    {titre:"Ex 3 — Probabilités",theme:'Épreuve 2 parties (Q1/Q2). Arbres, proba. totales. Variables X, Y, Z. Espérance, variance, Bienaymé-Tchebychev.', pts:5},
+    {titre:"Ex 4 — Géo. espace", theme:'Prisme ABFEDCGH, vecteur normal plan (ABG). Droites parallèles, base espace, décomposition AG⃗, volume.', pts:5},
   ]},
   { year:2023, exercices:[
-    {titre:'Ex 1 — Analyse · ln',theme:'Logarithme : propriétés, étude complète. IPP ∫ln(x)dx. Calcul intégrale définie.', pts:5},
-    {titre:'Ex 2 — Géo. espace', theme:'Vecteurs espace, droites, plans. Produit scalaire, distance point-plan. Plan ax+by+cz+d=0.', pts:5},
-    {titre:'Ex 3 — Probabilités',theme:'Probabilités totales, binomiale B(n,p), normale N(μ,σ²), Moivre-Laplace.', pts:5},
-    {titre:'Ex 4 — Suites',      theme:'Limites de suites, monotonie bornée, convergence, suites récurrentes. Récurrence.', pts:5},
+    {titre:"Ex 1 — Analyse · ln",theme:'Logarithme : propriétés, étude complète. IPP ∫ln(x)dx. Calcul intégrale définie.', pts:5},
+    {titre:"Ex 2 — Géo. espace", theme:'Vecteurs espace, droites, plans. Produit scalaire, distance point-plan. Plan ax+by+cz+d=0.', pts:5},
+    {titre:"Ex 3 — Probabilités",theme:'Probabilités totales, binomiale B(n,p), normale N(μ,σ²), Moivre-Laplace.', pts:5},
+    {titre:"Ex 4 — Suites",      theme:'Limites de suites, monotonie bornée, convergence, suites récurrentes. Récurrence.', pts:5},
   ]},
   { year:2022, exercices:[
-    {titre:'Ex 1 — Analyse · ln',theme:'Logarithme : ln(ab), ln(a/b), ln(aⁿ). Étude complète, intégration par parties, primitives ln x.', pts:5},
-    {titre:'Ex 2 — Complexes',  theme:"Formes trigonométrique z=r(cosθ+isinθ) et exponentielle reⁱᶿ. Moivre. Racines n-ièmes de l\'unité.", pts:5},
-    {titre:'Ex 3 — Probabilités',theme:'Probabilités conditionnelles P_A(B). Variables aléatoires, espérance, loi normale N(μ,σ²).', pts:5},
-    {titre:'Ex 4 — Géo. espace', theme:'Plans cartésiens, vecteur normal n⃗. Positions relatives droites/plans. Orthogonalité. Distance.', pts:5},
+    {titre:"Ex 1 — Analyse · ln",theme:'Logarithme : ln(ab), ln(a/b), ln(aⁿ). Étude complète, intégration par parties, primitives ln x.', pts:5},
+    {titre:"Ex 2 — Complexes",  theme:"Formes trigonométrique z=r(cosθ+isinθ) et exponentielle reⁱᶿ. Moivre. Racines n-ièmes de l\'unité.", pts:5},
+    {titre:"Ex 3 — Probabilités",theme:'Probabilités conditionnelles P_A(B). Variables aléatoires, espérance, loi normale N(μ,σ²).', pts:5},
+    {titre:"Ex 4 — Géo. espace", theme:'Plans cartésiens, vecteur normal n⃗. Positions relatives droites/plans. Orthogonalité. Distance.', pts:5},
   ]},
   { year:2021, exercices:[
     {titre:'Ex 1 — Analyse · eˣ',theme:"Exponentielle, dérivation, équations différentielles y\'=ay+b. Variations, tangente. Modélisation.", pts:5},
-    {titre:'Ex 2 — Probabilités',theme:'Probabilités conditionnelles, arbres pondérés, formule totale. Variables aléatoires, espérance, binomiale.', pts:5},
-    {titre:'Ex 3 — Géo. espace', theme:'Géométrie analytique : vecteurs, droites, plans, repère orthonormé. Repr. paramétrique.', pts:5},
-    {titre:'Ex 4 — Algorithmique',theme:'Python : listes, fonctions, boucles for/while. Simulation probabiliste. Intégrales (rectangles).', pts:5},
+    {titre:"Ex 2 — Probabilités",theme:'Probabilités conditionnelles, arbres pondérés, formule totale. Variables aléatoires, espérance, binomiale.', pts:5},
+    {titre:"Ex 3 — Géo. espace", theme:'Géométrie analytique : vecteurs, droites, plans, repère orthonormé. Repr. paramétrique.', pts:5},
+    {titre:"Ex 4 — Algorithmique",theme:'Python : listes, fonctions, boucles for/while. Simulation probabiliste. Intégrales (rectangles).', pts:5},
   ]},
 ]
 
@@ -2732,7 +2735,7 @@ const linksTechno: Record<number, AnneeLinks> = {
       correction: `${SD}/2022/sti2d-spe-physique-chimie-mathematiques-2022-metropole-corrige.pdf` },
     { label:'STI2D — Métropole · Septembre 2022', flag:'⚙️',
       sujet:      `${AP}/metropole_sti2d_septembre_2022-2.pdf`,
-      correction: `${AP}/Corrige_STI2D_Metro_sept_2022_DV.pdf` },
+      correction: undefined },
   ]},
   2021: { sessions: [
     { label:'STI2D — Métropole La Réunion · Juin 2021', flag:'⚙️',
@@ -2807,57 +2810,57 @@ const linksExpertes: Record<number, AnneeLinks> = {
 // ════════════════════════════════════════════════════════════════
 const dataTechno: AnneeData[] = [
   { year:2025, note:'🆕', exercices:[
-    {titre:'Ex 1 — Suites (STMG)',       theme:'Suites géométriques, intérêts composés, valeur acquise, mensualités. Algorithme de seuil.', pts:7},
-    {titre:'Ex 2 — Probabilités (STMG)', theme:'Probabilités conditionnelles, arbres, variable aléatoire X, espérance E(X). Binomiale B(n,p).', pts:6},
-    {titre:'Ex 3 — Analyse (STI2D)',     theme:'Exponentielle et logarithme. Modélisation physique : décharge RC, refroidissement Newton.', pts:7},
+    {titre:"Ex 1 — Suites (STMG)",       theme:'Suites géométriques, intérêts composés, valeur acquise, mensualités. Algorithme de seuil.', pts:7},
+    {titre:"Ex 2 — Probabilités (STMG)", theme:'Probabilités conditionnelles, arbres, variable aléatoire X, espérance E(X). Binomiale B(n,p).', pts:6},
+    {titre:"Ex 3 — Analyse (STI2D)",     theme:'Exponentielle et logarithme. Modélisation physique : décharge RC, refroidissement Newton.', pts:7},
   ]},
   { year:2024, exercices:[
-    {titre:'Ex 1 — Fonctions (STMG)',    theme:'Second degré, forme canonique, variations, applications économiques (maximisation CA).', pts:7},
-    {titre:'Ex 2 — Stats 2 var. (STMG)',theme:'Nuage de points, point moyen G, droite de régression (moindres carrés), coefficient r, prévisions.', pts:6},
-    {titre:'Ex 3 — Intégration (STI2D)',theme:"Primitives, intégrale définie ∫ₐᵇf = F(b)−F(a), valeur moyenne, travail d\'une force.", pts:7},
+    {titre:"Ex 1 — Fonctions (STMG)",    theme:'Second degré, forme canonique, variations, applications économiques (maximisation CA).', pts:7},
+    {titre:"Ex 2 — Stats 2 var. (STMG)",theme:'Nuage de points, point moyen G, droite de régression (moindres carrés), coefficient r, prévisions.', pts:6},
+    {titre:"Ex 3 — Intégration (STI2D)",theme:"Primitives, intégrale définie ∫ₐᵇf = F(b)−F(a), valeur moyenne, travail d\'une force.", pts:7},
   ]},
   { year:2023, exercices:[
-    {titre:'Ex 1 — Probabilités (STMG)',theme:'Binomiale B(n,p), probas totales, arbres. Espérance E(X)=np, variance V(X)=np(1−p).', pts:7},
-    {titre:'Ex 2 — Calcul fin. (STMG)', theme:"Taux d\'évolution, coefficients multiplicateurs, évolutions successives, taux réciproque.", pts:6},
-    {titre:'Ex 3 — Analyse (STI2D)',    theme:'Logarithme : propriétés algébriques, équations, résolution. Croissances comparées.', pts:7},
+    {titre:"Ex 1 — Probabilités (STMG)",theme:'Binomiale B(n,p), probas totales, arbres. Espérance E(X)=np, variance V(X)=np(1−p).', pts:7},
+    {titre:"Ex 2 — Calcul fin. (STMG)", theme:"Taux d\'évolution, coefficients multiplicateurs, évolutions successives, taux réciproque.", pts:6},
+    {titre:"Ex 3 — Analyse (STI2D)",    theme:'Logarithme : propriétés algébriques, équations, résolution. Croissances comparées.', pts:7},
   ]},
   { year:2022, exercices:[
-    {titre:'Ex 1 — Suites (STMG)',      theme:'Suites arithmétiques, capital, amortissements linéaires. Seuil par algorithme.', pts:7},
-    {titre:'Ex 2 — Probabilités (STMG)',theme:'Probabilités conditionnelles, indépendance, variable aléatoire, espérance.', pts:6},
-    {titre:'Ex 3 — Probas cont. (STI2D)',theme:'Loi uniforme [a;b], loi normale N(μ;σ²), standardisation Z=(X−μ)/σ.', pts:7},
+    {titre:"Ex 1 — Suites (STMG)",      theme:'Suites arithmétiques, capital, amortissements linéaires. Seuil par algorithme.', pts:7},
+    {titre:"Ex 2 — Probabilités (STMG)",theme:'Probabilités conditionnelles, indépendance, variable aléatoire, espérance.', pts:6},
+    {titre:"Ex 3 — Probas cont. (STI2D)",theme:'Loi uniforme [a;b], loi normale N(μ;σ²), standardisation Z=(X−μ)/σ.', pts:7},
   ]},
   { year:2021, exercices:[
-    {titre:'Ex 1 — Fonctions (STMG)',   theme:'Second degré, affines, exponentielle. Tableau de variations. Applications économiques.', pts:7},
-    {titre:'Ex 2 — Suites (STMG)',      theme:'Suites géométriques, intérêts composés, mensualités. Valeur acquise.', pts:6},
+    {titre:"Ex 1 — Fonctions (STMG)",   theme:'Second degré, affines, exponentielle. Tableau de variations. Applications économiques.', pts:7},
+    {titre:"Ex 2 — Suites (STMG)",      theme:'Suites géométriques, intérêts composés, mensualités. Valeur acquise.', pts:6},
     {titre:'Ex 3 — Analyse (STI2D)',    theme:"Exp. et ln, étude. Équations différentielles y\'=ay+b, condition initiale y(0)=y₀.", pts:7},
   ]},
 ]
 
 const dataExpertes: AnneeData[] = [
   { year:2025, note:'🆕', exercices:[
-    {titre:'Ex 1 — Arithmétique', theme:'PGCD (Euclide). Bézout : au+bv=PGCD(a,b). Équations diophantiennes ax+by=c dans ℤ.', pts:7},
-    {titre:'Ex 2 — Complexes',   theme:'Forme exponentielle reⁱᶿ, Euler : eⁱᶿ=cosθ+isinθ, De Moivre, racines n-ièmes. Polygones.', pts:7},
-    {titre:'Ex 3 — Matrices',    theme:'Calcul matriciel, puissances Mⁿ. Chaînes de Markov : Pₙ₊₁=Pₙ×M. État stable π=π×M.', pts:6},
+    {titre:"Ex 1 — Arithmétique", theme:'PGCD (Euclide). Bézout : au+bv=PGCD(a,b). Équations diophantiennes ax+by=c dans ℤ.', pts:7},
+    {titre:"Ex 2 — Complexes",   theme:'Forme exponentielle reⁱᶿ, Euler : eⁱᶿ=cosθ+isinθ, De Moivre, racines n-ièmes. Polygones.', pts:7},
+    {titre:"Ex 3 — Matrices",    theme:'Calcul matriciel, puissances Mⁿ. Chaînes de Markov : Pₙ₊₁=Pₙ×M. État stable π=π×M.', pts:6},
   ]},
   { year:2024, exercices:[
-    {titre:'Ex 1 — Arithmétique', theme:'Congruences mod n. Petit Fermat : aᵖ⁻¹≡1[p] si p premier. Applications cryptographiques.', pts:7},
-    {titre:'Ex 2 — Complexes',   theme:'Module |z|, arg(z). Euler : cosθ=(eⁱᶿ+e⁻ⁱᶿ)/2. Linéarisation de cosⁿθ.', pts:7},
-    {titre:'Ex 3 — Graphes',     theme:"Vocabulaire, degrés, chaînes eulériennes (Euler). Matrice d\'adjacence, graphes probabilistes.", pts:6},
+    {titre:"Ex 1 — Arithmétique", theme:'Congruences mod n. Petit Fermat : aᵖ⁻¹≡1[p] si p premier. Applications cryptographiques.', pts:7},
+    {titre:"Ex 2 — Complexes",   theme:'Module |z|, arg(z). Euler : cosθ=(eⁱᶿ+e⁻ⁱᶿ)/2. Linéarisation de cosⁿθ.', pts:7},
+    {titre:"Ex 3 — Graphes",     theme:"Vocabulaire, degrés, chaînes eulériennes (Euler). Matrice d\'adjacence, graphes probabilistes.", pts:6},
   ]},
   { year:2023, exercices:[
-    {titre:'Ex 1 — Arithmétique', theme:'PGCD, Bézout, Gauss : si a|bc et pgcd(a,b)=1 alors a|c. Équations diophantiennes.', pts:7},
-    {titre:'Ex 2 — Complexes',   theme:'Module, argument, racines n-ièmes, géométrie du plan complexe. Transformations dans ℂ.', pts:7},
-    {titre:'Ex 3 — Matrices',    theme:'Calcul matriciel, inverse A⁻¹=(1/det)adj(A). Suites vectorielles Vₙ₊₁=M·Vₙ.', pts:6},
+    {titre:"Ex 1 — Arithmétique", theme:'PGCD, Bézout, Gauss : si a|bc et pgcd(a,b)=1 alors a|c. Équations diophantiennes.', pts:7},
+    {titre:"Ex 2 — Complexes",   theme:'Module, argument, racines n-ièmes, géométrie du plan complexe. Transformations dans ℂ.', pts:7},
+    {titre:"Ex 3 — Matrices",    theme:'Calcul matriciel, inverse A⁻¹=(1/det)adj(A). Suites vectorielles Vₙ₊₁=M·Vₙ.', pts:6},
   ]},
   { year:2022, exercices:[
-    {titre:'Ex 1 — Arithmétique', theme:'Divisibilité ℤ, division euclidienne. Congruences a≡b[n] ⟺ n|(a−b). Propriétés.', pts:7},
-    {titre:'Ex 2 — Complexes',   theme:'Équations polynomiales dans ℂ. Δ<0 : racines complexes conjuguées. Viète.', pts:7},
-    {titre:'Ex 3 — Graphes',     theme:"Matrice d\'adjacence. Graphe probabiliste, Markov, matrice de transition. État stable.", pts:6},
+    {titre:"Ex 1 — Arithmétique", theme:'Divisibilité ℤ, division euclidienne. Congruences a≡b[n] ⟺ n|(a−b). Propriétés.', pts:7},
+    {titre:"Ex 2 — Complexes",   theme:'Équations polynomiales dans ℂ. Δ<0 : racines complexes conjuguées. Viète.', pts:7},
+    {titre:"Ex 3 — Graphes",     theme:"Matrice d\'adjacence. Graphe probabiliste, Markov, matrice de transition. État stable.", pts:6},
   ]},
   { year:2021, exercices:[
-    {titre:'Ex 1 — Arithmétique', theme:"Nombres premiers, crible d\'Ératosthène. Décomposition unique en facteurs premiers.", pts:7},
-    {titre:'Ex 2 — Complexes',   theme:'Formes trig. et expo. Moivre (cosθ+isinθ)ⁿ. Linéarisation cos(nθ), sin(nθ).', pts:7},
-    {titre:'Ex 3 — Matrices',    theme:'Matrices carrées ordre 2 : opérations, identité I₂, inverse A⁻¹, puissances Mⁿ.', pts:6},
+    {titre:"Ex 1 — Arithmétique", theme:"Nombres premiers, crible d\'Ératosthène. Décomposition unique en facteurs premiers.", pts:7},
+    {titre:"Ex 2 — Complexes",   theme:'Formes trig. et expo. Moivre (cosθ+isinθ)ⁿ. Linéarisation cos(nθ), sin(nθ).', pts:7},
+    {titre:"Ex 3 — Matrices",    theme:'Matrices carrées ordre 2 : opérations, identité I₂, inverse A⁻¹, puissances Mⁿ.', pts:6},
   ]},
 ]
 
@@ -5574,30 +5577,2302 @@ Il faut contrôler au moins 1112 pièces.`
 // ════════════════════════════════════════════════════════════════
 //  SECTIONS — noms identiques aux pages de cours
 // ════════════════════════════════════════════════════════════════
-type SKey = 'terminale-generale' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde'
+
+// ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE TERMINALE GÉNÉRALE
+//  ✅ URLs vérifiées sur sujetdebac.fr (avril 2026)
+//  Pattern : annales-pdf/ANNÉE/spe-physique-chimie-ANNÉE-CENTRE-sujet-officiel.pdf
+//  Épreuve : 3h30 · Coef. 16 · Bac Général
+// ════════════════════════════════════════════════════════════════
+
+const linksPhysiqueChimie: Record<number, AnneeLinks> = {
+
+  // ─── 2025 ─ 19 sujets · 12 corrections ──────────────────────
+  2025: { sessions: [
+    { label:'Métropole France 1 · 17 juin 2025', flag:'🇫🇷',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-metropole-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 18 juin 2025', flag:'🇫🇷',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-metropole-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-metropole-2-corrige.pdf` },
+    { label:'Métropole Secours 2 · juin 2025', flag:'🇫🇷',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-metropole-secours2-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-metropole-secours2-corrige.pdf` },
+    { label:'Amérique du Nord 1 · mai 2025', flag:'🌎',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-1-corrige.pdf` },
+    { label:'Amérique du Nord 2 · mai 2025', flag:'🌎',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-2-corrige.pdf` },
+    { label:'Amérique du Nord 2 Bis · mai 2025', flag:'🌎',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-2bis-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-amerique-nord-2bis-corrige.pdf` },
+    { label:'Asie 1 · juin 2025', flag:'🌏',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-asie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-asie-1-corrige.pdf` },
+    { label:'Asie 2 · juin 2025', flag:'🌏',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-asie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-asie-2-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 1 · juin 2025', flag:'🌍',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-centres-etranger-1-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 2 · juin 2025', flag:'🌍',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-centres-etranger-2-corrige.pdf` },
+    { label:'Polynésie 1 · juin 2025', flag:'🌊',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-polynesie-1-sujet-officiel.pdf`,
+      correction: `${LLY}/polynesie-2025-jour-1` },
+    { label:'Polynésie 2 · juin 2025', flag:'🌊',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-polynesie-2-sujet-officiel.pdf`,
+      correction: `${LLY}/polynesie-2025-jour-2` },
+    { label:'Métropole France 1 — Remplacement · sept. 2025', flag:'🍂',
+      sujet:      `${SDB}/2025/spe-physique-chimie-2025-metropole-1-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2025/spe-physique-chimie-2025-metropole-1-remplacement-corrige.pdf` },
+  ]},
+
+  // ─── 2024 ─ 14 sujets · 14 corrections ──────────────────────
+  2024: { sessions: [
+    { label:'Métropole France 1 · 19 juin 2024', flag:'🇫🇷',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-metropole-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 20 juin 2024', flag:'🇫🇷',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-metropole-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-metropole-2-corrige.pdf` },
+    { label:'Amérique du Nord 1 · mai 2024', flag:'🌎',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-amerique-nord-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-amerique-nord-1-corrige.pdf` },
+    { label:'Amérique du Nord 2 · mai 2024', flag:'🌎',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-amerique-nord-2-corrige.pdf` },
+    { label:'Asie 1 · 10 juin 2024', flag:'🌏',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-asie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-asie-1-corrige.pdf` },
+    { label:'Asie 2 · 11 juin 2024', flag:'🌏',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-asie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-asie-2-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 1 · 5 juin 2024', flag:'🌍',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-centres-etranger-1-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 2 · 6 juin 2024', flag:'🌍',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-centres-etranger-2-corrige.pdf` },
+    { label:'Polynésie 1 · 19 juin 2024', flag:'🌊',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-polynesie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-polynesie-1-corrige.pdf` },
+    { label:'Polynésie 2 · 20 juin 2024', flag:'🌊',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-polynesie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-polynesie-2-corrige.pdf` },
+    { label:'Suède 2 · juin 2024', flag:'🇸🇪',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-suede-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-suede-2-corrige.pdf` },
+    { label:'Métropole France 1 — Remplacement · sept. 2024', flag:'🍂',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-metropole-1-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-metropole-1-remplacement-corrige.pdf` },
+    { label:'Métropole France 2 — Remplacement · sept. 2024', flag:'🍂',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-metropole-2-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-metropole-2-remplacement-corrige.pdf` },
+    { label:'Polynésie 2 — Remplacement · sept. 2024', flag:'🌊',
+      sujet:      `${SDB}/2024/spe-physique-chimie-2024-polynesie-2-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2024/spe-physique-chimie-2024-polynesie-2-remplacement-corrige.pdf` },
+  ]},
+
+  // ─── 2023 ─ 19 sujets · 11 corrections ──────────────────────
+  2023: { sessions: [
+    { label:'Métropole France 1 · 20 mars 2023', flag:'🇫🇷',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-metropole-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 21 mars 2023', flag:'🇫🇷',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-metropole-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-metropole-2-corrige.pdf` },
+    { label:'Amérique du Nord 1 · mars 2023', flag:'🌎',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-amerique-nord-1-sujet-officiel.pdf`,
+      correction: `${LLY}/amerique-nord-1-2023-jour-1` },
+    { label:'Amérique du Nord 2 · mars 2023', flag:'🌎',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${LLY}/amerique-nord-2-2023-jour-1` },
+    { label:'Asie 1 · mars 2023', flag:'🌏',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-asie-1-sujet-officiel.pdf`,
+      correction: `${LLY}/asie-2023-jour-1` },
+    { label:'Asie 2 · 24 mars 2023', flag:'🌏',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-asie-2-sujet-officiel.pdf`,
+      correction: `${LLY}/asie-2023-jour-2` },
+    { label:'Centres Étrangers Afrique 1 · mars 2023', flag:'🌍',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-centres-etranger-1-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 2 · mars 2023', flag:'🌍',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-centres-etranger-2-corrige.pdf` },
+    { label:'La Réunion 1 · mars 2023', flag:'🏝️',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-la-reunion-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-la-reunion-1-corrige.pdf` },
+    { label:'La Réunion 2 · mars 2023', flag:'🏝️',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-la-reunion-2-sujet-officiel.pdf`,
+      correction: `${LLY}/la-reunion-2023-jour-2` },
+    { label:'Liban 1 · mars 2023', flag:'🇱🇧',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-liban-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-liban-1-corrige.pdf` },
+    { label:'Liban 2 · mars 2023', flag:'🇱🇧',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-liban-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-liban-2-corrige.pdf` },
+    { label:'Polynésie 1 · mars 2023', flag:'🌊',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-polynesie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-polynesie-1-corrige.pdf` },
+    { label:'Polynésie 2 · mars 2023', flag:'🌊',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-polynesie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-polynesie-2-corrige.pdf` },
+    { label:'Métropole France 1 — Remplacement · sept. 2023', flag:'🍂',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-metropole-1-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-metropole-1-remplacement-corrige.pdf` },
+    { label:'Métropole France 2 — Remplacement · sept. 2023', flag:'🍂',
+      sujet:      `${SDB}/2023/spe-physique-chimie-2023-metropole-2-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2023/spe-physique-chimie-2023-metropole-2-remplacement-corrige.pdf` },
+  ]},
+
+  // ─── 2022 ─ 18 sujets · 8 corrections ───────────────────────
+  2022: { sessions: [
+    { label:'Métropole France 1 · 11 mai 2022', flag:'🇫🇷',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-metropole-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 12 mai 2022', flag:'🇫🇷',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-metropole-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-metropole-2-corrige.pdf` },
+    { label:'Amérique du Nord 1 · 18 mai 2022', flag:'🌎',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-amerique-nord-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-amerique-nord-1-corrige.pdf` },
+    { label:'Amérique du Nord 2 · 19 mai 2022', flag:'🌎',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${LLY}/amerique-nord-2-2022-jour-2` },
+    { label:'Asie 1 · mai 2022', flag:'🌏',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-asie-1-sujet-officiel.pdf`,
+      correction: `${LLY}/asie-2022-jour-1` },
+    { label:'Asie 2 · mai 2022', flag:'🌏',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-asie-2-sujet-officiel.pdf`,
+      correction: `${LLY}/asie-2022-jour-2` },
+    { label:'Centres Étrangers Afrique 1 · mai 2022', flag:'🌍',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${LLY}/centres-etrangers-1-2022-jour-1` },
+    { label:'Centres Étrangers Afrique 2 · mai 2022', flag:'🌍',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${LLY}/centres-etrangers-2-2022-jour-1` },
+    { label:'Mayotte-Liban 1 · mai 2022', flag:'🇲🇾',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-mayotte-liban-1-sujet-officiel.pdf`,
+      correction: `${LLY}/mayotte-liban-2022-jour-1` },
+    { label:'Mayotte-Liban 2 · mai 2022', flag:'🇲🇾',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-mayotte-liban-2-sujet-officiel.pdf`,
+      correction: `${LLY}/mayotte-liban-2022-jour-2` },
+    { label:'Polynésie 1 · 4 mai 2022', flag:'🌊',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-polynesie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-polynesie-1-corrige.pdf` },
+    { label:'Polynésie 2 · mai 2022', flag:'🌊',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-polynesie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-polynesie-2-corrige.pdf` },
+    { label:'Métropole France 1 — Remplacement · sept. 2022', flag:'🍂',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-metropole-1-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-metropole-1-remplacement-corrige.pdf` },
+    { label:'Métropole France 2 — Remplacement · sept. 2022', flag:'🍂',
+      sujet:      `${SDB}/2022/spe-physique-chimie-2022-metropole-2-remplacement-sujet-officiel.pdf`,
+      correction: `${SDB}/2022/spe-physique-chimie-2022-metropole-2-remplacement-corrige.pdf` },
+  ]},
+
+  // ─── 2021 ─ 15 sujets · 15 corrections ──────────────────────
+  2021: { sessions: [
+    { label:'Métropole France 1 · 7 juin 2021', flag:'🇫🇷',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-metropole-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 8 juin 2021', flag:'🇫🇷',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-metropole-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-metropole-2-corrige.pdf` },
+    { label:'Métropole Candidat libre 1 · 2021', flag:'🇫🇷',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-metro-cand-libre-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-metro-cand-libre-1-corrige.pdf` },
+    { label:'Métropole Candidat libre 2 · 2021', flag:'🇫🇷',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-metro-cand-libre-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-metro-cand-libre-2-corrige.pdf` },
+    { label:'Amérique du Nord 2 · juin 2021', flag:'🌎',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-amerique-nord-2-corrige.pdf` },
+    { label:'Asie 1 · juin 2021', flag:'🌏',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-asie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-asie-1-corrige.pdf` },
+    { label:'Asie 2 · juin 2021', flag:'🌏',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-asie-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-asie-2-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 1 · juin 2021', flag:'🌍',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-centres-etranger-1-corrige.pdf` },
+    { label:'Centres Étrangers Afrique 2 · juin 2021', flag:'🌍',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-centres-etranger-2-corrige.pdf` },
+    { label:'Polynésie 1 · juin 2021', flag:'🌊',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-polynesie-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-polynesie-1-corrige.pdf` },
+    { label:'Sujet Zéro 1 · 2021', flag:'📝',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-zero-1-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-zero-1-corrige.pdf` },
+    { label:'Sujet Zéro 2 · 2021', flag:'📝',
+      sujet:      `${SDB}/2021/spe-physique-chimie-2021-zero-2-sujet-officiel.pdf`,
+      correction: `${SDB}/2021/spe-physique-chimie-2021-zero-2-corrige.pdf` },
+  ]},
+}
+
+// ── Exercices par année — PC Terminale (thèmes réels vérifiés) ──
+const dataPhysiqueChimie: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    { titre:'Ex 1 — Chimie · Indicateur coloré & Titrages',
+      theme:'Emballage intelligent avec bleu de bromophénol (BBP). Indicateur acide-base, domaine de virage, pKa. Titrage pH-métrique et spectrophotométrique.',
+      pts:7 },
+    { titre:'Ex 2 — Physique · Nucléaire & Datation',
+      theme:"Datation d'une roche au Strontium-87. Loi de décroissance radioactive, isochrone, âge de la roche (site de Meymac, Corrèze).",
+      pts:7 },
+    { titre:'Ex 3 — Physique · Mécanique des fluides',
+      theme:"Viscosimètre à chute de bille. 2ème loi de Newton avec frottement visqueux, vitesse limite, viscosité d'une huile. Modèle de Stokes.",
+      pts:6 },
+  ]},
+  { year:2024, exercices:[
+    { titre:'Ex 1 — Chimie · Extraction & Acide-base',
+      theme:'Extraction liquide-liquide du thymol (huile essentielle de thym). Acido-basicité, ion thymolate. Solubilité sélective dans solvant organique (hexane). Pourcentage massique.',
+      pts:7 },
+    { titre:'Ex 2 — Physique · Mécanique & Énergie',
+      theme:"Chute libre d'un smartphone (2ème loi Newton). Énergie cinétique, énergie potentielle, conservation de l'énergie mécanique. Modélisation avec et sans frottements.",
+      pts:6 },
+    { titre:'Ex 3 — Physique · Ondes & Circuits',
+      theme:'Circuit RLC en régime sinusoïdal forcé. Résonance ω₀=1/√(LC), impédance, facteur de qualité Q, bande passante. Application filtrage.',
+      pts:7 },
+  ]},
+  { year:2023, exercices:[
+    { titre:'Ex 1 — Chimie · Cinétique & Équilibres',
+      theme:"Réaction d'estérification de Marcellin Berthelot. Cinétique, t₁/₂, équilibre chimique, quotient de réaction Qr, amélioration du rendement. Titrage colorimétrique.",
+      pts:7 },
+    { titre:'Ex 2 — Physique · Mécanique des fluides',
+      theme:'Mécanique des fluides biologiques. Théorème de Bernoulli, continuité S₁v₁=S₂v₂. Application médicale : circulation sanguine, viscosimètre.',
+      pts:6 },
+    { titre:'Ex 3 — Chimie · Acide-base & Optique',
+      theme:'Acide citrique comme produit ménager. Spectroscopie IR, solubilité, diagramme de distribution, Ka. Titrage pH-métrique, choix indicateur coloré.',
+      pts:7 },
+  ]},
+  { year:2022, exercices:[
+    { titre:'Ex 1 — Physique · Optique & Lunette',
+      theme:'La découverte de Neptune. 3ème loi de Kepler T²/r³=cte. Lunette astronomique, grossissement, distance focale. Lentilles convergentes.',
+      pts:5 },
+    { titre:'Ex 2 — Physique · Thermodynamique',
+      theme:'Bouteille isotherme. 1er principe de la thermodynamique ΔU=W+Q, énergie interne, flux thermique. Transfert thermique par conduction et rayonnement.',
+      pts:8 },
+    { titre:'Ex 3 — Chimie · Rédox & Piles',
+      theme:"Corrosion du fer. Piles galvaniques, demi-équations électroniques, potentiel d'oxydoréduction. Protection cathodique par zinc (anode sacrificielle).",
+      pts:7 },
+  ]},
+  { year:2021, exercices:[
+    { titre:'Ex 1 — Physique · Mouvement & Champ',
+      theme:'Mouvement dans un champ électrique uniforme (déviation d\'électrons). Équations horaires, trajectoire parabolique. Analogie avec le champ de pesanteur.',
+      pts:7 },
+    { titre:'Ex 2 — Chimie · Dosages & Spectro.',
+      theme:'Dosage par étalonnage UV-visible (Beer-Lambert A=εlc). Réactions rédox, demi-équations, bilan. Titrages colorimétrique et conductimétrique. Équivalence.',
+      pts:6 },
+    { titre:'Ex 3 — Physique · Ondes & Effet Doppler',
+      theme:'Ondes mécaniques progressives, célérité v=λf. Effet Doppler : fréquence perçue selon le mouvement de la source. Applications médicales (écho-Doppler).',
+      pts:7 },
+  ]},
+]
+
+//  SECTIONS — noms identiques aux pages de cours
+// ════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE SECONDE — 15 exercices par chapitre
+// ════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE SECONDE — Programme officiel MEN France
+//  5 thèmes · 20 exercices corrigés par chapitre
+// ════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE SECONDE — aligné sur bac-france/physique/seconde
+//  4 grands thèmes · 20 exercices corrigés par chapitre
+// ════════════════════════════════════════════════════════════════
+const CHAPITRES_SECONDE_PC: ChapitreData[] = [
+  {
+    id:'atomes-noyau', numero:1,
+    titre:'Atomes, noyaux & Tableau périodique',
+    sousTitre:'Structure atomique · Isotopes · Config. électronique · Tableau périodique',
+    icon:'⚛️', color:'#10b981',
+    notions:['Noyau atomique','Isotopes','Z et A','Config. électronique','Tableau périodique','Électrons de valence'],
+    exercices:[
+      {id:'SN1-01',difficulte:1,titre:'Notation ᴬ_Z X',
+       enonce:"Oxygène ¹⁶₈O.\n1. Donner Z, N, nombre d'électrons.\n2. Charge du noyau.\n3. Atome neutre ?",
+       correction:'1. Z=8 protons, N=8 neutrons, 8 électrons\n2. +8e = +1,28×10⁻¹⁸C\n3. Oui: 8(+) + 8(-) = 0',
+       notions:['Noyau']},
+      {id:'SN1-02',difficulte:1,titre:'Isotopes du chlore',
+       enonce:'³⁵₁₇Cl et ³⁷₁₇Cl.\n1. Z et N pour chacun.\n2. Pourquoi sont-ils isotopes ?\n3. Masse atomique moyenne (75% ³⁵Cl, 25% ³⁷Cl).',
+       correction:'1. ³⁵Cl: Z=17 N=18 · ³⁷Cl: Z=17 N=20\n2. Même Z=17, A différent (neutrons différents)\n3. M = 0,75×35+0,25×37 = 35,5 g/mol',
+       notions:['Isotopes']},
+      {id:'SN1-03',difficulte:1,titre:'Configurations électroniques',
+       enonce:'Écrire les configurations de: H(1) He(2) Li(3) Ne(10) Na(11) Cl(17) Ca(20).\nDonner les électrons de valence de Na et Cl.',
+       correction:'H:(1) · He:(2) · Li:(2,1) · Ne:(2,8) · Na:(2,8,1) · Cl:(2,8,7) · Ca:(2,8,8,2)\nNa: 1 e⁻ val · Cl: 7 e⁻ val',
+       notions:['Config. électronique']},
+      {id:'SN1-04',difficulte:1,titre:'Tableau périodique — groupes et périodes',
+       enonce:'Na est en période 3, groupe 1.\n1. Que signifie période 3 ?\n2. Que signifie groupe 1 ?\n3. Quel autre élément du groupe 17 ?',
+       correction:'1. 3 couches électroniques occupées\n2. 1 électron de valence\n3. F, Cl, Br, I (halogènes)',
+       notions:['Tableau périodique']},
+      {id:'SN1-05',difficulte:1,titre:'Masse molaire',
+       enonce:'Calculer M de: NaCl · H₂SO₄ · CaCO₃ · C₆H₁₂O₆.\nM(H)=1 M(C)=12 M(O)=16 M(Na)=23 M(S)=32 M(Cl)=35,5 M(Ca)=40.',
+       correction:'NaCl = 58,5 g/mol · H₂SO₄ = 98 g/mol · CaCO₃ = 100 g/mol · C₆H₁₂O₆ = 180 g/mol',
+       notions:['Masse molaire']},
+      {id:'SN1-06',difficulte:1,titre:'Quantité de matière et Avogadro',
+       enonce:'Nₐ = 6,02×10²³ mol⁻¹.\n1. n(Fe) pour m=28g. M=56.\n2. m(NaOH) pour n=0,5mol. M=40.\n3. N(molécules) dans 1mol H₂O.',
+       correction:'1. n = 0,5 mol · 2. m = 20 g · 3. N = 6,02×10²³',
+       notions:['Quantité matière','Avogadro']},
+      {id:'SN1-07',difficulte:2,titre:'Ions courants',
+       enonce:'Former les ions de Na(11) · Cl(17) · Ca(20) · O(8) · Al(13).\nDonner formule, protons, électrons, charge.',
+       correction:'Na⁺: 11p 10e +1 · Cl⁻: 17p 18e -1 · Ca²⁺: 20p 18e +2\nO²⁻: 8p 10e -2 · Al³⁺: 13p 10e +3',
+       notions:['Ions']},
+      {id:'SN1-08',difficulte:2,titre:'Concentration molaire',
+       enonce:'Dissolve 5,85g NaCl (M=58,5) dans 500mL.\n1. n(NaCl). 2. Concentration C. 3. Ions présents et concentrations.',
+       correction:'1. n = 0,1 mol · 2. C = 0,2 mol/L · 3. [Na⁺] = [Cl⁻] = 0,2 mol/L',
+       notions:['Concentration']},
+      {id:'SN1-09',difficulte:2,titre:'Dilution',
+       enonce:'20mL HCl C₁=2mol/L dilué à 200mL.\n1. Relation C₁V₁=C₂V₂. 2. C₂. 3. Facteur de dilution.',
+       correction:'1. C₁V₁ = C₂V₂ · 2. C₂ = 0,2 mol/L · 3. F = 10',
+       notions:['Dilution']},
+      {id:'SN1-10',difficulte:2,titre:'Volume molaire des gaz',
+       enonce:'Vm=22,4L/mol à CNT (0°C, 1atm). n=0,3mol CO₂.\n1. Volume à CNT. 2. m(CO₂). M=44. 3. V à 25°C, P=10⁵Pa via PV=nRT.',
+       correction:'1. V = 6,72 L · 2. m = 13,2 g · 3. V = nRT/P = 7,43 L',
+       notions:['Volume molaire','Gaz parfait']},
+      {id:'SN1-11',difficulte:2,titre:'Réactif limitant',
+       enonce:'N₂+3H₂→2NH₃. n(N₂)=0,4mol n(H₂)=1,0mol.\n1. Réactif limitant. 2. n(NH₃) produit. 3. Excès restant.',
+       correction:'1. H₂ limitant (besoin 1,2mol > 1,0mol disponible)\n2. n(NH₃) = 2/3×1,0 = 0,667 mol\n3. n(N₂) restant = 0,067 mol',
+       notions:['Réactif limitant']},
+      {id:'SN1-12',difficulte:2,titre:'Spectrométrie de masse — isotopes',
+       enonce:'Spectre du chlore: m/z=35(75%) et m/z=37(25%).\n1. À quoi correspondent ces pics ?\n2. Masse atomique moy.\n3. Pic à m/z=70: expliquer.',
+       correction:'1. Isotopes ³⁵Cl et ³⁷Cl\n2. M = 35,5 g/mol\n3. Ion Cl₂⁺: ³⁵Cl+³⁵Cl = 70',
+       notions:['Spectrométrie','Isotopes']},
+      {id:'SN1-13',difficulte:2,titre:'Composition centésimale',
+       enonce:'Glucose C₆H₁₂O₆ M=180g/mol.\n1. %C %H %O. 2. m(C) dans 90g de glucose. 3. Vérifier somme=100%.',
+       correction:'1. %C=40% · %H=6,7% · %O=53,3%\n2. m(C) = 36 g\n3. 40+6,7+53,3 = 100% ✓',
+       notions:['Composition centésimale']},
+      {id:'SN1-14',difficulte:3,titre:'Modèle de Bohr',
+       enonce:'H: E_n=-13,6/n² eV. h=6,63×10⁻³⁴ c=3×10⁸.\n1. E₁. 2. E₃. 3. λ du photon émis lors 3→1.',
+       correction:'1. E₁ = -13,6 eV · 2. E₃ = -1,51 eV\n3. ΔE = 12,09 eV = 1,94×10⁻¹⁸J · λ = hc/ΔE = 103 nm (UV)',
+       notions:['Bohr','Photon']},
+      {id:'SN1-15',difficulte:2,titre:'Halogènes — propriétés',
+       enonce:'F(9) Cl(17) Br(35): groupe 17.\n1. Configurations. 2. Électrons de valence. 3. Pourquoi réagissent-ils de façon similaire ?',
+       correction:'1. F:(2,7) · Cl:(2,8,7) · Br:(2,8,18,7)\n2. Tous 7 e⁻ val\n3. Propriétés chimiques définies par e⁻ de valence → tendance à capter 1e⁻',
+       notions:['Halogènes']},
+      {id:'SN1-16',difficulte:2,titre:'Radioactivité — ¹⁴C',
+       enonce:'¹⁴₆C radioactif β⁻, t₁/₂=5730 ans.\n1. Stable ? Pourquoi ?\n2. Désintégration: ¹⁴₆C→¹⁴₇N+e⁻. Vérifier conservation.\n3. Application.',
+       correction:'1. Instable: excès de neutrons (N=8 pour Z=6)\n2. A: 14=14 ✓ · Z: 6=7+(-1) ✓\n3. Datation carbone-14 (archéologie)',
+       notions:['Radioactivité']},
+      {id:'SN1-17',difficulte:3,titre:'Identification par spectrométrie',
+       enonce:'Élément inconnu X: pics m/z=28(92%) et m/z=29(8%).\n1. Masse atomique moy. 2. Si ²⁸₁₄Si: Z. 3. Identifier.',
+       correction:'1. M = 28,08 g/mol · 2. Z = 14\n3. Silicium (M_tabulé = 28,09 ✓)',
+       notions:['Spectrométrie']},
+      {id:'SN1-18',difficulte:2,titre:"Écriture symbolique d'un noyau",
+       enonce:'Noyau X: 26 protons et 30 neutrons.\n1. Écrire ᴬ_Z X. 2. Quel élément ? 3. Charge du noyau en Coulombs.',
+       correction:'1. ⁵⁶₂₆X · 2. Fer (Fe) · 3. Q = 26×1,6×10⁻¹⁹ = 4,16×10⁻¹⁸ C',
+       notions:['Noyau atomique']},
+      {id:'SN1-19',difficulte:2,titre:"Dureté de l'eau",
+       enonce:'[Ca²⁺]=2,5mmol/L (M=40) · [Mg²⁺]=1,2mmol/L (M=24).\n1. TH en °F (1°F=0,1mmol/L). 2. [Ca²⁺] en mg/L. 3. Eau dure si TH>15°F ?',
+       correction:'1. TH = 37°F · 2. 100 mg/L · 3. TH=37>15 → très dure',
+       notions:['Dureté eau']},
+      {id:'SN1-20',difficulte:3,titre:'Synthèse — analyse médicament',
+       enonce:'Paracétamol C₈H₉NO₂ M=151g/mol. Comprimé 500mg.\n1. n(paracétamol). 2. Molécules par comprimé. 3. %N massique.',
+       correction:'1. n = 3,31×10⁻³ mol · 2. N = 2,0×10²¹ · 3. %N = 14/151×100 = 9,3%',
+       notions:['Application médicale']},
+    ]
+  },
+  {
+    id:'transformations-chimiques', numero:2,
+    titre:'Transformations chimiques',
+    sousTitre:'Équations · Combustion · Oxydoréduction · Acide-base · pH',
+    icon:'🔥', color:'#ef4444',
+    notions:['Équation chimique','Combustion','Oxydoréduction','N.o.','pH','Acide-base'],
+    exercices:[
+      {id:'ST2-01',difficulte:1,titre:"Équilibrage d'équations chimiques",
+       enonce:'Équilibrer:\n1. H₂+O₂→H₂O\n2. Fe+O₂→Fe₂O₃\n3. CH₄+O₂→CO₂+H₂O\n4. Al+HCl→AlCl₃+H₂',
+       correction:'1. 2H₂+O₂→2H₂O · 2. 4Fe+3O₂→2Fe₂O₃\n3. CH₄+2O₂→CO₂+2H₂O · 4. 2Al+6HCl→2AlCl₃+3H₂',
+       notions:['Équation chimique']},
+      {id:'ST2-02',difficulte:1,titre:'Conservation de la masse',
+       enonce:'CH₄+2O₂→CO₂+2H₂O. Brûler 16g CH₄ (M=16).\n1. n(CH₄). 2. m(CO₂). 3. m(H₂O). Vérifier conservation.',
+       correction:'1. n=1mol · 2. m=44g · 3. m=36g\nVérif: 16+64=80g → 44+36=80g ✓',
+       notions:['Conservation masse']},
+      {id:'ST2-03',difficulte:1,titre:'pH — acides et bases forts',
+       enonce:'pH de: HCl 0,01mol/L · HNO₃ 10⁻³mol/L · NaOH 0,01mol/L · H₂SO₄ 0,005mol/L.',
+       correction:'HCl: pH=2 · HNO₃: pH=3 · NaOH: pOH=2→pH=12 · H₂SO₄: [H₃O⁺]=0,01→pH=2',
+       notions:['pH']},
+      {id:'ST2-04',difficulte:1,titre:"Produit ionique de l'eau",
+       enonce:'Ke=10⁻¹⁴.\n1. [OH⁻] si pH=3. 2. [H₃O⁺] si pOH=4. 3. Milieu si [OH⁻]=10⁻⁸mol/L.',
+       correction:'1. [OH⁻]=10⁻¹¹mol/L · 2. [H₃O⁺]=10⁻¹⁰mol/L · 3. pH=6 → acide',
+       notions:['Ke']},
+      {id:'ST2-05',difficulte:2,titre:'Acide fort vs acide faible',
+       enonce:'HCl 0,1mol/L vs CH₃COOH 0,1mol/L (pKa=4,75).\n1. pH(HCl). 2. pH(CH₃COOH)≈½(pKa-logC). 3. Lequel est plus acide ?',
+       correction:'1. pH=1 · 2. pH≈2,87 · 3. HCl pH=1<2,87 → HCl plus acide',
+       notions:['Acide fort/faible']},
+      {id:'ST2-06',difficulte:2,titre:'Oxydoréduction — identification',
+       enonce:'Zn+2HCl→ZnCl₂+H₂.\n1. Oxydant et réducteur. 2. Demi-équations. 3. N.o. Zn avant/après.',
+       correction:'1. H⁺: oxydant · Zn: réducteur\n2. Zn→Zn²⁺+2e⁻ · 2H⁺+2e⁻→H₂\n3. Zn: 0→+2',
+       notions:['Oxydoréduction']},
+      {id:'ST2-07',difficulte:2,titre:"Nombre d'oxydation",
+       enonce:'N.o. de: Mn dans KMnO₄ · S dans H₂SO₄ · N dans HNO₃ · N dans NH₃.',
+       correction:'KMnO₄: Mn=+7 · H₂SO₄: S=+6 · HNO₃: N=+5 · NH₃: N=-3',
+       notions:['N.o.']},
+      {id:'ST2-08',difficulte:2,titre:'Combustion du propane',
+       enonce:"C₃H₈+5O₂→3CO₂+4H₂O. 44g propane (M=44).\n1. Vérifier bilan. 2. m(CO₂) par kg propane. 3. CO₂ d'une bouteille 13kg.",
+       correction:'1. C:3=3 H:8=8 O:10=10 ✓ · 2. 3kg CO₂/kg propane · 3. 39kg CO₂',
+       notions:['Combustion']},
+      {id:'ST2-09',difficulte:2,titre:'Neutralisation',
+       enonce:'HCl+NaOH→NaCl+H₂O. 25mL HCl 0,1mol/L + 25mL NaOH 0,1mol/L.\n1. n(HCl) et n(NaOH). 2. pH mélange. 3. Excess 5mL NaOH 0,1mol/L: pH.',
+       correction:'1. n=n=2,5×10⁻³mol → équimolaires · 2. pH=7\n3. [OH⁻]=9,09×10⁻³mol/L → pH≈11,96',
+       notions:['Neutralisation']},
+      {id:'ST2-10',difficulte:2,titre:'Identification des ions',
+       enonce:'Test pour: Cl⁻ · Fe³⁺ · Cu²⁺ · SO₄²⁻ · NH₄⁺.',
+       correction:'Cl⁻: AgNO₃→ppt blanc · Fe³⁺: NaOH→ppt rouille · Cu²⁺: NaOH→ppt bleu\nSO₄²⁻: BaCl₂→ppt blanc · NH₄⁺: NaOH chaud→NH₃ piquant',
+       notions:['Tests ions']},
+      {id:'ST2-11',difficulte:2,titre:'Dosage acide-base — vinaigre',
+       enonce:'10mL vinaigre dosé par NaOH 0,5mol/L. V_éq=8mL.\n1. C(acide acétique). 2. Degré acidité (ρ=1,01g/mL M=60). 3. Indicateur coloré.',
+       correction:'1. C = 0,4 mol/L · 2. degré ≈ 2,4% · 3. BBT (pH_éq=7)',
+       notions:['Dosage']},
+      {id:'ST2-12',difficulte:2,titre:'Pile Daniell',
+       enonce:'Zn|Zn²⁺||Cu²⁺|Cu. E°=1,10V.\n1. Demi-réactions. 2. Équation globale. 3. Sens courant extérieur.',
+       correction:'1. Anode: Zn→Zn²⁺+2e⁻ · Cathode: Cu²⁺+2e⁻→Cu\n2. Zn+Cu²⁺→Zn²⁺+Cu · 3. Courant de Cu(+) vers Zn(-)',
+       notions:['Pile']},
+      {id:'ST2-13',difficulte:2,titre:"Électrolyse de l'eau",
+       enonce:'2H₂O→2H₂+O₂. I=1A t=30min. F=96500C/mol.\n1. Q=It. 2. n(H₂). 3. V(H₂) à CNT.',
+       correction:'1. Q=1800C · 2. n=9,3×10⁻³mol · 3. V=208mL',
+       notions:['Électrolyse']},
+      {id:'ST2-14',difficulte:2,titre:'Corrosion et protection',
+       enonce:'Corrosion Fe: Fe→Fe²⁺+2e⁻ et O₂+2H₂O+4e⁻→4OH⁻.\n1. Oxydant et réducteur. 2. Équation globale. 3. Deux méthodes de protection.',
+       correction:'1. O₂: oxydant · Fe: réducteur\n2. 2Fe+O₂+2H₂O→2Fe(OH)₂ → rouille\n3. Galvanisation (Zn) · Peinture · Acier inox · Protection cathodique',
+       notions:['Corrosion']},
+      {id:'ST2-15',difficulte:2,titre:'Acide faible — Ka',
+       enonce:'HCOOH pKa=3,75 C=0,1mol/L.\n1. Équation dissociation. 2. pH≈½(pKa-logC). 3. Taux dissociation α.',
+       correction:'1. HCOOH+H₂O⇌HCOO⁻+H₃O⁺\n2. pH≈2,37 · 3. α=4,27%',
+       notions:['Acide faible','Ka']},
+      {id:'ST2-16',difficulte:2,titre:'Chromatographie CCM',
+       enonce:'Solvant: 8cm. A: 5,6cm. B: 2,4cm.\n1. Rf(A) et Rf(B). 2. Lequel est plus polaire. 3. Même Rf → même composé ?',
+       correction:'1. Rf(A)=0,70 · Rf(B)=0,30\n2. B (Rf faible = retenu par silice polaire)\n3. Fort indice mais pas certitude absolue',
+       notions:['CCM','Rf']},
+      {id:'ST2-17',difficulte:3,titre:'Équilibre acide-base — tampon',
+       enonce:'50mL CH₃COOH 0,2mol/L + 50mL NaOH 0,1mol/L. pKa=4,75.\n1. n(AH) et n(NaOH). 2. n(AH)_f et n(A⁻)_f. 3. pH.',
+       correction:'1. n(AH)=0,01mol · n(OH)=0,005mol\n2. n(AH)_f=0,005mol · n(A⁻)=0,005mol\n3. pH = 4,75+log(1) = 4,75 (demi-neutralisation)',
+       notions:['Tampon']},
+      {id:'ST2-18',difficulte:2,titre:'Réaction avec réactif limitant',
+       enonce:'Fe+H₂SO₄→FeSO₄+H₂. 5,6g Fe + 50mL H₂SO₄ 0,1mol/L. M(Fe)=56.\n1. n(Fe) et n(H₂SO₄). 2. Réactif limitant. 3. V(H₂) à CNT.',
+       correction:'1. n(Fe)=0,1mol · n(H₂SO₄)=0,005mol\n2. H₂SO₄ limitant · 3. V=0,112L',
+       notions:['Réactif limitant']},
+      {id:'ST2-19',difficulte:3,titre:'Dosage H₂O₂ par KMnO₄',
+       enonce:'KMnO₄ 0,02mol/L. V_éq=20mL pour 10mL H₂O₂.\nMnO₄⁻+8H⁺+5e⁻→Mn²⁺ · H₂O₂→O₂+2H⁺+2e⁻.\n1. n(MnO₄⁻). 2. n(H₂O₂) (ratio 2:5). 3. C(H₂O₂).',
+       correction:'1. n=4×10⁻⁴mol · 2. n(H₂O₂)=10⁻³mol · 3. C=0,1mol/L',
+       notions:['Dosage rédox']},
+      {id:'ST2-20',difficulte:3,titre:'Synthèse — eau de Javel',
+       enonce:'Cl₂+2NaOH→NaOCl+NaCl+H₂O. Titre 2,6% Cl₂ actif.\n1. Dismutation (définir). 2. [NaOCl] si 2,6g Cl₂/100mL M=71. 3. Agent désinfectant actif.',
+       correction:'1. Même élément oxydé ET réduit (Cl: 0→+1 et -1)\n2. [NaOCl]=0,366mol/L · 3. OCl⁻ (hypochlorite)',
+       notions:['Dismutation']},
+    ]
+  },
+  {
+    id:'description-mouvement', numero:3,
+    titre:'Description du mouvement',
+    sousTitre:'Référentiel · Vecteur vitesse · MRU · MRUA · Trajectoire',
+    icon:'🚀', color:'#4f6ef7',
+    notions:['Référentiel','Vecteur vitesse','MRU','MRUA','Trajectoire','MCU'],
+    exercices:[
+      {id:'SM3-01',difficulte:1,titre:'Référentiel et relativité',
+       enonce:'Passager dans train MRU lâche une balle.\n1. Trajectoire dans référentiel train.\n2. Trajectoire dans référentiel terrestre.\n3. Lequel est galiléen ?',
+       correction:'1. Verticale · 2. Parabolique · 3. Référentiel terrestre',
+       notions:['Référentiel']},
+      {id:'SM3-02',difficulte:1,titre:'Vecteur vitesse moyen',
+       enonce:'A(0;0)→B(6;4) en Δt=2s.\n1. Vecteur AB. 2. Distance AB. 3. Vecteur vitesse moyen.',
+       correction:'1. AB=(6;4) · 2. AB=√52≈7,2m · 3. v=(3;2)m/s |v|=3,6m/s',
+       notions:['Vecteur vitesse']},
+      {id:'SM3-03',difficulte:1,titre:'MRU — équation horaire',
+       enonce:'x(t)=15t+5 (m, s).\n1. Vitesse et x₀. 2. x(10s). 3. t pour x=200m.',
+       correction:'1. v=15m/s · x₀=5m · 2. x=155m · 3. t=13s',
+       notions:['MRU']},
+      {id:'SM3-04',difficulte:2,titre:'MRUA — équations',
+       enonce:'v₀=0, a=4m/s².\n1. v après 6s. 2. d=½at². 3. v quand d=50m: v²=2ad.',
+       correction:'1. v=24m/s · 2. d=72m · 3. v=20m/s',
+       notions:['MRUA']},
+      {id:'SM3-05',difficulte:2,titre:'Chute libre',
+       enonce:'Balle lâchée h=25m. g=10m/s².\n1. t=√(2h/g). 2. v impact=√(2gh). 3. Ec si m=100g.',
+       correction:'1. t≈2,24s · 2. v≈22,4m/s · 3. Ec=25J',
+       notions:['Chute libre']},
+      {id:'SM3-06',difficulte:2,titre:'Variation vecteur vitesse',
+       enonce:'t₁: v=(4;0). t₂: v=(0;3). Δt=2s.\n1. Δv. 2. |Δv|. 3. a=Δv/Δt.',
+       correction:'1. Δv=(-4;3) · 2. |Δv|=5m/s · 3. a=(-2;1,5)m/s²',
+       notions:['Vecteur accélération']},
+      {id:'SM3-07',difficulte:2,titre:'Trajectoire — équation cartésienne',
+       enonce:'x(t)=3t · y(t)=t²+1 (m, s).\n1. y=f(x). 2. Type de courbe. 3. Point à t=2s.',
+       correction:'1. y=x²/9+1 · 2. Parabole · 3. x=6m y=5m',
+       notions:['Trajectoire']},
+      {id:'SM3-08',difficulte:2,titre:'MCU — mouvement circulaire',
+       enonce:'R=3m, T=6s.\n1. v=2πR/T. 2. a_c=v²/R. 3. Sens de a_c.',
+       correction:'1. v≈3,14m/s · 2. a_c≈3,3m/s² · 3. Vers le centre',
+       notions:['MCU']},
+      {id:'SM3-09',difficulte:2,titre:'Méthode des cordes',
+       enonce:'Toutes 40ms. Positions (cm): 0;8;18;30;44;60.\n1. Vitesses v₁ à v₄. 2. Accélération. 3. Type de mouvement.',
+       correction:'1. v₁=2,25 v₂=2,75 v₃=3,25 v₄=3,75 m/s\n2. a=12,5m/s² · 3. MRUA',
+       notions:['Méthode cordes']},
+      {id:'SM3-10',difficulte:2,titre:"Distance d'arrêt — sécurité",
+       enonce:'v=90km/h, t_r=1s, a=-7m/s².\n1. v en m/s. 2. d_réaction. 3. d_freinage et d_total.',
+       correction:'1. v=25m/s · 2. d_r=25m · 3. d_f=44,6m → d_total≈70m',
+       notions:['Distance arrêt']},
+      {id:'SM3-11',difficulte:2,titre:'Satellite — vitesse orbitale',
+       enonce:'GMm/r²=mv²/r. GM=3,98×10¹⁴ r=7000km.\n1. v. 2. T=2πr/v. 3. h=r-R_T (R_T=6371km).',
+       correction:'1. v=7542m/s · 2. T≈97min · 3. h=629km',
+       notions:['Satellite']},
+      {id:'SM3-12',difficulte:2,titre:'Projectile horizontal',
+       enonce:'v₀=20m/s horizontal depuis h=20m. g=10m/s².\n1. x(t) et y(t). 2. Durée chute. 3. Portée.',
+       correction:'1. x=20t · y=20-5t² · 2. t=2s · 3. x=40m',
+       notions:['Projectile']},
+      {id:'SM3-13',difficulte:3,titre:'Lancer oblique',
+       enonce:'v₀=25m/s θ=37°. g=10m/s².\n1. v₀ₓ et v₀ᵧ. 2. H_max. 3. R=v₀²sin2θ/g.',
+       correction:'1. v₀ₓ=20m/s · v₀ᵧ=15m/s · 2. H=11,25m · 3. R=60m',
+       notions:['Lancer oblique']},
+      {id:'SM3-14',difficulte:2,titre:'Chronophotographie',
+       enonce:'Photos toutes 100ms. Écarts: 2;4;6;8;10cm.\n1. Mobile accélère ? 2. Accélération. 3. v initiale et finale.',
+       correction:'1. Oui (écarts croissants réguliers)\n2. a=2m/s² · 3. v₁=20cm/s · v_f=100cm/s',
+       notions:['Chronophotographie']},
+      {id:'SM3-15',difficulte:2,titre:'Vitesse relative',
+       enonce:'Train A: 100km/h Est. Train B: 80km/h Ouest.\n1. v_rel A/B. 2. v_rel B/A. 3. Si même sens: v_rel.',
+       correction:'1. 180km/h · 2. 180km/h · 3. 20km/h',
+       notions:['Vitesse relative']},
+      {id:'SM3-16',difficulte:2,titre:'Balle lancée vers le haut',
+       enonce:'v₀=30m/s vers le haut. g=10m/s².\n1. H_max=v₀²/2g. 2. Durée montée. 3. v à h=30m.',
+       correction:'1. H=45m · 2. t=3s · 3. v=√300≈17,3m/s',
+       notions:['Cinématique verticale']},
+      {id:'SM3-17',difficulte:2,titre:'Équation horaire et dérivée',
+       enonce:'x(t)=2t²+3t-1 (m, s).\n1. v(t)=dx/dt. 2. v(4s). 3. Mouvement accéléré ou décéléré ?',
+       correction:'1. v=4t+3 · 2. v=19m/s · 3. a=4>0 et v>0 → accéléré',
+       notions:['Dérivée']},
+      {id:'SM3-18',difficulte:3,titre:'GPS — vitesse instantanée',
+       enonce:'GPS toutes 1s: x=0;10;25;45m.\n1. v₁₂ et v₂₃. 2. Accélération moy. 3. Prédire x(4s).',
+       correction:'1. v₁₂=15m/s · v₂₃=20m/s · 2. a=5m/s² · 3. x≈70m',
+       notions:['GPS']},
+      {id:'SM3-19',difficulte:2,titre:'Comparaison MRU et MRUA',
+       enonce:'MRU: x₁=10t. MRUA: x₂=t² (m,s).\n1. Positions à t=5s. 2. Vitesses à t=5s. 3. Instant où x₁=x₂.',
+       correction:'1. x₁=50m · x₂=25m · 2. v₁=10m/s · v₂=10m/s · 3. t=10s',
+       notions:['Comparaison mouvements']},
+      {id:'SM3-20',difficulte:3,titre:"Synthèse — freinage d'urgence",
+       enonce:"Voiture v=108km/h. Trace freinage=60m. μ=0,8 g=10m/s².\n1. v en m/s. 2. a=-μg. 3. s'arrête avant obstacle à 60m ?",
+       correction:"1. v=30m/s · 2. a=-8m/s² · 3. d_arrêt=v²/2|a|=56,25m<60m → s'arrête avant ✓",
+       notions:['Freinage']},
+    ]
+  },
+  {
+    id:'forces-interactions', numero:4,
+    titre:'Forces & Interactions',
+    sousTitre:'Poids · Équilibre · Coulomb · Gravitation · Pascal · Archimède · Gaz parfait',
+    icon:'⚡', color:'#f59e0b',
+    notions:['Poids','Équilibre','Coulomb','Gravitation','Champ E','Pascal','Archimède','Gaz parfait'],
+    exercices:[
+      {id:'SF4-01',difficulte:1,titre:'Poids et masse',
+       enonce:'m=5kg. g_Terre=9,8 g_Lune=1,6.\n1. Poids sur Terre et Lune. 2. Masse change-t-elle ? 3. Différence poids/masse.',
+       correction:'1. P_T=49N · P_L=8N · 2. Non · 3. Masse: quantité matière(kg) · Poids: force(N)',
+       notions:['Poids','Masse']},
+      {id:'SF4-02',difficulte:1,titre:"Principe d'inertie",
+       enonce:"1. Énoncer le principe d'inertie.\n2. Puck sur glace parfaite: mouvement ?\n3. Astronaute espace, moteurs coupés: que se passe-t-il ?",
+       correction:'1. Si ΣF=0: repos ou MRU · 2. MRU indéfini · 3. Continue à v=cste en ligne droite',
+       notions:['Principe inertie']},
+      {id:'SF4-03',difficulte:2,titre:'Loi de Coulomb',
+       enonce:'q₁=4μC q₂=-6μC r=30cm. k=9×10⁹.\n1. F. 2. Attraction ou répulsion. 3. r÷2: F ?',
+       correction:'1. F=2,4N · 2. Attraction (charges opposées) · 3. F×4=9,6N',
+       notions:['Coulomb']},
+      {id:'SF4-04',difficulte:2,titre:'Gravitation — g(h)',
+       enonce:'G=6,67×10⁻¹¹ M_T=5,97×10²⁴ R_T=6371km.\n1. g₀=GM/R². 2. g(1000km). 3. Poids 70kg aux deux altitudes.',
+       correction:'1. g₀=9,82m/s² · 2. g=7,34m/s² · 3. P₀=687N · P=514N',
+       notions:['Gravitation']},
+      {id:'SF4-05',difficulte:2,titre:'Champ électrique — condensateur',
+       enonce:'U=300V d=3cm.\n1. E=U/d. 2. Force sur q=5nC. 3. Lignes de champ.',
+       correction:'1. E=10000V/m · 2. F=5×10⁻⁵N · 3. Parallèles de + vers -, perpendiculaires armatures',
+       notions:['Champ E']},
+      {id:'SF4-06',difficulte:2,titre:'Pression et théorème de Pascal',
+       enonce:'ρ_eau=1000 g=9,8.\n1. P à h=20m. 2. P_tot avec P_atm=10⁵Pa. 3. Vérin: S₁=5cm² S₂=100cm² F₁=20N. F₂.',
+       correction:'1. P=196000Pa · 2. P_tot=2,96×10⁵Pa · 3. F₂=400N',
+       notions:['Pression','Pascal']},
+      {id:'SF4-07',difficulte:2,titre:"Poussée d'Archimède",
+       enonce:'Objet V=200cm³ m=300g. ρ_eau=1000 g=10.\n1. F_A. 2. Flotte ou coule. 3. ρ_objet.',
+       correction:'1. F_A=2N · 2. P=3N>F_A → coule · 3. ρ=1500kg/m³',
+       notions:['Archimède']},
+      {id:'SF4-08',difficulte:2,titre:'Gaz parfait PV=nRT',
+       enonce:'2mol T=300K P=10⁵Pa. R=8,314.\n1. V. 2. T double à P cst: V. 3. P double à T cst: V.',
+       correction:'1. V≈50L · 2. V double=100L · 3. V÷2=25L',
+       notions:['Gaz parfait']},
+      {id:'SF4-09',difficulte:2,titre:'Équilibre plan incliné',
+       enonce:'Bloc 3kg θ=30° en équilibre. g=10.\n1. Poids P. 2. P∥ et P⊥. 3. N et force de frottement f.',
+       correction:'1. P=30N · 2. P∥=15N · P⊥=26N · 3. N=26N · f=15N',
+       notions:['Équilibre']},
+      {id:'SF4-10',difficulte:2,titre:'Interactions fondamentales',
+       enonce:'Proton-électron à r=10⁻¹⁰m.\n1. F_coulomb. 2. F_grav. 3. Rapport.',
+       correction:'1. F_C=2,3×10⁻⁸N · 2. F_G=1,01×10⁻⁴⁷N · 3. F_C/F_G≈2,3×10³⁹',
+       notions:['Interactions fondamentales']},
+      {id:'SF4-11',difficulte:2,titre:'Iceberg — flottaison',
+       enonce:'ρ_glace=917 ρ_eau=1025.\n1. Fraction émergée f=1-ρ_glace/ρ_eau. 2. V sous eau si V=1km³. 3. Danger navigation.',
+       correction:"1. f=10,5% · 2. V_sous=0,895km³ · 3. 89,5% invisible sous l'eau",
+       notions:['Flottaison']},
+      {id:'SF4-12',difficulte:2,titre:'Plan incliné — Newton',
+       enonce:'Bloc 2kg θ=30° sans frottement. g=10.\n1. P∥=mgsinθ. 2. a=gsinθ. 3. v après d=5m.',
+       correction:'1. P∥=10N · 2. a=5m/s² · 3. v=√50≈7,1m/s',
+       notions:['Newton','Plan incliné']},
+      {id:'SF4-13',difficulte:2,titre:"Déflexion d'un électron",
+       enonce:'E=2000V/m vertical v₀=5×10⁷m/s horizontal L=4cm.\n1. F et a vertical. 2. t dans plaques. 3. y déviation.',
+       correction:'1. a=3,5×10¹⁴m/s² · 2. t=8×10⁻¹⁰s · 3. y≈0,11mm',
+       notions:['Déflexion']},
+      {id:'SF4-14',difficulte:3,titre:'Satellite géostationnaire',
+       enonce:'T=24h GM=3,98×10¹⁴.\n1. r³=GMT²/(4π²). 2. r et h. 3. v orbitale.',
+       correction:'1. r³=7,54×10²²m³ · 2. r=42200km h=35830km · 3. v=3068m/s',
+       notions:['Satellite géostationnaire']},
+      {id:'SF4-15',difficulte:2,titre:'Pression atmosphérique et altitude',
+       enonce:'P=P₀×e^(-h/H₀). P₀=10⁵Pa H₀=8500m.\n1. P(5500m). 2. % de P₀. 3. Conséquence physiologique.',
+       correction:'1. P≈5,24×10⁴Pa · 2. 52% · 3. pO₂ insuffisant → hypoxie',
+       notions:['Pression atmosphérique']},
+      {id:'SF4-16',difficulte:2,titre:'Pneu — loi des gaz',
+       enonce:'Pneu: V=30L T₁=15°C P₁=2,5×10⁵Pa.\n1. n(air). 2. T₂=60°C V cst: P₂. 3. Pourquoi vérifier à froid.',
+       correction:'1. n=3,14mol · 2. P₂=2,89×10⁵Pa · 3. T chaud → P élevée → mesure biaisée',
+       notions:['Gaz parfait','Pneu']},
+      {id:'SF4-17',difficulte:2,titre:'Vases communicants',
+       enonce:'Eau+huile (ρ=800) dans tube en U. h_huile=15cm côté droit.\n1. h_eau côté gauche. 2. Pression interface.',
+       correction:'1. ρ_eau×h_eau=ρ_huile×h_huile → h_eau=12cm · 2. P=1176Pa',
+       notions:['Vases communicants']},
+      {id:'SF4-18',difficulte:2,titre:'Manomètre — pression artérielle',
+       enonce:'Hg ρ=13600 h=10cm g=9,8.\n1. ΔP=ρgh. 2. 120mmHg en Pa. 3. Application médicale.',
+       correction:'1. ΔP=13328Pa · 2. 120mmHg=16kPa · 3. Mesure pression artérielle',
+       notions:['Manomètre']},
+      {id:'SF4-19',difficulte:3,titre:'Fusée — 3ème loi Newton',
+       enonce:'Fusée m=1000kg (dont 700kg carburant). Poussée F=12000N. g=10.\n1. Poids total initial. 2. a initiale. 3. a quand m=300kg. Quel principe ?',
+       correction:'1. P=17000N · 2. a=(12000-17000)/1000=-5m/s² (ne décolle pas encore)\nSi m_init=1000kg: a=(12000-10000)/1000=2m/s² · 3. a=30m/s² · 3ème loi Newton',
+       notions:['3ème loi Newton','Fusée']},
+      {id:'SF4-20',difficulte:3,titre:'Synthèse — GPS et triangulation',
+       enonce:'Satellite GPS h=20200km c=3×10⁸m/s Δt=67ms.\n1. Distance. 2. Doppler si f=1575MHz v_sat=3,87km/s. 3. Pourquoi 4 satellites minimum.',
+       correction:'1. d=20000km · 2. Δf=20,3kHz · 3. 3 sphères → 2 points, 4ème élimine ambiguïté + correction horloge',
+       notions:['GPS']},
+    ]
+  },
+  {
+    id:'ondes-mecaniques-2', numero:5,
+    titre:'Ondes mécaniques & sonores',
+    sousTitre:'Célérité · λ=v/f · Retard · Spectre · Intensité · dB · Doppler',
+    icon:'🌊', color:'#8b5cf6',
+    notions:['Onde mécanique','Célérité','λ=v/f','Retard','Harmoniques','Intensité sonore','dB','Doppler'],
+    exercices:[
+      {id:'SO5-01',difficulte:1,titre:'λ=v/f',
+       enonce:'Son v=340m/s f=680Hz.\n1. λ. 2. T. 3. Si λ=1m: f.',
+       correction:'1. λ=0,5m · 2. T=1,47ms · 3. f=340Hz',notions:['λ=v/f']},
+      {id:'SO5-02',difficulte:1,titre:'Retard temporel',
+       enonce:'Foudre à 3km. v=340m/s.\n1. τ. 2. Si τ=10s: d. 3. Sonar écho τ=0,6s v=1500m/s: fond.',
+       correction:"1. τ=8,82s · 2. d=3400m · 3. d=450m",notions:['Retard']},
+      {id:'SO5-03',difficulte:2,titre:"Niveau d'intensité sonore",
+       enonce:'L=10log(I/I₀) I₀=10⁻¹²W/m².\n1. L si I=10⁻⁶W/m². 2. L si I=1W/m². 3. L₁=L₂=60dB: L_total.',
+       correction:"1. L=60dB · 2. L=120dB · 3. I_tot=2×10⁻⁶→L≈63dB",notions:['dB']},
+      {id:'SO5-04',difficulte:2,titre:'Spectre et harmoniques',
+       enonce:'Son: f₁=300Hz f₂=600Hz f₃=900Hz.\n1. Fondamental et harmoniques. 2. Hauteur. 3. Timbre.',
+       correction:"1. f₁: fondamental · f₂: 2ème harmonique · f₃: 3ème\n2. Hauteur=f₁=300Hz · 3. Composition spectrale",notions:['Spectre','Harmoniques']},
+      {id:'SO5-05',difficulte:2,titre:'Onde longitudinale vs transversale',
+       enonce:'1. Différences. 2. Son: type. 3. Son se propage-t-il dans le vide ?',
+       correction:"1. Transversale: oscillation⊥propagation · Longitudinale: oscillation∥propagation\n2. Longitudinale · 3. Non (onde mécanique)",notions:['Types ondes']},
+      {id:'SO5-06',difficulte:2,titre:'Célérité dans différents milieux',
+       enonce:'v_air=340, v_eau=1500, v_acier=5100 m/s. f=1kHz.\n1. λ dans chaque. 2. Pourquoi v_acier>>v_air. 3. Application sonar.',
+       correction:"1. λ_air=0,34m · λ_eau=1,5m · λ_acier=5,1m\n2. Liaisons interatomiques rigides dans acier\n3. v_eau élevée → détection rapide et précise",notions:['Célérité']},
+      {id:'SO5-07',difficulte:2,titre:'Effet Doppler',
+       enonce:'Ambulance f₀=500Hz v=30m/s. v_son=340m/s.\n1. f perçue approche. 2. f éloignement. 3. Application radar.',
+       correction:"1. f=548Hz · 2. f=459Hz · 3. Mesure Δf réfléchi → vitesse véhicule",notions:['Doppler']},
+      {id:'SO5-08',difficulte:2,titre:'Interférences sonores',
+       enonce:'2 HP synchronisés f=1000Hz v=340m/s. Point P: d₁=1m d₂=1,5m.\n1. λ. 2. δ. 3. Constructive ou destructive.',
+       correction:"1. λ=0,34m · 2. δ=0,5m · 3. δ/λ≈1,47≈3/2 → destructive",notions:['Interférences sonores']},
+      {id:'SO5-09',difficulte:2,titre:'Écho et réverbération',
+       enonce:'v_son=340m/s.\n1. Si τ=0,5s: distance falaise. 2. d_min pour entendre écho (τ_min=0,1s). 3. Réverbération vs écho.',
+       correction:"1. d=85m · 2. d_min=17m · 3. τ<0,1s → réverbération (réflexions indiscernables)",notions:['Écho']},
+      {id:'SO5-10',difficulte:2,titre:'Ultrason médical',
+       enonce:'Sonde 5MHz v=1540m/s. Écho Δt=20μs.\n1. λ. 2. Profondeur. 3. Résolution≈λ.',
+       correction:"1. λ=0,308mm · 2. d=7,7mm · 3. Résolution≈0,3mm",notions:['Ultrason']},
+      {id:'SO5-11',difficulte:2,titre:'Corde vibrante — harmoniques',
+       enonce:'Corde L=65cm v=400m/s.\n1. f₁=v/(2L). 2. f₂ et f₃. 3. Presser à L/2: nouveau f₁.',
+       correction:"1. f₁=308Hz · 2. f₂=615Hz f₃=923Hz · 3. f_new=615Hz (octave)",notions:['Ondes stationnaires']},
+      {id:'SO5-12',difficulte:2,titre:'Protection auditive',
+       enonce:'Concert L=110dB. I₀=10⁻¹²W/m².\n1. I au concert. 2. Si I×10: L. 3. Seuil douleur=120dB: risque.',
+       correction:"1. I=0,1W/m² · 2. L=120dB · 3. Oui: 110dB → risque auditif",notions:['Protection auditive']},
+      {id:'SO5-13',difficulte:3,titre:'Doppler cosmologique',
+       enonce:"Galaxie: Hα λ₀=656nm observée à λ=676nm.\n1. s'approche ou s'éloigne. 2. v≈cΔλ/λ₀. 3. Que révèle ce résultat.",
+       correction:"1. λ augmente → s'éloigne (décalage rouge)\n2. v=9150km/s · 3. Univers en expansion",notions:['Doppler cosmologique']},
+      {id:'SO5-14',difficulte:2,titre:'Ondes sismiques',
+       enonce:'Onde P v=6km/s · Onde S v=3,5km/s. Station à 700km.\n1. t_P et t_S. 2. Δt. 3. Utilité.',
+       correction:"1. t_P=116,7s · t_S=200s · 2. Δt=83,3s · 3. Localiser épicentre",notions:['Ondes sismiques']},
+      {id:'SO5-15',difficulte:2,titre:"Représentation d'une onde",
+       enonce:'Onde: y=2cos(2π(t/0,01-x/3,4)) cm.\n1. T et f. 2. λ. 3. v.',
+       correction:"1. T=0,01s f=100Hz · 2. λ=3,4m · 3. v=340m/s",notions:['Représentation onde']},
+      {id:'SO5-16',difficulte:2,titre:'Diffraction sonore',
+       enonce:'f=500Hz v=340m/s. Ouverture a=50cm.\n1. λ. 2. Condition diffraction. 3. Le son passe autour du mur ?',
+       correction:"1. λ=0,68m · 2. a<λ → forte diffraction · 3. Oui",notions:['Diffraction']},
+      {id:'SO5-17',difficulte:2,titre:'Sonar actif',
+       enonce:'f=20kHz v=1500m/s. Écho Δt=2s.\n1. λ. 2. Distance cible. 3. Détection objet 1cm ?',
+       correction:"1. λ=7,5cm · 2. d=1500m · 3. Non: résolution≈λ=7,5cm>1cm",notions:['Sonar']},
+      {id:'SO5-18',difficulte:2,titre:'Flûte — acoustique musicale',
+       enonce:'Flûte ouverte L=66cm v=340m/s.\n1. f₁=v/(2L). 2. f₂ f₃. 3. Note (Do4=261Hz).',
+       correction:"1. f₁=258Hz≈Do4 · 2. f₂=515Hz f₃=773Hz · 3. ≈Do4",notions:['Acoustique musicale']},
+      {id:'SO5-19',difficulte:3,titre:'Radar de vitesse',
+       enonce:'Radar f₀=10GHz. Voiture réfléchit f=10,000200GHz.\n1. Δf. 2. v=cΔf/(2f₀). 3. En km/h.',
+       correction:"1. Δf=200kHz · 2. v=3m/s · 3. v=10,8km/h",notions:['Radar Doppler']},
+      {id:'SO5-20',difficulte:3,titre:'Synthèse — sonar robot',
+       enonce:'Sonar 40kHz v=340m/s (air).\n1. λ. 2. Mur à 1,5m: τ. 3. Détection objet 2cm ?',
+       correction:"1. λ=8,5mm · 2. τ=8,82ms · 3. Résolution=8,5mm<2cm → oui ✓",notions:['Capteur ultrason']},
+    ]
+  },
+  {
+    id:'ondes-lumineuses', numero:6,
+    titre:'Ondes lumineuses & Lentilles',
+    sousTitre:'Spectre EM · Réfraction · Couleurs · Lentilles convergentes · Instruments',
+    icon:'🌈', color:'#06b6d4',
+    notions:['Spectre EM','Réfraction','Indice','Lentille','Conjugaison','Grandissement','Vergence'],
+    exercices:[
+      {id:'SL6-01',difficulte:1,titre:'Spectre électromagnétique',
+       enonce:'Classer par λ croissante: micro-ondes X UV visible IR radio.\nPour λ=500nm: f et domaine.',
+       correction:"X<UV<Visible<IR<Micro-ondes<Radio\nf=6×10¹⁴Hz · Lumière visible (vert)",notions:['Spectre EM']},
+      {id:'SL6-02',difficulte:1,titre:'Loi de Snell-Descartes',
+       enonce:"Air(n=1)→eau(n=1,33). θ₁=40°.\n1. Loi. 2. θ₂. 3. Se rapproche ou s'éloigne de la normale ?",
+       correction:"1. n₁sinθ₁=n₂sinθ₂ · 2. θ₂≈28,9° · 3. θ₂<θ₁ → se rapproche",notions:['Réfraction']},
+      {id:'SL6-03',difficulte:1,titre:'Indice de réfraction',
+       enonce:'v_verre=2×10⁸m/s.\n1. n=c/v. 2. λ dans verre si λ_air=600nm. 3. La fréquence change ?',
+       correction:"1. n=1,5 · 2. λ=400nm · 3. Non: f invariante",notions:['Indice']},
+      {id:'SL6-04',difficulte:2,titre:'Synthèse additive et soustractive',
+       enonce:'1. R+V=? R+B=? V+B=? R+V+B=?\n2. Cyan+Magenta=? (soustractive).\n3. Objet vert sous lumière rouge: couleur.',
+       correction:"1. Jaune · Magenta · Cyan · Blanc · 2. Bleu · 3. Noir",notions:['Couleurs','Synthèse']},
+      {id:'SL6-05',difficulte:2,titre:'Lentille convergente — relation de conjugaison',
+       enonce:"f'=12cm. OA=-36cm.\n1. 1/OA'-1/OA=1/f' → OA'. 2. γ. 3. Image réelle/virtuelle, droite/renversée.",
+       correction:"1. OA'=18cm · 2. γ=-0,5 · 3. Réelle (OA'>0) Renversée (γ<0) Réduite",notions:['Conjugaison']},
+      {id:'SL6-06',difficulte:2,titre:'Loupe — objet entre F et O',
+       enonce:"f'=10cm. OA=-6cm.\n1. OA'. 2. γ. 3. Image virtuelle ? Loupe ?",
+       correction:"1. OA'=-15cm · 2. γ=+2,5 · 3. Virtuelle (OA'<0) · Droite agrandie → loupe ×2,5",notions:['Loupe']},
+      {id:'SL6-07',difficulte:2,titre:'Réflexion totale interne',
+       enonce:'Verre n=1,5→air.\n1. θ_L=arcsin(1/n). 2. θ=45°: RT ? 3. Fibre optique.',
+       correction:"1. θ_L=41,8° · 2. 45°>41,8° → RT ✓ · 3. Réflexions totales successives",notions:['Réflexion totale']},
+      {id:'SL6-08',difficulte:2,titre:"Énergie d'un photon",
+       enonce:'λ=450nm. h=6,63×10⁻³⁴.\n1. f. 2. E=hf. 3. Comparer à λ=700nm.',
+       correction:"1. f=6,67×10¹⁴Hz · 2. E=4,42×10⁻¹⁹J=2,76eV · 3. Bleu>rouge: E plus grande",notions:['Photon']},
+      {id:'SL6-09',difficulte:2,titre:'Lunette astronomique',
+       enonce:'f₁=80cm f₂=4cm.\n1. G=f₁/f₂. 2. Condition afocale. 3. Intérêt grand diamètre.',
+       correction:"1. G=20 · 2. Image intermédiaire au foyer objet oculaire · 3. Meilleure résolution angulaire",notions:['Lunette']},
+      {id:'SL6-10',difficulte:2,titre:'Correction de la myopie',
+       enonce:"Myope: vision nette jusqu'à 15cm. Verre f'=-25cm.\n1. D. 2. Image de l'infini OA'. 3. Correction suffisante ?",
+       correction:"1. D=-4δ · 2. OA'=-25cm · 3. Image à 25cm > 15cm → légère sous-correction",notions:['Myopie']},
+      {id:'SL6-11',difficulte:2,titre:'Loi de Wien — couleur des étoiles',
+       enonce:'λ_max×T=2,9×10⁻³m·K. Soleil T=5778K Sirius T=10000K.\n1. λ_max Soleil. 2. λ_max Sirius. 3. Couleurs.',
+       correction:"1. λ=502nm · 2. λ=290nm (UV) · 3. Soleil: jaune-blanc · Sirius: bleue-blanche",notions:['Loi Wien']},
+      {id:'SL6-12',difficulte:2,titre:'Diffraction par une fente',
+       enonce:'a=0,1mm λ=500nm D=2m.\n1. θ=λ/a. 2. Largeur tache. 3. Réseau 600tr/mm λ=589nm: θ ordre 1.',
+       correction:"1. θ=5×10⁻³rad · 2. L=2cm · 3. d=1,67μm → sinθ=0,353 → θ=20,6°",notions:['Diffraction','Réseau']},
+      {id:'SL6-13',difficulte:2,titre:'Interférences — fentes de Young',
+       enonce:'a=0,5mm D=1m λ=600nm.\n1. i=λD/a. 2. x₅. 3. Si λ double: i.',
+       correction:"1. i=1,2mm · 2. x₅=6mm · 3. i=2,4mm",notions:['Young']},
+      {id:'SL6-14',difficulte:2,titre:'Couleur des objets',
+       enonce:'1. Objet blanc en rouge: couleur ?\n2. Objet cyan en rouge: couleur ?\n3. Objet noir: que fait-il avec la lumière ?',
+       correction:"1. Rouge · 2. Noir (cyan=V+B absorbe rouge) · 3. Absorbe tout",notions:['Couleur objets']},
+      {id:'SL6-15',difficulte:2,titre:'Dispersion — arc-en-ciel',
+       enonce:'Prisme: n_rouge=1,51 n_violet=1,53. θ₁=45°.\n1. θ₂ rouge et violet. 2. Lumière blanche dispersée ? 3. Ordre couleurs arc-en-ciel.',
+       correction:"1. θ₂_rouge=27,9° · θ₂_violet=27,5° · 2. Oui (n varie selon λ) · 3. Rouge extérieur violet intérieur",notions:['Dispersion']},
+      {id:'SL6-16',difficulte:2,titre:'Vergence',
+       enonce:"D=+25δ. OA=-40cm.\n1. f'=1/D. 2. OA'. 3. γ.",
+       correction:"1. f'=4cm · 2. OA'=4,44cm · 3. γ=-0,11 (renversée réduite)",notions:['Vergence']},
+      {id:'SL6-17',difficulte:3,titre:'Appareil photo',
+       enonce:"f'=50mm. Objet OA=-200cm.\n1. OA'. 2. γ. 3. Sujet à 50cm: OA'.",
+       correction:"1. OA'≈5,13cm · 2. γ≈-0,026 · 3. OA'=6,25cm (capteur doit reculer)",notions:['Appareil photo']},
+      {id:'SL6-18',difficulte:2,titre:'Mesure de λ par Young',
+       enonce:'a=0,4mm D=2m. 10 interfranges=29mm.\n1. i. 2. λ=ia/D. 3. Couleur.',
+       correction:"1. i=2,9mm · 2. λ=580nm · 3. Jaune-orange",notions:['Mesure λ']},
+      {id:'SL6-19',difficulte:3,titre:'Synthèse — fibre optique',
+       enonce:'n_coeur=1,5 n_gaine=1,45 L=100km.\n1. θ_c. 2. v dans fibre. 3. t transit. 4. Dispersion modale Δt.',
+       correction:"1. θ_c=75° · 2. v=2×10⁸m/s · 3. t=0,5ms · 4. v_min=5,18×10⁷m/s → Δt=1,43ms",notions:['Fibre optique']},
+      {id:'SL6-20',difficulte:3,titre:'Synthèse — microscope',
+       enonce:'Objectif f₁=5mm oculaire f₂=25mm tube D=160mm.\n1. G≈D/f₁. 2. Image observée. 3. Résolution.',
+       correction:"1. G≈32 (ou 320 calcul complet) · 2. Image réelle formée par objectif · 3. ≈200nm",notions:['Microscope']},
+    ]
+  },
+  {
+    id:'signaux-electriques-2', numero:7,
+    titre:'Signaux électriques & Circuits',
+    sousTitre:'Ohm · Kirchhoff · Puissance · Effet Joule · Numérisation · Shannon',
+    icon:'🔌', color:'#f97316',
+    notions:['Loi Ohm','Kirchhoff','Puissance','Effet Joule','Numérisation','Shannon','RC'],
+    exercices:[
+      {id:'SE7-01',difficulte:1,titre:"Loi d'Ohm",
+       enonce:'R=220Ω U=12V.\n1. I=U/R. 2. P=U²/R. 3. Énergie dissipée en 1h.',
+       correction:"1. I=54,5mA · 2. P=0,655W · 3. E=2358J",notions:['Loi Ohm']},
+      {id:'SE7-02',difficulte:1,titre:'Résistors en série',
+       enonce:'R₁=100Ω R₂=200Ω E=9V r=5Ω.\n1. R_eq. 2. I. 3. U_R₁ et U_R₂.',
+       correction:"1. R_eq=305Ω · 2. I=29,5mA · 3. U₁=2,95V · U₂=5,9V",notions:['Série']},
+      {id:'SE7-03',difficulte:2,titre:'Résistors en parallèle',
+       enonce:'R₁=100Ω R₂=150Ω U=6V.\n1. R_eq=R₁R₂/(R₁+R₂). 2. I total. 3. I₁ et I₂.',
+       correction:"1. R_eq=60Ω · 2. I=100mA · 3. I₁=60mA I₂=40mA",notions:['Parallèle']},
+      {id:'SE7-04',difficulte:2,titre:'Puissance et facture électrique',
+       enonce:'Chauffe-eau 2kW 2h/j 30j. 1kWh=0,18€.\n1. Énergie (kWh). 2. Coût. 3. Économie si P=1,5kW.',
+       correction:"1. E=120kWh · 2. 21,6€ · 3. Économie=5,4€/mois",notions:['Facture']},
+      {id:'SE7-05',difficulte:2,titre:'Pont diviseur de tension',
+       enonce:'R₁=4kΩ R₂=6kΩ E=10V.\n1. U_R₂=E×R₂/(R₁+R₂). 2. Vérifier. 3. Pour U_R₂=3V si R₁=7kΩ: R₂.',
+       correction:"1. U_R₂=6V · 2. I=1mA → U₂=6V ✓ · 3. R₂=3kΩ",notions:['Diviseur tension']},
+      {id:'SE7-06',difficulte:2,titre:'Générateur réel',
+       enonce:'E=12V r=1Ω R=5Ω.\n1. I. 2. U_bornes=E-rI. 3. P_utile et P_r.',
+       correction:"1. I=2A · 2. U=10V · 3. P_utile=20W · P_r=4W",notions:['Générateur réel']},
+      {id:'SE7-07',difficulte:2,titre:'Effet Joule — câble',
+       enonce:'R=0,5Ω I=10A t=1h.\n1. P_Joule. 2. Énergie dissipée. 3. Pourquoi limiter R des câbles.',
+       correction:"1. P=50W · 2. E=180kJ · 3. Pertes thermiques + risque incendie",notions:['Effet Joule']},
+      {id:'SE7-08',difficulte:2,titre:'Oscilloscope — lecture',
+       enonce:'Base temps: 5ms/div. Sensibilité: 2V/div. Signal: 4 div horiz 3 div vert pp.\n1. T. 2. U_pp. 3. f.',
+       correction:"1. T=20ms · 2. U_pp=6V · 3. f=50Hz",notions:['Oscilloscope']},
+      {id:'SE7-09',difficulte:2,titre:'Numérisation — Shannon',
+       enonce:'f_max=20kHz.\n1. f_e min (critère Shannon). 2. CD f_e=44100Hz: critère ok ? 3. 16bits: niveaux.',
+       correction:"1. f_e≥40kHz · 2. 44100>40000 ✓ · 3. 2¹⁶=65536 niveaux",notions:['Shannon']},
+      {id:'SE7-10',difficulte:2,titre:'Débit numérique — CD audio',
+       enonce:'CD: f_e=44100Hz 16bits stéréo.\n1. Débit brut. 2. Durée 700Mo. 3. f_max reproductible.',
+       correction:"1. 1,41Mbps=176ko/s · 2. ≈66min · 3. 22050Hz",notions:['Débit']},
+      {id:'SE7-11',difficulte:2,titre:'CAN — quantification',
+       enonce:'CAN: 0-5V 8bits.\n1. Pas Δ=5/(2⁸-1). 2. Code de U=3V. 3. Erreur max.',
+       correction:"1. Δ=19,6mV · 2. k≈153 → 10011001₂ · 3. Erreur≈9,8mV",notions:['Quantification']},
+      {id:'SE7-12',difficulte:2,titre:'Circuit RC',
+       enonce:'R=10kΩ C=100μF.\n1. τ=RC. 2. u_C(τ) si E=5V. 3. Chargé après combien de τ.',
+       correction:"1. τ=1s · 2. u_C=3,16V=63,2%E · 3. Après 5τ (≈99%)",notions:['RC']},
+      {id:'SE7-13',difficulte:2,titre:'Analogique vs numérique',
+       enonce:'1. Définir. 2. Avantages numérique. 3. Débit voix (f_e=8kHz 8bits).',
+       correction:"1. Analogique: continu · Numérique: discret · 2. Insensible bruit, compression · 3. 64kbps",notions:['Analogique','Numérique']},
+      {id:'SE7-14',difficulte:2,titre:'Défibrillateur — condensateur',
+       enonce:'C=32μF U=5000V.\n1. E=½CU². 2. Décharge Δt=4ms: P. 3. Avantage condensateur.',
+       correction:"1. E=400J · 2. P=100kW · 3. Grande puissance instantanée",notions:['Condensateur']},
+      {id:'SE7-15',difficulte:2,titre:'Puissance en AC',
+       enonce:'R=100Ω U_eff=230V f=50Hz.\n1. I_eff. 2. P. 3. U_max.',
+       correction:"1. I=2,3A · 2. P=529W · 3. U_max=325V",notions:['AC']},
+      {id:'SE7-16',difficulte:2,titre:'Lois de Kirchhoff',
+       enonce:'Nœud: I₁=3A I₂=1,5A entrent I₄=2A sort I₃=?\n1. Loi nœuds. 2. I₃. 3. Vérifier maille E=12V R₁=4Ω R₂=8Ω.',
+       correction:"1. ΣI_ent=ΣI_sort · 2. I₃=2,5A · 3. I=1A · 4+8=12V ✓",notions:['Kirchhoff']},
+      {id:'SE7-17',difficulte:3,titre:'Image numérique',
+       enonce:'1920×1080 pixels 24bits/pixel.\n1. Taille brute. 2. JPEG×20: taille. 3. 30fps: débit.',
+       correction:"1. ≈6,25Mo · 2. 0,31Mo · 3. 187,5Mo/s brut → 9,4Mo/s compressé",notions:['Image numérique']},
+      {id:'SE7-18',difficulte:2,titre:'Alimentation électronique',
+       enonce:'U_AC=9V_eff C=470μF R=100Ω.\n1. U_DC≈U_AC√2. 2. I. 3. τ: bien lissé si τ>>T=20ms ?',
+       correction:"1. U_DC=12,7V · 2. I=127mA · 3. τ=47ms>>20ms ✓",notions:['Alimentation']},
+      {id:'SE7-19',difficulte:2,titre:'Thermistance — capteur température',
+       enonce:'R(T)=10000e^(-0,04(T-25)) Ω.\n1. R(25°C) et R(75°C). 2. I si U=5V. 3. Comment mesurer T.',
+       correction:"1. R(25)=10kΩ · R(75)=1353Ω · 2. I(25)=0,5mA · I(75)=3,7mA · 3. Mesurer I→R→T",notions:['Thermistance']},
+      {id:'SE7-20',difficulte:3,titre:'Synthèse — maison connectée',
+       enonce:'Frigo: R_on=1000Ω R_off=10000Ω U=230V. On 40% du temps sur 720h/mois.\n1. P_on. 2. P_off. 3. Conso mensuelle.',
+       correction:"1. P_on=52,9W · 2. P_off=0,529W · 3. E=52,9×288+0,529×432≈15,5kWh",notions:['Consommation']},
+    ]
+  },
+  {
+    id:'formes-energie', numero:8,
+    titre:"Formes d'énergie",
+    sousTitre:'Énergie cinétique · Énergie potentielle · Conservation · Travail · Puissance',
+    icon:'⚡', color:'#eab308',
+    notions:['Énergie cinétique','Énergie potentielle','Conservation Em','Travail','Puissance','Énergie élastique'],
+    exercices:[
+      {id:'SG8-01',difficulte:1,titre:"Énergie cinétique",enonce:"m=1200kg v=90km/h.\n1. v en m/s. 2. Ec=½mv². 3. v double: Ec.",correction:"1. v=25m/s · 2. Ec=375kJ · 3. Ec×4=1,5MJ",notions:['Ec']},
+      {id:'SG8-02',difficulte:1,titre:"Énergie potentielle",enonce:"m=3kg h=10m g=9,8.\n1. Ep=mgh. 2. Origine. 3. v si lâché.",correction:"1. Ep=294J · 2. Travail personne · 3. v=14m/s",notions:['Ep']},
+      {id:'SG8-03',difficulte:2,titre:"Conservation Em",enonce:"Toboggan h_A=5m m=50kg sans frottement. g=9,8.\n1. Em à A. 2. v_B. 3. Avec W_f=-100J: v_B réelle.",correction:"1. Em=2450J · 2. v=9,9m/s · 3. v=9,7m/s",notions:['Conservation Em']},
+      {id:'SG8-04',difficulte:2,titre:"Travail d'une force",enonce:"F=40N α=60° d=10m.\n1. W=Fdcosα. 2. W si α=90°. 3. W poids si déplacement horizontal.",correction:"1. W=200J · 2. W=0 · 3. W=0",notions:['Travail']},
+      {id:'SG8-05',difficulte:2,titre:"Théorème énergie cinétique",enonce:"80kg cycliste: W_prop=5000J W_f=-2000J v₀=0.\n1. ΔEc. 2. v finale. 3. P si Δt=10s.",correction:"1. ΔEc=3000J · 2. v=8,66m/s · 3. P=500W",notions:['Théorème Ec']},
+      {id:'SG8-06',difficulte:2,titre:"Pendule",enonce:"m=0,5kg L=1m h=0,05m. g=9,8.\n1. Ep haut. 2. v bas. 3. h où v=0,7m/s.",correction:"1. Ep=0,245J · 2. v=0,99m/s · 3. h≈0,025m",notions:['Pendule']},
+      {id:'SG8-07',difficulte:2,titre:"Ressort",enonce:"k=300N/m x=8cm m=50g.\n1. Ep=½kx². 2. v_max. 3. h_max vertical.",correction:"1. Ep=0,96J · 2. v=6,2m/s · 3. h=1,96m",notions:['Énergie élastique']},
+      {id:'SG8-08',difficulte:2,titre:"Freinage et chaleur freins",enonce:"1500kg v=108km/h d=80m.\n1. Ec. 2. F freinage. 3. ΔT freins si 50% chaleur (m=5kg c=500).",correction:"1. Ec=675kJ · 2. F=8437,5N · 3. ΔT=135°C",notions:['Freinage']},
+      {id:'SG8-09',difficulte:2,titre:"Looping",enonce:"m=500kg h_A=40m boucle R=10m h_haut=20m. g=9,8.\n1. v bas. 2. v haut. 3. Condition N>0 au sommet.",correction:"1. v=28m/s · 2. v=19,8m/s · 3. v_min=√(gR)=9,9m/s<19,8m/s ✓",notions:['Looping']},
+      {id:'SG8-10',difficulte:2,titre:"Énergie nucléaire",enonce:"1g U-235: E=8,2×10¹⁰J. Pétrole 1g: 45kJ.\n1. Facteur multiplication. 2. Δm=E/c². 3. Application centrale.",correction:"1. F≈1,8×10⁶ · 2. Δm=9,1×10⁻⁷g · 3. Chaleur→vapeur→turbine→alternateur→électricité",notions:['Nucléaire']},
+      {id:'SG8-11',difficulte:2,titre:"Énergie solaire",enonce:"3m² flux=800W/m² η=20%.\n1. P reçue. 2. P élec. 3. kWh/an (1200h).",correction:"1. P=2400W · 2. P_élec=480W · 3. 576kWh",notions:['Solaire']},
+      {id:'SG8-12',difficulte:2,titre:"Barrage hydraulique",enonce:"h=100m Q=200m³/s ρ=1000 g=9,8 η=90%.\n1. P_hyd. 2. P_élec. 3. Foyers alimentés (4000kWh/an).",correction:"1. P=196MW · 2. P_élec=176,4MW · 3. ≈387000 foyers",notions:['Hydraulique']},
+      {id:'SG8-13',difficulte:2,titre:"Voiture électrique",enonce:"Batterie 60kWh conso 15kWh/100km m=1500kg v=130km/h.\n1. Autonomie. 2. Ec. 3. % batterie pour Ec.",correction:"1. 400km · 2. Ec=0,272kWh · 3. 0,45%",notions:['VE']},
+      {id:'SG8-14',difficulte:3,titre:"Projectile et énergie",enonce:"m=100g v₀=30m/s θ=45°. g=10.\n1. Ec initiale. 2. Ep_max (H). 3. Ec en H_max.",correction:"1. Ec=45J · 2. H=22,5m Ep=22,5J · 3. Ec=22,5J (Ec_x=½mv₀²cos²θ ✓)",notions:['Projectile','Énergie']},
+      {id:'SG8-15',difficulte:2,titre:"Métabolisme humain",enonce:"Repos P=80W. Course P=600W η=25%. 1kcal=4186J.\n1. E 24h repos (kcal). 2. P_tot course. 3. Aliments 1h course.",correction:"1. E=6,9MJ=1649kcal · 2. P_tot=2400W · 3. E=8,64MJ=2064kcal",notions:['Métabolisme']},
+      {id:'SG8-16',difficulte:2,titre:"Éolienne",enonce:"R=40m v=12m/s ρ=1,2 η=45%.\n1. P=½ρπR²v³. 2. P_élec. 3. kWh/an (2000h).",correction:"1. P=5,24MW · 2. P_élec=2,36MW · 3. 4720MWh",notions:['Éolien']},
+      {id:'SG8-17',difficulte:3,titre:"Saut en hauteur — bilan énergie",enonce:"m=75kg H=2m. g=9,8.\n1. Ep à H. 2. v min nécessaire. 3. η si aliment 500kJ.",correction:"1. Ep=1470J · 2. v=6,26m/s · 3. η=0,29% (+ apport musculaire)",notions:['Biomécanique']},
+      {id:'SG8-18',difficulte:2,titre:"Trébuchet médiéval",enonce:"M=400kg h₁=4m m=40kg η=35%. g=9,8.\n1. W_contrepoids. 2. Ec_projectile. 3. v et H_max (θ=45°).",correction:"1. W=15680J · 2. Ec=5488J · 3. v=16,6m/s H=7m",notions:['Catapulte']},
+      {id:'SG8-19',difficulte:2,titre:"Collision et sécurité automobile",enonce:"m=1200kg v=36km/h d_déformation=0,5m.\n1. Ec. 2. F_impact=Ec/d. 3. a en g. Rôle airbag.",correction:"1. v=10m/s Ec=60kJ · 2. F=120kN · 3. a=10g · Airbag: ↑Δt → ↓F",notions:['Collision']},
+      {id:'SG8-20',difficulte:3,titre:"Synthèse — centrale marémotrice",enonce:"h=8m S=100km² ρ=1025 g=9,8 η=80%.\n1. Ep par marée (h_moy=h/2). 2. E électrique. 3. P si turbines en 6h.",correction:"1. Ep=3,22×10¹³J · 2. E_élec=2,57×10¹³J · 3. P=1,19GW",notions:['Marémotrice']},
+    ]
+  },
+  {
+    id:'bilans-energetiques-2', numero:9,
+    titre:"Bilans & Conversions d'énergie",
+    sousTitre:'Puissance · Rendement · Transferts thermiques · Développement durable',
+    icon:'🔋', color:'#14b8a6',
+    notions:['Puissance','Rendement','Conduction thermique','Bilan carbone','Développement durable'],
+    exercices:[
+      {id:'SB9-01',difficulte:1,titre:"Puissance et rendement",enonce:"P_abs=1000W P_mec=750W.\n1. η. 2. P perdue. 3. Énergie utile en 1h.",correction:"1. η=75% · 2. 250W · 3. 2,7MJ",notions:['Rendement']},
+      {id:'SB9-02',difficulte:2,titre:"Conduction thermique",enonce:"Mur e=20cm S=10m² λ=0,8 ΔT=20°C.\n1. φ=λSΔT/e. 2. Énergie 24h. 3. Comment réduire.",correction:"1. φ=800W · 2. E=19,2kWh · 3. Isolation: ↑e ou ↓λ",notions:['Conduction']},
+      {id:'SB9-03',difficulte:2,titre:"3 modes de transfert thermique",enonce:"1. Définir conduction convection rayonnement.\n2. Mode dominant casserole eau chauffée.\n3. Thermos — vide: quel mode éliminé.",correction:"1. Conduction: contact · Convection: fluide · Rayonnement: EM\n2. Convection + conduction · 3. Conduction et convection → seul rayonnement reste",notions:['Transferts thermiques']},
+      {id:'SB9-04',difficulte:2,titre:"Chaleur spécifique massique",enonce:"200g eau 20→80°C c=4180. P=2000W.\n1. Q=mcΔT. 2. t chauffage. 3. η si 15% perdu.",correction:"1. Q=50160J · 2. t=25s · 3. t_réel=29,5s",notions:['Chaleur spécifique']},
+      {id:'SB9-05',difficulte:2,titre:"Bilan puissance — circuit",enonce:"E=12V r=2Ω R=10Ω.\n1. I. 2. P_r et P_R. 3. Vérifier bilan.",correction:"1. I=1A · 2. P_r=2W P_R=10W · 3. P_gen=EI=12W=2+10 ✓",notions:['Bilan puissance']},
+      {id:'SB9-06',difficulte:2,titre:"Énergie chimique combustion",enonce:"Méthane ΔH=-890kJ/mol M=16.\n1. E/kg. 2. CO₂/kg. 3. Comparer propane (ΔH=-2220 M=44).",correction:"1. 55,6MJ/kg · 2. 2,75kg CO₂/kg · 3. E_propane=50,5MJ/kg → méthane plus énergétique/kg",notions:['Énergie chimique']},
+      {id:'SB9-07',difficulte:2,titre:"Panneau solaire — bilan",enonce:"3 panneaux 2m² flux=900W/m² η=18%.\n1. P_élec totale. 2. kWh/an (1100h). 3. Économie (0,18€/kWh).",correction:"1. P=972W · 2. E=1069kWh · 3. 192€/an",notions:['Solaire']},
+      {id:'SB9-08',difficulte:2,titre:"RT2020",enonce:"100m². RT2012=100kWh/m²/an. RT2020=50kWh/m²/an.\n1. Conso chaque. 2. Économie annuelle (0,18€). 3. Retour invest surcoût=5000€.",correction:"1. 10000 vs 5000kWh · 2. 900€/an · 3. ≈5,6 ans",notions:['RT2020']},
+      {id:'SB9-09',difficulte:2,titre:"Voiture thermique vs électrique",enonce:"Therm: 7L/100km PCI=10kWh/L. Élec: 17kWh/100km.\n1. E therm/100km. 2. η=35%: E mec. 3. CO₂ (élec=60g/kWh essence=2,4kg/L).",correction:"1. E=70kWh · 2. E_mec=24,5kWh · 3. CO₂_élec=1,02kg vs CO₂_therm=16,8kg → élec 16× moins",notions:['Bilan carbone']},
+      {id:'SB9-10',difficulte:3,titre:"Pompe à chaleur (PAC)",enonce:"COP=4 P_élec=1kW.\n1. P_therm=COP×P. 2. P prélevée extérieur. 3. Économie vs radiateur élec.",correction:"1. P_therm=4kW · 2. P_ext=3kW · 3. PAC: 1kW élec pour 4kW therm → économie 75%",notions:['PAC','COP']},
+      {id:'SB9-11',difficulte:2,titre:"Double vitrage",enonce:"Simple: e=6mm λ=1. Double: e_air=15mm λ_air=0,025 + 2 vitres. S=5m² ΔT=25°C.\n1. R_therm. 2. Flux φ. 3. Économie 6 mois (0,18€).",correction:"1. R_simple=0,006 · R_double=0,612 m²K/W\n2. φ_simple=20833W · φ_double=204W\n3. ΔE≈8950kWh → 1611€/an",notions:['Double vitrage']},
+      {id:'SB9-12',difficulte:2,titre:"Rendement global centrale",enonce:"η₁=40% η₂=98% η₃=99%.\n1. η_global. 2. Combustible pour 1kWh utile. 3. Si η₁=55%: nouveau résultat.",correction:"1. η=38,8% · 2. E=2,58kWh_fossile · 3. η=53,3% → 1,88kWh",notions:['Rendement global']},
+      {id:'SB9-13',difficulte:3,titre:"Bilan maison photovoltaïque",enonce:"Chauffage 8000kWh ECS 2500kWh élec 3500kWh. Panneaux 4kWc (1200kWh/kWc).\n1. Conso totale. 2. Production. 3. Taux autoconso et facture (0,18€).",correction:"1. C=14000kWh · 2. E_sol=4800kWh · 3. Taux=34,3% · Facture=9200×0,18=1656€",notions:['Bilan maison']},
+      {id:'SB9-14',difficulte:2,titre:"Éolienne — bilan complet",enonce:"R=35m v=10m/s ρ=1,2 η=42%.\n1. P=½ρπR²v³. 2. P_élec. 3. Durée pour 1GWh.",correction:"1. P=2,31MW · 2. P_élec=0,97MW · 3. t≈43 jours",notions:['Éolien']},
+      {id:'SB9-15',difficulte:2,titre:"Chauffe-eau solaire",enonce:"Capteur 3m² flux=700W/m² η=60%.\n1. P_therm. 2. Q pour 150L 15→55°C. 3. Durée.",correction:"1. P=1260W · 2. Q=25,08MJ · 3. t≈5,5h",notions:['Solaire thermique']},
+      {id:'SB9-16',difficulte:2,titre:"Géothermie",enonce:"Gradient 3°C/100m puits 3000m T_surf=15°C. Q=2MW η=20%.\n1. T fond. 2. P_élec. 3. CO₂ vs gaz (250g/kWh).",correction:"1. T=105°C · 2. P_élec=0,4MW · 3. ≈30g/kWh vs 250g → 8× moins",notions:['Géothermie']},
+      {id:'SB9-17',difficulte:2,titre:"Régulation thermique du corps",enonce:"Course P_musc=600W η=25%. m=70kg c=3500J/kg/K.\n1. P_therm. 2. ΔT sans régulation (1h). 3. Mécanisme.",correction:"1. P_therm=450W · 2. ΔT=6,6°C → 43,6°C (dangereux) · 3. Transpiration: évaporation absorbe chaleur",notions:['Thermorégulation']},
+      {id:'SB9-18',difficulte:3,titre:"Synthèse — transition énergétique mondiale",enonce:"Monde: 160000TWh/an 80% fossile CO₂=3,6×10¹³kg/an.\n1. E fossile. 2. Réduire CO₂ de 50%: économie. 3. Surface panneaux (η=20% E=200W/m² 2000h).",correction:"1. E_fossile=128000TWh · 2. 1,8×10¹³kg CO₂ · 3. S≈1,6×10⁶km² (≈Europe)",notions:['Transition énergétique']},
+      {id:'SB9-19',difficulte:2,titre:"Barrage hydroélectrique — bilan",enonce:"h=120m Q=300m³/s η=92% ρ=1000 g=9,8.\n1. P_hyd. 2. P_élec. 3. E annuelle (TWh).",correction:"1. P_hyd=352,8MW · 2. P_élec=324,6MW · 3. E=2,84TWh",notions:['Hydraulique']},
+      {id:'SB9-20',difficulte:3,titre:"Synthèse — autoconsommation solaire",enonce:"Appartement 50m²: conso 6500kWh/an. Panneaux 10kWc×100h/mois.\n1. Conso. 2. Production/an. 3. Bilan (achat 0,18€ revente excédent 0,10€).",correction:"1. C=6500kWh · 2. E_sol=12000kWh · 3. Excédent=5500kWh · Revente=550€ · Bilan=+550€/an",notions:['Autoconsommation']},
+    ]
+  },
+]
+
+
+const CHAPITRES_PREMIERE_PC: ChapitreData[] = [
+  { id:"quantite-matiere", numero:1,
+    titre:"Quantité de matière & Réactions",
+    sousTitre:"Mole · Avancement · Réactif limitant · Tableau ICE",
+    icon:"⚗️", color:"#10b981",
+    notions:["Mole","Masse molaire","Concentration","Avancement","Tableau ICE","Réactif limitant"],
+    exercices:[
+      {id:"P01-01",difficulte:1,titre:"Quantité de matière",
+       enonce:"H₂SO₄ M=98. NaOH M=40.\n1. n(H₂SO₄) dans 49g.\n2. m(NaOH) pour n=0,25mol.\n3. N(molécules) dans 0,5mol H₂O. Na=6,02x10^23.",
+       correction:"1. n=0,5mol · 2. m=10g · 3. N=3,01x10^23",
+       notions:["Quantité matière"]},
+      {id:"P01-02",difficulte:1,titre:"Concentration molaire",
+       enonce:"7,3g HCl (M=36,5) dans 200mL.\n1. n(HCl).\n2. C molaire.\n3. C massique en g/L.",
+       correction:"1. n=0,2mol · 2. C=1mol/L · 3. C_m=36,5g/L",
+       notions:["Concentration"]},
+      {id:"P01-03",difficulte:1,titre:"Dilution",
+       enonce:"50mL HCl C1=2mol/L dilué à 500mL.\n1. C1V1=C2V2.\n2. C2.\n3. Facteur de dilution.",
+       correction:"1. C1V1=C2V2 · 2. C2=0,2mol/L · 3. F=10",
+       notions:["Dilution"]},
+      {id:"P01-04",difficulte:2,titre:"Tableau d'avancement",
+       enonce:"Fe + H₂SO₄ → FeSO₄ + H₂. n(Fe)=0,2mol n(H₂SO₄)=0,15mol.\n1. Tableau ICE.\n2. Réactif limitant.\n3. n(H₂) produit.",
+       correction:"Fe: 0,2-x · H₂SO₄: 0,15-x · H₂: x\nx_max=0,15mol (H₂SO₄ limitant) · n(H₂)=0,15mol",
+       notions:["Tableau ICE","Réactif limitant"]},
+      {id:"P01-05",difficulte:2,titre:"Avancement et taux",
+       enonce:"A + 2B → C. n(A)=0,3 n(B)=0,5mol.\n1. Réactif limitant.\n2. x_max.\n3. Taux si x_f=0,2mol.",
+       correction:"1. B limitant (besoin 0,6 > 0,5) · 2. x_max=0,25mol · 3. tau=80%",
+       notions:["Avancement","Taux"]},
+      {id:"P01-06",difficulte:2,titre:"Volume molaire et gaz",
+       enonce:"Vm=22,4L/mol à CNT. PV=nRT R=8,314.\n1. V(CO₂) si n=0,3mol à CNT.\n2. m(O₂) dans 11,2L. M=32.\n3. V à 25°C P=10^5 Pa.",
+       correction:"1. V=6,72L · 2. n=0,5mol → m=16g · 3. V=7,43L",
+       notions:["Volume molaire","Gaz parfait"]},
+      {id:"P01-07",difficulte:2,titre:"Composition centésimale",
+       enonce:"Aspirine C₉H₈O₄ M=180g/mol.\n1. %C %H %O.\n2. m(C) dans 500mg aspirine.\n3. Formule brute.",
+       correction:"1. %C=60% · %H=4,4% · %O=35,6% · 2. m=300mg · 3. C₉H₈O₄",
+       notions:["Composition centésimale"]},
+      {id:"P01-08",difficulte:2,titre:"Dureté de l'eau",
+       enonce:"[Ca2+]=120mg/L M=40 · [Mg2+]=30mg/L M=24.\n1. [Ca2+] molaire.\n2. TH en degF (1 degF=0,1mmol/L).\n3. n(Ca2+) dans 0,5L.",
+       correction:"1. C=3mmol/L · 2. TH=42,5 degF · 3. n=1,5x10^-3 mol",
+       notions:["Concentration massique"]},
+      {id:"P01-09",difficulte:3,titre:"Synthèse aspirine — rendement",
+       enonce:"n(salicylate)=0,01mol n(anhydride)=0,015mol. M(aspirine)=180. m_obtenu=1,26g.\n1. Réactif limitant.\n2. m théorique.\n3. Rendement.",
+       correction:"1. Salicylate limitant · 2. m_th=1,8g · 3. eta=70%",
+       notions:["Rendement","Synthèse"]},
+      {id:"P01-10",difficulte:2,titre:"Combustion propane",
+       enonce:"C₃H₈ + 5O₂ → 3CO₂ + 4H₂O. 44g propane M=44.\n1. n(propane).\n2. m(CO₂).\n3. V(H₂O_vap) à CNT.",
+       correction:"1. n=1mol · 2. m=132g · 3. V=89,6L",
+       notions:["Combustion"]},
+      {id:"P01-11",difficulte:2,titre:"Dosage par précipitation",
+       enonce:"Cl- eau de mer. V=20mL AgNO₃ 0,1mol/L V_éq=32mL.\n1. Réaction ionique.\n2. n(Cl-).\n3. [Cl-].",
+       correction:"1. Ag+ + Cl- → AgCl(s) · 2. n=3,2x10^-3 mol · 3. [Cl-]=0,16mol/L",
+       notions:["Dosage"]},
+      {id:"P01-12",difficulte:2,titre:"Beer-Lambert",
+       enonce:"A=eps x l x C. l=1cm eps=1250 C=4x10^-4 mol/L.\n1. Absorbance A.\n2. C si A=0,75.\n3. Intérêt spectrophotométrie.",
+       correction:"1. A=0,5 · 2. C=6x10^-4 mol/L · 3. Doser espèce colorée précisément",
+       notions:["Beer-Lambert"]},
+      {id:"P01-13",difficulte:2,titre:"Dosage conductimétrique",
+       enonce:"NaOH dosé par HCl. G_min à V_éq=12mL C(HCl)=0,1mol/L V=20mL.\n1. n(NaOH).\n2. C(NaOH).\n3. Pourquoi G diminue avant équivalence.",
+       correction:"1. n=1,2x10^-3 mol · 2. C=0,06mol/L · 3. OH- (mobile) remplacé par Cl- (moins mobile)",
+       notions:["Dosage conductimétrique"]},
+      {id:"P01-14",difficulte:3,titre:"H2O2 dosé par KMnO4",
+       enonce:"KMnO₄ 0,02mol/L V_éq=25mL pour 20mL H₂O₂.\nMnO4- + 8H+ + 5e- → Mn2+ · H₂O₂ → O₂ + 2H+ + 2e-.\n1. n(MnO4-).\n2. n(H₂O₂) ratio 2:5.\n3. C(H₂O₂).",
+       correction:"1. n=5x10^-4 mol · 2. n=1,25x10^-3 mol · 3. C=0,0625mol/L",
+       notions:["Dosage rédox"]},
+      {id:"P01-15",difficulte:3,titre:"Estérification — équilibre",
+       enonce:"CH₃COOH + C₂H₅OH ⇌ ester + H₂O. 1mol + 1mol tau=67%.\n1. n(ester).\n2. K=tau²/(1-tau)².\n3. Si 1mol + 3mol alcool: tau.",
+       correction:"1. n=0,67mol · 2. K=4,1 · 3. tau=91%",
+       notions:["Estérification"]},
+      {id:"P01-16",difficulte:2,titre:"CCM — chromatographie",
+       enonce:"Solvant=8cm. A=5,6cm B=2,4cm.\n1. Rf(A) et Rf(B).\n2. Lequel plus polaire.\n3. Éluant plus polaire: Rf monte ou baisse.",
+       correction:"1. Rf(A)=0,70 · Rf(B)=0,30 · 2. B · 3. Rf monte",
+       notions:["CCM","Rf"]},
+      {id:"P01-17",difficulte:2,titre:"Solution étalon",
+       enonce:"Préparer 250mL NaCl 0,1mol/L M=58,5.\n1. n nécessaire.\n2. m à peser.\n3. Protocole.",
+       correction:"1. n=0,025mol · 2. m=1,46g · 3. Peser → dissoudre 200mL → fiole 250mL → compléter → agiter",
+       notions:["Préparation solution"]},
+      {id:"P01-18",difficulte:2,titre:"Eau de Javel — dismutation",
+       enonce:"Cl₂ + 2NaOH → NaOCl + NaCl + H₂O. 2,6g Cl₂/100mL M=71.\n1. N.o. Cl : dismutation.\n2. [NaOCl].\n3. Agent désinfectant actif.",
+       correction:"1. Cl: 0 → +1 et -1 · 2. [NaOCl]=0,366mol/L · 3. OCl-",
+       notions:["Dismutation"]},
+      {id:"P01-19",difficulte:3,titre:"Engrais NPK",
+       enonce:"15%N (M=14) 15%P₂O₅ (M=142) 15%K₂O (M=94). 100g engrais.\n1. n(N) n(P₂O₅) n(K₂O).\n2. Ratio N:P:K.\n3. Utilité.",
+       correction:"1. n(N)=1,07mol · n(P₂O₅)=0,106mol · n(K₂O)=0,16mol\n2. N:P:K ≈ 10:1:1,5\n3. N: croissance · P: racines · K: résistance",
+       notions:["Chimie agricole"]},
+      {id:"P01-20",difficulte:3,titre:"Analyse antiacide",
+       enonce:"Comprimé NaHCO₃ m=1,25g dosé par HCl 0,5mol/L V_éq=25mL. M=84.\nNaHCO₃ + HCl → NaCl + H₂O + CO₂.\n1. n(NaHCO₃). 2. m dosée. 3. % pureté.",
+       correction:"1. n=0,0125mol · 2. m=1,05g · 3. 84%",
+       notions:["Dosage","Médicament"]},
+    ]
+  },
+  { id:"reactions-redox", numero:2,
+    titre:"Réactions d'oxydo-réduction",
+    sousTitre:"Couples O/R · N.o. · Demi-équations · Titrages · Piles",
+    icon:"⚡", color:"#ef4444",
+    notions:["Oxydant","Réducteur","N.o.","Demi-équations","Titrage rédox","Pile","Électrolyse"],
+    exercices:[
+      {id:"P02-01",difficulte:1,titre:"Identification O/R",
+       enonce:"Cu2+ + Zn → Cu + Zn2+.\n1. Oxydant et réducteur.\n2. Demi-équations.\n3. N.o. Cu avant/après.",
+       correction:"1. Cu2+: oxydant · Zn: réducteur\n2. Cu2+ + 2e- → Cu · Zn → Zn2+ + 2e-\n3. +2 → 0",
+       notions:["O/R"]},
+      {id:"P02-02",difficulte:2,titre:"Nombre d'oxydation",
+       enonce:"N.o. de Mn dans KMnO₄ · S dans H₂SO₄ · N dans HNO₃ · N dans NH₃ · Cr dans K₂Cr₂O₇.",
+       correction:"Mn=+7 · S=+6 · N(HNO₃)=+5 · N(NH₃)=-3 · Cr=+6",
+       notions:["N.o."]},
+      {id:"P02-03",difficulte:2,titre:"Équilibrage en milieu acide",
+       enonce:"MnO4- → Mn2+ et Fe2+ → Fe3+ en milieu H+.\n1. Demi-éq réduction MnO4-.\n2. Demi-éq oxydation Fe2+.\n3. Équation globale.",
+       correction:"1. MnO4- + 8H+ + 5e- → Mn2+ + 4H₂O\n2. Fe2+ → Fe3+ + e- (x5)\n3. MnO4- + 8H+ + 5Fe2+ → Mn2+ + 4H₂O + 5Fe3+",
+       notions:["Demi-équations"]},
+      {id:"P02-04",difficulte:2,titre:"Titrage rédox Fe2+",
+       enonce:"KMnO₄ 0,02mol/L V_éq=18mL V(Fe2+)=25mL.\n1. n(MnO4-).\n2. n(Fe2+) stœch 1:5.\n3. C(Fe2+).",
+       correction:"1. n=3,6x10^-4 mol · 2. n=1,8x10^-3 mol · 3. C=0,072mol/L",
+       notions:["Titrage rédox"]},
+      {id:"P02-05",difficulte:2,titre:"Pile Daniell",
+       enonce:"Zn|Zn2+||Cu2+|Cu. E°=1,10V.\n1. Demi-réactions anode et cathode.\n2. Équation globale.\n3. Sens courant extérieur.",
+       correction:"1. Anode: Zn → Zn2+ + 2e- · Cathode: Cu2+ + 2e- → Cu\n2. Zn + Cu2+ → Zn2+ + Cu\n3. De Cu(+) vers Zn(-)",
+       notions:["Pile"]},
+      {id:"P02-06",difficulte:2,titre:"Électrolyse du cuivre",
+       enonce:"Cu2+ + 2e- → Cu. I=3A t=45min. M=63,5 F=96500.\n1. Q. 2. n(Cu). 3. m(Cu).",
+       correction:"1. Q=8100C · 2. n=0,042mol · 3. m=2,66g",
+       notions:["Électrolyse"]},
+      {id:"P02-07",difficulte:2,titre:"Corrosion galvanique",
+       enonce:"Acier (Fe) + zinc dans eau salée.\n1. Quel métal s'oxyde et pourquoi.\n2. Galvanisation: comment protège.\n3. Protection cathodique: principe.",
+       correction:"1. Zn (potentiel plus négatif) → Zn → Zn2+ + 2e-\n2. Zn sacrificiel s'oxyde à la place du Fe\n3. Rendre Fe cathode par courant extérieur",
+       notions:["Corrosion"]},
+      {id:"P02-08",difficulte:2,titre:"Oxydation des alcools",
+       enonce:"Éthanol → éthanal → acide éthanoïque.\n1. N.o. C central à chaque étape.\n2. Quel oxydant.\n3. Test de Fehling.",
+       correction:"1. Éthanol: -1 · Éthanal: +1 · Acide: +3\n2. K₂Cr₂O₇ en milieu acide\n3. Cu2+ → Cu₂O rouge brique (aldéhyde)",
+       notions:["Oxydation alcool"]},
+      {id:"P02-09",difficulte:3,titre:"Dosage H2O2 par KMnO4",
+       enonce:"V_éq=20mL KMnO₄ 0,02mol/L pour 10mL H₂O₂.\nRatio 2MnO4- : 5H₂O₂.\n1. n(MnO4-). 2. n(H₂O₂). 3. Degré volumique.",
+       correction:"1. n=4x10^-4 mol · 2. n=10^-3 mol · 3. C=0,1mol/L → 3,4g/L → degré 3,4V",
+       notions:["Dosage H2O2"]},
+      {id:"P02-10",difficulte:2,titre:"Rouille et protection",
+       enonce:"4Fe + 3O₂ + 6H₂O → 2Fe₂O₃·3H₂O.\n1. N.o. Fe avant/après.\n2. Facteurs accélérant la corrosion.\n3. Galvanisation Zn: pourquoi protège même si rayé.",
+       correction:"1. Fe: 0 → +3\n2. Eau, sel, acide, contact métaux différents\n3. Zn sacrificiel (potentiel plus négatif que Fe)",
+       notions:["Corrosion Fe"]},
+      {id:"P02-11",difficulte:2,titre:"Pile hydrogène",
+       enonce:"H₂ → 2H+ + 2e- · O₂ + 4H+ + 4e- → 2H₂O. E°=1,23V.\n1. Équation globale.\n2. DeltaH=-286kJ/mol: exo ou endo.\n3. eta si P_élec=1kW P_total=2,5kW.",
+       correction:"1. 2H₂ + O₂ → 2H₂O · 2. Exothermique · 3. eta=40%",
+       notions:["Pile hydrogène"]},
+      {id:"P02-12",difficulte:2,titre:"Batterie Li-ion",
+       enonce:"Capacité 3Ah U=3,7V.\n1. Pourquoi Li préféré.\n2. Charge Q.\n3. Énergie stockée.",
+       correction:"1. Potentiel le plus négatif → FEM maximale\n2. Q=10800C · 3. E=40kJ≈11Wh",
+       notions:["Batterie Li-ion"]},
+      {id:"P02-13",difficulte:3,titre:"SO2 dans le vin",
+       enonce:"SO₂ dosé par I₂ 0,01mol/L. V=5mL pour 50mL vin.\nSO₂ + I₂ + H₂O → H₂SO₄ + 2HI.\n1. n(I₂). 2. n(SO₂). 3. m(SO₂)/L M=64.",
+       correction:"1. n=5x10^-5 mol · 2. n=5x10^-5 mol · 3. 64mg/L",
+       notions:["Dosage SO2"]},
+      {id:"P02-14",difficulte:2,titre:"Photosynthèse et rédox",
+       enonce:"6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂.\n1. N.o. C dans CO₂ et glucose.\n2. C oxydé ou réduit.\n3. Oxydant et réducteur.",
+       correction:"1. CO₂: +4 · Glucose: 0 · 2. C réduit\n3. Réducteur: H₂O · Oxydant: CO₂",
+       notions:["Photosynthèse"]},
+      {id:"P02-15",difficulte:3,titre:"Betadine — dosage I2",
+       enonce:"I₂ dosé par Na₂S₂O₃ 0,1mol/L. V_éq=15mL pour 10mL.\nI₂ + 2S₂O3 2- → 2I- + S₄O6 2-.\n1. n(Na₂S₂O₃). 2. n(I₂). 3. C(I₂) et m/L M=254.",
+       correction:"1. n=1,5x10^-3 mol · 2. n=7,5x10^-4 mol · 3. C=0,075mol/L → 19g/L",
+       notions:["Dosage I2"]},
+      {id:"P02-16",difficulte:2,titre:"Respiration cellulaire",
+       enonce:"C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O. DeltaH=-2810kJ/mol.\n1. N.o. C dans glucose et CO₂.\n2. Oxydant biologique.\n3. Énergie par gramme glucose.",
+       correction:"1. Glucose: 0 · CO₂: +4 · 2. O₂ · 3. 15,6kJ/g",
+       notions:["Respiration cellulaire"]},
+      {id:"P02-17",difficulte:3,titre:"Vitamine C — dosage iodométrique",
+       enonce:"Vit.C M=176 dans 100mL jus. I₂ 0,01mol/L V_éq=8mL.\nC₆H₈O₆ + I₂ → C₆H₆O₆ + 2HI.\n1. n(I₂). 2. n(vitC). 3. m(vitC)/100mL.",
+       correction:"1. n=8x10^-5 mol · 2. n=8x10^-5 mol · 3. m=14,1mg",
+       notions:["Dosage vitamine C"]},
+      {id:"P02-18",difficulte:2,titre:"Dismutation — eau de Javel",
+       enonce:"Cl₂ + 2NaOH → NaOCl + NaCl + H₂O.\n1. N.o. Cl dans chaque produit.\n2. Définir dismutation.\n3. Pourquoi NaOCl est désinfectant.",
+       correction:"1. NaOCl: +1 · NaCl: -1\n2. Même élément oxydé ET réduit simultanément\n3. OCl- oxydant puissant",
+       notions:["Dismutation"]},
+      {id:"P02-19",difficulte:2,titre:"Identification Fe2+/Fe3+",
+       enonce:"1. Séparer ions par CCM ?\n2. Test NaOH pour Fe2+ et Fe3+.\n3. SCN- + Fe3+: observation.",
+       correction:"1. Non (ions en solution)\n2. Fe2+ → précipité vert · Fe3+ → précipité rouille\n3. FeSCN2+: rouge sang",
+       notions:["Identification Fe"]},
+      {id:"P02-20",difficulte:3,titre:"Oxygène dissous — Winkler",
+       enonce:"V_éq=5mL Na₂S₂O₃ 0,025mol/L pour 100mL eau. Ratio O₂:Na₂S₂O₃=1:8.\n1. n(Na₂S₂O₃). 2. n(O₂). 3. m(O₂)/L M=32.",
+       correction:"1. n=1,25x10^-4 mol · 2. n=1,56x10^-5 mol · 3. m=5mg/L",
+       notions:["Dosage O2 dissous"]},
+    ]
+  },
+  { id:"structure-entites", numero:3,
+    titre:"Structure des entités & Propriétés physiques",
+    sousTitre:"Lewis · VSEPR · Polarité · Ponts H · Van der Waals · Solubilité",
+    icon:"🔬", color:"#8b5cf6",
+    notions:["Lewis","VSEPR","Polarité","Ponts H","Van der Waals","Solubilité","Extraction","IR"],
+    exercices:[
+      {id:"P03-01",difficulte:1,titre:"Schémas de Lewis",
+       enonce:"Tracer Lewis de: H₂O · NH₃ · CH₄ · HCl · O₂ · N₂.",
+       correction:"H₂O: 2 O-H + 2 doublets · NH₃: 3 N-H + 1 doublet · CH₄: 4 C-H\nHCl: liaison + 3 doublets · O₂: double liaison + doublets · N₂: triple liaison",
+       notions:["Lewis"]},
+      {id:"P03-02",difficulte:2,titre:"Géométrie VSEPR",
+       enonce:"Géométrie de: H₂O · NH₃ · CH₄ · CO₂ · PCl₃ · BF₃.",
+       correction:"H₂O: coudée (104°) · NH₃: pyramide (107°) · CH₄: tétraèdre (109,5°)\nCO₂: linéaire · PCl₃: pyramide · BF₃: plan trigonal",
+       notions:["VSEPR"]},
+      {id:"P03-03",difficulte:2,titre:"Polarité des liaisons",
+       enonce:"chi: H=2,2 C=2,5 N=3,0 O=3,5 F=4,0.\n1. C-O: Delta_chi et polarité.\n2. H-F.\n3. N-H.",
+       correction:"1. Delta_chi=1,0 → polaire delta- O - C delta+\n2. Delta_chi=1,8 → très polaire\n3. Delta_chi=0,8 → faiblement polaire",
+       notions:["Polarité liaison"]},
+      {id:"P03-04",difficulte:2,titre:"Polarité des molécules",
+       enonce:"Polaire ou non: CO₂ (linéaire) · H₂O (coudée) · CCl₄ (symétrique) · CHCl₃.",
+       correction:"CO₂: NON · H₂O: POLAIRE · CCl₄: NON · CHCl₃: POLAIRE",
+       notions:["Polarité molécule"]},
+      {id:"P03-05",difficulte:2,titre:"Ponts hydrogène",
+       enonce:"PE: H₂O=100°C H₂S=-61°C HF=19,5°C HCl=-85°C.\n1. Pourquoi H₂O et HF ont PE élevé.\n2. Groupe formant ponts H.\n3. Éthanol (78°C) vs éther diéthylique (35°C): expliquer.",
+       correction:"1. Ponts H forts (O-H···O et F-H···F)\n2. X-H avec X=O, N, F\n3. Éthanol: OH → ponts H · Éther: pas de OH entre molécules",
+       notions:["Ponts H"]},
+      {id:"P03-06",difficulte:2,titre:"Van der Waals",
+       enonce:"n-pentane (PE=36°C) vs néopentane (PE=10°C). Même formule C₅H₁₂.\n1. Type interactions.\n2. Pourquoi PE différents.\n3. Comparer n-hexane (PE=69°C).",
+       correction:"1. Van der Waals (London)\n2. n-pentane: surface plus grande → VdW plus fortes\n3. n-hexane: chaîne plus longue → PE encore plus élevé",
+       notions:["Van der Waals"]},
+      {id:"P03-07",difficulte:2,titre:"Solubilité",
+       enonce:"Soluble dans eau ou hexane: NaCl · éthanol · cyclohexane · acide acétique · savon.",
+       correction:"NaCl: eau · Cyclohexane: hexane · Éthanol: eau ET hexane\nAcide acétique: eau · Savon: amphiphile → micelles dans eau",
+       notions:["Solubilité"]},
+      {id:"P03-08",difficulte:2,titre:"Extraction liquide-liquide",
+       enonce:"Iode dans eau. 3×10mL hexane vs 1×30mL hexane.\n1. Pourquoi 3 petites > 1 grande.\n2. Matériel.\n3. Récupérer I₂.",
+       correction:"1. Rendement cumulé supérieur\n2. Ampoule à décanter\n3. Évaporer hexane sous hotte",
+       notions:["Extraction"]},
+      {id:"P03-09",difficulte:2,titre:"Chromatographie sur colonne",
+       enonce:"Colonne silice (polaire). Mélange A(polaire) + B(apolaire). Éluant cyclohexane.\n1. Qui sort en premier.\n2. Éluant méthanol: ordre change.\n3. HPLC vs CCM.",
+       correction:"1. B (moins affinité silice)\n2. A sort en premier (méthanol compétiteur)\n3. HPLC: quantitative, haute résolution · CCM: rapide, qualitative",
+       notions:["Chromatographie"]},
+      {id:"P03-10",difficulte:2,titre:"Spectroscopie IR",
+       enonce:"O-H alcool: 3200-3600/cm · C=O: 1700/cm · N-H: 3300-3500/cm.\n1. Molécule avec 3400 et 1710/cm.\n2. Pas de bande 3200-3600/cm.\n3. Acide carboxylique: bandes.",
+       correction:"1. Acide carboxylique (OH + C=O)\n2. Pas de groupe OH\n3. Bande large OH 2500-3300/cm + C=O 1710/cm",
+       notions:["Spectroscopie IR"]},
+      {id:"P03-11",difficulte:2,titre:"Polarité et solvant",
+       enonce:"1. Semblable dissout le semblable: expliquer.\n2. NaCl soluble eau pas hexane.\n3. Éthanol: soluble eau ET hexane.",
+       correction:"1. Interactions soluté-solvant doivent être similaires\n2. NaCl ionique: eau polaire · Hexane apolaire: interactions faibles\n3. Éthanol: OH polaire (eau) + CH₃ apolaire (hexane)",
+       notions:["Polarité","Solvant"]},
+      {id:"P03-12",difficulte:2,titre:"Isomérie cis-trans",
+       enonce:"cis-2-butène vs trans-2-butène. C₄H₈.\n1. Différence structurale.\n2. Lequel polaire.\n3. PE: cis=3,7°C trans=0,9°C: expliquer.",
+       correction:"1. Cis: substituants même côté · Trans: côtés opposés\n2. Cis: asymétrique → polaire\n3. Cis polaire → interactions dipolaires → PE plus élevé",
+       notions:["Isomérie cis-trans"]},
+      {id:"P03-13",difficulte:2,titre:"Alcools et points d'ébullition",
+       enonce:"Méthanol(65°C) Éthanol(78°C) Propanol(97°C).\n1. Interactions dominantes.\n2. Tendance PE.\n3. Glycérol (3 OH, M=92, PE=290°C).",
+       correction:"1. Ponts H + Van der Waals\n2. Chaîne plus longue → VdW plus fortes → PE plus élevé\n3. 3 OH → réseau dense ponts H → PE très élevé",
+       notions:["Alcools"]},
+      {id:"P03-14",difficulte:2,titre:"Tensioactifs et micelles",
+       enonce:"Savon: CH₃(CH₂)₁₄COO- Na+.\n1. Parties hydrophile/hydrophobe.\n2. Formation micelles.\n3. Pourquoi nettoie les graisses.",
+       correction:"1. Hydrophile: COO- Na+ · Hydrophobe: CH₃(CH₂)₁₄\n2. Queues au centre, têtes en surface\n3. Graisse emprisonnée dans micelle",
+       notions:["Tensioactifs"]},
+      {id:"P03-15",difficulte:3,titre:"Identification molécule inconnue",
+       enonce:"X: M=60g/mol. IR: 3200/cm large + 1710/cm. RMN: 3 signaux.\n1. Fonction chimique.\n2. Formule brute C₂H₄O₂ (M=60) possible.\n3. Identifier X.",
+       correction:"1. Acide carboxylique\n2. M=24+4+32=60 ✓\n3. X = acide acétique CH₃COOH",
+       notions:["Identification","Spectres"]},
+      {id:"P03-16",difficulte:2,titre:"Solubilité médicaments et pH",
+       enonce:"Aspirine pKa=3,5.\n1. Forme dominante à pH=1 et pH=7,4.\n2. Pourquoi solubilité dépend du pH.\n3. Aspirine effervescente: rôle bicarbonate.",
+       correction:"1. pH=1: HA (peu soluble) · pH=7,4: A- (soluble)\n2. A- ionique très soluble · HA neutre peu soluble\n3. Bicarbonate neutralise HA → A- → meilleure dissolution",
+       notions:["pH et solubilité"]},
+      {id:"P03-17",difficulte:2,titre:"Nylon vs polyéthylène",
+       enonce:"1. Interactions intermoléculaires dans chacun.\n2. Résistance thermique.\n3. Biodégradabilité.",
+       correction:"1. Nylon: ponts H (C=O···H-N) · PE: Van der Waals\n2. Nylon: T_fusion plus élevée\n3. Nylon: liaisons amide hydrolysables → plus biodégradable",
+       notions:["Polymères"]},
+      {id:"P03-18",difficulte:2,titre:"Comparaison points d'ébullition",
+       enonce:"Éthane(-89°C) Méthanol(65°C) HF(19,5°C) Eau(100°C).\n1. Interactions dominantes pour chacun.\n2. Pourquoi PE(eau) > PE(méthanol).\n3. Éthane: interactions.",
+       correction:"1. Éthane: VdW · HF: ponts H · Méthanol: ponts H + VdW · Eau: réseau 3D ponts H\n2. Eau: 4 ponts H par molécule (réseau 3D plus fort)\n3. VdW seulement (apolaire)",
+       notions:["Comparaison PE"]},
+      {id:"P03-19",difficulte:3,titre:"Parfum — interactions",
+       enonce:"Géraniol (terpène, OH, PE=230°C): parfum naturel.\n1. Interactions avec peau.\n2. Pourquoi tient mieux sur peau grasse.\n3. Dilution dans éthanol.",
+       correction:"1. VdW avec lipides + ponts H avec protéines (OH)\n2. Lipides dissolvent terpènes apolaires → libération lente\n3. Éthanol: miscible eau, volatil → application rapide",
+       notions:["Parfum","Interactions"]},
+      {id:"P03-20",difficulte:3,titre:"Huile essentielle — linalol",
+       enonce:"Linalol M=154g/mol. IR: 3350/cm (OH) sans C=O.\n1. Classe fonctionnelle.\n2. Interactions avec membranes.\n3. Solubilité eau vs huile.",
+       correction:"1. Alcool terpénique\n2. VdW avec lipides + ponts H avec protéines\n3. Peu soluble eau · Soluble dans huile",
+       notions:["Alcool terpénique"]},
+    ]
+  },
+  { id:"loi-coulomb", numero:4,
+    titre:"Loi de Coulomb & Champs",
+    sousTitre:"Coulomb · Gravitation · Champ E · Champ g · Lignes de champ",
+    icon:"⚡", color:"#4f6ef7",
+    notions:["Loi Coulomb","Gravitation","Champ électrique","Champ gravitationnel","Lignes champ","Lorentz"],
+    exercices:[
+      {id:"P04-01",difficulte:1,titre:"Loi de Coulomb",
+       enonce:"q1=3μC q2=-5μC r=20cm. k=9x10^9.\n1. F.\n2. Attraction ou répulsion.\n3. r÷2: F.",
+       correction:"1. F=3,375N · 2. Attraction · 3. F×4=13,5N",
+       notions:["Coulomb"]},
+      {id:"P04-02",difficulte:1,titre:"Champ électrique",
+       enonce:"q=+4nC r=10cm.\n1. E=kq/r².\n2. Sens du champ.\n3. Force sur q2=-2μC.",
+       correction:"1. E=3600V/m · 2. Diverge de q(+) · 3. F=-7,2x10^-3 N (vers q)",
+       notions:["Champ E"]},
+      {id:"P04-03",difficulte:1,titre:"Gravitation g(h)",
+       enonce:"G=6,67x10^-11 M_T=5,97x10^24 R_T=6371km.\n1. g0=GM/R².\n2. g(400km).\n3. Poids 80kg aux deux altitudes.",
+       correction:"1. g0=9,82m/s² · 2. g=8,69m/s² · 3. P0=785N P(400)=695N",
+       notions:["Gravitation"]},
+      {id:"P04-04",difficulte:2,titre:"Condensateur plan",
+       enonce:"U=400V d=4cm.\n1. E=U/d.\n2. Lignes de champ.\n3. Force sur proton.",
+       correction:"1. E=10000V/m · 2. Parallèles de + vers - · 3. F=1,6x10^-15 N",
+       notions:["Condensateur"]},
+      {id:"P04-05",difficulte:2,titre:"Déflexion dans champ E",
+       enonce:"Proton m=1,67x10^-27 q=1,6x10^-19. E=2000V/m perp à v0=10^6 m/s. L=5cm.\n1. F et a.\n2. t dans plaques.\n3. Déviation y.",
+       correction:"1. F=3,2x10^-16 N · a=1,92x10^11 m/s² · 2. t=5x10^-8 s · 3. y=2,4mm",
+       notions:["Déflexion"]},
+      {id:"P04-06",difficulte:2,titre:"Coulomb vs gravitation",
+       enonce:"Proton-électron à r=5,3x10^-11 m.\n1. F_coulomb.\n2. F_grav.\n3. Rapport.",
+       correction:"1. F_C=8,2x10^-8 N · 2. F_G=3,6x10^-47 N · 3. ratio≈2,3x10^39",
+       notions:["Interactions fondamentales"]},
+      {id:"P04-07",difficulte:2,titre:"Superposition de champs",
+       enonce:"+2μC en A et -2μC en B AB=30cm. Point M milieu.\n1. E1 et E2 en M.\n2. E_total.\n3. Lignes dipôle.",
+       correction:"1. E1=E2=800kV/m · 2. E_tot=1,6MV/m · 3. De + vers -, arcs",
+       notions:["Dipôle"]},
+      {id:"P04-08",difficulte:2,titre:"Spectrographe de masse",
+       enonce:"12C+ et 13C+. v=10^5 m/s B=0,5T q=1,6x10^-19 u=1,66x10^-27.\n1. r12=mv/(qB).\n2. r13.\n3. Delta_r.",
+       correction:"1. r12=24,9mm · 2. r13=27,1mm · 3. Delta_r=4,4mm",
+       notions:["Spectrographe"]},
+      {id:"P04-09",difficulte:2,titre:"Force de Lorentz",
+       enonce:"Électron v=2x10^6 m/s B=0,05T.\n1. F=qvB.\n2. r=mv/(qB).\n3. T=2pi x m/(qB).",
+       correction:"1. F=1,6x10^-14 N · 2. r=0,228m · 3. T=7,14x10^-10 s",
+       notions:["Lorentz"]},
+      {id:"P04-10",difficulte:2,titre:"Lignes de champ",
+       enonce:"1. Lignes autour charge +q.\n2. Condensateur plan.\n3. Dipôle +q et -q.",
+       correction:"1. Radiales sortant de +q\n2. Parallèles uniformes de + vers -\n3. De +q vers -q en arcs",
+       notions:["Lignes champ"]},
+      {id:"P04-11",difficulte:3,titre:"Accélérateur de particules",
+       enonce:"Proton accéléré U=50kV. q=1,6x10^-19 m=1,67x10^-27.\n1. v=sqrt(2qU/m).\n2. r dans B=0,2T.\n3. f=qB/(2pi x m).",
+       correction:"1. v=3,1x10^6 m/s · 2. r=0,162m · 3. f=3,06MHz",
+       notions:["Accélérateur"]},
+      {id:"P04-12",difficulte:2,titre:"Solénoïde",
+       enonce:"n=1000sp/m I=3A. mu0=4pi x 10^-7.\n1. B=mu0 x n x I.\n2. Direction.\n3. Force Laplace: fil L=5cm I2=2A perp B.",
+       correction:"1. B=3,77mT · 2. Axe du solénoïde · 3. F=3,77x10^-4 N",
+       notions:["Solénoïde"]},
+      {id:"P04-13",difficulte:2,titre:"RMN — fréquence de Larmor",
+       enonce:"Proton B=1,5T. gamma=2,675x10^8.\n1. f=gamma x B/(2pi) en MHz.\n2. lambda.\n3. Domaine EM.",
+       correction:"1. f=63,9MHz · 2. lambda=4,7m · 3. Ondes radio",
+       notions:["RMN"]},
+      {id:"P04-14",difficulte:2,titre:"Travail de la force électrique",
+       enonce:"E=5000V/m d=3cm. q=2x10^-6 C.\n1. W=qEd.\n2. W si angle=30°.\n3. v finale si v0=0 m=10^-3 kg.",
+       correction:"1. W=3x10^-4 J · 2. W=2,6x10^-4 J · 3. v=0,775m/s",
+       notions:["Travail force E"]},
+      {id:"P04-15",difficulte:2,titre:"Équilibre de charges",
+       enonce:"q1=+1μC à x=0 q2=-2μC à x=10cm q3=? à x=20cm. Équilibre de q2.\n1. F12.\n2. q3.\n3. Signe de q3.",
+       correction:"1. F12=1,8N · 2. q3=1μC · 3. Positif",
+       notions:["Équilibre charges"]},
+      {id:"P04-16",difficulte:2,titre:"IRM",
+       enonce:"IRM 3T. gamma=2,675x10^8. Gradient B=40mT/m.\n1. f Larmor.\n2. Delta_f sur 20cm.\n3. Résolution si Delta_f_min=1Hz.",
+       correction:"1. f=127,7MHz · 2. Delta_f=339kHz · 3. Delta_x=59μm",
+       notions:["IRM"]},
+      {id:"P04-17",difficulte:3,titre:"Cyclotron médical",
+       enonce:"B=1,5T R_max=0,3m. Protons pour TEP.\n1. v_max=qBR/m.\n2. Ec en MeV.\n3. Atteignable pour 11MeV (R=0,34m)?",
+       correction:"1. v=4,31x10^7 m/s · 2. Ec=9,7MeV · 3. Non (R requis > R_max)",
+       notions:["Cyclotron"]},
+      {id:"P04-18",difficulte:3,titre:"Force dans un noyau",
+       enonce:"2 protons dans He à r=2x10^-15 m.\n1. F_coulomb.\n2. Pourquoi noyau stable.\n3. Énergie liaison He=28,3MeV: Delta_m.",
+       correction:"1. F=57N · 2. Force nucléaire forte >> Coulomb à cette échelle\n3. Delta_m=5x10^-29 kg",
+       notions:["Force nucléaire"]},
+      {id:"P04-19",difficulte:2,titre:"Dipôle électrique",
+       enonce:"+q et -q séparés d=2nm q=1,6x10^-19 C.\n1. p=qd.\n2. Application H₂O.",
+       correction:"1. p=3,2x10^-28 C·m\n2. H₂O: p=6,17x10^-30 C·m → polaire → solvant universel",
+       notions:["Dipôle"]},
+      {id:"P04-20",difficulte:3,titre:"Spectrométrie de masse — Xe",
+       enonce:"Xe+ m=131u accéléré U=5000V puis B=0,5T. q=1,6x10^-19 u=1,66x10^-27.\n1. v après accélération.\n2. r.\n3. Delta_r pour 132Xe+.",
+       correction:"1. v=4,9x10^4 m/s · 2. r=13,3cm · 3. Delta_r≈0,5mm",
+       notions:["Spectrométrie masse"]},
+    ]
+  },
+  { id:"fluides", numero:5,
+    titre:"Fluides au repos",
+    sousTitre:"Pression · Pascal · Archimède · Gaz parfait PV=nRT",
+    icon:"💧", color:"#06b6d4",
+    notions:["Pression hydrostatique","Pascal","Archimède","PV=nRT","Flottaison","Henry"],
+    exercices:[
+      {id:"P05-01",difficulte:1,titre:"Pression hydrostatique",
+       enonce:"rho=1000 g=9,8.\n1. P à h=20m.\n2. P_tot avec P_atm=10^5 Pa.\n3. h pour P=3x10^5 Pa.",
+       correction:"1. P=196000Pa · 2. P_tot=2,96x10^5 Pa · 3. h=20,4m",
+       notions:["Pression"]},
+      {id:"P05-02",difficulte:1,titre:"Théorème de Pascal",
+       enonce:"Vérin: S1=2cm² S2=200cm² F1=50N.\n1. P transmis.\n2. F2.\n3. d2 si d1=10cm.",
+       correction:"1. P=25x10^4 Pa · 2. F2=5000N · 3. d2=0,1cm",
+       notions:["Pascal"]},
+      {id:"P05-03",difficulte:1,titre:"Poussée d'Archimède",
+       enonce:"V=500cm³ m=600g rho_eau=1000 g=10.\n1. F_A.\n2. Flotte ou coule.\n3. rho_objet.",
+       correction:"1. F_A=5N · 2. P=6N > F_A → coule · 3. rho=1200kg/m³",
+       notions:["Archimède"]},
+      {id:"P05-04",difficulte:2,titre:"Boyle-Mariotte",
+       enonce:"V1=10L P1=2x10^5 Pa T=cste.\n1. V2 si P2=5x10^5 Pa.\n2. P2 si V2=3L.\n3. Application plongée.",
+       correction:"1. V2=4L · 2. P2=6,67x10^5 Pa · 3. Poumons comprimés en profondeur",
+       notions:["Boyle-Mariotte"]},
+      {id:"P05-05",difficulte:2,titre:"Loi de Charles",
+       enonce:"V1=5L T1=300K P=cste.\n1. V2 si T2=600K.\n2. T2 pour V2=7L.\n3. Application ballon météo.",
+       correction:"1. V2=10L · 2. T2=420K=147°C · 3. Altitude: T et P diminuent → V augmente",
+       notions:["Charles"]},
+      {id:"P05-06",difficulte:2,titre:"PV=nRT",
+       enonce:"3mol T=25°C P=2x10^5 Pa R=8,314.\n1. V.\n2. T→600K V cst: P2.\n3. Densité M=32g/mol.",
+       correction:"1. V=37,3L · 2. P2=4x10^5 Pa · 3. rho=2,57g/L",
+       notions:["PV=nRT"]},
+      {id:"P05-07",difficulte:2,titre:"Flottaison — iceberg",
+       enonce:"rho_glace=917 rho_eau=1025.\n1. Fraction émergée.\n2. V sous eau si V=1km³.\n3. Danger navigation.",
+       correction:"1. f=10,5% · 2. V_sous=0,895km³ · 3. 89,5% invisible",
+       notions:["Flottaison"]},
+      {id:"P05-08",difficulte:2,titre:"Manomètre",
+       enonce:"Hg rho=13600 h=10cm g=9,8.\n1. Delta_P=rho x g x h.\n2. 120mmHg en Pa.\n3. Application médicale.",
+       correction:"1. Delta_P=13328Pa · 2. 16kPa · 3. Pression artérielle",
+       notions:["Manomètre"]},
+      {id:"P05-09",difficulte:2,titre:"Sous-marin",
+       enonce:"V=5000m³ m=4x10^6 kg rho=1025 g=9,8.\n1. F_A.\n2. Poids.\n3. Masse eau pour plonger.",
+       correction:"1. F_A=5,02x10^7 N · 2. P=3,92x10^7 N · 3. Delta_m=1,13x10^6 kg",
+       notions:["Sous-marin"]},
+      {id:"P05-10",difficulte:2,titre:"Pression atmosphérique",
+       enonce:"P=P0 x exp(-h/H0) P0=10^5 Pa H0=8500m.\n1. P(5500m).\n2. % de P0.\n3. Physiologie altitude.",
+       correction:"1. P≈5,24x10^4 Pa · 2. 52% · 3. pO₂ insuffisant → hypoxie",
+       notions:["Pression atmosphérique"]},
+      {id:"P05-11",difficulte:2,titre:"Capillarité",
+       enonce:"Tube r=0,1mm. gamma=0,072N/m. h=2gamma/(rho x g x r).\n1. h.\n2. r=0,05mm: h.\n3. Rôle végétaux.",
+       correction:"1. h=14,7cm · 2. h=29,4cm · 3. Remontée sève",
+       notions:["Capillarité"]},
+      {id:"P05-12",difficulte:2,titre:"Pneu — loi des gaz",
+       enonce:"V=30L T1=15°C P1=2,5x10^5 Pa.\n1. n(air).\n2. T2=60°C V cst: P2.\n3. Vérifier à froid.",
+       correction:"1. n=3,14mol · 2. P2=2,89x10^5 Pa · 3. T chaud → P élevée → mesure biaisée",
+       notions:["Gaz parfait"]},
+      {id:"P05-13",difficulte:3,titre:"Baromètre de Torricelli",
+       enonce:"Tube Hg rho=13600 h=760mm g=9,8.\n1. P_atm=rho x g x h.\n2. Pourquoi Hg pas eau.\n3. Altitude P=0,5P0: h.",
+       correction:"1. P=10^5 Pa ✓ · 2. Eau: h=10m (impraticable) · 3. h=380mm",
+       notions:["Baromètre"]},
+      {id:"P05-14",difficulte:2,titre:"Loi de Henry — plongée",
+       enonce:"kH(O₂)=1,3x10^-3 mol/(L·atm). P_O2=0,21atm.\n1. C(O₂) dans eau.\n2. À 30m (P×4): C.\n3. Accident décompression.",
+       correction:"1. C=2,73x10^-4 mol/L · 2. C×4 · 3. Remontée rapide → bulles dans sang",
+       notions:["Henry"]},
+      {id:"P05-15",difficulte:3,titre:"Ballon stratosphérique",
+       enonce:"V0=1m³ P0=10^5 Pa T0=293K. Altitude: P=10^4 Pa T=220K.\n1. V final.\n2. F_A si rho_air=0,1kg/m³.\n3. m_max pour monter.",
+       correction:"1. V=7,51m³ · 2. F_A=7,36N · 3. m_max=0,75kg",
+       notions:["Ballon"]},
+      {id:"P05-16",difficulte:2,titre:"Tirant d'eau",
+       enonce:"Bateau S=100m² m=50000kg rho=1025.\n1. V_imm=m/rho.\n2. h=V_imm/S.\n3. Cargo +30000kg: h.",
+       correction:"1. V_imm=48,8m³ · 2. h=0,488m · 3. h=0,78m",
+       notions:["Tirant eau"]},
+      {id:"P05-17",difficulte:2,titre:"Pression artérielle",
+       enonce:"120mmHg au cœur. rho_sang=1060 g=9,8.\n1. P en Pa.\n2. P au pied (h=1,3m dessous).\n3. P cerveau (h=0,4m dessus).",
+       correction:"1. P=16kPa · 2. P_pied=29520Pa · 3. P_cerveau=11840Pa",
+       notions:["Pression artérielle"]},
+      {id:"P05-18",difficulte:2,titre:"Machine à café expresso",
+       enonce:"P=9bars. Filtre S=5cm².\n1. P en atm et Pa.\n2. F sur filtre.\n3. Rôle haute pression.",
+       correction:"1. P=9x10^5 Pa=8,88atm · 2. F=450N · 3. Extraction rapide arômes + crema",
+       notions:["Pression"]},
+      {id:"P05-19",difficulte:2,titre:"Autocuiseur",
+       enonce:"V cst. T1=20°C P1=10^5 Pa. Soupape à P=1,2x10^5 Pa.\n1. P2 si T2=120°C.\n2. T ouverture soupape.\n3. Cuisson plus rapide.",
+       correction:"1. P2=1,34x10^5 Pa · 2. T=352K=79°C · 3. T_ébullition > 100°C → cuisson 2-3× plus rapide",
+       notions:["Gay-Lussac"]},
+      {id:"P05-20",difficulte:3,titre:"Montgolfière",
+       enonce:"V=2500m³ m_total=700kg rho_air=1,2 g=9,8.\n1. F_A (air froid).\n2. Condition décollage.\n3. T_air_chaud nécessaire.",
+       correction:"1. F_A=29400N · 2. rho_chaud < 0,92kg/m³ · 3. T=375K=102°C",
+       notions:["Montgolfière"]},
+    ]
+  },
+  { id:"deuxieme-loi-newton-approche", numero:6,
+    titre:"2ème loi de Newton (approche)",
+    sousTitre:"ΣF=ma · Plan incliné · Chute libre · Projectile · Satellite",
+    icon:"🚀", color:"#f59e0b",
+    notions:["2ème loi Newton","Plan incliné","Chute libre","Projectile","Satellite","Quantité de mouvement"],
+    exercices:[
+      {id:"P06-01",difficulte:1,titre:"2ème loi — horizontal",
+       enonce:"5kg F=20N sans frottement.\n1. a.\n2. v après 4s.\n3. d après 4s.",
+       correction:"1. a=4m/s² · 2. v=16m/s · 3. d=32m",
+       notions:["Newton"]},
+      {id:"P06-02",difficulte:2,titre:"Plan incliné sans frottement",
+       enonce:"4kg theta=30°. g=10.\n1. P_par=mg sin(theta).\n2. a=g sin(theta).\n3. v après d=5m.",
+       correction:"1. P_par=20N · 2. a=5m/s² · 3. v=sqrt(50)≈7,1m/s",
+       notions:["Plan incliné"]},
+      {id:"P06-03",difficulte:2,titre:"Plan incliné avec frottement",
+       enonce:"3kg theta=30° mu=0,2. g=10.\n1. N=mg cos(theta).\n2. f=mu N.\n3. a=g(sin theta - mu cos theta).",
+       correction:"1. N=26N · 2. f=5,2N · 3. a=3,27m/s²",
+       notions:["Frottement"]},
+      {id:"P06-04",difficulte:2,titre:"Ascenseur",
+       enonce:"70kg g=9,8.\n1. Poids P.\n2. Montée a=3m/s²: N.\n3. Chute libre: N.",
+       correction:"1. P=686N · 2. N=896N · 3. N=0",
+       notions:["Ascenseur"]},
+      {id:"P06-05",difficulte:2,titre:"Projectile oblique",
+       enonce:"v0=25m/s theta=37°. g=10.\n1. x(t) y(t).\n2. H_max.\n3. Portée R.",
+       correction:"1. x=20t · y=15t-5t² · 2. H=11,25m · 3. R=60m",
+       notions:["Projectile"]},
+      {id:"P06-06",difficulte:2,titre:"Machine d'Atwood",
+       enonce:"m1=3kg m2=5kg. g=9,8.\n1. a=(m2-m1)g/(m1+m2).\n2. T=2m1m2g/(m1+m2).\n3. v après 2s.",
+       correction:"1. a=2,45m/s² · 2. T=36,75N · 3. v=4,9m/s",
+       notions:["Atwood"]},
+      {id:"P06-07",difficulte:2,titre:"Fusée — 3ème loi",
+       enonce:"v_gaz=3000m/s débit=10kg/s m=1000kg g=10.\n1. Poussée F.\n2. Poids.\n3. a.",
+       correction:"1. F=30000N · 2. P=10000N · 3. a=20m/s²",
+       notions:["Fusée"]},
+      {id:"P06-08",difficulte:2,titre:"3 blocs empilés",
+       enonce:"m1=m2=m3=2kg F=18N.\n1. a système.\n2. N12.\n3. N23.",
+       correction:"1. a=3m/s² · 2. N12=12N · 3. N23=6N",
+       notions:["Forces contact"]},
+      {id:"P06-09",difficulte:2,titre:"Freinage",
+       enonce:"1200kg v0=108km/h a=-8m/s².\n1. v0 en m/s.\n2. d_arrêt=v0²/(2|a|).\n3. Si v0 double: d.",
+       correction:"1. v0=30m/s · 2. d=56,25m · 3. d×4=225m",
+       notions:["Freinage"]},
+      {id:"P06-10",difficulte:2,titre:"Voiture en virage",
+       enonce:"m=1200kg R=80m v=72km/h.\n1. v en m/s.\n2. a_c=v²/R.\n3. F centripète.",
+       correction:"1. v=20m/s · 2. a_c=5m/s² · 3. F=6000N",
+       notions:["MCU"]},
+      {id:"P06-11",difficulte:3,titre:"Satellite géostationnaire",
+       enonce:"T=24h GM=3,98x10^14.\n1. r³=GMT²/(4pi²).\n2. r et h.\n3. v.",
+       correction:"1. r³=7,54x10^22 m³ · 2. r=42200km h=35830km · 3. v=3068m/s",
+       notions:["Satellite"]},
+      {id:"P06-12",difficulte:2,titre:"Pendule simple",
+       enonce:"L=1m g=9,8.\n1. T=2pi sqrt(L/g).\n2. T Lune (g=1,6).\n3. L pour T=2s.",
+       correction:"1. T=2,01s · 2. T_L=4,97s · 3. L=0,993m",
+       notions:["Pendule"]},
+      {id:"P06-13",difficulte:2,titre:"Quantité de mouvement",
+       enonce:"A: 500g v=2m/s → B: 500g repos. A s'arrête.\n1. Conservation.\n2. v_B.\n3. Élastique ?",
+       correction:"1. p_avant=p_après · 2. v_B=2m/s · 3. Ec conservée → élastique",
+       notions:["Quantité mouvement"]},
+      {id:"P06-14",difficulte:2,titre:"Résistance air — v_limite",
+       enonce:"f=kv² k=0,5 F_moteur=2000N m=1000kg.\n1. v_lim=sqrt(F/k).\n2. a à v=30m/s.\n3. k double: v_lim.",
+       correction:"1. v_lim=63,2m/s · 2. a=1,55m/s² · 3. v_lim=44,7m/s",
+       notions:["Résistance air"]},
+      {id:"P06-15",difficulte:3,titre:"Lancement vertical",
+       enonce:"m=800kg F=15000N g=10.\n1. a initiale.\n2. a quand m=500kg.\n3. v après 60s.",
+       correction:"1. a=8,75m/s² · 2. a=20m/s² · 3. v=840m/s",
+       notions:["Fusée"]},
+      {id:"P06-16",difficulte:2,titre:"Courbe — bosse",
+       enonce:"m=1000kg R=50m v=36km/h g=10.\n1. a_c.\n2. N en bas de bosse.\n3. Condition N=0 en haut.",
+       correction:"1. v=10m/s a_c=2m/s² · 2. N=12000N · 3. v_max=22,4m/s",
+       notions:["Courbe"]},
+      {id:"P06-17",difficulte:2,titre:"Portance",
+       enonce:"m=5000kg. L=0,5 rho S Cl v². rho=1,2 S=25m² Cl=1,5.\n1. v_décrochage.\n2. Si Cl=1,8.\n3. Rôle volets.",
+       correction:"1. v=46,7m/s · 2. v=42,6m/s · 3. Volets: augmente Cl → baisse v_décrochage",
+       notions:["Portance"]},
+      {id:"P06-18",difficulte:3,titre:"Force de marée",
+       enonce:"M_L=7,34x10^22 d=3,84x10^8 m R_T=6,37x10^6 m. Force sur 1kg eau.\n1. F_proche.\n2. F_loin.\n3. Delta=F_proche-F_loin.",
+       correction:"1. F_proche=3,44x10^-5 N · 2. F_loin=3,20x10^-5 N · 3. Delta=2,4x10^-6 N",
+       notions:["Force marée"]},
+      {id:"P06-19",difficulte:2,titre:"Tube de Pitot",
+       enonce:"Delta_P=500Pa rho=1,2.\n1. v=sqrt(2 Delta_P/rho).\n2. En km/h.\n3. h=10000m rho=0,4: v.",
+       correction:"1. v=28,9m/s · 2. 104km/h · 3. v=50m/s=180km/h",
+       notions:["Bernoulli"]},
+      {id:"P06-20",difficulte:3,titre:"Rentrée atmosphérique",
+       enonce:"Capsule 200kg v0=7800m/s f=kv² k=0,5.\n1. f à v0.\n2. a initiale.\n3. v_lim vertical.",
+       correction:"1. f=3,04x10^7 N · 2. a=1,52x10^5 m/s² · 3. v_lim=62,6m/s",
+       notions:["Rentrée atm."]},
+    ]
+  },
+  { id:"energie-mecanique", numero:7,
+    titre:"Aspects énergétiques mécaniques",
+    sousTitre:"Travail · Ec · Ep · Théorème Ec · Conservation Em",
+    icon:"⚡", color:"#eab308",
+    notions:["Travail","Énergie cinétique","Théorème Ec","Énergie potentielle","Conservation Em","Puissance"],
+    exercices:[
+      {id:"P07-01",difficulte:1,titre:"Travail d'une force",
+       enonce:"F=50N angle=60° d=8m.\n1. W=F x d x cos(angle).\n2. W si angle=90°.\n3. W poids si horizontal.",
+       correction:"1. W=200J · 2. W=0 · 3. W=0",
+       notions:["Travail"]},
+      {id:"P07-02",difficulte:1,titre:"Énergie cinétique",
+       enonce:"Avion m=50000kg v=250m/s.\n1. Ec=0,5mv².\n2. v÷2: Ec.\n3. Freinage d=1500m: F.",
+       correction:"1. Ec=1,56GJ · 2. Ec÷4 · 3. F=1040kN",
+       notions:["Ec"]},
+      {id:"P07-03",difficulte:2,titre:"Théorème de l'énergie cinétique",
+       enonce:"90kg cycliste: W_prop=10000J W_f=-3000J v0=5m/s.\n1. Delta_Ec.\n2. v finale.\n3. P si Delta_t=20s.",
+       correction:"1. Delta_Ec=7000J · 2. Ec_f=8125J → v=13,4m/s · 3. P=500W",
+       notions:["Théorème Ec"]},
+      {id:"P07-04",difficulte:2,titre:"Conservation énergie — ski",
+       enonce:"70kg h_A=50m v_A=2m/s h_B=0 sans frottement.\n1. Em_A.\n2. v_B.\n3. h si v=20m/s.",
+       correction:"1. Em=34440J · 2. v=31,4m/s · 3. h=29,8m",
+       notions:["Conservation Em"]},
+      {id:"P07-05",difficulte:2,titre:"Travail du poids",
+       enonce:"m=2kg A(h=10m) → B(h=4m) g=9,8.\n1. W_poids=mg(hA-hB).\n2. Delta_Ep=-W_poids.\n3. Force conservative ?",
+       correction:"1. W=117,6J · 2. Delta_Ep=-117,6J · 3. Oui (indépendant du chemin)",
+       notions:["Travail poids"]},
+      {id:"P07-06",difficulte:2,titre:"Ressort",
+       enonce:"k=500N/m x=12cm m=100g.\n1. Ep=0,5kx².\n2. v_max.\n3. h_max vertical.",
+       correction:"1. Ep=3,6J · 2. v=8,49m/s · 3. h=3,67m",
+       notions:["Énergie élastique"]},
+      {id:"P07-07",difficulte:2,titre:"Chute avec frottements",
+       enonce:"0,2kg h=5m v_sol=8m/s.\n1. Em_i.\n2. Em_f.\n3. W_frottements.",
+       correction:"1. Em_i=9,8J · 2. Em_f=6,4J · 3. W_f=-3,4J",
+       notions:["Frottements"]},
+      {id:"P07-08",difficulte:2,titre:"Puissance ascenseur",
+       enonce:"500kg v=2m/s g=9,8.\n1. F motrice.\n2. P=Fv.\n3. E pour h=50m.",
+       correction:"1. F=4900N · 2. P=9800W · 3. E=245000J",
+       notions:["Puissance"]},
+      {id:"P07-09",difficulte:3,titre:"Looping",
+       enonce:"m=600kg h_A=40m boucle R=12m h_haut=24m g=9,8.\n1. v bas.\n2. v haut.\n3. N au sommet N=m(v²/R - g).",
+       correction:"1. v=28m/s · 2. v=17,7m/s · 3. N=9780N",
+       notions:["Looping"]},
+      {id:"P07-10",difficulte:2,titre:"Parachutiste",
+       enonce:"80kg chute libre 10s puis a=8m/s². g=10.\n1. v fin chute libre.\n2. Ec.\n3. F frottement parachute.",
+       correction:"1. v=98m/s · 2. Ec=383kJ · 3. F=1440N",
+       notions:["Parachute"]},
+      {id:"P07-11",difficulte:2,titre:"Montagnes russes",
+       enonce:"m=500kg h_A=30m h_B=0 h_C=20m v_A=0 g=10.\n1. v_B.\n2. v_C.\n3. h_D si v_D=5m/s.",
+       correction:"1. v_B=24,5m/s · 2. v_C=14,1m/s · 3. h_D=28,75m",
+       notions:["Conservation Em"]},
+      {id:"P07-12",difficulte:2,titre:"Grue — rendement",
+       enonce:"2000kg h=15m en 30s g=9,8.\n1. W_utile.\n2. P_utile.\n3. P_élec si eta=80%.",
+       correction:"1. W=294kJ · 2. P=9800W · 3. P_élec=12250W",
+       notions:["Rendement"]},
+      {id:"P07-13",difficulte:3,titre:"Saut à la perche",
+       enonce:"m=80kg v0=9m/s → h=5,4m.\n1. Ec initiale.\n2. Ep nette (h_CdG_sol=1m).\n3. Analyse bilan.",
+       correction:"1. Ec=3240J · 2. Ep=3449J · 3. Ec < Ep → apport musculaire supplémentaire",
+       notions:["Bilan énergie"]},
+      {id:"P07-14",difficulte:2,titre:"Énergie orbitale satellite",
+       enonce:"m=1000kg r=7000km GM=3,98x10^14.\n1. v.\n2. Ec.\n3. Ep=-GMm/r et Em.",
+       correction:"1. v=7542m/s · 2. Ec=28,4GJ · 3. Ep=-56,9GJ · Em=-28,4GJ",
+       notions:["Énergie orbitale"]},
+      {id:"P07-15",difficulte:3,titre:"Freinage — chaleur freins",
+       enonce:"1200kg v0=30m/s d=50m.\n1. Ec.\n2. F freinage.\n3. Delta_T freins (m=8kg c=500J/kgK).",
+       correction:"1. Ec=540kJ · 2. F=10800N · 3. Delta_T=135°C",
+       notions:["Freinage"]},
+      {id:"P07-16",difficulte:2,titre:"Balle rebondissante",
+       enonce:"m=100g h0=3m rebond h1=2m.\n1. Ec impact.\n2. Ec rebond.\n3. e=sqrt(h1/h0).",
+       correction:"1. Ec=2,94J · 2. Ec=1,96J · 3. e=0,816",
+       notions:["Rebond"]},
+      {id:"P07-17",difficulte:2,titre:"Centrale hydraulique",
+       enonce:"h=150m Q=300m³/s eta=92% rho=1000 g=9,8.\n1. P_hyd=rho x Q x g x h.\n2. P_élec.\n3. E/an (TWh).",
+       correction:"1. P=441MW · 2. P_élec=406MW · 3. E=3,56TWh",
+       notions:["Hydraulique"]},
+      {id:"P07-18",difficulte:3,titre:"Météorite",
+       enonce:"m=10^9 kg v=20km/s.\n1. Ec.\n2. Équivalent TNT (1t=4,2x10^9 J).",
+       correction:"1. Ec=2x10^17 J · 2. 47,6 mégatonnes TNT",
+       notions:["Impact météorite"]},
+      {id:"P07-19",difficulte:2,titre:"Travail d'Archimède",
+       enonce:"m=2kg V=5x10^-4 m³ descend d=1m eau rho=1000 g=9,8.\n1. F_A.\n2. Poids.\n3. W_résultante.",
+       correction:"1. F_A=4,9N · 2. P=19,6N · 3. W_res=14,7J",
+       notions:["Travail Archimède"]},
+      {id:"P07-20",difficulte:3,titre:"Synthèse — éolienne",
+       enonce:"R=50m v=12m/s rho=1,2 eta=42%.\n1. P_cin=0,5 rho pi R² v³.\n2. P_élec.\n3. dm/dt=rho pi R² v.",
+       correction:"1. P=8,15MW · 2. P_élec=3,42MW · 3. dm/dt≈113t/s",
+       notions:["Éolienne"]},
+    ]
+  },
+
+  { id:"bilans-energetiques", numero:8,
+    titre:"Bilans énergétiques",
+    sousTitre:"Bilan puissance · Effet Joule · Rendement · Conduction · PAC",
+    icon:"🔋", color:"#10b981",
+    notions:["Bilan puissance","Effet Joule","Rendement","Conduction thermique","Chaleur spécifique","PAC"],
+    exercices:[
+      {id:"P08-01",difficulte:1,titre:"Rendement",
+       enonce:"P_abs=1000W P_mec=750W.\n1. eta.\n2. P perdue en chaleur.\n3. Énergie utile en 1h.",
+       correction:"1. eta=75% · 2. 250W · 3. 2,7MJ",
+       notions:["Rendement"]},
+      {id:"P08-02",difficulte:1,titre:"Chaleur spécifique",
+       enonce:"1kg eau 20→80°C c=4180J/(kg·K). P=2kW.\n1. Q=mcDeltaT.\n2. t chauffage.\n3. eta si 10% perdu.",
+       correction:"1. Q=251kJ · 2. t=125s · 3. t_réel=139s",
+       notions:["Chaleur spécifique"]},
+      {id:"P08-03",difficulte:2,titre:"Rendement global centrale",
+       enonce:"eta1=40% eta2=98% eta3=99%.\n1. eta_global.\n2. Combustible pour 1kWh utile.\n3. Si eta1=55%.",
+       correction:"1. eta=38,8% · 2. E=2,58kWh_fossile · 3. eta=53,3%",
+       notions:["Rendement global"]},
+      {id:"P08-04",difficulte:2,titre:"Énergie chimique — méthane",
+       enonce:"DeltaH=-890kJ/mol M=16.\n1. E/kg.\n2. CO₂/kg.\n3. Comparer propane (DeltaH=-2220 M=44).",
+       correction:"1. 55,6MJ/kg · 2. 2,75kg CO₂ · 3. Propane: 50,5MJ/kg → méthane plus énergétique/kg",
+       notions:["Énergie chimique"]},
+      {id:"P08-05",difficulte:2,titre:"Conduction thermique",
+       enonce:"Mur e=20cm S=10m² lambda=0,8W/(mK) DeltaT=20°C.\n1. phi=lambda x S x DeltaT/e.\n2. Énergie 24h.\n3. Comment réduire les pertes.",
+       correction:"1. phi=800W · 2. E=19,2kWh · 3. Isolation: augmenter e ou diminuer lambda",
+       notions:["Conduction"]},
+      {id:"P08-06",difficulte:2,titre:"Double vitrage",
+       enonce:"Simple: e=6mm lambda=1. Double: e_air=15mm lambda_air=0,025 + 2 vitres. S=5m² DeltaT=25°C.\n1. R_therm de chaque.\n2. Flux phi.\n3. Économie 6 mois (0,18 euro/kWh).",
+       correction:"1. R_simple=0,006 · R_double=0,612 m²K/W\n2. phi_simple=20833W · phi_double=204W\n3. Eco≈1611 euro/an",
+       notions:["Double vitrage"]},
+      {id:"P08-07",difficulte:2,titre:"Panneau solaire",
+       enonce:"3 panneaux 2m² flux=900W/m² eta=18%.\n1. P_élec totale.\n2. kWh/an (1100h).\n3. Économie (0,18 euro/kWh).",
+       correction:"1. P=972W · 2. E=1069kWh · 3. 192 euro/an",
+       notions:["Solaire"]},
+      {id:"P08-08",difficulte:2,titre:"Pompe à chaleur",
+       enonce:"COP=4 P_élec=1kW.\n1. P_therm=COP x P_élec.\n2. P prélevée à extérieur.\n3. Économie vs radiateur élec.",
+       correction:"1. P_therm=4kW · 2. P_ext=3kW · 3. PAC: 1kW élec pour 4kW therm → économie 75%",
+       notions:["PAC"]},
+      {id:"P08-09",difficulte:2,titre:"Chauffe-eau solaire",
+       enonce:"Capteur 3m² flux=700W/m² eta=60%.\n1. P_therm.\n2. Q pour 150L 15→55°C.\n3. Durée.",
+       correction:"1. P=1260W · 2. Q=25,08MJ · 3. t≈5,5h",
+       notions:["Solaire thermique"]},
+      {id:"P08-10",difficulte:2,titre:"Voiture élec vs thermique",
+       enonce:"Therm: 7L/100km PCI=10kWh/L. Élec: 17kWh/100km.\n1. E therm/100km.\n2. CO₂ (élec=60g/kWh essence=2,4kg/L).\n3. Coût (élec=0,18 euro, essence=1,8 euro/L).",
+       correction:"1. E=70kWh · 2. CO₂_élec=1kg vs CO₂_therm=16,8kg → ×16 moins\n3. Élec moins cher",
+       notions:["Bilan carbone"]},
+      {id:"P08-11",difficulte:2,titre:"Centrale nucléaire",
+       enonce:"P_therm=3000MW eta=33%.\n1. P_élec.\n2. P chaleur dissipée.\n3. Surface panneaux équivalents (eta=20% E=200W/m²).",
+       correction:"1. P_élec=990MW · 2. P_chaleur=2010MW · 3. S=24,75km²",
+       notions:["Nucléaire"]},
+      {id:"P08-12",difficulte:2,titre:"RT2020",
+       enonce:"Maison 100m². RT2012=100kWh/m²/an. RT2020=50kWh/m²/an.\n1. Conso chaque norme.\n2. Économie (0,18 euro/kWh).\n3. Retour invest surcoût=5000 euro.",
+       correction:"1. 10000 vs 5000kWh · 2. 900 euro/an · 3. 5,6 ans",
+       notions:["RT2020"]},
+      {id:"P08-13",difficulte:2,titre:"Géothermie",
+       enonce:"Gradient 3°C/100m puits 3000m T_surf=15°C. Q=2MW eta=20%.\n1. T en fond.\n2. P_élec.\n3. CO₂ vs gaz (250g/kWh).",
+       correction:"1. T=105°C · 2. P_élec=0,4MW · 3. ≈8× moins de CO₂",
+       notions:["Géothermie"]},
+      {id:"P08-14",difficulte:2,titre:"Bilan cycliste",
+       enonce:"m=80kg P_meca=250W eta=25%. 2h de vélo.\n1. P_tot.\n2. Calories brûlées (1kcal=4186J).\n3. m(pâtes) (350kcal/100g).",
+       correction:"1. P_tot=1000W · 2. E=7,2MJ=1720kcal · 3. m=491g",
+       notions:["Métabolisme"]},
+      {id:"P08-15",difficulte:2,titre:"Éolienne",
+       enonce:"R=35m v=10m/s rho=1,2 eta=42%.\n1. P_hyd=0,5 x rho x pi x R² x v³.\n2. P_élec.\n3. Durée pour 1GWh.",
+       correction:"1. P=2,31MW · 2. P_élec=0,97MW · 3. t≈43 jours",
+       notions:["Éolien"]},
+      {id:"P08-16",difficulte:2,titre:"Thermorégulation",
+       enonce:"Course P_musc=600W eta=25%. m=70kg c=3500J/(kg·K).\n1. P_therm produite.\n2. DeltaT sans régulation (1h).\n3. Mécanisme.",
+       correction:"1. P_therm=450W · 2. DeltaT=6,6°C → 43,6°C · 3. Transpiration: évaporation absorbe chaleur",
+       notions:["Thermorégulation"]},
+      {id:"P08-17",difficulte:3,titre:"Bilan maison BBC",
+       enonce:"Chauffage 5000kWh ECS 2500kWh élec 3500kWh. PAC COP=3. Panneaux 4kWc (1200kWh/kWc).\n1. Conso totale.\n2. E_élec PAC.\n3. Production solaire.\n4. Facture nette (0,18 euro/kWh).",
+       correction:"1. C=11000kWh · 2. E_PAC=1667kWh · 3. E_sol=4800kWh\n4. Achat=6200kWh → 1116 euro",
+       notions:["Bilan maison"]},
+      {id:"P08-18",difficulte:2,titre:"Gaz vs électrique",
+       enonce:"Chaudière gaz eta=90%. Résistance élec P=5kW pendant 20min.\n1. E résistance.\n2. Coût (gaz=0,09 euro/kWh, élec=0,18 euro/kWh).\n3. Gaz vs élec: rapport.",
+       correction:"1. E=1,67kWh · 2. Coût_gaz≈0,17 euro · Coût_élec=0,30 euro · 3. Gaz 2× moins cher ici",
+       notions:["Comparaison énergies"]},
+      {id:"P08-19",difficulte:2,titre:"Rayonnement solaire",
+       enonce:"P_Soleil=3,84x10^26 W d=1,5x10^11 m.\n1. Flux phi=P/(4pi x d²).\n2. P panneau 2m² eta=20%.\n3. T Soleil par loi de Wien (lambda_max=502nm).",
+       correction:"1. phi=1361W/m² · 2. P=544W · 3. T=5778K",
+       notions:["Rayonnement"]},
+      {id:"P08-20",difficulte:3,titre:"Transition énergétique",
+       enonce:"Monde: 160000TWh/an 80% fossile CO₂=3,6x10^13 kg/an.\n1. E fossile.\n2. Réduire CO₂ de 50%: économie.\n3. Surface panneaux (eta=20% E=200W/m² 2000h/an).",
+       correction:"1. E_fossile=128000TWh · 2. 1,8x10^13 kg CO₂ à économiser\n3. S≈1,6x10^6 km² (≈Europe)",
+       notions:["Transition énergétique"]},
+    ]
+  },
+  { id:"energie-chimique-thermique", numero:9,
+    titre:"Énergie chimique & thermique",
+    sousTitre:"DeltaH · Loi de Hess · Calorimétrie · PCI · Énergie de liaison",
+    icon:"🔥", color:"#f97316",
+    notions:["DeltaH","Énergie liaison","Loi Hess","Calorimétrie","PCI","Enthalpie dissolution"],
+    exercices:[
+      {id:"P09-01",difficulte:2,titre:"Énergie de liaison — DeltaH",
+       enonce:"N₂ + 3H₂ → 2NH₃. E(N≡N)=945 E(H-H)=436 E(N-H)=391 kJ/mol.\n1. Liaisons rompues.\n2. Liaisons formées.\n3. DeltaH.",
+       correction:"1. 945+3×436=2253kJ · 2. 6×391=2346kJ · 3. DeltaH=-93kJ/mol (exo)",
+       notions:["Énergie liaison"]},
+      {id:"P09-02",difficulte:1,titre:"Enthalpie de combustion",
+       enonce:"Propane DeltaH=-2220kJ/mol M=44.\n1. E/kg.\n2. CO₂/kg.\n3. Comparer méthane (DeltaH=-890 M=16).",
+       correction:"1. 50,5MJ/kg · 2. 3kg CO₂/kg propane · 3. Méthane: 55,6MJ/kg → plus énergétique/kg",
+       notions:["DeltaH combustion"]},
+      {id:"P09-03",difficulte:2,titre:"Loi de Hess",
+       enonce:"DeltaH_f(CO₂)=-393 · DeltaH_f(H₂O)=-286 · DeltaH_f(C₂H₅OH)=-277 kJ/mol.\nDeltaH combustion éthanol: C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O.",
+       correction:"DeltaH=2(-393)+3(-286)-(-277)=-1367kJ/mol",
+       notions:["Loi Hess"]},
+      {id:"P09-04",difficulte:2,titre:"Calorimétrie",
+       enonce:"100mL eau à 20°C + 100mL eau à 60°C. c=4180J/(kg·K).\n1. T finale.\n2. Chaleur échangée.\n3. Si 50mL à 60°C + 150mL à 20°C: T.",
+       correction:"1. T=40°C · 2. Q=8360J · 3. T=30°C",
+       notions:["Calorimétrie"]},
+      {id:"P09-05",difficulte:2,titre:"Dissolution exothermique — NaOH",
+       enonce:"NaOH: DeltaH_diss=-44,5kJ/mol M=40. 4g dans 200mL eau c=4180J/(kg·K).\n1. Exo ou endo.\n2. DeltaT.\n3. Pourquoi NaOH chauffe.",
+       correction:"1. Exothermique (DeltaH < 0) · 2. DeltaT=5,3°C · 3. Énergie hydratation ions > énergie réseau",
+       notions:["Enthalpie dissolution"]},
+      {id:"P09-06",difficulte:2,titre:"PCI — hydrogène vs essence",
+       enonce:"H₂: PCI=120MJ/kg. Essence: 45MJ/kg. Gazole: 43MJ/kg.\n1. H₂ vs essence: facteur.\n2. E/100km gazole (7L rho=0,85).\n3. m(H₂) équivalent.",
+       correction:"1. H₂: 2,7× plus énergétique/kg · 2. E=256MJ · 3. m=2,13kg",
+       notions:["PCI"]},
+      {id:"P09-07",difficulte:2,titre:"Dissolution endothermique — NH4NO3",
+       enonce:"NH₄NO₃: DeltaH=+26kJ/mol M=80. 8g dans 100mL eau.\n1. Exo ou endo.\n2. DeltaT.\n3. Application cold pack.",
+       correction:"1. Endothermique · 2. DeltaT=-6,2°C · 3. Compresse froide chimique",
+       notions:["Endothermique"]},
+      {id:"P09-08",difficulte:2,titre:"Énergie alimentaire",
+       enonce:"Glucose C₆H₁₂O₆ DeltaH=-2810kJ/mol M=180.\n1. E/g.\n2. Tablette chocolat (50g glucides).\n3. Durée course P=600W.",
+       correction:"1. E=15,6kJ/g · 2. E=780kJ · 3. t=1300s≈22min",
+       notions:["Énergie alimentaire"]},
+      {id:"P09-09",difficulte:3,titre:"Bilan centrale gaz",
+       enonce:"Centrale gaz DeltaH_CH4=-890kJ/mol. 1GW élec eta=55% durée=24h.\n1. E_élec.\n2. E_chimique consommée.\n3. n(CH₄) et m.",
+       correction:"1. E=8,64x10^13 J · 2. E_chim=1,57x10^14 J · 3. n=1,76x10^8 mol → m=2820t",
+       notions:["Centrale gaz"]},
+      {id:"P09-10",difficulte:2,titre:"DeltaH par Hess — éthanol",
+       enonce:"DeltaH_f(CO₂)=-393 DeltaH_f(H₂O)=-286 DeltaH_f(C₂H₅OH)=-277 kJ/mol.\nDeltaH combustion éthanol.",
+       correction:"DeltaH=2(-393)+3(-286)-(-277)=-1367kJ/mol",
+       notions:["Hess"]},
+      {id:"P09-11",difficulte:2,titre:"Photon vs énergie de liaison C-C",
+       enonce:"lambda=250nm (UV). E_liaison C-C=347kJ/mol. h=6,63x10^-34.\n1. E photon.\n2. E liaison C-C par photon.\n3. UV peut rompre liaison C-C ?",
+       correction:"1. E=7,95x10^-19 J · 2. 5,76x10^-19 J · 3. E_UV > E_liaison → oui",
+       notions:["Photochimie"]},
+      {id:"P09-12",difficulte:2,titre:"Hydrogène comme carburant",
+       enonce:"H₂ + 0,5O₂ → H₂O DeltaH=-286kJ/mol. Pile eta=60%.\n1. E_élec/mol.\n2. E/kg H₂ (M=2).\n3. Voiture 500km (15kWh/100km): m(H₂).",
+       correction:"1. E=171,6kJ/mol · 2. E=85,8MJ/kg=23,8kWh/kg · 3. m=3,15kg",
+       notions:["Hydrogène"]},
+      {id:"P09-13",difficulte:2,titre:"Biocarburant — bilan CO2",
+       enonce:"Éthanol DeltaH=-1370kJ/mol M=46. CO₂_comb=2,0kg/kg. CO₂_absorbe=2,3kg/kg.\n1. E/kg éthanol.\n2. CO₂ net.\n3. Comparer essence (45MJ/kg).",
+       correction:"1. E=29,8MJ/kg · 2. CO₂_net≈0 (neutre théoriquement)\n3. Éthanol moins énergétique (29,8 vs 45MJ/kg)",
+       notions:["Biocarburant"]},
+      {id:"P09-14",difficulte:3,titre:"Calorimètre de combustion",
+       enonce:"1g glucose brûlé. C_cal=10kJ/K DeltaT=+1,56°C. M=180.\n1. E libérée.\n2. DeltaH/mol.\n3. Comparer -2810kJ/mol théorique.",
+       correction:"1. Q=15,6kJ · 2. DeltaH=-2808kJ/mol · 3. Erreur < 0,1% ✓",
+       notions:["Calorimètre"]},
+      {id:"P09-15",difficulte:3,titre:"Pile à combustible et cogénération",
+       enonce:"H₂ + 0,5O₂ → H₂O DeltaH=-286kJ/mol. eta_elec=60% eta_therm=30%.\n1. E_élec/mol.\n2. E_therm.\n3. Rendement total (cogénération).",
+       correction:"1. E_élec=171,6kJ/mol · 2. E_therm=85,8kJ/mol · 3. eta_total=90%",
+       notions:["Cogénération"]},
+      {id:"P09-16",difficulte:2,titre:"Dissolution HCl — sécurité",
+       enonce:"HCl(g) → HCl(aq) DeltaH=-74,8kJ/mol M=36,5. 1g dans 50mL eau.\n1. Exo ou endo.\n2. DeltaT.\n3. Précaution.",
+       correction:"1. Exothermique · 2. DeltaT≈9,8°C · 3. Ajouter acide dans eau (jamais inverse)",
+       notions:["Sécurité chimie"]},
+      {id:"P09-17",difficulte:2,titre:"Combustion du bois",
+       enonce:"PCI=17MJ/kg eta=75%.\n1. E_utile/kg.\n2. m(bois)/h pour P=2kW.\n3. CO₂/an si 3t bois (1,8kgCO₂/kg).",
+       correction:"1. E=12,75MJ/kg · 2. m=0,565kg/h · 3. CO₂=5400kg",
+       notions:["Biomasse"]},
+      {id:"P09-18",difficulte:2,titre:"Décomposition calcaire",
+       enonce:"CaCO₃ → CaO + CO₂. DeltaH=+178kJ/mol M=100.\n1. Exo ou endo.\n2. E pour 1t CaCO₃.\n3. Utilisation CaO.",
+       correction:"1. Endothermique (four requis) · 2. E=1,78x10^9 J=494kWh · 3. Ciment, chaulage",
+       notions:["Calcination"]},
+      {id:"P09-19",difficulte:3,titre:"Biogaz — analyse",
+       enonce:"Biogaz: 65%CH₄ + 35%CO₂. P=1atm T=25°C V=100L.\n1. n(CH₄) et n(CO₂).\n2. E si CH₄ brûlé (DeltaH=-890kJ/mol).\n3. Utilisation CO₂.",
+       correction:"1. n_tot=4,04mol · n(CH₄)=2,63mol · n(CO₂)=1,41mol\n2. E=2341kJ · 3. Serres, boissons",
+       notions:["Biogaz"]},
+      {id:"P09-20",difficulte:3,titre:"Chauffe-eau solaire vs gaz",
+       enonce:"Capteur 3m² eta=60% flux=700W/m². Besoin: 150L 15→55°C/j. Gaz eta=90% à 0,09 euro/kWh.\n1. Q nécessaire.\n2. Durée capteur (6h soleil/j).\n3. Économie/an.",
+       correction:"1. Q=25,08MJ=6,97kWh · 2. t=5,5h < 6h → suffisant · 3. Économie≈254 euro/an",
+       notions:["Solaire thermique"]},
+    ]
+  },
+  { id:"ondes-mecaniques", numero:10,
+    titre:"Ondes mécaniques progressives",
+    sousTitre:"Propagation · Célérité · Retard · lambda=v/f · Diffraction · Doppler",
+    icon:"🌊", color:"#8b5cf6",
+    notions:["Onde progressive","Célérité","Retard","lambda=v/f","Diffraction","Interférences","Doppler"],
+    exercices:[
+      {id:"P10-01",difficulte:1,titre:"lambda=v/f",
+       enonce:"Son v=340m/s.\n1. lambda pour f=440Hz.\n2. T.\n3. lambda pour f=20Hz.",
+       correction:"1. lambda=0,773m · 2. T=2,27ms · 3. lambda=17m",
+       notions:["lambda=v/f"]},
+      {id:"P10-02",difficulte:1,titre:"Retard",
+       enonce:"Foudre à 2,5km v=340m/s.\n1. tau.\n2. Si tau=5s: d.\n3. Sonar tau=0,8s v=1500m/s: d.",
+       correction:"1. tau=7,35s · 2. d=1700m · 3. d=600m",
+       notions:["Retard"]},
+      {id:"P10-03",difficulte:2,titre:"Longitudinale vs transversale",
+       enonce:"1. Définir et donner exemples.\n2. Son dans eau: type.\n3. Onde sur corde: type.",
+       correction:"1. Transversale: oscillation perp propagation (lumière, corde)\nLongitudinale: oscillation parallèle (son, ultrason)\n2. Longitudinale · 3. Transversale",
+       notions:["Types ondes"]},
+      {id:"P10-04",difficulte:2,titre:"Célérité dans différents milieux",
+       enonce:"v_air=340 v_eau=1500 v_acier=5100 m/s. f=2kHz.\n1. lambda dans chaque.\n2. Pourquoi v_acier > v_eau > v_air.\n3. Retard pour 1km dans chaque.",
+       correction:"1. lambda_air=0,17m · lambda_eau=0,75m · lambda_acier=2,55m\n2. Rigidité croissante\n3. tau_air=2,94s · tau_eau=0,667s · tau_acier=0,196s",
+       notions:["Célérité"]},
+      {id:"P10-05",difficulte:2,titre:"Représentation d'une onde",
+       enonce:"Onde: y=3 sin(2pi(t/0,02 - x/6,8)) cm.\n1. T et f.\n2. lambda et v.\n3. y(x=0 t=0,005s).",
+       correction:"1. T=0,02s f=50Hz · 2. lambda=6,8m v=340m/s · 3. y=3cm",
+       notions:["Représentation"]},
+      {id:"P10-06",difficulte:2,titre:"Corde vibrante — modes propres",
+       enonce:"Corde L=1m v=200m/s.\n1. f1=v/(2L).\n2. f2 f3 f4.\n3. L pour f1=440Hz (La).",
+       correction:"1. f1=100Hz · 2. f2=200Hz f3=300Hz f4=400Hz · 3. L=0,227m",
+       notions:["Ondes stationnaires"]},
+      {id:"P10-07",difficulte:2,titre:"Déphasage",
+       enonce:"Source à x=0 lambda=0,8m. Point A à x=0,2m v=320m/s.\n1. tau.\n2. phi=2pi x/lambda.\n3. En avance ou retard.",
+       correction:"1. tau=6,25x10^-4 s · 2. phi=pi/2 (90°) · 3. En retard",
+       notions:["Déphasage"]},
+      {id:"P10-08",difficulte:2,titre:"Diffraction",
+       enonce:"Onde lambda=2m fente a=3m.\n1. Condition diffraction (a≈lambda).\n2. theta=lambda/a.\n3. Comparer lambda=0,5m.",
+       correction:"1. a=3m lambda=2m → a≈lambda → diffraction notable\n2. theta=38°\n3. lambda=0,5m → a/lambda=6 >> 1 → diffraction faible",
+       notions:["Diffraction"]},
+      {id:"P10-09",difficulte:2,titre:"Interférences",
+       enonce:"S1 et S2 en phase f=500Hz v=340m/s. Point P: d1=2m d2=2,68m.\n1. lambda.\n2. delta=d2-d1.\n3. Constructive ou destructive.",
+       correction:"1. lambda=0,68m · 2. delta=0,68m=lambda → constructive (maximum)",
+       notions:["Interférences"]},
+      {id:"P10-10",difficulte:2,titre:"Doppler — ambulance",
+       enonce:"f0=500Hz v_source=30m/s v_son=340m/s.\n1. f approche.\n2. f éloignement.\n3. Delta_f.",
+       correction:"1. f=548Hz · 2. f=459Hz · 3. Delta_f=89Hz",
+       notions:["Doppler"]},
+      {id:"P10-11",difficulte:3,titre:"Chauve-souris — sonar",
+       enonce:"f=80kHz v=340m/s. Insecte à d=2m.\n1. lambda.\n2. tau aller-retour.\n3. Résolution.",
+       correction:"1. lambda=4,25mm · 2. tau=11,8ms · 3. Résolution≈4,25mm",
+       notions:["Sonar biologique"]},
+      {id:"P10-12",difficulte:2,titre:"Ondes sismiques",
+       enonce:"Onde P v=6km/s Onde S v=3,5km/s. Station à d=500km.\n1. t_P et t_S.\n2. Delta_t.\n3. Localisation.",
+       correction:"1. t_P=83,3s · t_S=142,9s · 2. Delta_t=59,6s · 3. Triangulation avec 3 stations",
+       notions:["Sismologie"]},
+      {id:"P10-13",difficulte:2,titre:"Corde — tension et vitesse",
+       enonce:"Corde L=80cm mu=5x10^-3 kg/m T=320N. v=sqrt(T/mu).\n1. v.\n2. f1.\n3. T double: f1.",
+       correction:"1. v=253m/s · 2. f1=158Hz · 3. f1 x sqrt(2)=223Hz",
+       notions:["Corde vibrante"]},
+      {id:"P10-14",difficulte:2,titre:"Radar Doppler",
+       enonce:"f0=10GHz. Voiture réfléchit f=10,000200GHz.\n1. Delta_f.\n2. v=c x Delta_f/(2f0).\n3. En km/h.",
+       correction:"1. Delta_f=200kHz · 2. v=3m/s · 3. 10,8km/h",
+       notions:["Radar"]},
+      {id:"P10-15",difficulte:3,titre:"GPS",
+       enonce:"Satellite f=1575MHz c=3x10^8 m/s Delta_t=66,7ms.\n1. d.\n2. Delta_f Doppler si v_sat=3,87km/s.\n3. Précision si Delta_t ± 10ns.",
+       correction:"1. d=20000km · 2. Delta_f=20,3kHz · 3. Delta_d=3m",
+       notions:["GPS"]},
+      {id:"P10-16",difficulte:2,titre:"Diffraction lumière",
+       enonce:"lambda=550nm fente a=0,2mm D=1m.\n1. Condition.\n2. theta=lambda/a.\n3. Largeur tache centrale.",
+       correction:"1. a >> lambda mais diffraction visible\n2. theta=2,75x10^-3 rad · 3. L=5,5mm",
+       notions:["Diffraction lumière"]},
+      {id:"P10-17",difficulte:2,titre:"Tuyaux sonores",
+       enonce:"L=0,5m v=340m/s.\n1. Tuyau ouvert-ouvert: f1=v/(2L).\n2. Tuyau ouvert-fermé: f1=v/(4L).\n3. Modes harmoniques.",
+       correction:"1. f1=340Hz · 2. f1=170Hz\n3. Ouvert-ouvert: tous harmoniques · Ouvert-fermé: harmoniques impairs",
+       notions:["Tuyaux sonores"]},
+      {id:"P10-18",difficulte:3,titre:"Onde stationnaire",
+       enonce:"Onde y=2sin(2pi(x/lambda - ft)) réfléchie sur paroi rigide.\n1. Onde réfléchie.\n2. Onde stationnaire y_total.\n3. Ventres et noeuds.",
+       correction:"1. y_r=+2sin(2pi(x/lambda + ft)) (inversion de phase)\n2. y_tot=4sin(2pi x/lambda) cos(2pi ft)\n3. Ventre: x=lambda/4 + n lambda/2 · Noeud: x=n lambda/2",
+       notions:["Réflexion onde"]},
+      {id:"P10-19",difficulte:2,titre:"Célérité et température",
+       enonce:"v_son=331+0,6T (T en °C).\n1. v à 0°C et 20°C.\n2. lambda(440Hz) aux 2 températures.\n3. Pourquoi v eau > v air.",
+       correction:"1. v(0)=331m/s · v(20)=343m/s\n2. lambda(0)=0,752m · lambda(20)=0,780m\n3. Eau: molécules plus proches, liaisons H transmettent mieux",
+       notions:["Célérité vs T"]},
+      {id:"P10-20",difficulte:3,titre:"Synthèse — échographie",
+       enonce:"Sonde 7,5MHz. Tissu v=1540m/s. Écho tau=30μs.\n1. lambda tissu.\n2. Profondeur.\n3. Résolution axiale.",
+       correction:"1. lambda=0,205mm · 2. d=2,31cm · 3. Résol=lambda/2=0,1mm",
+       notions:["Échographie"]},
+    ]
+  },
+  { id:"ondes-sonores", numero:11,
+    titre:"Ondes sonores",
+    sousTitre:"Son pur · Timbre · Hauteur · Spectre · Intensité dB",
+    icon:"🎵", color:"#ec4899",
+    notions:["Son pur","Timbre","Hauteur","Spectre","Intensité sonore","dB","Harmoniques"],
+    exercices:[
+      {id:"P11-01",difficulte:1,titre:"Son pur vs composé",
+       enonce:"Diapason: 440Hz sinusoïde. Violon: 440Hz + harmoniques.\n1. Définir son pur et composé.\n2. Même hauteur ?\n3. Timbre différent: pourquoi.",
+       correction:"1. Pur: 1 fréquence · Composé: plusieurs\n2. Oui (même f1=440Hz) · 3. Spectre harmonique différent",
+       notions:["Son pur/composé"]},
+      {id:"P11-02",difficulte:1,titre:"Niveau d'intensité sonore",
+       enonce:"L=10 log(I/I0) I0=10^-12 W/m².\n1. L si I=10^-8 W/m².\n2. I si L=80dB.\n3. L1=L2=70dB: L_total.",
+       correction:"1. L=40dB · 2. I=10^-4 W/m² · 3. I_tot=2x10^-5 → L≈73dB",
+       notions:["dB"]},
+      {id:"P11-03",difficulte:2,titre:"Spectre d'amplitude",
+       enonce:"f1=200Hz f2=400Hz f3=600Hz. A1=5 A2=3 A3=1.\n1. Fondamental et harmoniques.\n2. Note approximative.\n3. Si A3→0: son change comment.",
+       correction:"1. f1: fondamental · f2: 2ème · f3: 3ème\n2. Sol3≈196Hz · 3. Timbre change, hauteur identique",
+       notions:["Spectre","Harmoniques"]},
+      {id:"P11-04",difficulte:2,titre:"Hauteur, timbre, intensité",
+       enonce:"1. Définir hauteur timbre intensité.\n2. I à 120dB.\n3. I à 60dB.",
+       correction:"1. Hauteur=f fondamentale · Timbre=spectre · Intensité=énergie\n2. I=1W/m² · 3. I=10^-6 W/m²",
+       notions:["Hauteur Timbre"]},
+      {id:"P11-05",difficulte:2,titre:"Diffraction et écoute",
+       enonce:"f=500Hz v=340m/s. Mur avec ouverture a=70cm.\n1. lambda.\n2. Condition diffraction.\n3. f=3400Hz: diffraction.",
+       correction:"1. lambda=68cm · 2. a≈lambda → forte diffraction\n3. lambda=10cm << a → diffraction faible → son directionnel",
+       notions:["Diffraction sonore"]},
+      {id:"P11-06",difficulte:2,titre:"Réverbération",
+       enonce:"Cathédrale T_reverb=6s. Concert T_reverb=2s.\n1. Pourquoi cathédrale T élevé.\n2. Idéal musique vs parole.\n3. Comment réduire T_reverb.",
+       correction:"1. Parois réfléchissantes + grand volume\n2. Musique: 1,5-2s · Parole: 0,5-1s\n3. Matériaux absorbants (moquette, rideaux, dalles)",
+       notions:["Réverbération"]},
+      {id:"P11-07",difficulte:2,titre:"Harmoniques tuyau",
+       enonce:"Flûte ouverte L=40cm v=340m/s.\n1. f1.\n2. f2 f3.\n3. Clarinette (tuyau fermé): f1.",
+       correction:"1. f1=425Hz · 2. f2=850Hz f3=1275Hz\n3. f1=212Hz (harmoniques impairs uniquement)",
+       notions:["Acoustique musicale"]},
+      {id:"P11-08",difficulte:2,titre:"Battement acoustique",
+       enonce:"Deux sources f1=440Hz et f2=443Hz.\n1. Fréquence de battement f_bat=|f1-f2|.\n2. Période battement.\n3. Utilisation pour accordage.",
+       correction:"1. f_bat=3Hz · 2. T_bat=0,33s\n3. Accorder jusqu'à f_bat=0 (unisson)",
+       notions:["Battement"]},
+      {id:"P11-09",difficulte:2,titre:"Doppler sonore",
+       enonce:"Source f0=1000Hz v_source=20m/s. v_son=340m/s.\n1. f observateur approche source.\n2. f observateur s'éloigne.\n3. Application médecine.",
+       correction:"1. f=1062Hz · 2. f=944Hz · 3. Doppler vasculaire (mesure flux sanguin)",
+       notions:["Doppler"]},
+      {id:"P11-10",difficulte:2,titre:"Son dans différents milieux",
+       enonce:"v_air=340 v_eau=1500 v_acier=5100. f=5000Hz.\n1. lambda dans chaque.\n2. Pourquoi v croît.\n3. Isolation phonique: matériau.",
+       correction:"1. lambda_air=68mm · lambda_eau=300mm · lambda_acier=1020mm\n2. Rigidité et densité augmentent\n3. Laine de verre: absorbe énergie acoustique",
+       notions:["Célérité"]},
+      {id:"P11-11",difficulte:2,titre:"Spectre vocal",
+       enonce:"Voyelle a: f1=120Hz (voix homme). Harmoniques f2=240 f3=360.\n1. Quelle note.\n2. Formants à 800Hz et 1200Hz: rôle.\n3. Traitement numérique audio.",
+       correction:"1. 120Hz ≈ Si2\n2. Formants: résonances du conduit vocal qui colorent la voix\n3. Filtres numériques amplifient/atténuent certaines fréquences",
+       notions:["Voix","Formants"]},
+      {id:"P11-12",difficulte:2,titre:"Écho en montagne",
+       enonce:"Randonneur crie. Paroi à d=500m v=340m/s.\n1. tau aller-retour.\n2. Écho audible (tau > 0,1s) ?\n3. Si tau=0,04s: écho ou réverbération.",
+       correction:"1. tau=2,94s · 2. 2,94 > 0,1 → écho audible\n3. tau=0,04s < 0,1s → réverbération",
+       notions:["Écho","Réverbération"]},
+      {id:"P11-13",difficulte:3,titre:"Acoustique concert — RT60",
+       enonce:"Volume V=15000m³. Surface S=5000m². Coeff absorption alpha_moy=0,15.\nRT60=0,161 x V/(S x alpha_moy).\n1. RT60.\n2. Idéal musique classique.\n3. Si alpha_moy→0,3: RT60.",
+       correction:"1. RT60=3,22s · 2. 1,5-2s (trop longue → ajouter absorbants)\n3. RT60=1,61s (mieux)",
+       notions:["Acoustique architecturale"]},
+      {id:"P11-14",difficulte:2,titre:"Interférences sonores",
+       enonce:"2 HP en phase f=680Hz v=340m/s. P: d1=1m d2=1,5m.\n1. lambda.\n2. delta=d2-d1.\n3. Constructive ou destructive.",
+       correction:"1. lambda=0,5m · 2. delta=0,5m=lambda → constructive (maximum)",
+       notions:["Interférences"]},
+      {id:"P11-15",difficulte:3,titre:"Synthèse — ultrason chirurgical",
+       enonce:"HIFU (ultrasons focalisés): f=1MHz v=1540m/s.\n1. lambda.\n2. Profondeur si écho tau=0,013s.\n3. Application médicale.",
+       correction:"1. lambda=1,54mm · 2. d=10cm · 3. Destruction tumeurs par chaleur (thermoablation)",
+       notions:["HIFU"]},
+      {id:"P11-16",difficulte:2,titre:"Timbre instrumental",
+       enonce:"Hautbois et violon jouent La 440Hz. Hautbois: harmoniques pairs absents.\n1. Timbre: rôle.\n2. Hautbois: spectre schématique.\n3. Pourquoi on distingue les instruments.",
+       correction:"1. Timbre = composition harmonique\n2. Raies à 440, 1320, 2200 Hz (harmoniques impairs)\n3. Chaque instrument a une signature spectrale unique",
+       notions:["Timbre instrumental"]},
+      {id:"P11-17",difficulte:2,titre:"Décibels et addition",
+       enonce:"Marteau: L=85dB. Deuxième marteau identique.\n1. I marteau seul.\n2. I deux marteaux.\n3. L total.",
+       correction:"1. I=3,16x10^-4 W/m² · 2. I_tot=6,32x10^-4 W/m² · 3. L=88dB",
+       notions:["dB addition"]},
+      {id:"P11-18",difficulte:3,titre:"Audiogramme",
+       enonce:"Seuil normal: 0dB HL à 1000Hz. Patient: +40dB HL à 4000Hz.\n1. I correspondant à +40dB HL.\n2. Type de surdité.\n3. Gain appareillage.",
+       correction:"1. I=10^-8 W/m² · 2. Surdité de perception (cellules ciliées)\n3. Gain=40dB à 4000Hz",
+       notions:["Audiologie"]},
+      {id:"P11-19",difficulte:2,titre:"Comparaison son et onde EM",
+       enonce:"Câble coaxial: onde EM v=2x10^8 m/s f=1GHz.\n1. lambda.\n2. Retard sur 1m.\n3. Comparer son et EM: propagation.",
+       correction:"1. lambda=0,2m=20cm · 2. tau=5ns\n3. Son: mécanique, milieu requis · EM: champ, se propage dans vide",
+       notions:["Comparaison onde son/EM"]},
+      {id:"P11-20",difficulte:3,titre:"Synthèse — acoustique sous-marine",
+       enonce:"SONAR: f=10kHz v=1500m/s. Baleine à d=5km.\n1. lambda.\n2. tau aller-retour.\n3. f Doppler si baleine à v=5m/s vers sonar.",
+       correction:"1. lambda=0,15m · 2. tau=6,67s\n3. f=10000 x (1500+5)/(1500-5)=10033Hz → Delta_f=33Hz",
+       notions:["SONAR","Doppler"]},
+    ]
+  },
+  { id:"ondes-electromagnetiques", numero:12,
+    titre:"Ondes électromagnétiques & couleurs",
+    sousTitre:"Spectre EM · Réfraction · Couleurs · Loi de Wien · Photon",
+    icon:"🌈", color:"#06b6d4",
+    notions:["Spectre EM","Réfraction","Couleurs","Synthèse","Loi Wien","Photon","Diffraction"],
+    exercices:[
+      {id:"P12-01",difficulte:1,titre:"Spectre électromagnétique",
+       enonce:"Classer par lambda croissante: radio micro-ondes IR visible UV X gamma.\nPour lambda=500nm: f et domaine.",
+       correction:"Gamma < X < UV < Visible < IR < Micro-ondes < Radio\nf=6x10^14 Hz · visible vert",
+       notions:["Spectre EM"]},
+      {id:"P12-02",difficulte:1,titre:"Loi de Snell-Descartes",
+       enonce:"Air(n=1) → verre(n=1,5). theta1=45°.\n1. Loi n1 sin(theta1)=n2 sin(theta2).\n2. theta2.\n3. Se rapproche ou s'éloigne de la normale.",
+       correction:"1. n1 sin(theta1)=n2 sin(theta2)\n2. sin(theta2)=sin45°/1,5=0,471 → theta2=28°\n3. Se rapproche",
+       notions:["Réfraction"]},
+      {id:"P12-03",difficulte:2,titre:"Indice et vitesse",
+       enonce:"n(verre)=1,5. v=c/n.\n1. v.\n2. lambda dans verre si lambda_air=600nm.\n3. Fréquence change dans verre.",
+       correction:"1. v=2x10^8 m/s · 2. lambda=400nm · 3. Non: f=c/lambda_air=v/lambda_verre (f invariante)",
+       notions:["Indice"]},
+      {id:"P12-04",difficulte:2,titre:"Synthèse additive et soustractive",
+       enonce:"1. R+V=? R+B=? V+B=? R+V+B=?\n2. Cyan+Magenta (soustractive).\n3. Objet vert sous lumière rouge.",
+       correction:"1. Jaune · Magenta · Cyan · Blanc · 2. Bleu · 3. Noir",
+       notions:["Couleurs"]},
+      {id:"P12-05",difficulte:2,titre:"Loi de Wien — étoiles",
+       enonce:"lambda_max x T=2,9x10^-3 m·K. Soleil T=5778K. Bételgeuse T=3500K.\n1. lambda_max Soleil.\n2. lambda_max Bételgeuse.\n3. Couleurs.",
+       correction:"1. lambda=502nm (jaune-blanc) · 2. lambda=829nm (rouge orangé)\n3. Soleil: jaune-blanc · Bételgeuse: rouge",
+       notions:["Loi Wien"]},
+      {id:"P12-06",difficulte:2,titre:"Énergie d'un photon",
+       enonce:"lambda=450nm (bleu). h=6,63x10^-34.\n1. f.\n2. E=hf.\n3. Comparer à lambda=700nm.",
+       correction:"1. f=6,67x10^14 Hz · 2. E=4,42x10^-19 J=2,76eV · 3. Bleu: E plus grande",
+       notions:["Photon"]},
+      {id:"P12-07",difficulte:2,titre:"Réflexion totale interne",
+       enonce:"Verre n=1,5 → air.\n1. theta_L=arcsin(1/n).\n2. theta=45°: RT ?\n3. Fibre optique.",
+       correction:"1. theta_L=41,8° · 2. 45° > 41,8° → RT ✓ · 3. Réflexions totales successives",
+       notions:["Réflexion totale"]},
+      {id:"P12-08",difficulte:2,titre:"Diffraction — réseau",
+       enonce:"Réseau 600tr/mm. lambda=589nm.\n1. d=1/600 mm.\n2. theta ordre 1: d sin(theta)=lambda.\n3. theta ordre 2.",
+       correction:"1. d=1,67μm · 2. sin(theta)=0,353 → theta=20,6° · 3. sin(theta)=0,705 → theta=44,8°",
+       notions:["Réseau","Diffraction"]},
+      {id:"P12-09",difficulte:2,titre:"Young — mesure lambda",
+       enonce:"a=0,4mm D=2m. 10 interfranges=29mm.\n1. i.\n2. lambda=i x a/D.\n3. Couleur.",
+       correction:"1. i=2,9mm · 2. lambda=580nm · 3. Jaune-orange",
+       notions:["Young"]},
+      {id:"P12-10",difficulte:2,titre:"Couleur des objets",
+       enonce:"1. Objet blanc en rouge.\n2. Objet cyan en rouge.\n3. Objet noir.",
+       correction:"1. Rouge · 2. Noir (cyan=V+B absorbe rouge) · 3. Absorbe tout",
+       notions:["Couleur objets"]},
+      {id:"P12-11",difficulte:2,titre:"Dispersion — arc-en-ciel",
+       enonce:"n_rouge=1,51 n_violet=1,53. theta1=45°.\n1. theta2 rouge et violet.\n2. Dispersion: définir.\n3. Ordre couleurs arc-en-ciel.",
+       correction:"1. theta2_rouge=27,9° · theta2_violet=27,5°\n2. n varie avec lambda → couleurs déviées différemment\n3. Rouge extérieur violet intérieur",
+       notions:["Dispersion"]},
+      {id:"P12-12",difficulte:2,titre:"Absorption chlorophylles",
+       enonce:"Chlorophylle a absorbe à 430nm et 680nm.\n1. Domaines EM.\n2. Couleurs absorbées.\n3. Pourquoi feuilles vertes.",
+       correction:"1. Visible (bleu-violet et rouge)\n2. Violet-bleu et rouge\n3. Lumière verte réfléchie → feuilles vertes",
+       notions:["Absorption","Photosynthèse"]},
+      {id:"P12-13",difficulte:3,titre:"Fibre optique — dispersion",
+       enonce:"n_coeur=1,5 n_gaine=1,45 L=100km.\n1. theta_c.\n2. v.\n3. t transit.\n4. Dispersion modale Delta_t.",
+       correction:"1. theta_c=75° · 2. v=2x10^8 m/s · 3. t=0,5ms · 4. Delta_t=1,43ms",
+       notions:["Fibre optique"]},
+      {id:"P12-14",difficulte:2,titre:"LASER — photons",
+       enonce:"LASER rouge lambda=632,8nm. P=5mW. Spot A=1mm².\n1. f.\n2. Intensité I=P/A.\n3. E par photon et nombre par seconde.",
+       correction:"1. f=4,74x10^14 Hz · 2. I=5000W/m²\n3. E=3,14x10^-19 J · N=P/E=1,59x10^16 photons/s",
+       notions:["Laser","Photon"]},
+      {id:"P12-15",difficulte:3,titre:"Synthèse — astrophysique",
+       enonce:"Étoile: lambda_max=289nm. Raie H à lambda_obs=657nm (lambda0=656nm).\n1. T par Wien.\n2. Type étoile.\n3. S'approche ou s'éloigne. 4. v=c x Delta_lambda/lambda0.",
+       correction:"1. T=10035K · 2. Étoile chaude bleue-blanche\n3. Delta_lambda=+1nm → s'éloigne (rouge shift)\n4. v=457km/s",
+       notions:["Astrophysique","Doppler"]},
+      {id:"P12-16",difficulte:2,titre:"Lumière et sécurité",
+       enonce:"UV: lambda=300nm. IR: lambda=1000nm.\n1. E photon UV et IR.\n2. Lequel plus dangereux pour la peau.\n3. Indice UV=12: risque.",
+       correction:"1. E_UV=6,63x10^-19 J · E_IR=1,99x10^-19 J\n2. UV (énergie plus grande, ionisant)\n3. Indice 12=extrême → protection obligatoire",
+       notions:["Sécurité UV"]},
+      {id:"P12-17",difficulte:2,titre:"Rayons X — imagerie médicale",
+       enonce:"Rayons X: lambda=0,1nm.\n1. f.\n2. E_photon en keV (1eV=1,6x10^-19 J).\n3. Pourquoi traversent les tissus mous.",
+       correction:"1. f=3x10^18 Hz · 2. E=12,4keV\n3. Énergie élevée → ionisants → traversent matières peu denses",
+       notions:["Rayons X"]},
+      {id:"P12-18",difficulte:3,titre:"Interféromètre LIGO",
+       enonce:"LIGO: déformation Delta_l/l=10^-21. Bras L=4km. Laser lambda=1064nm.\n1. Delta_l en attomètres (1am=10^-18 m).\n2. Combien de lambda cela représente.\n3. Quel phénomène détecte-t-il.",
+       correction:"1. Delta_l=4am · 2. Delta_l/lambda=3,76x10^-12 (infime fraction de lambda!)\n3. Ondes gravitationnelles (fusion trous noirs)",
+       notions:["Interférométrie"]},
+      {id:"P12-19",difficulte:2,titre:"Vision des abeilles",
+       enonce:"Abeilles voient UV (300-400nm) + visible (400-650nm). Humains: 380-780nm.\n1. Abeilles voient-elles le rouge ?\n2. Voient-elles le bleu ?\n3. Comment les fleurs exploitent cela.",
+       correction:"1. Non: rouge≈700nm > 650nm\n2. Oui (400-650nm inclut bleu)\n3. Marquages UV invisibles pour humains guident abeilles vers nectar",
+       notions:["Vision","Spectre visible"]},
+      {id:"P12-20",difficulte:3,titre:"Synthèse — télescope James Webb",
+       enonce:"JWST: miroir D=6,5m. Observe IR lambda=0,6-28μm.\n1. Pourquoi IR et pas visible.\n2. Résolution angulaire theta=lambda/D pour lambda=2μm.\n3. Comparer Hubble (D=2,4m lambda_visible=500nm).",
+       correction:"1. Galaxies lointaines décalées vers rouge + nuages pousière transparents en IR\n2. theta=3,1x10^-7 rad\n3. theta_Hubble=2,1x10^-7 rad → Hubble légèrement meilleur dans son domaine",
+       notions:["Télescope","Résolution"]},
+    ]
+  },
+  { id:"signaux-electriques", numero:13,
+    titre:"Signaux électriques & numérisation",
+    sousTitre:"Oscilloscope · Signal AC · Numérisation · Shannon · Débit · Filtres",
+    icon:"📡", color:"#f97316",
+    notions:["Oscilloscope","Signal AC","Numérisation","Shannon","Débit","Filtres","CAN","Codage"],
+    exercices:[
+      {id:"P13-01",difficulte:1,titre:"Oscilloscope — lecture",
+       enonce:"Base temps: 5ms/div. Sensibilité: 2V/div. 4 div horiz 3 div vert pp.\n1. T.\n2. U_pp.\n3. f.",
+       correction:"1. T=20ms · 2. U_pp=6V · 3. f=50Hz",
+       notions:["Oscilloscope"]},
+      {id:"P13-02",difficulte:1,titre:"Signal AC — valeur efficace",
+       enonce:"U_max=325V f=50Hz.\n1. U_eff=U_max/sqrt(2).\n2. T.\n3. I_eff si R=100Ω.",
+       correction:"1. U_eff=230V · 2. T=20ms · 3. I_eff=2,3A",
+       notions:["Signal AC"]},
+      {id:"P13-03",difficulte:2,titre:"Shannon — critère",
+       enonce:"f_max=20kHz.\n1. f_e min.\n2. CD f_e=44100Hz: critère ok ?\n3. 16bits: niveaux de quantification.",
+       correction:"1. f_e ≥ 40kHz · 2. 44100 > 40000 ✓ · 3. 2^16=65536 niveaux",
+       notions:["Shannon"]},
+      {id:"P13-04",difficulte:2,titre:"Débit numérique",
+       enonce:"CD: f_e=44100Hz 16bits stéréo.\n1. Débit brut.\n2. Durée 700Mo.\n3. f_max reproductible.",
+       correction:"1. 1,41Mbps=176ko/s · 2. ≈66min · 3. 22050Hz",
+       notions:["Débit"]},
+      {id:"P13-05",difficulte:2,titre:"CAN — quantification",
+       enonce:"CAN: 0-5V 8bits.\n1. Pas Delta=5/(2^8-1).\n2. Code de U=3V.\n3. Erreur max.",
+       correction:"1. Delta=19,6mV · 2. k≈153 → 10011001 en binaire · 3. Erreur≈9,8mV",
+       notions:["Quantification"]},
+      {id:"P13-06",difficulte:2,titre:"Analogique vs numérique",
+       enonce:"1. Définir analogique et numérique.\n2. Avantages numérique.\n3. Débit voix (f_e=8kHz 8bits).",
+       correction:"1. Analogique: continu · Numérique: discret 0/1\n2. Insensible bruit, compression, copies parfaites\n3. 64kbps",
+       notions:["Analogique","Numérique"]},
+      {id:"P13-07",difficulte:2,titre:"Signal audio — codage",
+       enonce:"Voix 300Hz-3400Hz. Téléphonie: f_e=8kHz 8bits.\n1. Shannon vérifié ?\n2. Niveaux.\n3. Débit.",
+       correction:"1. f_e=8kHz ≥ 2x3400=6800Hz ✓ · 2. 256 niveaux · 3. 64kbps",
+       notions:["Téléphonie"]},
+      {id:"P13-08",difficulte:2,titre:"Image numérique",
+       enonce:"1920×1080 pixels 24bits/pixel.\n1. Taille brute.\n2. JPEG×20: taille.\n3. 30fps: débit.",
+       correction:"1. ≈6,25Mo · 2. 0,31Mo · 3. 187,5Mo/s brut → 9,4Mo/s compressé",
+       notions:["Image numérique"]},
+      {id:"P13-09",difficulte:2,titre:"Circuit RC",
+       enonce:"R=10kΩ C=100μF.\n1. tau=RC.\n2. u_C(tau) si E=5V.\n3. Chargé après combien de tau.",
+       correction:"1. tau=1s · 2. u_C=3,16V=63,2% E · 3. Après 5 tau",
+       notions:["RC"]},
+      {id:"P13-10",difficulte:2,titre:"Filtre passe-bas RC",
+       enonce:"R=1kΩ C=1μF. f_c=1/(2pi x RC).\n1. f_c.\n2. Atténuation à f >> f_c.\n3. Application audio.",
+       correction:"1. f_c=159Hz · 2. -20dB par décade · 3. Supprime aigus, garde graves",
+       notions:["Filtre RC"]},
+      {id:"P13-11",difficulte:2,titre:"Alimentation électronique",
+       enonce:"U_AC=9V_eff C=470μF R=100Ω.\n1. U_DC=U_AC x sqrt(2).\n2. I.\n3. tau=RC: lissage si tau >> T=20ms ?",
+       correction:"1. U_DC=12,7V · 2. I=127mA · 3. tau=47ms >> 20ms ✓",
+       notions:["Alimentation"]},
+      {id:"P13-12",difficulte:2,titre:"Défibrillateur",
+       enonce:"C=32μF U=5000V.\n1. E=0,5CU².\n2. Décharge Delta_t=4ms: P.\n3. Avantage condensateur.",
+       correction:"1. E=400J · 2. P=100kW · 3. Grande puissance instantanée impossible du secteur",
+       notions:["Condensateur"]},
+      {id:"P13-13",difficulte:3,titre:"Qualité audio numérique",
+       enonce:"Enregistrement 24bits 96kHz stéréo.\n1. Débit brut.\n2. Avantage 24bits vs 16bits.\n3. WAV: lossless ou lossy.",
+       correction:"1. Débit=24x96000x2=4,608Mbps=576ko/s\n2. 16,7x10^6 niveaux vs 65536 → dynamique +48dB\n3. WAV: lossless (sans perte)",
+       notions:["Qualité audio"]},
+      {id:"P13-14",difficulte:2,titre:"Déphasage — circuit RL",
+       enonce:"u=10cos(2pi x 50t) V. L=0,1H R=31,4Ω.\nomega=2pi x f. Z=sqrt(R²+(L x omega)²). phi=arctan(L x omega/R).\n1. omega.\n2. Z.\n3. phi.",
+       correction:"1. omega=314rad/s · 2. L x omega=31,4 → Z=44,4Ω · 3. phi=45°",
+       notions:["Déphasage RL"]},
+      {id:"P13-15",difficulte:3,titre:"Synthèse — ADSL",
+       enonce:"ADSL: bande 300Hz-1100kHz. f_e=2,2MHz 8bits/échantillon.\n1. f_max reproductible.\n2. Débit brut.\n3. Pourquoi débit réel (10-20Mbps) < débit brut.",
+       correction:"1. f_max=1,1MHz ✓ · 2. Débit=17,6Mbps\n3. Codage, correction erreurs, overhead protocoles",
+       notions:["ADSL"]},
+      {id:"P13-16",difficulte:2,titre:"Puissance AC — valeurs efficaces",
+       enonce:"R=50Ω U_eff=230V f=50Hz.\n1. I_eff.\n2. P=U_eff x I_eff.\n3. U_max et I_max.",
+       correction:"1. I_eff=4,6A · 2. P=1058W · 3. U_max=325V I_max=6,5A",
+       notions:["Valeurs efficaces"]},
+      {id:"P13-17",difficulte:2,titre:"Spectre fréquentiel signal carré",
+       enonce:"Signal carré f=1kHz: fondamental + harmoniques impairs (3f 5f 7f).\n1. Fréquences premières raies.\n2. Shannon pour reproduire jusqu'au 5ème harmonique.\n3. Rôle harmoniques dans timbre.",
+       correction:"1. 1kHz, 3kHz, 5kHz, 7kHz\n2. f_e ≥ 2×5kHz=10kHz\n3. Harmoniques colorent le son",
+       notions:["Spectre signal"]},
+      {id:"P13-18",difficulte:3,titre:"WiFi — fréquences et codage",
+       enonce:"WiFi 5GHz. Débit max 300Mbps. Modulation 64-QAM: 6 bits/symbole.\n1. lambda.\n2. Taux de symboles=Débit/bits_par_symbole.\n3. Pourquoi 5GHz meilleur que 2,4GHz pour débit.",
+       correction:"1. lambda=60mm · 2. Taux=50Mbauds\n3. 5GHz: bande passante plus large → plus de canaux → plus de débit",
+       notions:["WiFi","Modulation"]},
+      {id:"P13-19",difficulte:2,titre:"Maison connectée — consommation",
+       enonce:"Box ADSL: P=15W allumée 24h/j. Frigo R_on=1000Ω R_off=10000Ω U=230V on 40% du temps (720h/mois).\n1. Conso box/an.\n2. P_frigo on et off.\n3. Conso frigo mensuelle.",
+       correction:"1. E_box=15×8760=131kWh\n2. P_on=52,9W · P_off=0,529W\n3. E_frigo=52,9×288+0,529×432≈15,5kWh",
+       notions:["Consommation"]},
+      {id:"P13-20",difficulte:3,titre:"Synthèse — chaîne audio numérique",
+       enonce:"Micro → CAN (f_e=48kHz 24bits) → DSP → CNA → ampli → HP.\n1. Débit brut mono.\n2. Si DSP ajoute écho (délai 200ms): échantillons en mémoire.\n3. Avantage numérique vs analogique.",
+       correction:"1. Débit=48000×24=1,152Mbps=144ko/s\n2. N=0,2×48000=9600 échantillons\n3. Précision, reproductibilité, effets impossibles en analogique",
+       notions:["Chaîne audio"]},
+    ]
+  },
+]
+
+
+type SKey = 'terminale-generale' | 'terminale-physique-chimie' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde-maths' | 'seconde-physique-chimie' | 'premiere-physique-chimie' | 'sti2d-physique-chimie' | 'stes-physique-chimie'
+
+
+// ════════════════════════════════════════════════════════════════
+//  STI2D — PHYSIQUE-CHIMIE (épreuve PC spécifique STI2D)
+//  URLs : sujetdebac.fr · 2021–2025
+// ════════════════════════════════════════════════════════════════
+const dataSTI2DPC: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'PC — Oscillations électriques', theme:"Oscillations libres circuit LC. Énergie électromagnétique. Période propre T₀=2π√(LC).", pts:7},
+    {titre:'PC — Ondes mécaniques', theme:"Ondes progressives sinusoïdales. Célérité, longueur onde, diffraction.", pts:7},
+    {titre:'Chimie', theme:"Cinétique chimique. Vitesse, facteurs cinétiques, catalyse.", pts:6},
+  ]},
+  { year:2024, exercices:[
+    {titre:'PC — Dipôle RC', theme:"Charge condensateur. Constante τ=RC. Courbes u_C(t), i(t). Détermination graphique de τ.", pts:7},
+    {titre:"PC — Ondes lumineuses", theme:"Diffraction fente. Interférences Young i=λD/a. Mesure de longueur d'onde.", pts:7},
+    {titre:'Chimie', theme:"Équilibres chimiques. Quotient Qr, K, loi de modération (Le Chatelier).", pts:6},
+  ]},
+  { year:2023, exercices:[
+    {titre:'PC — Satellites', theme:"Gravitation. Vitesse orbitale. 3ème loi Kepler T²=kr³. Satellite géostationnaire.", pts:7},
+    {titre:'PC — Dipôle RL', theme:"Bobine. Inductance L. Constante τ=L/R. Énergie E_L=½LI².", pts:7},
+    {titre:'Chimie', theme:"Acides et bases. pH. Dosage conductimétrique. Équivalence.", pts:6},
+  ]},
+  { year:2022, exercices:[
+    {titre:'PC — Lentilles minces', theme:"Lentilles convergentes et divergentes. Relation conjugaison 1/OA'-1/OA=1/f'. Grandissement.", pts:7},
+    {titre:'PC — Circuit RC', theme:"Filtrage passe-bas. Constante de temps. Applications industrielles.", pts:7},
+    {titre:'Chimie', theme:"Oxydoréduction. N.o. Piles électrochimiques. Électrolyse — loi de Faraday.", pts:6},
+  ]},
+  { year:2021, exercices:[
+    {titre:'PC — Énergie mécanique', theme:"Champ gravitationnel. Conservation énergie mécanique. Chute libre avec frottement fluide.", pts:7},
+    {titre:"PC — Interférences", theme:"Fentes de Young. Interfrange. Mesure de longueur d'onde. Lumière cohérente.", pts:7},
+    {titre:'Chimie', theme:"Cinétique. Suivi temporel. Temps de demi-réaction t₁/₂. Facteurs cinétiques.", pts:6},
+  ]},
+]
+
+const linksSTI2DPC: Record<number, AnneeLinks> = {
+  2025: { sessions: [
+    { label:'STI2D — Métropole · 17 juin 2025', flag:'⚙️',
+      sujet:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'STI2D — Remplacement · sept. 2025', flag:'⚙️',
+      sujet:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-remplacement-sujet-officiel.pdf`,
+      correction:`${AP}/Corrige_STI2D_Metro_sept_2025_secours_FH.pdf` },
+  ]},
+  2024: { sessions: [
+    { label:'STI2D — Métropole · 19 juin 2024', flag:'⚙️',
+      sujet:`${AP}/STI2D_metropole_19_juin_2024__FH2.pdf`,
+      correction:`${AP}/Corrige_STI2D_metropole_19_juin_2024_FH-2.pdf` },
+  ]},
+  2023: { sessions: [
+    { label:'STI2D — Métropole · 20 mars 2023', flag:'⚙️',
+      sujet:`${SD}/2023/sti2d-spe-physique-chimie-mathematiques-2023-metropole-sujet-officiel.pdf`,
+      correction:`${SD}/2023/sti2d-spe-physique-chimie-mathematiques-2023-metropole-corrige.pdf` },
+    { label:'STI2D — Mexique · juin 2023', flag:'⚙️',
+      sujet:`${AP}/STI2D_Mexique_juin_2023_DV_FH.pdf`,
+      correction:`${AP}/Corrige_STI2D_Mexique_juin_2023_FH.pdf` },
+    { label:'STI2D — Métropole · sept. 2023', flag:'⚙️',
+      sujet:`${AP}/STI2D_metro_9_2023_jcs.pdf`,
+      correction:`${AP}/Corrige_STI2D_metropole_9_2023_JCS_.pdf` },
+  ]},
+  2022: { sessions: [
+    { label:'STI2D — Métropole · 11 mai 2022', flag:'⚙️',
+      sujet:`${SD}/2022/sti2d-spe-physique-chimie-mathematiques-2022-metropole-sujet-officiel.pdf`,
+      correction:`${SD}/2022/sti2d-spe-physique-chimie-mathematiques-2022-metropole-corrige.pdf` },
+    { label:'STI2D — Métropole · sept. 2022', flag:'⚙️',
+      sujet:`${AP}/metropole_sti2d_septembre_2022-2.pdf`,
+      correction:`${AP}/Corrige_STI2D_Metro_sept_2022_DV.pdf` },
+  ]},
+  2021: { sessions: [
+    { label:'STI2D — Métropole La Réunion · juin 2021', flag:'⚙️',
+      sujet:`${AP}/STI2D_juin_2021_Metropole_DV.pdf`,
+      correction:`${AP}/Corrige_STI2D_Metropole_J2_juin_2021_FH.pdf` },
+    { label:'STI2D — Métropole · sept. 2021', flag:'⚙️',
+      sujet:`${SD}/2021/sti2d-spe-physique-chimie-mathematiques-2021-metropole-sujet-officiel.pdf`,
+      correction:`${AP}/Corrige_STI2D_sept_2021_Metropole_FH.pdf` },
+  ]},
+}
+
+const dataSTESPC: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Partie Chimie — CBPH', theme:"Alimentation & Santé : molécules organiques, réactions chimiques biologiques, pH des fluides corporels.", pts:10},
+    {titre:'Partie Biologie — CBPH', theme:"Défense de l'organisme : immunité, microbiologie, analyses médicales, physiologie humaine.", pts:10},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Partie Chimie — CBPH', theme:"Solutions médicamenteuses : concentration, dilution, titrages acide-base et pH physiologique.", pts:10},
+    {titre:'Partie Biologie — CBPH', theme:"Homéostasie et régulation : équilibre glucidique, insuline, diabète, analyses biologiques.", pts:10},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Partie Chimie — CBPH', theme:"Chimie des médicaments : molécules actives, groupes fonctionnels, réactivité chimique.", pts:10},
+    {titre:'Partie Biologie — CBPH', theme:"Hérédité et génétique humaine : ADN, mutations, maladies génétiques, diagnostic prénatal.", pts:10},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Partie Chimie — CBPH', theme:"Antiseptiques et désinfectants : oxydoréduction, concentrations, dosage, sécurité chimique.", pts:10},
+    {titre:'Partie Biologie — CBPH', theme:"Sécurité routière et physiologie : réflexes, temps de réaction, toxicologie (alcool, drogues).", pts:10},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Partie Chimie — CBPH', theme:"Chimie de l'eau et des solutions biologiques : pH, acido-basicité, dilution, solutés.", pts:10},
+    {titre:'Partie Biologie — CBPH', theme:"Nutrition et digestion : enzymes digestives, catabolisme, alimentation équilibrée.", pts:10},
+  ]},
+  { year:2020, note:'📚', exercices:[
+    {titre:'Sciences Physiques & Chimiques', theme:"Archive APMEP 1995-2020 : ondes, optique médicale, radioactivité, solutions, cinétique.", pts:20},
+  ]},
+]
+
+const linksSTESPC: Record<number, AnneeLinks> = {
+  2025: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2025', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Métropole Remplacement · sept. 2025', flag:'🍂',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Polynésie · juin 2025', flag:'🌊',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-polynesie-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Nouvelle-Calédonie · 2025', flag:'🌿',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-nouvelle-caledonie-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  2024: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2024', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2024/st2s-spe-chimie-bio-physiopat-humaines-2024-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Métropole Remplacement · sept. 2024', flag:'🍂',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2024/st2s-spe-chimie-bio-physiopat-humaines-2024-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Polynésie · juin 2024', flag:'🌊',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2024/st2s-spe-chimie-bio-physiopat-humaines-2024-polynesie-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  2023: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2023', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2023/st2s-spe-chimie-bio-physiopat-humaines-2023-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Polynésie · juin 2023', flag:'🌊',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2023/st2s-spe-chimie-bio-physiopat-humaines-2023-polynesie-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Nouvelle-Calédonie · 2023', flag:'🌿',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2023/st2s-spe-chimie-bio-physiopat-humaines-2023-nouvelle-caledonie-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  2022: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2022', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2022/st2s-spe-chimie-bio-physiopat-humaines-2022-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Métropole Remplacement · sept. 2022', flag:'🍂',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2022/st2s-spe-chimie-bio-physiopat-humaines-2022-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Polynésie · juin 2022', flag:'🌊',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2022/st2s-spe-chimie-bio-physiopat-humaines-2022-polynesie-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  2021: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2021', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2021/st2s-spe-chimie-bio-physiopat-humaines-2021-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Métropole Remplacement · sept. 2021', flag:'🍂',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2021/st2s-spe-chimie-bio-physiopat-humaines-2021-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'ST2S · Spé CBPH · Polynésie · juin 2021', flag:'🌊',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2021/st2s-spe-chimie-bio-physiopat-humaines-2021-polynesie-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  2020: { sessions: [
+    { label:'ST2S · Sciences Physiques & Chimiques · Archive 1995–2020 · APMEP', flag:'📚',
+      sujet:`https://www.apmep.fr/IMG/pdf/st2s-1995-2020.pdf`,
+      correction:`https://www.apmep.fr/IMG/pdf/st2s-1995-2020.pdf` },
+  ]},
+}
 
 const SECTIONS: {
   key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
   data:AnneeData[]; links:Record<number,AnneeLinks>;
 }[] = [
   { key:'terminale-generale',
-    label:'Terminale Générale', icon:'🎓', color:'#4f6ef7', coeff:'Coef. 16 · 3h30',
-    desc:'Spécialité Mathématiques · Bac Général · Source APMEP : sujets + corrigés PDF directs',
+    label:'Terminale · Maths', icon:'🎓', color:'#4f6ef7', coeff:'Coef. 16 · 3h30',
+    desc:'Spécialité Mathématiques · Bac Général · Analyse · Algèbre · Probabilités · Géométrie',
     data:dataGenerale, links:linksGenerale },
+  { key:'terminale-physique-chimie',
+    label:'Terminale Phy-Chimie', icon:'⚗️', color:'#06b6d4', coeff:'Coef. 16 · 3h30',
+    desc:'Spécialité Physique-Chimie · Bac Général · Mécanique · Thermodynamique · Ondes · Chimie',
+    data:dataPhysiqueChimie, links:linksPhysiqueChimie },
   { key:'terminale-technologique',
-    label:'Terminale Technologique', icon:'⚙️', color:'#06d6a0', coeff:'STMG · STI2D/STL',
-    desc:'Série STI2D · Épreuve PCM (Physique-Chimie & Maths) · 3h · Source : APMEP & sujetdebac.fr',
+    label:'Terminale · Techno', icon:'⚙️', color:'#06d6a0', coeff:'STMG · STI2D/STL',
+    desc:'Série STI2D · Épreuve PCM (Physique-Chimie & Maths) · 3h · Sujet + Correction',
     data:dataTechno, links:linksTechno },
   { key:'terminale-maths-expertes',
-    label:'Terminale Maths Expertes', icon:'⭐', color:'#8b5cf6', coeff:'Option · Coef. 2 · 3h',
-    desc:'Option Maths Expertes · Arithmétique · Complexes · Matrices & Graphes · APMEP',
+    label:'Terminale · Expertes', icon:'⭐', color:'#8b5cf6', coeff:'Option · Coef. 2 · 3h',
+    desc:'Option Maths Expertes · Arithmétique · Complexes · Matrices & Graphes',
     data:dataExpertes, links:linksExpertes },
-  { key:'seconde', label:'Seconde Générale', icon:'📘', color:'#10b981', coeff:'7 thèmes · 16 exercices',
-    desc: "Programme officiel Seconde — Vrais exercices corrigés par thème. Algorithmique, Algèbre, Géométrie, Fonctions, Stats & Probas.",
+  { key:'premiere-specialite', label:'Première · Maths', icon:'📗', color:'#f59e0b', coeff:'DS lycées · 2h',
+    desc:"Pas d'examen national en Première. DS de lycées (Henri-IV, LLG) couvrant tout le programme.",
     data:[], links:{} },
-  { key:'premiere-specialite', label:'Première Spécialité', icon:'📗', color:'#f59e0b', coeff:'E3C · DS lycées · 2h',
-    desc: "Pas d'examen national en Première. E3C 2021-2022 + DS publiés par des professeurs.",
+  { key:'seconde-maths', label:'Seconde · Maths', icon:'📘', color:'#10b981', coeff:'Enseignement commun',
+    desc:'Mathématiques Seconde · Enseignement commun · Fonctions · Géométrie · Probabilités · Statistiques',
     data:[], links:{} },
+  { key:'seconde-physique-chimie', label:'Seconde Phy-Chimie', icon:'🔬', color:'#f97316', coeff:'Enseignement commun',
+    desc:'Physique-Chimie Seconde · Lumière · Atomes · Énergie · 45 exercices corrigés',
+    data:[], links:{} },
+  { key:'premiere-physique-chimie', label:'Première Phy-Chimie', icon:'⚗️', color:'#ec4899', coeff:'Spé · DS lycées',
+    desc:'Physique-Chimie Première · Mécanique · Électricité · Chimie · 45 exercices corrigés',
+    data:[], links:{} },
+  { key:'sti2d-physique-chimie', label:'STI2D · Phy-Chimie', icon:'⚙️', color:'#10b981', coeff:'Voie techno · 2h',
+    desc:"Physique-Chimie STI2D · Épreuve spécifique · Mécanique · Électricité · Ondes · Chimie appliquée",
+    data:dataSTI2DPC, links:linksSTI2DPC },
+  { key:'stes-physique-chimie', label:'ST2S · Phy-Chimie', icon:'🏥', color:'#f43f5e', coeff:'Voie techno · 2h',
+    desc:"Physique-Chimie ST2S · Santé & Social · Ondes · Électricité · Chimie des médicaments",
+    data:dataSTESPC, links:linksSTESPC },
 ]
 
 // ════════════════════════════════════════════════════════════════
@@ -5632,7 +7907,7 @@ function PdfModal({ url, title, onClose }: { url:string; title:string; onClose:(
         <span style={{fontSize:18}}>📄</span>
         <div style={{flex:1,minWidth:0}}>
           <p style={{margin:'0 0 1px',fontWeight:700,fontSize:13,color:'white',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{title}</p>
-          <p style={{margin:0,fontSize:10,color:'rgba(255,255,255,0.35)'}}>📋 Source officielle APMEP (apmep.fr)</p>
+
         </div>
         <div style={{display:'flex',gap:8,flexShrink:0}}>
           <a href={downloadHref} download={isPdf} target="_blank" rel="noreferrer"
@@ -5738,7 +8013,9 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
       {/* NOTE INFO */}
       <div style={{background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.3)',
         borderRadius:12,padding:'14px 18px',marginBottom:24,fontSize:13}}>
-        ℹ️ <strong>Pas d'examen national en Première</strong> — Exercices couvrant tout le programme de Première Spécialité. Choisissez un chapitre ci-dessous.
+        ℹ️ <strong>Pas d'examen national en Première</strong> — Ces exercices proviennent des livrets
+        officiels du <strong>Lycée Henri-IV</strong> (Paris, 2024) et de <strong>Louis-le-Grand &amp; Henri-IV</strong> (LLG 2022),
+        couvrant tout le programme de Première Spécialité. Choisissez un chapitre ci-dessous.
       </div>
 
       {/* GRILLE CHAPITRES */}
@@ -5823,6 +8100,7 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
                       </div>
                       <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                         <span style={{fontSize:10,color:diffColor,fontWeight:700}}>{stars} (niv. {ex.difficulte})</span>
+                        <span style={{fontSize:10,color:'var(--muted)'}}>📚 {ex.source}</span>
                         {ex.notions.slice(0,2).map(n=>(
                           <span key={n} style={{fontSize:10,background:'var(--surface)',color:'var(--muted)',
                             border:'1px solid var(--border)',padding:'1px 6px',borderRadius:10}}>{n}</span>
@@ -5868,8 +8146,11 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
   )
 }
 
+type Matiere = 'maths' | 'physique-chimie' | null
+
 export default function ExamensFrancePage() {
   const router = useRouter()
+  const [matiere,setMatiere]           = useState<Matiere>(null)
   const [activeSec,setActiveSec]       = useState<SKey>('terminale-generale')
   const [selectedYear,setSelectedYear] = useState<number|null>(null)
   const [modal,setModal]               = useState<{url:string;title:string}|null>(null)
@@ -5879,8 +8160,116 @@ export default function ExamensFrancePage() {
   const anneeLinks = selectedYear ? sec.links[selectedYear] : null
   const ptTotal    = detail?.exercices.reduce((t,e)=>t+e.pts,0)??0
 
-  const openPdf          = (url:string,title:string) => setModal({url,title})
+  const openPdf = (url:string,title:string) => setModal({url,title})
   const lancerSimulation = () => router.push('/simulation-france')
+
+  const goSec = (key:SKey) => {
+    setActiveSec(key)
+    setSelectedYear(null)
+    const mathKeys:SKey[] = ['terminale-generale','terminale-maths-expertes','terminale-technologique','premiere-specialite','seconde-maths']
+    const pcKeys:SKey[] = ['terminale-physique-chimie','seconde-physique-chimie','sti2d-physique-chimie','stes-physique-chimie']
+    setMatiere(mathKeys.includes(key) ? 'maths' : 'physique-chimie')
+  }
+
+  // ── PAGE INTERMÉDIAIRE ──────────────────────────────────────
+  if (matiere === null) {
+    return (
+      <>
+        <Navbar/>
+        <main style={{position:'relative',zIndex:1,paddingTop:80,minHeight:'100vh'}}>
+          <div className="container" style={{paddingTop:64,paddingBottom:80,maxWidth:960}}>
+
+            <div style={{textAlign:'center',marginBottom:52}}>
+              <span className="label">📋 Examens Officiels · Bac France</span>
+              <h1 style={{fontSize:'clamp(28px,4vw,50px)',marginBottom:16,marginTop:12,lineHeight:1.15}}>
+                5 Ans d&#39;Annales Officielles<br/>
+                <span style={{background:'linear-gradient(90deg,#6366f1,#06b6d4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+                  2021 → 2025 · Sujets + Corrections PDF
+                </span>
+              </h1>
+              <p style={{color:'var(--text2)',fontSize:15,maxWidth:520,margin:'0 auto',lineHeight:1.7}}>
+                Choisissez votre matière pour accéder aux annales officielles du Baccalauréat général.
+              </p>
+            </div>
+
+            {/* CARTES MATIÈRES */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20,marginBottom:52}}>
+
+              {/* MATHS */}
+              <button
+                onClick={()=>{ setMatiere('maths'); setActiveSec('terminale-generale') }}
+                style={{padding:'36px 28px',background:'rgba(99,102,241,0.06)',border:'1.5px solid rgba(99,102,241,0.22)',borderRadius:20,cursor:'pointer',textAlign:'left',transition:'all 0.22s',fontFamily:'var(--font-body)'}}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-5px)';e.currentTarget.style.borderColor='rgba(99,102,241,0.55)';e.currentTarget.style.background='rgba(99,102,241,0.11)'}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.borderColor='rgba(99,102,241,0.22)';e.currentTarget.style.background='rgba(99,102,241,0.06)'}}>
+                <div style={{fontSize:52,marginBottom:14}}>📐</div>
+                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'#818cf8'}}>Mathématiques</h2>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.65,margin:'0 0 18px'}}>
+                  Spécialité Terminale · Maths Expertes · Techno STMG/STI2D · Première · Seconde
+                </p>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:20}}>
+                  {['Terminale Générale','Maths Expertes','Techno','Première','Seconde'].map(t=>(
+                    <span key={t} style={{fontSize:10,padding:'3px 9px',borderRadius:20,background:'rgba(99,102,241,0.12)',color:'#818cf8',fontWeight:600}}>{t}</span>
+                  ))}
+                </div>
+                <span style={{display:'inline-flex',alignItems:'center',gap:6,color:'#818cf8',fontWeight:700,fontSize:13}}>
+                  Voir les annales →
+                </span>
+              </button>
+
+              {/* PHYSIQUE-CHIMIE */}
+              <button
+                onClick={()=>{ setMatiere('physique-chimie'); setActiveSec('terminale-physique-chimie') }}
+                style={{padding:'36px 28px',background:'rgba(6,182,212,0.06)',border:'1.5px solid rgba(6,182,212,0.22)',borderRadius:20,cursor:'pointer',textAlign:'left',transition:'all 0.22s',fontFamily:'var(--font-body)'}}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-5px)';e.currentTarget.style.borderColor='rgba(6,182,212,0.55)';e.currentTarget.style.background='rgba(6,182,212,0.11)'}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.borderColor='rgba(6,182,212,0.22)';e.currentTarget.style.background='rgba(6,182,212,0.06)'}}>
+                <div style={{fontSize:52,marginBottom:14}}>⚗️</div>
+                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'#22d3ee'}}>Physique-Chimie</h2>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.65,margin:'0 0 18px'}}>
+                  Spécialité Terminale · Seconde · STI2D & ST2S (bientôt)
+                </p>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:20}}>
+                  {['Terminale Phy-Chimie','Seconde'].map(t=>(
+                    <span key={t} style={{fontSize:10,padding:'3px 9px',borderRadius:20,background:'rgba(6,182,212,0.12)',color:'#22d3ee',fontWeight:600}}>{t}</span>
+                  ))}
+                  {['STI2D','ST2S'].map(t=>(
+                    <span key={t} style={{fontSize:10,padding:'3px 9px',borderRadius:20,background:'rgba(255,255,255,0.04)',color:'var(--muted)',fontWeight:600}}>{t} bientôt</span>
+                  ))}
+                </div>
+                <span style={{display:'inline-flex',alignItems:'center',gap:6,color:'#22d3ee',fontWeight:700,fontSize:13}}>
+                  Voir les annales →
+                </span>
+              </button>
+
+              {/* SVT — bientôt */}
+              <button disabled
+                style={{padding:'36px 28px',background:'rgba(255,255,255,0.02)',border:'1.5px solid rgba(255,255,255,0.07)',borderRadius:20,cursor:'not-allowed',textAlign:'left',fontFamily:'var(--font-body)',opacity:0.45}}>
+                <div style={{fontSize:52,marginBottom:14}}>🌱</div>
+                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'var(--muted)'}}>SVT</h2>
+                <p style={{fontSize:13,color:'var(--muted)',lineHeight:1.65,margin:'0 0 18px'}}>
+                  Sciences de la Vie et de la Terre · Bientôt disponible
+                </p>
+                <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 14px',borderRadius:8,background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:12,fontWeight:600}}>
+                  🚧 En construction
+                </span>
+              </button>
+            </div>
+
+            {/* Lien Examens Tunisie */}
+            <div style={{textAlign:'center',paddingTop:32,borderTop:'1px solid var(--border)'}}>
+              <p style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>Cherchez les examens tunisiens ?</p>
+              <a href="/examens"
+                style={{display:'inline-flex',gap:8,alignItems:'center',padding:'11px 24px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,textDecoration:'none',color:'var(--text)',fontWeight:600,fontSize:13,transition:'all 0.18s'}}
+                onMouseEnter={e=>{ e.currentTarget.style.borderColor='rgba(220,38,38,0.4)'; e.currentTarget.style.transform='translateY(-2px)' }}
+                onMouseLeave={e=>{ e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.transform='none' }}>
+                🇹🇳 Examens Tunisie — Bac Maths · Sc.Ex · Techno
+              </a>
+            </div>
+          </div>
+        </main>
+        <Footer/>
+      </>
+    )
+  }
 
   return (
     <>
@@ -5891,8 +8280,16 @@ export default function ExamensFrancePage() {
         <div className="container" style={{paddingTop:40,paddingBottom:80}}>
 
           {/* HEADER */}
-          <div style={{marginBottom:40}}>
-            <span className="label">📋 Examens Officiels Bac France</span>
+          <div style={{marginBottom:36}}>
+            <button onClick={()=>{setMatiere(null);setSelectedYear(null)}}
+              style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 14px',borderRadius:9,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--muted)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'var(--font-body)',marginBottom:14,transition:'all 0.15s'}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(99,102,241,0.45)'}
+              onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+              ← Toutes les matières
+            </button>
+            <span className="label" style={{marginLeft:8,fontSize:11}}>
+              {matiere==='maths'?'📐 Mathématiques':'⚗️ Physique-Chimie'}
+            </span>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',marginBottom:14}}>
               5 Ans d'Examens Officiels<br/>
               <span style={{color:'var(--accent)'}}>2021 → 2025 · Sujets + Corrections PDF</span>
@@ -5901,26 +8298,58 @@ export default function ExamensFrancePage() {
               Cliquez sur <strong>📄 Sujet</strong> ou <strong>✅ Correction</strong> pour lire le PDF
               directement ici — sans quitter le site. Bouton <strong>⬇ Télécharger</strong> disponible dans le viewer.
             </p>
-            <div style={{display:'inline-flex',gap:10,alignItems:'center',padding:'8px 16px',background:'rgba(79,110,247,0.08)',border:'1px solid rgba(79,110,247,0.2)',borderRadius:10}}>
-              <span style={{fontSize:14}}>🏛️</span>
-              <span style={{fontSize:12,color:'var(--text2)'}}>
-                Source officielle : <strong style={{color:'var(--accent)'}}>APMEP</strong> — Association des Professeurs de Mathématiques de l'Enseignement Public
-              </span>
-            </div>
+
           </div>
 
-          {/* ONGLETS SECTIONS */}
-          <div style={{display:'flex',gap:6,flexWrap:'nowrap',overflowX:'auto',marginBottom:32,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:6}}>
-            {SECTIONS.map(s=>(
-              <button key={s.key} onClick={()=>{setActiveSec(s.key);setSelectedYear(null)}}
-                style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:13,fontWeight:600,transition:'all 0.2s',
-                  background:activeSec===s.key?s.color:'transparent',
-                  color:activeSec===s.key?'white':'var(--muted)',
-                  boxShadow:activeSec===s.key?`0 4px 16px ${s.color}45`:'none'}}>
-                <span>{s.icon}</span><span>{s.label}</span>
-                <span style={{fontSize:10,background:activeSec===s.key?'rgba(255,255,255,0.22)':'var(--surface2)',padding:'1px 7px',borderRadius:8}}>{s.coeff}</span>
-              </button>
-            ))}
+          
+          {/* ONGLETS — 2 lignes : Maths / Physique-Chimie */}
+          <div style={{marginBottom:28,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:15,padding:'8px 8px 6px',display:'flex',flexDirection:'column',gap:5}}>
+            {/* Ligne Mathématiques */}
+            {matiere==='maths' && (
+              <div style={{display:'flex',gap:3,alignItems:'center',flexWrap:'wrap'}}>
+                <span style={{fontSize:11,paddingLeft:6,paddingRight:6,color:'var(--muted)',fontWeight:700}}>📐</span>
+                {SECTIONS.filter(s=>(['terminale-generale','terminale-maths-expertes','terminale-technologique','premiere-specialite','seconde-maths'] as SKey[]).includes(s.key)).map(s=>(
+                  <button key={s.key} onClick={()=>goSec(s.key)}
+                    style={{display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:9,border:`1px solid ${activeSec===s.key?s.color:'transparent'}`,cursor:'pointer',fontFamily:'var(--font-body)',fontSize:12,fontWeight:600,transition:'all 0.16s',whiteSpace:'nowrap',
+                      background:activeSec===s.key?`${s.color}16`:'transparent',
+                      color:activeSec===s.key?s.color:'var(--muted)'}}>
+                    <span>{s.icon}</span>
+                    <span>{s.label}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}20`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)'}}>{s.coeff}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Ligne Physique-Chimie */}
+            {matiere==='physique-chimie' && (
+              <div style={{display:'flex',gap:3,alignItems:'center',flexWrap:'wrap'}}>
+                <span style={{fontSize:11,paddingLeft:6,paddingRight:6,color:'var(--muted)',fontWeight:700}}>⚗️</span>
+                {SECTIONS.filter(s=>(['terminale-physique-chimie','premiere-physique-chimie','seconde-physique-chimie'] as SKey[]).includes(s.key)).map(s=>(
+                  <button key={s.key} onClick={()=>goSec(s.key)}
+                    style={{display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:9,border:`1px solid ${activeSec===s.key?s.color:'transparent'}`,cursor:'pointer',fontFamily:'var(--font-body)',fontSize:12,fontWeight:600,transition:'all 0.16s',whiteSpace:'nowrap',
+                      background:activeSec===s.key?`${s.color}16`:'transparent',
+                      color:activeSec===s.key?s.color:'var(--muted)'}}>
+                    <span>{s.icon}</span>
+                    <span>{s.label}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}20`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)'}}>{s.coeff}</span>
+                  </button>
+                ))}
+                {/* STI2D + ST2S Physique-Chimie — actifs */}
+                {(['sti2d-physique-chimie','stes-physique-chimie'] as SKey[]).map(key=>{
+                  const s = SECTIONS.find(x=>x.key===key)!
+                  return (
+                    <button key={s.key} onClick={()=>goSec(s.key)}
+                      style={{display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:9,border:`1px solid ${activeSec===s.key?s.color:'transparent'}`,cursor:'pointer',fontFamily:'var(--font-body)',fontSize:12,fontWeight:600,transition:'all 0.16s',whiteSpace:'nowrap',
+                        background:activeSec===s.key?`${s.color}16`:'transparent',
+                        color:activeSec===s.key?s.color:'var(--muted)'}}>
+                      <span>{s.icon}</span>
+                      <span>{s.label}</span>
+                      <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}20`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)'}}>{s.coeff}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* BANNIÈRE SECTION */}
@@ -5936,12 +8365,9 @@ export default function ExamensFrancePage() {
               </div>
             </div>
             <div style={{fontSize:12,color:'var(--muted)',textAlign:'right'}}>
-              {activeSec === 'seconde' ? (<>
-                <div>📘 {CHAPITRES_SECONDE.length} thèmes · {CHAPITRES_SECONDE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
-                <div style={{marginTop:4}}>📚 Exercices originaux — niveaux ★ à ★★★★</div>
-              </>) : activeSec === 'premiere-specialite' ? (<>
+              {activeSec === 'premiere-specialite' ? (<>
                 <div>📗 {CHAPITRES_PREMIERE.length} chapitres · {CHAPITRES_PREMIERE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
-                <div style={{marginTop:4}}>📚 Exercices originaux</div>
+                <div style={{marginTop:4}}>📚 Sources : Lycée Henri-IV (2024) + LLG (2022)</div>
               </>) : (<>
                 <div>📅 2021 → 2025 · 5 années</div>
                 <div style={{marginTop:4}}>📄 Sujet + ✅ Correction par centre d'examen</div>
@@ -5961,11 +8387,15 @@ export default function ExamensFrancePage() {
             </button>
           </div>
 
-          {/* GRILLE ANNÉES ou DS PREMIÈRE */}
-          {activeSec === 'seconde' ? (
+          {/* GRILLE ANNÉES ou DS PREMIÈRE ou SECONDE */}
+          {activeSec === 'seconde-maths' ? (
             <PremiereView chapitres={CHAPITRES_SECONDE}/>
           ) : activeSec === 'premiere-specialite' ? (
             <PremiereView chapitres={CHAPITRES_PREMIERE}/>
+          ) : activeSec === 'seconde-physique-chimie' ? (
+            <PremiereView chapitres={CHAPITRES_SECONDE_PC}/>
+          ) : activeSec === 'premiere-physique-chimie' ? (
+            <PremiereView chapitres={CHAPITRES_PREMIERE_PC}/>
           ) : (
             <div>
           <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14,fontWeight:600}}>
@@ -6009,8 +8439,6 @@ export default function ExamensFrancePage() {
                 </div>
                 <p style={{fontSize:13,color:'var(--muted)',margin:0}}>
                   Barème total : <strong style={{color:'var(--text)'}}>{ptTotal}/20</strong>
-                  {' · '}Source : <strong>APMEP (apmep.fr)</strong>
-                  {' · '}Cliquez → PDF dans la page directement
                 </p>
               </div>
 
@@ -6034,50 +8462,37 @@ export default function ExamensFrancePage() {
                   ))}
                 </div>
               </div>
-
-              {/* Source */}
-              <div style={{padding:'8px 14px',background:'var(--surface2)',borderRadius:10,fontSize:11,color:'var(--muted)',display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
-                <span>🏛️</span>
-                <span>Sources officielles :</span>
-                <a href="https://www.apmep.fr/Annales-Terminale-Generale" target="_blank" rel='noreferrer' style={{color:'var(--accent)'}}>APMEP — apmep.fr</a>
-                <span>·</span>
-                <a href="https://www.apmep.fr/Annee-2025" target="_blank" rel='noreferrer' style={{color:'var(--accent)'}}>Annales 2021–2025</a>
-              </div>
             </div>
           )}
             </div>
           )}{/* fin ternaire premiere / normal */}
 
-          {/* AUTRES SECTIONS */}
-          <div style={{marginTop:52,paddingTop:36,borderTop:'1px solid var(--border)'}}>
-            <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16,fontWeight:600}}>Autres sections</p>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12}}>
-              {SECTIONS.filter(s=>s.key!==activeSec).map(s=>(
-                <button key={s.key}
-                  onClick={()=>{setActiveSec(s.key);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
-                  style={{display:'flex',gap:12,alignItems:'center',padding:16,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,cursor:'pointer',textAlign:'left',transition:'all 0.2s',fontFamily:'var(--font-body)'}}
-                  onMouseEnter={e=>{e.currentTarget.style.borderColor=`${s.color}60`;e.currentTarget.style.transform='translateY(-2px)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}>
-                  <span style={{fontSize:26}}>{s.icon}</span>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label}</div>
-                    <div style={{fontSize:10,color:s.color,fontWeight:600,marginTop:2}}>{s.coeff} · 5 années</div>
-                  </div>
-                </button>
-              ))}
-              <a href='/examens' style={{display:'flex',gap:12,alignItems:'center',padding:16,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,textDecoration:'none',transition:'all 0.2s'}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(220,38,38,0.5)';e.currentTarget.style.transform='translateY(-2px)'}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}>
-                <span style={{fontSize:26}}>🇹🇳</span>
-                <div>
-                  <div style={{fontWeight:700,fontSize:13,color:'var(--text)'}}>Examens Tunisie</div>
-                  <div style={{fontSize:10,color:'#4f6ef7',fontWeight:600,marginTop:2}}>Bac Maths · Sc.Ex · Techno · Info</div>
-                </div>
+          {/* seconde-physique-chimie rendu via PremiereView ci-dessus */}
+
+          {/* NAVIGATION BAS */}
+          <div style={{marginTop:48,paddingTop:32,borderTop:'1px solid var(--border)',display:'flex',gap:12,flexWrap:'wrap',alignItems:'center',justifyContent:'space-between'}}>
+            <button onClick={()=>{setMatiere(null);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
+              style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 20px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,cursor:'pointer',fontFamily:'var(--font-body)',fontWeight:700,fontSize:13,color:'var(--text)',transition:'all 0.18s'}}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.45)';e.currentTarget.style.transform='translateY(-1px)'}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}>
+              ← Toutes les matières
+            </button>
+            <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+              <button
+                onClick={()=>{const next=matiere==='maths'?'physique-chimie':'maths';const sec=next==='maths'?'terminale-generale':'terminale-physique-chimie';setMatiere(next as Matiere);setActiveSec(sec as SKey);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,cursor:'pointer',fontFamily:'var(--font-body)',fontWeight:600,fontSize:12,color:'var(--muted)',transition:'all 0.18s'}}
+                onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(6,182,212,0.4)'}
+                onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+                {matiere==='maths'?'⚗️ Aller en Physique-Chimie':'📐 Aller en Mathématiques'}
+              </button>
+              <a href='/examens'
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,textDecoration:'none',fontWeight:600,fontSize:12,color:'var(--muted)',transition:'all 0.18s'}}
+                onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(220,38,38,0.4)'}
+                onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
+                🇹🇳 Examens Tunisie
               </a>
             </div>
-          </div>
-
-        </div>
+          </div></div>
       </main>
       <Footer/>
 

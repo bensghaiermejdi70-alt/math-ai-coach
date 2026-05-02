@@ -127,6 +127,8 @@ export default function RegisterPage() {
                   <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:500 }}>Téléphone</label>
                   <input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="2X XXX XXX" className="input" style={{ borderRadius:10 }} />
                 </div>
+
+
               </>
             )}
 
