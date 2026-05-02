@@ -45,6 +45,8 @@ const SECTION_CONFIGS = [
     themes:['Fonctions & Suites (STMG)','Stats 2 var. (STMG)','Probas & Finance (STMG)','Suites & Expo/Ln (STI2D)','Intégration & Probas (STI2D)','Géométrie espace (STI2D)'] },
   { key:'expertes',  label:'Maths-Expertes', color:'#8b5cf6', icon:'★',
     themes:['Arithmétique (PGCD, Bézout, Fermat)','Complexes (Moivre, racines n-ièmes)','Graphes & Matrices','Chaînes de Markov'] },
+  { key:'seconde',   label:'Seconde Générale', color:'#10b981', icon:'📘',
+    themes:['Algorithmique & Python','Nombres & Calculs','Intervalles & Inéquations','Calcul Littéral','Fonctions & Variations','Géométrie & Vecteurs','Statistiques & Probabilités'] },
 ]
 
 // ─── Sujets officiels Terminale Générale 2021-2025 (enrichi) ────────────
@@ -1875,7 +1877,179 @@ const CHAPITRES_PAR_SECTION: Record<string, {
     ],
   },
 
+  // ─── Seconde Générale — 7 thèmes (source: /bac-france/maths/seconde) ───
+  seconde: { key:'seconde', label:'Seconde Générale — Mathématiques', color:'#10b981', icon:'📘',
+    chapitres: [
+      { slug:'python-seconde',       titre:'Algorithmique & Python',               badge:'Info',      desc:'Variables, types, conditions if/elif/else, boucles for/while, fonctions def/return, listes, algorithmes classiques : tri selection, dichotomie, seuil.' },
+      { slug:'nombres-calculs',      titre:'Nombres & Calculs',                    badge:'Algèbre',   desc:'Puissances et proprietes (a^m*a^n=a^(m+n)), racines carrees (simplification, rationalisation), PGCD par Euclide, PPCM, ensembles N Z Q R, notation scientifique.' },
+      { slug:'intervalles-inequations', titre:'Intervalles, Inégalités & Inéquations', badge:'Analyse', desc:'Notations intervalles, proprietes des inegalites (changement de sens), resolution inéquations 1er degre, valeur absolue |x-a|<r, encadrements.' },
+      { slug:'calcul-litteral',      titre:'Calcul Littéral',                      badge:'Algèbre',   desc:'Identites remarquables (a+b)^2 (a-b)^2 (a+b)(a-b), factorisation, produit nul, fractions algebriques, simplification, equations du 2nd degre, discriminant.' },
+      { slug:'fonctions-seconde',    titre:'Fonctions — Variations & Signes',      badge:'Analyse',   desc:'Image, antecedent, tableau de variations, extremums, fonctions de reference (x^2, 1/x, racine), parite, resolutions graphiques, tableau de signes.' },
+      { slug:'geometrie-vecteurs',   titre:'Géométrie — Vecteurs & Droites',       badge:'Géométrie', desc:'Coordonnees de vecteurs, operations, colinearite (determinant), equations de droites, coefficient directeur, positions relatives, perpendiculaire, Thalès, Pythagore.' },
+      { slug:'stats-probas-seconde', titre:'Statistiques & Probabilités',          badge:'Stats',     desc:'Moyenne, mediane, quartiles, ecart-type, taux d evolution, coefficient multiplicateur, probabilites (equiprobabilite, complementaire, union), intervalle de fluctuation.' },
+    ],
+  },
+
 }
+// ════════════════════════════════════════════════════════════════════
+//  PHYSIQUE-CHIMIE FRANCE — Configs, Archives et Chapitres
+//  Sources : sujetdebac.fr + apmep.fr (vérifié dans examens-france)
+//  Sections : Terminale + Première + STI2D + ST2S
+// ════════════════════════════════════════════════════════════════════
+
+const SECTION_CONFIGS_PHYS_FR = [
+  { key:'terminale-phys', label:'Terminale Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
+    themes:['Ondes et signaux','Mécanique','Énergie','Chimie organique','Optique','Électricité'] },
+  { key:'premiere-phys',  label:'Première Spécialité — Physique-Chimie', color:'#4f6ef7', icon:'🔬',
+    themes:['Constitution matière','Mécanique','Ondes','Chimie','Électricité','Optique'] },
+  { key:'seconde-phys',   label:'Seconde — Physique-Chimie',              color:'#f97316', icon:'🔬',
+    themes:['Atomes','Transformations chimiques','Mouvement','Forces','Ondes','Énergie'] },
+  { key:'sti2d-phys',    label:'Terminale STI2D — Physique-Chimie',      color:'#10b981', icon:'⚙️',
+    themes:['Mécanique','Électricité','Ondes','Thermodynamique','Chimie des matériaux'] },
+  { key:'st2s-phys',     label:'Terminale ST2S — CBPH',                   color:'#8b5cf6', icon:'🏥',
+    themes:['Chimie biologie','Acide-base','Oxydoréduction','Ondes médicales','Physique santé'] },
+]
+
+const ARCHIVES_PHYS_FR: Archive[] = [
+  // ── Terminale Générale Physique-Chimie (sujetdebac.fr) ────────────────────
+  { id:'tphys-2024-m', year:2024, session:'Terminale · Physique-Chimie · Métropole · juin 2024', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2024/terminale-physique-chimie-2024-metropole-sujet-officiel.pdf`, themes:['Ondes sonores','Mécanique quantique','Chimie organique','Électricité'] },
+  { id:'tphys-2024-m2', year:2024, session:'Terminale · Physique-Chimie · Métropole · remplacement 2024', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2024/terminale-physique-chimie-2024-metropole-remplacement-sujet-officiel.pdf`, themes:['Mécanique','Ondes','Chimie'] },
+  { id:'tphys-2023-m', year:2023, session:'Terminale · Physique-Chimie · Métropole · mars 2023', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2023/terminale-physique-chimie-2023-metropole-sujet-officiel.pdf`, themes:['Physique quantique','Mécanique','Ondes','Chimie organique'] },
+  { id:'tphys-2022-m', year:2022, session:'Terminale · Physique-Chimie · Métropole · mai 2022', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2022/terminale-physique-chimie-2022-metropole-sujet-officiel.pdf`, themes:['Mécanique','Ondes','Chimie','Énergie'] },
+  { id:'tphys-2021-m', year:2021, session:'Terminale · Physique-Chimie · Métropole · juin 2021', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2021/terminale-physique-chimie-2021-metropole-sujet-officiel.pdf`, themes:['Optique','Mécanique','Chimie organique'] },
+  { id:'tphys-2024-an', year:2024, session:'Terminale · Physique-Chimie · Amérique du Nord 2024', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2024/terminale-physique-chimie-2024-amerique-du-nord-sujet-officiel.pdf`, themes:['Mécanique quantique','Ondes','Chimie'] },
+  { id:'tphys-2023-an', year:2023, session:'Terminale · Physique-Chimie · Amérique du Nord 2023', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2023/terminale-physique-chimie-2023-amerique-du-nord-sujet-officiel.pdf`, themes:['Physique quantique','Mécanique','Chimie'] },
+  // ── Première Spécialité Physique-Chimie ───────────────────────────────────
+  { id:'pphys-2024-m', year:2024, session:'Première · Physique-Chimie · Métropole · 2024', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2024/premiere-spe-physique-chimie-2024-metropole-sujet-officiel.pdf`, themes:['Constitution matière','Ondes','Mécanique','Chimie'] },
+  { id:'pphys-2023-m', year:2023, session:'Première · Physique-Chimie · Métropole · 2023', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2023/premiere-spe-physique-chimie-2023-metropole-sujet-officiel.pdf`, themes:['Optique','Mécanique','Chimie','Constitution'] },
+  { id:'pphys-2022-m', year:2022, session:'Première · Physique-Chimie · Métropole · 2022', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2022/premiere-spe-physique-chimie-2022-metropole-sujet-officiel.pdf`, themes:['Constitution','Ondes','Mécanique','Chimie'] },
+  // ── Terminale STI2D Physique-Chimie ───────────────────────────────────────
+  { id:'sti-2025-m', year:2025, session:'STI2D · Physique-Chimie-Maths · Métropole · juin 2025', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-sujet-officiel.pdf`, themes:['Mécanique','Électricité','Ondes','Chimie matériaux'] },
+  { id:'sti-2025-s', year:2025, session:'STI2D · Remplacement · sept. 2025', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-remplacement-sujet-officiel.pdf`, themes:['Mécanique','Électricité','Chimie'] },
+  { id:'sti-2024-m', year:2024, session:'STI2D · Physique-Chimie · Métropole · 2024', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${AP}/STI2D_metropole_19_juin_2024__FH2.pdf`, themes:['Mécanique','Ondes','Chimie','Électricité'] },
+  { id:'sti-2023-m', year:2023, session:'STI2D · Physique-Chimie · Métropole · 2023', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2023/sti2d-spe-physique-chimie-mathematiques-2023-metropole-sujet-officiel.pdf`, themes:['Mécanique','Ondes','Chimie','Thermique'] },
+  { id:'sti-2022-m', year:2022, session:'STI2D · Physique-Chimie · Métropole · 2022', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2022/sti2d-spe-physique-chimie-mathematiques-2022-metropole-sujet-officiel.pdf`, themes:['Mécanique','Électricité','Chimie','Ondes'] },
+  { id:'sti-2021-m', year:2021, session:'STI2D · Physique-Chimie · Métropole · 2021', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${AP}/STI2D_juin_2021_Metropole_DV.pdf`, themes:['Mécanique','Ondes','Chimie matériaux'] },
+  // ── Terminale ST2S CBPH ───────────────────────────────────────────────────
+  { id:'st2s-2025-m', year:2025, session:'ST2S · CBPH · Métropole · juin 2025', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-metropole-sujet-officiel.pdf`, themes:['Acide-base santé','Biologie','Physique médicale'] },
+  { id:'st2s-2024-m', year:2024, session:'ST2S · CBPH · Métropole · juin 2024', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2024/st2s-spe-chimie-bio-physiopat-humaines-2024-metropole-sujet-officiel.pdf`, themes:['Chimie biologie','Oxydoréduction','Physique santé'] },
+  { id:'st2s-2023-m', year:2023, session:'ST2S · CBPH · Métropole · juin 2023', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2023/st2s-spe-chimie-bio-physiopat-humaines-2023-metropole-sujet-officiel.pdf`, themes:['Chimie médicale','Biologie','Physique santé'] },
+  { id:'st2s-2022-m', year:2022, session:'ST2S · CBPH · Métropole · juin 2022', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2022/st2s-spe-chimie-bio-physiopat-humaines-2022-metropole-sujet-officiel.pdf`, themes:['Acide-base','Biologie humaine','Physique médicale'] },
+  { id:'st2s-2021-m', year:2021, session:'ST2S · CBPH · Métropole · juin 2021', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2021/st2s-spe-chimie-bio-physiopat-humaines-2021-metropole-sujet-officiel.pdf`, themes:['Chimie biologie','Santé','Physique médicale'] },
+]
+
+const CHAPITRES_PHYS_FR: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+
+  // ══ TERMINALE GÉNÉRALE — PHYSIQUE-CHIMIE ═══════════════════════════════════
+  // Programme Physique-Chimie Terminale Générale (BO 2019, programme 2021+)
+  'terminale-phys': {
+    key:'terminale-phys', label:'Terminale Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'meca-cin',         titre:"Mécanique — Cinématique & Dynamique",    badge:"Physique",     desc:"2ème loi de Newton ΣF=ma, équations horaires, chute libre, plan incliné, frottement, énergie cinétique Ec=½mv², travail W=F·d·cosθ, puissance." },
+      { slug:'gravitation',      titre:"Gravitation universelle",                badge:"Physique",     desc:"Loi de gravitation F=G·m₁m₂/r², champ gravitationnel g=GM/r², satellites (lois de Kepler T²/R³=cte), vitesse de libération, orbites." },
+      { slug:'energie-mecanique', titre:"Énergie mécanique",                    badge:"Physique",     desc:"Énergie cinétique, potentielle (de pesanteur et élastique), mécanique, conservation et non-conservation, travail des forces, puissance." },
+      { slug:'oscillateurs',     titre:"Oscillateurs harmoniques",               badge:"Physique",     desc:"Pendule simple T=2π√(l/g), oscillateur masse-ressort T=2π√(m/k), énergie, analogie avec LC, amortissement." },
+      { slug:'ondes-progressives',titre:"Ondes progressives — Caractéristiques", badge:"Physique",    desc:"Célérité v=λf, période, longueur d'onde, retard τ=d/v, déphasage, ondes transversales et longitudinales, double slit." },
+      { slug:'physique-quantique',titre:"Physique quantique",                    badge:"Physique",     desc:"Dualité onde-corpuscule, photon E=hf, effet photoélectrique, modèle de Bohr, niveaux d'énergie, transitions, spectre d'émission/absorption." },
+      { slug:'optique-ondulatoire',titre:"Optique ondulatoire",                  badge:"Physique",     desc:"Interférences (fentes d'Young, i=λD/a), diffraction (θ≈λ/a), polarisation, réseau de diffraction nλ=d·sinθ, cohérence." },
+      { slug:'induction-lenz',   titre:"Induction — Faraday & Lenz",            badge:"Physique",     desc:"Flux magnétique Φ=BS·cosθ, loi de Faraday e=-dΦ/dt, loi de Lenz (opposition), auto-induction e=-L·di/dt, transformateur." },
+      { slug:'courants-alternatifs',titre:"Courants alternatifs — RLC",          badge:"Physique",     desc:"Valeurs efficaces, impédances ZR=R, ZL=Lω, ZC=1/(Cω), circuit série RLC, résonance fréquence f₀=1/(2π√LC), facteur de qualité Q." },
+      { slug:'thermodynamique',  titre:"Thermodynamique",                        badge:"Physique",     desc:"Systèmes thermodynamiques, échanges d'énergie, capacité thermique Q=mc·ΔT, bilan énergétique, diagramme énergie, rendements thermiques." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'chimie-organ-struct',titre:"Chimie organique — Structure",         badge:"Chimie",       desc:"Familles de composés (alcanes, alcènes, alcools, acides, esters, amines, amides), isomérie de constitution, représentation topologique, nomenclature." },
+      { slug:'chimie-organ-reactions',titre:"Chimie organique — Réactions",      badge:"Chimie",       desc:"Substitution, addition, élimination, estérification-hydrolyse, polymérisations (addition, condensation), mécanismes réactionnels, effets stériques." },
+      { slug:'transformations-acides', titre:"Transformations acide-base",       badge:"Chimie",       desc:"Couples acide/base, constante Ka, pKa, pH, titrages (courbe, point équivalence, indicateurs), tampons, réaction prépondérante (pKa)." },
+      { slug:'oxydoreduction',   titre:"Réactions d'oxydoréduction",             badge:"Chimie",       desc:"Nombres d'oxydation, couples Ox/Red, électrochimie (pile, électrolyse), demi-équations rédox, loi de Faraday, applications industrielles." },
+      { slug:'cinetique-chimique',titre:"Cinétique chimique",                    badge:"Chimie",       desc:"Vitesse de réaction, facteurs cinétiques (T, concentration, catalyseur), temps de demi-réaction t₁/₂, suivi (spectrophotométrie, conductimétrie)." },
+      { slug:'equilibres-chimiques',titre:"Équilibres chimiques",                badge:"Chimie",       desc:"Constante d'équilibre K, quotient de réaction Qr, déplacement d'équilibre (Le Chatelier), taux d'avancement, optimisation industrielle." },
+      { slug:'chimie-verte',     titre:"Chimie verte & Développement durable",   badge:"Chimie",       desc:"12 principes de chimie verte, économie d'atomes, réactions en flux continu, solvants verts, biocarburants, CO₂ supercritique, bilan carbone." },
+    ],
+  },
+
+  // ══ PREMIÈRE SPÉCIALITÉ — PHYSIQUE-CHIMIE ══════════════════════════════════
+  // Programme Physique-Chimie Première Spécialité (BO 2019)
+  'premiere-phys': {
+    key:'premiere-phys', label:'Première Spécialité — Physique-Chimie', color:'#4f6ef7', icon:'🔬',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'constitution-matiere', titre:"Constitution et transformation de la matière", badge:"Physique/Chimie", desc:"Atomes, ions, molécules, liaisons chimiques (ionique, covalente), électronégativité, solides cristallins (ionique, moléculaire, covalent, métallique)." },
+      { slug:'modele-quantique',  titre:"Modèle quantique de l'atome",           badge:"Physique",     desc:"Orbitales atomiques (s,p,d), configuration électronique, tableau périodique, liaisons de valence, VSEPR, géométrie moléculaire (AXnEm)." },
+      { slug:'spectroscopie',    titre:"Spectroscopies IR et RMN",               badge:"Physique",     desc:"Spectroscopie IR (groupes fonctionnels, liaisons C=O, O-H, N-H), spectre RMN ¹H (déplacement chimique, multiplicité, intégration, identification)." },
+      { slug:'optique-geometrique',titre:"Optique géométrique",                  badge:"Physique",     desc:"Réfraction (loi de Snell-Descartes n₁sinθ₁=n₂sinθ₂), réflexion totale interne, lentilles minces, relation conjugaison 1/f'=1/OA'-1/OA, grandissement." },
+      { slug:'signaux-visuels',  titre:"Signaux et images",                      badge:"Physique",     desc:"Formation d'images (lentilles, appareil photo), persistance rétinienne, couleurs (synthèse additive/soustractive), spectre visible, radiations monochromatiques." },
+      { slug:'ondes-1re',        titre:"Ondes mécaniques et sonores",            badge:"Physique",     desc:"Propagation, période T, fréquence f, longueur d'onde λ=vT, ondes sonores (spectre audible), ultrason (échographie), effet Doppler Δf/f=v_S/v." },
+      { slug:'electricite-1re',  titre:"Électricité — Dipôles et lois",          badge:"Physique",     desc:"Dipôles R, L, C, lois de Kirchhoff, diviseur de tension, pont de Wheatstone, associations série/parallèle, puissance et énergie électrique." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'chimie-organ-1re', titre:"Chimie organique — Familles et réactions", badge:"Chimie",    desc:"Groupes caractéristiques (hydroxyle, carbonyle, carboxyle, amine, ester), réactions de substitution (halogénation), addition (HX sur alcène), élimination." },
+      { slug:'acide-base-1re',   titre:"Acides et bases — pH et Ka",            badge:"Chimie",       desc:"pH=-log[H₃O⁺], Ka, pKa, acides/bases forts et faibles, diagramme de prédominance, solution tampon, dosage acide-base (indicateurs, pH-métrique)." },
+      { slug:'oxydoreduction-1re',titre:"Oxydoréduction — Couples Ox/Red",      badge:"Chimie",       desc:"Nombre d'oxydation, couples rédox, équilibrage demi-équations (méthode des e⁻), réactions spontanées, prévision (classement par potentiel standard)." },
+      { slug:'cinet-1re',        titre:"Cinétique chimique — Suivi temporel",   badge:"Chimie",       desc:"Vitesse volumique de réaction, suivi temporel (spectrophotométrie Beer-Lambert, conductimétrie), facteurs cinétiques, temps de demi-réaction t₁/₂." },
+    ],
+  },
+
+  // ══ SECONDE — PHYSIQUE-CHIMIE ══════════════════════════════════════════════
+  // Programme Physique-Chimie Seconde (BO 2019) — Enseignement commun
+  // Source: /bac-france/physique/seconde/[slug]
+  'seconde-phys': {
+    key:'seconde-phys', label:'Seconde — Physique-Chimie', color:'#f97316', icon:'🔬',
+    chapitres: [
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'atomes-noyau',            titre:"Atomes, noyaux & Tableau périodique",    badge:"Chimie",    desc:"Structure atomique (protons, neutrons, électrons), isotopes, notation AZX, configuration électronique (couches K,L,M), tableau périodique (familles, périodes, métaux/non-métaux)." },
+      { slug:'transformations-chimiques',titre:"Transformations chimiques",             badge:"Chimie",    desc:"Réactions chimiques (réactifs, produits, conservation masse), équilibrage, avancement x, réactif limitant, transformations totales et équilibrées, écriture des équations." },
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'description-mouvement',   titre:"Description du mouvement",              badge:"Physique",  desc:"Référentiel, trajectoire (rectiligne, circulaire, courbe), vecteur position et vitesse, vitesse scalaire v=d/t, mouvement uniforme et accéléré, chronophotographie." },
+      { slug:'forces-interactions',     titre:"Forces & Interactions",                 badge:"Physique",  desc:"Interactions gravitationnelle (F=Gm₁m₂/r²) et électrique (Coulomb), caractéristiques d'une force (point, direction, sens, valeur), poids P=mg, Newton 1 et 3 (actions-réactions)." },
+      { slug:'ondes-mecaniques-2',      titre:"Ondes mécaniques & sonores",            badge:"Physique",  desc:"Ondes progressives (transversales, longitudinales), célérité v=λ·f, période T, longueur d'onde λ, retard τ=d/v, ondes sonores (fréquence, intensité en dB), ultrasons." },
+      { slug:'ondes-lumineuses',        titre:"Ondes lumineuses & Lentilles",          badge:"Physique",  desc:"Nature ondulatoire de la lumière, spectre visible (400-800nm), dispersion (prisme, arc-en-ciel), lentilles minces convergentes (foyers, relation conjugaison 1/f'=1/v-1/u, grandissement)." },
+      { slug:'signaux-electriques-2',   titre:"Signaux électriques & Circuits",        badge:"Physique",  desc:"Grandeurs électriques (tension U, intensité I, résistance R), loi d'Ohm U=RI, circuit série et parallèle, lois de Kirchhoff (nœuds, mailles), puissance P=UI, énergie W=P·t." },
+      { slug:'formes-energie',          titre:"Formes d'énergie",                      badge:"Physique",  desc:"Énergie cinétique Ec=½mv², énergie potentielle de pesanteur Ep=mgh, énergie mécanique Em=Ec+Ep, énergie interne, chimique, rayonnante, nucléaire — conversions, conservation." },
+      { slug:'bilans-energetiques-2',   titre:"Bilans & Conversions d'énergie",        badge:"Physique",  desc:"Bilan énergétique global, rendement η=E_utile/E_fournie (%), transferts thermiques (conduction, convection, rayonnement), puissance P=E/t, développement durable et ressources." },
+    ],
+  },
+
+  // ══ TERMINALE STI2D — PHYSIQUE-CHIMIE ════════════════════════════════════
+  // Programme Physique-Chimie STI2D (mathématiques + PC combinés)
+  'sti2d-phys': {
+    key:'sti2d-phys', label:'Terminale STI2D — Physique-Chimie', color:'#10b981', icon:'⚙️',
+    chapitres: [
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'sti-mecanique',    titre:"Mécanique — Lois de Newton",             badge:"Physique STI2D", desc:"2ème loi de Newton (translation/rotation), moment d'une force, équilibres, machines (leviers, engrenages), travail, puissance, rendement mécanique." },
+      { slug:'sti-energetique',  titre:"Conversions et bilans énergétiques",     badge:"Physique STI2D", desc:"Énergies électrique (P=UI), mécanique (Ec=½mv²), thermique (Q=mcΔT), chimique, conversion et stockage, rendement η=E_utile/E_fournie, bilan global." },
+      { slug:'sti-ondes-mec',   titre:"Ondes mécaniques — Applications",         badge:"Physique STI2D", desc:"Propagation, v=λf, retard d/v, ondes sonores (décibels dB), ultrasons (contrôle non destructif, échographie), vibrations structure, résonance." },
+      { slug:'sti-elec',        titre:"Électricité — Circuits et dipôles",       badge:"Physique STI2D", desc:"Dipôles R, L, C, régimes transitoires RC (τ=RC) et RL (τ=L/R), circuits RLC, courant alternatif, valeurs efficaces, puissance active/réactive." },
+      { slug:'sti-optique',     titre:"Optique — Réfraction et instruments",      badge:"Physique STI2D", desc:"Réfraction n₁sinθ₁=n₂sinθ₂, angle limite, fibre optique, lentilles minces, formation d'images, appareil photo, loupe, microscope, lunette." },
+      { slug:'sti-thermique',   titre:"Thermique — Transferts thermiques",        badge:"Physique STI2D", desc:"Conduction (Fourier), convection, rayonnement (Stefan-Boltzmann), résistance thermique R=e/(λS), bilan énergétique habitat, isolation." },
+      { slug:'sti-nuc',         titre:"Énergie nucléaire",                        badge:"Physique STI2D", desc:"Nucléons, énergie de liaison, défaut de masse E=Δmc², fission (U-235), fusion (H+H), réacteur nucléaire, radioactivité et applications médicales." },
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'sti-chimie-mater',titre:"Chimie des matériaux",                    badge:"Chimie STI2D", desc:"Métaux et alliages (structure, propriétés), polymères (thermoplastiques, thermodurcissables), céramiques, matériaux composites, traitements de surface." },
+      { slug:'sti-chimie-corrosion',titre:"Corrosion et protection",             badge:"Chimie STI2D", desc:"Oxydation des métaux, corrosion électrochimique (piles galvaniques), protection cathodique, anodisation, galvanisation, peintures anticorrosion." },
+      { slug:'sti-chimie-acides',titre:"Chimie des solutions",                   badge:"Chimie STI2D", desc:"Acides-bases (pH, Ka), dosages, oxydoréduction, piles électrochimiques, électrolyse industrielle (dépôt galvanique, production Al/Cl₂)." },
+    ],
+  },
+
+  // ══ TERMINALE ST2S — CBPH ════════════════════════════════════════════════
+  // Programme Chimie, Biologie et Physiopathologie Humaines (ST2S)
+  'st2s-phys': {
+    key:'st2s-phys', label:'Terminale ST2S — CBPH', color:'#8b5cf6', icon:'🏥',
+    chapitres: [
+      // ── CHIMIE ────────────────────────────────────────────────────────────
+      { slug:'st2s-solutions',   titre:"Chimie des solutions — Concentrations",  badge:"Chimie CBPH", desc:"Concentrations massique et molaire, dilutions (C₁V₁=C₂V₂), solutions pharmaceutiques, dosages (spectrophotométrie Beer-Lambert A=εlc)." },
+      { slug:'st2s-acide-base',  titre:"Acides-bases — Applications médicales", badge:"Chimie CBPH", desc:"pH sanguin (7,35-7,45), acidose/alcalose, tampons physiologiques (NaHCO₃/H₂CO₃), dosages pH-métriques, médicaments acides/bases (aspirine)." },
+      { slug:'st2s-redox',       titre:"Oxydoréduction — Antiseptiques",        badge:"Chimie CBPH", desc:"Couples rédox, antiseptiques oxydants (eau oxygénée H₂O₂, permanganate KMnO₄), dosage iodométrique, taux d'alcoolémie (éthylotest)." },
+      { slug:'st2s-organique',   titre:"Molécules organiques — Médicaments",    badge:"Chimie CBPH", desc:"Groupes fonctionnels médicaments (acides, amines, esters, amides), liaisons H, isomérie (stéréochimie), paracétamol, ibuprofène, aspirine structure-activité." },
+      // ── PHYSIQUE ──────────────────────────────────────────────────────────
+      { slug:'st2s-ondes-med',   titre:"Ondes — Imagerie médicale",             badge:"Physique CBPH", desc:"Ultrasons (v=d/t, f Doppler Δf=2f₀v/c), scanner IRM (RMN), radiographie X, endoscopie (fibre optique), ECG (courant électrique du cœur)." },
+      { slug:'st2s-radioactivite',titre:"Radioactivité — Applications médicales",badge:"Physique CBPH", desc:"Rayonnements α, β, γ, loi N(t)=N₀e^(-λt), t₁/₂, activité A=λN, scintigraphie, TEP (tomographie), radiothérapie, radio-isotopes médicaux." },
+      { slug:'st2s-optique-med', titre:"Optique médicale",                      badge:"Physique CBPH", desc:"Œil (modèle optique, défauts visuels), lunettes (vergence, correction), microscope médical, endoscope, fibre optique médicale, colorimétrie (spectre visible)." },
+      { slug:'st2s-physio',      titre:"Physique de la physiologie",             badge:"Physique CBPH", desc:"Pression artérielle (Pa, mmHg), débit sanguin Q=S·v, viscosité (Poiseuille), ventilation pulmonaire (volumes, débits), bioélectricité (potentiel d'action, ECG)." },
+    ],
+  },
+}
+
 
 
 // ── Fonction génération examen par chapitres ──────────────────────
@@ -1941,16 +2115,23 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
+  archives?: Archive[]
+  chapitresParSection?: typeof CHAPITRES_PAR_SECTION
+  sectionConfigs?: typeof SECTION_CONFIGS
+  matiere?: 'maths'|'physique'
 }) {
+  const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
+  const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
+  const SEC_CONFIGS_ACTIVE = scProp       ?? SECTION_CONFIGS
   const [tab, setTab] = useState<'archive'|'chapitre'|'import'>('archive')
   const searchParams = useSearchParams()
 
   // ── Onglet Archives ──
   const [filterSection, setFilterSection] = useState(() => {
     const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'terminale':'terminale','premiere':'premiere','techno':'techno','expertes':'expertes' }
+    const map: Record<string,string> = { 'terminale':'terminale','premiere':'premiere','techno':'techno','expertes':'expertes','seconde':'seconde' }
     return sec && map[sec] ? map[sec] : 'all'
   })
   const [filterYear, setFilterYear]       = useState('all')
@@ -1963,12 +2144,12 @@ function PhaseSelect({ onStart }: {
   // ── Onglet Par Chapitre ──
   const [chapSection, setChapSection] = useState<string>(() => {
     const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'terminale':'terminale','premiere':'premiere','techno':'techno','expertes':'expertes' }
+    const map: Record<string,string> = { 'terminale':'terminale','premiere':'premiere','techno':'techno','expertes':'expertes','seconde':'seconde' }
     return sec && map[sec] ? map[sec] : 'terminale'
   })
   const [selectedChaps, setSelectedChaps] = useState<{slug:string;titre:string;badge:string;desc:string}[]>([])
 
-  const filtered = ARCHIVES.filter(a=>
+  const filtered = ARCHIVES_ACTIVE.filter(a=>
     (filterSection==='all'||a.sectionKey===filterSection) &&
     (filterYear==='all'||a.year===Number(filterYear)) &&
     (filterSession==='all'||a.session===filterSession)
@@ -1998,7 +2179,7 @@ function PhaseSelect({ onStart }: {
 
   const canStartArchive = selected.length>0 || customText.trim().length>20
   const canStartChap    = selectedChaps.length>=1 && selectedChaps.length<=4
-  const currentSecData  = CHAPITRES_PAR_SECTION[chapSection]
+  const currentSecData  = CHAPITRES_ACTIVE[chapSection]
 
   const BADGE_COLORS: Record<string,string> = {
     'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
@@ -2053,7 +2234,7 @@ function PhaseSelect({ onStart }: {
             </div>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
               {([
-                ['filterSection','Section',['all',...SECTION_CONFIGS.map(s=>s.key)],['Toutes',...SECTION_CONFIGS.map(s=>s.label.split(' ')[0])]],
+                ['filterSection','Section',['all',...SEC_CONFIGS_ACTIVE.map(s=>s.key)],['Toutes',...SEC_CONFIGS_ACTIVE.map(s=>s.label.split(' ')[0])]],
                 ['filterYear','Année',['all',...YEARS.map(String)],['Toutes',...YEARS.map(String)]],
                 ['filterSession','Session',['all','Principale','Contrôle'],['Les 2','Principale','Contrôle']],
               ] as [string,string,string[],string[]][]).map(([id,,vals,labels])=>(
@@ -2120,7 +2301,7 @@ function PhaseSelect({ onStart }: {
               1 — Choisir la section
             </p>
             <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {Object.values(CHAPITRES_PAR_SECTION).map(sec=>(
+              {Object.values(CHAPITRES_ACTIVE).map(sec=>(
                 <button key={sec.key} onClick={()=>{setChapSection(sec.key);setSelectedChaps([])}}
                   style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:10,cursor:'pointer',fontWeight:600,fontSize:13,transition:'all 0.2s',fontFamily:'inherit',
                     background:chapSection===sec.key?`${sec.color}25`:'rgba(255,255,255,0.04)',
@@ -4329,6 +4510,11 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 }
 
 function SimulationFrancePageInner() {
+  // ── Matière : maths ou physique ──────────────────────────────────
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
+    if (typeof window === 'undefined') return 'maths'
+    return new URLSearchParams(window.location.search).get('subject') === 'physique' ? 'physique' : 'maths'
+  })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
   const [customText, setCustomText] = useState('')
@@ -4448,9 +4634,36 @@ function SimulationFrancePageInner() {
 
           <PhaseTimeline phase={phase}/>
 
+          {/* ── ONGLETS MATIÈRE ── */}
+          {phase === 'select' && (
+            <div style={{display:'flex',gap:8,marginBottom:24,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
+              {([
+                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b' },
+                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+              ]).map(m => (
+                <button key={m.key} onClick={() => setActiveMatiere(m.key)}
+                  style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
+                    background:activeMatiere===m.key?m.color:'transparent',
+                    color:activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
+                    boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
+                  <span style={{fontSize:18}}>{m.icon}</span>
+                  <span>{m.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:24,padding:'30px 32px',backdropFilter:'blur(10px)'}}>
 
-            {phase==='select'&&<PhaseSelect onStart={handleStart}/>}
+            {phase==='select'&&(
+              <PhaseSelect
+                onStart={handleStart}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : SECTION_CONFIGS}
+                matiere={activeMatiere}
+              />
+            )}
 
             {phase==='generating'&&(
               chapitresMode
