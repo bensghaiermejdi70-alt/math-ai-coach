@@ -91,7 +91,7 @@ interface RankingEntry {
   day: number; date: string; ts: number
 }
 
-type Phase = 'inscription'|'generating'|'exam'|'correction'|'analysing'|'analysis'|'statistiques'
+type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'correction'|'analysing'|'analysis'|'statistiques'
 
 // ── LocalStorage helpers ──────────────────────────────────────────
 function saveRanking(entry: RankingEntry) {
@@ -1091,6 +1091,175 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
   )
 }
 
+
+
+// ════════════════════════════════════════════════════════════════════
+// PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
+// ════════════════════════════════════════════════════════════════════
+function PhaseChoixMatiereFR({
+  candidat, dayNum, onMaths, onRetour
+}: {
+  candidat: Candidat
+  dayNum: number
+  onMaths: () => void
+  onRetour: () => void
+}) {
+  const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
+
+  // Mapper section → section physique simulation france
+  const physSection = (() => {
+    switch (candidat.sectionKey) {
+      case 'terminale': return 'terminale-phys'
+      case 'premiere':  return 'premiere-phys'
+      case 'techno':    return 'sti2d-phys'
+      default:          return 'terminale-phys'
+    }
+  })()
+
+  const MATIERES = [
+    {
+      key: 'maths',
+      icon: '🧮',
+      label: 'Mathématiques',
+      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses · Programme officiel France',
+      color: '#4f6ef7',
+      gradient: 'linear-gradient(135deg,rgba(79,110,247,0.18),rgba(99,102,241,0.08))',
+      border: 'rgba(79,110,247,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'physique',
+      icon: '⚗️',
+      label: 'Physique-Chimie',
+      desc: 'Simulation par chapitres · Mécanique, Ondes, Chimie organique, Électricité, Quantique…',
+      color: '#06d6a0',
+      gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(6,214,160,0.35)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+      href: `/simulation-france?subject=physique&section=${physSection}`,
+    },
+    {
+      key: 'svt',
+      icon: '🧬',
+      label: 'SVT',
+      desc: 'Génétique · Immunologie · Physiologie · Géologie — Bientôt disponible',
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.05))',
+      border: 'rgba(16,185,129,0.25)',
+      available: false,
+      badge: '🔜 Prochainement',
+      badgeColor: '#fbbf24',
+    },
+    {
+      key: 'anglais',
+      icon: '🇬🇧',
+      label: 'Anglais',
+      desc: '8 axes thématiques · Essay · Synthesis · LLCER · AMC — Bientôt disponible',
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.05))',
+      border: 'rgba(245,158,11,0.25)',
+      available: false,
+      badge: '🔜 Prochainement',
+      badgeColor: '#fbbf24',
+    },
+    {
+      key: 'informatique',
+      icon: '💻',
+      label: 'NSI / Informatique',
+      desc: 'Algorithmique · Python · SQL · Réseaux · Architecture — Bientôt disponible',
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.12),rgba(109,40,217,0.05))',
+      border: 'rgba(139,92,246,0.25)',
+      available: false,
+      badge: '🔜 Prochainement',
+      badgeColor: '#fbbf24',
+    },
+  ]
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      <Navbar/>
+      <div style={{maxWidth:720,margin:'0 auto',padding:'80px 20px 60px'}}>
+
+        {/* Header */}
+        <div style={{textAlign:'center',marginBottom:36}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(99,102,241,0.1))',border:'1px solid rgba(59,130,246,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:18}}>
+            <span style={{fontSize:20}}>🇫🇷</span>
+            <span style={{fontSize:13,fontWeight:800,color:'#93c5fd',letterSpacing:'0.1em',textTransform:'uppercase'}}>Bac Blanc France — Jour {dayNum}</span>
+          </div>
+          <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#60a5fa,#4f6ef7,#818cf8)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+            Choisissez votre matière
+          </h1>
+          {/* Candidat info */}
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 20px',marginTop:10,flexWrap:'wrap',justifyContent:'center'}}>
+            <span style={{fontSize:20}}>🎓</span>
+            <span style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>{candidat.prenom} {candidat.nom}</span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
+            <span style={{fontSize:12,color:sec?.color||'#60a5fa',fontWeight:700}}>{sec?.icon} {candidat.section}</span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.lycee}</span>
+          </div>
+        </div>
+
+        {/* Grille matières */}
+        <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
+          {MATIERES.map(m => (
+            <button
+              key={m.key}
+              disabled={!m.available}
+              onClick={() => {
+                if (!m.available) return
+                if (m.key === 'maths') { onMaths(); return }
+                if ((m as any).href) window.location.href = (m as any).href
+              }}
+              style={{
+                width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
+                borderRadius:16,padding:'22px 24px',display:'flex',alignItems:'center',
+                gap:20,cursor:m.available?'pointer':'not-allowed',
+                opacity:m.available?1:0.65,
+                transition:'transform 0.15s, box-shadow 0.15s',
+                textAlign:'left',fontFamily:'inherit',
+              }}
+              onMouseEnter={e=>{ if(m.available){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
+              onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
+            >
+              <div style={{width:56,height:56,borderRadius:14,background:`${m.color}20`,border:`1.5px solid ${m.color}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
+                {m.icon}
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5,flexWrap:'wrap'}}>
+                  <span style={{fontSize:17,fontWeight:800,color:'white'}}>{m.label}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:m.badgeColor,background:`${m.badgeColor}18`,border:`1px solid ${m.badgeColor}30`,borderRadius:20,padding:'2px 10px'}}>
+                    {m.badge}
+                  </span>
+                </div>
+                <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.5}}>{m.desc}</div>
+              </div>
+              {m.available && <span style={{fontSize:22,color:m.color,flexShrink:0,fontWeight:700}}>→</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Retour */}
+        <div style={{textAlign:'center'}}>
+          <button onClick={onRetour}
+            style={{padding:'10px 24px',borderRadius:10,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>
+            ← Modifier ma fiche
+          </button>
+        </div>
+
+        <p style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,marginTop:24}}>
+          Chaque jour = un nouveau concours · Programme officiel Éducation Nationale France
+        </p>
+      </div>
+      <Footer/>
+    </div>
+  )
+}
 
 // ════════════════════════════════════════════════════════════════════
 // PHASE 1 — INSCRIPTION
@@ -2530,16 +2699,24 @@ function BacBlancFranceInner() {
       alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 19€/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 29€/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 199€/an (Sprint inclus)\n\n→ mathsbac.com/abonnement-france')
       return
     }
-    setCandidat(c); setPhase('generating')
+    setCandidat(c); setPhase('choix-matiere')
+  }, [isAdmin, checkQuota])
+
+  const handleStartMaths = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && !checkQuota('simulations')) {
+      alert('Quota atteint — Bac Blanc disponible en mai-juin.')
+      return
+    }
+    setPhase('generating')
     try {
-      const e = await generateBacBlanc(c, dayNum)
-      // Incrémenter quota Supabase
+      const e = await generateBacBlanc(candidat, dayNum)
       await incrementQuotaSub('simulations')
       setExam(e); setPhase('exam')
     } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('inscription')
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
@@ -2584,6 +2761,14 @@ function BacBlancFranceInner() {
   if (phase === 'statistiques') return <PageStatistiques onBack={handleRestart}/>
   
   if (phase === 'inscription') return <PhaseInscription onSubmit={handleInscription} onStatistiques={()=>setPhase('statistiques')}/>
+  if (phase === 'choix-matiere' && candidat) return (
+    <PhaseChoixMatiereFR
+      candidat={candidat}
+      dayNum={dayNum}
+      onMaths={handleStartMaths}
+      onRetour={()=>setPhase('inscription')}
+    />
+  )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
   if (phase === 'correction' && exam && candidat) return(

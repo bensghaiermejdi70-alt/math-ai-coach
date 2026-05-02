@@ -3,204 +3,194 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 
-// ═══════════════════════════════════════════════════════════════════
-// MATHÉMATIQUES — Section Informatique (Bac Tunisie)
-// Programme officiel CNP — source : tadris.tn
-// Tome I : 5 chapitres | Tome II : 3 chapitres
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+//  Programme officiel CNP Tunisie — Sciences Informatiques
+//  4ème année secondaire · Mathématiques Coefficient 3
+//  Mis à jour selon programme officiel CNP (tadris.tn)
+// ═══════════════════════════════════════════════════════════════
 
-const MATHS = {
-  id: 'mathematiques',
-  icon: '📐',
-  titre: 'Mathématiques',
-  desc: 'Suites, limites, dérivabilité, log & exp, calcul intégral, complexes, probabilités, statistiques. Programme officiel CNP — source : tadris.tn',
-  color: '#8b5cf6',
-  tomes: [
-    {
-      label: '📗 Tome I — Analyse',
-      chapitres: [
-        { ch: 'CH 01', slug: 'suites',             titre: 'Suites réelles',                          nbThm: 12, nbEx: 8  },
-        { ch: 'CH 02', slug: 'limite-continuite',   titre: 'Limite et continuité',                    nbThm: 14, nbEx: 10 },
-        { ch: 'CH 03', slug: 'derivabilite',        titre: 'Dérivabilité & étude de fonctions',       nbThm: 11, nbEx: 8  },
-        { ch: 'CH 04', slug: 'log-exp',             titre: 'Fonctions logarithme et exponentielle',   nbThm: 10, nbEx: 7  },
-        { ch: 'CH 05', slug: 'calcul-integral',     titre: 'Calcul intégral & primitives',            nbThm: 9,  nbEx: 7  },
-      ],
-    },
-    {
-      label: '📘 Tome II — Algèbre & Probabilités',
-      chapitres: [
-        { ch: 'CH 06', slug: 'complexes',     titre: 'Nombres complexes',               nbThm: 12, nbEx: 8 },
-        { ch: 'CH 07', slug: 'probabilites',  titre: 'Probabilités sur un ensemble fini', nbThm: 9,  nbEx: 6 },
-        { ch: 'CH 08', slug: 'statistiques',  titre: 'Statistiques',                    nbThm: 7,  nbEx: 5 },
-      ],
-    },
-  ],
+const COLOR = '#6366f1'
+
+// PARTIE 1 — ANALYSE (7 chapitres)
+const PARTIE1 = [
+  {
+    ch: 'CH 01', slug: 'fonctions-generalites', titre: 'Fonctions — Généralités',
+    badge: 'Analyse', nbThm: 8, nbEx: 6,
+    desc: 'Ensemble de définition (détermination, restriction), parité (fonctions paires, impaires), opérations sur les fonctions (somme, produit, quotient, composée), fonction √f (conditions d\'existence f(x)≥0).'
+  },
+  {
+    ch: 'CH 02', slug: 'limites-continuite', titre: 'Limites et Continuité',
+    badge: 'Analyse', nbThm: 13, nbEx: 10,
+    desc: 'Limite finie en un point (définition, propriétés), limite infinie (en un point et à l\'infini), opérations sur les limites (somme, produit, quotient), formes indéterminées (résolution), continuité (définition, opérations), TVI (f(x)=k), asymptotes verticales/horizontales/obliques.'
+  },
+  {
+    ch: 'CH 03', slug: 'derivation', titre: 'Dérivation',
+    badge: 'Analyse', nbThm: 11, nbEx: 9,
+    desc: 'Nombre dérivé (taux d\'accroissement, limite), fonction dérivée (dérivabilité sur un intervalle), dérivées usuelles (tableau complet), opérations (somme, produit, quotient, composée), tangente y=f\'(a)(x−a)+f(a), signe de la dérivée et sens de variation, extrema (maximum, minimum).'
+  },
+  {
+    ch: 'CH 04', slug: 'etude-fonctions', titre: 'Étude de Fonctions',
+    badge: 'Analyse', nbThm: 10, nbEx: 8,
+    desc: 'Polynômes deg 2, deg 3, bicarrées, rationnelles (ax+b/cx+d, ax²+bx+c/dx+e), irrationnelles (√(ax+b), √(ax²+bx+c)), circulaires (sin(ax+b), cos(ax+b), tan x).'
+  },
+  {
+    ch: 'CH 05', slug: 'logarithme', titre: 'Fonction Logarithme Népérien',
+    badge: 'Analyse', nbThm: 9, nbEx: 7,
+    desc: 'Définition ln x pour x>0, propriétés algébriques, dérivée (ln x)\'=1/x et (ln u)\'=u\'/u, étude complète (variations, limites, courbe représentative), fonctions du type x↦ln(u(x)) (dérivée, étude).'
+  },
+  {
+    ch: 'CH 06', slug: 'exponentielle', titre: 'Fonction Exponentielle',
+    badge: 'Analyse', nbThm: 9, nbEx: 7,
+    desc: 'Définition eˣ (réciproque de ln), propriétés algébriques, dérivée (eˣ)\'=eˣ et (eᵘ)\'=u\'·eᵘ, étude complète (variations, limites, courbe représentative), fonctions du type x↦e^(u(x)) (dérivée, étude).'
+  },
+  {
+    ch: 'CH 07', slug: 'suites', titre: 'Suites Numériques',
+    badge: 'Analyse', nbThm: 11, nbEx: 8,
+    desc: 'Suites arithmétiques (u_{n+1}=u_n+r, terme général, somme), géométriques (u_{n+1}=q·u_n, terme général, somme), récurrentes u_{n+1}=f(u_n) avec u₀ donné, limite d\'une suite (convergence, divergence), principe de récurrence (démonstration).'
+  },
+]
+
+// PARTIE 2 — GÉOMÉTRIE (1 chapitre)
+const PARTIE2 = [
+  {
+    ch: 'CH 08', slug: 'geometrie-espace', titre: 'Géométrie dans l\'Espace',
+    badge: 'Géométrie', nbThm: 9, nbEx: 7,
+    desc: 'Vecteurs de l\'espace (composantes, opérations), produit scalaire dans l\'espace (définition, propriétés, applications), droites dans l\'espace (représentations paramétrique et cartésienne), plans (équation cartésienne ax+by+cz+d=0), positions relatives (droite-droite, droite-plan, plan-plan), distance point-plan et point-droite.'
+  },
+]
+
+// PARTIE 3 — PROBABILITÉS (2 chapitres)
+const PARTIE3 = [
+  {
+    ch: 'CH 09', slug: 'denombrement', titre: 'Dénombrement',
+    badge: 'Probabilités', nbThm: 6, nbEx: 5,
+    desc: 'Arrangements Aₙᵖ = n!/(n−p)!, permutations n!, combinaisons Cₙᵖ = (n choose p), formule du binôme (a+b)ⁿ = Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.'
+  },
+  {
+    ch: 'CH 10', slug: 'probabilites', titre: 'Probabilités',
+    badge: 'Probabilités', nbThm: 9, nbEx: 7,
+    desc: 'Vocabulaire probabiliste (univers Ω, événements élémentaires), probabilité sur ensemble fini (définition), probabilité de la réunion P(A∪B), probabilité de l\'intersection P(A∩B), équiprobabilité P(A)=card(A)/card(Ω), probabilités conditionnelles P_A(B)=P(A∩B)/P(A), indépendance P(A∩B)=P(A)×P(B).'
+  },
+]
+
+const badgeColors: Record<string, { bg: string; color: string }> = {
+  'Analyse':      { bg: 'rgba(99,102,241,0.15)',  color: '#6366f1' },
+  'Géométrie':    { bg: 'rgba(79,110,247,0.15)',  color: '#4f6ef7' },
+  'Probabilités': { bg: 'rgba(245,200,66,0.15)',  color: '#f5c842' },
 }
 
-const ALL_CHAPITRES = MATHS.tomes.flatMap(t => t.chapitres)
-const totalThm = ALL_CHAPITRES.reduce((s, c) => s + c.nbThm, 0)
-const totalEx  = ALL_CHAPITRES.reduce((s, c) => s + c.nbEx,  0)
-
-function ChapitreCard({ ch, color }: { ch: typeof ALL_CHAPITRES[0]; color: string }) {
+function ChapterCard({ ch, href }: { ch: typeof PARTIE1[0]; href: string }) {
+  const bc = badgeColors[ch.badge] || badgeColors['Analyse']
   return (
-    <Link href={`/bac/informatique/${ch.slug}`} style={{ textDecoration: 'none' }}>
-      <div
-        className="card"
-        style={{ padding: 18, transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'translateY(-3px)'
-          e.currentTarget.style.boxShadow = `0 8px 28px ${color}22`
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = ''
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--muted)', background: 'var(--surface2)', padding: '2px 7px', borderRadius: 6 }}>
-            {ch.ch}
-          </span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{ch.nbThm} concepts</span>
-        </div>
-
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 12, lineHeight: 1.4 }}>
-          {ch.titre}
-        </div>
-
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--muted)', marginBottom: 4 }}>
-            <span>Progression</span><span>0%</span>
+    <Link href={href} style={{ textDecoration: 'none' }}>
+      <div className="card" style={{ padding: 22, height: '100%', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
+        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 8px 32px ${COLOR}22` }}
+        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 6 }}>{ch.ch}</span>
+            <span style={{ fontSize: 11, background: bc.bg, color: bc.color, padding: '2px 8px', borderRadius: 12, fontWeight: 600 }}>{ch.badge}</span>
           </div>
-          <div style={{ height: 3, background: 'var(--surface2)', borderRadius: 4 }}>
-            <div style={{ height: '100%', width: '0%', background: `linear-gradient(90deg,${color},#f97316)`, borderRadius: 4 }} />
-          </div>
-          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 3 }}>0 / {ch.nbEx} exercices</div>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{ch.nbThm} théorèmes</span>
         </div>
-
+        <h3 style={{ fontSize: 15, fontFamily: 'var(--font-display)', fontWeight: 700, marginBottom: 8 }}>{ch.titre}</h3>
+        <p style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 14 }}>{ch.desc}</p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {['Déf', 'Thm', 'Ex'].map(l => (
-              <span key={l} style={{
-                fontSize: 10, padding: '2px 6px', borderRadius: 8,
-                background: l === 'Déf' ? 'rgba(79,110,247,0.15)' : l === 'Thm' ? `${color}20` : 'rgba(6,214,160,0.12)',
-                color:      l === 'Déf' ? '#4f6ef7'               : l === 'Thm' ? color          : '#06d6a0',
-              }}>{l}</span>
-            ))}
-          </div>
-          <span style={{ fontSize: 12, color: color, fontWeight: 600 }}>Ouvrir →</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>📝 {ch.nbEx} exercices</span>
+          <span style={{ fontSize: 12, color: COLOR, fontWeight: 600 }}>Ouvrir →</span>
         </div>
       </div>
     </Link>
   )
 }
 
+function PartieHeader({ titre, desc, color, count }: { titre: string; desc: string; color: string; count: number }) {
+  return (
+    <div style={{ background: `linear-gradient(135deg,${color}12,${color}04)`, border: `1px solid ${color}28`, borderRadius: 16, padding: '18px 26px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+      <div>
+        <h2 style={{ fontSize: 22, marginBottom: 3 }}>{titre}</h2>
+        <p style={{ fontSize: 13, color: 'var(--muted)', margin: 0 }}>{desc}</p>
+      </div>
+      <span style={{ background: `${color}20`, color, padding: '5px 13px', borderRadius: 20, fontSize: 12, fontFamily: 'var(--font-mono)' }}>{count} ch.</span>
+    </div>
+  )
+}
+
 export default function InformatiquePage() {
+  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length
   return (
     <>
       <Navbar />
       <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
-
-        {/* Breadcrumb */}
         <div style={{ borderBottom: '1px solid var(--border)', padding: '14px clamp(20px,5vw,60px)', display: 'flex', gap: 8, fontSize: 13, color: 'var(--muted)', alignItems: 'center' }}>
-          <Link href="/bac" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Bac</Link>
-          <span>›</span>
+          <Link href="/bac" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Bac</Link><span>›</span>
           <span style={{ color: 'var(--text)' }}>Sciences Informatiques</span>
         </div>
-
         <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
 
-          {/* HEADER */}
-          <div style={{ marginBottom: 48 }}>
-            <span style={{ background: 'rgba(99,102,241,0.15)', color: '#6366f1', padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, marginBottom: 12, display: 'inline-block' }}>
-              Coefficient 3
-            </span>
-            <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 12 }}>
-              💻 Sciences Informatiques — Mathématiques
-            </h1>
-            <p style={{ maxWidth: 680, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
-              Programme officiel CNP Tunisie — 4ème année secondaire.
-              Tous les chapitres de <strong style={{ color: '#8b5cf6' }}>Mathématiques</strong> de la section Informatique,
-              avec théorèmes, définitions, formules et exercices type Bac 2026.
-              Source : <span style={{ color: '#8b5cf6', fontFamily: 'var(--font-mono)', fontSize: 13 }}>tadris.tn</span>
+          <div style={{ marginBottom: 44 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+              <span style={{ background: 'rgba(99,102,241,0.15)', color: COLOR, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>Coefficient 3</span>
+              <span style={{ background: 'linear-gradient(135deg,#6366f1,#a78bfa)', color: 'white', fontSize: 10, fontWeight: 800, padding: '3px 12px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU PROGRAMME</span>
+            </div>
+            <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 10 }}>Sciences Informatiques — Mathématiques</h1>
+            <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 16 }}>
+              Programme officiel CNP Tunisie — 4ème année secondaire. {totalCh} chapitres répartis en 3 parties :
+              Analyse · Géométrie de l'espace · Probabilités.
+              Source : <span style={{ color: COLOR, fontFamily: 'var(--font-mono)', fontSize: 13 }}>tadris.tn</span>
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
-              <span>📚 2 tomes</span><span>·</span>
-              <span>📖 {ALL_CHAPITRES.length} chapitres</span><span>·</span>
-              <span>📊 {totalThm}+ concepts</span><span>·</span>
-              <span>📝 {totalEx}+ exercices</span>
+              <span>💻 {totalCh} chapitres</span><span>·</span>
+              <span>📊 85+ théorèmes</span><span>·</span>
+              <span>📝 67+ exercices</span>
             </div>
           </div>
 
-          {/* TOMES */}
-          {MATHS.tomes.map((tome, ti) => {
-            const tomeTotalThm = tome.chapitres.reduce((s, c) => s + c.nbThm, 0)
-            const tomeTotalEx  = tome.chapitres.reduce((s, c) => s + c.nbEx,  0)
-            return (
-              <div key={ti} style={{ marginBottom: 52 }}>
+          {/* Partie 1 */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📈 Partie 1 — Analyse" desc="Fonctions · Limites & Continuité · Dérivation · Étude de fonctions · Ln · Exp · Suites" color={COLOR} count={PARTIE1.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE1.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
+            </div>
+          </div>
 
-                {/* Bannière tome */}
-                <div style={{
-                  background: `linear-gradient(135deg,${MATHS.color}18,${MATHS.color}06)`,
-                  border: `1px solid ${MATHS.color}30`,
-                  borderRadius: 16, padding: '20px 28px', marginBottom: 24,
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12,
-                }}>
+          {/* Partie 2 */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📐 Partie 2 — Géométrie dans l'Espace" desc="Vecteurs · Produit scalaire · Droites et plans · Distances" color="#4f6ef7" count={PARTIE2.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE2.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 3 */}
+          <div style={{ marginBottom: 52 }}>
+            <PartieHeader titre="🎲 Partie 3 — Dénombrement & Probabilités" desc="Arrangements, Permutations, Combinaisons, Formule du binôme · Probabilités conditionnelles" color="#f5c842" count={PARTIE3.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE3.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 14 }}>
+            {[
+              { href:'/bac/maths',         icon:'📐', titre:'Section Maths',    desc:'10 chapitres · Coeff 4' },
+              { href:'/bac/sciences-exp',  icon:'🔬', titre:'Sc. Expérim.',     desc:'9 chapitres · Coeff 3' },
+              { href:'/bac/sciences-tech', icon:'⚙️', titre:'Sc. Techniques',   desc:'12 chapitres · Coeff 3' },
+              { href:'/bac/eco-gestion',   icon:'💹', titre:'Éco-Gestion',      desc:'11 chapitres · Coeff 2' },
+            ].map(s => (
+              <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
+                <div className="card" style={{ padding: 18, display: 'flex', gap: 12, alignItems: 'center', transition: 'transform 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                  <div style={{ fontSize: 24 }}>{s.icon}</div>
                   <div>
-                    <h2 style={{ fontSize: 22, marginBottom: 4 }}>{tome.label}</h2>
-                    <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>
-                      {ti === 0
-                        ? 'Suites · Limite & continuité · Dérivabilité · Logarithme & Exponentielle · Calcul intégral'
-                        : 'Nombres complexes · Probabilités · Statistiques'}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <span style={{ background: `${MATHS.color}22`, color: MATHS.color, padding: '5px 13px', borderRadius: 20, fontSize: 12, fontFamily: 'var(--font-mono)' }}>
-                      {tome.chapitres.length} ch.
-                    </span>
-                    <span style={{ background: 'var(--surface2)', color: 'var(--muted)', padding: '5px 13px', borderRadius: 20, fontSize: 12 }}>
-                      {tomeTotalThm} concepts · {tomeTotalEx} ex.
-                    </span>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{s.titre}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{s.desc}</div>
                   </div>
                 </div>
-
-                {/* Grille chapitres */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
-                  {tome.chapitres.map(ch => (
-                    <ChapitreCard key={ch.slug} ch={ch} color={MATHS.color} />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-
-          {/* Navigation inter-sections */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 32, marginTop: 8 }}>
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>Autres sections</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14 }}>
-              {[
-                { href: '/bac/maths',         icon: '🧮', titre: 'Mathématiques',       sous: '9 chapitres · Coeff 4' },
-                { href: '/bac/sciences-exp',  icon: '🔬', titre: 'Sciences Exp.',        sous: '10 chapitres · Coeff 3' },
-                { href: '/bac/sciences-tech', icon: '⚙️', titre: 'Sciences Tech.',       sous: '10 chapitres · Coeff 3' },
-                { href: '/bac/eco-gestion',   icon: '💹', titre: 'Éco-Gestion',          sous: '13 chapitres · Coeff 2' },
-              ].map(s => (
-                <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                  <div
-                    className="card"
-                    style={{ padding: 18, display: 'flex', gap: 12, alignItems: 'center', transition: 'transform 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                    onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
-                  >
-                    <div style={{ fontSize: 26 }}>{s.icon}</div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14 }}>{s.titre}</div>
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{s.sous}</div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+              </Link>
+            ))}
           </div>
-
         </div>
       </main>
       <Footer />

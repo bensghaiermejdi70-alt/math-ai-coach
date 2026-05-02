@@ -3,376 +3,393 @@ import { useState } from 'react'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
-type TType = 'Théorème' | 'Définition' | 'Formule clé' | 'Propriété' | 'Corollaire'
-interface Thm { id: string; type: TType; label: string; enonce: string; remarque?: string }
-interface Section { titre: string; theoremes: Thm[] }
-interface Ch { slug: string; num: string; titre: string; badge: string; tome: 1|2; desc: string; color: string; icon: string; sections: Section[] }
+// Route : /bac/eco-gestion/[slug]
+// Programme officiel CNP Tunisie — Économie & Gestion · Coef. 2
 
-const TYPE_STYLE: Record<TType, { bg: string; color: string; border: string }> = {
-  'Théorème':    { bg: 'rgba(124,58,237,0.12)',  color: '#a78bfa', border: 'rgba(124,58,237,0.4)' },
-  'Définition':  { bg: 'rgba(79,110,247,0.12)',   color: '#4f6ef7', border: 'rgba(79,110,247,0.4)' },
-  'Formule clé': { bg: 'rgba(245,200,66,0.12)',   color: '#f5c842', border: 'rgba(245,200,66,0.4)' },
-  'Propriété':   { bg: 'rgba(6,214,160,0.12)',    color: '#06d6a0', border: 'rgba(6,214,160,0.4)'  },
-  'Corollaire':  { bg: 'rgba(249,115,22,0.12)',   color: '#f97316', border: 'rgba(249,115,22,0.4)' },
+const C = { thm:'#a78bfa', def:'#4f6ef7', formule:'#f5c842', prop:'#06d6a0', corollaire:'#f97316' }
+const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', corollaire:'Corollaire' }
+
+const NAV_ORDER = ['fonctions-generalites','limites-continuite','derivation','etude-fonctions','logarithme','exponentielle','suites','geometrie-espace','statistiques','denombrement','probabilites']
+const TITRES: Record<string,string> = {'fonctions-generalites': "Fonctions \u2014 G\u00e9n\u00e9ralit\u00e9s", 'limites-continuite': "Limites et Continuit\u00e9", 'derivation': "D\u00e9rivation", 'etude-fonctions': "\u00c9tude de Fonctions", 'logarithme': "Logarithme N\u00e9p\u00e9rien", 'exponentielle': "Fonction Exponentielle", 'suites': "Suites Num\u00e9riques", 'geometrie-espace': "G\u00e9om\u00e9trie dans l'Espace", 'statistiques': "Statistiques \u2014 S\u00e9ries \u00e0 deux variables", 'denombrement': "D\u00e9nombrement", 'probabilites': "Probabilit\u00e9s"}
+const NUMS: Record<string,string> = {'fonctions-generalites': 'CH 01', 'limites-continuite': 'CH 02', 'derivation': 'CH 03', 'etude-fonctions': 'CH 04', 'logarithme': 'CH 05', 'exponentielle': 'CH 06', 'suites': 'CH 07', 'geometrie-espace': 'CH 08', 'statistiques': 'CH 09', 'denombrement': 'CH 10', 'probabilites': 'CH 11'}
+const SEC_COLOR: Record<string,string> = {'fonctions-generalites':'#10b981', 'limites-continuite':'#10b981', 'derivation':'#10b981', 'etude-fonctions':'#10b981', 'logarithme':'#10b981', 'exponentielle':'#10b981', 'suites':'#10b981', 'geometrie-espace':'#4f6ef7', 'statistiques':'#f97316', 'denombrement':'#f5c842', 'probabilites':'#f5c842'}
+
+const CHAPITRES: Record<string,{
+  ch:string; titre:string; badge:string; desc:string; duree:string; section:string;
+  theoremes:{id:string;type:string;nom:string;enonce:string}[];
+  exercices:{id:string;niveau:string;titre:string;enonce:string;correction:string}[];
+}> = {
+  'fonctions-generalites': {
+    ch:'CH 01', titre:"Fonctions \u2014 G\u00e9n\u00e9ralit\u00e9s", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"Ensemble de d\u00e9finition, parit\u00e9 (f(-x)=f(x) paire, f(-x)=-f(x) impaire), restriction \u00e0 un intervalle, op\u00e9rations (somme, produit, quotient, compos\u00e9e), fonction \u221af (conditions f(x)\u22650), valeur absolue |f|.",
+    theoremes:[
+      {id:'D1',type:'def',nom:"Ensemble de d\u00e9finition",
+       enonce:"D_f = ensemble des x pour lesquels f(x) est d\u00e9finie.\n\nCas courants :\n\u2022 1/g(x) : g(x)\u22600\n\u2022 \u221ag(x) : g(x)\u22650\n\u2022 ln(g(x)) : g(x)>0\n\nIntersection des conditions si plusieurs contraintes."},
+      {id:'D2',type:'def',nom:"Parit\u00e9 et p\u00e9riodicit\u00e9",
+       enonce:"f paire : D_f sym\u00e9trique et f(\u2212x)=f(x) \u2192 courbe sym\u00e9trique par rapport \u00e0 Oy\nf impaire : f(\u2212x)=\u2212f(x) \u2192 sym\u00e9trique par rapport \u00e0 O\nf p\u00e9riodique T : f(x+T)=f(x) pour tout x\u2208D_f\n\nExemples : sin, cos (T=2\u03c0) ; tan (T=\u03c0) ; |sin x| (T=\u03c0)"},
+      {id:'D3',type:'def',nom:"Op\u00e9rations sur les fonctions",
+       enonce:"Somme/produit/quotient (avec g\u22600) : D=D_f\u2229D_g\nCompos\u00e9e g\u2218f : x\u21a6g(f(x)), D={x\u2208D_f : f(x)\u2208D_g}\n\n\u221af(x) : conditions f(x)\u22650\n|f(x)| : d\u00e9fini sur D_f entier\nf+g, fg, f/g, g\u2218f : appliquer les r\u00e8gles"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Domaine",
+       enonce:"D_f pour f(x)=\u221a(x+2)/ln(x).",
+       correction:"x+2\u22650\u2192x\u2265\u22122 ; x>0 ; x\u22601.\nD_f=]0;1[\u222a]1;+\u221e[."},
+      {id:'EX02',niveau:'Facile',titre:"Parit\u00e9",
+       enonce:"f(x)=x\u00b3+sin x. Paire ou impaire ?",
+       correction:"f(\u2212x)=\u2212x\u00b3\u2212sin x=\u2212f(x). f est impaire."},
+    ],
+  },
+  'limites-continuite': {
+    ch:'CH 02', titre:"Limites et Continuit\u00e9", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"Limite finie en un r\u00e9el a (d\u00e9finition, unicit\u00e9), limite infinie en a (asymptote verticale), limite \u00e0 l'infini (finie \u2192 horizontale, infinie), op\u00e9rations sur les limites (formes ind\u00e9termin\u00e9es), continuit\u00e9 en un point et sur un intervalle, TVI (f(x)=k), th\u00e9or\u00e8me de la bijection, asymptotes.",
+    theoremes:[
+      {id:'D1',type:'def',nom:"Limite en un point",
+       enonce:"lim(x\u2192a) f(x)=\u2113 : f(x) arbitrairement proche de \u2113 pour x\u2192a\nLimites \u00e0 gauche et droite \u2192 si \u00e9gales \u2192 limite existe\n\nOp\u00e9rations (\u2113,m\u2208\u211d) : somme \u2113+m, produit \u2113m, quotient \u2113/m (m\u22600)\nFormes ind\u00e9termin\u00e9es : 0/0, \u221e/\u221e, \u221e\u2212\u221e, 0\u00b7\u221e \u2192 lever par factorisation, conjugu\u00e9, \u00e9quivalents"},
+      {id:'T1',type:'thm',nom:"Th\u00e9or\u00e8me des Valeurs Interm\u00e9diaires (TVI)",
+       enonce:"f continue sur [a,b] et k entre f(a) et f(b) :\n\u2203 c\u2208[a,b] : f(c)=k\n\nCorollaire : si f(a)\u00b7f(b)<0 \u2192 \u2203 racine dans ]a,b[\nSi f strictement monotone \u2192 racine unique\n\nDichotomie : diviser [a,b] par 2 \u00e0 chaque \u00e9tape pour approcher c"},
+      {id:'T2',type:'thm',nom:"Th\u00e9or\u00e8me de la bijection",
+       enonce:"f continue et strictement monotone sur [a,b] :\n\u2192 f r\u00e9alise une bijection de [a,b] vers [f(a),f(b)]\n\u2192 Pour tout k\u2208[f(a),f(b)], \u2203 unique c : f(c)=k"},
+      {id:'D2',type:'def',nom:"Asymptotes",
+       enonce:"Verticale x=a : lim(x\u2192a)|f(x)|=+\u221e\nHorizontale y=\u2113 : lim(x\u2192\u00b1\u221e)f(x)=\u2113\nOblique y=ax+b : lim(x\u2192\u00b1\u221e)[f(x)\u2212ax\u2212b]=0\n  a=lim f(x)/x ; b=lim[f(x)\u2212ax]\n\nBranche parabolique : lim f(x)/x=\u00b1\u221e"},
+      {id:'F1',type:'formule',nom:"Croissances compar\u00e9es",
+       enonce:"x\u2192+\u221e : e\u02e3\u226bx\u207f\u226bln x (pour tout n>0)\nlim e\u02e3/x\u207f=+\u221e ; lim(ln x)/x\u1d45=0 (\u03b1>0)\nx\u21920\u207a : lim x\u00b7ln x=0\n\nLimites fondamentales :\nlim(x\u21920) sin x/x=1 ; lim(x\u21920)(e\u02e3\u22121)/x=1"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Asymptote oblique",
+       enonce:"f(x)=(x\u00b2+2x)/(x+1). Asymptote oblique.",
+       correction:"a=lim f/x=1. b=lim[f(x)\u2212x]=lim[x/(x+1)]=1. AO : y=x+1."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"TVI",
+       enonce:"Montrer que f(x)=x\u00b3\u22122x+1 a une racine dans ]\u22122;\u22121[.",
+       correction:"f(\u22122)=\u22123<0 ; f(\u22121)=2>0. f continue \u2192 \u2203 c par TVI."},
+    ],
+  },
+  'derivation': {
+    ch:'CH 03', titre:"D\u00e9rivation", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"Nombre d\u00e9riv\u00e9 (taux d'accroissement, limite), interpr\u00e9tation g\u00e9om\u00e9trique (tangente), approximation affine f(x)\u2248f(a)+f'(a)(x\u2212a), d\u00e9rivabilit\u00e9 sur un intervalle, d\u00e9riv\u00e9es usuelles (x\u207f, 1/x, \u221ax, sin x, cos x, e\u02e3, ln x), op\u00e9rations (somme, produit, quotient, compos\u00e9e), signe de f' et variations, extrema locaux.",
+    theoremes:[
+      {id:'D1',type:'def',nom:"Nombre d\u00e9riv\u00e9 et tangente",
+       enonce:"f'(a)=lim(x\u2192a)(f(x)\u2212f(a))/(x\u2212a)\nTangente en (a,f(a)) : y=f'(a)(x\u2212a)+f(a)\nApproximation affine : f(x)\u2248f(a)+f'(a)(x\u2212a)"},
+      {id:'F1',type:'formule',nom:"D\u00e9riv\u00e9es usuelles",
+       enonce:"(x\u207f)'=nx\u207f\u207b\u00b9 ; (\u221ax)'=1/(2\u221ax) ; (1/x)'=\u22121/x\u00b2\n(e\u02e3)'=e\u02e3 ; (ln x)'=1/x\n(sin x)'=cos x ; (cos x)'=\u2212sin x ; (tan x)'=1/cos\u00b2x\n(arcsin x)'=1/\u221a(1\u2212x\u00b2) ; (arctan x)'=1/(1+x\u00b2)\n\n(u+v)'=u'+v' ; (uv)'=u'v+uv'\n(u/v)'=(u'v\u2212uv')/v\u00b2 ; (f\u2218g)'=f'(g)\u00b7g'"},
+      {id:'T1',type:'thm',nom:"Variations, extrema et convexit\u00e9",
+       enonce:"f'(x)>0 sur I \u2192 f croissante ; f'(x)<0 \u2192 f d\u00e9croissante\nf'(a)=0 et changement de signe \u2192 extremum local en a\n\nConvexit\u00e9 : f''(x)\u22650 \u2194 f convexe sur I\nPoint d'inflexion : f'' change de signe\nTh\u00e9or\u00e8me de Rolle : f continue sur [a,b], d\u00e9rivable sur ]a,b[, f(a)=f(b) \u2192 \u2203c : f'(c)=0"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"D\u00e9riv\u00e9e compos\u00e9e",
+       enonce:"f(x)=sin(3x\u00b2+1). Calculer f'(x).",
+       correction:"f'(x)=6x\u00b7cos(3x\u00b2+1)."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Extrema",
+       enonce:"f(x)=x\u00b3\u22126x+2. Extrema locaux.",
+       correction:"f'(x)=3x\u00b2\u22126=0 \u2192 x=\u00b1\u221a2.\nMax local f(\u2212\u221a2)=2+4\u221a2 ; min local f(\u221a2)=2\u22124\u221a2."},
+    ],
+  },
+  'etude-fonctions': {
+    ch:'CH 04', titre:"\u00c9tude de Fonctions", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"Polyn\u00f4mes deg 2 (ax\u00b2+bx+c, sommet, signe), deg 3 (variations), bicarr\u00e9es ax\u2074+bx\u00b2+c (substitution X=x\u00b2), rationnelles type 1 ax+b/cx+d (centre de sym\u00e9trie), type 2 ax\u00b2+bx+c/dx+e, irrationnelles (\u221a(ax+b), \u221a(ax\u00b2+bx+c)), circulaires (sin(ax+b), cos(ax+b), p\u00e9riodicit\u00e9).",
+    theoremes:[
+      {id:'F1',type:'formule',nom:"Polyn\u00f4mes",
+       enonce:"Deg 2 : sommet S(\u2212b/2a;\u2212\u0394/4a) ; signe selon \u0394 et a\nDeg 3 : f'(x)=3ax\u00b2+2bx+c ; inflexion en x=\u2212b/(3a)\nBicarr\u00e9e ax\u2074+bx\u00b2+c : substitution X=x\u00b2 \u2192 aX\u00b2+bX+c"},
+      {id:'F2',type:'formule',nom:"Fonctions rationnelles",
+       enonce:"Type 1 (ax+b)/(cx+d) :\n\u2022 AV x=\u2212d/c ; AH y=a/c ; centre sym. (\u2212d/c;a/c)\n\nType 2 (ax\u00b2+bx+c)/(dx+e) :\n\u2022 Division euclidienne \u2192 AO\n\nType 3 (ax\u00b2+bx+c)/(dx\u00b2+ex+f) :\n\u2022 \u00c9tude du signe du d\u00e9nominateur"},
+      {id:'F3',type:'formule',nom:"Fonctions irrationnelles et circulaires",
+       enonce:"Irrationnelles :\n\u2022 \u221a(ax+b) : D=[\u2212b/a;+\u221e[ ; d\u00e9riv\u00e9e a/(2\u221a(ax+b))\n\u2022 \u221a(ax\u00b2+bx+c) : D selon signe du trin\u00f4me\n\nCirculaires :\n\u2022 sin(ax+b) : p\u00e9riode 2\u03c0/a ; (sin(ax+b))'=a\u00b7cos(ax+b)\n\u2022 cos(ax+b) : p\u00e9riode 2\u03c0/a ; (cos(ax+b))'=\u2212a\u00b7sin(ax+b)\n\u2022 tan x : p\u00e9riode \u03c0 ; D=\u211d\\{\u03c0/2+k\u03c0}\n\nExponentielle ln x et e\u02e3 int\u00e9gr\u00e9es dans l'\u00e9tude"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Rationnelle type 1",
+       enonce:"f(x)=(2x\u22121)/(x+3). Asymptotes.",
+       correction:"AV : x=\u22123. AH : y=2. Centre de sym\u00e9trie (\u22123;2)."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Bicarr\u00e9e",
+       enonce:"f(x)=x\u2074\u22125x\u00b2+4. Trouver les racines.",
+       correction:"X=x\u00b2 : X\u00b2\u22125X+4=0 \u2192 X=1 ou X=4.\nx=\u00b11 ou x=\u00b12."},
+    ],
+  },
+  'logarithme': {
+    ch:'CH 05', titre:"Logarithme N\u00e9p\u00e9rien", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"D\u00e9finition ln x pour x>0, propri\u00e9t\u00e9s alg\u00e9briques (ln(ab)=ln a+ln b, ln(a\u207f)=n\u00b7ln a), d\u00e9riv\u00e9e (ln x)'=1/x et (ln u)'=u'/u, \u00e9tude compl\u00e8te (variations, limites, courbe repr\u00e9sentative), fonctions du type x\u21a6ln(u(x)).",
+    theoremes:[
+      {id:'D1',type:'def',nom:"D\u00e9finition et propri\u00e9t\u00e9s alg\u00e9briques",
+       enonce:"(ln x)'=1/x pour x>0 ; ln(1)=0 ; ln(e)=1\nR\u00e9ciproque de e\u02e3 : ln(e\u02e3)=x ; e^(ln x)=x\n\nln(ab)=ln a+ln b ; ln(a/b)=ln a\u2212ln b\nln(a\u207f)=n\u00b7ln a ; ln(\u221aa)=(1/2)ln a\nln(1/a)=\u2212ln a"},
+      {id:'F1',type:'formule',nom:"D\u00e9riv\u00e9e compos\u00e9e et \u00e9tude",
+       enonce:"(ln u)'=u'/u (u>0) ; (ln|u|)'=u'/u\n\n\u00c9tude de ln x :\n\u2022 Domaine ]0;+\u221e[ ; croissante ; concave\n\u2022 lim(x\u21920\u207a)ln x=\u2212\u221e ; lim(x\u2192+\u221e)=+\u221e\n\nCroissances compar\u00e9es :\nlim(x\u2192+\u221e)(ln x)/x\u1d45=0 (\u03b1>0)\nlim(x\u21920\u207a) x\u00b7ln x=0"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Simplification",
+       enonce:"Simplifier A=ln(4)\u22122ln(\u221a2).",
+       correction:"A=ln 4\u2212ln 2=ln 2."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"\u00c9tude",
+       enonce:"f(x)=x\u00b7ln x sur ]0;+\u221e[. Minimum.",
+       correction:"f'(x)=ln x+1=0 \u2192 x=1/e. Min : f(1/e)=\u22121/e."},
+    ],
+  },
+  'exponentielle': {
+    ch:'CH 06', titre:"Fonction Exponentielle", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"D\u00e9finition e\u02e3 (r\u00e9ciproque de ln), propri\u00e9t\u00e9s alg\u00e9briques (e^(a+b)=e\u1d43\u00d7e\u1d47, (e\u1d43)\u207f=e^(na)), d\u00e9riv\u00e9e (e\u02e3)'=e\u02e3 et (e\u1d58)'=u'\u00b7e\u1d58, \u00e9tude compl\u00e8te (variations, limites, courbe), fonctions du type x\u21a6e^(u(x)).",
+    theoremes:[
+      {id:'D1',type:'def',nom:"D\u00e9finition et propri\u00e9t\u00e9s",
+       enonce:"e\u02e3 = r\u00e9ciproque de ln ; (e\u02e3)'=e\u02e3 ; e\u2070=1 ; e\u02e3>0\ne^(a+b)=e\u1d43e\u1d47 ; (e\u1d43)\u207f=e\u207f\u1d43 ; e\u207b\u02e3=1/e\u02e3\n(e\u1d58)'=u'e\u1d58\n\n\u00c9tude : croissante sur \u211d ; convexe (in\u00e9galit\u00e9 e\u02e3\u22651+x)\nlim(x\u2192\u2212\u221e)e\u02e3=0 ; lim(x\u2192+\u221e)=+\u221e"},
+      {id:'F1',type:'formule',nom:"Croissances compar\u00e9es et base a\u02e3",
+       enonce:"lim(x\u2192+\u221e) e\u02e3/x\u207f=+\u221e (n>0)\nlim(x\u2192\u2212\u221e) |x\u207f|e\u02e3=0\n\nBase a\u02e3=e^(x ln a) (a>0, a\u22601) ; (a\u02e3)'=ln(a)\u00b7a\u02e3"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"\u00c9quation",
+       enonce:"R\u00e9soudre e^(2x)=5.",
+       correction:"2x=ln 5 \u2192 x=ln5/2."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Syst\u00e8me",
+       enonce:"R\u00e9soudre e^(2x)\u22123e\u02e3+2=0.",
+       correction:"t=e\u02e3>0 : t\u00b2\u22123t+2=0 \u2192 t=1 ou t=2.\nx=0 ou x=ln2."},
+    ],
+  },
+  'suites': {
+    ch:'CH 07', titre:"Suites Num\u00e9riques", badge:'Analyse',
+    duree:'~5h', section:"Partie 1 \u2014 Analyse (7 ch.)",
+    desc:"Suites arithm\u00e9tiques (u_{n+1}=u_n+r, terme g\u00e9n\u00e9ral, somme), g\u00e9om\u00e9triques (u_{n+1}=q\u00b7u_n, terme g\u00e9n\u00e9ral, somme), suites du type u_n=f(n), r\u00e9currentes u_{n+1}=f(u_n) (cas affine au_n+b), limite d'une suite (convergence, divergence), th\u00e9or\u00e8me des gendarmes.",
+    theoremes:[
+      {id:'D1',type:'def',nom:"Suites arithm\u00e9tiques et g\u00e9om\u00e9triques",
+       enonce:"Arithm\u00e9tique (raison r) : u\u2099\u208a\u2081=u\u2099+r\n\u2022 u\u2099=u\u2080+nr ; S\u2099=n(u\u2081+u\u2099)/2\n\nG\u00e9om\u00e9trique (raison q\u22600) : u\u2099\u208a\u2081=q\u00b7u\u2099\n\u2022 u\u2099=u\u2080\u00b7q\u207f ; S\u2099=u\u2081(1\u2212q\u207f)/(1\u2212q)\n\u2022 |q|<1\u21920 ; q>1\u2192+\u221e ; |q|>1, q<0 : diverge"},
+      {id:'T1',type:'thm',nom:"Convergence \u2014 Suites monotones born\u00e9es",
+       enonce:"Toute suite croissante et major\u00e9e converge.\nToute suite d\u00e9croissante et minor\u00e9e converge.\n\nTh\u00e9or\u00e8me des gendarmes :\nv\u2099\u2264u\u2099\u2264w\u2099 et lim v\u2099=lim w\u2099=\u2113 \u27f9 lim u\u2099=\u2113"},
+      {id:'D2',type:'def',nom:"Suite r\u00e9currente u\u2099\u208a\u2081=f(u\u2099)",
+       enonce:"Cas affine u\u2099\u208a\u2081=au\u2099+b (a\u22601) :\n\u2022 Point fixe \u2113=b/(1\u2212a)\n\u2022 v\u2099=u\u2099\u2212\u2113 g\u00e9om\u00e9trique raison a\n\u2022 u\u2099=\u2113+(u\u2080\u2212\u2113)\u00b7a\u207f\n\nCas homographique u\u2099\u208a\u2081=(au\u2099+b)/(cu\u2099+d) :\n\u2022 Points fixes : \u2113 est racine de c\u2113\u00b2+(d\u2212a)\u2113\u2212b=0\n\u2022 Changement de variable v\u2099=1/(u\u2099\u2212\u2113) ou (u\u2099\u2212\u2113)/(u\u2099\u2212\u2113')\n\nSi u\u2099\u2192\u2113 et f continue : f(\u2113)=\u2113"},
+      {id:'T2',type:'thm',nom:"Principe de r\u00e9currence",
+       enonce:"Pour montrer P(n) vraie pour tout n\u2265n\u2080 :\n1. Base : v\u00e9rifier P(n\u2080)\n2. H\u00e9r\u00e9dit\u00e9 : supposer P(n) et montrer P(n+1)\n\u27f9 P(n) vraie pour tout n\u2265n\u2080"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Suite g\u00e9om\u00e9trique",
+       enonce:"u\u2099 g\u00e9om\u00e9trique, u\u2080=4, q=1/2. lim u\u2099 ?",
+       correction:"|q|=1/2<1 \u2192 lim u\u2099=0."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Suite affine",
+       enonce:"u\u2099\u208a\u2081=2u\u2099\u22123, u\u2080=1. Exprimer u\u2099.",
+       correction:"\u2113=3. v\u2099=u\u2099\u22123, v\u2080=\u22122. v\u2099=\u22122\u00d72\u207f. u\u2099=3\u22122^(n+1)."},
+    ],
+  },
+  'geometrie-espace': {
+    ch:'CH 08', titre:"G\u00e9om\u00e9trie dans l'Espace", badge:'Géométrie',
+    duree:'~5h', section:"Partie 2 \u2014 G\u00e9om\u00e9trie",
+    desc:"Vecteurs de l'espace (composantes, somme, produit par scalaire), bases (trois vecteurs non coplanaires), produit scalaire dans l'espace (d\u00e9finition, propri\u00e9t\u00e9s, applications), droites dans l'espace (repr\u00e9sentation param\u00e9trique, cart\u00e9sienne), plans dans l'espace (ax+by+cz+d=0), positions relatives (droite-droite, droite-plan, plan-plan), distance point-plan et point-droite.",
+    theoremes:[
+      {id:'F1',type:'formule',nom:"Vecteurs et produit scalaire",
+       enonce:"u\u20d7(x;y;z) ; \u2016u\u20d7\u2016=\u221a(x\u00b2+y\u00b2+z\u00b2)\nu\u20d7\u00b7v\u20d7=xx'+yy'+zz'=\u2016u\u20d7\u2016\u2016v\u20d7\u2016cos\u03b8\nu\u20d7\u22a5v\u20d7 \u27fa u\u20d7\u00b7v\u20d7=0 ; \u2016u\u20d7\u2016\u00b2=u\u20d7\u00b7u\u20d7"},
+      {id:'D1',type:'def',nom:"Plans et droites",
+       enonce:"Plan : ax+by+cz+d=0, normale n\u20d7(a;b;c)\nPlan par A(x\u2080;y\u2080;z\u2080), normale n\u20d7 :\na(x\u2212x\u2080)+b(y\u2212y\u2080)+c(z\u2212z\u2080)=0\n\nDroite par A, directeur u\u20d7(a;b;c) :\nx=x\u2080+at ; y=y\u2080+bt ; z=z\u2080+ct (t\u2208\u211d)"},
+      {id:'F2',type:'formule',nom:"Distances",
+       enonce:"d(M,plan ax+by+cz+d=0)=|ax\u2080+by\u2080+cz\u2080+d|/\u221a(a\u00b2+b\u00b2+c\u00b2)\nd(M,droite)=\u2016AM\u20d7\u2227u\u20d7\u2016/\u2016u\u20d7\u2016 (produit vectoriel)\n\nSph\u00e8re centre \u03a9(a;b;c), rayon r :\n(x\u2212a)\u00b2+(y\u2212b)\u00b2+(z\u2212c)\u00b2=r\u00b2"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"\u00c9quation du plan",
+       enonce:"Plan par A(1;2;3), normale n\u20d7(2;\u22121;1).",
+       correction:"2(x\u22121)\u2212(y\u22122)+(z\u22123)=0 \u2192 2x\u2212y+z\u22123=0."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Distance point-plan",
+       enonce:"Distance de M(3;1;2) au plan 2x\u2212y+z\u22123=0.",
+       correction:"d=|6\u22121+2\u22123|/\u221a(4+1+1)=|4|/\u221a6=4\u221a6/6=2\u221a6/3."},
+    ],
+  },
+  'statistiques': {
+    ch:'CH 09', titre:"Statistiques \u2014 S\u00e9ries \u00e0 deux variables", badge:'Statistiques',
+    duree:'~5h', section:"Partie 3 \u2014 Statistiques",
+    desc:"Nuage de points (xi, yi), point moyen G(x\u0304, \u0233), ajustement lin\u00e9aire (droite de r\u00e9gression par moindres carr\u00e9s), coefficient de corr\u00e9lation r (\u22121\u2264r\u22641, interpr\u00e9tation qualit\u00e9 de l'ajustement), pr\u00e9visions par extrapolation et interpolation.",
+    theoremes:[
+      {id:'F1',type:'formule',nom:"Droite de r\u00e9gression et corr\u00e9lation",
+       enonce:"Donn\u00e9es (x\u1d62;y\u1d62), i=1,\u2026,n.\nx\u0304=\u03a3x\u1d62/n ; \u0233=\u03a3y\u1d62/n ; G(x\u0304;\u0233)\ncov(X,Y)=(1/n)\u03a3x\u1d62y\u1d62\u2212x\u0304\u0233\n\u03c3\u00b2\u2093=(1/n)\u03a3x\u1d62\u00b2\u2212x\u0304\u00b2\n\nDroite y=ax+b (passe par G) :\na=cov/\u03c3\u00b2\u2093 ; b=\u0233\u2212ax\u0304\nr=cov/(\u03c3\u2093\u03c3\u1d67) ; \u22121\u2264r\u22641\n|r|\u22481 \u2192 bonne corr\u00e9lation lin\u00e9aire"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Intermédiaire',titre:"Droite de r\u00e9gression",
+       enonce:"Points : (1;2),(2;4),(3;5),(4;7). Droite y=ax+b.",
+       correction:"x\u0304=2,5 ; \u0233=4,5. \u03a3x\u1d62y\u1d62/4=53/4. cov=53/4\u221211,25=2. \u03c3\u00b2\u2093=30/4\u22126,25=1,25.\na=2/1,25=1,6. b=4,5\u22124=0,5. Droite : y=1,6x+0,5."},
+    ],
+  },
+  'denombrement': {
+    ch:'CH 10', titre:"D\u00e9nombrement", badge:'Probabilités',
+    duree:'~5h', section:"Partie 4 \u2014 Probabilit\u00e9s (2 ch.)",
+    desc:"Arrangements A\u2099\u1d56 = n!/(n\u2212p)!, permutations n!, combinaisons C\u2099\u1d56 = (n choose p), formule du bin\u00f4me (a+b)\u207f = \u03a3 C\u2099\u1d4f a\u1d4f b\u207f\u207b\u1d4f.",
+    theoremes:[
+      {id:'F1',type:'formule',nom:"Arrangements, permutations, combinaisons",
+       enonce:"Arrangements (ordre compte) : A\u2099\u1d56=n!/(n\u2212p)!\nPermutations de n \u00e9l\u00e9ments : n!\nCombinaisons (ordre indiff\u00e9rent) : C\u2099\u1d56=n!/(p!(n\u2212p)!)\n\nPropri\u00e9t\u00e9s : C\u2099\u1d56=C\u2099\u207f\u207b\u1d56 ; C\u2099\u1d56+C\u2099\u1d56\u207a\u00b9=C\u2099\u208a\u2081\u1d56\u207a\u00b9\n\nFormule du bin\u00f4me de Newton :\n(a+b)\u207f=\u03a3\u2096\u208c\u2080\u207f C\u2099\u1d4f\u00b7a\u1d4f\u00b7b\u207f\u207b\u1d4f"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Combinaisons",
+       enonce:"Calculer C\u2086\u00b3.",
+       correction:"C\u2086\u00b3=6!/(3!3!)=20."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Bin\u00f4me",
+       enonce:"D\u00e9velopper (1+x)\u2074.",
+       correction:"1+4x+6x\u00b2+4x\u00b3+x\u2074."},
+    ],
+  },
+  'probabilites': {
+    ch:'CH 11', titre:"Probabilit\u00e9s", badge:'Probabilités',
+    duree:'~5h', section:"Partie 4 \u2014 Probabilit\u00e9s (2 ch.)",
+    desc:"Vocabulaire probabiliste (univers \u03a9, \u00e9v\u00e9nements \u00e9l\u00e9mentaires), probabilit\u00e9 sur ensemble fini (d\u00e9finition, axiomes), probabilit\u00e9 de la r\u00e9union P(A\u222aB)=P(A)+P(B)\u2212P(A\u2229B), \u00e9quiprobabilit\u00e9 P(A)=card(A)/card(\u03a9), probabilit\u00e9s conditionnelles P_A(B)=P(A\u2229B)/P(A), ind\u00e9pendance P(A\u2229B)=P(A)\u00d7P(B).",
+    theoremes:[
+      {id:'F1',type:'formule',nom:"Probabilit\u00e9s conditionnelles",
+       enonce:"P(B|A)=P(A\u2229B)/P(A) (P(A)>0)\nP(A\u2229B)=P(A)\u00b7P(B|A)=P(B)\u00b7P(A|B)\n\nFormule des probabilit\u00e9s totales :\nP(B)=P(A)\u00b7P(B|A)+P(\u0100)\u00b7P(B|\u0100)"},
+      {id:'T1',type:'thm',nom:"Th\u00e9or\u00e8me de Bayes et ind\u00e9pendance",
+       enonce:"Bayes : P(A|B)=P(A)\u00b7P(B|A)/P(B)\n\nInd\u00e9pendance : P(A\u2229B)=P(A)\u00b7P(B)\n\u27fa P(B|A)=P(B) \u27fa P(A|B)=P(A)\n\n\u00c9quiprobabilit\u00e9 : P(A)=card(A)/card(\u03a9)"},
+    ],
+    exercices:[
+      {id:'EX01',niveau:'Facile',titre:"Probabilit\u00e9s totales",
+       enonce:"P(A)=0,3, P(B|A)=0,7, P(B|\u0100)=0,1. Calculer P(B).",
+       correction:"P(B)=0,3\u00d70,7+0,7\u00d70,1=0,21+0,07=0,28."},
+      {id:'EX02',niveau:'Intermédiaire',titre:"Bayes",
+       enonce:"Test + : 95% si malade, 3% si sain. 2% malades. P(malade|+) ?",
+       correction:"P(+)=0,02\u00d70,95+0,98\u00d70,03=0,019+0,0294=0,0484.\nP(m|+)=0,019/0,0484\u224839%."},
+    ],
+  },
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  DONNÉES — Programme CNP Économie & Gestion 4ème Tunisie
-// ═══════════════════════════════════════════════════════════════
-const CHAPITRES: Ch[] = [
-// ─── TOME I — ANALYSE ────────────────────────────────────────
-{
-  slug:'logique-raisonnement', num:'CH 01', titre:'Logique & Raisonnement', badge:'Logique', tome:1,
-  color:'#06d6a0', icon:'⊢', desc:'Propositions, connecteurs, tables de vérité, modes de raisonnement.',
-  sections:[
-  { titre:'I. Propositions et connecteurs logiques', theoremes:[
-    { id:'lr1', type:'Définition', label:'Proposition',
-      enonce:'Une proposition est un énoncé qui est soit vrai (V), soit faux (F).\nExemples : "2+2=4" (V), "7 est pair" (F).' },
-    { id:'lr2', type:'Définition', label:'Connecteurs logiques',
-      enonce:'• Négation : ¬P  (non P)\n• Conjonction : P ∧ Q  (P et Q)\n• Disjonction : P ∨ Q  (P ou Q)\n• Implication : P ⟹ Q  (si P alors Q)\n• Équivalence : P ⟺ Q  (P si et seulement si Q)',
-      remarque:'P ⟹ Q est faux uniquement quand P est vrai et Q est faux.' },
-    { id:'lr3', type:'Formule clé', label:'Tables de vérité essentielles',
-      enonce:'P ⟹ Q  équivaut à  ¬P ∨ Q\nContraposée : P ⟹ Q  équivaut à  ¬Q ⟹ ¬P\nP ⟺ Q  équivaut à  (P⟹Q) ∧ (Q⟹P)\nLois de De Morgan :\n• ¬(P∧Q) ≡ ¬P∨¬Q\n• ¬(P∨Q) ≡ ¬P∧¬Q' },
-  ]},
-  { titre:'II. Modes de raisonnement', theoremes:[
-    { id:'lr4', type:'Propriété', label:'Raisonnement direct',
-      enonce:'On part de l\'hypothèse H et on enchaîne des implications :\nH ⟹ P₁ ⟹ P₂ ⟹ ... ⟹ C\npour aboutir à la conclusion C.' },
-    { id:'lr5', type:'Propriété', label:'Raisonnement par contraposée',
-      enonce:'Pour prouver P ⟹ Q, on prouve ¬Q ⟹ ¬P.\nLes deux sont logiquement équivalents.' },
-    { id:'lr6', type:'Propriété', label:'Raisonnement par l\'absurde',
-      enonce:'Pour prouver P, on suppose ¬P et on dérive une contradiction.\nSi ¬P ⟹ Faux, alors P est vrai.' },
-    { id:'lr7', type:'Théorème', label:'Raisonnement par récurrence',
-      enonce:'Pour prouver P(n) pour tout n ≥ n₀ :\n1. Initialisation : vérifier P(n₀)\n2. Hérédité : supposer P(n) vraie (H.R.) et prouver P(n+1)\nConclusion : P(n) vraie pour tout n ≥ n₀.' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'limites-continuite', num:'CH 02', titre:'Continuité & Limites', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'∞', desc:'Limites, TVI, asymptotes, prolongement par continuité.',
-  sections:[
-  { titre:'I. Limites de fonctions', theoremes:[
-    { id:'lc1', type:'Définition', label:'Limite finie en un point',
-      enonce:'f admet ℓ pour limite en a si :\n∀ε>0, ∃δ>0 : 0<|x−a|<δ ⟹ |f(x)−ℓ|<ε\nNotation : lim(x→a) f(x) = ℓ',
-      remarque:'f(a) peut ne pas être défini.' },
-    { id:'lc2', type:'Théorème', label:'Théorème des Gendarmes',
-      enonce:'Si g(x) ≤ f(x) ≤ h(x) au voisinage de a\net lim g = lim h = ℓ en a, alors lim f = ℓ.' },
-    { id:'lc3', type:'Formule clé', label:'Limites fondamentales',
-      enonce:'• lim(x→0) sin(x)/x = 1\n• lim(x→0) (eˣ−1)/x = 1\n• lim(x→0) ln(1+x)/x = 1\nCroissances comparées (x→+∞) :\n• eˣ/xⁿ → +∞ pour tout n\n• ln(x)/xᵅ → 0 pour α>0' },
-  ]},
-  { titre:'II. Continuité et TVI', theoremes:[
-    { id:'lc4', type:'Définition', label:'Continuité en un point',
-      enonce:'f est continue en a si lim(x→a) f(x) = f(a).' },
-    { id:'lc5', type:'Théorème', label:'Théorème des Valeurs Intermédiaires (TVI)',
-      enonce:'Si f est continue sur [a,b] et k est entre f(a) et f(b),\n∃ c ∈ [a,b] tel que f(c) = k.',
-      remarque:'Si f est de plus strictement monotone, c est unique.' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'suites-numeriques', num:'CH 03', titre:'Suites Numériques', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'Σ', desc:'Suites arithmétiques, géométriques, convergence, récurrentes.',
-  sections:[
-  { titre:'I. Suites classiques', theoremes:[
-    { id:'sn1', type:'Formule clé', label:'Suite arithmétique de raison r',
-      enonce:'uₙ = u₀ + n·r\nSomme : u₀+u₁+…+uₙ = (n+1)·(u₀+uₙ)/2' },
-    { id:'sn2', type:'Formule clé', label:'Suite géométrique de raison q',
-      enonce:'uₙ = u₀·qⁿ  (q ≠ 0)\nSomme : u₀+u₁+…+uₙ = u₀·(1−qⁿ⁺¹)/(1−q)  (q ≠ 1)' },
-  ]},
-  { titre:'II. Convergence', theoremes:[
-    { id:'sn3', type:'Théorème', label:'Suite monotone bornée',
-      enonce:'Toute suite monotone et bornée est convergente.' },
-    { id:'sn4', type:'Théorème', label:'Suite récurrente uₙ₊₁ = f(uₙ)',
-      enonce:'Si f est continue et uₙ → ℓ, alors ℓ est un point fixe : f(ℓ) = ℓ.\nMéthode : résoudre f(x) = x, puis étudier la monotonie de (uₙ).' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'derivabilite', num:'CH 04', titre:'Dérivabilité & Applications', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'∂', desc:'Dérivées, Rolle, TAF, extrema, convexité, variation.',
-  sections:[
-  { titre:'I. Dérivées usuelles et règles', theoremes:[
-    { id:'d1', type:'Formule clé', label:'Tableau des dérivées usuelles',
-      enonce:'(xⁿ)\' = n·xⁿ⁻¹\n(eˣ)\' = eˣ\n(ln x)\' = 1/x\n(sin x)\' = cos x\n(cos x)\' = −sin x\n(√x)\' = 1/(2√x)\n(u·v)\' = u\'v + uv\'\n(u/v)\' = (u\'v − uv\')/v²\n(f∘g)\' = (f\'∘g)·g\'' },
-    { id:'d2', type:'Théorème', label:'Théorème de Rolle',
-      enonce:'Si f continue sur [a,b], dérivable sur ]a,b[ et f(a)=f(b),\nalors ∃ c ∈ ]a,b[ tel que f\'(c) = 0.' },
-    { id:'d3', type:'Théorème', label:'Théorème des Accroissements Finis (TAF)',
-      enonce:'Si f continue sur [a,b] et dérivable sur ]a,b[,\n∃ c ∈ ]a,b[ tel que f\'(c) = [f(b)−f(a)]/(b−a).' },
-  ]},
-  { titre:'II. Étude de fonctions', theoremes:[
-    { id:'d4', type:'Propriété', label:'Extrema et dérivée',
-      enonce:'Si f\'(a) = 0 et f\' change de signe en a :\n• f\'  + puis − → maximum local\n• f\'  − puis + → minimum local' },
-    { id:'d5', type:'Propriété', label:'Convexité et dérivée seconde',
-      enonce:'f convexe sur I ⟺ f\'\' ≥ 0 sur I ⟺ C_f au-dessus de ses tangentes.\nf concave sur I ⟺ f\'\' ≤ 0 sur I.\nPoint d\'inflexion : f\'\'(a) = 0 et f\'\' change de signe.' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'primitives-integrales', num:'CH 05', titre:'Primitives & Intégrales', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'∫', desc:'Table des primitives, IPP, théorème fondamental, aires.',
-  sections:[
-  { titre:'I. Primitives', theoremes:[
-    { id:'pi1', type:'Formule clé', label:'Primitives usuelles',
-      enonce:'∫xⁿdx = xⁿ⁺¹/(n+1)  (n≠−1)\n∫(1/x)dx = ln|x|\n∫eˣdx = eˣ\n∫sin(x)dx = −cos(x)\n∫cos(x)dx = sin(x)\n∫u\'·f(u)dx = F(u)+C (primitive de forme composée)' },
-    { id:'pi2', type:'Théorème', label:'Intégration par parties (IPP)',
-      enonce:'∫u·v\'dx = [u·v] − ∫u\'·v dx\nChoisir u et v\' selon la règle LIATE :\nLogarithme · Inverse · Algèbre · Trig · Expo.' },
-  ]},
-  { titre:'II. Intégrale définie', theoremes:[
-    { id:'pi3', type:'Théorème', label:'Théorème fondamental de l\'analyse',
-      enonce:'Si f est continue sur [a,b] et F est une primitive de f :\n∫[a,b] f(x)dx = F(b) − F(a)' },
-    { id:'pi4', type:'Propriété', label:'Aire entre deux courbes',
-      enonce:'Aire = ∫[a,b] |f(x)−g(x)|dx\nSi f(x) ≥ g(x) sur [a,b] : Aire = ∫[a,b] (f(x)−g(x))dx' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'logarithme', num:'CH 06', titre:'Logarithme Népérien', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'ln', desc:'Définition intégrale, propriétés, dérivées, limites.',
-  sections:[
-  { titre:'I. Définition et propriétés', theoremes:[
-    { id:'lg1', type:'Définition', label:'Logarithme népérien',
-      enonce:'ln(x) = ∫[1,x] (1/t)dt  pour x > 0\nDomaine : ]0,+∞[\nln est strictement croissante, concave sur ]0,+∞[' },
-    { id:'lg2', type:'Propriété', label:'Propriétés algébriques',
-      enonce:'ln(ab) = ln a + ln b\nln(a/b) = ln a − ln b\nln(aⁿ) = n·ln a\nln(1) = 0  ;  ln(e) = 1  ;  ln(e^a) = a' },
-    { id:'lg3', type:'Formule clé', label:'Limites et croissances comparées',
-      enonce:'lim(x→0⁺) ln(x) = −∞\nlim(x→+∞) ln(x)/xᵅ = 0  (α>0)\nlim(x→0) ln(1+x)/x = 1\n(ln x)\' = 1/x  ;  (ln|u|)\' = u\'/u' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'exponentielle', num:'CH 07', titre:'Fonction Exponentielle', badge:'Analyse', tome:1,
-  color:'#6366f1', icon:'eˣ', desc:'Réciproque de ln, propriétés, limites, croissance comparée.',
-  sections:[
-  { titre:'I. Définition et propriétés', theoremes:[
-    { id:'ex1', type:'Définition', label:'Fonction exponentielle',
-      enonce:'exp = ln⁻¹  (réciproque de ln)\ne^x = y ⟺ x = ln(y)\ne^0 = 1  ;  e^1 = e ≈ 2,718\nDomaine : ℝ → ]0,+∞[' },
-    { id:'ex2', type:'Propriété', label:'Propriétés algébriques',
-      enonce:'e^(a+b) = eᵃ·eᵇ\ne^(a−b) = eᵃ/eᵇ\n(eᵃ)ⁿ = e^(na)\ne^(−x) = 1/eˣ' },
-    { id:'ex3', type:'Formule clé', label:'Dérivées et limites',
-      enonce:'(eˣ)\' = eˣ  ;  (e^u)\' = u\'·e^u\nlim(x→−∞) eˣ = 0\nlim(x→+∞) eˣ/xⁿ = +∞  (croissance comparée)\nlim(x→0) (e^x−1)/x = 1' },
-  ]},
-]},
-// ─── TOME II — ALGÈBRE, PROBABILITÉS & FINANCES ──────────────
-{
-  slug:'probabilites', num:'CH 01', titre:'Probabilités', badge:'Probabilités', tome:2,
-  color:'#f5c842', icon:'P', desc:'Probabilités conditionnelles, Bayes, loi binomiale.',
-  sections:[
-  { titre:'I. Probabilités conditionnelles', theoremes:[
-    { id:'pr1', type:'Définition', label:'Probabilité conditionnelle',
-      enonce:'P(A|B) = P(A∩B)/P(B)  si P(B) > 0\n"Probabilité de A sachant que B est réalisé"' },
-    { id:'pr2', type:'Théorème', label:'Formule des probabilités totales',
-      enonce:'Si (B₁,...,Bₙ) est une partition de Ω :\nP(A) = Σ P(A|Bᵢ)·P(Bᵢ)' },
-    { id:'pr3', type:'Théorème', label:'Théorème de Bayes',
-      enonce:'P(Bᵢ|A) = P(A|Bᵢ)·P(Bᵢ) / Σ P(A|Bⱼ)·P(Bⱼ)',
-      remarque:'Utiliser l\'arbre de probabilités pour organiser les calculs.' },
-  ]},
-  { titre:'II. Variables aléatoires et loi binomiale', theoremes:[
-    { id:'pr4', type:'Définition', label:'Variable aléatoire discrète',
-      enonce:'X : Ω → ℝ\nEspérance : E(X) = Σ xᵢ·P(X=xᵢ)\nVariance : V(X) = E(X²) − [E(X)]²\nÉcart-type : σ = √V(X)' },
-    { id:'pr5', type:'Formule clé', label:'Loi binomiale B(n, p)',
-      enonce:'X ~ B(n,p) : nombre de succès en n épreuves de Bernoulli\nP(X=k) = C(n,k)·pᵏ·(1−p)^(n−k)\nE(X) = np  ;  V(X) = np(1−p)' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'statistiques', num:'CH 02', titre:'Statistiques', badge:'Statistiques', tome:2,
-  color:'#f97316', icon:'σ', desc:'Série à deux variables, covariance, corrélation, régression.',
-  sections:[
-  { titre:'I. Série à deux variables', theoremes:[
-    { id:'st1', type:'Définition', label:'Covariance',
-      enonce:'cov(X,Y) = (1/n)·Σxᵢyᵢ − x̄·ȳ\nMesure la liaison linéaire entre X et Y.' },
-    { id:'st2', type:'Formule clé', label:'Coefficient de corrélation linéaire',
-      enonce:'r = cov(X,Y) / (σₓ·σᵧ)\n−1 ≤ r ≤ 1\n|r| proche de 1 → liaison linéaire forte\n|r| proche de 0 → pas de liaison linéaire' },
-    { id:'st3', type:'Formule clé', label:'Droite de régression y en x',
-      enonce:'y = ax + b\na = cov(X,Y) / V(X)\nb = ȳ − a·x̄\nLa droite passe toujours par le point moyen (x̄, ȳ).' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'matrices', num:'CH 03', titre:'Matrices & Systèmes', badge:'Algèbre', tome:2,
-  color:'#a78bfa', icon:'M', desc:'Opérations matricielles, déterminant, inverse, systèmes linéaires.',
-  sections:[
-  { titre:'I. Opérations sur les matrices', theoremes:[
-    { id:'mat1', type:'Définition', label:'Matrice d\'ordre m×n',
-      enonce:'Tableau de m lignes et n colonnes.\nAddition : (A+B)ᵢⱼ = aᵢⱼ + bᵢⱼ\nMultiplication scalaire : (λA)ᵢⱼ = λaᵢⱼ\nProduit : (AB)ᵢⱼ = Σₖ aᵢₖ·bₖⱼ  (si A m×p et B p×n)',
-      remarque:'Le produit AB est défini si nombre de colonnes de A = nombre de lignes de B.' },
-    { id:'mat2', type:'Formule clé', label:'Déterminant d\'ordre 2 et 3',
-      enonce:'det(2×2) : |a b; c d| = ad − bc\ndet(3×3) : développement par rapport à une ligne/colonne\n= a₁₁(a₂₂a₃₃−a₂₃a₃₂) − a₁₂(a₂₁a₃₃−a₂₃a₃₁) + a₁₃(a₂₁a₃₂−a₂₂a₃₁)' },
-    { id:'mat3', type:'Théorème', label:'Matrice inverse',
-      enonce:'A est inversible ⟺ det(A) ≠ 0\nA⁻¹ = (1/det A)·adj(A)\nPour ordre 2 : si A=(a b; c d), A⁻¹ = (1/(ad−bc))·(d −b; −c a)' },
-  ]},
-  { titre:'II. Systèmes linéaires', theoremes:[
-    { id:'mat4', type:'Propriété', label:'Résolution par matrice inverse',
-      enonce:'Système AX = B :\nSi det(A) ≠ 0 → solution unique : X = A⁻¹·B\nSi det(A) = 0 → soit aucune solution, soit infinité.' },
-    { id:'mat5', type:'Propriété', label:'Méthode de Gauss-Jordan',
-      enonce:'1. Former la matrice augmentée (A|B)\n2. Opérations élémentaires sur les lignes :\n   Lᵢ ← Lᵢ + k·Lⱼ  ;  Lᵢ ↔ Lⱼ  ;  Lᵢ ← λLᵢ\n3. Réduire en forme échelonnée réduite\n4. Lire la solution ou conclure sur la compatibilité.' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'arithmetique', num:'CH 04', titre:'Arithmétique', badge:'Algèbre', tome:2,
-  color:'#a78bfa', icon:'ℤ', desc:'Euclide, Bézout, Gauss, congruences modulo n.',
-  sections:[
-  { titre:'I. Divisibilité et algorithme d\'Euclide', theoremes:[
-    { id:'ar1', type:'Définition', label:'Divisibilité dans ℤ',
-      enonce:'a divise b (a|b) si ∃k∈ℤ tel que b = ka.\nPGCD(a,b) : le plus grand diviseur commun.\nPPCM(a,b) = |a·b| / PGCD(a,b)' },
-    { id:'ar2', type:'Théorème', label:'Algorithme d\'Euclide',
-      enonce:'PGCD(a,b) = PGCD(b, a mod b)\nOn divise successivement jusqu\'au reste nul.\nLe dernier reste non nul est le PGCD.' },
-  ]},
-  { titre:'II. Théorèmes de Bézout et Gauss', theoremes:[
-    { id:'ar3', type:'Théorème', label:'Théorème de Bézout',
-      enonce:'a et b sont premiers entre eux (PGCD=1)\n⟺ ∃ (u,v) ∈ ℤ² : au + bv = 1\nGénéral : ∃ (u,v) : au + bv = PGCD(a,b)' },
-    { id:'ar4', type:'Théorème', label:'Théorème de Gauss',
-      enonce:'Si a|bc et PGCD(a,b) = 1, alors a|c.' },
-    { id:'ar5', type:'Définition', label:'Congruences modulo n',
-      enonce:'a ≡ b (mod n) ⟺ n | (a−b)\nPropriétés :\n• a≡b et c≡d ⟹ a+c≡b+d et ac≡bd (mod n)\n• a≡b ⟹ aᵏ≡bᵏ (mod n)' },
-  ]},
-]},
-// ─────────────────────────────────────────────────────────────
-{
-  slug:'mathematiques-financieres', num:'CH 05', titre:'Mathématiques Financières', badge:'Finances', tome:2,
-  color:'#10b981', icon:'💰', desc:'Intérêts simples/composés, annuités, emprunts, amortissement.',
-  sections:[
-  { titre:'I. Intérêts simples et composés', theoremes:[
-    { id:'mf1', type:'Formule clé', label:'Intérêts simples',
-      enonce:'Intérêts : I = C₀ · t · n\nCapital acquis : Cₙ = C₀·(1 + t·n)\noù t = taux annuel, n = durée en années.',
-      remarque:'Utilisé pour des placements de courte durée (< 1 an).' },
-    { id:'mf2', type:'Formule clé', label:'Intérêts composés',
-      enonce:'Capital acquis : Cₙ = C₀·(1+t)ⁿ\nValeur actuelle : C₀ = Cₙ / (1+t)ⁿ = Cₙ·(1+t)^(−n)\noù t = taux périodique, n = nombre de périodes.',
-      remarque:'À chaque période, les intérêts s\'ajoutent au capital et produisent eux-mêmes des intérêts.' },
-    { id:'mf3', type:'Définition', label:'Valeur actuelle et valeur acquise',
-      enonce:'Valeur acquise Vₙ : valeur d\'un capital dans le futur.\nValeur actuelle V₀ : valeur actuelle d\'un capital futur.\nFacteur d\'actualisation : v = 1/(1+t)' },
-  ]},
-  { titre:'II. Annuités', theoremes:[
-    { id:'mf4', type:'Formule clé', label:'Valeur acquise d\'une suite d\'annuités constantes',
-      enonce:'Annuités a versées en fin de période :\nVₙ = a · [(1+t)ⁿ − 1] / t\nAnnuités en début de période :\nVₙ = a · [(1+t)ⁿ − 1] / t · (1+t)' },
-    { id:'mf5', type:'Formule clé', label:'Valeur actuelle d\'une suite d\'annuités',
-      enonce:'V₀ = a · [1 − (1+t)^(−n)] / t\nUtilisée pour calculer la mensualité d\'un emprunt :',
-      remarque:'a = V₀·t / [1−(1+t)^(−n)]  ← mensualité constante' },
-  ]},
-  { titre:'III. Emprunts et amortissement', theoremes:[
-    { id:'mf6', type:'Propriété', label:'Tableau d\'amortissement — emprunt indivis',
-      enonce:'Chaque ligne du tableau :\n• Capital restant dû en début de période\n• Intérêts = Capital restant dû × t\n• Amortissement = Annuité − Intérêts\n• Capital restant dû fin = Capital début − Amortissement' },
-    { id:'mf7', type:'Formule clé', label:'Amortissement constant (linéaire)',
-      enonce:'Amortissement annuel = Valeur empruntée / n\nLa charge financière décroît chaque année.',
-      remarque:'Le total des intérêts est inférieur à celui d\'un remboursement par annuités constantes.' },
-  ]},
-]},
-]
-
-// ─────────────────────────────────────────────────────────────
-// COMPOSANTS UI
-// ─────────────────────────────────────────────────────────────
-function ThmCard({ thm }: { thm: Thm }) {
-  const [open, setOpen] = useState(true)
-  const st = TYPE_STYLE[thm.type]
-  return (
-    <div style={{ border: `1px solid ${st.border}`, borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
-      <button onClick={() => setOpen(!open)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: st.bg, border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, background: st.color, color: '#0d0d1a', padding: '2px 8px', borderRadius: 8, flexShrink: 0 }}>{thm.type.toUpperCase()}</span>
-        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', flex: 1 }}>{thm.label}</span>
-        <span style={{ color: 'var(--muted)', fontSize: 14 }}>{open ? '▲' : '▼'}</span>
-      </button>
-      {open && (
-        <div style={{ padding: '14px 18px', background: 'var(--surface)' }}>
-          <pre style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--text)', whiteSpace: 'pre-wrap', lineHeight: 1.7, margin: 0 }}>{thm.enonce}</pre>
-          {thm.remarque && (
-            <div style={{ marginTop: 10, padding: '8px 12px', background: 'rgba(245,200,66,0.08)', border: '1px solid rgba(245,200,66,0.25)', borderRadius: 8 }}>
-              <span style={{ fontSize: 11, color: '#f5c842', fontWeight: 700 }}>💡 Remarque : </span>
-              <span style={{ fontSize: 12, color: 'var(--text2)' }}>{thm.remarque}</span>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
+function TypeBadge({type}:{type:string}) {
+  const color = C[type as keyof typeof C]||C.def
+  return <span style={{fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,background:`${color}20`,color,border:`1px solid ${color}30`,flexShrink:0}}>{L[type as keyof typeof L]||type}</span>
 }
 
-export default function EcoGestionSlugPage({ params }: { params: { slug: string } }) {
-  const ch = CHAPITRES.find(c => c.slug === params.slug)
-  const [filter, setFilter] = useState<TType | 'Tous'>('Tous')
+export default function EcoGestionSlugPage() {
+  const params = useParams()
+  const slug = params?.slug as string
+  const ch = CHAPITRES[slug]
+  const [openEx, setOpenEx] = useState<string|null>(null)
+  const secColor = SEC_COLOR[slug]||'#10b981'
+  const idx = NAV_ORDER.indexOf(slug)
+  const prevSlug = idx>0 ? NAV_ORDER[idx-1] : null
+  const nextSlug = idx<NAV_ORDER.length-1 ? NAV_ORDER[idx+1] : null
 
   if (!ch) return (
-    <>
-      <Navbar />
-      <main style={{ paddingTop: 120, textAlign: 'center' }}>
-        <h1>Chapitre introuvable</h1>
-        <Link href="/bac/eco-gestion" style={{ color: 'var(--accent)' }}>← Retour</Link>
-      </main>
-      <Footer />
-    </>
+    <><Navbar/>
+      <main style={{paddingTop:80,minHeight:'50vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:48,marginBottom:16}}>📭</div>
+          <h2 style={{marginBottom:12}}>Chapitre non trouvé</h2>
+          <Link href="/bac/eco-gestion" style={{color:'#10b981'}}>← Retour Économie & Gestion</Link>
+        </div>
+      </main><Footer/></>
   )
 
-  const allTypes: TType[] = ['Théorème', 'Définition', 'Formule clé', 'Propriété', 'Corollaire']
-  const filteredSections = ch.sections.map(sec => ({
-    ...sec,
-    theoremes: filter === 'Tous' ? sec.theoremes : sec.theoremes.filter(t => t.type === filter)
-  })).filter(sec => sec.theoremes.length > 0)
-
-  const totalThm = ch.sections.reduce((s, sec) => s + sec.theoremes.length, 0)
+  const GROUPS: {label:string;slugs:string[]}[] = [
+    {label:"Partie 1 \u2014 Analyse (7 ch.)", slugs:["fonctions-generalites", "limites-continuite", "derivation", "etude-fonctions", "logarithme", "exponentielle", "suites"]},
+    {label:"Partie 2 \u2014 G\u00e9om\u00e9trie", slugs:["geometrie-espace"]},
+    {label:"Partie 3 \u2014 Statistiques", slugs:["statistiques"]},
+    {label:"Partie 4 \u2014 Probabilit\u00e9s (2 ch.)", slugs:["denombrement", "probabilites"]},
+  ]
 
   return (
-    <>
-      <Navbar />
-      <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
-        {/* Breadcrumb */}
-        <div style={{ borderBottom: '1px solid var(--border)', padding: '14px clamp(20px,5vw,60px)', display: 'flex', gap: 8, fontSize: 13, color: 'var(--muted)', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Link href="/bac" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Bac</Link>
-          <span>›</span>
-          <Link href="/bac/eco-gestion" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Économie & Gestion</Link>
-          <span>›</span>
-          <span style={{ color: 'var(--text)' }}>{ch.titre}</span>
+    <><Navbar/>
+      <main style={{position:'relative',zIndex:1,paddingTop:80}}>
+        <div style={{borderBottom:'1px solid var(--border)',padding:'14px clamp(20px,5vw,60px)',display:'flex',gap:8,fontSize:13,color:'var(--muted)',alignItems:'center',flexWrap:'wrap'}}>
+          <Link href="/bac" style={{color:'var(--muted)',textDecoration:'none'}}>Bac</Link><span>›</span>
+          <Link href="/bac/eco-gestion" style={{color:'var(--muted)',textDecoration:'none'}}>Économie & Gestion</Link><span>›</span>
+          <span style={{color:secColor,fontWeight:600}}>{ch.ch} — {ch.titre}</span>
         </div>
-
-        <div className="container" style={{ paddingTop: 36, paddingBottom: 80 }}>
-          {/* Header chapitre */}
-          <div style={{ background: `linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,154,114,0.05))`, border: '1px solid rgba(16,185,129,0.25)', borderRadius: 20, padding: '28px 32px', marginBottom: 32 }}>
-            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', marginBottom: 12 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--muted)', background: 'var(--surface2)', padding: '3px 10px', borderRadius: 8 }}>{ch.num}</span>
-              <span style={{ fontSize: 11, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>Tome {ch.tome === 1 ? 'I — Analyse' : 'II — Algèbre & Finances'}</span>
-              <span style={{ fontSize: 11, background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '3px 10px', borderRadius: 20 }}>{ch.badge}</span>
+        <div className="container" style={{paddingTop:40,paddingBottom:80}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 275px',gap:32,alignItems:'start'}}>
+            <div>
+              <div style={{marginBottom:32}}>
+                <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
+                  <span style={{fontFamily:'var(--font-mono)',fontSize:12,background:'var(--surface2)',color:'var(--muted)',padding:'3px 10px',borderRadius:8}}>Économie & Gestion · {ch.ch}</span>
+                  <span style={{fontSize:12,background:`${secColor}20`,color:secColor,padding:'3px 10px',borderRadius:12,fontWeight:600}}>{ch.badge}</span>
+                  <span style={{fontSize:11,background:'rgba(79,110,247,0.1)',color:'#10b981',padding:'3px 10px',borderRadius:12}}>Bac Tunisie · Coef. 2</span>
+                </div>
+                <h1 style={{fontSize:'clamp(22px,3.5vw,36px)',marginBottom:8}}>{ch.titre}</h1>
+                <div style={{fontSize:12,color:secColor,marginBottom:8}}>📂 {ch.section}</div>
+                <p style={{color:'var(--text2)',fontSize:14,lineHeight:1.65,marginBottom:14,maxWidth:640}}>{ch.desc}</p>
+                <div style={{display:'flex',gap:16,fontSize:12,color:'var(--muted)',flexWrap:'wrap'}}>
+                  <span>📊 {ch.theoremes.length} théorèmes & formules</span><span>·</span>
+                  <span>📝 {ch.exercices.length} exercices</span><span>·</span>
+                  <span>⏱ {ch.duree}</span>
+                </div>
+              </div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:24,padding:'10px 14px',background:'var(--surface)',borderRadius:12,border:'1px solid var(--border)'}}>
+                <span style={{fontSize:12,color:'var(--muted)',marginRight:4}}>Légende :</span>
+                {Object.entries(L).map(([k,v])=>(<span key={k} style={{fontSize:11,padding:'2px 10px',borderRadius:20,background:`${C[k as keyof typeof C]}18`,color:C[k as keyof typeof C],border:`1px solid ${C[k as keyof typeof C]}25`,fontWeight:600}}>{v}</span>))}
+              </div>
+              <div style={{marginBottom:44}}>
+                <h2 style={{fontSize:20,marginBottom:18}}>📐 Cours officiel — Théorèmes & Formules</h2>
+                <div style={{display:'flex',flexDirection:'column',gap:13}}>
+                  {ch.theoremes.map(t=>{
+                    const color=C[t.type as keyof typeof C]||C.def
+                    return (
+                      <div key={t.id} style={{borderLeft:`3px solid ${color}`,background:`${color}07`,borderRadius:'0 12px 12px 0',padding:'15px 20px',border:`1px solid ${color}18`}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8,gap:10,flexWrap:'wrap'}}>
+                          <div style={{fontWeight:700,fontSize:14}}>{t.nom}</div>
+                          <TypeBadge type={t.type}/>
+                        </div>
+                        <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.8,whiteSpace:'pre-line',fontFamily:t.type==='formule'?'var(--font-mono)':'inherit'}}>{t.enonce}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div style={{marginBottom:44}}>
+                <h2 style={{fontSize:20,marginBottom:18}}>📝 Exercices</h2>
+                <div style={{display:'flex',flexDirection:'column',gap:11}}>
+                  {ch.exercices.map(ex=>(
+                    <div key={ex.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'}}>
+                      <div style={{padding:'15px 20px'}}>
+                        <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8,flexWrap:'wrap'}}>
+                          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--muted)',background:'var(--surface2)',padding:'2px 8px',borderRadius:6}}>{ex.id}</span>
+                          <span style={{fontSize:11,padding:'2px 8px',borderRadius:10,fontWeight:600,background:ex.niveau==='Facile'?'rgba(6,214,160,0.15)':'rgba(245,158,11,0.15)',color:ex.niveau==='Facile'?'#06d6a0':'#f59e0b'}}>{ex.niveau}</span>
+                          <span style={{fontWeight:600,fontSize:14}}>{ex.titre}</span>
+                        </div>
+                        <p style={{fontSize:13,color:'var(--text2)',margin:0,lineHeight:1.6,whiteSpace:'pre-line'}}>{ex.enonce}</p>
+                      </div>
+                      <div style={{borderTop:'1px solid var(--border)',padding:'10px 20px',display:'flex',gap:10,flexWrap:'wrap'}}>
+                        <Link href={`/solve?q=${encodeURIComponent('Économie & Gestion Tunisie — '+ch.titre+' — '+ex.enonce)}`} className="btn btn-primary" style={{fontSize:12,padding:'6px 14px'}}>🧮 Résoudre avec IA</Link>
+                        <button onClick={()=>setOpenEx(openEx===ex.id?null:ex.id)} style={{fontSize:12,padding:'6px 14px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text2)',cursor:'pointer',fontFamily:'inherit'}}>
+                          📋 {openEx===ex.id?'Masquer':'Correction'}
+                        </button>
+                      </div>
+                      {openEx===ex.id&&(
+                        <div style={{padding:'13px 20px',borderTop:'1px solid var(--border)',background:`${secColor}06`}}>
+                          <div style={{fontSize:11,color:secColor,fontWeight:700,marginBottom:5}}>✅ Correction</div>
+                          <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.75,whiteSpace:'pre-line'}}>{ex.correction}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,borderTop:'1px solid var(--border)',paddingTop:22}}>
+                {prevSlug?(<Link href={`/bac/eco-gestion/${prevSlug}`} style={{textDecoration:'none'}}><div className="card" style={{padding:'13px 16px',transition:'transform 0.15s'}} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}><div style={{fontSize:11,color:'var(--muted)',marginBottom:3}}>← Précédent</div><div style={{fontWeight:700,fontSize:13}}>{TITRES[prevSlug]}</div></div></Link>):<div/>}
+                {nextSlug?(<Link href={`/bac/eco-gestion/${nextSlug}`} style={{textDecoration:'none'}}><div className="card" style={{padding:'13px 16px',textAlign:'right',transition:'transform 0.15s'}} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}><div style={{fontSize:11,color:'var(--muted)',marginBottom:3}}>Suivant →</div><div style={{fontWeight:700,fontSize:13}}>{TITRES[nextSlug]}</div></div></Link>):<div/>}
+              </div>
             </div>
-            <h1 style={{ fontSize: 'clamp(24px,3.5vw,38px)', marginBottom: 10 }}>{ch.titre}</h1>
-            <p style={{ color: 'var(--text2)', marginBottom: 16, maxWidth: 600 }}>{ch.desc}</p>
-            <div style={{ display: 'flex', gap: 20, fontSize: 13, color: 'var(--muted)', flexWrap: 'wrap' }}>
-              <span>📐 {totalThm} résultats</span>
-              <span>·</span>
-              <span>📂 {ch.sections.length} sections</span>
-              <span>·</span>
-              <span style={{ color: '#10b981' }}>Bac Économie & Gestion · CNP Tunisie</span>
-            </div>
-          </div>
-
-          {/* Filtres */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
-            {(['Tous', ...allTypes] as const).map(t => (
-              <button key={t} onClick={() => setFilter(t)}
-                style={{ padding: '7px 14px', borderRadius: 20, border: '1px solid', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)',
-                  background: filter === t ? (t === 'Tous' ? '#10b981' : TYPE_STYLE[t as TType].color) : 'transparent',
-                  color: filter === t ? (t === 'Tous' ? '#fff' : '#0d0d1a') : 'var(--muted)',
-                  borderColor: filter === t ? 'transparent' : 'var(--border)' }}>
-                {t}
-              </button>
-            ))}
-          </div>
-
-          {/* Sections & théorèmes */}
-          {filteredSections.map((sec, si) => (
-            <div key={si} style={{ marginBottom: 36 }}>
-              <h2 style={{ fontSize: 18, marginBottom: 16, paddingBottom: 8, borderBottom: '1px solid var(--border)', color: 'var(--text)' }}>{sec.titre}</h2>
-              {sec.theoremes.map(thm => <ThmCard key={thm.id} thm={thm} />)}
-            </div>
-          ))}
-
-          {/* Navigation */}
-          <div style={{ marginTop: 40, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-            <Link href="/bac/eco-gestion" className="btn btn-secondary">← Tous les chapitres</Link>
-            <Link href="/examens" className="btn btn-primary">📋 Examens Bac →</Link>
+            <aside style={{position:'sticky',top:88}}>
+              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:14}}>
+                <div style={{padding:'11px 15px',borderBottom:'1px solid var(--border)',fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em'}}>💹 Économie & Gestion · 11 ch.</div>
+                {GROUPS.map(g=>(
+                  <div key={g.label}>
+                    <div style={{padding:'7px 15px 3px',fontSize:10,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',background:'rgba(255,255,255,0.02)'}}>{g.label}</div>
+                    {g.slugs.map(s=>(
+                      <Link key={s} href={`/bac/eco-gestion/${s}`} style={{textDecoration:'none'}}>
+                        <div style={{padding:'8px 15px',borderBottom:'1px solid var(--border)',background:s===slug?`${SEC_COLOR[s]||secColor}12`:'transparent',borderLeft:s===slug?`3px solid ${SEC_COLOR[s]||secColor}`:'3px solid transparent',transition:'all 0.15s'}}
+                          onMouseEnter={e=>{if(s!==slug)e.currentTarget.style.background='rgba(255,255,255,0.03)'}}
+                          onMouseLeave={e=>{if(s!==slug)e.currentTarget.style.background='transparent'}}>
+                          <div style={{fontSize:10,color:'var(--muted)',marginBottom:1,fontFamily:'var(--font-mono)'}}>{NUMS[s]}</div>
+                          <div style={{fontSize:11,fontWeight:s===slug?700:400,color:s===slug?SEC_COLOR[s]||secColor:'var(--text2)'}}>{TITRES[s]}</div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:13,padding:'14px'}}>
+                <div style={{fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Actions</div>
+                <div style={{display:'flex',flexDirection:'column',gap:7}}>
+                  <Link href={`/solve?q=${encodeURIComponent('Explique-moi '+ch.titre+' Économie & Gestion Bac Tunisie')}`} className="btn btn-primary" style={{textAlign:'center',fontSize:12}}>🤖 Chat IA — {ch.titre}</Link>
+                  <Link href="/examens" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>📋 Exercice type Bac</Link>
+                  <Link href="/bac/eco-gestion" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>← Retour Économie & Gestion</Link>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer/>
+      <style>{`@media(max-width:900px){div[style*="grid-template-columns: 1fr 275px"]{grid-template-columns:1fr!important;}aside{display:none;}}`}</style>
     </>
   )
 }
