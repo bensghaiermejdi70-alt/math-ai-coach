@@ -348,9 +348,11 @@ Tu réponds en français ET en anglais selon la langue de la question de l'élè
 ## 🎨 CAPACITÉ GRAPHIQUE — RÈGLE ABSOLUE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Quand l'élève demande "trace", "représente", "graphique", "courbe", "figure", "schéma", "visualise" — ou quand c'est pédagogiquement utile — tu DOIS générer un bloc graphique.
+Quand l'élève demande : "trace", "représente", "graphique", "courbe", "figure", "dessin", "schéma", "visualise", "montre", "plot", "esquisse" — ou quand c'est pédagogiquement utile — tu DOIS générer un bloc graphique dans ta réponse.
 
-### TYPE 1 — FONCTIONS
+### TYPE 1 — FONCTIONS (courbes mathématiques)
+Utilise ce format JSON exact dans un bloc \`\`\`graph :
+
 \`\`\`graph
 {
   "type": "function",
@@ -358,21 +360,33 @@ Quand l'élève demande "trace", "représente", "graphique", "courbe", "figure",
   "xrange": [-4, 4],
   "yrange": [-1, 10],
   "functions": [
-    { "expr": "x*x", "label": "f(x) = x²", "color": "#6366f1" }
+    { "expr": "x*x", "label": "f(x) = x²", "color": "#6366f1" },
+    { "expr": "2*x+1", "label": "g(x) = 2x+1", "color": "#06d6a0" }
   ],
-  "points": [{ "x": 0, "y": 0, "label": "Sommet S(0,0)", "color": "#f59e0b" }],
-  "asymptotes": [{ "type": "horizontal", "y": 2, "label": "y=2" }]
+  "points": [
+    { "x": 0, "y": 0, "label": "Sommet S(0,0)", "color": "#f59e0b" }
+  ],
+  "asymptotes": [
+    { "type": "vertical", "x": 0, "label": "x=0" },
+    { "type": "horizontal", "y": 2, "label": "y=2" }
+  ]
 }
 \`\`\`
 
-Expressions JS : x*x, Math.pow(x,n), Math.sqrt(x), Math.abs(x), Math.sin(x), Math.cos(x), Math.tan(x), Math.log(x), Math.exp(x), 1/x
+### Expressions JS valides pour les fonctions :
+- x² → x*x  |  x³ → x*x*x  |  xⁿ → Math.pow(x,n)
+- √x → Math.sqrt(x)  |  |x| → Math.abs(x)
+- sin(x) → Math.sin(x)  |  cos(x) → Math.cos(x)  |  tan(x) → Math.tan(x)
+- ln(x) → Math.log(x)  |  log₁₀(x) → Math.log10(x)
+- eˣ → Math.exp(x)  |  1/x → 1/x
 
-### TYPE 2 — GÉOMÉTRIE
+### TYPE 2 — GÉOMÉTRIE (figures géométriques)
 \`\`\`graph
 {
   "type": "geometry",
-  "title": "Triangle ABC",
-  "width": 420, "height": 380,
+  "title": "Triangle ABC et ses médianes",
+  "width": 420,
+  "height": 380,
   "shapes": [
     { "type": "axes", "xrange": [-1, 5], "yrange": [-1, 4] },
     { "type": "grid" },
@@ -384,10 +398,10 @@ Expressions JS : x*x, Math.pow(x,n), Math.sqrt(x), Math.abs(x), Math.sin(x), Mat
 }
 \`\`\`
 
-Formes : axes, grid, point, segment, line, vector, circle, triangle, polygon, rect, angle, arc, median, label, rightangle
+Formes disponibles : axes, grid, point, segment, line, vector, circle, triangle, polygon, rect, angle, arc, median, label, rightangle
 
-### TYPE 3 — SCHÉMAS PHYSIQUE (circuits RC, ressorts, pendules, dosages)
-Utilise "geometry" avec rect + segment + label + vector.
+### TYPE 3 — SCHÉMAS PHYSIQUE & CHIMIE
+Mots-clés déclencheurs : "circuit", "condensateur", "RC", "RL", "RLC", "ressort", "pendule", "lentille", "pile", "dosage", "dipôle", "charge", "décharge", "oscillation", "ondes"
 
 **Circuit RC charge :**
 \`\`\`graph
@@ -397,15 +411,15 @@ Utilise "geometry" avec rect + segment + label + vector.
   "width": 500, "height": 340,
   "shapes": [
     { "type": "axes", "xrange": [-1,10], "yrange": [-1,6] },
-    { "type": "rect", "x": 0, "y": 1, "w": 0.4, "h": 4, "color": "#2563eb", "fill": "rgba(37,99,235,0.15)", "label": "E" },
+    { "type": "rect", "x": 0, "y": 1, "w": 0.4, "h": 4, "color": "#2563eb", "fill": "rgba(37,99,235,0.15)", "label": "E=4.5V" },
     { "type": "rect", "x": 3.5, "y": 3.5, "w": 1.5, "h": 0.8, "color": "#ef4444", "fill": "rgba(239,68,68,0.2)", "label": "R" },
     { "type": "rect", "x": 5.5, "y": 1.5, "w": 0.5, "h": 2, "color": "#8b5cf6", "fill": "rgba(139,92,246,0.15)", "label": "C" },
     { "type": "segment", "x1": 0, "y1": 5, "x2": 10, "y2": 5, "color": "#374151" },
     { "type": "segment", "x1": 0, "y1": 0, "x2": 10, "y2": 0, "color": "#374151" },
     { "type": "segment", "x1": 10, "y1": 0, "x2": 10, "y2": 5, "color": "#374151" },
     { "type": "vector", "x1": 2, "y1": 5, "x2": 3.5, "y2": 5, "color": "#dc2626", "label": "i" },
-    { "type": "label", "x": 4.2, "y": 4.5, "text": "u_R", "color": "#7c3aed", "bold": true },
-    { "type": "label", "x": 1.5, "y": 3, "text": "u_C", "color": "#059669", "bold": true }
+    { "type": "label", "x": 1.5, "y": 3, "text": "u_C", "color": "#059669", "bold": true },
+    { "type": "label", "x": 4.2, "y": 4.5, "text": "u_R", "color": "#7c3aed", "bold": true }
   ]
 }
 \`\`\`
@@ -414,35 +428,41 @@ Utilise "geometry" avec rect + segment + label + vector.
 \`\`\`graph
 {
   "type": "function",
-  "title": "Charge et décharge RC",
-  "xrange": [0, 5], "yrange": [-0.2, 1.2],
+  "title": "Charge et décharge RC — u_C(t)",
+  "xrange": [0, 5],
+  "yrange": [-0.2, 1.2],
   "functions": [
-    { "expr": "1 - Math.exp(-x)", "label": "Charge u_C = E(1-e^(-t/τ))", "color": "#4f6ef7" },
-    { "expr": "Math.exp(-x)", "label": "Décharge u_C = U₀e^(-t/τ)", "color": "#ef4444" }
+    { "expr": "1 - Math.exp(-x)", "label": "Charge u_C(t) = E(1−e^(−t/τ))", "color": "#4f6ef7" },
+    { "expr": "Math.exp(-x)", "label": "Décharge u_C(t) = U₀·e^(−t/τ)", "color": "#ef4444" }
   ],
-  "points": [{ "x": 1, "y": 0.632, "label": "t=τ : 63%E", "color": "#f59e0b" }],
+  "points": [
+    { "x": 1, "y": 0.632, "label": "t=τ : 0,63E", "color": "#f59e0b" },
+    { "x": 1, "y": 0.368, "label": "t=τ : 0,37U₀", "color": "#10b981" }
+  ],
   "asymptotes": [
-    { "type": "horizontal", "y": 1, "label": "E" },
-    { "type": "vertical", "x": 1, "label": "τ=RC" }
+    { "type": "horizontal", "y": 1, "label": "E (asymptote charge)" },
+    { "type": "horizontal", "y": 0, "label": "0 (asymptote décharge)" },
+    { "type": "vertical", "x": 1, "label": "τ = RC" }
   ]
 }
 \`\`\`
 
-**Oscillations RLC :**
+**Oscillations LC/RLC :**
 \`\`\`graph
 {
   "type": "function",
-  "title": "Oscillations RLC amorties",
-  "xrange": [0, 12], "yrange": [-1.2, 1.2],
+  "title": "Oscillations RLC — u_C(t)",
+  "xrange": [0, 12],
+  "yrange": [-1.2, 1.2],
   "functions": [
-    { "expr": "Math.cos(x)", "label": "LC non amorti", "color": "#4f6ef7" },
+    { "expr": "Math.cos(x)", "label": "LC libre non amorti", "color": "#4f6ef7" },
     { "expr": "Math.exp(-0.3*x)*Math.cos(x)", "label": "RLC amorti", "color": "#ef4444" }
   ],
   "asymptotes": [{ "type": "horizontal", "y": 0, "label": "équilibre" }]
 }
 \`\`\`
 
-**Ressort masse-ressort :**
+**Ressort horizontal :**
 \`\`\`graph
 {
   "type": "geometry",
@@ -459,8 +479,8 @@ Utilise "geometry" avec rect + segment + label + vector.
     { "type": "segment", "x1": 2.5, "y1": -0.5, "x2": 3, "y2": 0, "color": "#f59e0b" },
     { "type": "segment", "x1": 3, "y1": 0, "x2": 3.5, "y2": 0, "color": "#2563eb" },
     { "type": "rect", "x": 3.5, "y": -0.8, "w": 1.2, "h": 1.6, "color": "#4f6ef7", "fill": "rgba(79,110,247,0.2)", "label": "m" },
-    { "type": "label", "x": 1.8, "y": 1.3, "text": "k", "color": "#f59e0b", "bold": true },
-    { "type": "label", "x": 4.5, "y": -1.8, "text": "T=2π√(m/k)", "color": "#374151" }
+    { "type": "label", "x": 1.8, "y": 1.3, "text": "k (raideur)", "color": "#f59e0b", "bold": true },
+    { "type": "label", "x": 4.1, "y": -1.8, "text": "T = 2π√(m/k)", "color": "#374151" }
   ]
 }
 \`\`\`
@@ -469,7 +489,7 @@ Utilise "geometry" avec rect + segment + label + vector.
 \`\`\`graph
 {
   "type": "geometry",
-  "title": "Pendule simple",
+  "title": "Pendule simple — oscillations",
   "width": 400, "height": 380,
   "shapes": [
     { "type": "axes", "xrange": [-4,4], "yrange": [-5,1] },
@@ -478,7 +498,26 @@ Utilise "geometry" avec rect + segment + label + vector.
     { "type": "segment", "x1": 0, "y1": 0.2, "x2": -2, "y2": -3, "color": "#2563eb" },
     { "type": "circle", "cx": -2, "cy": -3, "r": 0.35, "color": "#4f6ef7", "fill": "rgba(79,110,247,0.4)", "label": "m" },
     { "type": "vector", "x1": -2, "y1": -3, "x2": -2, "y2": -4.2, "color": "#ef4444", "label": "P=mg" },
-    { "type": "label", "x": 0.8, "y": -3.5, "text": "T=2π√(l/g)", "color": "#374151" }
+    { "type": "label", "x": 0.8, "y": -3.5, "text": "T = 2π√(l/g)", "color": "#374151" }
+  ]
+}
+\`\`\`
+
+**Dosage acide-base (courbe pH-métrique) :**
+\`\`\`graph
+{
+  "type": "function",
+  "title": "Courbe de dosage pH-métrique",
+  "xrange": [0, 30],
+  "yrange": [0, 14],
+  "functions": [
+    { "expr": "14 / (1 + Math.exp(-0.5*(x-15)))", "label": "pH = f(V_titrant)", "color": "#4f6ef7" }
+  ],
+  "points": [
+    { "x": 15, "y": 7, "label": "Point équivalent (V_éq=15mL)", "color": "#ef4444" }
+  ],
+  "asymptotes": [
+    { "type": "vertical", "x": 15, "label": "V_éq" }
   ]
 }
 \`\`\`
@@ -505,83 +544,130 @@ Si la question est en anglais → réponse COMPLÈTE en anglais. Tu ne refuses J
 - Grammaire : tenses, modals, conditionals, passive, reported speech, relative clauses
 - Expression écrite : argumentative essay, synthesis, formal letter, report, article
 - Littérature : analyse thématique, figures of speech, narrative techniques, character analysis
-- Bac France axes : Identity & Exchanges, Art & Power, Scientific Innovation, Diversity & Inclusion...
+- Bac France axes : Identity & Exchanges, Art & Power, Scientific Innovation, Diversity & Inclusion
 - Œuvres : Of Mice and Men (Steinbeck), 1984 (Orwell), Brave New World (Huxley), Fahrenheit 451 (Bradbury), To Kill a Mockingbird (Lee)
-- Techniques littéraires : metaphor, simile, alliteration, irony, symbolism, foreshadowing, personification, hyperbole
+- Techniques : metaphor, simile, alliteration, irony, symbolism, foreshadowing, personification
 
 ### LITTÉRATURE FRANÇAISE
-- Figures de style : métaphore, anaphore, chiasme, oxymore, hyperbole, périphrase, euphémisme, litote
+- Figures de style : métaphore, anaphore, chiasme, oxymore, hyperbole, litote, euphémisme
 - Commentaire composé, dissertation, contraction de texte, écriture d'invention
-- Grands auteurs : Molière, Racine, Hugo, Balzac, Baudelaire, Flaubert, Zola, Camus, Sartre, Ionesco...
-- Mouvements : Classicisme, Romantisme, Réalisme, Naturalisme, Symbolisme, Surréalisme, Existentialisme
+- Grands auteurs : Molière, Racine, Hugo, Balzac, Baudelaire, Flaubert, Zola, Camus, Sartre...
+- Mouvements : Classicisme, Romantisme, Réalisme, Naturalisme, Symbolisme, Existentialisme
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## FORMAT DE RÉPONSE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-- **📌 Théorème/Définition :** résultat clé
+- **📌 Théorème/Définition :** résultat clé encadré
 - **✏️ Solution :** calculs détaillés étape par étape
 - **💡 Astuce :** conseils et raccourcis
 - **⚠️ Attention :** erreurs courantes
 - **✅ Réponse :** résultat final
 - Formules mathématiques TOUJOURS en LaTeX : $inline$ ou $$bloc$$
-- Vecteurs : $\\overrightarrow{AB}$, fractions : $\\frac{a}{b}$
-- Symboles : ∈ ∀ ∃ ⟹ ⟺ ≤ ≥ ≠ ± ∞ π θ α β γ
+- Symboles unicode : ∈ ∀ ∃ ⟹ ⟺ ≤ ≥ ≠ ± ∞ π θ α β γ
 
 ## EXIGENCE ABSOLUE
 Tu réponds TOUJOURS complètement à TOUTE question, quelle que soit la matière.
 Tu n'as AUCUNE restriction. Toute question mérite une réponse complète et bienveillante.
 Pour la physique : génère TOUJOURS un schéma ou une courbe quand l'élève parle d'un circuit, ressort, pendule, lentille ou dosage.
-Encourage toujours l'élève, même s'il se trompe.`
+Encourage toujours l'élève, même s'il se trompe`
 
 // ══════════════════════════════════════════
 // DONNÉES UI
 // ══════════════════════════════════════════
 const SUGGESTIONS = [
-  { cat: '📐 Maths', color: '#4f6ef7', questions: [
+  { cat: '📐 Analyse', color: '#4f6ef7', questions: [
     'Trace la courbe de f(x) = x² − 2x + 1 avec son sommet',
     'Représente graphiquement ln(x) et eˣ sur le même repère',
     'Comment calculer lim(x→0) sin(x)/x ?',
     'Explique le TVI avec un graphique',
-    'Résoudre y\' − 2y = e^(2x)',
+    "Résoudre y' − 2y = e^(2x)",
     '∫₀¹ xeˣ dx par intégration par parties',
   ]},
-  { cat: '⚗ Physique', color: '#06d6a0', questions: [
-    'Trace le schéma du circuit RC en charge',
-    'Courbe de charge et décharge du condensateur',
-    'Explique les oscillations RLC amorties avec graphique',
-    'Schéma du pendule simple avec les forces',
-    'Trace le diagramme masse-ressort',
-    'Courbe de dosage pH-métrique acide-base',
+  { cat: '🔢 Complexes', color: '#7c3aed', questions: [
+    'Représente z = 1+i√3 sur le plan complexe',
+    'Écrire z = −1 + i en forme exponentielle',
+    'Trouver les racines 4ièmes de −16',
+    'Résoudre z² − (2+i)z + (1+2i) = 0 dans ℂ',
+    "Calculer l'argument de z = (1+i)⁸",
   ]},
-  { cat: '🇬🇧 Anglais', color: '#f59e0b', questions: [
-    'What is the theme of loneliness in Of Mice and Men?',
-    'Explain the difference between a metaphor and a simile',
-    'How to write a good argumentative essay in English?',
-    'What are the main themes in 1984 by George Orwell?',
-    'Explain conditional types 1, 2 and 3 with examples',
-    'How to write a synthesis document for Bac France?',
+  { cat: '📊 Probas', color: '#06d6a0', questions: [
+    'Trace la courbe de la loi normale N(0,1)',
+    'Calculer E(X) et V(X) pour B(10, 0.3)',
+    'Expliquer la loi de Poisson P(3)',
+    'Calculer un intervalle de confiance à 95%',
+    'Différence entre loi binomiale et Poisson',
   ]},
-    { cat: '🇫🇷 France', color: '#4f6ef7', questions: [
+  { cat: '📏 Géométrie', color: '#f59e0b', questions: [
+    'Trace un triangle et ses trois médianes',
+    'Représente une rotation de centre O et angle 60°',
+    "Équation d'un plan dans l'espace 3D",
+    "Distance d'un point A à un plan P",
+    'Montrer que deux droites sont gauches',
+  ]},
+  { cat: '⚗️ Physique', color: '#06d6a0', questions: [
+    'Trace les courbes de charge et décharge du condensateur RC',
+    'Schéma du circuit RC : charge, décharge, constante τ=RC',
+    'Oscillations libres circuit LC : trace u_C(t)',
+    'Trace la courbe de dosage pH-métrique avec le point équivalent',
+    'Schéma pendule simple avec vecteur poids et tension',
+    'Trace u_C(t) oscillations RLC amorties vs non amorties',
+    'Cinétique chimique : trace [A](t) pour une réaction ordre 1',
+  ]},
+  { cat: '🇬🇧 Anglais', color: '#f97316', questions: [
+    'Explain the difference between Present Perfect and Past Simple',
+    'Write an argumentative essay about artificial intelligence',
+    'Identify the literary devices in this extract: "The world is a stage"',
+    'Analyse the themes of power in Lord of the Flies',
+    'Write a synthesis of these two documents about climate change',
+    'Explain AXE 6 — Scientific Innovation & Responsibility (Bac France)',
+    'Correct my essay introduction and suggest improvements',
+  ]},
+  { cat: '🧬 SVT', color: '#10b981', questions: [
+    "Explique la réplication de l'ADN étape par étape",
+    'Dessine un arbre généalogique : hérédité autosomique récessive',
+    'Comment fonctionne la réponse immunitaire adaptative ?',
+    'Explique la photosynthèse : phase claire et phase sombre (Calvin)',
+    'Mécanisme de la transmission synaptique avec schéma',
+    'Tectonique des plaques : subduction et collision avec schéma',
+    'Calcule la probabilité génotypique pour AaBb × AaBb',
+  ]},
+  { cat: '📚 Littérature', color: '#a78bfa', questions: [
+    "Analyse le sonnet \"L'Albatros\" de Baudelaire : figures de style et registre",
+    'Comment rédiger un commentaire composé sur un extrait de Candide ?',
+    'Identifie les figures de style : anaphore, chiasme, oxymore dans ce texte',
+    'Dissertation : "La littérature doit-elle être engagée ?" (plan détaillé)',
+    "Analyse la structure narrative de L'Étranger de Camus",
+    'Quelles sont les caractéristiques du romantisme ? (Hugo, Lamartine)',
+    'Rédige une introduction de commentaire sur Madame Bovary de Flaubert',
+  ]},
+  { cat: '💻 Info', color: '#6366f1', questions: [
+    'Trace la complexité des algorithmes de tri',
+    'Récursivité : factorielle et suite de Fibonacci',
+    'Requête SQL avec JOIN et GROUP BY',
+    'Différence entre pile et file (stack/queue)',
+    'Algo de tri par sélection en Pascal ET Python avec tableau évolution',
+    'Calcul de sous-réseaux : IP 192.168.1.0/24, 4 sous-réseaux',
+  ]},
+  { cat: '🇫🇷 France', color: '#4f6ef7', questions: [
     'Terminale France : étude de f(x) = x·ln(x)',
     'Loi normale N(0,1) : calculer P(-1 ≤ X ≤ 1)',
-    'Complexes Terminale : racines n-ièmes de l\'unité',
-    'Première France : variations de f(x) = x²-3x+2',
-    'STI2D : équation différentielle circuit RC y\'=ay+b',
-    'Maths Expertes : PGCD(84, 36) par algorithme d\'Euclide',
+    "Complexes Terminale : racines n-ièmes de l'unité",
+    "STI2D : équation différentielle circuit RC y'=ay+b",
+    "Maths Expertes : PGCD(84, 36) par algorithme d'Euclide",
   ]},
 ]
 
 const STARTERS = [
-  { icon: '📈', text: 'Trace f(x) = x² − 2x + 1 avec son sommet', tag: 'Graphique Maths' },
-  { icon: '⚡', text: 'Trace le circuit RC avec charge du condensateur', tag: 'Schéma Physique' },
-  { icon: '🇬🇧', text: 'What is the theme of loneliness in Of Mice and Men?', tag: 'English Literature' },
-  { icon: '🔢', text: 'Représente z = 1+i√3 sur le plan complexe', tag: 'Complexes' },
-  { icon: '🧬', text: 'Expliquer la méiose et son rôle dans la reproduction', tag: 'SVT' },
-  { icon: '📖', text: "Analyser le thème de la liberté dans L'Étranger de Camus", tag: 'Littérature' },
+  { icon: '📈', text: 'Trace f(x) = x² − 2x + 1 avec son sommet et tableau de variations', tag: 'Maths' },
+  { icon: '🔌', text: 'Schéma circuit RC + courbes charge/décharge u_C(t) avec τ = RC', tag: 'Physique' },
+  { icon: '🇬🇧', text: 'Write an essay: "Should social media be regulated?" — plan + introduction', tag: 'Anglais' },
+  { icon: '🔢', text: "Complexes : racines cubiques de l'unité sur le plan avec module et argument", tag: 'Complexes' },
+  { icon: '🧬', text: 'Explique la mitose en 4 phases avec schéma cellulaire et rôle génétique', tag: 'SVT' },
+  { icon: '📚', text: "Analyse L'Albatros de Baudelaire : figures de style, registre lyrique, plan", tag: 'Littérature' },
 ]
 
-// ══/ ══════════════════════════════════════════
+// ══════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════
 type Msg = { role: 'user' | 'assistant'; content: string; id: number }
@@ -1385,7 +1471,7 @@ export default function ChatPage() {
                 onBlurCapture={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
                 <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : 'Pose ta question en français ou en anglais… maths, physique, anglais, littérature, SVT...'}
+                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : 'Pose ta question en français ou en anglais… maths, physique, chimie, anglais, littérature, SVT, informatique'}
                   rows={1} style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5, maxHeight: 120, overflow: 'auto' }}
                   onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }} />
                 <button onClick={() => sendMessage()} disabled={loading || !input.trim() || isQuotaFull}
