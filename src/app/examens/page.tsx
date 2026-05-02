@@ -660,12 +660,12 @@ const BAC_MATHS_DATA: AnneeData[] = [
   ]},
   { year:2021, exercices:[
     {titre:'Exercice 1',theme:'Primitives et intégrales — intégration par parties',pts:5},
-    {titre:'Exercice 2',theme:'Complexes — racines nièmes de l\'unité, polygone',pts:6},
+    {titre:'Exercice 2',theme:"Complexes — racines nièmes de l'unité, polygone",pts:6},
     {titre:'Exercice 3',theme:'Probabilités — loi normale, intervalle de confiance',pts:3},
     {titre:'Exercice 4',theme:'Similitudes — conservation angles, point fixe unique',pts:6},
   ]},
   { year:2020, exercices:[
-    {titre:'Exercice 1',theme:'Équations différentielles — y\' + ay = b',pts:5},
+    {titre:'Exercice 1',theme:"Équations différentielles — y' + ay = b",pts:5},
     {titre:'Exercice 2',theme:'Complexes — module, argument, forme exponentielle',pts:6},
     {titre:'Exercice 3',theme:'Probabilités — loi binomiale B(n,p)',pts:3},
     {titre:'Exercice 4',theme:'Géométrie espace — droites, plans, perpendicularité',pts:6},
@@ -707,7 +707,7 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
     {titre:'Exercice 1',theme:'Analyse — étude de fonction, limites, dérivée',pts:5},
     {titre:'Exercice 2',theme:'Nombres complexes — forme algébrique, géométrie',pts:5},
     {titre:'Exercice 3',theme:'Probabilités — loi binomiale, espérance',pts:4},
-    {titre:'Exercice 4',theme:'Géométrie dans l\'espace — repère, droites, plans',pts:6},
+    {titre:'Exercice 4',theme:"Géométrie dans l'espace — repère, droites, plans",pts:6},
   ]},
   { year:2024, note:'🔥', exercices:[
     {titre:'Exercice 1',theme:'Suites numériques — récurrence, limite',pts:4},
@@ -718,7 +718,7 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
   ]},
   { year:2023, exercices:[
     {titre:'Exercice 1',theme:'Continuité et limites — formes indéterminées, TVI',pts:4},
-    {titre:'Exercice 2',theme:'Intégrales — intégration par parties, calcul d\'aire',pts:5},
+    {titre:'Exercice 2',theme:"Intégrales — intégration par parties, calcul d'aire",pts:5},
     {titre:'Exercice 3',theme:'Complexes — racines carrées dans ℂ, géométrie',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — variable aléatoire discrète, espérance',pts:4},
     {titre:'Exercice 5',theme:'Géométrie analytique — droite, distance, angles',pts:3},
@@ -726,7 +726,7 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
   { year:2022, exercices:[
     {titre:'Exercice 1',theme:'Suites — suite par récurrence, monotonie',pts:4},
     {titre:'Exercice 2',theme:'Fonctions — dérivée, tableau de variation complet',pts:5},
-    {titre:'Exercice 3',theme:'Complexes — forme exponentielle, formule d\'Euler',pts:4},
+    {titre:'Exercice 3',theme:"Complexes — forme exponentielle, formule d'Euler",pts:4},
     {titre:'Exercice 4',theme:'Probabilités totales — formule de Bayes, arbre',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — droite, plan, distance',pts:3},
   ]},
@@ -740,7 +740,7 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
   { year:2020, exercices:[
     {titre:'Exercice 1',theme:'Limites et continuité — TVI, prolongement par continuité',pts:4},
     {titre:'Exercice 2',theme:'Logarithme — étude complète, inégalités, asymptotes',pts:5},
-    {titre:'Exercice 3',theme:'Complexes — racines nièmes de l\'unité, géométrie',pts:4},
+    {titre:'Exercice 3',theme:"Complexes — racines nièmes de l'unité, géométrie",pts:4},
     {titre:'Exercice 4',theme:'Probabilités — répétitions indépendantes de Bernoulli',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — sphère, intersection avec plan',pts:3},
   ]},
@@ -753,7 +753,7 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
   ]},
   { year:2018, exercices:[
     {titre:'Exercice 1',theme:'Fonctions réciproques — arctan, arcsin, étude',pts:4},
-    {titre:'Exercice 2',theme:'Intégrales — calcul, inégalité d\'intégrale, aire',pts:5},
+    {titre:'Exercice 2',theme:"Intégrales — calcul, inégalité d'intégrale, aire",pts:5},
     {titre:'Exercice 3',theme:'Complexes — argument, module, résolution équation',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — espérance, variance, écart-type',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — plan perpendiculaire, projeté',pts:3},
@@ -768,12 +768,12 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
   { year:2016, exercices:[
     {titre:'Exercice 1',theme:'Continuité — TVI, résolution f(x)=k, unicité',pts:4},
     {titre:'Exercice 2',theme:'Fonctions — étude complète, tableau de signe',pts:5},
-    {titre:'Exercice 3',theme:'Complexes — racines cubiques de l\'unité, ω',pts:4},
+    {titre:'Exercice 3',theme:"Complexes — racines cubiques de l'unité, ω",pts:4},
     {titre:'Exercice 4',theme:'Probabilités — tirages avec et sans remise',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — orthogonalité des plans',pts:3},
   ]},
   { year:2015, exercices:[
-    {titre:'Exercice 1',theme:'Équations différentielles — y\' = ay + b, solution particulière',pts:4},
+    {titre:'Exercice 1',theme:"Équations différentielles — y' = ay + b, solution particulière",pts:4},
     {titre:'Exercice 2',theme:'Logarithme et exponentielle — inégalités classiques',pts:5},
     {titre:'Exercice 3',theme:'Complexes — De Moivre, angle inscrit dans cercle',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — arbre de probabilités, Bayes',pts:4},
@@ -797,7 +797,7 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
   ]},
   { year:2023, exercices:[
     {titre:'Exercice 1',theme:'Continuité et limites — asymptotes, branches infinies',pts:4},
-    {titre:'Exercice 2',theme:'Primitives et intégrales — calcul exact d\'aire',pts:5},
+    {titre:'Exercice 2',theme:"Primitives et intégrales — calcul exact d'aire",pts:5},
     {titre:'Exercice 3',theme:'Arithmétique — nombres premiers, théorème de Gauss ★',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — espérance, variance',pts:4},
     {titre:'Exercice 5',theme:'Complexes — module, argument, résolution équation',pts:3},
@@ -805,7 +805,7 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
   { year:2022, exercices:[
     {titre:'Exercice 1',theme:'Suites — récurrence, convergence vers point fixe',pts:4},
     {titre:'Exercice 2',theme:'Dérivabilité — TAF, inégalités, démonstrations',pts:5},
-    {titre:'Exercice 3',theme:'Arithmétique — algorithme d\'Euclide étendu, intro RSA ★',pts:4},
+    {titre:'Exercice 3',theme:"Arithmétique — algorithme d'Euclide étendu, intro RSA ★",pts:4},
     {titre:'Exercice 4',theme:'Probabilités — probabilités conditionnelles, Bayes',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — distance point-droite, projection',pts:3},
   ]},
@@ -838,16 +838,16 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
     {titre:'Exercice 5',theme:'Géométrie espace — produit vectoriel, volume',pts:3},
   ]},
   { year:2017, exercices:[
-    {titre:'Exercice 1',theme:'Limites — formes indéterminées, règle de L\'Hôpital',pts:4},
+    {titre:'Exercice 1',theme:"Limites — formes indéterminées, règle de L'Hôpital",pts:4},
     {titre:'Exercice 2',theme:'Primitives — changement de variable, primitives usuelles',pts:5},
     {titre:'Exercice 3',theme:'Arithmétique — congruences, petit théorème de Fermat ★',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — espérance, loi binomiale, variance',pts:4},
     {titre:'Exercice 5',theme:'Complexes — forme exponentielle, argument',pts:3},
   ]},
   { year:2016, exercices:[
-    {titre:'Exercice 1',theme:'Équations différentielles — y\'+ay=b, solution générale',pts:4},
+    {titre:'Exercice 1',theme:"Équations différentielles — y'+ay=b, solution générale",pts:4},
     {titre:'Exercice 2',theme:'Logarithme — inégalités, étude de fonction, courbe',pts:5},
-    {titre:'Exercice 3',theme:'Arithmétique — PGCD par algorithme d\'Euclide ★',pts:4},
+    {titre:'Exercice 3',theme:"Arithmétique — PGCD par algorithme d'Euclide ★",pts:4},
     {titre:'Exercice 4',theme:'Probabilités — loi normale N(μ,σ²), utilisation table',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — coplanéité, distance',pts:3},
   ]},
@@ -886,9 +886,9 @@ const BAC_INFO_DATA: AnneeData[] = [
     {titre:'🌐 STI (Web/Réseau)',theme:'CSS3 flexbox, JavaScript et manipulation des événements DOM',pts:3},
   ]},
   { year:2021, exercices:[
-    {titre:'⚙️ Algorithmique',theme:'Récursivité — Tours de Hanoï, analyse de la pile d\'appels',pts:7},
+    {titre:'⚙️ Algorithmique',theme:"Récursivité — Tours de Hanoï, analyse de la pile d'appels",pts:7},
     {titre:'🗄️ Bases de données',theme:'Normalisation 1FN/2FN/3FN, modèle relationnel, clés',pts:6},
-    {titre:'📐 Mathématiques',theme:'Complexes — affixe, vecteurs, géométrie de l\'espace',pts:4},
+    {titre:'📐 Mathématiques',theme:"Complexes — affixe, vecteurs, géométrie de l'espace",pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'HTML5 sémantique + formulaires PHP, validation serveur',pts:3},
   ]},
   { year:2020, exercices:[
@@ -916,7 +916,7 @@ const BAC_INFO_DATA: AnneeData[] = [
     {titre:'🌐 STI (Web/Réseau)',theme:'JavaScript — validation formulaire côté client, regex',pts:3},
   ]},
   { year:2016, exercices:[
-    {titre:'⚙️ Algorithmique',theme:'Tri sélection — analyse, trace d\'exécution, complexité O(n²)',pts:7},
+    {titre:'⚙️ Algorithmique',theme:"Tri sélection — analyse, trace d'exécution, complexité O(n²)",pts:7},
     {titre:'🗄️ Bases de données',theme:'Modélisation — contraintes, tables de jonction N-M',pts:6},
     {titre:'📐 Mathématiques',theme:'Complexes, forme exponentielle, arithmétique de base',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'PHP — sessions, cookies, authentification utilisateur',pts:3},
@@ -1011,17 +1011,611 @@ const BAC_ECO_GESTION_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG SECTIONS
 // ════════════════════════════════════════════════════════════════
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco'
-const SECTIONS = [
-  { key:'maths' as SKey,    icon:'🧮', label:'Bac Maths',          color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,    links:mathsLinks,   desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
-  { key:'sc-exp' as SKey,   icon:'🔬', label:'Sciences Exp.',       color:'#06d6a0', coeff:'Coeff. 3', data:BAC_SC_EXP_DATA,   links:scExpLinks,   desc:'Analyse · Complexes · Probabilités · Géométrie espace' },
-  { key:'sc-tech' as SKey,  icon:'⚙️', label:'Sciences Tech.',      color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_DATA,  links:scTechLinks,  desc:'Sujet et Correction Mathématiques · Analyse · Arithmétique · Probabilités' },
-  { key:'eco' as SKey,      icon:'💹', label:'Éco-Gestion',          color:'#10b981', coeff:'Coeff. 2', data:BAC_ECO_GESTION_DATA, links:ecoGestionLinks, desc:'Analyse · Probabilités · Matrices · Mathématiques Financières ★' },
-  { key:'info' as SKey,     icon:'💻', label:'Informatique',         color:'#6366f1', coeff:'Coeff. 3', data:BAC_INFO_DATA,     links:infoLinks,    desc:'Mathématiques uniquement · Sujet + Correction officielle' },
+
+
+// ════════════════════════════════════════════════════════════════
+//  DONNÉES PHYSIQUE-CHIMIE — liens et thèmes
+// ════════════════════════════════════════════════════════════════
+const scExpPhysLinks: Record<number, AnneeLinks> = {
+  2025: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2025,'principale','sciences_ex','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      'http://www.echoexam.edunet.tn/bac/2025/controle/sciences_ex/physique.pdf',
+      correction: undefined },
+  },
+  2024: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2024,'principale','sciences_ex','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2024,'controle','sciences_ex','physique.pdf'),
+      correction: undefined },
+  },
+  2023: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2023,'principale','sciences_ex','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2023,'controle','sciences_ex','physique.pdf'),
+      correction: undefined },
+  },
+  2022: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2022,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2022,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2022,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2022,'controle','sciences_ex','physique_c.pdf') },
+  },
+  2021: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2021,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2021,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2021,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2021,'controle','sciences_ex','physique_c.pdf') },
+  },
+  2020: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2020,'principale','sciences_ex','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2020,'controle','sciences_ex','physique.pdf'),
+      correction: undefined },
+  },
+  2019: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2019,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2019,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2019,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2019,'controle','sciences_ex','physique_c.pdf') },
+  },
+  2018: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2018,'principale','sciences_ex','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2018,'controle','sciences_ex','physique.pdf'),
+      correction: undefined },
+  },
+  2017: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2017,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2017,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2017,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2017,'controle','sciences_ex','physique_c.pdf') },
+  },
+  2016: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2016,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2016,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2016,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2016,'controle','sciences_ex','physique_c.pdf') },
+  },
+  2015: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2015,'principale','sciences_ex','physique.pdf'),
+      correction: bw(2015,'principale','sciences_ex','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2015,'controle','sciences_ex','physique.pdf'),
+      correction: bw(2015,'controle','sciences_ex','physique_c.pdf') },
+  },
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS — BAC SCIENCES TECHNIQUES · PHYSIQUE-CHIMIE
+//  Coeff 3 · Durée 3h
+//  Sujets : bacweb.tn technique/physique.pdf
+//  Corrections : bacweb.tn physique_c.pdf + Google Drive pour manquants
+// ════════════════════════════════════════════════════════════════
+const scTechPhysLinks: Record<number, AnneeLinks> = {
+  2025: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2025,'principale','technique','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      'http://www.echoexam.edunet.tn/bac/2025/controle/technique/physique.pdf',
+      correction: undefined },
+  },
+  2024: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2024,'principale','technique','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2024,'controle','technique','physique.pdf'),
+      correction: undefined },
+  },
+  2023: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2023,'principale','technique','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2023,'controle','technique','physique.pdf'),
+      correction: undefined },
+  },
+  2022: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2022,'principale','technique','physique.pdf'),
+      correction: bw(2022,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2022,'controle','technique','physique.pdf'),
+      correction: bw(2022,'controle','technique','physique_c.pdf') },
+  },
+  2021: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2021,'principale','technique','physique.pdf'),
+      correction: bw(2021,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2021,'controle','technique','physique.pdf'),
+      correction: bw(2021,'controle','technique','physique_c.pdf') },
+  },
+  2020: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2020,'principale','technique','physique.pdf'),
+      correction: bw(2020,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2020,'controle','technique','physique.pdf'),
+      correction: bw(2020,'controle','technique','physique_c.pdf') },
+  },
+  2019: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2019,'principale','technique','physique.pdf'),
+      correction: bw(2019,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2019,'controle','technique','physique.pdf'),
+      correction: bw(2019,'controle','technique','physique_c.pdf') },
+  },
+  2018: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2018,'principale','technique','physique.pdf'),
+      correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2018,'controle','technique','physique.pdf'),
+      correction: undefined },
+  },
+  2017: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2017,'principale','technique','physique.pdf'),
+      correction: bw(2017,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2017,'controle','technique','physique.pdf'),
+      correction: bw(2017,'controle','technique','physique_c.pdf') },
+  },
+  2016: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2016,'principale','technique','physique.pdf'),
+      correction: bw(2016,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2016,'controle','technique','physique.pdf'),
+      correction: bw(2016,'controle','technique','physique_c.pdf') },
+  },
+  2015: {
+    principale: { label:'Session Principale', session:'P',
+      sujet:      bw(2015,'principale','technique','physique.pdf'),
+      correction: bw(2015,'principale','technique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet:      bw(2015,'controle','technique','physique.pdf'),
+      correction: bw(2015,'controle','technique','physique_c.pdf') },
+  },
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DATA — SCIENCES EXPÉRIMENTALES · Thèmes Physique-Chimie
+// ════════════════════════════════════════════════════════════════
+const BAC_SC_EXP_PHYS_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Cinétique chimique — vitesse de réaction, facteurs cinétiques, loi de vitesse, temps de demi-vie',pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Équilibres et acido-basicité — pH, Ka, titrage, courbe de neutralisation',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — 2ème loi de Newton, systèmes en translation, forces et accélération',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Électricité — circuits RC/RL, régimes transitoires, constante de temps, oscillations',pts:6},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Transformations chimiques — avancement, taux de conversion, réaction acide-base',pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Oxydoréduction — couples rédox, potentiel standard, pile électrochimique',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Oscillations mécaniques — pendule, ressort, énergie mécanique, amortissement',pts:5},
+    {titre:'Physique — Exercice 2',theme:"Ondes — propagation, longueur d'onde, célérité, phénomènes de diffraction",pts:6},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Cinétique — loi de vitesse, ordre de réaction, facteur de fréquence, énergie activation',pts:5},
+    {titre:'Chimie — Exercice 2',theme:"Acido-basicité — constante d'acidité pKa, réactions acide-base, solutions tampons",pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — lois de Newton, chute libre, plan incliné, frottement',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Électromagnétisme — induction, force de Laplace, loi de Faraday, auto-induction',pts:6},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Transformations rapides et lentes — vitesse de réaction, catalyse, facteurs cinétiques',pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Électrochimie — électrolyse, pile, loi de Faraday, oxydoréduction',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Oscillations libres et forcées — circuit RLC, résonance, facteur de qualité',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Ondes lumineuses — interférences, diffraction, réfraction, dispersion',pts:6},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Chimie — Exercice 1',theme:"Cinétique chimique — suivi temporel, loi de vitesse, méthode d'isolement",pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Acide-base — dosage pH-métrique, courbe de titrage, indicateurs colorés',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — satellite, force gravitationnelle, orbite circulaire, vitesse cosmique',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Circuits électriques — régimes transitoires RC et RL, réponse indicielle',pts:6},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Transformations chimiques — réactions totales, équilibres, quotient de réaction',pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Oxydoréduction — équilibrage demi-équations, pile Daniell, f.e.m.',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — centre de masse, rotation, moment cinétique, couple',pts:5},
+    {titre:'Physique — Exercice 2',theme:"Optique — lentilles minces, construction géométrique, instruments d'optique",pts:6},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Chimie — Exercice 1',theme:"Cinétique — vitesse instantanée, énergie d'activation, loi d'Arrhenius",pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Dosages — spectrophotométrie, Beer-Lambert, titrage colorimétrique',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Oscillations mécaniques — pendule simple et pesant, petites oscillations',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Propagation des ondes — onde sonore, ultrason, effet Doppler',pts:6},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Transformations acide-base — réactions en solution, pH, constante Ka',pts:5},
+    {titre:'Chimie — Exercice 2',theme:"Électrochimie — électrolyse de l'eau, quantité d'électricité, loi de Faraday",pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — dynamique de translation, travail, puissance, énergie',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Circuits RLC — oscillations libres amorties, énergie, pseudo-période',pts:6},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Cinétique — suivi par conductimétrie, ordre zéro et premier, temps de demi-réaction',pts:5},
+    {titre:'Chimie — Exercice 2',theme:"Oxydoréduction — potentiel d'électrode, formule de Nernst, pile électrochimique",pts:4},
+    {titre:'Physique — Exercice 1',theme:'Mécanique — lancement de projectile, équation horaire, portée',pts:5},
+    {titre:'Physique — Exercice 2',theme:'Induction — loi de Faraday, loi de Lenz, force contre-électromotrice',pts:6},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Chimie — Exercice 1',theme:'Transformations acido-basiques — pH des solutions, réactions totales et équilibrées',pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Cinétique — méthode dégradée, ordre de réaction, temps de demi-vie',pts:4},
+    {titre:'Physique — Exercice 1',theme:'Oscillations — pendule-ressort, énergie potentielle et cinétique, bilan énergétique',pts:5},
+    {titre:'Physique — Exercice 2',theme:"Ondes — interférences lumineuses, fentes d'Young, réseau de diffraction",pts:6},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Chimie — Exercice 1',theme:"Réactions d'oxydo-réduction — équilibrage, nombre d'oxydation, couples rédox",pts:5},
+    {titre:'Chimie — Exercice 2',theme:'Dosages — titrage potentiométrique, pH-mètre, courbe dérivée, équivalence',pts:4},
+    {titre:'Physique — Exercice 1',theme:"Mécanique — solide en rotation, moment d'inertie, théorème du moment cinétique",pts:5},
+    {titre:'Physique — Exercice 2',theme:'Circuits électriques — régimes transitoires, oscillateur LC, amortissement',pts:6},
+  ]},
 ]
 
 // ════════════════════════════════════════════════════════════════
-//  MODALE PDF — Google Docs Viewer (contourne les restrictions CORS/iframe)
+//  DATA — SCIENCES TECHNIQUES · Thèmes Physique-Chimie
+// ════════════════════════════════════════════════════════════════
+const BAC_SC_TECH_PHYS_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Chimie (7 pts)',theme:'Transformations chimiques en solution — réactions acide-base, pH, dosage, applications industrielles',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique et électricité — 2ème loi de Newton, circuits RC/RL, oscillations, ondes sonores',pts:15},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Oxydoréduction et électrochimie — couples rédox, pile, électrolyse industrielle',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique — translation, forces, énergie + Électricité — régimes transitoires, oscillations RLC',pts:15},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Cinétique et transformations acide-base — vitesse, ordre, pH et Ka, applications',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique — lois de Newton, plans inclinés + Ondes — propagation, ultrasons, Doppler',pts:15},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Acido-basicité et oxydoréduction — réactions en solution aqueuse, dosages',pts:7},
+    {titre:'Physique (15 pts)',theme:'Oscillations mécaniques + circuits LC, résonance, ondes lumineuses',pts:15},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Cinétique chimique — suivi, facteurs, lois de vitesse, catalyse',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique du solide + électromagnétisme, induction de Faraday-Lenz',pts:15},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Transformations chimiques — réactions totales et équilibrées, pH, dosage acide-base',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique — rotation, moment + Optique — réfraction, lentilles, systèmes optiques',pts:15},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Oxydoréduction — équilibrage demi-équations, pile, potentiel standard, applications',pts:7},
+    {titre:'Physique (15 pts)',theme:'Oscillations libres et forcées — amortissement, résonance + ondes propagation',pts:15},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Acido-basicité — pH des solutions faibles et fortes, dosage pH-métrique',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique — lancement de projectile, satellites + circuits électriques RC',pts:15},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Cinétique — suivi par spectrophotométrie, ordre de réaction, énergie activation',pts:7},
+    {titre:'Physique (15 pts)',theme:'Mécanique du solide + induction électromagnétique, loi de Lenz',pts:15},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Chimie (7 pts)',theme:"Transformations d'oxydoréduction — électrolyse, pile Daniell, loi de Faraday",pts:7},
+    {titre:'Physique (15 pts)',theme:'Oscillations mécaniques — pendule, ressort + ondes lumineuses, interférences',pts:15},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Chimie (7 pts)',theme:'Acide-base — constante Ka, pKa, tampons physiologiques, dosage',pts:7},
+    {titre:'Physique (15 pts)',theme:'Circuits RLC — oscillations libres, énergie, pseudo-période, amortissement',pts:15},
+  ]},
+]
+
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS — BAC MATHÉMATIQUES · PHYSIQUE-CHIMIE
+//  Coeff 3 · Durée 3h · bacweb.tn/bac/{year}/{session}/math/physique.pdf
+// ════════════════════════════════════════════════════════════════
+const mathPhysLinks: Record<number, AnneeLinks> = {
+  2025: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2025,'principale','math','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: 'http://www.echoexam.edunet.tn/bac/2025/controle/math/physique.pdf', correction: undefined },
+  },
+  2024: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2024,'principale','math','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2024,'controle','math','physique.pdf'), correction: undefined },
+  },
+  2023: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2023,'principale','math','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2023,'controle','math','physique.pdf'), correction: undefined },
+  },
+  2022: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2022,'principale','math','physique.pdf'),
+      correction: bw(2022,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2022,'controle','math','physique.pdf'),
+      correction: bw(2022,'controle','math','physique_c.pdf') },
+  },
+  2021: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2021,'principale','math','physique.pdf'),
+      correction: bw(2021,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2021,'controle','math','physique.pdf'),
+      correction: bw(2021,'controle','math','physique_c.pdf') },
+  },
+  2020: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2020,'principale','math','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2020,'controle','math','physique.pdf'), correction: undefined },
+  },
+  2019: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2019,'principale','math','physique.pdf'),
+      correction: bw(2019,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2019,'controle','math','physique.pdf'),
+      correction: bw(2019,'controle','math','physique_c.pdf') },
+  },
+  2018: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2018,'principale','math','physique.pdf'),
+      correction: bw(2018,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2018,'controle','math','physique.pdf'),
+      correction: bw(2018,'controle','math','physique_c.pdf') },
+  },
+  2017: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2017,'principale','math','physique.pdf'),
+      correction: bw(2017,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2017,'controle','math','physique.pdf'),
+      correction: bw(2017,'controle','math','physique_c.pdf') },
+  },
+  2016: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2016,'principale','math','physique.pdf'),
+      correction: bw(2016,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2016,'controle','math','physique.pdf'),
+      correction: bw(2016,'controle','math','physique_c.pdf') },
+  },
+  2015: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2015,'principale','math','physique.pdf'),
+      correction: bw(2015,'principale','math','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2015,'controle','math','physique.pdf'),
+      correction: bw(2015,'controle','math','physique_c.pdf') },
+  },
+}
+
+const BAC_MATH_PHYS_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique chimique — vitesse, loi de vitesse, ordre de réaction, facteurs cinétiques, applications",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique : 2ème loi de Newton, satellites, forces — Électricité : circuits RC/RL, oscillations libres",pts:12},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Transformations en solution — réactions acide-base, pH, dosage pH-métrique, pKa, Ka",pts:8},
+    {titre:'Physique (12 pts)',theme:"Oscillations mécaniques — pendule et ressort, énergie — Ondes : propagation, diffraction, ultrasons",pts:12},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Oxydoréduction — équilibrage demi-équations, potentiel standard, pile Daniell, applications",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique du solide — lois de Newton, frottement — Induction électromagnétique, loi de Faraday-Lenz",pts:12},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique — suivi par conductimétrie, ordre de réaction, énergie activation — Applications industrielles",pts:8},
+    {titre:'Physique (12 pts)',theme:"Circuits RLC — oscillations libres amorties, résonance — Ondes lumineuses, interférences Young",pts:12},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Acido-basicité — pH, Ka, pKa, réactions totales et partielles, dosage pH-métrique, solutions tampons",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — plan incliné, travail, énergie — Circuits électriques, régimes transitoires RC et RL",pts:12},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Dosages — titrage conductimétrique, pH-métrique, spectrophotométrie, courbes d'équivalence",pts:8},
+    {titre:'Physique (12 pts)',theme:"Oscillations libres — circuit LC, pendule — Optique géométrique : réfraction, lentilles convergentes",pts:12},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Électrochimie — pile, f.e.m., électrolyse, loi de Faraday, applications médicales",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — satellite, vitesse cosmique, énergie potentielle — Propagation ondes, effet Doppler",pts:12},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique chimique — méthode intégrale, ordre zéro et premier, t1/2, facteur de fréquence",pts:8},
+    {titre:'Physique (12 pts)',theme:"Pendule pesant — petites oscillations, pseudo-période — Induction, transformateur idéal",pts:12},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Acide-base — constante Ka, pH des solutions faibles et fortes, réactions, dosage colorimétrique",pts:8},
+    {titre:'Physique (12 pts)',theme:"Lancer de projectile — équations horaires — Circuits électriques LC, énergie, oscillations",pts:12},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Oxydoréduction — nombre d'oxydation, équilibrage, couples rédox, pile, potentiel de Nernst",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique du solide — rotation, moment cinétique — Ondes lumineuses, réseau de diffraction",pts:12},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique et équilibres — vitesse, constante, facteurs, suivi par spectrophotométrie (Beer-Lambert)",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — plan incliné, travail, puissance — Oscillateur RC et RL, constante de temps",pts:12},
+  ]},
+]
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS — BAC INFORMATIQUE · PHYSIQUE-CHIMIE
+//  Coeff 3 · Durée 3h · bacweb.tn/bac/{year}/{session}/informatique/physique.pdf
+// ════════════════════════════════════════════════════════════════
+const infoPhysLinks: Record<number, AnneeLinks> = {
+  2025: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2025,'principale','informatique','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2025,'controle','informatique','physique.pdf'), correction: undefined },
+  },
+  2024: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2024,'principale','informatique','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2024,'controle','informatique','physique.pdf'), correction: undefined },
+  },
+  2023: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2023,'principale','informatique','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2023,'controle','informatique','physique.pdf'), correction: undefined },
+  },
+  2022: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2022,'principale','informatique','physique.pdf'),
+      correction: bw(2022,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2022,'controle','informatique','physique.pdf'),
+      correction: bw(2022,'controle','informatique','physique_c.pdf') },
+  },
+  2021: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2021,'principale','informatique','physique.pdf'),
+      correction: bw(2021,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2021,'controle','informatique','physique.pdf'),
+      correction: bw(2021,'controle','informatique','physique_c.pdf') },
+  },
+  2020: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2020,'principale','informatique','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2020,'controle','informatique','physique.pdf'), correction: undefined },
+  },
+  2019: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2019,'principale','informatique','physique.pdf'),
+      correction: bw(2019,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2019,'controle','informatique','physique.pdf'),
+      correction: bw(2019,'controle','informatique','physique_c.pdf') },
+  },
+  2018: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2018,'principale','informatique','physique.pdf'), correction: undefined },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2018,'controle','informatique','physique.pdf'), correction: undefined },
+  },
+  2017: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2017,'principale','informatique','physique.pdf'),
+      correction: bw(2017,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2017,'controle','informatique','physique.pdf'),
+      correction: bw(2017,'controle','informatique','physique_c.pdf') },
+  },
+  2016: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2016,'principale','informatique','physique.pdf'),
+      correction: bw(2016,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2016,'controle','informatique','physique.pdf'),
+      correction: bw(2016,'controle','informatique','physique_c.pdf') },
+  },
+  2015: {
+    principale: { label:'Session Principale', session:'P',
+      sujet: bw(2015,'principale','informatique','physique.pdf'),
+      correction: bw(2015,'principale','informatique','physique_c.pdf') },
+    controle:   { label:'Session de Contrôle', session:'C',
+      sujet: bw(2015,'controle','informatique','physique.pdf'),
+      correction: bw(2015,'controle','informatique','physique_c.pdf') },
+  },
+}
+
+const BAC_INFO_PHYS_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Chimie (8 pts)',theme:"Transformations acide-base — pH, Ka, pKa, dosage, solutions tampons biologiques",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — 2ème loi de Newton, translation — Oscillations électriques : circuits LC, RLC",pts:12},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Oxydoréduction — équilibrage, potentiel, pile électrochimique, électrolyse — Applications",pts:8},
+    {titre:'Physique (12 pts)',theme:"Ondes mécaniques — propagation, réflexion, son — Électromagnétisme : induction, loi de Lenz",pts:12},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique chimique — suivi temporel, loi de vitesse, énergie activation, loi Arrhenius",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — plan incliné, travail, puissance — Circuits RC : charge, décharge, constante tau",pts:12},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Acido-basicité — pH, titrages, courbe de neutralisation, indicateurs colorés, applications",pts:8},
+    {titre:'Physique (12 pts)',theme:"Pendule simple et pesant — période propre — Ondes lumineuses : diffraction, interférences",pts:12},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Électrochimie — pile Daniell, formule de Nernst, électrolyse, loi de Faraday, applications",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — satellite géostationnaire, gravitation — Circuits RL, régime transitoire, auto-induction",pts:12},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique — ordre de réaction, méthode intégrale, temps de demi-réaction, catalyse",pts:8},
+    {titre:'Physique (12 pts)',theme:"Oscillations libres — circuit LC, énergie — Optique : réfraction, lentille mince convergente",pts:12},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Dosages — spectrophotométrie, loi Beer-Lambert, titrage conductimétrique, pH-métrique",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — lancement projectile, portée — Induction électromagnétique, transformateur",pts:12},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Acide-base — solutions faibles et fortes, pH, Ka, réactions acido-basiques, dilution",pts:8},
+    {titre:'Physique (12 pts)',theme:"Oscillations mécaniques — ressort, pendule — Circuits RLC : résonance, facteur de qualité Q",pts:12},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Cinétique — suivi par spectrophotométrie (Beer-Lambert), ordre de réaction, énergie activation",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique du solide — rotation, moment cinétique — Ondes sonores, effet Doppler, ultrasons",pts:12},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Oxydoréduction — demi-équations, couples rédox, pile, constante d'équilibre électrochimique",pts:8},
+    {titre:'Physique (12 pts)',theme:"Mécanique — forces de frottement, travail — Circuits RC : régime transitoire, charge décharge",pts:12},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Chimie (8 pts)',theme:"Acide-base — pH, Ka, pKa, réactions totales, titrages potentiométriques et pH-métriques",pts:8},
+    {titre:'Physique (12 pts)',theme:"Oscillations libres — circuit LC, énergie — Mécanique du solide : rotation, moment d'inertie",pts:12},
+  ]},
+]
+
+// ════════════════════════════════════════════════════════════════
+//  CONFIG — MATIÈRES ET SECTIONS
+// ════════════════════════════════════════════════════════════════
+type Matiere = 'maths' | 'physique'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys'
+
+const SECTIONS_MATHS = [
+  { key:'maths'    as SKey, icon:'🧮', label:'Bac Maths',      color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,       links:mathsLinks,      desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
+  { key:'sc-exp'   as SKey, icon:'🔬', label:'Sciences Exp.',   color:'#06d6a0', coeff:'Coeff. 3', data:BAC_SC_EXP_DATA,      links:scExpLinks,      desc:'Analyse · Complexes · Probabilités · Géométrie espace' },
+  { key:'sc-tech'  as SKey, icon:'⚙️', label:'Sciences Tech.',  color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_DATA,     links:scTechLinks,     desc:'Mathématiques · Analyse · Arithmétique · Probabilités' },
+  { key:'eco'      as SKey, icon:'💹', label:'Éco-Gestion',      color:'#10b981', coeff:'Coeff. 2', data:BAC_ECO_GESTION_DATA, links:ecoGestionLinks, desc:'Analyse · Probabilités · Matrices · Mathématiques Financières ★' },
+  { key:'info'     as SKey, icon:'💻', label:'Informatique',     color:'#6366f1', coeff:'Coeff. 3', data:BAC_INFO_DATA,        links:infoLinks,       desc:'Mathématiques · Sujet + Correction officielle' },
+]
+
+const SECTIONS_PHYS = [
+  { key:'sc-exp-phys'  as SKey, icon:'🔬', label:'Sciences Exp.',   color:'#06d6a0', coeff:'Coeff. 4', data:BAC_SC_EXP_PHYS_DATA,  links:scExpPhysLinks,  desc:'Chimie (9 pts) · Physique (13 pts) · Durée 3h · Programme enrichi' },
+  { key:'sc-tech-phys' as SKey, icon:'⚙️', label:'Sciences Tech.',  color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_PHYS_DATA, links:scTechPhysLinks, desc:'Chimie (7 pts) · Physique (15 pts) · Applications technologiques' },
+  { key:'math-phys'    as SKey, icon:'🧮', label:'Bac Maths',       color:'#4f6ef7', coeff:'Coeff. 3', data:BAC_MATH_PHYS_DATA,    links:mathPhysLinks,   desc:'Chimie (8 pts) · Physique (12 pts) · Niveau le plus exigeant' },
+  { key:'info-phys'    as SKey, icon:'💻', label:'Informatique',    color:'#6366f1', coeff:'Coeff. 3', data:BAC_INFO_PHYS_DATA,    links:infoPhysLinks,   desc:'Chimie (8 pts) · Physique (12 pts) · Programme spécialisé' },
+]
+
+// ════════════════════════════════════════════════════════════════
+//  MODALE PDF
 // ════════════════════════════════════════════════════════════════
 function PdfModal({ url, title, onClose }: { url:string; title:string; onClose:()=>void }) {
   useEffect(() => {
@@ -1031,28 +1625,19 @@ function PdfModal({ url, title, onClose }: { url:string; title:string; onClose:(
     return () => { document.removeEventListener('keydown', fn); document.body.style.overflow = '' }
   },[onClose])
 
-  // Types d'URL supportés
   const isPdf     = url.endsWith('.pdf')
   const isGDrive  = url.includes('drive.google.com')
   const isViewable = isPdf || isGDrive
-
-  // Pour les PDF bacweb, on passe par Google Docs Viewer
   const iframeSrc = isPdf
     ? `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`
-    : url   // Google Drive /preview déjà prêt pour iframe
-
-  // Lien de téléchargement : pour GDrive, convertir /preview → /view
-  const downloadHref = isGDrive
-    ? url.replace('/preview', '/view')
     : url
-
-  const sourceLabel = isGDrive
-    ? '📂 Correction · mathsplustn.com (Google Drive)'
+  const downloadHref = isGDrive ? url.replace('/preview', '/view') : url
+  const sourceLabel  = isGDrive
+    ? '📂 Correction · Google Drive'
     : '📋 Sujet · bacweb.tn (CNTE officiel)'
 
   return (
     <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:9999,display:'flex',flexDirection:'column'}}>
-      {/* Barre */}
       <div onClick={e=>e.stopPropagation()} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 18px',background:'#0d0d1a',borderBottom:'1px solid rgba(255,255,255,0.08)',flexShrink:0,flexWrap:'wrap'}}>
         <span style={{fontSize:18}}>{isGDrive ? '✅' : '📄'}</span>
         <div style={{flex:1,minWidth:0}}>
@@ -1071,7 +1656,6 @@ function PdfModal({ url, title, onClose }: { url:string; title:string; onClose:(
           <button onClick={onClose} style={{padding:'6px 14px',borderRadius:8,border:'1px solid rgba(255,255,255,0.2)',background:'transparent',color:'white',cursor:'pointer',fontSize:14,fontWeight:700}}>✕</button>
         </div>
       </div>
-      {/* Viewer */}
       <div onClick={e=>e.stopPropagation()} style={{flex:1,background:'#1a1a2e',position:'relative'}}>
         {isViewable ? (
           <iframe src={iframeSrc} style={{width:'100%',height:'100%',border:'none'}} title={title} allow="autoplay" />
@@ -1090,7 +1674,7 @@ function PdfModal({ url, title, onClose }: { url:string; title:string; onClose:(
   )
 }
 
-// ── Mini bouton lien ─────────────────────────────────────────
+// ── Bouton PDF ────────────────────────────────────────────────
 function BtnLink({ label, url, color, onOpen }: { label:string; url?:string; color:string; onOpen:(u:string,t:string)=>void; }) {
   if (!url) return null
   return (
@@ -1103,23 +1687,18 @@ function BtnLink({ label, url, color, onOpen }: { label:string; url?:string; col
   )
 }
 
-// ════════════════════════════════════════════════════════════════
-//  COMPOSANT SESSIONS — 2 sessions côte à côte
-// ════════════════════════════════════════════════════════════════
+// ── SessionsBlock — gère maths ET physique ────────────────────
 function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
   year: number; secKey: SKey; color: string;
   links?: AnneeLinks; infoL?: InfoLinks;
   onOpen: (url: string, title: string) => void
 }) {
-  const sessions = secKey === 'info'
-    ? [
-        { label:'📌 Session Principale', key:'principale' as const, border:'rgba(79,110,247,0.4)', bg:'rgba(79,110,247,0.06)' },
-        { label:'🔄 Session de Contrôle', key:'controle' as const, border:'rgba(245,158,11,0.4)', bg:'rgba(245,158,11,0.06)' },
-      ]
-    : [
-        { label:'📌 Session Principale', key:'principale' as const, border:'rgba(79,110,247,0.4)', bg:'rgba(79,110,247,0.06)' },
-        { label:'🔄 Session de Contrôle', key:'controle' as const, border:'rgba(245,158,11,0.4)', bg:'rgba(245,158,11,0.06)' },
-      ]
+  const sessions = [
+    { label:'📌 Session Principale', key:'principale' as const, border:'rgba(79,110,247,0.4)', bg:'rgba(79,110,247,0.06)' },
+    { label:'🔄 Session de Contrôle', key:'controle'  as const, border:'rgba(245,158,11,0.4)', bg:'rgba(245,158,11,0.06)' },
+  ]
+  const isPhys = secKey === 'sc-exp-phys' || secKey === 'sc-tech-phys'
+  const label  = isPhys ? 'Physique-Chimie' : 'Mathématiques'
 
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14,marginBottom:20}}>
@@ -1140,20 +1719,18 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
           )
         } else {
           const sess = links?.[s.key]
+          const btnSujet  = isPhys ? '📄 Sujet' : (secKey === 'sc-tech' || secKey === 'eco' ? '📐 Sujet Maths' : '📄 Sujet')
+          const btnCorr   = isPhys ? '✅ Correction' : (secKey === 'sc-tech' || secKey === 'eco' ? '✅ Correction Maths' : '✅ Correction')
+          const titleBase = isPhys
+            ? `${label} — ${secKey === 'sc-exp-phys' ? 'Bac Sciences Expérimentales' : 'Bac Sciences Techniques'} ${year} — ${s.label}`
+            : `${label} — ${secKey === 'sc-tech' ? 'Bac Sciences Techniques' : secKey === 'eco' ? 'Bac Économie & Gestion' : ''} ${year} — ${s.label}`
           return (
             <div key={s.key} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:14,padding:18}}>
               <p style={{margin:'0 0 12px',fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label} {year}</p>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                <BtnLink
-                  label={secKey === 'sc-tech' || secKey === 'eco' ? '📐 Sujet Maths' : '📄 Sujet'}
-                  url={sess?.sujet} color={color}
-                  onOpen={(u)=>onOpen(u,`Sujet Mathématiques — ${secKey === 'sc-tech' ? 'Bac Sciences Techniques' : secKey === 'eco' ? 'Bac Économie & Gestion' : ''} ${year} — ${s.label}`)}
-                />
-                <BtnLink
-                  label={secKey === 'sc-tech' || secKey === 'eco' ? '✅ Correction Maths' : '✅ Correction'}
-                  url={sess?.correction} color="#06d6a0"
-                  onOpen={(u)=>onOpen(u,`Correction Mathématiques — ${secKey === 'sc-tech' ? 'Bac Sciences Techniques' : secKey === 'eco' ? 'Bac Économie & Gestion' : ''} ${year} — ${s.label}`)}
-                />
+                <BtnLink label={btnSujet}  url={sess?.sujet}      color={color}      onOpen={(u)=>onOpen(u,`Sujet ${titleBase}`)} />
+                <BtnLink label={btnCorr}   url={sess?.correction} color="#06d6a0"    onOpen={(u)=>onOpen(u,`Correction ${titleBase}`)} />
+
               </div>
               {!sess?.sujet && !sess?.correction && (
                 <p style={{margin:0,fontSize:12,color:'var(--muted)'}}>Session non disponible cette année</p>
@@ -1167,22 +1744,46 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
 }
 
 // ════════════════════════════════════════════════════════════════
-//  PAGE PRINCIPALE
+//  PAGE PRINCIPALE — Examens Bac Tunisie (Maths + Physique-Chimie)
 // ════════════════════════════════════════════════════════════════
-export default function ExamensPage() {
+export default function ExamensTunisiePage() {
   const router = useRouter()
-  const [activeSec, setActiveSec] = useState<SKey>('maths')
-  const [selectedYear, setSelectedYear] = useState<number|null>(null)
-  const [modal, setModal] = useState<{url:string;title:string}|null>(null)
+  const [activeMatiere, setActiveMatiere] = useState<Matiere>('maths')
+  const [activeSec,     setActiveSec]     = useState<SKey>('maths')
+  const [selectedYear,  setSelectedYear]  = useState<number|null>(null)
+  const [modal,         setModal]         = useState<{url:string;title:string}|null>(null)
 
-  const sec = SECTIONS.find(s=>s.key===activeSec)!
-  const detail = sec.data.find(a=>a.year===selectedYear)
-  const isInfo = activeSec==='info'
-  const ptTotal = detail?.exercices.reduce((s,e)=>s+e.pts,0)??0
+  const isMaths  = activeMatiere === 'maths'
+  const sections = isMaths ? SECTIONS_MATHS : SECTIONS_PHYS
+  const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
+  const detail   = sec.data.find(a => a.year === selectedYear)
+  const isInfo   = activeSec === 'info'
+  const ptTotal  = detail?.exercices.reduce((s,e) => s+e.pts, 0) ?? 0
 
-  // Redirige vers la vraie page Simulation IA
-  const lancerSimulation = () => router.push(`/simulation?section=${activeSec}`)
+  const switchMatiere = (m: Matiere) => {
+    setActiveMatiere(m)
+    setActiveSec(m === 'maths' ? 'maths' : 'sc-exp-phys')
+    setSelectedYear(null)
+  }
 
+  const lancerSimulation = () => {
+    // Mapper les clés physique vers la section correspondante pour la simulation
+    const simSectionMap: Record<string, string> = {
+      'maths':        'maths',
+      'sc-exp':       'sc-exp',
+      'sc-tech':      'sc-tech',
+      'eco':          'eco',
+      'info':         'info',
+      'sc-exp-phys':  'sc-exp',    // Physique Sc.Exp → section scexp dans simulation
+      'sc-tech-phys': 'sc-tech',   // Physique Sc.Tech → section sctech dans simulation
+      'math-phys':    'maths',     // Physique Maths → section maths dans simulation
+      'info-phys':    'info',      // Physique Info → section info dans simulation
+    }
+    const simSection = simSectionMap[activeSec] ?? activeSec
+    const isPhysSection = activeSec.endsWith('-phys')
+    const subjectParam = isPhysSection ? '&subject=physique' : ''
+    router.push(`/simulation?section=${simSection}${subjectParam}`)
+  }
   const openPdf = (url:string, title:string) => setModal({url,title})
 
   return (
@@ -1194,10 +1795,10 @@ export default function ExamensPage() {
         <div className="container" style={{paddingTop:40,paddingBottom:80}}>
 
           {/* HEADER */}
-          <div style={{marginBottom:40}}>
+          <div style={{marginBottom:36}}>
             <span className="label">📋 Examens Officiels Bac Tunisie</span>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',marginBottom:14}}>
-              11 Ans d'Examens Officiels<br />
+              11 Ans d'Examens Officiels<br/>
               <span style={{color:'var(--accent)'}}>2 Sessions · Sujets + Corrections</span>
             </h1>
             <p style={{maxWidth:560,color:'var(--text2)',lineHeight:1.7,marginBottom:10}}>
@@ -1210,10 +1811,24 @@ export default function ExamensPage() {
             </div>
           </div>
 
-          {/* ONGLETS SECTIONS */}
+          {/* ── NIVEAU 1 : MATIÈRE ── */}
+          <div style={{display:'flex',gap:8,marginBottom:20,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:6,width:'fit-content'}}>
+            {([
+              { key:'maths'    as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
+              { key:'physique' as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+            ]).map(m => (
+              <button key={m.key} onClick={() => switchMatiere(m.key)}
+                style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
+                <span style={{fontSize:18}}>{m.icon}</span>
+                <span>{m.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* ── NIVEAU 2 : SECTIONS ── */}
           <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:32,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,padding:6,width:'fit-content'}}>
-            {SECTIONS.map(s=>(
-              <button key={s.key} onClick={()=>{setActiveSec(s.key);setSelectedYear(null)}}
+            {sections.map(s => (
+              <button key={s.key} onClick={() => {setActiveSec(s.key); setSelectedYear(null)}}
                 style={{display:'flex',alignItems:'center',gap:6,padding:'9px 16px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:13,fontWeight:600,transition:'all 0.2s',background:activeSec===s.key?s.color:'transparent',color:activeSec===s.key?'white':'var(--muted)',boxShadow:activeSec===s.key?`0 4px 16px ${s.color}45`:'none'}}>
                 <span>{s.icon}</span>
                 <span>{s.label}</span>
@@ -1230,6 +1845,9 @@ export default function ExamensPage() {
                 <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap',marginBottom:4}}>
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
+                  <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
+                    {isMaths ? 'Mathématiques' : 'Physique-Chimie'}
+                  </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>
               </div>
@@ -1240,15 +1858,13 @@ export default function ExamensPage() {
             </div>
           </div>
 
-          {/* SIMULATION IA — Lien vers /simulation */}
+          {/* SIMULATION IA */}
           <div style={{background:'linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.08))',border:'1px solid rgba(99,102,241,0.25)',borderRadius:14,padding:'16px 22px',marginBottom:28,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
             <div>
               <p style={{margin:0,fontWeight:700,fontSize:15}}>🎯 Simuler un Bac Complet — {sec.label}</p>
               <p style={{margin:'3px 0 0',fontSize:12,color:'var(--muted)'}}>🧠 IA · 10 examens originaux · correction détaillée · analyse des faiblesses · remédiation personnalisée</p>
             </div>
-            <button
-              onClick={lancerSimulation}
-              className="btn btn-primary"
+            <button onClick={lancerSimulation} className="btn btn-primary"
               style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',border:'none',padding:'11px 22px',fontWeight:700,fontSize:14,cursor:'pointer',borderRadius:12,color:'white',boxShadow:'0 6px 20px rgba(99,102,241,0.45)',display:'flex',alignItems:'center',gap:8}}>
               🧠 Lancer la Simulation IA →
             </button>
@@ -1259,10 +1875,10 @@ export default function ExamensPage() {
             Sélectionnez une année pour accéder aux 2 sessions
           </p>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(145px,1fr))',gap:12,marginBottom:32}}>
-            {sec.data.map(a=>{
-              const sel = selectedYear===a.year
+            {sec.data.map(a => {
+              const sel = selectedYear === a.year
               return (
-                <div key={a.year} onClick={()=>setSelectedYear(sel?null:a.year)}
+                <div key={a.year} onClick={() => setSelectedYear(sel ? null : a.year)}
                   style={{cursor:'pointer',textAlign:'center',padding:'18px 10px',background:sel?`${sec.color}18`:'var(--surface)',border:sel?`2px solid ${sec.color}`:'1px solid var(--border)',borderRadius:14,transition:'all 0.2s',boxShadow:sel?`0 6px 24px ${sec.color}30`:'none',transform:sel?'translateY(-3px)':'none'}}
                   onMouseEnter={e=>{if(!sel){e.currentTarget.style.borderColor=`${sec.color}70`;e.currentTarget.style.transform='translateY(-2px)'}}}
                   onMouseLeave={e=>{if(!sel){e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}}>
@@ -1285,7 +1901,7 @@ export default function ExamensPage() {
               <div style={{marginBottom:24}}>
                 <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
                   <span style={{fontSize:22}}>{sec.icon}</span>
-                  <h3 style={{margin:0}}>Bac {sec.label} — {selectedYear}</h3>
+                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
                     ✅ Sujets + Corrections disponibles
                   </span>
@@ -1297,12 +1913,12 @@ export default function ExamensPage() {
                 </p>
               </div>
 
-              {/* SESSIONS — 2 blocs côte à côte */}
+              {/* SESSIONS */}
               <SessionsBlock
                 year={selectedYear!}
                 secKey={activeSec}
                 color={sec.color}
-                links={activeSec!=='info' ? (sec.links as Record<number,AnneeLinks>)[selectedYear!] : undefined}
+                links={(sec.links as Record<number,AnneeLinks>)[selectedYear!]}
                 infoL={activeSec==='info' ? infoLinks[selectedYear!] : undefined}
                 onOpen={openPdf}
               />
@@ -1313,7 +1929,7 @@ export default function ExamensPage() {
                   📊 Contenu du sujet session principale
                 </p>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:10}}>
-                  {detail.exercices.map((ex,i)=>(
+                  {detail.exercices.map((ex,i) => (
                     <div key={i} style={{background:'var(--surface)',border:'1px solid var(--border)',borderLeft:`3px solid ${sec.color}`,borderRadius:10,padding:'12px 14px'}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,alignItems:'flex-start',gap:8}}>
                         <span style={{fontWeight:700,fontSize:12,color:sec.color}}>{ex.titre}</span>
@@ -1342,8 +1958,8 @@ export default function ExamensPage() {
           <div style={{marginTop:52,paddingTop:36,borderTop:'1px solid var(--border)'}}>
             <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16,fontWeight:600}}>Autres sections</p>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12}}>
-              {SECTIONS.filter(s=>s.key!==activeSec).map(s=>(
-                <button key={s.key} onClick={()=>{setActiveSec(s.key);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
+              {sections.filter(s => s.key !== activeSec).map(s => (
+                <button key={s.key} onClick={() => {setActiveSec(s.key); setSelectedYear(null); window.scrollTo({top:0,behavior:'smooth'})}}
                   style={{display:'flex',gap:12,alignItems:'center',padding:16,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:12,cursor:'pointer',textAlign:'left',transition:'all 0.2s',fontFamily:'var(--font-body)'}}
                   onMouseEnter={e=>{e.currentTarget.style.borderColor=`${s.color}60`;e.currentTarget.style.transform='translateY(-2px)'}}
                   onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}>
@@ -1368,5 +1984,3 @@ export default function ExamensPage() {
     </>
   )
 }
-
-
