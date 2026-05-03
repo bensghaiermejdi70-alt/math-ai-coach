@@ -33,7 +33,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json()
-    const { id, status, user_id, plan_type, ends_at, email_target, action } = body
+    const { id, status, user_id, plan_type, ends_at, email_target, action, matiere } = body
 
     // ── Activation par email (panel admin manuel) ────────────────
     if (action === 'activate_by_email' && email_target) {
@@ -46,29 +46,40 @@ export async function PATCH(req: NextRequest) {
       }
 
       const endDate = new Date()
-      if (plan_type === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
-      else endDate.setMonth(endDate.getMonth() + 1)
+      if (plan_type === 'annuel' || plan_type?.startsWith('annuel_'))
+        endDate.setFullYear(endDate.getFullYear() + 1)
+      else
+        endDate.setMonth(endDate.getMonth() + 1)
+
+      // Construire le plan_type final avec matière
+      // body.matiere est passé depuis le panel admin (ex: 'mathematiques')
+      const matiere = body.matiere || 'mathematiques'
+      const basePlan = plan_type?.split('_')[0] === 'sprint'
+        ? 'sprint_bac'
+        : (plan_type?.split('_')[0] || 'mensuel')
+      const finalPlanType = `${basePlan}_${matiere}`
 
       // Insérer subscription active
       await supabase.from('subscriptions').insert({
-        user_id:        profile.id,
-        plan_type:      plan_type || 'mensuel',
-        status:         'active',
-        price_paid:     0,
-        payment_method: 'especes',
+        user_id:           profile.id,
+        plan_type:         finalPlanType,
+        status:            'active',
+        price_paid:        0,
+        payment_method:    'especes',
         payment_reference: 'ADMIN_MANUAL',
-        starts_at:      new Date().toISOString(),
-        ends_at:        endDate.toISOString(),
+        starts_at:         new Date().toISOString(),
+        ends_at:           endDate.toISOString(),
       })
 
-      // Mettre à jour le profil
+      // Mettre à jour le profil — RESET current_session_id pour éviter blocage
       await supabase.from('profiles').update({
-        is_active:        true,
-        plan_type:        plan_type || 'mensuel',
-        subscription_end: endDate.toISOString(),
+        is_active:          true,
+        plan_type:          finalPlanType,
+        subscription_end:   endDate.toISOString(),
+        current_session_id: null,   // ← reset pour éviter déconnexion forcée
       }).eq('id', profile.id)
 
-      return NextResponse.json({ ok: true })
+      return NextResponse.json({ ok: true, plan_type: finalPlanType })
     }
 
     // ── Activation / désactivation par ID subscription ───────────
@@ -110,12 +121,21 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // Update profile
+    // Update profile — avec matière + reset session_id à l'activation
     if (resolvedUserId) {
+      const matiere2 = body.matiere || 'mathematiques'
+      const basePlan2 = plan_type?.split('_')[0] === 'sprint'
+        ? 'sprint_bac'
+        : (plan_type?.split('_')[0] || 'mensuel')
+      const finalPlan2 = status === 'active'
+        ? `${basePlan2}_${matiere2}`
+        : null
+
       await supabase.from('profiles').update({
-        is_active:        status === 'active',
-        plan_type:        status === 'active' ? (plan_type || null) : null,
-        subscription_end: status === 'active' ? endDate : null,
+        is_active:          status === 'active',
+        plan_type:          finalPlan2,
+        subscription_end:   status === 'active' ? endDate : null,
+        current_session_id: status === 'active' ? null : undefined, // reset à l'activation
       }).eq('id', resolvedUserId)
     }
 
