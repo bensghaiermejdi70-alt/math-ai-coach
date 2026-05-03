@@ -1685,9 +1685,9 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
           {sec&&(
             <div style={{background:`${sec.color}10`,border:`1px solid ${sec.color}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
-              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label} — Jour {dayNum}</div>
-              <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Thèmes : {sec.themes.join(' · ')}</div>
-              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Durée : {sec?.duration?sec.duration/60:3}h · Coeff {sec?.coeff||3} · 20 points · 4 exercices</div>
+              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label}</div>
+              <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Bac Blanc · Concours National · 1 Mai – 30 Juin</div>
+              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Choisissez votre matière à l'étape suivante</div>
             </div>
           )}
 
