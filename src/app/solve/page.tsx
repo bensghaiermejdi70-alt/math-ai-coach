@@ -1978,6 +1978,51 @@ Structure OBLIGATOIRE :
   }
 
   // ── Rendu ──
+  // ── Vérification accès matière ─────────────────────────────────
+  const SUBJECT_TO_MATIERE: Record<string,string> = {
+    physique:'physique', informatique:'informatique',
+    svt:'svt', anglais:'anglais', litterature:'anglais', maths:'mathematiques'
+  }
+  const currentMatiere = SUBJECT_TO_MATIERE[subject] || 'mathematiques'
+  const isSolverLocked = hasActiveSubscription && !isAdmin
+    && !checkMatiereAccess(currentMatiere as any)
+    && subject !== 'maths' && subject !== 'litterature'
+
+  if (isSolverLocked) {
+    const info = ({
+      physique: { label:'Physique-Chimie', color:'#06d6a0', icon:'⚗️' },
+      svt: { label:'SVT', color:'#10b981', icon:'🧬' },
+      anglais: { label:'Anglais', color:'#f59e0b', icon:'🇬🇧' },
+      informatique: { label:'Informatique', color:'#8b5cf6', icon:'💻' },
+    } as Record<string,{label:string;color:string;icon:string}>)[subject]
+    return (
+      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <Navbar/>
+        <div style={{textAlign:'center',maxWidth:360,padding:32}}>
+          <div style={{fontSize:48,marginBottom:16}}>🔒</div>
+          <div style={{fontSize:20,fontWeight:800,color:'white',marginBottom:8}}>
+            {info?.icon} Solveur {info?.label}
+          </div>
+          <div style={{fontSize:14,color:'rgba(255,255,255,0.5)',lineHeight:1.7,marginBottom:24}}>
+            Tu as accès au solveur de ta matière abonnée uniquement.<br/>
+            Tes cours et examens restent accessibles gratuitement.
+          </div>
+          <a href={`/abonnement?matiere=${currentMatiere}`}
+            style={{display:'inline-flex',alignItems:'center',gap:8,
+              background:`linear-gradient(135deg,${info?.color||'#4f6ef7'},${info?.color||'#4f6ef7'}cc)`,
+              color:'white',padding:'12px 28px',borderRadius:12,
+              fontWeight:700,fontSize:14,textDecoration:'none',marginRight:12}}>
+            S'abonner {info?.icon} →
+          </a>
+          <a href="/solve" style={{fontSize:13,color:'rgba(255,255,255,0.4)',textDecoration:'none',display:'block',marginTop:16}}>
+            ← Retour solveur maths
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+
   return (
     <>
       <Navbar />
@@ -2341,44 +2386,6 @@ Structure OBLIGATOIRE :
 }
 
 export default function SolvePage() {
-  // Vérification accès matière pour le solveur
-  const currentMatiere = SUBJECT_TO_MATIERE[subject] || 'mathematiques'
-  const isSolverLocked = hasActiveSubscription && !checkMatiereAccess(currentMatiere as any)
-    && subject !== 'maths' && subject !== 'litterature'
-
-  if (isSolverLocked) {
-    const info = ({
-      physique: { label:'Physique-Chimie', color:'#06d6a0', icon:'⚗️' },
-      svt: { label:'SVT', color:'#10b981', icon:'🧬' },
-      anglais: { label:'Anglais', color:'#f59e0b', icon:'🇬🇧' },
-      informatique: { label:'Informatique', color:'#8b5cf6', icon:'💻' },
-    } as Record<string,{label:string;color:string;icon:string}>)[subject]
-    return (
-      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <div style={{textAlign:'center',maxWidth:360,padding:32}}>
-          <div style={{fontSize:48,marginBottom:16}}>🔒</div>
-          <div style={{fontSize:20,fontWeight:800,color:'white',marginBottom:8}}>
-            {info?.icon} Solveur {info?.label}
-          </div>
-          <div style={{fontSize:14,color:'rgba(255,255,255,0.5)',lineHeight:1.7,marginBottom:24}}>
-            Tu as accès au solveur de ta matière abonnée uniquement.
-            Tes cours et examens restent accessibles gratuitement.
-          </div>
-          <a href={`/abonnement?matiere=${currentMatiere}`}
-            style={{display:'inline-flex',alignItems:'center',gap:8,
-              background:`linear-gradient(135deg,${info?.color||'#4f6ef7'},${info?.color||'#4f6ef7'}cc)`,
-              color:'white',padding:'12px 28px',borderRadius:12,
-              fontWeight:700,fontSize:14,textDecoration:'none',marginRight:12}}>
-            S'abonner {info?.icon} →
-          </a>
-          <a href="/solve" style={{fontSize:13,color:'rgba(255,255,255,0.4)',textDecoration:'none'}}>
-            ← Retour solveur maths
-          </a>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#080817', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14 }}>
