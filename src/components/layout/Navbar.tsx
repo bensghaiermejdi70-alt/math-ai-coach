@@ -40,7 +40,7 @@ function BacBlancBtn({ pathname }: { pathname: string }) {
         animation: isMay && !isActive ? 'pulse-bb 2.5s ease-in-out infinite' : 'none',
       }}>
         <span style={{fontSize:14}}>🏆</span>
-        <span>Bac Blanc{isMay ? ` J${day}` : ''}</span>
+        <span>Bac Blanc</span>
         {isMay && !isActive && (
           <span style={{background:'#f59e0b',color:'#0a0a1a',fontSize:9,fontWeight:900,padding:'1px 5px',borderRadius:50,letterSpacing:'0.05em'}}>LIVE</span>
         )}
