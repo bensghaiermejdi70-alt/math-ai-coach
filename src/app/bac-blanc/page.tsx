@@ -416,21 +416,9 @@ RÉPONSE JSON OBLIGATOIRE :
   ]
 }`
 
-  const res = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-opus-4-5',
-      max_tokens: 4000,
-      system,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  })
-  if (!res.ok) throw new Error(`API error ${res.status}`)
-  const data = await res.json()
-  const raw = data.content?.[0]?.text || ''
+  // Utiliser askClaude() — même fonction que generateBacBlanc (maths)
+  const raw = await askClaude(prompt, system, 5000)
 
-  // Utiliser parseJSON robuste (gère backticks, GRAPH tags, etc.)
   const parsed = parseJSON<BacExam>(raw, {
     id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
     day: dayNum,
@@ -443,7 +431,6 @@ RÉPONSE JSON OBLIGATOIRE :
     exercises: []
   })
 
-  // Vérification structure minimale
   if (!parsed.exercises || parsed.exercises.length === 0) {
     throw new Error('Réponse IA invalide — réessayez')
   }
