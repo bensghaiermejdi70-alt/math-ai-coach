@@ -1,6 +1,46 @@
 // src/lib/types/monetisation.ts
 
+// Matières disponibles pour l'abonnement
+export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique'
+
+// PlanType = plan seul (legacy) OU plan_matiere (nouveau format)
+// Format : "mensuel_mathematiques" | "annuel_physique" | "sprint_bac_mathematiques"
+// Legacy : "mensuel" | "annuel" | "sprint_bac" (= mathematiques par défaut)
 export type PlanType = 'mensuel' | 'annuel' | 'sprint_bac'
+  | 'mensuel_mathematiques' | 'annuel_mathematiques' | 'sprint_bac_mathematiques'
+  | 'mensuel_physique'      | 'annuel_physique'      | 'sprint_bac_physique'
+  | 'mensuel_svt'           | 'annuel_svt'           | 'sprint_bac_svt'
+  | 'mensuel_anglais'       | 'annuel_anglais'       | 'sprint_bac_anglais'
+  | 'mensuel_informatique'  | 'annuel_informatique'  | 'sprint_bac_informatique'
+
+// ── Helpers pour extraire plan et matière ──────────────────────────
+export function extractPlan(planType: string | null | undefined): 'mensuel' | 'annuel' | 'sprint_bac' {
+  if (!planType) return 'mensuel'
+  if (planType.startsWith('sprint_bac')) return 'sprint_bac'
+  if (planType.startsWith('annuel'))     return 'annuel'
+  return 'mensuel'
+}
+
+export function extractMatiere(planType: string | null | undefined): MatiereType {
+  if (!planType) return 'mathematiques'
+  const parts = planType.split('_')
+  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique']
+  const last = parts[parts.length - 1] as MatiereType
+  return known.includes(last) ? last : 'mathematiques'
+}
+
+export function hasMatiereAccess(planType: string | null | undefined, matiere: MatiereType): boolean {
+  if (!planType) return false
+  return extractMatiere(planType) === matiere
+}
+
+export const MATIERE_LABELS: Record<MatiereType, string> = {
+  mathematiques: '🧮 Mathématiques',
+  physique:      '⚗️ Physique-Chimie',
+  svt:           '🧬 SVT',
+  anglais:       '🇬🇧 Anglais',
+  informatique:  '💻 Informatique',
+}
 export type PaymentMethod = 'd17' | 'konnect' | 'flouci' | 'recharge_mobile' | 'manual'
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled'
 export type UserRole = 'student' | 'teacher' | 'admin'
@@ -154,7 +194,7 @@ export const PLAN_DEFINITIONS: Record<PlanType, {
 // QUOTA LIMITS par plan
 // ============================================================
 
-export function getQuotaLimits(planType: PlanType | null, isSprint: boolean = false): PlanQuotas {
+export function getQuotaLimits(planType: PlanType | string | null, isSprint: boolean = false): PlanQuotas {
   if (!planType) {
     // Utilisateur non abonné — accès gratuit limité
     return {
@@ -168,11 +208,14 @@ export function getQuotaLimits(planType: PlanType | null, isSprint: boolean = fa
     }
   }
 
-  if (isSprint || planType === 'sprint_bac') {
+  // Extraire le plan de base (gère "mensuel_mathematiques" → "mensuel")
+  const basePlan = extractPlan(planType)
+
+  if (isSprint || basePlan === 'sprint_bac') {
     return PLAN_DEFINITIONS.sprint_bac.quotas
   }
 
-  return PLAN_DEFINITIONS[planType].quotas
+  return PLAN_DEFINITIONS[basePlan].quotas
 }
 
 // Email admin (accès illimité sans abonnement)

@@ -6,8 +6,11 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Profile,
   UserQuotas,
+  MatiereType,
   ADMIN_EMAIL,
   getQuotaLimits,
+  extractMatiere,
+  hasMatiereAccess,
   PlanQuotas
 } from '@/lib/types/monetisation'
 
@@ -38,6 +41,8 @@ interface AuthContextType {
 
   hasActiveSubscription: boolean
   daysRemaining: number | null
+  matiereActive: MatiereType   // matière de l'abonnement actif
+  checkMatiereAccess: (matiere: MatiereType) => boolean
 
   signIn: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>
   signUp: (data: SignUpData) => Promise<{ error: string | null }>
@@ -77,7 +82,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscriptionEnd.getTime() > Date.now())
 
   const isSprint =
-    profile?.plan_type === 'sprint_bac' && hasActiveSubscription
+    (profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
+    && hasActiveSubscription
+
+  // Matière de l'abonnement actif
+  const matiereActive: MatiereType = hasActiveSubscription
+    ? extractMatiere(profile?.plan_type)
+    : 'mathematiques'
+
+  // Vérifier si l'utilisateur a accès à une matière donnée
+  function checkMatiereAccess(matiere: MatiereType): boolean {
+    if (isAdmin) return true
+    if (!hasActiveSubscription) return false
+    return hasMatiereAccess(profile?.plan_type, matiere)
+  }
 
   const quotaLimits = hasActiveSubscription
     ? getQuotaLimits(profile?.plan_type ?? null, isSprint)
@@ -98,6 +116,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single()
 
     if (error) {
+      // PGRST116 = profil inexistant → le créer automatiquement
+      if (error.code === 'PGRST116') {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: authUser?.email ?? '',
+            full_name: authUser?.user_metadata?.full_name ?? '',
+            role: 'user',
+            is_active: false,
+            plan_type: null,
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'id' })
+          .select()
+          .single()
+        setProfile(newProfile)
+        return
+      }
       console.error('Erreur chargement profil:', error)
       setProfile(null)
       return
@@ -179,7 +216,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(data: SignUpData) {
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -193,6 +230,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error)
       return { error: translateAuthError(error.message) }
+
+    // Créer le profil dans profiles dès l'inscription
+    // (même avant confirmation email — sera accessible après connexion)
+    if (authData.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authData.user.id,
+          email: data.email,
+          full_name: data.full_name,
+          phone: data.phone || null,
+          section_bac: data.section_bac || null,
+          role: 'user',
+          is_active: false,
+          plan_type: null,
+          created_at: new Date().toISOString(),
+        }, { onConflict: 'id' })
+
+      if (profileError) {
+        console.error('Erreur création profil:', profileError)
+        // On ne bloque pas l'inscription pour autant
+      }
+    }
 
     return { error: null }
   }
@@ -308,12 +368,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .eq('id', currentUser.id)
                 .single()
               
-              if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
+              if (prof?.is_active && prof?.current_session_id !== null && prof?.current_session_id && prof.current_session_id !== localId) {
                 localStorage.removeItem('mathbac_session_id')
                 clearState()
                 await supabase.auth.signOut()
                 window.location.href = '/login?error=session_dupliquee'
                 return
+              }
+              // Si current_session_id NULL en DB → l'initialiser
+              if (prof?.current_session_id === null) {
+                await supabase.from('profiles')
+                  .update({ current_session_id: localId })
+                  .eq('id', currentUser.id)
               }
             }
           }
@@ -371,12 +437,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (prof.current_session_id === localId) return
       
-      if (prof?.is_active && prof.current_session_id !== localId) {
+      // Ne déconnecter que si DB a un session_id NON-NULL différent
+      // Si current_session_id est NULL en DB (ex: activation manuelle),
+      // on met juste à jour sans déconnecter
+      if (prof?.is_active && prof.current_session_id !== null && prof.current_session_id !== localId) {
         signingOut = true
         localStorage.removeItem('mathbac_session_id')
         clearState()
         await supabase.auth.signOut()
         window.location.href = '/login?error=session_dupliquee'
+      } else if (prof?.current_session_id === null && localId) {
+        // Activation manuelle : mettre à jour le session_id en DB
+        await supabase.from('profiles')
+          .update({ current_session_id: localId })
+          .eq('id', currentUser.id)
       }
     }
 
@@ -404,6 +478,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         hasActiveSubscription,
         daysRemaining,
+        matiereActive,
+        checkMatiereAccess,
 
         signIn,
         signUp,
@@ -445,4 +521,3 @@ function translateAuthError(msg: string): string {
     return 'Cet email est deja utilise'
   return msg
 }
-

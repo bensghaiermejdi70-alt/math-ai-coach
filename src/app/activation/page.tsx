@@ -13,9 +13,8 @@ import Footer from '@/components/layout/Footer'
 const PLAN_PRICES: Record<string, number> = {
   mensuel: 60, sprint: 90, annuel: 600,
 }
-// ── CORRECTION : noms génériques ──
 const PLAN_LABELS: Record<string, string> = {
-  mensuel: 'Abonnement Mensuel', sprint: 'Sprint Bac', annuel: 'Abonnement Annuel',
+  mensuel: 'MathBac Mensuel', sprint: 'Sprint Bac', annuel: 'MathBac Annuel',
 }
 
 // ── 2 méthodes uniquement ─────────────────────────────────────────
@@ -85,7 +84,7 @@ function AdminPanel() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setMsg(`✅ ${PLAN_LABELS[planTarget]} activé pour ${emailTarget}`)
+      setMsg(`✅ Abonnement ${PLAN_LABELS[planTarget]} activé pour ${emailTarget}`)
       setEmailTarget('')
     } catch (err: any) {
       setMsg(`❌ ${err.message}`)
@@ -108,10 +107,9 @@ function AdminPanel() {
           <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:5, fontWeight:600 }}>Plan</label>
           <select value={planTarget} onChange={e => setPlanTarget(e.target.value)}
             className="input" style={{ borderRadius:9, background:'var(--surface)', color:'var(--text)', cursor:'pointer' }}>
-            {/* ── CORRECTION : labels génériques dans le select ── */}
-            <option value="mensuel">Abonnement Mensuel — 60 DT</option>
+            <option value="mensuel">MathBac Mensuel — 60 DT</option>
             <option value="sprint">Sprint Bac — 90 DT</option>
-            <option value="annuel">Abonnement Annuel — 600 DT</option>
+            <option value="annuel">MathBac Annuel — 600 DT</option>
           </select>
         </div>
         <button type="submit" disabled={loading}
@@ -154,7 +152,7 @@ function ActivationInner() {
   const [error,      setError]      = useState('')
 
   const price     = PLAN_PRICES[planParam] || 60
-  const planLabel = PLAN_LABELS[planParam] || 'Abonnement Mensuel'
+  const planLabel = PLAN_LABELS[planParam] || 'MathBac Mensuel'
   const info      = METHODS[method]
 
   async function handleSubmit(e: React.FormEvent) {
@@ -185,7 +183,12 @@ function ActivationInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_id:               user?.id || null,
-          plan_type:             planParam,
+          // Format: "mensuel_mathematiques" ou "sprint_bac_physique"
+          plan_type: matiereParam && matiereParam !== 'mathematiques'
+            ? `${planParam}_${matiereParam}`
+            : planParam === 'sprint_bac'
+              ? 'sprint_bac_mathematiques'
+              : `${planParam}_mathematiques`,
           status:                method === 'especes' ? 'pending_cash' : 'pending',
           price_paid:            price,
           payment_method:        method,
