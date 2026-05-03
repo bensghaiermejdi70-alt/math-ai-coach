@@ -377,6 +377,8 @@ Exercice 4 : "On réalise un dosage pH-métrique de..."
 
 RÉPONSE JSON OBLIGATOIRE :
 {
+  "id": "bb-physique-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
   "title": "Bac Blanc — Physique-Chimie — ${sec.label} — Jour ${dayNum}",
   "section": "${sec.label}",
   "date": "${dateStr}",
@@ -384,36 +386,32 @@ RÉPONSE JSON OBLIGATOIRE :
   "duration": 180,
   "exercises": [
     {
-      "number": 1,
+      "num": 1,
       "theme": "${prog?.ex1.theme || 'Physique'}",
-      "title": "Titre exercice 1",
+      "title": "Titre exercice 1 (ex: Dipôle RC — condensateur)",
       "points": 8,
-      "enonce": "Énoncé complet et détaillé (minimum 150 mots)...",
-      "questions": ["1) a) Question...", "1) b) Question...", "2) a) Question...", "2) b) Question...", "2) c) Question..."]
+      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous...\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale..."
     },
     {
-      "number": 2,
+      "num": 2,
       "theme": "${prog?.ex2.theme || 'Physique'}",
-      "title": "Titre exercice 2",
+      "title": "Titre exercice 2 (ex: Pendule simple — oscillations)",
       "points": 6,
-      "enonce": "Énoncé complet...",
-      "questions": ["1) a) ...", "1) b) ...", "2) a) ...", "2) b) ..."]
+      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ..."
     },
     {
-      "number": 3,
+      "num": 3,
       "theme": "${prog?.ex3.theme || 'Chimie'}",
-      "title": "Titre exercice 3",
+      "title": "Titre exercice 3 (ex: Cinétique chimique)",
       "points": 3,
-      "enonce": "Énoncé...",
-      "questions": ["1) ...", "2) ...", "3) ..."]
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ..."
     },
     {
-      "number": 4,
+      "num": 4,
       "theme": "${prog?.ex4.theme || 'Chimie'}",
-      "title": "Titre exercice 4",
+      "title": "Titre exercice 4 (ex: Dosage acide-base)",
       "points": 3,
-      "enonce": "Énoncé...",
-      "questions": ["1) ...", "2) ...", "3) ..."]
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ..."
     }
   ]
 }`
@@ -428,12 +426,29 @@ RÉPONSE JSON OBLIGATOIRE :
       messages: [{ role: 'user', content: prompt }],
     }),
   })
-  if (!res.ok) throw new Error('API error')
+  if (!res.ok) throw new Error(`API error ${res.status}`)
   const data = await res.json()
   const raw = data.content?.[0]?.text || ''
-  const cleaned = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()
-  const parsed = JSON.parse(cleaned)
-  return parsed as BacExam
+
+  // Utiliser parseJSON robuste (gère backticks, GRAPH tags, etc.)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: 'Bac Blanc Physique-Chimie',
+    section: candidat.section,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 180,
+    exercises: []
+  })
+
+  // Vérification structure minimale
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return parsed
 }
 
 // ── sanitizeExpr (identique simulation) ──────────────────────────
