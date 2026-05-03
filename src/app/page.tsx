@@ -267,29 +267,38 @@ export default function HomePage() {
             </div>
 
             {/* Titre principal */}
+            <div style={{ marginBottom:22, animation:'fadeInUp 0.7s ease 0.08s both' }}>
+              {/* Ligne drapeaux + séparateur */}
+              <div style={{
+                display:'inline-flex', alignItems:'center', gap:10,
+                background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)',
+                borderRadius:100, padding:'7px 22px', fontSize:13, marginBottom:22,
+              }}>
+                <span style={{ fontWeight:800, color:'#60a5fa' }}>🇫🇷 Bac France</span>
+                <span style={{ color:'rgba(255,255,255,0.2)', fontSize:16 }}>|</span>
+                <span style={{ fontWeight:800, color:'#4f6ef7' }}>🇹🇳 Bac Tunisie</span>
+              </div>
+            </div>
+
             <h1 style={{
               fontFamily:'var(--font-display)', fontWeight:900,
-              fontSize:'clamp(20px,3.2vw,44px)', lineHeight:1.05,
-              letterSpacing:'-0.03em', marginBottom:16,
+              fontSize:'clamp(22px,3.5vw,50px)', lineHeight:1.05,
+              letterSpacing:'-0.03em', marginBottom:18,
               animation:'fadeInUp 0.7s ease 0.1s both',
             }}>
-              <span style={{ display:'block', marginBottom:6, fontSize:'clamp(13px,1.5vw,17px)', fontWeight:600, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.45)' }}>MathBac.AI — Votre</span>
+              <span style={{ display:'block', marginBottom:6, color:'rgba(255,255,255,0.9)' }}>
+                Ton professeur IA personnel
+              </span>
               <span style={{
                 display:'block',
-                background:'linear-gradient(95deg,#4f6ef7 0%,#7c3aed 40%,#60a5fa 80%,#06d6a0 100%)',
+                background:'linear-gradient(95deg,#4f6ef7 0%,#7c3aed 35%,#06d6a0 70%,#f59e0b 100%)',
                 WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                marginBottom:6,
-              }}>Professeur IA Généraliste</span>
-              <span style={{
-                display:'block',
-                background:'linear-gradient(95deg,#f5c842 0%,#f97316 70%)',
-                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                fontSize:'clamp(16px,2.5vw,34px)',
-              }}>Toutes Matières · Bac Tunisie & France</span>
+                fontSize:'clamp(16px,2.8vw,38px)', fontWeight:800,
+              }}>Maths · PC · SVT · Anglais · Info · Littérature</span>
             </h1>
 
-            {/* Matières chips */}
-            <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', marginBottom:28, animation:'fadeInUp 0.7s ease 0.15s both' }}>
+            {/* Matières chips discrets */}
+            <div style={{ display:'flex', gap:7, justifyContent:'center', flexWrap:'wrap', marginBottom:24, animation:'fadeInUp 0.7s ease 0.15s both' }}>
               {[
                 { icon:'🧮', label:'Mathématiques', color:'#4f6ef7' },
                 { icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
@@ -299,10 +308,10 @@ export default function HomePage() {
                 { icon:'📚', label:'Littérature', color:'#a78bfa' },
               ].map(m => (
                 <span key={m.label} style={{
-                  display:'inline-flex', alignItems:'center', gap:5,
-                  padding:'5px 14px', borderRadius:100,
-                  background:`${m.color}15`, border:`1px solid ${m.color}35`,
-                  color:m.color, fontSize:12, fontWeight:700,
+                  display:'inline-flex', alignItems:'center', gap:4,
+                  padding:'4px 12px', borderRadius:100,
+                  background:`${m.color}12`, border:`1px solid ${m.color}28`,
+                  color:m.color, fontSize:11, fontWeight:600,
                 }}>
                   {m.icon} {m.label}
                 </span>
