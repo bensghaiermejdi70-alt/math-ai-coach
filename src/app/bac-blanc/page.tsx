@@ -229,6 +229,213 @@ function parseJSON<T>(raw: string, fallback: T): T {
   }
 }
 
+
+// ── Programme Physique-Chimie par jour — rotation 31 jours ────────
+// Couvre TOUT le programme officiel PC Bac Tunisie
+// ex1 = Physique partie 1 (8pts) · ex2 = Physique partie 2 (6pts)
+// ex3 = Chimie partie 1 (3pts)   · ex4 = Chimie partie 2 (3pts)
+const PROGRAMME_JOUR_PHYSIQUE: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+  ex4: { theme: string; sousTh: string }
+}[]> = {
+  'scexp': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge du condensateur, τ=RC, énergie E=½Cu²"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — T=2π√(l/g), énergie mécanique, amortissement"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — établissement et rupture du courant, τ=L/R, énergie magnétique"}, ex2:{theme:"Mécanique",sousTh:"Ressort horizontal — T=2π√(m/k), énergie cinétique et potentielle"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, formule de Nernst"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC libre — oscillations amorties, pseudo-période, échanges Ec↔Em"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation, célérité v=λf, retard τ=d/v, déphasage"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion τ=xf/xmax, ordre de réaction, Arrhenius"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance, fréquence propre f₀=1/(2π√LC), facteur Q"}, ex2:{theme:"Optique",sousTh:"Lentilles minces, relation de conjugaison, grandissement, instruments optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Taux avancement final τf, déplacement équilibre, loi modération"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), applications industrielles"} },
+    { ex1:{theme:"Mécanique",sousTh:"2ème loi de Newton ΣF=ma — plan incliné, frottement, énergie cinétique Ec=½mv²"}, ex2:{theme:"Électricité",sousTh:"Oscillateurs LC libres — solution sinusoïdale, fréquence propre, énergie"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool ⇌ ester + eau, taux de conversion"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — spectrophotométrie, conductimétrie, pH-métrie"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, réseau nλ=d·sinθ"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"Acides et bases faibles, diagramme de prédominance, solutions tampons"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, τf"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie t₁/₂=ln2/λ, activité A=λN"}, ex2:{theme:"Électricité",sousTh:"Induction électromagnétique — loi de Faraday e=-dΦ/dt, loi de Lenz"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage iodométrique, permanganométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (polyéthylène) et polycondensation (nylon, polyester)"} },
+    { ex1:{theme:"Mécanique",sousTh:"Moment cinétique, pendule pesant, oscillations forcées, résonance mécanique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène et enzymatique — mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Énergie de liaison, défaut de masse E=Δm·c², fission et fusion nucléaires"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres RC et RL — fonction transfert H(f), fréquence de coupure fc=1/(2πRC)"}, ex2:{theme:"Mécanique",sousTh:"Projectile — équations horaires, portée, flèche, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"pH des solutions aqueuses — acides forts, acides faibles, calcul complet"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — Ks, condition de précipitation"} },
+    { ex1:{theme:"Optique",sousTh:"Spectres atomiques — photon E=hf=hc/λ, transitions, absorption et émission"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbes résonance, bande passante Δf=f₀/Q"}, ex3:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique Daniell — anode, cathode, f.e.m., sens courant"} },
+    { ex1:{theme:"Mécanique",sousTh:"Oscillateur masse-ressort vertical — position équilibre, T=2π√(m/k), énergie"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — conservation A et Z, énergie libérée, applications médicales"}, ex3:{theme:"Cinétique chimique",sousTh:"Loi de vitesse — ordre 0, ordre 1, ordre 2, détermination expérimentale"}, ex4:{theme:"Acide-base",sousTh:"Indicateurs colorés, zones de virage, choix de l'indicateur pour un dosage"} },
+    { ex1:{theme:"Électricité",sousTh:"Condensateur plan — capacité C=ε₀S/e, association série et parallèle"}, ex2:{theme:"Ondes lumineuses",sousTh:"Optique ondulatoire — cohérence, longueur de cohérence, applications laser"}, ex3:{theme:"Équilibres chimiques",sousTh:"Équilibre de solubilité — produit de solubilité Ks, pH et précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — synthèse, propriétés basiques, liaisons peptidiques"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc et impulsion — conservation quantité de mouvement, choc élastique/plastique"}, ex2:{theme:"Électricité",sousTh:"Circuit LC et analogie mécano-électrique — tableau de correspondance complet"}, ex3:{theme:"Oxydoréduction",sousTh:"Électrolyse de solutions aqueuses — produits obtenus, rendement faradique"}, ex4:{theme:"Cinétique chimique",sousTh:"Effet de la température — énergie d'activation, loi d'Arrhenius, diagramme"} },
+    { ex1:{theme:"Ondes mécaniques",sousTh:"Effet Doppler — Δf/f=v/c, applications (radar, échographie, astronomie)"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie, moment d'une force, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Bilan complet acide-base — réaction prépondérante, taux d'avancement"}, ex4:{theme:"Chimie organique",sousTh:"Médicaments et molécules organiques — structure, propriétés, isomérie"} },
+    { ex1:{theme:"Électricité",sousTh:"Bilan électricité — RC, RL, RLC, oscillations libres et forcées"}, ex2:{theme:"Mécanique",sousTh:"Bilan mécanique — Newton, pendule, ressort, énergie, satellites"}, ex3:{theme:"Chimie",sousTh:"Bilan chimie — cinétique, équilibres, acide-base"}, ex4:{theme:"Nucléaire",sousTh:"Bilan nucléaire — radioactivité, réactions, énergie"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — régime transitoire, constante de temps, comportement à t=0 et t→∞"}, ex2:{theme:"Optique",sousTh:"Réfraction — loi de Snell-Descartes n₁sinθ₁=n₂sinθ₂, réflexion totale, fibres optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique et équilibre, rendement, optimisation"}, ex4:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance complet"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RC — dipôle RC en régime transitoire, comportement condensateur à t=0 et t→∞"}, ex2:{theme:"Mécanique",sousTh:"Satellite — lois de Kepler T²/R³=cste, vitesse cosmique v=√(GM/R), énergie totale"}, ex3:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — produit de solubilité Ks, condition de précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions d'estérification"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RL — dipôle RL, énergie magnétique Em=½Li², comportement à t=0 et régime permanent"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — transitions énergétiques E=hf=hc/λ, spectre H, laser"}, ex3:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance, dosage"}, ex4:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique MnO₄⁻/Mn²⁺ — équilibrage, point équivalent"} },
+    { ex1:{theme:"Mécanique",sousTh:"Pendule pesant — moment d'inertie I, équation M=Iα, analogie avec pendule simple"}, ex2:{theme:"Électricité",sousTh:"Oscillations LC — échanges énergie condensateur↔bobine, charge et courant sinusoïdaux"}, ex3:{theme:"Cinétique chimique",sousTh:"Réactions d'ordre 2 — loi de vitesse v=k[A]², temps de demi-réaction t₁/₂=1/(k[A]₀)"}, ex4:{theme:"Équilibres chimiques",sousTh:"Acides aminés — propriétés acido-basiques, pH isoélectrique, peptides"} },
+    { ex1:{theme:"Optique",sousTh:"Lentilles convergentes — foyers conjugués, relation de conjugaison, construction d'image"}, ex2:{theme:"Mécanique",sousTh:"Poussée d'Archimède — conditions flottaison, équilibre d'un solide dans un fluide"}, ex3:{theme:"Acide-base",sousTh:"Solutions tampons — Henderson-Hasselbalch pH=pKa+log([A⁻]/[AH]), rôle biologique"}, ex4:{theme:"Chimie organique",sousTh:"Polymères industriels — PET, PVC, polystyrène, propriétés et recyclage"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Fission U-235 — bilan A et Z, neutrons produits, énergie libérée, centrale nucléaire"}, ex2:{theme:"Électricité",sousTh:"Induction — coefficient mutuelle d'induction M, transformateur parfait k=n₁/n₂"}, ex3:{theme:"Oxydoréduction",sousTh:"Corrosion des métaux — pile de corrosion, protection cathodique, galvanisation"}, ex4:{theme:"Acide-base",sousTh:"Titrages en retour — dosage de mélanges, calcul de concentration inconnue"} },
+    { ex1:{theme:"Mécanique",sousTh:"Oscillations forcées mécaniques — résonance en amplitude, bande passante, facteur Q"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes sinusoïdales — retard τ=d/v, déphasage φ=2πd/λ, figure de battements"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape cinétiquement déterminante, intermédiaire réactionnel"}, ex4:{theme:"Équilibres chimiques",sousTh:"Hydrolyse des sels — pH d'une solution de sel, prévision par pKa"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres RC passifs — filtre passe-bas fc=1/(2πRC), passe-haut, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Trajectoire parabolique — équations horaires, portée, flèche, vitesse d'impact"}, ex3:{theme:"Acide-base",sousTh:"Médicaments et pH — aspirine, paracétamol, antiacides, solubilité pH-dépendante"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — basicité, formation, liaison peptidique, protéines"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement p=mv, choc élastique Ec conservée, coefficient e"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC — résistance critique Rc=2√(L/C), régimes amortis et pseudo-périodique"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse enzymatique — cinétique Michaelis-Menten, Km et Vmax, inhibiteurs"}, ex4:{theme:"Nucléaire",sousTh:"Fusion nucléaire — réaction D+T→He+n, énergie libérée, applications thermonucléaires"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Réseau de diffraction — nλ=d·sinθ, spectre d'ordre 1, mesure de longueur d'onde"}, ex2:{theme:"Mécanique",sousTh:"Rotation d'un solide — moment cinétique L=Iω, conservation L, gyroscope"}, ex3:{theme:"Équilibres chimiques",sousTh:"Complexes métalliques — constante de formation β, EDTA, dosage complexométrique"}, ex4:{theme:"Oxydoréduction",sousTh:"Électrolyse de l'eau — bilan redox, gaz produits, loi de Faraday appliquée"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — énergie dissipée par effet Joule et énergie stockée dans le condensateur"}, ex2:{theme:"Optique",sousTh:"Interférences de Young — interfrange i=λD/a, conditions de cohérence, lumière blanche"}, ex3:{theme:"Chimie organique",sousTh:"Savons et détergents — saponification, micelles, tensioactifs, HLB"}, ex4:{theme:"Acide-base",sousTh:"Dosage par conductimétrie — courbe σ=f(V), point équivalent, calcul de concentration"} },
+    { ex1:{theme:"Mécanique",sousTh:"Énergie potentielle élastique Ep=½kx² — oscillateur amorti, dissipation par frottement"}, ex2:{theme:"Nucléaire",sousTh:"Radioactivité artificielle — activation neutronique, radio-isotopes médicaux (TEP, scintigraphie)"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi par manométrie — gaz produits, pression totale, dégagement gazeux"}, ex4:{theme:"Équilibres chimiques",sousTh:"Estérification-hydrolyse — équilibre et cinétique, optimisation du rendement"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — énergie lors de la rupture, surtension, arc électrique, protection circuits"}, ex2:{theme:"Mécanique",sousTh:"Oscillateur non linéaire — pendule à grande amplitude, méthode de Runge-Kutta simplifié"}, ex3:{theme:"Acide-base",sousTh:"Bilan acide-base complet — mélange d'acides, calcul pH par approximations successives"}, ex4:{theme:"Oxydoréduction",sousTh:"Piles à combustible — H₂/O₂, rendement, comparaison pile galvanique"} },
+    { ex1:{theme:"Mécanique",sousTh:"Bilan des forces — systèmes de plusieurs solides, contraintes, réactions au liaison"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbe résonance en tension, largeur bande, sélectivité"}, ex3:{theme:"Chimie organique",sousTh:"Chiralité — carbone asymétrique, énantiomères, diastéréoisomères, activité optique"}, ex4:{theme:"Cinétique chimique",sousTh:"Photochimie — réaction induite par lumière, quantum de photochimie, loi de Beer"} },
+    { ex1:{theme:"Ondes mécaniques",sousTh:"Ultrasons — célérité dans différents milieux, écho, sonar, contrôle non destructif"}, ex2:{theme:"Mécanique",sousTh:"Satellite géostationnaire — altitude, période T=24h, puissance transmise"}, ex3:{theme:"Équilibres chimiques",sousTh:"Indicateurs de fin de réaction — indicateurs colorés, pH-métrie, conductimétrie choix"}, ex4:{theme:"Acide-base",sousTh:"Eau de Javel — hypochlorite, propriétés oxydantes, dosage, concentration active"} },
+    { ex1:{theme:"Électricité",sousTh:"Révision électricité — RC, RL, RLC, induction, filtres — sujet de synthèse complet"}, ex2:{theme:"Mécanique",sousTh:"Révision mécanique — Newton, pendule, ressort, ondes, satellites — sujet de synthèse"}, ex3:{theme:"Chimie",sousTh:"Révision chimie — cinétique, équilibres, acide-base, redox — sujet de synthèse"}, ex4:{theme:"Nucléaire",sousTh:"Révision nucléaire — radioactivité, réactions, énergie — sujet de synthèse final"} },
+  ],
+  'sctech': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante de temps τ=RC, courbes"}, ex2:{theme:"Mécanique",sousTh:"2ème loi de Newton — translation, plan incliné, frottement, bilan forces"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante de temps τ=L/R, établissement du courant, énergie"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple et pesant — T=2π√(l/g), analogie LC, amortissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, f.e.m., formule de Nernst"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC — oscillations libres amorties, régimes, résistance critique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — célérité v=λf, retard τ=d/v, ultrasons, Doppler"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion, ordre de réaction, Arrhenius, énergie activation"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert A=εlc"} },
+    { ex1:{theme:"Mécanique",sousTh:"Ressort — oscillateur horizontal, T=2π√(m/k), énergie, amortissement"}, ex2:{theme:"Optique",sousTh:"Lentilles minces convergentes — foyers, relation conjugaison, grandissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux conversion τ, distillation, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), galvanoplastie, aluminium"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, couleurs"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance en courant, fréquence f₀=1/(2π√LC), Q"}, ex3:{theme:"Chimie organique",sousTh:"Fonctions organiques — alcool, acide, ester, amine, aldéhyde, cétone"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, pH-métrie"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie, activité A=λN"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique v=√(GM/R)"}, ex3:{theme:"Acide-base",sousTh:"Acides faibles — Ka, diagramme prédominance, solutions tampons, pH"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, sens réaction"} },
+    { ex1:{theme:"Électricité",sousTh:"Induction — loi Faraday e=-dΦ/dt, loi de Lenz, transformateur"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage rédox — permanganométrie, iodométrie, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (éthylène) et polycondensation (nylon, polyester)"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement, choc élastique, impulsion"}, ex2:{theme:"Électricité",sousTh:"Filtres RC — passe-bas, passe-haut, fonction transfert, fréquence coupure"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène, enzymatique — activation, mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, énergie de liaison E=Δm·c²"} },
+  ],
+  'maths': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, équation différentielle complète"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — équation différentielle, T=2π√(l/g), énergie mécanique Em"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, ordre, Arrhenius, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique complet avec dérivée"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — équation différentielle, τ=L/R, énergie Em=½Li², rupture"}, ex2:{theme:"Mécanique",sousTh:"Ressort — T=2π√(m/k), oscillations libres, analogie électromécanique"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, taux τf"}, ex4:{theme:"Oxydoréduction",sousTh:"Couple rédox, pile Daniell, Nernst E=E°+(0.06/n)log([Ox]/[Red])"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période T≈T₀=2π√(LC), décrément δ"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — v=λf, déphasage φ=2πd/λ, ondes stationnaires, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Ordre de réaction 0, 1, 2 — détermination, intégration, t₁/₂"}, ex4:{theme:"Acide-base",sousTh:"Spectrophotométrie Beer-Lambert A=εlc, dosage colorimétrique"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance en courant et tension, facteur Q=L/(R√LC)"}, ex2:{theme:"Optique",sousTh:"Diffraction fente θ≈λ/a, Young i=λD/a, réseau nλ=d·sinθ, spectre"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique, équilibre, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse — loi de Faraday m=MIt/(nF), rendement Q=It"} },
+    { ex1:{theme:"Mécanique",sousTh:"Newton ΣF=ma — satellite, vitesse cosmique, énergie mécanique, orbites circulaires"}, ex2:{theme:"Électricité",sousTh:"Induction — Faraday e=-dΦ/dt, Lenz, auto-induction, transformateur parfait"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool, τ, distillation, polymères"}, ex4:{theme:"Cinétique chimique",sousTh:"Catalyse, énergie d'activation Ea, diagramme énergétique"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, activité A=λN, E=Δmc²"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie I, moment de force M, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Polyacides, solutions tampons — Henderson-Hasselbalch, applications biologiques"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, condition précipitation, pH et solubilité"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — impulsion F·Δt, conservation quantité de mouvement p=mv, choc élastique"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — E=hf, niveaux d'énergie, transitions, laser"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique, iodométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Amides et polypeptides — liaison peptidique, propriétés, hydrolyse"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres actifs et passifs — RC, RL, passe-bande, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Oscillations forcées — résonance en amplitude et en énergie, bande passante"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape lente, intermédiaire, loi de vitesse"}, ex4:{theme:"Nucléaire",sousTh:"Fission U-235 et fusion H — bilan énergétique, centrale nucléaire"} },
+  ],
+  'info': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, courbes"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation v=λf, retard τ=d/v, ultrasons applications numériques"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, taux de conversion, facteurs cinétiques"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante τ=L/R, énergie magnétique Em=½Li², écrêtage"}, ex2:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences Young i=λD/a, holographie"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, Kéq, Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique, f.e.m., sens courant, anode et cathode"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période, régimes amortis"}, ex2:{theme:"Mécanique",sousTh:"Newton ΣF=ma — plan incliné, frein, énergie cinétique Ec=½mv²"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, Beer-Lambert"}, ex4:{theme:"Acide-base",sousTh:"Dosage conductimétrique, spectrophotométrique, point équivalent"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, applications médicales"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes, tuyaux sonores, ultrason médical"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux τ, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday, dépôts galvaniques"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance f₀=1/(2π√LC), facteur Q, bande passante"}, ex2:{theme:"Optique",sousTh:"Lentilles minces — foyers, relation de conjugaison, instruments optiques"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse — homogène, hétérogène, enzymatique"}, ex4:{theme:"Chimie organique",sousTh:"Fonctions organiques — ester, amide, polymères polyaddition"} },
+    { ex1:{theme:"Mécanique",sousTh:"Pendule simple — équation, T=2π√(l/g), analogie LC, amortissement"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, E=Δm·c², fission et fusion"}, ex3:{theme:"Acide-base",sousTh:"Dosage acido-basique — indicateurs colorés, choix indicateur"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, pH et solubilité, condition précipitation"} },
+  ],
+}
+
+function getProgrammeJourPhysique(sectionKey: string, dayNum: number) {
+  // Mapping sectionKey → programme physique-chimie officiel Bac Tunisie
+  // maths et eco ont le même programme PC que scexp
+  const physKey =
+    sectionKey === 'maths' ? 'scexp' :
+    sectionKey === 'eco'   ? 'scexp' :
+    sectionKey  // scexp, sctech, info → programme propre
+  const prog = PROGRAMME_JOUR_PHYSIQUE[physKey]
+  if (!prog || prog.length === 0) return null
+  // % prog.length pour la rotation sur les 61 jours (mai-juin)
+  return prog[(dayNum - 1) % prog.length]
+}
+
+// ── Génération examen Bac Blanc Physique-Chimie ────────────────────
+async function generateBacBlancPhysique(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_PHYSIQUE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
+EXPOSANTS : e^(-t/τ)  N₀·e^(-λt)  ½mv²  ½Cu²  — TOUJOURS parenthèses autour de l'exposant
+INDICES UNICODE : u_C → uC  i(t)  N₀  T₁/₂  ω₀  τ — utiliser symboles Unicode
+VECTEURS : F⃗  a⃗  v⃗  P⃗  — avec U+20D7
+UNITÉS : toujours préciser l'unité (V, A, Ω, F, H, m/s², N, J, mol/L, mol, s)
+FORMULES CLÉS :
+- RC : τ=RC · uC(t)=E(1-e^(-t/τ)) · i(t)=(E/R)e^(-t/τ) · E=½Cu²
+- RL : τ=L/R · i(t)=(E/R)(1-e^(-t/τ)) · eL=-L·di/dt · Em=½Li²
+- RLC : ω₀=1/√(LC) · T₀=2π√(LC) · Q=L/(R√LC)
+- Pendule : T=2π√(l/g) · Ressort : T=2π√(m/k)
+- Newton : ΣF=ma · Ec=½mv² · W=F·d·cosθ
+- Ondes : v=λ·f · τ=d/v · i=λD/a · nλ=d·sinθ
+- Nucléaire : N(t)=N₀·e^(-λt) · t₁/₂=ln2/λ · E=Δm·c²
+- Chimie : v=dx/dt · Ka=[A⁻][H₃O⁺]/[AH] · pH=-log[H₃O⁺] · m=MIt/(nF)`
+
+  const prog = getProgrammeJourPhysique(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Dipôle RC — charge et décharge'
+  const ex2Theme = prog?.ex2.sousTh || 'Mécanique — 2ème loi de Newton'
+  const ex3Theme = prog?.ex3.sousTh || 'Cinétique chimique'
+  const ex4Theme = prog?.ex4.sousTh || 'Acide-base — pH et dosage'
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${sec.label}.
+
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+
+═══ STRUCTURE OFFICIELLE DU SUJET PHYSIQUE-CHIMIE BAC TUNISIE ═══
+Durée : 3h · Total : 20 points · Format officiel MEN Tunisie
+
+Exercice 1 — PHYSIQUE PARTIE 1 (8 points) — ${ex1Theme}
+Exercice 2 — PHYSIQUE PARTIE 2 (6 points) — ${ex2Theme}
+Exercice 3 — CHIMIE PARTIE 1 (3 points) — ${ex3Theme}
+Exercice 4 — CHIMIE PARTIE 2 (3 points) — ${ex4Theme}
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Niveau exactement équivalent aux vrais examens officiels Bac Tunisie
+- Données numériques réalistes et cohérentes (R en kΩ, C en μF, L en mH...)
+- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
+- Minimum 120 mots par exercice
+- Inclure figures et schémas décrits textuellement (circuit, montage, courbe)
+
+PRÉSENTATION OFFICIELLE :
+Exercice 1 : "On réalise le montage représenté par la figure ci-contre..."
+Exercice 2 : "Un pendule simple de longueur l=..." ou "Un solide (S) de masse m=..."
+Exercice 3 : "On étudie la cinétique de la réaction entre..."
+Exercice 4 : "On réalise un dosage pH-métrique de..."
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "title": "Bac Blanc — Physique-Chimie — ${sec.label} — Jour ${dayNum}",
+  "section": "${sec.label}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    {
+      "number": 1,
+      "theme": "${prog?.ex1.theme || 'Physique'}",
+      "title": "Titre exercice 1",
+      "points": 8,
+      "enonce": "Énoncé complet et détaillé (minimum 150 mots)...",
+      "questions": ["1) a) Question...", "1) b) Question...", "2) a) Question...", "2) b) Question...", "2) c) Question..."]
+    },
+    {
+      "number": 2,
+      "theme": "${prog?.ex2.theme || 'Physique'}",
+      "title": "Titre exercice 2",
+      "points": 6,
+      "enonce": "Énoncé complet...",
+      "questions": ["1) a) ...", "1) b) ...", "2) a) ...", "2) b) ..."]
+    },
+    {
+      "number": 3,
+      "theme": "${prog?.ex3.theme || 'Chimie'}",
+      "title": "Titre exercice 3",
+      "points": 3,
+      "enonce": "Énoncé...",
+      "questions": ["1) ...", "2) ...", "3) ..."]
+    },
+    {
+      "number": 4,
+      "theme": "${prog?.ex4.theme || 'Chimie'}",
+      "title": "Titre exercice 4",
+      "points": 3,
+      "enonce": "Énoncé...",
+      "questions": ["1) ...", "2) ...", "3) ..."]
+    }
+  ]
+}`
+
+  const res = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 4000,
+      system,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+  if (!res.ok) throw new Error('API error')
+  const data = await res.json()
+  const raw = data.content?.[0]?.text || ''
+  const cleaned = raw.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim()
+  const parsed = JSON.parse(cleaned)
+  return parsed as BacExam
+}
+
 // ── sanitizeExpr (identique simulation) ──────────────────────────
 function sanitizeExpr(expr: string): string {
   let e = expr
@@ -1199,11 +1406,12 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onRetour
+  candidat, dayNum, onMaths, onPhysique, onRetour
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
+  onPhysique: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
@@ -1225,18 +1433,13 @@ function PhaseChoixMatiere({
       key: 'physique',
       icon: '⚗️',
       label: 'Physique-Chimie',
-      desc: 'Simulation par chapitres · RC, RLC, Cinétique, Acide-base, Newton…',
+      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses · Programme PC officiel',
       color: '#06d6a0',
       gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
       border: 'rgba(6,214,160,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
-      href: '/simulation?subject=physique&section=' + (
-        candidat.sectionKey === 'scexp' ? 'sc-exp' :
-        candidat.sectionKey === 'sctech' ? 'sc-tech' :
-        candidat.sectionKey === 'info' ? 'info' : 'maths'
-      ),
     },
     {
       key: 'svt',
@@ -1312,7 +1515,7 @@ function PhaseChoixMatiere({
               onClick={() => {
                 if (!m.available) return
                 if (m.key === 'maths') { onMaths(); return }
-                if (m.href) window.location.href = m.href
+                if (m.key === 'physique') { onPhysique(); return }
               }}
               style={{
                 width:'100%',
@@ -2834,6 +3037,23 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  // Lancer le bac blanc physique-chimie (même flux que maths)
+  const handleStartPhysique = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && !checkQuota('simulations')) {
+      alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancPhysique(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -2882,6 +3102,7 @@ function BacBlancInner() {
       candidat={candidat}
       dayNum={dayNum}
       onMaths={handleStartMaths}
+      onPhysique={handleStartPhysique}
       onRetour={()=>setPhase('inscription')}
     />
   )
