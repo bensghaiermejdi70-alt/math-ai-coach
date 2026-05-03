@@ -26,7 +26,16 @@ interface Sub {
 }
 
 const PLAN_LABELS: Record<string,string> = {
-  mensuel:'Mensuel', sprint:'Sprint Bac', annuel:'Annuel'
+  mensuel:'Mensuel', sprint:'Sprint Bac', annuel:'Annuel',
+  mensuel_mathematiques:'Mensuel · 🧮 Maths',
+  mensuel_physique:'Mensuel · ⚗️ PC',
+  mensuel_svt:'Mensuel · 🧬 SVT',
+  mensuel_anglais:'Mensuel · 🇬🇧 Anglais',
+  mensuel_informatique:'Mensuel · 💻 Info',
+  annuel_mathematiques:'Annuel · 🧮 Maths',
+  annuel_physique:'Annuel · ⚗️ PC',
+  sprint_bac_mathematiques:'Sprint · 🧮 Maths',
+  sprint_bac_physique:'Sprint · ⚗️ PC',
 }
 const METHOD_ICONS: Record<string,string> = {
   d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵', stripe:'💳'
@@ -50,6 +59,7 @@ export default function AdminPaymentsPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [msg,        setMsg]        = useState('')
   const [activating, setActivating] = useState<string|null>(null)
+  const [matieres,   setMatieres]   = useState<Record<string,string>>({})
   const [sortBy,     setSortBy]     = useState<'date_asc'|'date_desc'|'expiry_asc'|'expiry_desc'>('date_desc')
   const [filterDate, setFilterDate] = useState('')
 
@@ -102,8 +112,13 @@ export default function AdminPaymentsPage() {
   async function activate(s: Sub) {
     setActivating(s.id); setMsg('')
     try {
+      const matiere = matieres[s.id] || 'mathematiques'
+      const basePlan = s.plan_type?.startsWith('sprint') ? 'sprint_bac'
+        : s.plan_type?.startsWith('annuel') ? 'annuel' : 'mensuel'
+      const finalPlanType = `${basePlan}_${matiere}`
+
       const endDate = new Date()
-      if (s.plan_type === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
+      if (basePlan === 'annuel') endDate.setFullYear(endDate.getFullYear() + 1)
       else endDate.setMonth(endDate.getMonth() + 1)
 
       const res = await fetch('/api/admin/subscriptions', {
@@ -111,13 +126,15 @@ export default function AdminPaymentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: s.id, status: 'active',
-          user_id: s.user_id, plan_type: s.plan_type,
+          user_id: s.user_id,
+          plan_type: finalPlanType,
+          matiere,
           ends_at: endDate.toISOString(),
         }),
       })
       const { error } = await res.json()
       if (error) throw new Error(error)
-      setMsg(`✅ Abonnement activé pour ${s.email || s.id}`)
+      setMsg(`✅ Abonnement ${finalPlanType} activé pour ${s.email || s.id}`)
       await loadAll()
     } catch (err: any) {
       setMsg(`❌ ${err.message}`)
@@ -326,14 +343,28 @@ export default function AdminPaymentsPage() {
                   </div>
 
                   {/* Colonne 4 — Actions */}
-                  <div style={{ display:'flex', flexDirection:'column', gap:6, minWidth:120 }}>
+                  <div style={{ display:'flex', flexDirection:'column', gap:6, minWidth:150 }}>
                     {s.status !== 'active' && (
-                      <button onClick={() => activate(s)} disabled={isAct}
-                        style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
-                          background:'linear-gradient(135deg,#10b981,#059669)',
-                          color:'white', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
-                        {isAct ? '⏳...' : '✅ Activer'}
-                      </button>
+                      <>
+                        {/* Sélecteur matière */}
+                        <select value={matieres[s.id]||'mathematiques'}
+                          onChange={e => setMatieres(m => ({...m,[s.id]:e.target.value}))}
+                          style={{ padding:'5px 8px', borderRadius:7, border:'1px solid rgba(255,255,255,0.12)',
+                            background:'rgba(255,255,255,0.06)', color:'white', fontSize:11, fontWeight:600,
+                            cursor:'pointer', width:'100%' }}>
+                          <option value="mathematiques">🧮 Maths</option>
+                          <option value="physique">⚗️ Physique-Chimie</option>
+                          <option value="svt">🧬 SVT</option>
+                          <option value="anglais">🇬🇧 Anglais</option>
+                          <option value="informatique">💻 Informatique</option>
+                        </select>
+                        <button onClick={() => activate(s)} disabled={isAct}
+                          style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
+                            background:'linear-gradient(135deg,#10b981,#059669)',
+                            color:'white', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
+                          {isAct ? '⏳...' : '✅ Activer'}
+                        </button>
+                      </>
                     )}
                     {s.status === 'active' && (
                       <button onClick={() => deactivate(s)} disabled={isAct}
