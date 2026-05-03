@@ -1,5 +1,8 @@
 // src/lib/types/monetisation.ts
 
+// Plans de base (sans matière)
+export type BasePlanType = 'mensuel' | 'annuel' | 'sprint_bac'
+
 // Matières disponibles pour l'abonnement
 export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique'
 
@@ -121,7 +124,7 @@ export interface Plan {
 // PLAN DEFINITIONS
 // ============================================================
 
-export const PLAN_DEFINITIONS: Record<PlanType, {
+export const PLAN_DEFINITIONS: Record<BasePlanType, {
   label: string
   // Tunisie
   price_tn: string
@@ -209,7 +212,7 @@ export function getQuotaLimits(planType: PlanType | string | null, isSprint: boo
   }
 
   // Extraire le plan de base (gère "mensuel_mathematiques" → "mensuel")
-  const basePlan = extractPlan(planType)
+  const basePlan: BasePlanType = extractPlan(planType)
 
   if (isSprint || basePlan === 'sprint_bac') {
     return PLAN_DEFINITIONS.sprint_bac.quotas
