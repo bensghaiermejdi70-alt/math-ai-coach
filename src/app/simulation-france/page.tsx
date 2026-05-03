@@ -1,3 +1,43 @@
+// ── Composant verrou matière (Option C) ────────────────────────────
+function MatiereLockOverlay({ matiere, label, color, icon }: {
+  matiere: string; label: string; color: string; icon: string
+}) {
+  return (
+    <div style={{
+      position:'absolute', inset:0, zIndex:20,
+      background:'rgba(10,10,26,0.88)', backdropFilter:'blur(4px)',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+      borderRadius:'inherit', gap:12,
+    }}>
+      <div style={{ fontSize:36 }}>🔒</div>
+      <div style={{ textAlign:'center', maxWidth:260 }}>
+        <div style={{ fontSize:15, fontWeight:800, color:'white', marginBottom:6 }}>
+          {icon} {label}
+        </div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:16 }}>
+          Accès réservé aux abonnés {label}.
+          Tes cours et examens restent gratuits.
+        </div>
+        <a href={`/abonnement?matiere=${matiere}`}
+          style={{ display:'inline-flex', alignItems:'center', gap:6,
+            background:`linear-gradient(135deg,${color},${color}cc)`,
+            color:'white', padding:'9px 20px', borderRadius:10,
+            fontWeight:700, fontSize:13, textDecoration:'none' }}>
+          S'abonner {icon} →
+        </a>
+      </div>
+    </div>
+  )
+}
+
+// Mapping matière → infos visuelles
+const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
+  mathematiques: { label:'Mathématiques', color:'#4f6ef7', icon:'🧮' },
+  physique:      { label:'Physique-Chimie',color:'#06d6a0', icon:'⚗️' },
+  svt:           { label:'SVT',            color:'#10b981', icon:'🧬' },
+  anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
+  informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
+}
 'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
 import { useSearchParams } from 'next/navigation'
@@ -2442,7 +2482,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
 function PhaseGenerating({ archives, customText, onDone }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void
 }) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits } = useAuth()
+  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
@@ -4510,6 +4550,8 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 }
 
 function SimulationFrancePageInner() {
+  const { hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin } = useAuth()
+
   // ── Matière : maths ou physique ──────────────────────────────────
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
     if (typeof window === 'undefined') return 'maths'
@@ -4638,18 +4680,23 @@ function SimulationFrancePageInner() {
           {phase === 'select' && (
             <div style={{display:'flex',gap:8,marginBottom:24,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
               {([
-                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b' },
-                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
-              ]).map(m => (
-                <button key={m.key} onClick={() => setActiveMatiere(m.key)}
+                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
+                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+              ]).map(m => {
+                const locked = !isAdmin && hasActiveSubscription && m.matiere !== 'mathematiques' && !checkMatiereAccess(m.matiere as any)
+                return (
+                <button key={m.key} onClick={() => { if(!locked) setActiveMatiere(m.key) }}
                   style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
                     background:activeMatiere===m.key?m.color:'transparent',
                     color:activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
-                    boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
+                    boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none',
+                    opacity: locked ? 0.55 : 1 }}>
                   <span style={{fontSize:18}}>{m.icon}</span>
                   <span>{m.label}</span>
+                  {locked && <span style={{fontSize:12}}>🔒</span>}
                 </button>
-              ))}
+                )
+              })}
             </div>
           )}
 

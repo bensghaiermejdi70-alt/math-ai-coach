@@ -1,3 +1,33 @@
+function MatiereLockOverlay({ matiere, label, color, icon }: {
+  matiere: string; label: string; color: string; icon: string
+}) {
+  return (
+    <div style={{
+      position:'absolute', inset:0, zIndex:20,
+      background:'rgba(10,10,26,0.88)', backdropFilter:'blur(4px)',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+      borderRadius:'inherit', gap:12,
+    }}>
+      <div style={{ fontSize:36 }}>🔒</div>
+      <div style={{ textAlign:'center', maxWidth:260 }}>
+        <div style={{ fontSize:15, fontWeight:800, color:'white', marginBottom:6 }}>
+          {icon} {label}
+        </div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:16 }}>
+          Accès réservé aux abonnés {label}.
+          Tes cours et examens restent gratuits.
+        </div>
+        <a href={`/abonnement?matiere=${matiere}`}
+          style={{ display:'inline-flex', alignItems:'center', gap:6,
+            background:`linear-gradient(135deg,${color},${color}cc)`,
+            color:'white', padding:'9px 20px', borderRadius:10,
+            fontWeight:700, fontSize:13, textDecoration:'none' }}>
+          S'abonner {icon} →
+        </a>
+      </div>
+    </div>
+  )
+}
 'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
@@ -1137,7 +1167,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
   const [tab, setTab] = useState<'classement'|'insights'|'admin'>('classement')
   const [filterSection, setFilterSection] = useState('')
   const [filterDay, setFilterDay] = useState(0)
-  const { isAdmin } = useAuth()
+  const { isAdmin, checkMatiereAccess, matiereActive} = useAuth()
   // Panel admin dans PageStatistiques — garde le state local pour la saisie email
   const [adminEmail, setAdminEmail] = useState('')
   const [adminOk, setAdminOk] = useState(isAdmin)  // admin Supabase = accès direct
@@ -1419,13 +1449,18 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onRetour
+  candidat, dayNum, onMaths, onPhysique, onRetour,
+  hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
   onPhysique: () => void
   onRetour: () => void
+  hasActiveSubscription?: boolean
+  checkMatiereAccess?: (m: string) => boolean
+  matiereActive?: string
+  isAdmin?: boolean
 }) {
   const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
 
@@ -1521,53 +1556,54 @@ function PhaseChoixMatiere({
 
         {/* Grille matières */}
         <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
-          {MATIERES.map(m => (
-            <button
-              key={m.key}
-              disabled={!m.available}
-              onClick={() => {
-                if (!m.available) return
-                if (m.key === 'maths') { onMaths(); return }
-                if (m.key === 'physique') { onPhysique(); return }
-              }}
-              style={{
-                width:'100%',
-                background:m.gradient,
-                border:`1.5px solid ${m.border}`,
-                borderRadius:16,
-                padding:'22px 24px',
-                display:'flex',
-                alignItems:'center',
-                gap:20,
-                cursor:m.available?'pointer':'not-allowed',
-                opacity:m.available?1:0.65,
-                transition:'transform 0.15s, box-shadow 0.15s',
-                textAlign:'left',
-                fontFamily:'inherit',
-              }}
-              onMouseEnter={e=>{ if(m.available){(e.currentTarget as HTMLElement).style.transform='translateY(-2px)';(e.currentTarget as HTMLElement).style.boxShadow=`0 8px 32px ${m.color}30`} }}
-              onMouseLeave={e=>{ (e.currentTarget as HTMLElement).style.transform='translateY(0)';(e.currentTarget as HTMLElement).style.boxShadow='none' }}
-            >
-              {/* Icone */}
-              <div style={{width:56,height:56,borderRadius:14,background:`${m.color}20`,border:`1.5px solid ${m.color}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
-                {m.icon}
-              </div>
-              {/* Texte */}
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5,flexWrap:'wrap'}}>
-                  <span style={{fontSize:17,fontWeight:800,color:'white'}}>{m.label}</span>
-                  <span style={{fontSize:10,fontWeight:700,color:m.badgeColor,background:`${m.badgeColor}18`,border:`1px solid ${m.badgeColor}30`,borderRadius:20,padding:'2px 10px',letterSpacing:'0.04em'}}>
-                    {m.badge}
-                  </span>
+          {/* Grille matières */}
+        <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
+          {MATIERES.map(m => {
+            const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
+            const isLk = m.available && hasActiveSubscription && !checkMatiereAccess(matiereKey as any)
+            return (
+              <button
+                key={m.key}
+                disabled={!m.available || isLk}
+                onClick={() => {
+                  if (!m.available || isLk) return
+                  if (m.key === 'maths') { onMaths(); return }
+                  if (m.key === 'physique') { onPhysique(); return }
+                }}
+                style={{
+                  width:'100%',
+                  background:m.gradient,
+                  border:`1.5px solid ${m.border}`,
+                  borderRadius:16,padding:'22px 24px',display:'flex',alignItems:'center',
+                  gap:20,cursor:(m.available&&!isLk)?'pointer':'not-allowed',
+                  opacity:(m.available&&!isLk)?1:0.6,
+                  transition:'transform 0.15s, box-shadow 0.15s',
+                  textAlign:'left',fontFamily:'inherit',
+                }}
+                onMouseEnter={e=>{ if(m.available&&!isLk){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
+                onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
+              >
+                <div style={{width:56,height:56,borderRadius:14,background:`${m.color}20`,border:`1.5px solid ${m.color}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
+                  {isLk ? '🔒' : m.icon}
                 </div>
-                <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.5}}>{m.desc}</div>
-              </div>
-              {/* Flèche */}
-              {m.available && (
-                <span style={{fontSize:22,color:m.color,flexShrink:0,fontWeight:700}}>→</span>
-              )}
-            </button>
-          ))}
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5,flexWrap:'wrap'}}>
+                    <span style={{fontSize:17,fontWeight:800,color:'white'}}>{m.label}</span>
+                    <span style={{fontSize:10,fontWeight:700,color:isLk?'#f59e0b':m.badgeColor,background:isLk?'rgba(245,158,11,0.15)':`${m.badgeColor}18`,border:`1px solid ${isLk?'rgba(245,158,11,0.3)':m.badgeColor+30}`,borderRadius:20,padding:'2px 10px'}}>
+                      {isLk ? '🔒 Abonnement requis' : m.badge}
+                    </span>
+                  </div>
+                  <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.5}}>
+                    {isLk
+                      ? <span>S'abonner à <strong style={{color:m.color}}>{m.label}</strong> → <a href={`/abonnement?matiere=${matiereKey}`} style={{color:m.color,textDecoration:'underline'}}>Voir les plans</a></span>
+                      : m.desc
+                    }
+                  </div>
+                </div>
+                {m.available && !isLk && <span style={{fontSize:22,color:m.color,flexShrink:0,fontWeight:700}}>→</span>}
+              </button>
+            )
+          })}
         </div>
 
         {/* Retour */}
@@ -1583,6 +1619,7 @@ function PhaseChoixMatiere({
         </p>
       </div>
       <Footer/>
+    </div>
     </div>
   )
 }
@@ -3009,7 +3046,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancInner() {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive } = useAuth()
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
@@ -3041,6 +3078,10 @@ function BacBlancInner() {
   // Lancer le bac blanc maths (flux existant)
   const handleStartMaths = useCallback(async () => {
     if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('mathematiques')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Mathématiques pour accéder au Bac Blanc Maths.\n→ mathsbac.com/abonnement?matiere=mathematiques')
+      return
+    }
     if (!isAdmin && !checkQuota('simulations')) {
       alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
       return
@@ -3058,6 +3099,10 @@ function BacBlancInner() {
   // Lancer le bac blanc physique-chimie (même flux que maths)
   const handleStartPhysique = useCallback(async () => {
     if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('physique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Physique-Chimie pour accéder au Bac Blanc Physique.\n→ mathsbac.com/abonnement?matiere=physique')
+      return
+    }
     if (!isAdmin && !checkQuota('simulations')) {
       alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
       return
@@ -3122,6 +3167,10 @@ function BacBlancInner() {
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
       onRetour={()=>setPhase('inscription')}
+      hasActiveSubscription={hasActiveSubscription}
+      checkMatiereAccess={checkMatiereAccess}
+      matiereActive={matiereActive}
+      isAdmin={isAdmin}
     />
   )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>

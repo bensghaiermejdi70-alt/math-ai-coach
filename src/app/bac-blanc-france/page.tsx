@@ -2827,7 +2827,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancFranceInner() {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive } = useAuth()
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
@@ -2857,6 +2857,10 @@ function BacBlancFranceInner() {
 
   const handleStartMaths = useCallback(async () => {
     if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('mathematiques')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Mathématiques pour accéder au Bac Blanc Maths.\n→ mathsbac.com/abonnement?matiere=mathematiques')
+      return
+    }
     if (!isAdmin && !checkQuota('simulations')) {
       alert('Quota atteint — Bac Blanc disponible en mai-juin.')
       return
@@ -2873,6 +2877,10 @@ function BacBlancFranceInner() {
 
   const handleStartPhysique = useCallback(async () => {
     if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('physique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Physique-Chimie pour accéder au Bac Blanc Physique.\n→ mathsbac.com/abonnement?matiere=physique')
+      return
+    }
     if (!isAdmin && !checkQuota('simulations')) {
       alert('Quota atteint — Bac Blanc disponible en mai-juin.')
       return

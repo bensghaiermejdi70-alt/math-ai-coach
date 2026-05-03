@@ -1176,8 +1176,41 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 // ══════════════════════════════════════════
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════
+// ── Composant verrou matière (Option C) ────────────────────────────
+function MatiereLockOverlay({ matiere, label, color, icon }: {
+  matiere: string; label: string; color: string; icon: string
+}) {
+  return (
+    <div style={{
+      position:'absolute', inset:0, zIndex:20,
+      background:'rgba(10,10,26,0.88)', backdropFilter:'blur(4px)',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+      borderRadius:'inherit', gap:12,
+    }}>
+      <div style={{ fontSize:36 }}>🔒</div>
+      <div style={{ textAlign:'center', maxWidth:260 }}>
+        <div style={{ fontSize:15, fontWeight:800, color:'white', marginBottom:6 }}>
+          {icon} {label}
+        </div>
+        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:16 }}>
+          Cette matière nécessite un abonnement séparé.
+          Tes cours et examens restent accessibles gratuitement.
+        </div>
+        <a href={`/abonnement?matiere=${matiere}`}
+          style={{ display:'inline-flex', alignItems:'center', gap:6,
+            background:`linear-gradient(135deg,${color},${color}cc)`,
+            color:'white', padding:'9px 20px', borderRadius:10,
+            fontWeight:700, fontSize:13, textDecoration:'none',
+            boxShadow:`0 4px 16px ${color}40` }}>
+          S'abonner à {label} →
+        </a>
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPage() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1211,6 +1244,16 @@ export default function ChatPage() {
   }, [messages, loading])
   const getId = useCallback(() => { const id = nextMsgId; setNextMsgId(p => p + 1); return id }, [nextMsgId])
 
+  // Détecter si un message parle d'une matière non abonnée
+  const getMatiereFromMessage = useCallback((text: string): string | null => {
+    const t = text.toLowerCase()
+    if (t.includes('physique') || t.includes('chimie') || t.includes('circuit') || t.includes('condensateur') || t.includes('mécanique') || t.includes('newton') || t.includes('ondes')) return 'physique'
+    if (t.includes('svt') || t.includes('génétique') || t.includes('cellule') || t.includes('adn') || t.includes('mitose') || t.includes('immunité')) return 'svt'
+    if (t.includes('english') || t.includes('essay') || t.includes('grammar') || t.includes('vocabulary') || t.includes('anglais')) return 'anglais'
+    if (t.includes('algorithme') || t.includes('pascal') || t.includes('python') || t.includes('sql') || t.includes('réseau ip') || t.includes('informatique')) return 'informatique'
+    return null // maths par défaut ou indéterminé
+  }, [])
+
   const sendMessage = useCallback(async (text?: string) => {
     const content = (text ?? input).trim()
     if (!content || loading) return
@@ -1218,6 +1261,22 @@ export default function ChatPage() {
     if (!isAdmin && !checkQuota('chat')) {
       alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement`)
       return
+    }
+
+    // Vérifier accès matière si abonné
+    if (!isAdmin && hasActiveSubscription) {
+      const msgMatiere = getMatiereFromMessage(content)
+      if (msgMatiere && !checkMatiereAccess(msgMatiere as any)) {
+        const labels: Record<string,string> = { physique:'⚗️ Physique-Chimie', svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Informatique' }
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `🔒 **Accès limité à votre abonnement**\n\nVous êtes abonné à **${labels[matiereActive] || '🧮 Mathématiques'}**. Pour poser des questions en **${labels[msgMatiere]}**, abonnez-vous à cette matière.\n\n[👉 S'abonner à ${labels[msgMatiere]}](/abonnement?matiere=${msgMatiere})`,
+          id: nextMsgId
+        }])
+        setNextMsgId(p => p + 1)
+        setInput('')
+        return
+      }
     }
 
     const userMsg: Msg = { role: 'user', content, id: nextMsgId }
@@ -1236,7 +1295,15 @@ export default function ChatPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4000,
-          system: SYSTEM_PROMPT,
+          system: hasActiveSubscription && !isAdmin
+            ? SYSTEM_PROMPT + `\n\n## MATIÈRE ABONNÉE\nL'élève est abonné à : ${
+                matiereActive === 'physique' ? '⚗️ Physique-Chimie'
+                : matiereActive === 'svt' ? '🧬 SVT'
+                : matiereActive === 'anglais' ? '🇬🇧 Anglais'
+                : matiereActive === 'informatique' ? '💻 Informatique'
+                : '🧮 Mathématiques'
+              }. Priorise les explications dans cette matière.`
+            : SYSTEM_PROMPT,
           messages: history,
         }),
       })
@@ -1313,7 +1380,16 @@ export default function ChatPage() {
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#06d6a0,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🤖</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>Prof IA</div>
-                  <div style={{ fontSize: 10, color: '#06d6a0' }}>● En ligne · Toutes matières</div>
+                  <div style={{ fontSize: 10, color: '#06d6a0' }}>
+                    ● En ligne · Toutes matières
+                    {hasActiveSubscription && !isAdmin && (
+                      <span style={{marginLeft:8, padding:'1px 8px', borderRadius:20,
+                        background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
+                        color:'#a5b4fc', fontSize:9, fontWeight:700}}>
+                        {matiereActive==='physique'?'⚗️ PC':matiereActive==='svt'?'🧬 SVT':matiereActive==='anglais'?'🇬🇧 Anglais':matiereActive==='informatique'?'💻 Info':'🧮 Maths'}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text2)', lineHeight: 1.5, background: 'rgba(99,102,241,0.08)', borderRadius: 7, padding: '6px 8px' }}>
