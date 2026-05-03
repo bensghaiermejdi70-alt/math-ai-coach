@@ -318,7 +318,8 @@ function getProgrammeJourPhysique(sectionKey: string, dayNum: number) {
 
 // ── Génération examen Bac Blanc Physique-Chimie ────────────────────
 async function generateBacBlancPhysique(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
+  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
   const today = new Date()
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
   const seed = `BAC_BLANC_PHYSIQUE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
@@ -348,7 +349,7 @@ FORMULES CLÉS :
   const ex3Theme = prog?.ex3.sousTh || 'Cinétique chimique'
   const ex4Theme = prog?.ex4.sousTh || 'Acide-base — pH et dosage'
 
-  const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${sec.label}.
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
 
 SEED DÉTERMINISTE : ${seed}
 DATE : ${dateStr}
@@ -379,8 +380,8 @@ RÉPONSE JSON OBLIGATOIRE :
 {
   "id": "bb-physique-${dayNum}-${candidat.sectionKey}",
   "day": ${dayNum},
-  "title": "Bac Blanc — Physique-Chimie — ${sec.label} — Jour ${dayNum}",
-  "section": "${sec.label}",
+  "title": "Bac Blanc — Physique-Chimie — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
   "date": "${dateStr}",
   "totalPoints": 20,
   "duration": 180,
@@ -1108,8 +1109,8 @@ Réponds avec CE JSON EXACT (aucun texte avant ou après) :
 
   const raw = await askClaude(prompt, system, 5000)
   const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
-    title:`Bac Blanc — ${sec.label} — Jour ${dayNum}`,
-    section:sec.label, duration:sec.duration, totalPoints:20,
+    title:`Bac Blanc — ${sec?.label||candidat.section} — Jour ${dayNum}`,
+    section:sec?.label||candidat.section, duration:sec?.duration||180, totalPoints:20,
     exercises:[{num:1,title:'Exercice 1',theme:'Analyse',points:20,statement:'Erreur de génération — réessayez.'}]
   })
   return { ...parsed, id:`bb-j${dayNum}-${candidat.sectionKey}-${Date.now()}`, day:dayNum, date:dateStr, sectionKey:candidat.sectionKey }
@@ -1724,20 +1725,23 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 // PHASE 2 — GÉNÉRATION
 // ════════════════════════════════════════════════════════════════════
 function PhaseGenerating({candidat}:{candidat:Candidat}){
-  const sec=SECTIONS.find(s=>s.key===candidat.sectionKey)!
+  const sec=SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#06d6a0'
+  const secIcon  = sec?.icon  || '⚗️'
+  const secLabel = sec?.label || candidat.section
   const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
   const [msgIdx,setMsgIdx]=useState(0)
   useEffect(()=>{const t=setInterval(()=>setMsgIdx(m=>(m+1)%msgs.length),2200);return()=>clearInterval(t)},[])
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:28,color:'white',fontFamily:'system-ui'}}>
       <div style={{position:'relative',width:80,height:80}}>
-        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${sec.color}20`}}/>
-        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${sec.color}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
-        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{sec.icon}</div>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}20`}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{secIcon}</div>
       </div>
       <div style={{textAlign:'center',maxWidth:360}}>
-        <div style={{fontSize:20,fontWeight:800,color:sec.color,marginBottom:10}}>Génération du Concours</div>
-        <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {sec.label}</div>
+        <div style={{fontSize:20,fontWeight:800,color:secColor,marginBottom:10}}>Génération du Concours</div>
+        <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
         <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
@@ -1936,7 +1940,7 @@ ${exercicesHtml}
           <span style={{fontSize:22}}>🏆</span>
           <div>
             <div style={{fontWeight:800,fontSize:14,color:'#fbbf24'}}>Bac Blanc — Concours Jour {exam.day}</div>
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {sec.label} · {exam.duration/60}h · Coeff {sec.coeff}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {candidat.section} · {exam.duration/60}h</div>
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
