@@ -1,3 +1,5 @@
+'use client'
+
 // ── Composant verrou matière (Option C) ────────────────────────────
 function MatiereLockOverlay({ matiere, label, color, icon }: {
   matiere: string; label: string; color: string; icon: string
@@ -38,7 +40,6 @@ const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
   anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
   informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
 }
-'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
 import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'

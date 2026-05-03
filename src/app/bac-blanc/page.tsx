@@ -1,3 +1,5 @@
+'use client'
+
 function MatiereLockOverlay({ matiere, label, color, icon }: {
   matiere: string; label: string; color: string; icon: string
 }) {
@@ -28,7 +30,6 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
     </div>
   )
 }
-'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
@@ -1458,7 +1459,7 @@ function PhaseChoixMatiere({
   onPhysique: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
-  checkMatiereAccess?: (m: string) => boolean
+  checkMatiereAccess?: (m: any) => boolean
   matiereActive?: string
   isAdmin?: boolean
 }) {
@@ -1560,7 +1561,7 @@ function PhaseChoixMatiere({
         <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
           {MATIERES.map(m => {
             const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
-            const isLk = m.available && hasActiveSubscription && !checkMatiereAccess(matiereKey as any)
+            const isLk = m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
             return (
               <button
                 key={m.key}
