@@ -14,6 +14,18 @@ import {
   PlanQuotas
 } from '@/lib/types/monetisation'
 
+// Emails avec sessions multiples illimitées (pas de restriction appareil)
+const MULTI_SESSION_EMAILS = [
+  'bensghaiermejdi70@gmail.com',   // Admin
+  'mourad.essghaier@hotmail.fr',    // Abonné multi-appareils
+]
+
+// Vérifier si un email bénéficie de multi-sessions
+function isMultiSessionUser(email: string | undefined): boolean {
+  if (!email) return false
+  return MULTI_SESSION_EMAILS.includes(email.toLowerCase())
+}
+
 export type QuotaType =
   | 'simulations'
   | 'chat'
@@ -185,21 +197,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (data.user) {
-      const isUserAdmin = data.user.email === 'bensghaiermejdi70@gmail.com'
+      const isMultiSession = isMultiSessionUser(data.user.email)
       
       // Si changement d'utilisateur, nettoyer d'abord
       if (previousUserId.current && previousUserId.current !== data.user.id) {
-        console.log('Changement d utilisateur detecte:', previousUserId.current, '->', data.user.id)
         clearState()
       }
       
-      if (!isUserAdmin) {
-        // Toujours creer une nouvelle session
+      if (!isMultiSession) {
+        // Session unique : écraser la session précédente
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
-        
         await supabase.from('profiles')
           .update({ current_session_id: sessionId })
+          .eq('id', data.user.id)
+      } else {
+        // Multi-sessions : pas de restriction, juste nettoyer le session_id
+        await supabase.from('profiles')
+          .update({ current_session_id: null })
           .eq('id', data.user.id)
       }
       
@@ -344,15 +359,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const currentUser = session?.user ?? null
         
         if (currentUser) {
-          const isUserAdmin = currentUser.email === 'bensghaiermejdi70@gmail.com'
+          const isMultiSession = isMultiSessionUser(currentUser.email)
           
           // Detecter changement d'utilisateur
           if (previousUserId.current && previousUserId.current !== currentUser.id) {
-            console.log('AuthStateChange: Changement d utilisateur')
             clearState()
           }
           
-          if (!isUserAdmin) {
+          if (!isMultiSession) {
+            // Utilisateur standard : vérifier session unique
             const localId = localStorage.getItem('mathbac_session_id')
             
             if (!localId) {
@@ -375,14 +390,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 window.location.href = '/login?error=session_dupliquee'
                 return
               }
-              // Si current_session_id NULL en DB → l'initialiser
-              if (prof?.current_session_id === null) {
+              if (prof?.current_session_id === null && localId) {
                 await supabase.from('profiles')
                   .update({ current_session_id: localId })
                   .eq('id', currentUser.id)
               }
             }
           }
+          // Multi-session : aucune restriction d'appareil
           
           setUser(currentUser)
           previousUserId.current = currentUser.id
@@ -407,7 +422,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const currentUser = session.user
       
-      if (currentUser.email === 'bensghaiermejdi70@gmail.com') return
+      if (isMultiSessionUser(currentUser.email)) return
 
       const localId = localStorage.getItem('mathbac_session_id')
       
