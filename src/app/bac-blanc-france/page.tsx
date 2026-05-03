@@ -1342,6 +1342,14 @@ function PhaseChoixMatiereFR({
             <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
             <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.lycee}</span>
           </div>
+          {/* Info section avec thèmes — affiché ici (plus dans la fiche) */}
+          {sec && (
+            <div style={{marginTop:14,display:'inline-flex',alignItems:'center',gap:8,background:`${sec.color}10`,border:`1px solid ${sec.color}25`,borderRadius:10,padding:'8px 18px',flexWrap:'wrap',justifyContent:'center'}}>
+              <span style={{fontSize:11,color:sec.color,fontWeight:700}}>{sec.icon} {sec.label}</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>·</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{sec.themes.join(' · ')}</span>
+            </div>
+          )}
         </div>
 
         {/* Grille matières */}

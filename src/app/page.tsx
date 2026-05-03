@@ -269,40 +269,65 @@ export default function HomePage() {
             {/* Titre principal */}
             <h1 style={{
               fontFamily:'var(--font-display)', fontWeight:900,
-              fontSize:'clamp(22px,3.5vw,46px)', lineHeight:1.05,
-              letterSpacing:'-0.03em', marginBottom:30,
+              fontSize:'clamp(20px,3.2vw,44px)', lineHeight:1.05,
+              letterSpacing:'-0.03em', marginBottom:16,
               animation:'fadeInUp 0.7s ease 0.1s both',
             }}>
-              <span style={{ display:'block', marginBottom:4 }}>Ton Professeur de</span>
+              <span style={{ display:'block', marginBottom:6, fontSize:'clamp(13px,1.5vw,17px)', fontWeight:600, letterSpacing:'0.18em', textTransform:'uppercase', color:'rgba(255,255,255,0.45)' }}>MathBac.AI — Votre</span>
               <span style={{
                 display:'block',
-                background:'linear-gradient(95deg,#4f6ef7 0%,#7c3aed 45%,#60a5fa 100%)',
+                background:'linear-gradient(95deg,#4f6ef7 0%,#7c3aed 40%,#60a5fa 80%,#06d6a0 100%)',
                 WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-                marginBottom:4,
-              }}>Mathématiques</span>
+                marginBottom:6,
+              }}>Professeur IA Généraliste</span>
               <span style={{
                 display:'block',
                 background:'linear-gradient(95deg,#f5c842 0%,#f97316 70%)',
                 WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text',
-              }}>Alimenté par l'IA</span>
+                fontSize:'clamp(16px,2.5vw,34px)',
+              }}>Toutes Matières · Bac Tunisie & France</span>
             </h1>
+
+            {/* Matières chips */}
+            <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap', marginBottom:28, animation:'fadeInUp 0.7s ease 0.15s both' }}>
+              {[
+                { icon:'🧮', label:'Mathématiques', color:'#4f6ef7' },
+                { icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+                { icon:'🧬', label:'SVT', color:'#10b981' },
+                { icon:'🇬🇧', label:'Anglais', color:'#f59e0b' },
+                { icon:'💻', label:'Informatique', color:'#8b5cf6' },
+                { icon:'📚', label:'Littérature', color:'#a78bfa' },
+              ].map(m => (
+                <span key={m.label} style={{
+                  display:'inline-flex', alignItems:'center', gap:5,
+                  padding:'5px 14px', borderRadius:100,
+                  background:`${m.color}15`, border:`1px solid ${m.color}35`,
+                  color:m.color, fontSize:12, fontWeight:700,
+                }}>
+                  {m.icon} {m.label}
+                </span>
+              ))}
+            </div>
 
             {/* Sous-titre */}
             <p style={{
-              fontSize:'clamp(15px,2vw,19px)', color:'var(--muted)',
-              maxWidth:600, margin:'0 auto 48px', fontWeight:300, lineHeight:1.75,
+              fontSize:'clamp(14px,1.8vw,17px)', color:'var(--muted)',
+              maxWidth:640, margin:'0 auto 44px', fontWeight:300, lineHeight:1.8,
               animation:'fadeInUp 0.7s ease 0.2s both',
             }}>
-              Résolution étape par étape · Simulation Bac IA · Bac Blanc national · Remédiation personnalisée —
-              pour le <span style={{ color:'#4f6ef7', fontWeight:600 }}>Bac Tunisie</span> et le <span style={{ color:'#60a5fa', fontWeight:600 }}>Bac France</span>.
+              Correction étape par étape · Chat Professeur IA · Simulation Bac · Bac Blanc national ·
+              Remédiation personnalisée — pour le{' '}
+              <span style={{ color:'#4f6ef7', fontWeight:600 }}>Bac Tunisie</span> et le{' '}
+              <span style={{ color:'#60a5fa', fontWeight:600 }}>Bac France</span>,
+              dans toutes les matières.
             </p>
 
-            {/* CTA buttons */}
+            {/* CTA buttons — solveur supprimé */}
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:70, animation:'fadeInUp 0.7s ease 0.3s both' }}>
               <Link href="/bac" style={{
                 display:'inline-flex', alignItems:'center', gap:8,
                 background:'linear-gradient(135deg,#4f6ef7,#7c3aed)',
-                color:'white', padding:'14px 26px', borderRadius:13,
+                color:'white', padding:'15px 30px', borderRadius:13,
                 fontWeight:800, fontSize:14, textDecoration:'none',
                 boxShadow:'0 8px 28px rgba(79,110,247,0.45)', transition:'all 0.2s',
               }}
@@ -313,7 +338,7 @@ export default function HomePage() {
               <Link href="/bac-france" style={{
                 display:'inline-flex', alignItems:'center', gap:8,
                 background:'linear-gradient(135deg,#2563eb,#4f6ef7)',
-                color:'white', padding:'14px 26px', borderRadius:13,
+                color:'white', padding:'15px 30px', borderRadius:13,
                 fontWeight:800, fontSize:14, textDecoration:'none',
                 boxShadow:'0 8px 28px rgba(37,99,235,0.4)', transition:'all 0.2s',
               }}
@@ -321,15 +346,16 @@ export default function HomePage() {
                 onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'}}
               >🇫🇷 Programme France</Link>
 
-              <Link href="/solve" style={{
+              <Link href="/chat" style={{
                 display:'inline-flex', alignItems:'center', gap:8,
-                background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.14)',
-                color:'var(--text)', padding:'14px 26px', borderRadius:13,
-                fontWeight:600, fontSize:14, textDecoration:'none', transition:'all 0.2s',
+                background:'linear-gradient(135deg,rgba(6,214,160,0.18),rgba(16,185,129,0.1))',
+                border:'1px solid rgba(6,214,160,0.35)',
+                color:'#06d6a0', padding:'15px 30px', borderRadius:13,
+                fontWeight:700, fontSize:14, textDecoration:'none', transition:'all 0.2s',
               }}
-                onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.11)'}}
-                onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}}
-              >▶ Tester le solveur</Link>
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.background='linear-gradient(135deg,rgba(6,214,160,0.28),rgba(16,185,129,0.18))'}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.background='linear-gradient(135deg,rgba(6,214,160,0.18),rgba(16,185,129,0.1))'}}
+              >💬 Chat Professeur IA</Link>
             </div>
 
             {/* Stats */}
@@ -339,10 +365,10 @@ export default function HomePage() {
               animation:'fadeInUp 0.7s ease 0.4s both',
             }}>
               {[
-                { n:'2',    l:'Programmes',  s:'Tunisie & France' },
-                { n:'9+',   l:'Sections Bac', s:'TN + FR' },
+                { n:'6',    l:'Matières',    s:'Maths · PC · SVT · Anglais · Info · Littérature' },
+                { n:'2',    l:'Programmes',  s:'Bac Tunisie & Bac France' },
                 { n:'10+',  l:'Ans d\'examens', s:'Archives officielles' },
-                { n:'24/7', l:'Prof IA',      s:'Toujours disponible' },
+                { n:'24/7', l:'Prof IA',     s:'Toujours disponible' },
               ].map((s,i) => (
                 <div key={i} style={{ textAlign:'center' }}>
                   <div style={{
