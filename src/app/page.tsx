@@ -390,13 +390,14 @@ export default function HomePage() {
         {/* ═══════════════════════════════ 2 PROGRAMMES CÔTE À CÔTE */}
         <section className="section container reveal">
           <div style={{ textAlign:'center', marginBottom:52 }}>
-            <span className="label">Deux pays · Un coach</span>
+            <span className="label">Deux pays · Toutes matières</span>
             <h2 style={{ fontSize:'clamp(24px,4vw,44px)', lineHeight:1.15, marginBottom:14 }}>
               Tunisie <span style={{ color:'rgba(255,255,255,0.15)' }}>&</span> France —<br/>
               <span style={{ background:'linear-gradient(90deg,#4f6ef7,#60a5fa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>le même niveau d'excellence</span>
             </h2>
-            <p style={{ fontSize:15, color:'var(--text2)', maxWidth:520, margin:'0 auto', lineHeight:1.7 }}>
-              MathBac.AI couvre les deux programmes officiels avec cours, examens, simulations IA et Bac Blanc quotidien.
+            <p style={{ fontSize:15, color:'var(--text2)', maxWidth:540, margin:'0 auto', lineHeight:1.7 }}>
+              Cours · Examens officiels · Simulation IA · Bac Blanc · Chat Professeur —
+              dans toutes les matières, pour les deux programmes.
             </p>
           </div>
 
@@ -409,34 +410,59 @@ export default function HomePage() {
               padding:'36px 40px', position:'relative', overflow:'hidden',
             }}>
               <div style={{ position:'absolute', top:-60, right:-60, width:200, height:200, background:'radial-gradient(circle,rgba(79,110,247,0.18) 0%,transparent 70%)', filter:'blur(30px)', pointerEvents:'none' }} />
-              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:22 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
                 <span style={{ fontSize:52 }}>🇹🇳</span>
                 <div>
                   <div style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em', color:'#4f6ef7', marginBottom:3 }}>Programme CNP 2026</div>
                   <h3 style={{ fontSize:'clamp(20px,2.5vw,26px)', fontFamily:'var(--font-display)', fontWeight:800, margin:0 }}>Bac Tunisie</h3>
                 </div>
               </div>
-              <p style={{ fontSize:14, color:'var(--text2)', lineHeight:1.7, marginBottom:22 }}>
-                5 sections couvertes intégralement — tous les théorèmes, formules et 10 ans d'examens officiels avec corrections.
+              <p style={{ fontSize:14, color:'var(--text2)', lineHeight:1.7, marginBottom:20 }}>
+                Toutes matières · Toutes sections — cours, examens officiels, simulations IA et Bac Blanc quotidien.
               </p>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:28 }}>
-                {SECTIONS_TN.map(s => <SectionCard key={s.href} s={s} country="tn" />)}
+
+              {/* Sections Tunisie — sans détail programme */}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:9, marginBottom:24 }}>
+                {[
+                  { icon:'🧮', label:'Mathématiques',    color:'#4f6ef7', href:'/bac/maths' },
+                  { icon:'⚗️', label:'Sciences Exp.',    color:'#10b981', href:'/bac/sciences-exp' },
+                  { icon:'⚙️', label:'Sciences Tech.',   color:'#06b6d4', href:'/bac/sciences-tech' },
+                  { icon:'💻', label:'Informatique',     color:'#8b5cf6', href:'/bac/informatique' },
+                  { icon:'📊', label:'Éco-Gestion',      color:'#f59e0b', href:'/bac/eco-gestion' },
+                  { icon:'⚗️', label:'Physique-Chimie',  color:'#06d6a0', href:'/bac' },
+                  { icon:'🧬', label:'SVT',              color:'#10b981', href:'/bac' },
+                  { icon:'🇬🇧', label:'Anglais',          color:'#f97316', href:'/chat' },
+                ].map(s => (
+                  <Link key={s.label+s.href} href={s.href} style={{ textDecoration:'none' }}>
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      padding:'7px 14px', borderRadius:100,
+                      background:`${s.color}14`, border:`1px solid ${s.color}35`,
+                      color:s.color, fontSize:13, fontWeight:600,
+                      transition:'all 0.18s', cursor:'pointer',
+                    }}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=`${s.color}28`}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=`${s.color}14`}}
+                    >
+                      <span style={{fontSize:16}}>{s.icon}</span> {s.label}
+                    </span>
+                  </Link>
+                ))}
               </div>
-              <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:24 }}>
-                {['/bac','Cours','/examens','Examens','/simulation','Simulation','/bac-blanc','Bac Blanc'].reduce((acc,v,i,a)=> i%2===0 ? [...acc, {href:a[i],label:a[i+1]}] : acc, [] as {href:string;label:string}[]).map(l => (
+
+              {/* Liens navigation */}
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
+                {[{href:'/bac',label:'Cours'},{href:'/examens',label:'Examens'},{href:'/simulation',label:'Simulation'},{href:'/bac-blanc',label:'Bac Blanc'}].map(l => (
                   <Link key={l.href} href={l.href} style={{ fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:9, background:'rgba(79,110,247,0.1)', border:'1px solid rgba(79,110,247,0.2)', color:'#a5b4fc', textDecoration:'none', transition:'all 0.2s' }}
                     onMouseEnter={e=>{e.currentTarget.style.background='rgba(79,110,247,0.2)'}}
                     onMouseLeave={e=>{e.currentTarget.style.background='rgba(79,110,247,0.1)'}}
                   >{l.label}</Link>
                 ))}
               </div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-
-                <Link href="/bac" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', padding:'11px 22px', borderRadius:12, fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 6px 20px rgba(79,110,247,0.35)', transition:'all 0.2s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.opacity='0.88'}}
-                  onMouseLeave={e=>{e.currentTarget.style.opacity='1'}}
-                >Explorer le programme →</Link>
-              </div>
+              <Link href="/bac" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', padding:'11px 22px', borderRadius:12, fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 6px 20px rgba(79,110,247,0.35)', transition:'all 0.2s' }}
+                onMouseEnter={e=>{e.currentTarget.style.opacity='0.88'}}
+                onMouseLeave={e=>{e.currentTarget.style.opacity='1'}}
+              >Explorer le programme →</Link>
             </div>
 
             {/* ── France */}
@@ -446,34 +472,59 @@ export default function HomePage() {
               padding:'36px 40px', position:'relative', overflow:'hidden',
             }}>
               <div style={{ position:'absolute', top:-60, right:-60, width:200, height:200, background:'radial-gradient(circle,rgba(59,130,246,0.18) 0%,transparent 70%)', filter:'blur(30px)', pointerEvents:'none' }} />
-              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:22 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:20 }}>
                 <span style={{ fontSize:52 }}>🇫🇷</span>
                 <div>
                   <div style={{ fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'0.12em', color:'#60a5fa', marginBottom:3 }}>Programme officiel — Éducation nationale</div>
                   <h3 style={{ fontSize:'clamp(20px,2.5vw,26px)', fontFamily:'var(--font-display)', fontWeight:800, margin:0 }}>Bac France</h3>
                 </div>
               </div>
-              <p style={{ fontSize:14, color:'var(--text2)', lineHeight:1.7, marginBottom:22 }}>
-                4 filières couvertes — sujets APMEP, archives officielles, Maths Expertes et simulation Bac quotidienne.
+              <p style={{ fontSize:14, color:'var(--text2)', lineHeight:1.7, marginBottom:20 }}>
+                Toutes matières · Toutes filières — cours, examens officiels, simulations IA et Bac Blanc quotidien.
               </p>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:28 }}>
-                {SECTIONS_FR.map(s => <SectionCard key={s.href} s={s} country="fr" />)}
+
+              {/* Sections France — sans détail programme */}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:9, marginBottom:24 }}>
+                {[
+                  { icon:'🎓', label:'Terminale Générale', color:'#4f6ef7', href:'/bac-france/terminale-generale' },
+                  { icon:'📗', label:'Première Spécialité', color:'#3b82f6', href:'/bac-france/premiere' },
+                  { icon:'📘', label:'Seconde',            color:'#06b6d4', href:'/bac-france' },
+                  { icon:'📊', label:'STMG / STI2D',       color:'#10b981', href:'/bac-france/terminale-techno' },
+                  { icon:'★',  label:'Maths Expertes',     color:'#8b5cf6', href:'/bac-france/expertes' },
+                  { icon:'⚗️', label:'Physique-Chimie',    color:'#06d6a0', href:'/bac-blanc-france' },
+                  { icon:'🧬', label:'SVT',                color:'#10b981', href:'/chat' },
+                  { icon:'🇬🇧', label:'Anglais',            color:'#f97316', href:'/chat' },
+                ].map(s => (
+                  <Link key={s.label+s.href} href={s.href} style={{ textDecoration:'none' }}>
+                    <span style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      padding:'7px 14px', borderRadius:100,
+                      background:`${s.color}14`, border:`1px solid ${s.color}35`,
+                      color:s.color, fontSize:13, fontWeight:600,
+                      transition:'all 0.18s', cursor:'pointer',
+                    }}
+                      onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=`${s.color}28`}}
+                      onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=`${s.color}14`}}
+                    >
+                      <span style={{fontSize:16}}>{s.icon}</span> {s.label}
+                    </span>
+                  </Link>
+                ))}
               </div>
-              <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:24 }}>
-                {['/bac-france','Cours','/examens-france','Examens','/simulation-france','Simulation','/bac-blanc-france','Bac Blanc'].reduce((acc,v,i,a)=> i%2===0 ? [...acc, {href:a[i],label:a[i+1]}] : acc, [] as {href:string;label:string}[]).map(l => (
+
+              {/* Liens navigation */}
+              <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:24 }}>
+                {[{href:'/bac-france',label:'Cours'},{href:'/examens-france',label:'Examens'},{href:'/simulation-france',label:'Simulation'},{href:'/bac-blanc-france',label:'Bac Blanc'}].map(l => (
                   <Link key={l.href} href={l.href} style={{ fontSize:12, fontWeight:600, padding:'6px 14px', borderRadius:9, background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.2)', color:'#93c5fd', textDecoration:'none', transition:'all 0.2s' }}
                     onMouseEnter={e=>{e.currentTarget.style.background='rgba(59,130,246,0.2)'}}
                     onMouseLeave={e=>{e.currentTarget.style.background='rgba(59,130,246,0.1)'}}
                   >{l.label}</Link>
                 ))}
               </div>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-
-                <Link href="/bac-france" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#2563eb,#4f6ef7)', color:'white', padding:'11px 22px', borderRadius:12, fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 6px 20px rgba(37,99,235,0.35)', transition:'all 0.2s' }}
-                  onMouseEnter={e=>{e.currentTarget.style.opacity='0.88'}}
-                  onMouseLeave={e=>{e.currentTarget.style.opacity='1'}}
-                >Explorer le programme →</Link>
-              </div>
+              <Link href="/bac-france" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'linear-gradient(135deg,#2563eb,#4f6ef7)', color:'white', padding:'11px 22px', borderRadius:12, fontWeight:700, fontSize:14, textDecoration:'none', boxShadow:'0 6px 20px rgba(37,99,235,0.35)', transition:'all 0.2s' }}
+                onMouseEnter={e=>{e.currentTarget.style.opacity='0.88'}}
+                onMouseLeave={e=>{e.currentTarget.style.opacity='1'}}
+              >Explorer le programme →</Link>
             </div>
 
           </div>
