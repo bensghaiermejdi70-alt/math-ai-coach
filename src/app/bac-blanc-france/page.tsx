@@ -920,16 +920,16 @@ LOIS : B(n ; p)  N(μ ; σ²)
 GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
 
   const jsonTemplate = '{\n'
-    + '  "title": "' + sec.label + ' - Bac Blanc France Jour ' + dayNum + '",\n'
-    + '  "section": "' + sec.label + '",\n'
-    + '  "duration": ' + sec.duration + ',\n'
+    + '  "title": "' + (sec?.label||candidat.section) + ' - Bac Blanc France Jour ' + dayNum + '",\n'
+    + '  "section": "' + (sec?.label||candidat.section) + '",\n'
+    + '  "duration": ' + (sec?.duration||210) + ',\n'
     + '  "totalPoints": ' + totalPts + ',\n'
     + '  "exercises": [\n'
     + exJson + '\n'
     + '  ]\n'
     + '}'
 
-  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + sec.label + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
+  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
 
   const raw = await askClaude(prompt, system, 5500)
 
@@ -942,9 +942,9 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
   }))
 
   const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
-    title: sec.label + ' - Bac Blanc France Jour ' + dayNum,
-    section: sec.label,
-    duration: sec.duration,
+    title: (sec?.label||candidat.section) + ' - Bac Blanc France Jour ' + dayNum,
+    section: sec?.label||candidat.section,
+    duration: sec?.duration||210,
     totalPoints: totalPts,
     exercises: fallback,
   })
@@ -1127,7 +1127,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                 {SECTIONS_FR.map(sec=>{
                   const cnt=stats.ranking.filter(r=>r.sectionKey===sec.key).length
                   const avg=cnt?Math.round(stats.ranking.filter(r=>r.sectionKey===sec.key).reduce((s,r)=>s+r.score/r.maxScore*100,0)/cnt):0
-                  return(<div key={sec.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:13}}><span style={{color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span><span style={{color:'rgba(255,255,255,0.6)'}}>{cnt}</span><span style={{color:'#fbbf24',fontWeight:700}}>moy. {avg}%</span></div>)
+                  return(<div key={sec.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:13}}><span style={{color:sec?.color||"#4f6ef7"}}>{sec?.icon||""} {(sec?.label||"").split(' ')[0]}</span><span style={{color:'rgba(255,255,255,0.6)'}}>{cnt}</span><span style={{color:'#fbbf24',fontWeight:700}}>moy. {avg}%</span></div>)
                 })}
               </div>
             </div>
@@ -1506,8 +1506,8 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
           </div>
 
           {sec&&(
-            <div style={{background:`${sec.color}10`,border:`1px solid ${sec.color}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
-              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label}</div>
+            <div style={{background:`${sec?.color||"#4f6ef7"}10`,border:`1px solid ${sec?.color||"#4f6ef7"}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
+              <div style={{color:sec?.color||"#4f6ef7",fontWeight:700,marginBottom:4}}>{sec?.icon||"📚"} {sec?.label||""}</div>
               <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Thèmes : {sec.themes.join(' · ')}</div>
               <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Bac Blanc France · Choisissez votre matière à l'étape suivante</div>
             </div>
@@ -1559,7 +1559,7 @@ function PhaseGenerating({candidat}:{candidat:Candidat}){
         <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{secIcon}</div>
       </div>
       <div style={{textAlign:'center',maxWidth:360}}>
-        <div style={{fontSize:20,fontWeight:800,color:sec.color,marginBottom:10}}>Génération du Concours</div>
+        <div style={{fontSize:20,fontWeight:800,color:secColor,marginBottom:10}}>Génération du Concours</div>
         <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
         <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
       </div>
