@@ -436,7 +436,17 @@ RÉPONSE JSON OBLIGATOIRE :
     throw new Error('Réponse IA invalide — réessayez')
   }
 
-  return parsed
+  // Forcer les champs manquants que l'IA n'inclut pas toujours
+  return {
+    ...parsed,
+    id: parsed.id || `bb-physique-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 180,
+  }
 }
 
 // ── sanitizeExpr (identique simulation) ──────────────────────────
@@ -1763,7 +1773,9 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   const [uploadError, setUploadError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const sec = SECTIONS.find(s=>s.key===exam.sectionKey)!
+  const sec = SECTIONS.find(s=>s.key===exam.sectionKey) || SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#06d6a0'
+  const secCoeff = sec?.coeff || 3
 
   useEffect(()=>{
     if(!timerOn)return
@@ -1985,9 +1997,9 @@ ${exercicesHtml}
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:14,fontWeight:700}}>📋 Sujet officiel</p>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {exam.exercises.map(ex=>(
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${sec.color}`,borderRadius:12,padding:'16px 18px'}}>
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${secColor}`,borderRadius:12,padding:'16px 18px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center'}}>
-                    <span style={{fontWeight:700,fontSize:13,color:sec.color}}>{ex.title}</span>
+                    <span style={{fontWeight:700,fontSize:13,color:secColor}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
                   </div>
                   {ex.graph&&ex.graph!=='null'&&<TextWithGraphs text={ex.graph}/>}
