@@ -664,6 +664,90 @@ async function correctSingleExercise(exam: BacExam, exerciseIndex: number, stude
   return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
 }
 
+// ── Génération examen Bac Blanc Physique-Chimie France ────────────
+async function generateBacBlancPhysiqueFR(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
+  const secDuration = sec?.duration || 210
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy = today.getFullYear()
+  const seed = 'BBFR_PHYSIQUE_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  const prog = getProgrammeJourPhysiqueFR(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Mécanique — 2ème loi de Newton'
+  const ex2Theme = prog?.ex2.sousTh || 'Optique ondulatoire — interférences et diffraction'
+  const ex3Theme = prog?.ex3.sousTh || 'Chimie organique — familles et réactions'
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
+Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux, de niveau Bac France.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
+- Formules : écriture standard (pas LaTeX brut)
+- Exposants : e^(-t/τ), N₀·e^(-λt), ½mv², ½Cu²
+- Unités SI précises : V, A, Ω, F, H, m/s², N, J, mol/L, s, Hz
+- JAMAIS \frac — utiliser (a+b)/(c+d)
+- Vecteurs : F⃗, a⃗, v⃗, P⃗`
+
+  const prompt = 'Crée un sujet BAC BLANC PHYSIQUE-CHIMIE France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE PHYSIQUE-CHIMIE :\n'
+    + 'Durée : ' + (secDuration/60) + 'h · Total : 20 points\n'
+    + 'Exercice 1 — PHYSIQUE (8 points) : ' + ex1Theme + '\n'
+    + 'Exercice 2 — PHYSIQUE (6 points) : ' + ex2Theme + '\n'
+    + 'Exercice 3 — CHIMIE (6 points) : ' + ex3Theme + '\n\n'
+    + 'RÈGLES ABSOLUES :\n'
+    + '- Sujet ORIGINAL, jamais une copie des annales\n'
+    + '- Niveau exactement équivalent au vrai Bac France\n'
+    + '- Données numériques réalistes (R en kΩ, C en μF, L en mH...)\n'
+    + '- Chaque exercice avec sous-parties a) b) c) numérotées\n'
+    + '- Minimum 120 mots par exercice\n\n'
+    + 'RÉPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc PC — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + (prog?.ex1.theme || 'Physique') + '", "title": "Titre exercice 1", "points": 8, "statement": "DONNÉES :\n[données numériques]\n\n1) a) Question...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question..." },\n'
+    + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Physique') + '", "title": "Titre exercice 2", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ..." },\n'
+    + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Chimie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) ...\n2) ...\n3) ..." }\n'
+    + '  ]\n'
+    + '}'
+
+  const raw = await askClaude(prompt, system, 5500)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc PC — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
 // ── analyzeStudentWork (identique simulation) ─────────────────────
 // Analyse UN exercice immédiatement après correction
 async function analyzeOneExercise(
@@ -725,6 +809,60 @@ async function correctRemediationExercise(exercise: AnalysisResult['remediationE
 }
 
 // ── Génération examen Bac Blanc (distinct de simulation) ──────────
+// ── Programme Physique-Chimie Bac France — rotation 61 jours ─────────
+// Sections : terminale, premiere, techno (STI2D/STMG), expertes
+// ex1=Physique partie 1 · ex2=Physique partie 2 · ex3=Chimie
+const PROGRAMME_JOUR_PHYSIQUE_FR: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+}[]> = {
+  terminale: [
+    {ex1:{theme:"Mécanique",sousTh:"2ème loi Newton ΣF=ma, plan incliné, frottement, énergie cinétique Ec=½mv², travail W=F·d·cosθ"},ex2:{theme:"Physique quantique",sousTh:"Photon E=hf, effet photoélectrique, dualité onde-corpuscule, modèle de Bohr, niveaux énergie"},ex3:{theme:"Chimie organique",sousTh:"Familles fonctionnelles, isomérie, estérification-hydrolyse, mécanismes substitution et addition"}},
+    {ex1:{theme:"Gravitation",sousTh:"Loi de gravitation F=Gm₁m₂/r², champ gravitationnel g=GM/r², satellites Kepler T²/R³=cte, vitesse de libération"},ex2:{theme:"Optique ondulatoire",sousTh:"Interférences Young i=λD/a, diffraction θ≈λ/a, réseau nλ=d·sinθ, cohérence, polarisation"},ex3:{theme:"Cinétique chimique",sousTh:"Vitesse réaction, facteurs cinétiques (T, concentration, catalyseur), t₁/₂, suivi spectrophotométrique Beer-Lambert"}},
+    {ex1:{theme:"Énergie mécanique",sousTh:"Ec=½mv², Ep=mgh, Em=Ec+Ep, conservation, travail des forces non conservatives, puissance"},ex2:{theme:"Induction",sousTh:"Flux Φ=BS·cosθ, loi Faraday e=-dΦ/dt, loi Lenz, auto-induction e=-L·di/dt, transformateur"},ex3:{theme:"Acide-base",sousTh:"Ka, pKa, pH, acides faibles, titrage pH-métrique, point équivalence, solutions tampons, Henderson-Hasselbalch"}},
+    {ex1:{theme:"Oscillateurs",sousTh:"Pendule simple T=2π√(l/g), masse-ressort T=2π√(m/k), énergie, amortissement, analogie LC"},ex2:{theme:"Courants alternatifs",sousTh:"Valeurs efficaces, impédances ZR=R ZL=Lω ZC=1/(Cω), circuit RLC série, résonance f₀=1/(2π√LC), facteur Q"},ex3:{theme:"Équilibres chimiques",sousTh:"Constante K, quotient Qr, loi Le Chatelier, taux avancement, optimisation industrielle (Haber, Contact)"}},
+    {ex1:{theme:"Ondes progressives",sousTh:"Célérité v=λf, retard τ=d/v, déphasage, ondes transversales/longitudinales, effet Doppler Δf/f=v_s/v"},ex2:{theme:"Thermodynamique",sousTh:"Systèmes thermodynamiques, Q=mcΔT, échanges énergie, rendement thermique, diagramme énergie, bilan global"},ex3:{theme:"Oxydoréduction",sousTh:"Nombres oxydation, couples Ox/Red, électrochimie (pile, électrolyse), loi Faraday m=MIt/(nF), applications"}},
+    {ex1:{theme:"Mécanique quantique",sousTh:"Spectre H, séries Lyman/Balmer, transitions E=hf=hc/λ, longueur de de Broglie λ=h/(mv), principe incertitude"},ex2:{theme:"Mécanique",sousTh:"Moment cinétique L=Iω, conservation, satellite géostationnaire, orbites circulaires, vitesse cosmique"},ex3:{theme:"Chimie verte",sousTh:"12 principes chimie verte, économie atomes, solvants verts, biocarburants, bilan carbone, analyse cycle vie"}},
+    {ex1:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques émission/absorption, identification éléments, laser, cohérence, applications astrophysique"},ex2:{theme:"Électricité",sousTh:"Circuit RC τ=RC, circuit RL τ=L/R, RLC libre oscillations amorties, régimes apériodique/critique/pseudo-périodique"},ex3:{theme:"Cinétique chimique",sousTh:"Ordre réaction 0/1/2, détermination expérimentale, temps demi-réaction, catalyse enzymatique Michaelis-Menten"}},
+    {ex1:{theme:"Mécanique",sousTh:"Projectile — équations horaires, portée maximale, flèche, angle optimal, frottement aérodynamique"},ex2:{theme:"Optique géométrique",sousTh:"Réfraction Snell-Descartes n₁sinθ₁=n₂sinθ₂, réflexion totale interne, lentilles minces, relation conjugaison 1/f'=1/OA'-1/OA"},ex3:{theme:"Acide-base",sousTh:"Polyacides H₃PO₄, diagramme prédominance, titrages en retour, pH sang (7,35-7,45), acidose/alcalose"}},
+    {ex1:{theme:"Énergie",sousTh:"Sources énergie (fossiles, nucléaire, renouvelables), bilan énergétique mondial, puissance installée, rendements"},ex2:{theme:"Induction",sousTh:"Conversion énergie mécanique↔électrique, alternateur, moteur électrique, force de Laplace F=BIl, loi Lenz applications"},ex3:{theme:"Chimie organique",sousTh:"Stéréochimie, chiralité, carbone asymétrique, énantiomères, activité optique, médicaments R/S"}},
+    {ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité mouvement p=mv, choc élastique/inélastique, impulsion F·Δt, centre de masse"},ex2:{theme:"Physique quantique",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc², fission U-235, fusion H, centrale nucléaire"},ex3:{theme:"Équilibres chimiques",sousTh:"Dissociation eau Ke=10^(-14), pH solutions aqueuses, solubilité et Ks, précipitation sélective"}},
+    {ex1:{theme:"Gravitation",sousTh:"Énergie potentielle gravitationnelle Ep=-GMm/r, énergie mécanique satellite, vitesses cosmiques, trajectoires"},ex2:{theme:"Courants alternatifs",sousTh:"Puissance active P=UIcosφ, puissance réactive Q, facteur puissance cosφ, redressement, filtrage RC"},ex3:{theme:"Acide-base",sousTh:"Spectrophotométrie Beer-Lambert A=εlc, dosage colorimétrique, indicateurs colorés, choix indicateur dosage"}},
+    {ex1:{theme:"Oscillateurs",sousTh:"Oscillations forcées mécaniques, résonance amplitude, bande passante, facteur qualité Q, amortissement critique"},ex2:{theme:"Thermodynamique",sousTh:"Loi Fourier conduction thermique, résistance thermique R=e/(λS), convection, rayonnement Stefan, isolation habitat"},ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel, étape cinétiquement déterminante, intermédiaire réactionnel, complexe activé, Ea"}},
+    {ex1:{theme:"Ondes",sousTh:"Ondes sonores — spectre audible, intensité sonore dB L=10log(I/I₀), ultrason (sonar, échographie médical)"},ex2:{theme:"Électricité",sousTh:"Filtres actifs et passifs — passe-bas, passe-haut, passe-bande, diagramme Bode, fréquence coupure fc"},ex3:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (PE, PP, PVC), polycondensation (polyesters, polyamides nylon), propriétés, recyclage"}},
+    {ex1:{theme:"Mécanique quantique",sousTh:"Spectroscopie IR — absorptions groupes fonctionnels (C=O, O-H, N-H, C-H), nombre onde, identification molécule"},ex2:{theme:"Mécanique",sousTh:"Rotation solide — moment inertie I, moment force M=Iα, énergie rotation Erot=½Iω², gyroscope, conservation L"},ex3:{theme:"Oxydoréduction",sousTh:"Corrosion — pile galvanique corrosion, protection cathodique, galvanisation, anodisation aluminium"}},
+    {ex1:{theme:"Gravitation",sousTh:"Révision mécanique — Newton, gravitation, Kepler, énergie, satellites — sujet de synthèse complet"},ex2:{theme:"Physique quantique",sousTh:"Révision quantique — photons, spectres, radioactivité, E=Δmc², applications médicales — synthèse"},ex3:{theme:"Chimie",sousTh:"Révision chimie — cinétique, équilibres, acide-base, redox, organique — sujet de synthèse final"}},
+    {ex1:{theme:"Mécanique",sousTh:"Oscillateur harmonique — solution générale A·cos(ω₀t+φ), conditions initiales, énergie totale constante"},ex2:{theme:"Optique",sousTh:"RMN ¹H — déplacement chimique δ (ppm), multiplicité (n+1), intégration, identification structure moléculaire"},ex3:{theme:"Chimie organique",sousTh:"Synthèse organique multi-étapes — protection groupes fonctionnels, rendement global, chimie verte"}},
+  ],
+  premiere: [
+    {ex1:{theme:"Constitution matière",sousTh:"Atomes, ions, molécules, liaisons ionique/covalente, électronégativité, solides cristallins, modèle VSEPR géométrie"},ex2:{theme:"Optique",sousTh:"Réfraction n₁sinθ₁=n₂sinθ₂, réflexion totale interne nc=arcsin(n₂/n₁), lentilles minces, relation conjugaison"},ex3:{theme:"Chimie",sousTh:"pH, Ka, pKa, acides/bases faibles et forts, diagramme prédominance, dosage acide-base, Beer-Lambert"}},
+    {ex1:{theme:"Spectroscopie",sousTh:"IR — groupes fonctionnels (C=O 1700-1750 cm⁻¹, O-H 2500-3300, N-H 3300-3500), RMN ¹H — δ, multiplicité, intégration"},ex2:{theme:"Mécanique",sousTh:"Référentiel, trajectoire, vecteur vitesse v=dr/dt, vecteur accélération, mouvement uniformément accéléré"},ex3:{theme:"Chimie organique",sousTh:"Familles fonctionnelles (alcool, acide, amine, ester, aldéhyde, cétone), réactions substitution, addition, élimination"}},
+    {ex1:{theme:"Modèle quantique",sousTh:"Orbitales s,p,d, configuration électronique, tableau périodique, liaison de valence, polarité, moment dipolaire"},ex2:{theme:"Signaux",sousTh:"Formation images (lentilles, appareil photo, œil), persistance rétinienne, couleurs synthèse additive/soustractive, daltonisme"},ex3:{theme:"Acide-base",sousTh:"Titrages conductimétrique et pH-métrique, courbe dérivée, point équivalence, choix indicateur, calcul concentration"}},
+    {ex1:{theme:"Ondes",sousTh:"Propagation, période T, fréquence f, longueur onde λ=vT, ondes sonores spectre (20Hz-20kHz), ultrason Doppler médical"},ex2:{theme:"Électricité",sousTh:"Dipôles R, L, C, lois Kirchhoff, diviseur tension, associations série/parallèle, puissance P=UI, énergie W=Pt"},ex3:{theme:"Oxydoréduction",sousTh:"Nombre oxydation, couples rédox, équilibrage demi-équations, réactions spontanées, classement potentiels standard"}},
+    {ex1:{theme:"Constitution matière",sousTh:"Cristaux ioniques (NaCl), moléculaires, covalents (diamant), métalliques — propriétés mécaniques, électriques, thermiques"},ex2:{theme:"Mécanique",sousTh:"2ème loi Newton ΣF=ma, plan incliné, énergie cinétique Ec=½mv², travail W, puissance P, chute libre"},ex3:{theme:"Cinétique chimique",sousTh:"Vitesse réaction v=dx/dt, facteurs cinétiques, suivi conductimétrique, spectrophotométrique, pH-métrique, manométrique"}},
+    {ex1:{theme:"Spectroscopie",sousTh:"Spectre UV-Visible, chromophores, conjugaison, Beer-Lambert A=εlc, identification molécules organiques colorées"},ex2:{theme:"Optique",sousTh:"Microscope — grandissement G=G_obj×G_oc, loupe, lunette astronomique, profondeur de champ, résolution angulaire"},ex3:{theme:"Chimie organique",sousTh:"Nomenclature IUPAC, isomères de constitution, stéréoisomères (Z/E, R/S), propriétés physiques, point ébullition"}},
+  ],
+  techno: [
+    {ex1:{theme:"Mécanique STI2D",sousTh:"Newton (translation/rotation), moment force, machines (leviers, engrenages), travail, puissance, rendement η"},ex2:{theme:"Électricité STI2D",sousTh:"Dipôles R,L,C, régimes transitoires RC (τ=RC) et RL (τ=L/R), courant alternatif, valeurs efficaces, puissance active"},ex3:{theme:"Chimie matériaux",sousTh:"Métaux et alliages, polymères thermoplastiques/thermodurcissables, céramiques, composites, traitements surface"}},
+    {ex1:{theme:"Énergétique STI2D",sousTh:"Conversions énergie (électrique, mécanique, thermique, chimique), bilan E_utile/E_fournie, rendement η, stockage"},ex2:{theme:"Ondes STI2D",sousTh:"Ultrasons (contrôle non destructif, sonar, échographie), vibrations structure, résonance, décibels L=10log(I/I₀)"},ex3:{theme:"Chimie solutions STI2D",sousTh:"Acide-base (pH, Ka, dosages), oxydoréduction (piles, électrolyse), galvanoplastie, loi Faraday m=MIt/(nF)"}},
+    {ex1:{theme:"Thermique STI2D",sousTh:"Conduction Fourier φ=λS·ΔT/e, résistance thermique R=e/(λS), convection, rayonnement Stefan-Boltzmann, bilan habitat"},ex2:{theme:"Optique STI2D",sousTh:"Réfraction Snell-Descartes, fibre optique (réflexion totale interne), lentilles, instruments (loupe, microscope, endoscope)"},ex3:{theme:"Chimie corrosion STI2D",sousTh:"Oxydation métaux, corrosion électrochimique pile galvanique, protection cathodique, anodisation, galvanisation, peintures"}},
+    {ex1:{theme:"Nucléaire STI2D",sousTh:"Désintégrations α,β,γ — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc², fission U-235, réacteur nucléaire, applications médicales"},ex2:{theme:"Électricité STI2D",sousTh:"Circuit RLC libre oscillations, résonance f₀=1/(2π√LC), filtres RC passe-bas/haut, diagramme Bode, fréquence coupure"},ex3:{theme:"Chimie matériaux STI2D",sousTh:"Polymères PET/PP/nylon, propriétés mécaniques, recyclage, matériaux biosourcés, analyse thermique DSC"}},
+  ],
+  expertes: [
+    {ex1:{theme:"Analyse avancée",sousTh:"Intégrales multiples, suites numériques complexes, développements limités, équations différentielles avec physique"},ex2:{theme:"Algèbre linéaire",sousTh:"Matrices 3×3, déterminants, systèmes linéaires (Cramer, Gauss), valeurs propres, vecteurs propres, diagonalisation"},ex3:{theme:"Probabilités avancées",sousTh:"Loi normale N(μ,σ²), loi exponentielle, intervalles confiance, tests d'hypothèse, statistiques inférentielles"}},
+    {ex1:{theme:"Arithmétique",sousTh:"PGCD (Euclide, Bézout), congruences, indicatrice Euler, théorème Fermat, cryptographie RSA, chiffrement"},ex2:{theme:"Analyse complexe",sousTh:"Nombres complexes — module, argument, forme exponentielle, polynômes ℂ, racines n-ièmes, géométrie plan complexe"},ex3:{theme:"Dénombrement",sousTh:"Arrangements, combinaisons, binôme Newton, principe inclusion-exclusion, permutations, génération aléatoire"}},
+  ],
+}
+
+function getProgrammeJourPhysiqueFR(sectionKey: string, dayNum: number) {
+  // Terminale et expertes → même programme physique terminale
+  const physKey = (sectionKey === 'expertes') ? 'terminale' : sectionKey
+  const prog = PROGRAMME_JOUR_PHYSIQUE_FR[physKey]
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)!
   const today = new Date()
@@ -1097,11 +1235,12 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onRetour
+  candidat, dayNum, onMaths, onPhysique, onRetour
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
+  onPhysique: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -1133,14 +1272,14 @@ function PhaseChoixMatiereFR({
       key: 'physique',
       icon: '⚗️',
       label: 'Physique-Chimie',
-      desc: 'Simulation par chapitres · Mécanique, Ondes, Chimie organique, Électricité, Quantique…',
+      desc: 'Examen complet · 3 exercices · Correction IA · Programme officiel PC France · Analyse faiblesses',
       color: '#06d6a0',
       gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
       border: 'rgba(6,214,160,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
-      href: `/simulation-france?subject=physique&section=${physSection}`,
+
     },
     {
       key: 'svt',
@@ -1214,7 +1353,7 @@ function PhaseChoixMatiereFR({
               onClick={() => {
                 if (!m.available) return
                 if (m.key === 'maths') { onMaths(); return }
-                if ((m as any).href) window.location.href = (m as any).href
+                if (m.key === 'physique') { onPhysique(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -1368,9 +1507,9 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
           {sec&&(
             <div style={{background:`${sec.color}10`,border:`1px solid ${sec.color}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
-              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label} — Jour {dayNum}</div>
+              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label}</div>
               <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Thèmes : {sec.themes.join(' · ')}</div>
-              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Durée : {sec?.duration?sec.duration/60:3}h · Coeff {sec?.coeff||3} · 20 points · 4 exercices</div>
+              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Bac Blanc France · Choisissez votre matière à l'étape suivante</div>
             </div>
           )}
 
@@ -1405,20 +1544,23 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 // PHASE 2 — GÉNÉRATION
 // ════════════════════════════════════════════════════════════════════
 function PhaseGenerating({candidat}:{candidat:Candidat}){
-  const sec=SECTIONS_FR.find(s=>s.key===candidat.sectionKey)!
+  const sec=SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#4f6ef7'
+  const secIcon  = sec?.icon  || '⚗️'
+  const secLabel = sec?.label || candidat.section
   const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
   const [msgIdx,setMsgIdx]=useState(0)
   useEffect(()=>{const t=setInterval(()=>setMsgIdx(m=>(m+1)%msgs.length),2200);return()=>clearInterval(t)},[])
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:28,color:'white',fontFamily:'system-ui'}}>
       <div style={{position:'relative',width:80,height:80}}>
-        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${sec.color}20`}}/>
-        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${sec.color}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
-        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{sec.icon}</div>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}20`}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{secIcon}</div>
       </div>
       <div style={{textAlign:'center',maxWidth:360}}>
         <div style={{fontSize:20,fontWeight:800,color:sec.color,marginBottom:10}}>Génération du Concours</div>
-        <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {sec.label}</div>
+        <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
         <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
@@ -1440,7 +1582,10 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   const [uploadError, setUploadError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const sec = SECTIONS_FR.find(s=>s.key===exam.sectionKey)!
+  const sec = SECTIONS_FR.find(s=>s.key===exam.sectionKey) || SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#4f6ef7'
+  const secCoeff = sec?.coeff || 6
+  const secDuration = sec?.duration || 210
 
   useEffect(()=>{
     if(!timerOn)return
@@ -1497,7 +1642,7 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   // ── Sujet officiel PDF ────────────────────────────────────────────
   const openSubjectPdf=()=>{
     const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    const secForPdf=SECTIONS_FR.find(s=>s.key===exam.sectionKey)||{duration:180,coeff:3,icon:'📚'}
+    const secForPdf=SECTIONS_FR.find(s=>s.key===exam.sectionKey)||SECTIONS_FR.find(s=>s.key===candidat.sectionKey)||{duration:210,coeff:6,icon:'🇫🇷',label:candidat.section,key:candidat.sectionKey}
     const css=`
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
       *{box-sizing:border-box;margin:0;padding:0}
@@ -1617,7 +1762,7 @@ ${exercicesHtml}
           <span style={{fontSize:22}}>🏆</span>
           <div>
             <div style={{fontWeight:800,fontSize:14,color:'#fbbf24'}}>Bac Blanc — Concours Jour {exam.day}</div>
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {sec.label} · {exam.duration/60}h · Coeff {sec.coeff}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {sec?.label||candidat.section} · {exam.duration/60}h · Coeff {secCoeff}</div>
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
@@ -1662,9 +1807,9 @@ ${exercicesHtml}
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:14,fontWeight:700}}>📋 Sujet officiel</p>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {exam.exercises.map(ex=>(
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${sec.color}`,borderRadius:12,padding:'16px 18px'}}>
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${secColor}`,borderRadius:12,padding:'16px 18px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center'}}>
-                    <span style={{fontWeight:700,fontSize:13,color:sec.color}}>{ex.title}</span>
+                    <span style={{fontWeight:700,fontSize:13,color:secColor}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
                   </div>
                   {ex.graph&&ex.graph!=='null'&&<TextWithGraphs text={ex.graph}/>}
@@ -2718,6 +2863,22 @@ function BacBlancFranceInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  const handleStartPhysique = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && !checkQuota('simulations')) {
+      alert('Quota atteint — Bac Blanc disponible en mai-juin.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancPhysiqueFR(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -2766,6 +2927,7 @@ function BacBlancFranceInner() {
       candidat={candidat}
       dayNum={dayNum}
       onMaths={handleStartMaths}
+      onPhysique={handleStartPhysique}
       onRetour={()=>setPhase('inscription')}
     />
   )
