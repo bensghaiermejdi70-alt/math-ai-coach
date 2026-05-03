@@ -81,9 +81,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscriptionEnd !== null &&
       subscriptionEnd.getTime() > Date.now())
 
-  const isSprint =
-    (profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
-    && hasActiveSubscription
+  const isSprint: boolean =
+    ((profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
+    && hasActiveSubscription) === true
 
   // Matière de l'abonnement actif
   const matiereActive: MatiereType = hasActiveSubscription
