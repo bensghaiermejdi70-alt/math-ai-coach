@@ -270,12 +270,33 @@ export default function HomePage() {
             <h1 style={{
               fontFamily:'var(--font-display)', fontWeight:900,
               fontSize:'clamp(22px,3.5vw,50px)', lineHeight:1.05,
-              letterSpacing:'-0.03em', marginBottom:18,
+              letterSpacing:'-0.03em', marginBottom:24,
               animation:'fadeInUp 0.7s ease 0.1s both',
             }}>
-              <span style={{ display:'block', marginBottom:6, color:'rgba(255,255,255,0.9)' }}>
+              <span style={{ display:'block', marginBottom:20, color:'rgba(255,255,255,0.9)' }}>
                 Ton professeur IA personnel
               </span>
+              {/* Chips matières */}
+              <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
+                {[
+                  { icon:'🧮', label:'Mathématiques',  color:'#4f6ef7' },
+                  { icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+                  { icon:'🧬', label:'SVT',             color:'#10b981' },
+                  { icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
+                  { icon:'💻', label:'Informatique',    color:'#8b5cf6' },
+                  { icon:'📚', label:'Littérature',     color:'#a78bfa' },
+                ].map(m => (
+                  <span key={m.label} style={{
+                    display:'inline-flex', alignItems:'center', gap:7,
+                    padding:'8px 18px', borderRadius:100,
+                    background:`${m.color}18`, border:`1.5px solid ${m.color}45`,
+                    color:m.color, fontSize:14, fontWeight:700,
+                  }}>
+                    <span style={{fontSize:18}}>{m.icon}</span>
+                    <span>{m.label}</span>
+                  </span>
+                ))}
+              </div>
             </h1>
 
             {/* Sous-titre */}
