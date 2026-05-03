@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [loading,    setLoading]    = useState(true)
   const [activating, setActivating] = useState<string|null>(null)
   const [notes,      setNotes]      = useState<Record<string,string>>({})
+  const [matieres,   setMatieres]   = useState<Record<string,string>>({})  // subId → matiere
 
   useEffect(() => { if (!isLoading && !isAdmin) router.push('/') }, [isAdmin, isLoading])
   useEffect(() => { if (isAdmin) loadAll() }, [isAdmin])
@@ -51,22 +52,29 @@ export default function AdminPage() {
 
   async function activate(sub: any) {
     setActivating(sub.id)
-    const days = DURATIONS[sub.plan_type] || 30
+    const matiere = matieres[sub.id] || 'mathematiques'
+    const basePlan = sub.plan_type?.startsWith('sprint') ? 'sprint_bac'
+      : sub.plan_type?.startsWith('annuel') ? 'annuel' : 'mensuel'
+    const finalPlanType = `${basePlan}_${matiere}`
+    const days = DURATIONS[basePlan] || 30
     const now  = new Date()
     const end  = new Date(now.getTime() + days*86400000)
-    const { error } = await supabase.from('subscriptions').update({
-      status:     'active',
-      starts_at:  now.toISOString(),
-      ends_at:    end.toISOString(),
-    }).eq('id', sub.id)
-    // Mettre à jour le profil utilisateur
-    if (!error && sub.user_id) {
-      await supabase.from('profiles').update({
-        is_active:        true,
-        plan_type:        sub.plan_type,
-        subscription_end: end.toISOString(),
-      }).eq('id', sub.user_id)
-    }
+
+    // Utiliser l'API admin pour sync subscriptions + profiles + reset session
+    const res = await fetch('/api/admin/subscriptions', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id:       sub.id,
+        status:   'active',
+        user_id:  sub.user_id,
+        plan_type: finalPlanType,
+        matiere,
+        ends_at:  end.toISOString(),
+      })
+    })
+    const result = await res.json()
+    const error = res.ok ? null : result
     const fakeError = error
     if (!fakeError) {
       await supabase.from('admin_logs').insert({ admin_id:user?.id, action:'activate_subscription', target_user_id:sub.user_id, details:{ subscription_id:sub.id, plan:sub.plan_type, days } })
@@ -182,7 +190,17 @@ export default function AdminPage() {
                           {/* Badges */}
                           <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
                             <span className={`badge ${STATUS_STYLE[sub.status]||'badge-blue'}`} style={{ textTransform:'capitalize' }}>{sub.status}</span>
-                            <span className="badge badge-purple" style={{ textTransform:'capitalize' }}>{sub.plan_type.replace('_',' ')}</span>
+                            <span className="badge badge-purple" style={{ textTransform:'capitalize' }}>
+                              {sub.plan_type?.replace('mensuel_','📅 ')
+                                .replace('annuel_','📅 ')
+                                .replace('sprint_bac_','🔥 ')
+                                .replace('mathematiques','Maths')
+                                .replace('physique','PC')
+                                .replace('svt','SVT')
+                                .replace('anglais','Anglais')
+                                .replace('informatique','Info')
+                                .replace(/_/g,' ') || sub.plan_type}
+                            </span>
                             <span className="badge badge-blue" style={{ textTransform:'uppercase' }}>{sub.payment_method}</span>
                           </div>
 
@@ -214,7 +232,22 @@ export default function AdminPage() {
 
                         {/* Actions si pending */}
                         {sub.status === 'pending' && (
-                          <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:180 }}>
+                          <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:200 }}>
+                            {/* Sélecteur matière */}
+                            <div>
+                              <label style={{ fontSize:10, color:'var(--muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', display:'block', marginBottom:4 }}>
+                                Matière abonnée
+                              </label>
+                              <select value={matieres[sub.id]||'mathematiques'}
+                                onChange={e => setMatieres(m => ({...m,[sub.id]:e.target.value}))}
+                                className="input" style={{ borderRadius:8, fontSize:12, padding:'7px 10px', width:'100%' }}>
+                                <option value="mathematiques">🧮 Mathématiques</option>
+                                <option value="physique">⚗️ Physique-Chimie</option>
+                                <option value="svt">🧬 SVT</option>
+                                <option value="anglais">🇬🇧 Anglais</option>
+                                <option value="informatique">💻 Informatique</option>
+                              </select>
+                            </div>
                             <textarea value={notes[sub.id]||''} onChange={e => setNotes(n => ({...n,[sub.id]:e.target.value}))}
                               placeholder="Notes optionnelles..." rows={2}
                               className="input" style={{ borderRadius:8, fontSize:12, padding:'8px 12px', resize:'none' }} />
@@ -240,7 +273,14 @@ export default function AdminPage() {
         {tab === 'stats' && (
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             {[
-              { title:'Par plan', items: ['mensuel','annuel','sprint_bac'].map(p => ({ label:p.replace('_',' '), count:allSubs.filter(s=>s.plan_type===p&&s.status==='active').length })) },
+              { title:'Par plan × matière', items: [
+                  ...['mathematiques','physique','svt','anglais','informatique'].flatMap(mat =>
+                    ['mensuel','annuel','sprint_bac'].map(plan => ({
+                      label: `${plan==='sprint_bac'?'Sprint':plan==='annuel'?'Annuel':'Mensuel'} ${mat==='mathematiques'?'Maths':mat==='physique'?'PC':mat.toUpperCase()}`,
+                      count: allSubs.filter(s=>(s.plan_type===`${plan}_${mat}`||s.plan_type===plan)&&s.status==='active').length
+                    }))
+                  ).filter(x => x.count > 0)
+                ]},
               { title:'Par méthode', items: ['d17','konnect','flouci','recharge_mobile'].map(m => ({ label:m, count:allSubs.filter(s=>s.payment_method===m).length })) },
             ].map((block, i) => (
               <div key={i} className="card" style={{ padding:24 }}>
