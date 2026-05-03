@@ -367,12 +367,64 @@ export default function AdminPaymentsPage() {
                       </>
                     )}
                     {s.status === 'active' && (
-                      <button onClick={() => deactivate(s)} disabled={isAct}
-                        style={{ padding:'7px 14px', borderRadius:8, cursor:'pointer',
-                          background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)',
-                          color:'#f87171', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
-                        {isAct ? '⏳...' : '🚫 Désactiver'}
-                      </button>
+                      <>
+                        {/* Badge matière actuelle */}
+                        {(() => {
+                          const pt = s.plan_type || ''
+                          const mat = pt.includes('physique') ? '⚗️ PC'
+                            : pt.includes('svt') ? '🧬 SVT'
+                            : pt.includes('anglais') ? '🇬🇧 Anglais'
+                            : pt.includes('informatique') ? '💻 Info'
+                            : '🧮 Maths'
+                          return (
+                            <div style={{ padding:'4px 10px', borderRadius:6,
+                              background:'rgba(79,110,247,0.12)', border:'1px solid rgba(79,110,247,0.25)',
+                              color:'#93c5fd', fontSize:11, fontWeight:700, textAlign:'center' }}>
+                              {mat}
+                            </div>
+                          )
+                        })()}
+                        {/* Changer matière pour un abonné actif */}
+                        <select value={matieres[s.id]||''}
+                          onChange={e => setMatieres(m => ({...m,[s.id]:e.target.value}))}
+                          style={{ padding:'5px 8px', borderRadius:7, border:'1px solid rgba(255,255,255,0.12)',
+                            background:'rgba(255,255,255,0.04)', color:'rgba(255,255,255,0.6)',
+                            fontSize:10, cursor:'pointer', width:'100%' }}>
+                          <option value="">— Changer matière —</option>
+                          <option value="mathematiques">🧮 Maths</option>
+                          <option value="physique">⚗️ Physique-Chimie</option>
+                          <option value="svt">🧬 SVT</option>
+                          <option value="anglais">🇬🇧 Anglais</option>
+                          <option value="informatique">💻 Informatique</option>
+                        </select>
+                        {matieres[s.id] && (
+                          <button onClick={async () => {
+                            setActivating(s.id)
+                            const basePlan = s.plan_type?.startsWith('sprint') ? 'sprint_bac'
+                              : s.plan_type?.startsWith('annuel') ? 'annuel' : 'mensuel'
+                            const newPlan = `${basePlan}_${matieres[s.id]}`
+                            await fetch('/api/admin/subscriptions', {
+                              method:'PATCH', headers:{'Content-Type':'application/json'},
+                              body: JSON.stringify({ id:s.id, status:'active', user_id:s.user_id,
+                                plan_type:newPlan, matiere:matieres[s.id], ends_at:s.ends_at })
+                            })
+                            setMsg(`✅ Matière mise à jour → ${newPlan}`)
+                            setMatieres(m => ({...m,[s.id]:''}))
+                            await loadAll(); setActivating(null)
+                          }} disabled={isAct}
+                            style={{ padding:'5px 10px', borderRadius:7, border:'none', cursor:'pointer',
+                              background:'linear-gradient(135deg,#4f6ef7,#7c3aed)',
+                              color:'white', fontSize:11, fontWeight:700, opacity:isAct?0.6:1 }}>
+                            💾 Appliquer
+                          </button>
+                        )}
+                        <button onClick={() => deactivate(s)} disabled={isAct}
+                          style={{ padding:'7px 14px', borderRadius:8, cursor:'pointer',
+                            background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)',
+                            color:'#f87171', fontSize:12, fontWeight:700, opacity:isAct?0.6:1 }}>
+                          {isAct ? '⏳...' : '🚫 Désactiver'}
+                        </button>
+                      </>
                     )}
                     {s.payment_phone && (
                       <a href={`https://wa.me/216${s.payment_phone.replace(/\s/g,'')}?text=Bonjour%20!%20Votre%20abonnement%20MathBac.AI%20est%20activé%20✅`}
