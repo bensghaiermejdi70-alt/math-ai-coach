@@ -1,8 +1,12 @@
 // src/lib/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
 
+// Singleton — une seule instance pour toute l'app
+let _client: ReturnType<typeof createBrowserClient> | null = null
+
 export function createClient() {
-  return createBrowserClient(
+  if (_client) return _client
+  _client = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -10,11 +14,11 @@ export function createClient() {
         detectSessionInUrl: true,
         autoRefreshToken: true,
         persistSession: true,
-        // 🔒 Important pour le système de session unique :
-        // On garde persistSession mais on vérifie manuellement côté AuthContext
+        storageKey: 'sb-mathbac-auth', // clé unique pour éviter les conflits
       }
     }
   )
+  return _client
 }
 
 // 🔒 Fonction utilitaire pour forcer la déconnexion propre
@@ -58,4 +62,3 @@ export async function validateLocalSession(): Promise<boolean> {
   
   return prof?.current_session_id === localId
 }
-
