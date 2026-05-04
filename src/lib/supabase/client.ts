@@ -26,6 +26,10 @@ export function createClient() {
           detectSessionInUrl: true,
           autoRefreshToken: true,
           persistSession: true,
+          lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
+            // Désactiver le Web Lock API — évite les conflits entre instances
+            return fn()
+          },
         }
       }
     )
