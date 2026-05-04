@@ -103,6 +103,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscriptionEnd !== null &&
       subscriptionEnd.getTime() > Date.now())
 
+  // Debug log
+  if (profile) {
+    console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, {
+      isAdmin,
+      is_active: profile?.is_active,
+      subscriptionEnd: subscriptionEnd?.toISOString(),
+      now: new Date().toISOString(),
+      plan_type: profile?.plan_type,
+    })
+  }
+
   const isSprint: boolean =
     ((profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
     && hasActiveSubscription) === true
@@ -166,6 +177,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    console.log('[Auth] Profile chargé:', {
+      email: data?.email,
+      is_active: data?.is_active,
+      plan_type: data?.plan_type,
+      subscription_end: data?.subscription_end,
+    })
     setProfile(data)
   }
 
