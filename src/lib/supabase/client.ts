@@ -1,23 +1,37 @@
 // src/lib/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
 
-// Singleton — une seule instance pour toute l'app
-let _client: ReturnType<typeof createBrowserClient> | null = null
+// Singleton global — survit aux re-renders et hot reloads de Next.js
+declare global {
+  // eslint-disable-next-line no-var
+  var __supabase_client: ReturnType<typeof createBrowserClient> | undefined
+}
 
 export function createClient() {
-  if (_client) return _client
-  _client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        detectSessionInUrl: true,
-        autoRefreshToken: true,
-        persistSession: true,
+  if (typeof window === 'undefined') {
+    // SSR : toujours créer une nouvelle instance
+    return createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+
+  // Browser : utiliser le singleton global
+  if (!globalThis.__supabase_client) {
+    globalThis.__supabase_client = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          detectSessionInUrl: true,
+          autoRefreshToken: true,
+          persistSession: true,
+        }
       }
-    }
-  )
-  return _client
+    )
+  }
+
+  return globalThis.__supabase_client
 }
 
 // 🔒 Fonction utilitaire pour forcer la déconnexion propre
