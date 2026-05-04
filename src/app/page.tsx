@@ -284,7 +284,7 @@ export default function HomePage() {
                   { icon:'🧬', label:'SVT',             color:'#10b981' },
                   { icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
                   { icon:'💻', label:'Informatique',    color:'#8b5cf6' },
-                  { icon:'📚', label:'Littérature',     color:'#a78bfa' },
+                  { icon:'📚', label:'Francais',     color:'#a78bfa' },
                 ].map(m => (
                   <span key={m.label} style={{
                     display:'inline-flex', alignItems:'center', gap:7,
