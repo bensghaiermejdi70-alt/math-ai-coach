@@ -14,7 +14,6 @@ export function createClient() {
         detectSessionInUrl: true,
         autoRefreshToken: true,
         persistSession: true,
-        storageKey: 'sb-mathbac-auth', // clé unique pour éviter les conflits
       }
     }
   )
