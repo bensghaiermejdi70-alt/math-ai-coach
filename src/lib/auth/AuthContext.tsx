@@ -218,23 +218,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearState()
       }
       
+      // Gérer session locale
       if (!isMultiSession) {
-        // Session unique : créer session_id local seulement
-        // L'écriture en DB se fait uniquement si l'utilisateur est actif
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
-        // Vérifier is_active avant d'écrire en DB
-        const { data: prof } = await supabase.from('profiles')
-          .select('is_active')
-          .eq('id', data.user.id)
-          .single()
-        if (prof?.is_active) {
-          await supabase.from('profiles')
-            .update({ current_session_id: sessionId })
-            .eq('id', data.user.id)
-        }
       } else {
-        // Multi-sessions : pas de restriction
         localStorage.removeItem('mathbac_session_id')
       }
       
@@ -386,41 +374,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clearState()
           }
           
-          if (!isMultiSession) {
-            // Utilisateur standard : vérifier session unique
-            const localId = localStorage.getItem('mathbac_session_id')
-            
-            if (!localId) {
-              const newSessionId = crypto.randomUUID()
-              localStorage.setItem('mathbac_session_id', newSessionId)
-              await supabase.from('profiles')
-                .update({ current_session_id: newSessionId })
-                .eq('id', currentUser.id)
-            } else {
-              const { data: prof } = await supabase
-                .from('profiles')
-                .select('current_session_id, is_active')
-                .eq('id', currentUser.id)
-                .single()
-              
-              if (prof?.is_active === true && prof?.current_session_id !== null && prof?.current_session_id && prof.current_session_id !== localId) {
-                localStorage.removeItem('mathbac_session_id')
-                clearState()
-                await supabase.auth.signOut()
-                window.location.href = '/login?error=session_dupliquee'
-                return
-              }
-              // Si pas actif ou session null → initialiser sans bloquer
-              if (!prof?.is_active || prof?.current_session_id === null) {
-                if (localId) {
-                  await supabase.from('profiles')
-                    .update({ current_session_id: localId })
-                    .eq('id', currentUser.id)
-                }
-              }
-            }
-          }
-          // Multi-session : aucune restriction d'appareil
+          // Vérification session : uniquement en signIn, pas ici
+          // onAuthStateChange se déclenche trop souvent (navigation, focus)
+          // ce qui causait des conflits de lock Supabase
+          // La vérification multi-device est gérée dans verifySingleSession
           
           setUser(currentUser)
           previousUserId.current = currentUser.id
