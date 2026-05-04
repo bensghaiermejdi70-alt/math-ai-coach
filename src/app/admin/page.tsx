@@ -43,9 +43,9 @@ export default function AdminPage() {
     setAllSubs(a.data || [])
     if (s.data) setStats({
       total:   s.data.length,
-      active:  s.data.filter(x => x.status==='active').length,
-      pending: s.data.filter(x => x.status==='pending').length,
-      revenue: s.data.filter(x => x.status==='active').reduce((sum,x) => sum+(x.price_paid||0), 0),
+      active:  s.data.filter((x:any) => x.status==='active').length,
+      pending: s.data.filter((x:any) => x.status==='pending').length,
+      revenue: s.data.filter((x:any) => x.status==='active').reduce((sum:number,x:any) => sum+(x.price_paid||0), 0),
     })
     setLoading(false)
   }
