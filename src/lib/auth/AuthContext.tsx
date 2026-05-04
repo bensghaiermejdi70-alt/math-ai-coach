@@ -141,9 +141,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // PGRST116 = profil inexistant → le créer automatiquement
       if (error.code === 'PGRST116') {
         const { data: { user: authUser } } = await supabase.auth.getUser()
+        // INSERT uniquement si le profil n'existe vraiment pas
+        // NE PAS utiliser upsert qui écraserait is_active si le profil existe
         const { data: newProfile } = await supabase
           .from('profiles')
-          .upsert({
+          .insert({
             id: userId,
             email: authUser?.email ?? '',
             full_name: authUser?.user_metadata?.full_name ?? '',
@@ -151,14 +153,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             is_active: false,
             plan_type: null,
             created_at: new Date().toISOString(),
-          }, { onConflict: 'id' })
+          })
           .select()
           .single()
-        setProfile(newProfile)
+        if (newProfile) setProfile(newProfile)
         return
       }
-      console.error('Erreur chargement profil:', error)
-      setProfile(null)
+      // Toute autre erreur (lock conflict, timeout) → NE PAS toucher le profil
+      // Garder le profil actuel en mémoire si disponible
+      console.error('Erreur chargement profil (non critique):', error.code, error.message)
+      // Ne pas faire setProfile(null) — ça tuerait l'abonnement affiché
       return
     }
 
@@ -215,19 +219,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (!isMultiSession) {
-        // Session unique : créer un nouveau session_id et l'écrire en DB + localStorage
-        // Cela invalide automatiquement tous les autres appareils
+        // Session unique : créer session_id local seulement
+        // L'écriture en DB se fait uniquement si l'utilisateur est actif
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
-        await supabase.from('profiles')
-          .update({ current_session_id: sessionId })
+        // Vérifier is_active avant d'écrire en DB
+        const { data: prof } = await supabase.from('profiles')
+          .select('is_active')
           .eq('id', data.user.id)
+          .single()
+        if (prof?.is_active) {
+          await supabase.from('profiles')
+            .update({ current_session_id: sessionId })
+            .eq('id', data.user.id)
+        }
       } else {
-        // Multi-sessions : remettre à null pour ne jamais bloquer
+        // Multi-sessions : pas de restriction
         localStorage.removeItem('mathbac_session_id')
-        await supabase.from('profiles')
-          .update({ current_session_id: null })
-          .eq('id', data.user.id)
       }
       
       setUser(data.user)
@@ -457,11 +465,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (!prof?.current_session_id) {
-        const newSessionId = crypto.randomUUID()
-        localStorage.setItem('mathbac_session_id', newSessionId)
-        await supabase.from('profiles')
-          .update({ current_session_id: newSessionId })
-          .eq('id', currentUser.id)
+        // current_session_id NULL = pas de restriction active
+        // NE PAS modifier profiles ici pour éviter de déclencher des triggers
+        // Juste s'assurer que le localStorage est propre
+        if (!localId) {
+          localStorage.setItem('mathbac_session_id', crypto.randomUUID())
+        }
         return
       }
       
@@ -479,12 +488,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut()
         window.location.href = '/login?error=session_dupliquee'
       } else if (!prof?.is_active || prof?.current_session_id === null) {
-        // Pas actif OU session_id null → juste mettre à jour sans déconnecter
-        if (localId) {
-          await supabase.from('profiles')
-            .update({ current_session_id: localId })
-            .eq('id', currentUser.id)
-        }
+        // Pas actif OU session_id null → ne rien faire, laisser l'accès
+        return
       }
     }
 
