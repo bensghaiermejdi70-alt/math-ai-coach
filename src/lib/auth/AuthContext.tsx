@@ -205,14 +205,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (!isMultiSession) {
-        // Session unique : écraser la session précédente
+        // Session unique : créer un nouveau session_id et l'écrire en DB + localStorage
+        // Cela invalide automatiquement tous les autres appareils
         const sessionId = crypto.randomUUID()
         localStorage.setItem('mathbac_session_id', sessionId)
         await supabase.from('profiles')
           .update({ current_session_id: sessionId })
           .eq('id', data.user.id)
       } else {
-        // Multi-sessions : pas de restriction, juste nettoyer le session_id
+        // Multi-sessions : remettre à null pour ne jamais bloquer
+        localStorage.removeItem('mathbac_session_id')
         await supabase.from('profiles')
           .update({ current_session_id: null })
           .eq('id', data.user.id)
@@ -383,17 +385,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .eq('id', currentUser.id)
                 .single()
               
-              if (prof?.is_active && prof?.current_session_id !== null && prof?.current_session_id && prof.current_session_id !== localId) {
+              if (prof?.is_active === true && prof?.current_session_id !== null && prof?.current_session_id && prof.current_session_id !== localId) {
                 localStorage.removeItem('mathbac_session_id')
                 clearState()
                 await supabase.auth.signOut()
                 window.location.href = '/login?error=session_dupliquee'
                 return
               }
-              if (prof?.current_session_id === null && localId) {
-                await supabase.from('profiles')
-                  .update({ current_session_id: localId })
-                  .eq('id', currentUser.id)
+              // Si pas actif ou session null → initialiser sans bloquer
+              if (!prof?.is_active || prof?.current_session_id === null) {
+                if (localId) {
+                  await supabase.from('profiles')
+                    .update({ current_session_id: localId })
+                    .eq('id', currentUser.id)
+                }
               }
             }
           }
@@ -455,17 +460,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Ne déconnecter que si DB a un session_id NON-NULL différent
       // Si current_session_id est NULL en DB (ex: activation manuelle),
       // on met juste à jour sans déconnecter
-      if (prof?.is_active && prof.current_session_id !== null && prof.current_session_id !== localId) {
+      // Déconnecter UNIQUEMENT si l'abonnement est actif ET session différente
+      // Si is_active=false (abonnement expiré/gratuit) → ne jamais déconnecter pour session
+      if (prof?.is_active === true && prof.current_session_id !== null && prof.current_session_id !== localId) {
         signingOut = true
         localStorage.removeItem('mathbac_session_id')
         clearState()
         await supabase.auth.signOut()
         window.location.href = '/login?error=session_dupliquee'
-      } else if (prof?.current_session_id === null && localId) {
-        // Activation manuelle : mettre à jour le session_id en DB
-        await supabase.from('profiles')
-          .update({ current_session_id: localId })
-          .eq('id', currentUser.id)
+      } else if (!prof?.is_active || prof?.current_session_id === null) {
+        // Pas actif OU session_id null → juste mettre à jour sans déconnecter
+        if (localId) {
+          await supabase.from('profiles')
+            .update({ current_session_id: localId })
+            .eq('id', currentUser.id)
+        }
       }
     }
 
