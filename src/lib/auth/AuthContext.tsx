@@ -3,6 +3,16 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+
+// ── Singleton Supabase client — créé une seule fois pour tout l'app ──────────
+// Évite "Multiple GoTrueClient instances" qui cause des lock conflicts
+let _supabaseClient: ReturnType<typeof createClient> | null = null
+function getSupabaseClient() {
+  if (!_supabaseClient) {
+    _supabaseClient = createClient()
+  }
+  return _supabaseClient
+}
 import {
   Profile,
   UserQuotas,
@@ -70,7 +80,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient()
+  const supabase = getSupabaseClient()
 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
