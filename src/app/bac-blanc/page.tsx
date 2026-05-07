@@ -236,6 +236,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000): Prom
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system,
       messages: [{ role:'user', content:prompt }],
+      type: 'simulations'
     }),
   })
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }

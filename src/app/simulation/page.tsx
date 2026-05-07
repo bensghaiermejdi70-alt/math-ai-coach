@@ -320,6 +320,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000): Prom
       max_tokens: maxTokens,
       system,
       messages: [{ role:'user', content:prompt }],
+      type: 'simulations'
     }),
   })
   if (!r.ok) {

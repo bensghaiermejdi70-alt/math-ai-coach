@@ -6,7 +6,14 @@ import { ADMIN_EMAIL, getQuotaLimits } from '@/lib/types/monetisation'
 export const maxDuration = 120
 
 // Détecter le type de requête pour comptabiliser le bon quota
-function detectQuotaType(body: any): 'chat' | 'solver' | 'simulations' | null {
+function getQuotaType(body: any): 'chat' | 'solver' | 'simulations' | null {
+  // Priorité au paramètre explicite 'type' passé par le client
+  const explicitType = body?.type
+  if (explicitType === 'chat' || explicitType === 'solver' || explicitType === 'simulations') {
+    return explicitType
+  }
+
+  // Fallback à la détection basée sur le contenu (pour compatibilité)
   const systemPrompt = String(body?.system || '')
   const messageContent = Array.isArray(body?.messages)
     ? body.messages[body.messages.length - 1]?.content
@@ -58,13 +65,12 @@ export async function POST(req: NextRequest) {
     const supabase = createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // TODO prod: décommenter pour activer la vérification en production
-    // if (!user) {
-    //   return NextResponse.json({ error: 'Connexion requise' }, { status: 401 })
-    // }
+    if (!user) {
+      return NextResponse.json({ error: 'Connexion requise' }, { status: 401 })
+    }
 
     if (user && user.email !== ADMIN_EMAIL) {
-      const quotaType = detectQuotaType(body)
+      const quotaType = getQuotaType(body)
 
       if (quotaType) {
         // Récupérer abonnement actif depuis profiles, puis en fallback depuis subscriptions

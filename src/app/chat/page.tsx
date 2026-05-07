@@ -1326,6 +1326,7 @@ export default function ChatPage() {
               }. Priorise les explications dans cette matière.`
             : SYSTEM_PROMPT,
           messages: history,
+          type: 'chat'
         }),
       })
       const data = await res.json()
