@@ -2122,8 +2122,10 @@ Structure OBLIGATOIRE :
                   </div>
                   <span style={{ fontSize: 11, color: '#4f6ef7', flexShrink: 0 }}>Revoir →</span>
                   <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev, user?.id ?? undefined)) }}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.45)', fontSize:15, padding:'0 2px', flexShrink:0, lineHeight:1 }}
-                    title="Supprimer">×</button>
+                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.6)', fontSize:18, padding:'0 2px', flexShrink:0, lineHeight:1, transition:'color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,1)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.6)'}
+                    title="Supprimer cette résolution">×</button>
                 </div>
               ))}
             </div>

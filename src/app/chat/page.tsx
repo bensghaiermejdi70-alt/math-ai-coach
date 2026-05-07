@@ -1387,8 +1387,10 @@ export default function ChatPage() {
                           <div style={{ fontSize:10, color:'var(--muted)', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.preview.slice(0,50)}…</div>
                         </button>
                         <button onClick={e => { e.stopPropagation(); deleteSession(s.id, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)) }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.5)', fontSize:14, flexShrink:0, padding:'0 2px' }}
-                          title="Supprimer">×</button>
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.6)', fontSize:18, flexShrink:0, padding:'0 2px', transition:'color 0.2s' }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,1)'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.6)'}
+                          title="Supprimer cette conversation">×</button>
                       </div>
                     </div>
                   ))}

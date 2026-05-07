@@ -197,18 +197,46 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
 // QUOTA LIMITS par plan
 // ============================================================
 
-export function getQuotaLimits(planTypes: (PlanType | string)[] | PlanType | string | null, isSprint: boolean = false): PlanQuotas {
-  let types: (PlanType | string)[]
-  if (!planTypes) {
-    types = []
-  } else if (Array.isArray(planTypes)) {
-    types = planTypes
-  } else {
-    types = [planTypes]
+type PlanTypeInput = PlanType | string | Array<PlanType | string> | null
+
+function getPlanPriority(planType: string): number {
+  const basePlan = extractPlan(planType)
+  if (basePlan === 'sprint_bac') return 3
+  if (basePlan === 'annuel') return 2
+  return 1
+}
+
+function normalizePlanTypes(planTypes: PlanTypeInput): string[] {
+  if (!planTypes) return []
+  const list = Array.isArray(planTypes) ? planTypes : [planTypes]
+  const bestBySubject: Record<string, string> = {}
+
+  for (const planType of list) {
+    if (!planType) continue
+    const matiere = extractMatiere(planType)
+    const current = bestBySubject[matiere]
+    if (!current || getPlanPriority(planType) > getPlanPriority(current)) {
+      bestBySubject[matiere] = planType
+    }
   }
 
-  if (types.length === 0) {
-    // Utilisateur non abonné — accès gratuit limité
+  return Object.values(bestBySubject)
+}
+
+function combineQuotas(a: PlanQuotas, b: PlanQuotas): PlanQuotas {
+  return {
+    simulations_per_week: a.simulations_per_week + b.simulations_per_week,
+    chat_per_week: a.chat_per_week + b.chat_per_week,
+    solver_per_week: a.solver_per_week === -1 || b.solver_per_week === -1 ? -1 : a.solver_per_week + b.solver_per_week,
+    remediation_per_week: a.remediation_per_week + b.remediation_per_week,
+    analyses_per_week: a.analyses_per_week + b.analyses_per_week,
+    courses_unlimited: a.courses_unlimited || b.courses_unlimited,
+    bac_blanc: a.bac_blanc || b.bac_blanc,
+  }
+}
+
+export function getQuotaLimits(planTypes: PlanTypeInput, isSprint: boolean = false): PlanQuotas {
+  if (!planTypes) {
     return {
       simulations_per_week: 0,
       chat_per_week: 3,
@@ -220,7 +248,27 @@ export function getQuotaLimits(planTypes: (PlanType | string)[] | PlanType | str
     }
   }
 
-  const quotas = {
+  const normalizedPlanTypes = normalizePlanTypes(planTypes)
+
+  if (normalizedPlanTypes.length === 0) {
+    return {
+      simulations_per_week: 0,
+      chat_per_week: 3,
+      solver_per_week: 3,
+      remediation_per_week: 0,
+      analyses_per_week: 0,
+      courses_unlimited: false,
+      bac_blanc: false,
+    }
+  }
+
+  return normalizedPlanTypes.reduce<PlanQuotas>((acc, planType) => {
+    const basePlan = extractPlan(planType)
+    const quotas = (isSprint || basePlan === 'sprint_bac')
+      ? PLAN_DEFINITIONS.sprint_bac.quotas
+      : PLAN_DEFINITIONS[basePlan].quotas
+    return combineQuotas(acc, quotas)
+  }, {
     simulations_per_week: 0,
     chat_per_week: 0,
     solver_per_week: 0,
@@ -228,29 +276,15 @@ export function getQuotaLimits(planTypes: (PlanType | string)[] | PlanType | str
     analyses_per_week: 0,
     courses_unlimited: false,
     bac_blanc: false,
-  }
+  })
+}
 
-  for (const planType of types) {
-    // Extraire le plan de base (gère "mensuel_mathematiques" → "mensuel")
-    const basePlan: BasePlanType = extractPlan(planType)
-    const planDef = PLAN_DEFINITIONS[basePlan]
-    if (planDef) {
-      quotas.simulations_per_week += planDef.quotas.simulations_per_week
-      quotas.chat_per_week += planDef.quotas.chat_per_week
-      quotas.solver_per_week += planDef.quotas.solver_per_week
-      quotas.remediation_per_week += planDef.quotas.remediation_per_week
-      quotas.analyses_per_week += planDef.quotas.analyses_per_week
-      quotas.courses_unlimited = quotas.courses_unlimited || planDef.quotas.courses_unlimited
-      quotas.bac_blanc = quotas.bac_blanc || planDef.quotas.bac_blanc
-    }
+export function hasMatiereAccess(planType: PlanTypeInput, matiere: MatiereType): boolean {
+  if (!planType) return false
+  if (Array.isArray(planType)) {
+    return planType.some(pt => extractMatiere(pt) === matiere)
   }
-
-  // Si sprint, solver illimité
-  if (isSprint) {
-    quotas.solver_per_week = -1
-  }
-
-  return quotas
+  return extractMatiere(planType) === matiere
 }
 
 // Email admin (accès illimité sans abonnement)

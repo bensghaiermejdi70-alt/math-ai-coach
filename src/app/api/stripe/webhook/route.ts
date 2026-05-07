@@ -4,6 +4,7 @@
 import Stripe from "stripe"
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { extractMatiere } from "@/lib/types/monetisation"
 
 // ── Map priceId → plan_type ───────────────────────────────────────
 const PRICE_TO_PLAN: Record<string, string> = {
@@ -193,6 +194,29 @@ export async function POST(req: Request) {
       if (existingSub) {
         console.log(`⚠️ Abonnement déjà existant pour session ${session.id} — skip`)
         return NextResponse.json({ received: true })
+      }
+
+      // Vérifier s'il existe déjà un abonnement actif pour la même matière (si profile trouvé)
+      if (profile?.id) {
+        const matiere = extractMatiere(planType)
+        const now = new Date().toISOString()
+
+        const { data: existingByMatiere } = await supabase
+          .from('subscriptions')
+          .select('id, plan_type, ends_at, status')
+          .eq('user_id', profile.id)
+          .eq('status', 'active')
+
+        const duplicateActive = existingByMatiere?.some(sub => {
+          const subMatiere = extractMatiere(sub.plan_type)
+          const isExpired = !sub.ends_at || new Date(sub.ends_at) <= new Date(now)
+          return subMatiere === matiere && !isExpired
+        })
+
+        if (duplicateActive) {
+          console.log(`⚠️ Abonnement actif déjà existant pour matière ${matiere} — skip`)
+          return NextResponse.json({ received: true })
+        }
       }
 
       // Insérer dans subscriptions
