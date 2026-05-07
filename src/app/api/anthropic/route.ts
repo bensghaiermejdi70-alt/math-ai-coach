@@ -64,21 +64,23 @@ export async function POST(req: NextRequest) {
     // }
 
     if (user && user.email !== ADMIN_EMAIL) {
+      // Récupérer tous les abonnements actifs
+      const { data: subs } = await supabase
+        .from('subscriptions')
+        .select('plan_type')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .gt('subscription_end', new Date().toISOString())
+
+      const planTypes = subs?.map(s => s.plan_type) || []
+      const isSprint = planTypes.some(p => p?.startsWith('sprint_bac'))
+      const limits = getQuotaLimits(planTypes, isSprint)
+
       const quotaType = detectQuotaType(body)
 
       if (quotaType) {
-        // Récupérer abonnement actif depuis profiles (plus fiable que subscriptions)
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('plan_type, is_active, subscription_end')
-          .eq('id', user.id)
-          .single()
-
-        const isActive = profile?.is_active && profile?.subscription_end && new Date(profile.subscription_end) > new Date()
-        const planType = isActive ? profile?.plan_type : null
-        const limits   = getQuotaLimits(planType as any, planType?.startsWith('sprint_bac') || false)
         const limitKey = `${quotaType}_per_week` as keyof typeof limits
-        const limit    = limits[limitKey] as number
+        const limit = limits[limitKey] as number
 
         if (limit !== -1) { // -1 = illimité
           // Récupérer quotas semaine

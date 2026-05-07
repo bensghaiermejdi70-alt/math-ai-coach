@@ -197,8 +197,17 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
 // QUOTA LIMITS par plan
 // ============================================================
 
-export function getQuotaLimits(planType: PlanType | string | null, isSprint: boolean = false): PlanQuotas {
-  if (!planType) {
+export function getQuotaLimits(planTypes: (PlanType | string)[] | PlanType | string | null, isSprint: boolean = false): PlanQuotas {
+  let types: (PlanType | string)[]
+  if (!planTypes) {
+    types = []
+  } else if (Array.isArray(planTypes)) {
+    types = planTypes
+  } else {
+    types = [planTypes]
+  }
+
+  if (types.length === 0) {
     // Utilisateur non abonné — accès gratuit limité
     return {
       simulations_per_week: 0,
@@ -211,14 +220,37 @@ export function getQuotaLimits(planType: PlanType | string | null, isSprint: boo
     }
   }
 
-  // Extraire le plan de base (gère "mensuel_mathematiques" → "mensuel")
-  const basePlan: BasePlanType = extractPlan(planType)
-
-  if (isSprint || basePlan === 'sprint_bac') {
-    return PLAN_DEFINITIONS.sprint_bac.quotas
+  const quotas = {
+    simulations_per_week: 0,
+    chat_per_week: 0,
+    solver_per_week: 0,
+    remediation_per_week: 0,
+    analyses_per_week: 0,
+    courses_unlimited: false,
+    bac_blanc: false,
   }
 
-  return PLAN_DEFINITIONS[basePlan].quotas
+  for (const planType of types) {
+    // Extraire le plan de base (gère "mensuel_mathematiques" → "mensuel")
+    const basePlan: BasePlanType = extractPlan(planType)
+    const planDef = PLAN_DEFINITIONS[basePlan]
+    if (planDef) {
+      quotas.simulations_per_week += planDef.quotas.simulations_per_week
+      quotas.chat_per_week += planDef.quotas.chat_per_week
+      quotas.solver_per_week += planDef.quotas.solver_per_week
+      quotas.remediation_per_week += planDef.quotas.remediation_per_week
+      quotas.analyses_per_week += planDef.quotas.analyses_per_week
+      quotas.courses_unlimited = quotas.courses_unlimited || planDef.quotas.courses_unlimited
+      quotas.bac_blanc = quotas.bac_blanc || planDef.quotas.bac_blanc
+    }
+  }
+
+  // Si sprint, solver illimité
+  if (isSprint) {
+    quotas.solver_per_week = -1
+  }
+
+  return quotas
 }
 
 // Email admin (accès illimité sans abonnement)

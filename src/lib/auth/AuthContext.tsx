@@ -85,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [quotas, setQuotas] = useState<UserQuotas | null>(null)
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
   // REF pour tracker le changement d'utilisateur
@@ -97,42 +98,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ? new Date(profile.subscription_end)
     : null
 
-  const hasActiveSubscription =
-    isAdmin ||
-    (profile?.is_active === true &&
-      subscriptionEnd !== null &&
-      subscriptionEnd.getTime() > Date.now())
+  const hasActiveSubscription = isAdmin || subscriptions.length > 0
 
   // Debug log
   if (profile) {
     console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, {
       isAdmin,
-      is_active: profile?.is_active,
-      subscriptionEnd: subscriptionEnd?.toISOString(),
-      now: new Date().toISOString(),
-      plan_type: profile?.plan_type,
+      subscriptions: subscriptions.length,
+      planTypes: subscriptions.map(s => s.plan_type),
     })
   }
 
-  const isSprint: boolean =
-    ((profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
-    && hasActiveSubscription) === true
+  const isSprint: boolean = planTypes.some(p => p?.startsWith('sprint_bac'))
 
   // Matière de l'abonnement actif
-  const matiereActive: MatiereType = hasActiveSubscription
-    ? extractMatiere(profile?.plan_type)
+  const matiereActive: MatiereType = subscriptions.length > 0
+    ? extractMatiere(subscriptions[0].plan_type)
     : 'mathematiques'
 
   // Vérifier si l'utilisateur a accès à une matière donnée
   function checkMatiereAccess(matiere: MatiereType): boolean {
     if (isAdmin) return true
     if (!hasActiveSubscription) return false
-    return hasMatiereAccess(profile?.plan_type, matiere)
+    return subscriptions.some(sub => hasMatiereAccess(sub.plan_type, matiere))
   }
 
-  const quotaLimits = hasActiveSubscription
-    ? getQuotaLimits(profile?.plan_type ?? null, isSprint)
-    : getQuotaLimits(null)
+  async function loadSubscriptions(userId: string) {
+    const { data } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .gt('subscription_end', new Date().toISOString())
+    setSubscriptions(data || [])
+  }
+
+  const planTypes = subscriptions.map(s => s.plan_type)
+  const isSprint = planTypes.some(p => p?.startsWith('sprint_bac'))
+  const quotaLimits = getQuotaLimits(planTypes, isSprint)
+
+  const hasActiveSubscription = isAdmin || subscriptions.length > 0
 
   const daysRemaining =
     hasActiveSubscription && subscriptionEnd
@@ -247,6 +252,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       previousUserId.current = data.user.id
       await loadProfile(data.user.id)
       await loadQuotas(data.user.id)
+      await loadSubscriptions(data.user.id)
       
       window.location.href = '/'
       return { error: null, user: data.user }
@@ -339,6 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
     await loadProfile(user.id)
     await loadQuotas(user.id)
+    await loadSubscriptions(user.id)
   }
 
   function checkQuota(type: QuotaType): boolean {
@@ -400,6 +407,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           previousUserId.current = currentUser.id
           await loadProfile(currentUser.id)
           await loadQuotas(currentUser.id)
+          await loadSubscriptions(currentUser.id)
         } else {
           clearState()
         }
