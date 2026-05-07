@@ -98,31 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ? new Date(profile.subscription_end)
     : null
 
-  const hasActiveSubscription = isAdmin || subscriptions.length > 0
-
-  // Debug log
-  if (profile) {
-    console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, {
-      isAdmin,
-      subscriptions: subscriptions.length,
-      planTypes: subscriptions.map(s => s.plan_type),
-    })
-  }
-
-  const isSprint: boolean = planTypes.some(p => p?.startsWith('sprint_bac'))
-
-  // Matière de l'abonnement actif
-  const matiereActive: MatiereType = subscriptions.length > 0
-    ? extractMatiere(subscriptions[0].plan_type)
-    : 'mathematiques'
-
-  // Vérifier si l'utilisateur a accès à une matière donnée
-  function checkMatiereAccess(matiere: MatiereType): boolean {
-    if (isAdmin) return true
-    if (!hasActiveSubscription) return false
-    return subscriptions.some(sub => hasMatiereAccess(sub.plan_type, matiere))
-  }
-
   async function loadSubscriptions(userId: string) {
     const { data } = await supabase
       .from('subscriptions')
@@ -136,8 +111,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const planTypes = subscriptions.map(s => s.plan_type)
   const isSprint = planTypes.some(p => p?.startsWith('sprint_bac'))
   const quotaLimits = getQuotaLimits(planTypes, isSprint)
-
   const hasActiveSubscription = isAdmin || subscriptions.length > 0
+
+  // Debug log
+  if (profile) {
+    console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, {
+      isAdmin,
+      subscriptions: subscriptions.length,
+      planTypes: subscriptions.map(s => s.plan_type),
+    })
+  }
+
+  // Matière de l'abonnement actif
+  const matiereActive: MatiereType = subscriptions.length > 0
+    ? extractMatiere(subscriptions[0].plan_type)
+    : 'mathematiques'
+
+  // Vérifier si l'utilisateur a accès à une matière donnée
+  function checkMatiereAccess(matiere: MatiereType): boolean {
+    if (isAdmin) return true
+    if (!hasActiveSubscription) return false
+    return subscriptions.some(sub => hasMatiereAccess(sub.plan_type, matiere))
+  }
 
   const daysRemaining =
     hasActiveSubscription && subscriptionEnd
