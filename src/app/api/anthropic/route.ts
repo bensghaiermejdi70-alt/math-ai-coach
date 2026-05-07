@@ -7,27 +7,37 @@ export const maxDuration = 120
 
 // Détecter le type de requête pour comptabiliser le bon quota
 function detectQuotaType(body: any): 'chat' | 'solver' | 'simulations' | null {
-  const systemPrompt = String(body?.system || '').toLowerCase()
-  const userContent  = String(body?.messages?.[body.messages.length - 1]?.content || '').toLowerCase()
-  const normalized = `${systemPrompt} ${userContent}`
+  const systemPrompt = String(body?.system || '')
+  const messageContent = Array.isArray(body?.messages)
+    ? body.messages[body.messages.length - 1]?.content
+    : undefined
+  const userContent = typeof messageContent === 'string'
+    ? messageContent
+    : typeof messageContent === 'object' && messageContent !== null
+      ? JSON.stringify(messageContent)
+      : String(body?.prompt || '')
 
-  if (normalized.includes('simulation')
-    || normalized.includes('examen simulé')
-    || normalized.includes('sujet de bac')
-    || normalized.includes('crée un sujet')
-    || normalized.includes('sujet original')) {
-    return 'simulations'
-  }
-  if (normalized.includes('solveur')
-    || normalized.includes('étape par étape')
-    || normalized.includes('résoudre')
-    || normalized.includes('vérifie')
-    || normalized.includes('corrige')
-    || normalized.includes('corriger')) {
-    return 'solver'
-  }
+  const text = `${systemPrompt} ${userContent}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  const normalized = text.toLowerCase()
 
-  // Par défaut : chat
+  const isSimulation = [
+    'simulation', 'examen simul', 'sujet de bac', 'crée un sujet', 'cree un sujet',
+    'sujet original', 'génère un examen', 'genere un examen', 'génère un sujet',
+    'genere un sujet', 'examen variante', 'variante', 'sujet bac', 'sujet original'
+  ].some(token => normalized.includes(token))
+
+  if (isSimulation) return 'simulations'
+
+  const isSolver = [
+    'solveur', 'résous', 'resous', 'résoudre', 'resoudre',
+    'corrige', 'corriger', 'vérifie', 'verifie', 'solution', 'solution de l eleve',
+    'corrige la solution', 'vérifie et corrige', 'verifie et corrige'
+  ].some(token => normalized.includes(token))
+
+  if (isSolver) return 'solver'
+
   return 'chat'
 }
 
