@@ -144,7 +144,7 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     priceNum_fr: 19,
     description: 'Résiliable à tout moment',
     quotas: {
-      simulations_per_week: 2,
+      simulations_per_week: 5,
       chat_per_week: 20,
       solver_per_week: 20,      // ← 20/sem (was illimité)
       remediation_per_week: 10,
@@ -180,7 +180,7 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     description: 'Résiliable à tout moment · Quotas boostés',
     badge: '🔥 Mode Intensif',
     quotas: {
-      simulations_per_week: 5,
+      simulations_per_week: 10,
       chat_per_week: 30,
       solver_per_week: 40,      // ← 40/sem (was illimité)
       remediation_per_week: 20,
