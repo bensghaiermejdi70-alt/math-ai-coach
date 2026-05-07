@@ -192,7 +192,7 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
 // QUOTA LIMITS par plan
 // ============================================================
 
-type PlanTypeInput = PlanType | string | Array<PlanType | string> | null
+type PlanTypeInput = PlanType | string | Array<PlanType | string> | null | undefined
 
 function getPlanPriority(planType: string): number {
   const basePlan = extractPlan(planType)
