@@ -64,7 +64,8 @@ function renderKaTeX(text: string): string {
 // ══════════════════════════════════════════════════════════════════════
 // HISTORIQUE — Sauvegarde / Restauration localStorage
 // ══════════════════════════════════════════════════════════════════════
-const HISTORY_KEY = 'bacai_chat_history'
+const CHAT_HISTORY_PREFIX = 'bacai_chat_history_' 
+const CHAT_HISTORY_LEGACY_KEY = 'bacai_chat_history'
 const MAX_SESSIONS = 20  // max sessions sauvegardées
 
 interface ChatSession {
@@ -75,10 +76,27 @@ interface ChatSession {
   preview: string
 }
 
-function saveSession(messages: { role: string; content: string; id: number }[]): void {
+function getChatHistoryKey(userId?: string): string {
+  return userId ? `${CHAT_HISTORY_PREFIX}${userId}` : `${CHAT_HISTORY_PREFIX}guest`
+}
+
+function migrateChatHistory(userId?: string): void {
+  const newKey = getChatHistoryKey(userId)
+  if (localStorage.getItem(newKey)) return
+  const legacyValue = localStorage.getItem(CHAT_HISTORY_LEGACY_KEY)
+  if (!legacyValue) return
+  try {
+    const parsed = JSON.parse(legacyValue)
+    if (Array.isArray(parsed)) {
+      localStorage.setItem(newKey, JSON.stringify(parsed.slice(0, MAX_SESSIONS)))
+    }
+  } catch {}
+}
+
+function saveSession(messages: { role: string; content: string; id: number }[], userId?: string): void {
   if (messages.length < 2) return  // Pas de session vide
   try {
-    const sessions: ChatSession[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
+    const sessions: ChatSession[] = JSON.parse(localStorage.getItem(getChatHistoryKey(userId)) || '[]')
     const firstUser = messages.find(m => m.role === 'user')
     const title = firstUser ? firstUser.content.slice(0, 60) : 'Conversation'
     const preview = messages.filter(m => m.role === 'assistant')[0]?.content.slice(0, 100) || ''
@@ -90,19 +108,22 @@ function saveSession(messages: { role: string; content: string; id: number }[]):
       preview,
     }
     const updated = [session, ...sessions.filter(s => s.id !== session.id)].slice(0, MAX_SESSIONS)
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
+    localStorage.setItem(getChatHistoryKey(userId), JSON.stringify(updated))
   } catch {}
 }
 
-function loadSessions(): ChatSession[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') }
+function loadSessions(userId?: string): ChatSession[] {
+  try {
+    migrateChatHistory(userId)
+    return JSON.parse(localStorage.getItem(getChatHistoryKey(userId)) || '[]')
+  }
   catch { return [] }
 }
 
-function deleteSession(id: string): void {
+function deleteSession(id: string, userId?: string): void {
   try {
-    const sessions = loadSessions().filter(s => s.id !== id)
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions))
+    const sessions = loadSessions(userId).filter(s => s.id !== id)
+    localStorage.setItem(getChatHistoryKey(userId), JSON.stringify(sessions))
   } catch {}
 }
 
@@ -1210,7 +1231,7 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 }
 
 export default function ChatPage() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1226,8 +1247,8 @@ export default function ChatPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [copyMsg, setCopyMsg] = useState('')
   const [pdfMsg, setPdfMsg] = useState('')
-  // Charger l'historique au montage
-  useEffect(() => { setSessions(loadSessions()) }, [])
+  // Charger l'historique au montage et à chaque changement d'utilisateur
+  useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
   const chatUsed = quotas?.chat_used || 0
   const chatLimit = quotaLimits.chat_per_week
@@ -1324,7 +1345,7 @@ export default function ChatPage() {
       setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
       setNextMsgId(p => p + 1)
       // Sauvegarder dans l'historique
-      setTimeout(() => { saveSession(updatedMsgs); setSessions(loadSessions()) }, 100)
+      setTimeout(() => { saveSession(updatedMsgs, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)) }, 100)
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Erreur de connexion. Vérifie que le serveur est bien démarré.', id: nextMsgId }])
       setNextMsgId(p => p + 1)
@@ -1364,7 +1385,7 @@ export default function ChatPage() {
                           <div style={{ fontSize:10, color:'var(--muted)' }}>{s.date} · {s.messages.length} msg</div>
                           <div style={{ fontSize:10, color:'var(--muted)', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.preview.slice(0,50)}…</div>
                         </button>
-                        <button onClick={e => { e.stopPropagation(); deleteSession(s.id); setSessions(loadSessions()) }}
+                        <button onClick={e => { e.stopPropagation(); deleteSession(s.id, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)) }}
                           style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.5)', fontSize:14, flexShrink:0, padding:'0 2px' }}
                           title="Supprimer">×</button>
                       </div>
@@ -1442,7 +1463,7 @@ export default function ChatPage() {
                   style={{ padding:'8px 14px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, cursor:'pointer', fontSize:12, color: pdfMsg ? '#6ee7b7' : 'rgba(255,255,255,0.5)', fontFamily:'inherit', width:'100%', textAlign:'center' }}>
                   {pdfMsg ? `✓ ${pdfMsg}` : '📋 Copier la conversation'}
                 </button>
-                <button onClick={() => { saveSession(messages); setSessions(loadSessions()); setMessages([]); setShowWelcome(true); setInput('') }}
+                <button onClick={() => { saveSession(messages, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)); setMessages([]); setShowWelcome(true); setInput('') }}
                   style={{ padding:'7px 14px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--muted)', fontSize:11, cursor:'pointer', width:'100%', textAlign:'center' }}>
                   🗑 Nouvelle conversation
                 </button>

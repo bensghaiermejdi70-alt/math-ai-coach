@@ -1182,22 +1182,43 @@ interface HistoryItem {
 }
 
 // ── Persistance localStorage ──────────────────────────
-const SOLVE_HISTORY_KEY = 'bacai_solve_history'
+const SOLVE_HISTORY_PREFIX = 'bacai_solve_history_' 
+const SOLVE_HISTORY_LEGACY_KEY = 'bacai_solve_history'
 const MAX_SOLVE_HISTORY = 30
 
-function saveSolveHistory(items: HistoryItem[]): void {
-  try { localStorage.setItem(SOLVE_HISTORY_KEY, JSON.stringify(items.slice(0, MAX_SOLVE_HISTORY))) }
+function getSolveHistoryKey(userId?: string): string {
+  return userId ? `${SOLVE_HISTORY_PREFIX}${userId}` : `${SOLVE_HISTORY_PREFIX}guest`
+}
+
+function migrateSolveHistory(userId?: string): void {
+  const newKey = getSolveHistoryKey(userId)
+  if (localStorage.getItem(newKey)) return
+  const legacyValue = localStorage.getItem(SOLVE_HISTORY_LEGACY_KEY)
+  if (!legacyValue) return
+  try {
+    const parsed = JSON.parse(legacyValue)
+    if (Array.isArray(parsed)) {
+      localStorage.setItem(newKey, JSON.stringify(parsed.slice(0, MAX_SOLVE_HISTORY)))
+    }
+  } catch {}
+}
+
+function saveSolveHistory(items: HistoryItem[], userId?: string): void {
+  try { localStorage.setItem(getSolveHistoryKey(userId), JSON.stringify(items.slice(0, MAX_SOLVE_HISTORY))) }
   catch {}
 }
 
-function loadSolveHistory(): HistoryItem[] {
-  try { return JSON.parse(localStorage.getItem(SOLVE_HISTORY_KEY) || '[]') }
+function loadSolveHistory(userId?: string): HistoryItem[] {
+  try {
+    migrateSolveHistory(userId)
+    return JSON.parse(localStorage.getItem(getSolveHistoryKey(userId)) || '[]')
+  }
   catch { return [] }
 }
 
-function deleteSolveItem(id: string, current: HistoryItem[]): HistoryItem[] {
+function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): HistoryItem[] {
   const updated = current.filter(h => h.id !== id)
-  saveSolveHistory(updated)
+  saveSolveHistory(updated, userId)
   return updated
 }
 
@@ -1208,7 +1229,7 @@ function deleteSolveItem(id: string, current: HistoryItem[]): HistoryItem[] {
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, checkMatiereAccess, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, checkMatiereAccess, matiereActive} = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1228,10 +1249,14 @@ function SolvePageInner() {
   const [phase, setPhase] = useState<Phase>('input')
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
-  const [history, setHistory] = useState<HistoryItem[]>(() => loadSolveHistory())
+  const [history, setHistory] = useState<HistoryItem[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [similarQ, setSimilarQ] = useState<string[]>([])
   const [pdfMsg, setPdfMsg] = useState('')
+
+  useEffect(() => {
+    setHistory(loadSolveHistory(user?.id ?? undefined))
+  }, [user?.id])
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -1929,7 +1954,7 @@ Structure OBLIGATOIRE :
           id: Date.now().toString(), exercise: input,
           solution: sol, mode, timestamp: new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
         }, ...prev.slice(0, 29)]
-        saveSolveHistory(updated)
+        saveSolveHistory(updated, user?.id ?? undefined)
         return updated
       })
       setTimeout(() => solutionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
@@ -2073,7 +2098,7 @@ Structure OBLIGATOIRE :
             <div style={{ marginBottom: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
               <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span>🕘 Historique — {history.length} exercice{history.length > 1 ? 's' : ''}</span>
-                <button onClick={e => { e.stopPropagation(); const updated: HistoryItem[] = []; setHistory(updated); saveSolveHistory(updated) }}
+                <button onClick={e => { e.stopPropagation(); const updated: HistoryItem[] = []; setHistory(updated); saveSolveHistory(updated, user?.id ?? undefined) }}
                   style={{ fontSize:10, padding:'2px 8px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'rgba(239,68,68,0.6)', cursor:'pointer', fontFamily:'inherit' }}>
                   Vider
                 </button>
@@ -2094,7 +2119,7 @@ Structure OBLIGATOIRE :
                     </p>
                   </div>
                   <span style={{ fontSize: 11, color: '#4f6ef7', flexShrink: 0 }}>Revoir →</span>
-                  <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev)) }}
+                  <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev, user?.id ?? undefined)) }}
                     style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.45)', fontSize:15, padding:'0 2px', flexShrink:0, lineHeight:1 }}
                     title="Supprimer">×</button>
                 </div>
