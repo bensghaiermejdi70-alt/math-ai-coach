@@ -25,16 +25,20 @@ export async function GET(request: NextRequest) {
   }
 
   // Récupérer abonnement actif
-  const { data: subscription } = await supabase
+  const { data: subscriptions } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('user_id', user.id)
     .eq('is_active', true)
     .eq('status', 'active')
-    .gt('subscription_end', new Date().toISOString())
+    .order('ends_at', { ascending: false })
     .order('subscription_end', { ascending: false })
-    .limit(1)
-    .single()
+    .limit(5)
+
+  const subscription = (subscriptions || []).find((sub: any) => {
+    const endsAt = sub?.ends_at || sub?.subscription_end
+    return endsAt && new Date(endsAt) > new Date()
+  }) || null
 
   // Récupérer quotas semaine
   const weekStart = getWeekStart()
@@ -55,9 +59,10 @@ export async function GET(request: NextRequest) {
     subscription,
     quotas: quotas || null,
     limits,
-    daysRemaining: subscription?.subscription_end
-      ? Math.ceil((new Date(subscription.subscription_end).getTime() - Date.now()) / 86400000)
-      : null,
+    daysRemaining: (() => {
+      const endDate = subscription?.subscription_end || subscription?.ends_at
+      return endDate ? Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000) : null
+    })(),
   })
 }
 
@@ -101,16 +106,22 @@ export async function POST(request: NextRequest) {
     .single()
 
   // Vérifier abonnement
-  const { data: subscription } = await supabase
+  const { data: subscriptions } = await supabase
     .from('subscriptions')
-    .select('plan_type')
+    .select('plan_type, ends_at, subscription_end')
     .eq('user_id', user.id)
     .eq('is_active', true)
     .eq('status', 'active')
-    .gt('subscription_end', new Date().toISOString())
-    .single()
+    .order('ends_at', { ascending: false })
+    .order('subscription_end', { ascending: false })
+    .limit(5)
 
-  const planType = subscription?.plan_type || null
+  const activeSubscription = (subscriptions || []).find((sub: any) => {
+    const endsAt = sub?.ends_at || sub?.subscription_end
+    return endsAt && new Date(endsAt) > new Date()
+  }) || null
+
+  const planType = activeSubscription?.plan_type || null
   const limits = getQuotaLimits(planType as any, planType === 'sprint_bac')
   const limit = limits[`${type}_per_week` as keyof typeof limits] as number
   const current = (currentQuota as any)?.[col] || 0

@@ -136,11 +136,25 @@ export async function PUT(request: NextRequest) {
         status: 'active',
         is_active: true,
         subscription_start: now.toISOString(),
+        starts_at: now.toISOString(),
         subscription_end: end.toISOString(),
+        ends_at: end.toISOString(),
         activated_at: now.toISOString(),
         notes: `Paiement Konnect automatique - ${paymentRef}`,
       })
       .eq('id', sub.id)
+
+    if (sub.user_id) {
+      await adminClient
+        .from('profiles')
+        .update({
+          is_active: true,
+          plan_type: sub.plan_type,
+          subscription_end: end.toISOString(),
+          current_session_id: null,
+        })
+        .eq('id', sub.user_id)
+    }
 
     return NextResponse.json({ success: true })
 

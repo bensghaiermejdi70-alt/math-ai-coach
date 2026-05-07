@@ -64,23 +64,44 @@ export async function POST(req: NextRequest) {
     // }
 
     if (user && user.email !== ADMIN_EMAIL) {
-      // Récupérer tous les abonnements actifs
-      const { data: subs } = await supabase
-        .from('subscriptions')
-        .select('plan_type')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .gt('subscription_end', new Date().toISOString())
-
-      const planTypes = subs?.map(s => s.plan_type) || []
-      const isSprint = planTypes.some(p => p?.startsWith('sprint_bac'))
-      const limits = getQuotaLimits(planTypes, isSprint)
-
       const quotaType = detectQuotaType(body)
 
       if (quotaType) {
+        // Récupérer abonnement actif depuis profiles, puis en fallback depuis subscriptions
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan_type, is_active, subscription_end')
+          .eq('id', user.id)
+          .single()
+
+        let isActive = profile?.is_active && profile?.subscription_end && new Date(profile.subscription_end) > new Date()
+        let planType = isActive ? profile?.plan_type : null
+
+        if (!isActive) {
+          const { data: subscriptions } = await supabase
+            .from('subscriptions')
+            .select('plan_type, ends_at, subscription_end')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .eq('status', 'active')
+            .order('ends_at', { ascending: false })
+            .order('subscription_end', { ascending: false })
+            .limit(5)
+
+          const activeSubscription = (subscriptions || []).find((sub: any) => {
+            const endsAt = sub?.ends_at || sub?.subscription_end
+            return endsAt && new Date(endsAt) > new Date()
+          })
+
+          if (activeSubscription) {
+            isActive = true
+            planType = activeSubscription.plan_type
+          }
+        }
+
+        const limits   = getQuotaLimits(planType as any, planType?.startsWith('sprint_bac') || false)
         const limitKey = `${quotaType}_per_week` as keyof typeof limits
-        const limit = limits[limitKey] as number
+        const limit    = limits[limitKey] as number
 
         if (limit !== -1) { // -1 = illimité
           // Récupérer quotas semaine
