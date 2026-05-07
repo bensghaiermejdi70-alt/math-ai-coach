@@ -7,13 +7,18 @@ export const maxDuration = 120
 
 // Détecter le type de requête pour comptabiliser le bon quota
 function detectQuotaType(body: any): 'chat' | 'solver' | 'simulations' | null {
-  const systemPrompt = body?.system || ''
-  const userContent  = body?.messages?.[body.messages.length - 1]?.content || ''
+  const systemPrompt = String(body?.system || '')
+  const userContent  = String(body?.messages?.[body.messages.length - 1]?.content || '')
+  const normalized = (systemPrompt + ' ' + userContent).toLowerCase()
 
-  if (typeof systemPrompt === 'string') {
-    if (systemPrompt.includes('simulation') || systemPrompt.includes('examen simulé')) return 'simulations'
-    if (systemPrompt.includes('solveur') || systemPrompt.includes('étape par étape') || systemPrompt.includes('résoudre')) return 'solver'
-  }
+  if (normalized.includes('simulation') || normalized.includes('examen simulé')) return 'simulations'
+  if (normalized.includes('solveur')
+    || normalized.includes('étape par étape')
+    || normalized.includes('résoudre')
+    || normalized.includes('vérifie')
+    || normalized.includes('corrige')
+    || normalized.includes('corriger')) return 'solver'
+
   // Par défaut : chat
   return 'chat'
 }
