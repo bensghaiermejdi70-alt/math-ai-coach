@@ -32,11 +32,6 @@ export function extractMatiere(planType: string | null | undefined): MatiereType
   return known.includes(last) ? last : 'mathematiques'
 }
 
-export function hasMatiereAccess(planType: string | null | undefined, matiere: MatiereType): boolean {
-  if (!planType) return false
-  return extractMatiere(planType) === matiere
-}
-
 export const MATIERE_LABELS: Record<MatiereType, string> = {
   mathematiques: '🧮 Mathématiques',
   physique:      '⚗️ Physique-Chimie',
