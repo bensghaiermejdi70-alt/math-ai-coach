@@ -283,5 +283,46 @@ export function hasMatiereAccess(planType: PlanTypeInput, matiere: MatiereType):
   return extractMatiere(planType) === matiere
 }
 
+export function sumQuotasAcrossMatiere(quotasRecord: Record<MatiereType, UserQuotas> | null | undefined): UserQuotas {
+  if (!quotasRecord) {
+    return {
+      id: '',
+      user_id: '',
+      week_start: '',
+      matiere: 'mathematiques',
+      simulations_used: 0,
+      chat_used: 0,
+      solver_used: 0,
+      remediation_used: 0,
+      analyses_used: 0,
+    }
+  }
+
+  let total: UserQuotas = {
+    id: '',
+    user_id: '',
+    week_start: '',
+    matiere: 'mathematiques',
+    simulations_used: 0,
+    chat_used: 0,
+    solver_used: 0,
+    remediation_used: 0,
+    analyses_used: 0,
+  }
+
+  for (const matiere in quotasRecord) {
+    const quota = quotasRecord[matiere as MatiereType]
+    if (quota) {
+      total.simulations_used += quota.simulations_used
+      total.chat_used += quota.chat_used
+      total.solver_used += quota.solver_used
+      total.remediation_used += quota.remediation_used
+      total.analyses_used += quota.analyses_used
+    }
+  }
+
+  return total
+}
+
 // Email admin (accès illimité sans abonnement)
 export const ADMIN_EMAIL = 'bensghaiermejdi70@gmail.com'

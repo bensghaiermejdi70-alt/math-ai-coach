@@ -73,8 +73,8 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: string | null }>
 
   refreshSubscription: () => Promise<void>
-  checkQuota: (type: QuotaType) => boolean
-  incrementQuota: (type: QuotaType) => Promise<void>
+  checkQuota: (type: QuotaType, matiere?: MatiereType) => boolean
+  incrementQuota: (type: QuotaType, matiere?: MatiereType) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [quotas, setQuotas] = useState<UserQuotas | null>(null)
+  const [quotas, setQuotas] = useState<Record<MatiereType, UserQuotas> | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
   // REF pour tracker le changement d'utilisateur
@@ -217,21 +217,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function loadQuotas(userId: string) {
     const weekStart = getWeekStart()
 
-    const { data, error } = await supabase
+    const response = await supabase
       .from('user_quotas')
       .select('*')
       .eq('user_id', userId)
       .eq('week_start', weekStart)
 
-    if (error) {
-      console.error('Error loading quotas:', error)
-      setQuotas({})
+    const data = response.data as UserQuotas[] | null
+    const error = response.error
+
+    if (error || !data) {
+      if (error) {
+        console.error('Error loading quotas:', error)
+      }
+      setQuotas(null)
     } else {
-      const quotasMap: Record<MatiereType, UserQuotas> = {}
-      data.forEach(q => {
+      const quotasMap: Partial<Record<MatiereType, UserQuotas>> = {}
+      data.forEach((q: UserQuotas) => {
         quotasMap[q.matiere] = q
       })
-      setQuotas(quotasMap)
+      setQuotas(quotasMap as Record<MatiereType, UserQuotas>)
     }
   }
 

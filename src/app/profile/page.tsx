@@ -4,11 +4,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
 export default function ProfilePage() {
   const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut, refreshSubscription } = useAuth()
+  const totalQuotas = sumQuotasAcrossMatiere(quotas)
 
   // ── Portail Stripe (désabonnement France) ──
   const [portalLoading, setPortalLoading] = useState(false)
@@ -39,11 +41,11 @@ export default function ProfilePage() {
   }, [user])
 
   const QUOTA_BARS = [
-    { icon:'🎯', label:'Simulations Bac',    used: quotas?.simulations_used || 0, limit: quotaLimits.simulations_per_week },
-    { icon:'🤖', label:'Chat IA',           used: quotas?.chat_used         || 0, limit: quotaLimits.chat_per_week },
-    { icon:'📐', label:'Solveur',           used: quotas?.solver_used       || 0, limit: quotaLimits.solver_per_week },
-    { icon:'💡', label:'Remédiation IA',    used: quotas?.remediation_used  || 0, limit: quotaLimits.remediation_per_week },
-    { icon:'📊', label:'Analyses',          used: quotas?.analyses_used     || 0, limit: quotaLimits.analyses_per_week },
+    { icon:'🎯', label:'Simulations Bac',    used: totalQuotas?.simulations_used || 0, limit: quotaLimits.simulations_per_week },
+    { icon:'🤖', label:'Chat IA',           used: totalQuotas?.chat_used         || 0, limit: quotaLimits.chat_per_week },
+    { icon:'📐', label:'Solveur',           used: totalQuotas?.solver_used       || 0, limit: quotaLimits.solver_per_week },
+    { icon:'💡', label:'Remédiation IA',    used: totalQuotas?.remediation_used  || 0, limit: quotaLimits.remediation_per_week },
+    { icon:'📊', label:'Analyses',          used: totalQuotas?.analyses_used     || 0, limit: quotaLimits.analyses_per_week },
   ]
 
   function pct(used: number, limit: number) {

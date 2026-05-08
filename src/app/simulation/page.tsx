@@ -2480,7 +2480,7 @@ function PhaseGenerating({ archives, customText, onDone }: {
   const started = useRef(false)
 
   // Quota depuis Supabase
-  const simUsed      = quotas?.simulations_used || 0
+  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
   const simLimit     = quotaLimits.simulations_per_week  // -1 = illimité
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
@@ -4416,13 +4416,13 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
   sectionLabel: string
   onDone: (exams: GeneratedExam[]) => void
 }) {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits } = useAuth()
+  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const started = useRef(false)
 
-  const simUsed      = quotas?.simulations_used || 0
+  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
   const simLimit     = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const limitReached = !isUnlimited && simUsed >= simLimit

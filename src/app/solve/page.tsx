@@ -1294,7 +1294,7 @@ function SolvePageInner() {
   const solutionRef = useRef<HTMLDivElement>(null)
 
   // Quota depuis AuthContext (Supabase)
-  const solverUsed      = quotas?.solver_used || 0
+  const solverUsed      = quotas?.['mathematiques']?.solver_used || 0
   const solverLimit     = quotaLimits.solver_per_week // -1 = illimité (Sprint Bac)
   const isQuotaFull     = !isAdmin && !checkQuota('solver')
   const quotaRemaining  = isAdmin || solverLimit === -1

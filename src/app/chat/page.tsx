@@ -1250,7 +1250,7 @@ export default function ChatPage() {
   // Charger l'historique au montage et à chaque changement d'utilisateur
   useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
-  const chatUsed = quotas?.chat_used || 0
+  const chatUsed = quotas?.[matiereActive]?.chat_used || 0
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
