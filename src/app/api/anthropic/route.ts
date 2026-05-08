@@ -1,7 +1,7 @@
 // src/app/api/anthropic/route.ts — avec vérification quota abonnement
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { ADMIN_EMAIL, getQuotaLimits } from '@/lib/types/monetisation'
+import { ADMIN_EMAIL, getQuotaLimits, extractMatiere, hasMatiereAccess, MatiereType } from '@/lib/types/monetisation'
 
 export const maxDuration = 120
 
@@ -69,60 +69,55 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Connexion requise' }, { status: 401 })
     }
 
+    let shouldIncrementQuota = false
+    let incrementQuotaData: any = null
+
     if (user && user.email !== ADMIN_EMAIL) {
       const quotaType = getQuotaType(body)
 
       if (quotaType) {
-        // Récupérer abonnement actif depuis profiles, puis en fallback depuis subscriptions
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('plan_type, is_active, subscription_end')
-          .eq('id', user.id)
-          .single()
+        // Récupérer abonnements actifs
+        const { data: subscriptions } = await supabase
+          .from('subscriptions')
+          .select('plan_type, ends_at, subscription_end')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .eq('status', 'active')
+          .order('ends_at', { ascending: false })
+          .order('subscription_end', { ascending: false })
+          .limit(10)
 
-        let isActive = profile?.is_active && profile?.subscription_end && new Date(profile.subscription_end) > new Date()
-        let planType = isActive ? profile?.plan_type : null
+        const activePlanTypes = (subscriptions || []).filter((sub: any) => {
+          const endsAt = sub?.ends_at || sub?.subscription_end
+          return endsAt && new Date(endsAt) > new Date()
+        }).map((sub: any) => sub.plan_type)
 
-        if (!isActive) {
-          const { data: subscriptions } = await supabase
-            .from('subscriptions')
-            .select('plan_type, ends_at, subscription_end')
-            .eq('user_id', user.id)
-            .eq('is_active', true)
-            .eq('status', 'active')
-            .order('ends_at', { ascending: false })
-            .order('subscription_end', { ascending: false })
-            .limit(5)
+        const matiere = (body.matiere as MatiereType) || 'mathematiques'
 
-          const activeSubscription = (subscriptions || []).find((sub: any) => {
-            const endsAt = sub?.ends_at || sub?.subscription_end
-            return endsAt && new Date(endsAt) > new Date()
-          })
-
-          if (activeSubscription) {
-            isActive = true
-            planType = activeSubscription.plan_type
-          }
+        if (!hasMatiereAccess(activePlanTypes, matiere)) {
+          return NextResponse.json({ error: 'Accès non autorisé à cette matière' }, { status: 403 })
         }
 
-        const limits   = getQuotaLimits(planType as any, planType?.startsWith('sprint_bac') || false)
+        const relevantPlans = activePlanTypes.filter(pt => extractMatiere(pt) === matiere)
+        const limits = getQuotaLimits(relevantPlans, false) // TODO: check if sprint
         const limitKey = `${quotaType}_per_week` as keyof typeof limits
-        const limit    = limits[limitKey] as number
+        const limit = limits[limitKey] as number
 
         if (limit !== -1) { // -1 = illimité
-          // Récupérer quotas semaine
+          // Récupérer quotas semaine pour cette matière
           const weekStart = getWeekStart()
-          const { data: quotas } = await supabase
+          const { data: quota } = await supabase
             .from('user_quotas')
             .select('*')
             .eq('user_id', user.id)
             .eq('week_start', weekStart)
+            .eq('matiere', matiere)
             .single()
 
           const colMap: Record<string, string> = {
-            chat:'chat_used', solver:'solver_used', simulations:'simulations_used',
+            chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used',
           }
-          const used = (quotas as any)?.[colMap[quotaType]] || 0
+          const used = (quota as any)?.[colMap[quotaType]] || 0
 
           if (used >= limit) {
             return NextResponse.json({
@@ -134,13 +129,14 @@ export async function POST(req: NextRequest) {
             }, { status: 429 })
           }
 
-          // Incrémenter quota
-          const col = colMap[quotaType]
-          await supabase.from('user_quotas').upsert({
+          // Préparer l'incrémentation après succès
+          shouldIncrementQuota = true
+          incrementQuotaData = {
             user_id: user.id,
             week_start: weekStart,
-            [col]: used + 1,
-          }, { onConflict: 'user_id,week_start' })
+            matiere,
+            [colMap[quotaType]]: used + 1,
+          }
         }
       }
     }
@@ -157,7 +153,7 @@ if (!apiKey) {
 }
 
 // Construire le payload pour Anthropic en excluant les champs custom
-const { type, ...anthropicBody } = body
+const { type, matiere, ...anthropicBody } = body
 const response = await fetch('https://api.anthropic.com/v1/messages', {
   method: 'POST',
   headers: {
@@ -176,6 +172,11 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
         { error: data.error?.message || 'Erreur API Anthropic' },
         { status: response.status }
       )
+    }
+
+    // Incrémenter quota après succès
+    if (shouldIncrementQuota && incrementQuotaData) {
+      await supabase.from('user_quotas').upsert(incrementQuotaData, { onConflict: 'user_id,week_start,matiere' })
     }
 
     return NextResponse.json(data)

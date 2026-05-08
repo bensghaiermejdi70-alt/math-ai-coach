@@ -1326,7 +1326,8 @@ export default function ChatPage() {
               }. Priorise les explications dans cette matière.`
             : SYSTEM_PROMPT,
           messages: history,
-          type: 'chat'
+          type: 'chat',
+          matiere: matiereActive
         }),
       })
       const data = await res.json()

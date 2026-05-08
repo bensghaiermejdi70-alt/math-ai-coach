@@ -45,6 +45,10 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { MatiereType } from '@/lib/types/monetisation'
+
+// Track current subject for askClaude calls
+let globalMatiere: MatiereType = 'mathematiques'
 
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Simulation IA (géré par Supabase via AuthContext)
@@ -310,8 +314,9 @@ interface AnalysisResult {
 type Phase = 'select' | 'generating' | 'choose-exam' | 'exam' | 'grading' | 'graded' | 'correcting' | 'correction' | 'analysing' | 'analysis'
 
 // ── API Claude ────────────────────────────────────────────────────
-async function askClaude(prompt: string, system: string, maxTokens = 4000): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType): Promise<string> {
   // Appel via route Next.js pour eviter les erreurs CORS
+  const m = matiere || globalMatiere
   const r = await fetch('/api/anthropic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -320,7 +325,8 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000): Prom
       max_tokens: maxTokens,
       system,
       messages: [{ role:'user', content:prompt }],
-      type: 'simulations'
+      type: 'simulations',
+      matiere: m
     }),
   })
   if (!r.ok) {
@@ -2465,6 +2471,7 @@ function PhaseGenerating({ archives, customText, onDone }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void
 }) {
   const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
+  globalMatiere = matiereActive
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)

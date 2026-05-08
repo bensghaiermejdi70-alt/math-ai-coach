@@ -54,7 +54,7 @@ interface SignUpData {
 interface AuthContextType {
   user: User | null
   profile: Profile | null
-  quotas: UserQuotas | null
+  quotas: Record<MatiereType, UserQuotas> | null
   quotaLimits: PlanQuotas
 
   isAdmin: boolean
@@ -222,21 +222,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select('*')
       .eq('user_id', userId)
       .eq('week_start', weekStart)
-      .single()
 
-    if (error && error.code === 'PGRST116') {
-      const { data: newData } = await supabase
-        .from('user_quotas')
-        .insert({
-          user_id: userId,
-          week_start: weekStart
-        })
-        .select()
-        .single()
-
-      setQuotas(newData)
+    if (error) {
+      console.error('Error loading quotas:', error)
+      setQuotas({})
     } else {
-      setQuotas(data)
+      const quotasMap: Record<MatiereType, UserQuotas> = {}
+      data.forEach(q => {
+        quotasMap[q.matiere] = q
+      })
+      setQuotas(quotasMap)
     }
   }
 
@@ -369,9 +364,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
-  function checkQuota(type: QuotaType): boolean {
+  function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
     if (isAdmin) return true
     if (!quotas || !quotaLimits) return false
+
+    const quota = quotas[matiere]
+    if (!quota) return true // no quota yet, allow
 
     const limitKey: Record<QuotaType, string> = {
       simulations: 'simulations_per_week',
@@ -388,16 +386,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       analyses:    'analyses_used',
     }
     const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
-    const used  = (quotas as any)[usedKey[type]] as number ?? 0
+    const used  = (quota as any)[usedKey[type]] as number ?? 0
     if (limit === -1) return true
     return used < limit
   }
 
-  async function incrementQuota(type: QuotaType) {
+  async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
     if (!user || !quotas) return
 
     await supabase.rpc('increment_quota', {
       p_user_id: user.id,
+      p_matiere: matiere,
       p_type: type
     })
 

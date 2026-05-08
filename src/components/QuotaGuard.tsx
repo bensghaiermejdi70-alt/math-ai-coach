@@ -3,16 +3,18 @@
 
 import Link from 'next/link'
 import { useAuth, QuotaType } from '@/lib/auth/AuthContext'
+import { MatiereType } from '@/lib/types/monetisation'
 
 const LABELS: Record<QuotaType, string> = {
   simulations:'Simulation Bac', chat:'Chat IA', solver:'Solveur',
   remediation:'Remédiation IA', analyses:'Analyse performance',
 }
 
-export default function QuotaGuard({ type, children, fallback }: {
-  type: QuotaType; children: React.ReactNode; fallback?: React.ReactNode
+export default function QuotaGuard({ type, children, fallback, matiere }: {
+  type: QuotaType; children: React.ReactNode; fallback?: React.ReactNode; matiere?: MatiereType
 }) {
-  const { user, hasActiveSubscription, checkQuota, quotas, quotaLimits, isAdmin } = useAuth()
+  const { user, hasActiveSubscription, checkQuota, quotas, quotaLimits, isAdmin, matiereActive } = useAuth()
+  const matiereToCheck = matiere || matiereActive
 
   if (isAdmin) return <>{children}</>
 
@@ -27,10 +29,11 @@ export default function QuotaGuard({ type, children, fallback }: {
     </div>
   )
 
-  if (!checkQuota(type)) {
+  if (!checkQuota(type, matiereToCheck)) {
     const limit = quotaLimits[`${type}_per_week` as keyof typeof quotaLimits] as number
     const colMap: Record<QuotaType,string> = { simulations:'simulations_used', chat:'chat_used', solver:'solver_used', remediation:'remediation_used', analyses:'analyses_used' }
-    const used  = (quotas as any)?.[colMap[type]] || 0
+    const quotaData = quotas && quotas[matiereToCheck]
+    const used  = quotaData ? (quotaData as any)?.[colMap[type]] || 0 : 0
 
     return fallback || (
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'40px 20px', textAlign:'center', background:'var(--surface)', border:'1px solid var(--border)', borderRadius:20 }}>
@@ -42,7 +45,7 @@ export default function QuotaGuard({ type, children, fallback }: {
           <>
             <h3 style={{ fontFamily:'var(--font-display)', fontSize:18, marginBottom:8 }}>Quota hebdomadaire atteint</h3>
             <p style={{ fontSize:13, color:'var(--muted)', maxWidth:320, marginBottom:16 }}>
-              Vous avez utilisé <strong style={{ color:'var(--text)' }}>{used}/{limit}</strong> {LABELS[type].toLowerCase()} cette semaine.
+              Vous avez utilisé <strong style={{ color:'var(--text)' }}>{used}/{limit}</strong> {LABELS[type].toLowerCase()} cette semaine en {matiereToCheck}.
             </p>
             <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 20px', fontSize:13, color:'var(--text2)', marginBottom:16 }}>
               🔄 Renouvellement <strong style={{ color:'var(--text)' }}>lundi prochain</strong>

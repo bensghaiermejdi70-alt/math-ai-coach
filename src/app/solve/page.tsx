@@ -25,7 +25,8 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000): Prom
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: prompt }],
-      type: 'solver'
+      type: 'solver',
+      matiere: 'mathematiques'
     }),
   })
   if (!r.ok) {
@@ -54,7 +55,8 @@ async function askClaudeWithImage(
           { type: 'text', text: prompt },
         ],
       }],
-      type: 'solver'
+      type: 'solver',
+      matiere: 'mathematiques'
     }),
   })
   if (!r.ok) throw new Error(`HTTP ${r.status}`)

@@ -86,6 +86,7 @@ export interface UserQuotas {
   id: string
   user_id: string
   week_start: string
+  matiere: MatiereType
   simulations_used: number
   chat_used: number
   solver_used: number
