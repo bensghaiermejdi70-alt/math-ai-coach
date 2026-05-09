@@ -35,6 +35,7 @@ import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 let globalMatiere: string = 'mathematiques'
 
