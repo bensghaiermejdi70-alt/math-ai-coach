@@ -22,7 +22,8 @@ import {
   extractPlan,
   extractMatiere,
   hasMatiereAccess,
-  PlanQuotas
+  PlanQuotas,
+  sumQuotasAcrossMatiere,
 } from '@/lib/types/monetisation'
 
 // Emails avec sessions multiples illimitées (pas de restriction appareil)
@@ -178,7 +179,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (isAdmin) return true
     if (!quotas) return true
 
-    const limit = getSubjectQuotaLimit(type, matiere)
+    const limitKey: Record<QuotaType, string> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    const limit = (quotaLimits as any)[limitKey[type]] as number
+
+    const totalQuotas = sumQuotasAcrossMatiere(quotas)
     const usedKey: Record<QuotaType, string> = {
       simulations: 'simulations_used',
       chat:        'chat_used',
@@ -186,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       remediation: 'remediation_used',
       analyses:    'analyses_used',
     }
-    const used = (quotas[matiere] as any)?.[usedKey[type]] as number ?? 0
+    const used = (totalQuotas as any)[usedKey[type]] as number ?? 0
     if (limit === -1) return true
     return used < limit
   }
