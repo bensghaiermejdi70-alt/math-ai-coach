@@ -45,7 +45,7 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { MatiereType } from '@/lib/types/monetisation'
+import { MatiereType, sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: MatiereType = 'mathematiques'
@@ -2470,7 +2470,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
 function PhaseGenerating({ archives, customText, onDone }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void
 }) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
+  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   globalMatiere = matiereActive
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
@@ -2480,7 +2480,8 @@ function PhaseGenerating({ archives, customText, onDone }: {
   const started = useRef(false)
 
   // Quota depuis Supabase
-  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  const simUsed      = totalQuota.simulations_used || 0
   const simLimit     = quotaLimits.simulations_per_week  // -1 = illimité
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
@@ -4539,7 +4540,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 }
 
 function SimulationIAPageInner() {
-  const { hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin } = useAuth()
+  const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
@@ -4672,35 +4673,20 @@ function SimulationIAPageInner() {
                 { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
                 { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
               ]).map(m => {
-                // Lock si abonné à une autre matière (non-admin)
-                const lk = !isAdmin && hasActiveSubscription && m.matiere !== 'mathematiques' && !checkMatiereAccess(m.matiere as any)
-                // Pas abonné du tout → accès libre aux onglets (mais simulation bloquée par quota)
                 return (
                 <div key={m.key} style={{position:'relative'}}>
                   <button
                     onClick={() => {
-                      if (lk) {
-                        window.location.href = `/abonnement?matiere=${m.matiere}`
-                      } else {
-                        setActiveMatiere(m.key); setChapitresMode(false); setSelectedChapitres([])
-                      }
+                      setActiveMatiere(m.key); setChapitresMode(false); setSelectedChapitres([])
                     }}
-                    title={lk ? `Abonnez-vous à ${m.label} pour accéder` : m.label}
+                    title={m.label}
                     style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',
                       cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
-                      background:lk ? 'rgba(255,255,255,0.04)' : activeMatiere===m.key?m.color:'transparent',
-                      color:lk ? 'rgba(255,255,255,0.3)' : activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
+                      background: activeMatiere===m.key?m.color:'transparent',
+                      color: activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
                       boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
-                    <span style={{fontSize:18,filter:lk?'grayscale(1)':'none'}}>{m.icon}</span>
+                    <span style={{fontSize:18}}>{m.icon}</span>
                     <span>{m.label}</span>
-                    {lk && (
-                      <span style={{display:'inline-flex',alignItems:'center',gap:4,
-                        fontSize:10,fontWeight:700,color:'#fbbf24',
-                        background:'rgba(251,191,36,0.1)',border:'1px solid rgba(251,191,36,0.25)',
-                        borderRadius:20,padding:'2px 8px'}}>
-                        🔒 S'abonner
-                      </span>
-                    )}
                   </button>
                 </div>
                 )

@@ -45,6 +45,7 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: string = 'mathematiques'
@@ -2488,7 +2489,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
 function PhaseGenerating({ archives, customText, onDone }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void
 }) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
+  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
@@ -2497,7 +2498,8 @@ function PhaseGenerating({ archives, customText, onDone }: {
   const started = useRef(false)
 
   // Quota depuis Supabase
-  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  const simUsed      = totalQuota.simulations_used || 0
   const simLimit     = quotaLimits.simulations_per_week  // -1 = illimité
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
@@ -4439,7 +4441,8 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
   const [error, setError] = useState('')
   const started = useRef(false)
 
-  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  const simUsed      = totalQuota.simulations_used || 0
   const simLimit     = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const limitReached = !isUnlimited && simUsed >= simLimit
@@ -4556,7 +4559,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 }
 
 function SimulationFrancePageInner() {
-  const { hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin } = useAuth()
+  const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
   globalMatiere = matiereActive
 
   // ── Matière : maths ou physique ──────────────────────────────────
@@ -4690,7 +4693,7 @@ function SimulationFrancePageInner() {
                 { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
                 { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
               ]).map(m => {
-                const locked = !isAdmin && hasActiveSubscription && m.matiere !== 'mathematiques' && !checkMatiereAccess(m.matiere as any)
+                const locked = false
                 return (
                 <button key={m.key} onClick={() => { if(!locked) setActiveMatiere(m.key) }}
                   style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',

@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Solveur IA (géré par Supabase via AuthContext)
@@ -1233,7 +1234,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, checkMatiereAccess, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive} = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1294,7 +1295,8 @@ function SolvePageInner() {
   const solutionRef = useRef<HTMLDivElement>(null)
 
   // Quota depuis AuthContext (Supabase)
-  const solverUsed      = quotas?.['mathematiques']?.solver_used || 0
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  const solverUsed      = totalQuota.solver_used || 0
   const solverLimit     = quotaLimits.solver_per_week // -1 = illimité (Sprint Bac)
   const isQuotaFull     = !isAdmin && !checkQuota('solver')
   const quotaRemaining  = isAdmin || solverLimit === -1
@@ -1329,31 +1331,6 @@ function SolvePageInner() {
     const VALID_SUBJECTS = ['physique','informatique','svt','anglais','litterature']
     const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature' =
       VALID_SUBJECTS.includes(urlSubj) ? urlSubj as any : 'maths'
-
-    // ─── Vérifier accès matière si abonné ────────────────────────────
-    if (!isAdmin && hasActiveSubscription && activeSubj !== 'maths') {
-      const matiereMap: Record<string, string> = {
-        physique:'physique', informatique:'informatique',
-        svt:'svt', anglais:'anglais', litterature:'anglais'
-      }
-      const needed = matiereMap[activeSubj]
-      if (needed && !checkMatiereAccess(needed as any)) {
-        const labels: Record<string,string> = {
-          physique:'⚗️ Physique-Chimie', informatique:'💻 Informatique',
-          svt:'🧬 SVT', anglais:'🇬🇧 Anglais'
-        }
-        setError(`🔒 Accès limité — Vous êtes abonné à **${
-          matiereActive==='physique'?'⚗️ Physique-Chimie':
-          matiereActive==='svt'?'🧬 SVT':
-          matiereActive==='anglais'?'🇬🇧 Anglais':
-          matiereActive==='informatique'?'💻 Informatique':'🧮 Mathématiques'
-        }**.
-
-Pour accéder au solveur **${labels[needed]}**, abonnez-vous à cette matière sur [mathsbac.com/abonnement](/abonnement?matiere=${needed}).`)
-        setPhase('input')
-        return
-      }
-    }
 
     // ─── Infixe commun aux 3 system prompts ─────────────────────────────────
     const COMMON_FORMAT = `
@@ -2013,43 +1990,6 @@ Structure OBLIGATOIRE :
     svt:'svt', anglais:'anglais', litterature:'anglais', maths:'mathematiques'
   }
   const currentMatiere = SUBJECT_TO_MATIERE[subject] || 'mathematiques'
-  const isSolverLocked = hasActiveSubscription && !isAdmin
-    && !checkMatiereAccess(currentMatiere as any)
-    && subject !== 'maths' && subject !== 'litterature'
-
-  if (isSolverLocked) {
-    const info = ({
-      physique: { label:'Physique-Chimie', color:'#06d6a0', icon:'⚗️' },
-      svt: { label:'SVT', color:'#10b981', icon:'🧬' },
-      anglais: { label:'Anglais', color:'#f59e0b', icon:'🇬🇧' },
-      informatique: { label:'Informatique', color:'#8b5cf6', icon:'💻' },
-    } as Record<string,{label:string;color:string;icon:string}>)[subject]
-    return (
-      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <Navbar/>
-        <div style={{textAlign:'center',maxWidth:360,padding:32}}>
-          <div style={{fontSize:48,marginBottom:16}}>🔒</div>
-          <div style={{fontSize:20,fontWeight:800,color:'white',marginBottom:8}}>
-            {info?.icon} Solveur {info?.label}
-          </div>
-          <div style={{fontSize:14,color:'rgba(255,255,255,0.5)',lineHeight:1.7,marginBottom:24}}>
-            Tu as accès au solveur de ta matière abonnée uniquement.<br/>
-            Tes cours et examens restent accessibles gratuitement.
-          </div>
-          <a href={`/abonnement?matiere=${currentMatiere}`}
-            style={{display:'inline-flex',alignItems:'center',gap:8,
-              background:`linear-gradient(135deg,${info?.color||'#4f6ef7'},${info?.color||'#4f6ef7'}cc)`,
-              color:'white',padding:'12px 28px',borderRadius:12,
-              fontWeight:700,fontSize:14,textDecoration:'none',marginRight:12}}>
-            S'abonner {info?.icon} →
-          </a>
-          <a href="/solve" style={{fontSize:13,color:'rgba(255,255,255,0.4)',textDecoration:'none',display:'block',marginTop:16}}>
-            ← Retour solveur maths
-          </a>
-        </div>
-      </div>
-    )
-  }
 
 
   return (
@@ -2077,12 +2017,6 @@ Structure OBLIGATOIRE :
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 14, margin: 0 }}>
                 {subject==='physique'?'Physique-Chimie · Bac Tunisie/France · Correction IA + graphiques':subject==='informatique'?'Algo · SQL · Réseaux · Pascal · Python · Correction IA':subject==='svt'?'Génétique · Immunologie · Physiologie · Géologie · Correction IA':subject==='anglais'?'Grammar · Writing · Essay · Literature · Full English correction':subject==='litterature'?'Commentaire · Dissertation · Contraction · Auteurs · Correction IA':'Résous · Vérifie ta solution · Graphiques · PDF imprimable'}
-              {hasActiveSubscription && !isAdmin && subject !== 'maths' && !checkMatiereAccess(subject==='litterature'?'anglais':subject as any) && (
-                <div style={{marginTop:8,padding:'6px 14px',borderRadius:8,background:'rgba(251,191,36,0.1)',border:'1px solid rgba(251,191,36,0.25)',color:'#fbbf24',fontSize:12,fontWeight:700}}>
-                  🔒 Matière non incluse dans votre abonnement ·{' '}
-                  <a href={`/abonnement?matiere=${subject==='litterature'?'anglais':subject}`} style={{color:'#fbbf24',textDecoration:'underline'}}>S'abonner</a>
-                </div>
-              )}
               </p>
             </div>
             <button

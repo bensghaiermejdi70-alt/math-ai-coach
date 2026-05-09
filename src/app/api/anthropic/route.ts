@@ -1,7 +1,7 @@
 // src/app/api/anthropic/route.ts — avec vérification quota abonnement
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { ADMIN_EMAIL, getQuotaLimits, extractMatiere, hasMatiereAccess, MatiereType } from '@/lib/types/monetisation'
+import { ADMIN_EMAIL, getQuotaLimits, extractMatiere, MatiereType } from '@/lib/types/monetisation'
 
 export const maxDuration = 120
 
@@ -93,31 +93,26 @@ export async function POST(req: NextRequest) {
         }).map((sub: any) => sub.plan_type)
 
         const matiere = (body.matiere as MatiereType) || 'mathematiques'
-
-        if (!hasMatiereAccess(activePlanTypes, matiere)) {
-          return NextResponse.json({ error: 'Accès non autorisé à cette matière' }, { status: 403 })
-        }
-
-        const relevantPlans = activePlanTypes.filter(pt => extractMatiere(pt) === matiere)
-        const limits = getQuotaLimits(relevantPlans, false) // TODO: check if sprint
+        const relevantPlans = activePlanTypes
+        const limits = getQuotaLimits(relevantPlans, false)
         const limitKey = `${quotaType}_per_week` as keyof typeof limits
         const limit = limits[limitKey] as number
 
-        if (limit !== -1) { // -1 = illimité
-          // Récupérer quotas semaine pour cette matière
+        if (limit !== -1) {
           const weekStart = getWeekStart()
-          const { data: quota } = await supabase
+          const { data: quotas } = await supabase
             .from('user_quotas')
             .select('*')
             .eq('user_id', user.id)
             .eq('week_start', weekStart)
-            .eq('matiere', matiere)
-            .single()
 
           const colMap: Record<string, string> = {
             chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used',
           }
-          const used = (quota as any)?.[colMap[quotaType]] || 0
+          const used = (Array.isArray(quotas) ? quotas : []).reduce(
+            (sum, row) => sum + (((row as any)?.[colMap[quotaType]] as number) || 0),
+            0
+          )
 
           if (used >= limit) {
             return NextResponse.json({

@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'   
 import Navbar from '@/components/layout/Navbar'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // ── Charge KaTeX une seule fois globalement ───────────────────────
 function useKaTeX() {
@@ -1231,7 +1232,7 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 }
 
 export default function ChatPage() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, checkMatiereAccess, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1250,7 +1251,8 @@ export default function ChatPage() {
   // Charger l'historique au montage et à chaque changement d'utilisateur
   useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
-  const chatUsed = quotas?.[matiereActive]?.chat_used || 0
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  const chatUsed = totalQuota.chat_used || 0
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
@@ -1284,21 +1286,6 @@ export default function ChatPage() {
       return
     }
 
-    // Vérifier accès matière si abonné
-    if (!isAdmin && hasActiveSubscription) {
-      const msgMatiere = getMatiereFromMessage(content)
-      if (msgMatiere && !checkMatiereAccess(msgMatiere as any)) {
-        const labels: Record<string,string> = { physique:'⚗️ Physique-Chimie', svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Informatique' }
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `🔒 **Accès limité à votre abonnement**\n\nVous êtes abonné à **${labels[matiereActive] || '🧮 Mathématiques'}**. Pour poser des questions en **${labels[msgMatiere]}**, abonnez-vous à cette matière.\n\n[👉 S'abonner à ${labels[msgMatiere]}](/abonnement?matiere=${msgMatiere})`,
-          id: nextMsgId
-        }])
-        setNextMsgId(p => p + 1)
-        setInput('')
-        return
-      }
-    }
 
     const userMsg: Msg = { role: 'user', content, id: nextMsgId }
     setNextMsgId(p => p + 1)
