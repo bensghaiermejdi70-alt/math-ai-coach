@@ -1252,7 +1252,8 @@ export default function ChatPage() {
   useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  const chatUsed = totalQuota.chat_used || 0
+  // Quota cumulé : somme de tous les abonnements actifs (multi-matières)
+  const chatUsed  = totalQuota.chat_used || 0
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
@@ -1282,7 +1283,7 @@ export default function ChatPage() {
     if (!content || loading) return
 
     if (!isAdmin && !checkQuota('chat')) {
-      alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement`)
+      alert(`Quota atteint — ${chatUsed}/${chatLimit} messages cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an\n\n💡 Multi-abonnements : quotas cumulés\n→ mathsbac.com/abonnement`)
       return
     }
 

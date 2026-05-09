@@ -95,6 +95,7 @@ interface AuthContextType {
 
   refreshSubscription: () => Promise<void>
   checkQuota: (type: QuotaType, matiere?: MatiereType) => boolean
+  getQuotaUsage: (type: QuotaType) => { used: number; limit: number }
   incrementQuota: (type: QuotaType, matiere?: MatiereType) => Promise<void>
 }
 
@@ -121,20 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasActiveSubscription =
     isAdmin ||
+    activePlanTypes.length > 0 ||  // ← multi-abonnements actifs depuis subscriptions
     (profile?.is_active === true &&
       subscriptionEnd !== null &&
       subscriptionEnd.getTime() > Date.now())
 
-  // Debug log
-  if (profile) {
-    console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, {
-      isAdmin,
-      is_active: profile?.is_active,
-      subscriptionEnd: subscriptionEnd?.toISOString(),
-      now: new Date().toISOString(),
-      plan_type: profile?.plan_type,
-    })
-  }
+  // Debug (désactivé en prod)
+  // if (profile) console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, activePlanTypes)
 
   const activeMatieres = normalizeActiveMatieres(activePlanTypes)
 
@@ -186,8 +180,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       remediation: 'remediation_per_week',
       analyses:    'analyses_per_week',
     }
+    // Quota cumulé = somme de tous les abonnements actifs
     const limit = (quotaLimits as any)[limitKey[type]] as number
 
+    // Usage cumulé = somme de toutes les matières
     const totalQuotas = sumQuotasAcrossMatiere(quotas)
     const usedKey: Record<QuotaType, string> = {
       simulations: 'simulations_used',
@@ -199,6 +195,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const used = (totalQuotas as any)[usedKey[type]] as number ?? 0
     if (limit === -1) return true
     return used < limit
+  }
+
+  // Helper pour afficher le quota total dans les messages d'alerte
+  function getQuotaUsage(type: QuotaType): { used: number; limit: number } {
+    const limitKey: Record<QuotaType, string> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
+    const totalQuotas = sumQuotasAcrossMatiere(quotas)
+    const usedKey: Record<QuotaType, string> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
+    const used = (totalQuotas as any)[usedKey[type]] as number ?? 0
+    return { used, limit }
   }
 
   const daysRemaining =
@@ -263,8 +281,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .limit(20)
 
     const activeSubscriptions = (subscriptions || []).filter((sub: any) => {
+      // Accepter si date future OU si is_active=true sans date (abonnement permanent/admin)
       const endsAt = sub?.ends_at || sub?.subscription_end
-      return endsAt && new Date(endsAt) > new Date()
+      if (endsAt) return new Date(endsAt) > new Date()
+      return sub?.is_active === true  // fallback: is_active sans date
     })
 
     const activePlanTypesList = Array.from(new Set<string>(
@@ -594,6 +614,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         refreshSubscription,
         checkQuota,
+        getQuotaUsage,
         incrementQuota
       }}
     >

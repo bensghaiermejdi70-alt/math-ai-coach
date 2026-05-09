@@ -1296,8 +1296,9 @@ function SolvePageInner() {
 
   // Quota depuis AuthContext (Supabase)
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  const solverUsed      = totalQuota.solver_used || 0
-  const solverLimit     = quotaLimits.solver_per_week // -1 = illimité (Sprint Bac)
+  // Quota cumulé tous abonnements
+  const solverUsed  = totalQuota.solver_used || 0
+  const solverLimit = quotaLimits.solver_per_week
   const isQuotaFull     = !isAdmin && !checkQuota('solver')
   const quotaRemaining  = isAdmin || solverLimit === -1
     ? 999
@@ -1318,7 +1319,7 @@ function SolvePageInner() {
 
     // Vérifier quota via AuthContext (Supabase)
     if (!isAdmin && !checkQuota('solver')) {
-      alert(`Quota atteint — ${solverLimit} résolutions/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
+      alert(`Quota atteint — ${solverUsed}/${solverLimit} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
       return
     }
 

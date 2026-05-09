@@ -2481,8 +2481,9 @@ function PhaseGenerating({ archives, customText, onDone }: {
 
   // Quota depuis Supabase
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  const simUsed      = totalQuota.simulations_used || 0
-  const simLimit     = quotaLimits.simulations_per_week  // -1 = illimité
+  // Quota cumulé tous abonnements
+  const simUsed  = totalQuota.simulations_used || 0
+  const simLimit = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
   const limitReached = !isUnlimited && simUsed >= simLimit
@@ -4423,8 +4424,9 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
   const [error, setError] = useState('')
   const started = useRef(false)
 
-  const simUsed      = quotas?.[matiereActive]?.simulations_used || 0
-  const simLimit     = quotaLimits.simulations_per_week
+  // Quota cumulé tous abonnements
+  const simUsed  = quotas ? sumQuotasAcrossMatiere(quotas)?.simulations_used || 0 : 0
+  const simLimit = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const limitReached = !isUnlimited && simUsed >= simLimit
 
