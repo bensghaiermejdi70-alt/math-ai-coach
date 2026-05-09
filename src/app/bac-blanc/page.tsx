@@ -3051,8 +3051,29 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits } = useAuth()
   globalMatiere = matiereActive
+
+  // ── Logique Bac Blanc : 1 examen par matière par jour ──────────────────
+  // Avec N abonnements actifs → N matières disponibles par jour
+  // checkQuota hebdo gardé comme filet de sécurité anti-abus
+  const totalQuota    = sumQuotasAcrossMatiere(quotas)
+  const simUsed       = totalQuota.simulations_used || 0
+  const simLimit      = quotaLimits.simulations_per_week
+  const nbMatieres    = activeMatieres.length || 1   // nb d'abonnements actifs
+
+  // Vérifier si l'élève a déjà passé un examen pour une matière aujourd'hui
+  const todayStr = new Date().toISOString().split('T')[0]
+  function hasPassedTodayForMatiere(matiere: string): boolean {
+    if (typeof window === 'undefined') return false
+    const key = `bb_today_${matiere}_${todayStr}`
+    return localStorage.getItem(key) === '1'
+  }
+  function markPassedTodayForMatiere(matiere: string) {
+    if (typeof window === 'undefined') return
+    const key = `bb_today_${matiere}_${todayStr}`
+    localStorage.setItem(key, '1')
+  }
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
@@ -3073,8 +3094,9 @@ function BacBlancInner() {
 
   const handleInscription = useCallback(async (c: Candidat) => {
     // Vérifier quota simulation via Supabase (admin = illimité)
-    if (!isAdmin && !checkQuota('simulations')) {
-      alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
     // Sauvegarder le candidat et montrer le choix de matière
@@ -3088,14 +3110,21 @@ function BacBlancInner() {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Mathématiques pour accéder au Bac Blanc Maths.\n→ mathsbac.com/abonnement?matiere=mathematiques')
       return
     }
-    if (!isAdmin && !checkQuota('simulations')) {
-      alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
+    // Vérifier 1 examen par matière par jour
+    if (!isAdmin && hasPassedTodayForMatiere('mathematiques')) {
+      alert('✅ Vous avez déjà passé votre examen Mathématiques aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Physique-Chimie, vous pouvez passer cet examen.')
+      return
+    }
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
     setPhase('generating')
     try {
       const e = await generateBacBlanc(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
     } catch {
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
@@ -3109,14 +3138,21 @@ function BacBlancInner() {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Physique-Chimie pour accéder au Bac Blanc Physique.\n→ mathsbac.com/abonnement?matiere=physique')
       return
     }
-    if (!isAdmin && !checkQuota('simulations')) {
-      alert('Quota atteint — Bac Blanc disponible en mai-juin.\n\n📚 MathBac Mensuel : 60 DT/mois · 2 sim/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 5 sim/sem · Bac Blanc inclus\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement')
+    // Vérifier 1 examen par matière par jour
+    if (!isAdmin && hasPassedTodayForMatiere('physique')) {
+      alert('✅ Vous avez déjà passé votre examen Physique-Chimie aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Mathématiques, vous pouvez passer cet examen.')
+      return
+    }
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
     setPhase('generating')
     try {
       const e = await generateBacBlancPhysique(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
     } catch {
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
