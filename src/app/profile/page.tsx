@@ -9,8 +9,11 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
 export default function ProfilePage() {
-  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut, refreshSubscription } = useAuth()
+  const { user, profile, quotas, quotaLimits, activePlanTypes, hasActiveSubscription, daysRemaining, isAdmin, signOut, refreshSubscription } = useAuth()
   const totalQuotas = sumQuotasAcrossMatiere(quotas)
+  const planDescriptions = activePlanTypes.length > 0
+    ? activePlanTypes.map(pt => pt.replace('_', ' ')).join(', ')
+    : profile?.plan_type?.replace('_', ' ') || ''
 
   // ── Portail Stripe (désabonnement France) ──
   const [portalLoading, setPortalLoading] = useState(false)
@@ -125,7 +128,7 @@ export default function ProfilePage() {
 
                     <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
                       {[
-                        ['Plan', profile.plan_type?.replace('_', ' ') || ''],
+                        ['Plan', planDescriptions],
                         ['Expire le', profile.subscription_end ? new Date(profile.subscription_end).toLocaleDateString('fr-TN', { day:'numeric', month:'long', year:'numeric' }) : ''],
                       ].map(([k, v]) => (
                         <div key={k} style={{ display:'flex', justifyContent:'space-between', fontSize:13, padding:'7px 0', borderBottom:'1px solid var(--border)' }}>

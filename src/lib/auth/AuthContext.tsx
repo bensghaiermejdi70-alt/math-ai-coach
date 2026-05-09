@@ -19,6 +19,7 @@ import {
   MatiereType,
   ADMIN_EMAIL,
   getQuotaLimits,
+  extractPlan,
   extractMatiere,
   hasMatiereAccess,
   PlanQuotas
@@ -34,6 +35,22 @@ const MULTI_SESSION_EMAILS = [
 function isMultiSessionUser(email: string | undefined): boolean {
   if (!email) return false
   return MULTI_SESSION_EMAILS.includes(email.toLowerCase())
+}
+
+function getPlanPriority(planType: string | null | undefined): number {
+  const basePlan = extractPlan(planType)
+  if (basePlan === 'sprint_bac') return 3
+  if (basePlan === 'annuel') return 2
+  return 1
+}
+
+function chooseRepresentativePlanType(planTypes: string[]): string | null {
+  if (planTypes.length === 0) return null
+  return planTypes.slice().sort((a, b) => getPlanPriority(b) - getPlanPriority(a))[0]
+}
+
+function normalizeActiveMatieres(planTypes: string[]): MatiereType[] {
+  return Array.from(new Set(planTypes.map(extractMatiere)))
 }
 
 export type QuotaType =
@@ -65,6 +82,9 @@ interface AuthContextType {
   daysRemaining: number | null
   matiereActive: MatiereType   // matière de l'abonnement actif
   checkMatiereAccess: (matiere: MatiereType) => boolean
+  getSubjectQuotaLimit: (type: QuotaType, matiere?: MatiereType) => number
+  activePlanTypes: string[]
+  activeMatieres: MatiereType[]
 
   signIn: (email: string, password: string) => Promise<{ error: string | null; user: User | null }>
   signUp: (data: SignUpData) => Promise<{ error: string | null }>
@@ -85,6 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [quotas, setQuotas] = useState<Record<MatiereType, UserQuotas> | null>(null)
+  const [activePlanTypes, setActivePlanTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
   // REF pour tracker le changement d'utilisateur
@@ -114,25 +135,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const isSprint: boolean =
-    ((profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_'))
-    && hasActiveSubscription) === true
+  const activeMatieres = normalizeActiveMatieres(activePlanTypes)
 
-  // Matière de l'abonnement actif
+  const isSprint: boolean = hasActiveSubscription && !!(
+    activePlanTypes.some(pt => extractPlan(pt) === 'sprint_bac') ||
+    profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_')
+  )
+
+  // Matière de l'abonnement actif (représentative)
   const matiereActive: MatiereType = hasActiveSubscription
-    ? extractMatiere(profile?.plan_type)
+    ? activeMatieres[0] ?? extractMatiere(profile?.plan_type)
     : 'mathematiques'
 
   // Vérifier si l'utilisateur a accès à une matière donnée
   function checkMatiereAccess(matiere: MatiereType): boolean {
     if (isAdmin) return true
     if (!hasActiveSubscription) return false
-    return hasMatiereAccess(profile?.plan_type, matiere)
+    return hasMatiereAccess(activePlanTypes.length > 0 ? activePlanTypes : profile?.plan_type, matiere)
   }
 
   const quotaLimits = hasActiveSubscription
-    ? getQuotaLimits(profile?.plan_type ?? null, isSprint)
+    ? getQuotaLimits(activePlanTypes.length > 0 ? activePlanTypes : profile?.plan_type ?? null, isSprint)
     : getQuotaLimits(null)
+
+  function getSubjectQuotaLimit(type: QuotaType, matiere: MatiereType = matiereActive): number {
+    const relevantPlans = activePlanTypes.length > 0
+      ? activePlanTypes.filter(pt => extractMatiere(pt) === matiere)
+      : profile?.plan_type ? [profile.plan_type] : []
+
+    const limits = getQuotaLimits(relevantPlans.length > 0 ? relevantPlans : null, isSprint)
+    const limitKey: Record<QuotaType, string> = {
+      simulations: 'simulations_per_week',
+      chat:        'chat_per_week',
+      solver:      'solver_per_week',
+      remediation: 'remediation_per_week',
+      analyses:    'analyses_per_week',
+    }
+    return (limits as any)[limitKey[type]] as number ?? 0
+  }
+
+  function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
+    if (isAdmin) return true
+    if (!quotas) return true
+
+    const limit = getSubjectQuotaLimit(type, matiere)
+    const usedKey: Record<QuotaType, string> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
+    const used = (quotas[matiere] as any)?.[usedKey[type]] as number ?? 0
+    if (limit === -1) return true
+    return used < limit
+  }
 
   const daysRemaining =
     hasActiveSubscription && subscriptionEnd
@@ -185,33 +242,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     let finalProfile = data
-    if (!data?.is_active || !data?.subscription_end || new Date(data.subscription_end) <= new Date()) {
-      const { data: subscriptions } = await supabase
-        .from('subscriptions')
-        .select('plan_type, ends_at, subscription_end')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .eq('status', 'active')
-        .order('ends_at', { ascending: false })
-        .order('subscription_end', { ascending: false })
-        .limit(5)
+    const { data: subscriptions } = await supabase
+      .from('subscriptions')
+      .select('plan_type, ends_at, subscription_end')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .eq('status', 'active')
+      .order('ends_at', { ascending: false })
+      .order('subscription_end', { ascending: false })
+      .limit(20)
 
-      const activeSubscription = (subscriptions || []).find((sub: any) => {
+    const activeSubscriptions = (subscriptions || []).filter((sub: any) => {
+      const endsAt = sub?.ends_at || sub?.subscription_end
+      return endsAt && new Date(endsAt) > new Date()
+    })
+
+    const activePlanTypesList = Array.from(new Set<string>(
+      activeSubscriptions
+        .map((sub: any) => sub?.plan_type)
+        .filter((planType: unknown): planType is string => typeof planType === 'string' && planType.length > 0)
+    ))
+
+    if (activePlanTypesList.length > 0) {
+      const representativePlanType = chooseRepresentativePlanType(activePlanTypesList)
+      const latestEnd = activeSubscriptions.reduce((best: Date | null, sub: any) => {
         const endsAt = sub?.ends_at || sub?.subscription_end
-        return endsAt && new Date(endsAt) > new Date()
-      })
+        const endDate = endsAt ? new Date(endsAt) : null
+        if (!endDate) return best
+        if (!best || endDate > best) return endDate
+        return best
+      }, null)
 
-      if (activeSubscription) {
-        finalProfile = {
-          ...data,
-          is_active: true,
-          plan_type: activeSubscription.plan_type || data.plan_type,
-          subscription_end: activeSubscription.subscription_end || activeSubscription.ends_at || data.subscription_end,
-        }
+      finalProfile = {
+        ...data,
+        is_active: true,
+        plan_type: representativePlanType || data.plan_type,
+        subscription_end: latestEnd ? latestEnd.toISOString() : data.subscription_end,
       }
+    } else if (!data?.is_active || !data?.subscription_end || new Date(data.subscription_end) <= new Date()) {
+      // Si aucun abonnement actif n'est trouvé, on garde le profil tel quel
+      finalProfile = data
     }
 
     setProfile(finalProfile)
+    setActivePlanTypes(activePlanTypesList)
   }
 
   async function loadQuotas(userId: string) {
@@ -369,33 +443,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
-  function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
-    if (isAdmin) return true
-    if (!quotas || !quotaLimits) return false
-
-    const quota = quotas[matiere]
-    if (!quota) return true // no quota yet, allow
-
-    const limitKey: Record<QuotaType, string> = {
-      simulations: 'simulations_per_week',
-      chat:        'chat_per_week',
-      solver:      'solver_per_week',
-      remediation: 'remediation_per_week',
-      analyses:    'analyses_per_week',
-    }
-    const usedKey: Record<QuotaType, string> = {
-      simulations: 'simulations_used',
-      chat:        'chat_used',
-      solver:      'solver_used',
-      remediation: 'remediation_used',
-      analyses:    'analyses_used',
-    }
-    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
-    const used  = (quota as any)[usedKey[type]] as number ?? 0
-    if (limit === -1) return true
-    return used < limit
-  }
-
   async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
     if (!user || !quotas) return
 
@@ -516,6 +563,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         quotas,
         quotaLimits,
+        activePlanTypes,
+        activeMatieres,
 
         isAdmin,
         isLoading,
@@ -525,6 +574,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         daysRemaining,
         matiereActive,
         checkMatiereAccess,
+        getSubjectQuotaLimit,
 
         signIn,
         signUp,

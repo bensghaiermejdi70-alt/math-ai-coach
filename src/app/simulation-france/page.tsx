@@ -46,6 +46,9 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
 
+// Track current subject for askClaude calls
+let globalMatiere: string = 'mathematiques'
+
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Simulation IA (géré par Supabase via AuthContext)
 // Standard   : 5 simulations/semaine
@@ -159,7 +162,7 @@ interface AnalysisResult {
 type Phase = 'select' | 'generating' | 'choose-exam' | 'exam' | 'grading' | 'graded' | 'correcting' | 'correction' | 'analysing' | 'analysis'
 
 // ── API Claude ────────────────────────────────────────────────────
-async function askClaude(prompt: string, system: string, maxTokens = 4000): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string): Promise<string> {
   // Appel via route Next.js pour eviter les erreurs CORS
   const r = await fetch('/api/anthropic', {
     method: 'POST',
@@ -169,7 +172,8 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000): Prom
       max_tokens: maxTokens,
       system,
       messages: [{ role:'user', content:prompt }],
-      type: 'simulations'
+      type: 'simulations',
+      matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
   if (!r.ok) {
@@ -215,7 +219,7 @@ function parseJSON<T>(raw: string, fallback: T): T {
 
 // ── Génération examen ─────────────────────────────────────────────
 async function generateOneExam(
-  archives: Archive[], customText: string, idx: number
+  archives: Archive[], customText: string, idx: number, matiere: string = 'mathematiques'
 ): Promise<GeneratedExam> {
   const contextLines = archives.map(a =>
     `- ${a.section} ${a.year} Session ${a.session} | Thèmes: ${a.themes.join(', ')}`
@@ -320,7 +324,7 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000)
+  const raw = await askClaude(prompt, system, 5000, matiere)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title:`${section} — Simulation Variante ${idx+1}`,
     section, duration:180, totalPoints:totalPts,
@@ -2505,7 +2509,7 @@ function PhaseGenerating({ archives, customText, onDone }: {
     setGenerating(true)
     setError('')
     try {
-      const exam = await generateOneExam(archives, customText, idx)
+      const exam = await generateOneExam(archives, customText, idx, matiereActive)
       setExams(prev => [...prev, exam])
       setCurrentIdx(idx + 1)
       // Incrémenter quota dans Supabase
@@ -4553,6 +4557,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 
 function SimulationFrancePageInner() {
   const { hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin } = useAuth()
+  globalMatiere = matiereActive
 
   // ── Matière : maths ou physique ──────────────────────────────────
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {

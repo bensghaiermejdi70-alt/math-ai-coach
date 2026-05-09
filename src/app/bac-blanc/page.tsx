@@ -36,6 +36,8 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
 
+let globalMatiere: string = 'mathematiques'
+
 // ═══════════════════════════════════════════════════════════════════
 // BAC BLANC — CONCOURS NATIONAL IA  (1er mai – 15 juin)
 // Admin : bensghaiermejdi70@gmail.com — accès permanent, illimité
@@ -230,13 +232,14 @@ function getStats() {
 }
 
 // ── API Claude ────────────────────────────────────────────────────
-async function askClaude(prompt: string, system: string, maxTokens = 5000): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system,
       messages: [{ role:'user', content:prompt }],
-      type: 'simulations'
+      type: 'simulations',
+      matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
@@ -3049,6 +3052,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // ════════════════════════════════════════════════════════════════════
 function BacBlancInner() {
   const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive } = useAuth()
+  globalMatiere = matiereActive
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
