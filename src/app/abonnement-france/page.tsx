@@ -54,7 +54,7 @@ const MATIERES: {
     bg: 'rgba(99,102,241,0.08)',
     available: true,
     tagline: 'Analyse · Complexes · Probabilités · Géométrie · Isométries',
-    accesPayant: ['Simulation Bac IA','Chat Professeur IA','Solveur étape/étape','Bac Blanc IA','Remédiation & Analyse'],
+    accesPayant: ['Simulation Bac IA','Chat Professeur IA','Solveur étape/étape','Remédiation & Analyse'],
     accesFree: [
       'Cours CNP officiels (Terminale, Première, Seconde)',
       'Examens officiels du Bac + corrections détaillées',
@@ -71,7 +71,7 @@ const MATIERES: {
     bg: 'rgba(6,214,160,0.08)',
     available: true,
     tagline: 'RC/RL/RLC · Mécanique · Ondes · Acide-Base · Oxydoréduction',
-    accesPayant: ['Simulation Physique IA','Chat Professeur Physique','Solveur Physique-Chimie','Bac Blanc Physique','Remédiation & Analyse'],
+    accesPayant: ['Simulation Physique IA','Chat Professeur Physique','Solveur Physique-Chimie','Remédiation & Analyse'],
     accesFree: [
       'Cours Physique-Chimie officiels (Terminale, Première)',
       'Examens officiels Physique-Chimie + corrections',
