@@ -11,12 +11,12 @@ const MATIERES = [
     key: 'mathematiques',
     icon: '🧮',
     label: 'Mathématiques',
-    desc: 'Simulation Bac · Chat Prof · Solveur · Bac Blanc',
+    desc: 'Simulation Bac · Chat Prof · Solveur étape/étape',
     color: '#6366f1',
     gradient: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.07))',
     border: 'rgba(99,102,241,0.35)',
     available: true,
-    accesPayant: ['Simulation Bac IA','Chat Professeur IA','Solveur étape/étape','Bac Blanc IA','Remédiation & Analyse'],
+    accesPayant: ['Simulation Bac IA','Chat Professeur IA','Solveur étape/étape','Remédiation & Analyse'],
     // ── CORRECTION : accesFree enrichi ──
     accesFree: [
       'Cours CNP officiels (Terminale, Première, Seconde)',
@@ -29,12 +29,12 @@ const MATIERES = [
     key: 'physique',
     icon: '⚗️',
     label: 'Physique-Chimie',
-    desc: 'Simulation Physique · Chat Prof · Solveur Physique · Bac Blanc',
+    desc: 'Simulation Physique · Chat Prof · Solveur Physique-Chimie',
     color: '#06d6a0',
     gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.07))',
     border: 'rgba(6,214,160,0.35)',
     available: true,
-    accesPayant: ['Simulation Physique-Chimie IA','Chat Professeur Physique','Solveur Physique-Chimie','Bac Blanc Physique','Remédiation & Analyse'],
+    accesPayant: ['Simulation Physique-Chimie IA','Chat Professeur Physique','Solveur Physique-Chimie','Remédiation & Analyse'],
     // ── CORRECTION : accesFree enrichi ──
     accesFree: [
       'Cours Physique-Chimie officiels (Terminale, Première)',
