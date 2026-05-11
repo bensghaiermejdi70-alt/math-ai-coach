@@ -453,7 +453,39 @@ RÉPONSE JSON OBLIGATOIRE :
   ]
 }`
 
-  // ════════════════════════════════════════════════════════════════
+// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: 'Bac Blanc Physique-Chimie',
+    section: candidat.section,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 180,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  // Forcer les champs manquants que l'IA n'inclut pas toujours
+  return {
+    ...parsed,
+    id: parsed.id || `bb-physique-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 180,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
 // GÉNÉRATION BAC BLANC INFORMATIQUE
 // ════════════════════════════════════════════════════════════════
 async function generateBacBlancInfo(candidat: Candidat, dayNum: number): Promise<BacExam> {
@@ -548,38 +580,6 @@ Réponds EXACTEMENT avec ce JSON :
   }
   const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
   return { ...parsed, id:`bb-info-${dayNum}-${Date.now()}`, index:0 }
-}
-
-// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
-  const raw = await askClaude(prompt, system, 5000)
-
-  const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
-    day: dayNum,
-    title: 'Bac Blanc Physique-Chimie',
-    section: candidat.section,
-    sectionKey: candidat.sectionKey,
-    date: dateStr,
-    totalPoints: 20,
-    duration: 180,
-    exercises: []
-  })
-
-  if (!parsed.exercises || parsed.exercises.length === 0) {
-    throw new Error('Réponse IA invalide — réessayez')
-  }
-
-  // Forcer les champs manquants que l'IA n'inclut pas toujours
-  return {
-    ...parsed,
-    id: parsed.id || `bb-physique-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum,
-    sectionKey: candidat.sectionKey,
-    section: parsed.section || secLabel,
-    date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20,
-    duration: parsed.duration || 180,
-  }
 }
 
 // ── sanitizeExpr (identique simulation) ──────────────────────────
