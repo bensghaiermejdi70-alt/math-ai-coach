@@ -145,7 +145,9 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 }
 
 export default function AbonnementPage() {
-  const { user, profile, quotas, quotaLimits, hasActiveSubscription, daysRemaining, isAdmin, signOut } = useAuth()
+  const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut }
+  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel' }
+ = useAuth()
   const [payment, setPayment] = useState('d17')
   const [matiereKey, setMatiereKey] = useState<string>('')
   const matiere = MATIERES.find(m => m.key === matiereKey)
@@ -193,8 +195,12 @@ export default function AbonnementPage() {
           <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:600, height:300, background:'radial-gradient(circle, rgba(79,110,247,0.12) 0%, transparent 70%)', pointerEvents:'none' }} />
 
           {hasActiveSubscription && (
-            <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)', marginBottom:16 }}>
-              ✅ Abonnement actif — {profile?.plan_type}
+            <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', alignItems:'center', gap:8, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'6px 16px', marginBottom:16 }}>
+              {(activePlanTypes?.length > 0 ? activePlanTypes : profile?.plan_type ? [profile.plan_type] : []).map((pt: string) => (
+                <span key={pt} style={{ display:'inline-flex', alignItems:'center', gap:6, background:'rgba(6,214,160,0.1)', border:'1px solid rgba(6,214,160,0.3)', borderRadius:100, padding:'5px 14px', fontFamily:'var(--font-mono)', fontSize:12, color:'var(--teal)' }}>
+                  ✅ {PLAN_LABELS_DISPLAY[pt] ?? pt}
+                </span>
+              ))}
             </div>
           )}
 
