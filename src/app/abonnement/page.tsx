@@ -145,9 +145,8 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 }
 
 export default function AbonnementPage() {
-  const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut }
+  const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut } = useAuth()
   const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel' }
- = useAuth()
   const [payment, setPayment] = useState('d17')
   const [matiereKey, setMatiereKey] = useState<string>('')
   const matiere = MATIERES.find(m => m.key === matiereKey)
