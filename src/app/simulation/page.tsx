@@ -91,8 +91,10 @@ const SECTION_CONFIGS = [
     themes:['Analyse','Arithmétique','Probabilités','Complexes','Géométrie'] },
   { key:'eco', label:'Éco-Gestion', color:'#10b981', icon:'💹', folder:'economie_gestion', file:'math.pdf',
     themes:['Analyse & Suites','Probabilités & Statistiques','Matrices & Systèmes','Maths Financières','Logarithme & Exponentielle'] },
-  { key:'info', label:'Informatique', color:'#8b5cf6', icon:'⌨', folder:'informatique', file:'algorithme.pdf',
-    themes:['Algorithmique','Bases de données','Mathématiques','STI Web'] },
+  { key:'info',             label:'Sc. Informatiques',       color:'#6366f1', icon:'💻', folder:'informatique', file:'algorithme.pdf',
+    themes:['Algorithmique & Récursivité','Tri & Recherche','Structures de données','Bases de données SQL','TIC & Réseaux'] },
+  { key:'autres-sections',  label:'Autres Sections (TIC)',    color:'#f59e0b', icon:'🎓', folder:'math', file:'info.pdf',
+    themes:['Internet & Réseaux','HTML & CSS','JavaScript','Systèmes informatiques','Sécurité & RGPD'] },
 ]
 
 const ARCHIVES: Archive[] = YEARS.flatMap(y =>
@@ -164,6 +166,74 @@ const ARCHIVES_PHYS: Archive[] = YEARS.flatMap(y =>
 )
 
 // ── Chapitres Physique-Chimie ─────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+//  INFORMATIQUE — Configs et archives séparés
+// ════════════════════════════════════════════════════════════════
+const SECTION_CONFIGS_INFO = [
+  {
+    key:'info',
+    label:'Informatiques',
+    color:'#6366f1',
+    icon:'💻',
+    folder:'informatique',
+    file:'algorithme.pdf',
+    themes:['Algorithmique & Récursivité','Tri & Recherche','Structures de données','Bases de données SQL','TIC & Réseaux']
+  },
+  {
+    key:'autres-sections',
+    label:'Autres-Sections-(TIC)',
+    color:'#f59e0b',
+    icon:'🎓',
+    folder:'math',
+    file:'info.pdf',
+    themes:['Internet & Réseaux','HTML & CSS','JavaScript','Systèmes informatiques','Sécurité & RGPD']
+  },
+]
+
+const ARCHIVES_INFO: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_INFO.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
+  ])
+)
+
+const CHAPITRES_INFO: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  info: {
+    key:'info', label:'Sc. Informatiques', color:'#6366f1', icon:'💻',
+    chapitres: [
+      { slug:'algo-recursivite',  titre:'Récursivité',               badge:'Algorithmique',    desc:'Fonctions récursives — factorielle, Fibonacci, PGCD, Tours de Hanoï.' },
+      { slug:'algo-tri',          titre:'Algorithmes de Tri',         badge:'Algorithmique',    desc:'Tri sélection, insertion, bulles, fusion, rapide — complexités.' },
+      { slug:'algo-recherche',    titre:'Algorithmes de Recherche',   badge:'Algorithmique',    desc:'Recherche séquentielle et dichotomique — complexité et comparaison.' },
+      { slug:'algo-structures',   titre:'Structures de données',      badge:'Algorithmique',    desc:'Tableaux, listes chaînées, piles, files, arbres binaires.' },
+      { slug:'algo-fichiers',     titre:'Fichiers & Enregistrements', badge:'Algorithmique',    desc:'Fichiers séquentiels, accès direct, enregistrements Pascal/Python.' },
+      { slug:'bd-modele',         titre:'Modélisation E/A',           badge:'Bases de données', desc:'Modèle Entité-Association, cardinalités, clés primaires/étrangères.' },
+      { slug:'bd-sql-select',     titre:'SQL — SELECT avancé',        badge:'Bases de données', desc:'SELECT, WHERE, JOIN, GROUP BY, HAVING, sous-requêtes imbriquées.' },
+      { slug:'bd-sql-lmd',        titre:'SQL — LMD',                  badge:'Bases de données', desc:'INSERT, UPDATE, DELETE, CREATE TABLE, ALTER TABLE, contraintes.' },
+      { slug:'bd-normalisation',  titre:'Normalisation',              badge:'Bases de données', desc:'1FN, 2FN, 3FN — dépendances fonctionnelles, décomposition.' },
+      { slug:'tic-reseaux',       titre:'Réseaux informatiques',      badge:'TIC',              desc:'TCP/IP, DNS, HTTP, LAN/WAN, adressage IP, modèle OSI.' },
+      { slug:'tic-web',           titre:'Développement Web',          badge:'TIC',              desc:'HTML5, CSS3, JavaScript, PHP, MySQL PDO, formulaires, sessions.' },
+      { slug:'tic-securite',      titre:'Cybersécurité',              badge:'TIC',              desc:'Menaces, pare-feu, antivirus, RGPD, chiffrement, authentification.' },
+    ],
+  },
+  'autres-sections': {
+    key:'autres-sections', label:'Autres Sections (TIC)', color:'#f59e0b', icon:'🎓',
+    chapitres: [
+      { slug:'tic-internet',     titre:'Internet & Réseaux',      badge:'TIC', desc:'Protocoles TCP/IP, DNS, HTTP, HTTPS — architecture client/serveur.' },
+      { slug:'tic-web-html',     titre:'Web — HTML & CSS',         badge:'TIC', desc:'Structure HTML5, sélecteurs CSS3, mise en page, responsive design.' },
+      { slug:'tic-javascript',   titre:'Web — JavaScript',         badge:'TIC', desc:'Variables, fonctions, DOM, événements, validation formulaire.' },
+      { slug:'tic-os',           titre:'Systèmes informatiques',   badge:'TIC', desc:'CPU, RAM, SSD, systèmes d\'exploitation, gestionnaire de fichiers.' },
+      { slug:'tic-securite-gen', titre:'Sécurité informatique',    badge:'TIC', desc:'Virus, malware, pare-feu, données personnelles, RGPD.' },
+    ],
+  },
+}
+
 const CHAPITRES_PHYS: Record<string, {
   key: string; label: string; color: string; icon: string
   chapitres: { slug: string; titre: string; badge: string; desc: string }[]
@@ -2147,7 +2217,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'
+  matiere?: 'maths'|'physique'|'informatique'
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
@@ -4545,7 +4615,7 @@ function SimulationIAPageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
     return s === 'physique' ? 'physique' : 'maths'
@@ -4672,8 +4742,9 @@ function SimulationIAPageInner() {
           {phase === 'select' && (
             <div style={{display:'flex',gap:8,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
               {([
-                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
-                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+                { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
+                { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+                { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
               ]).map(m => {
                 return (
                 <div key={m.key} style={{position:'relative'}}>
@@ -4703,9 +4774,9 @@ function SimulationIAPageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

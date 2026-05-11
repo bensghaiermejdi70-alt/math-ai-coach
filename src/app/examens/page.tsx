@@ -448,189 +448,55 @@ const ecoGestionLinks: Record<number, AnneeLinks> = {
 //    physique_c.pdf  corrigé physique info (2021 vérifié)
 // ════════════════════════════════════════════════════════════════
 type InfoLinks = {
-  principale: { math_sujet?: string; math_corr?: string; algo_sujet?: string; algo_corr?: string; bd_sujet?: string; bd_corr?: string }
-  controle:   { math_sujet?: string; math_corr?: string; algo_sujet?: string; algo_corr?: string; bd_sujet?: string; bd_corr?: string }
+  principale: { algo_sujet?: string; algo_corr?: string; bd_sujet?: string; bd_corr?: string }
+  controle:   { algo_sujet?: string; algo_corr?: string; bd_sujet?: string; bd_corr?: string }
 }
 const infoLinks: Record<number, InfoLinks> = {
   2025: {
-    principale: {
-      math_sujet: 'https://drive.google.com/file/d/1Ewz9mKnu8NLbVy1iYRP-QAOKIaBZlyhO/preview',
-      math_corr:  'https://drive.google.com/file/d/1IBjYbhboqWucTM1YlpY_yTRifWpoGdm2/preview',
-      algo_sujet: bw(2025,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2025,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2025,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2025,'principale','informatique','bd_c.pdf'),
-    },
-    controle: {
-      math_sujet: 'https://drive.google.com/file/d/1Y8uH_NiEurb1ALUX5ZGuIlyeriWVFFf2/preview',
-      math_corr:  'https://drive.google.com/file/d/1tVODKqGPcFCi1ufp1IfUpd-Z_olnO3or/preview',
-      algo_sujet: bw(2025,'controle','informatique','algorithme.pdf'),
-      algo_corr:  bw(2025,'controle','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2025,'controle','informatique','bd.pdf'),
-    },
+    principale: { algo_sujet: bw(2025,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2025,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2025,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2025,'controle','informatique','bd.pdf') },
   },
   2024: {
-    principale: {
-      math_sujet: bw(2024,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2024,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2024,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2024,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2024,'principale','informatique','bd_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/19fNfBUNMOL1j0IVWQvexJEos8XmT1IBI/preview',
-    },
-    controle: {
-      math_sujet: bw(2024,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2024,'controle','informatique','algorithme.pdf'),
-      algo_corr:  bw(2024,'controle','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2024,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1saDJWbI-okTQddwvSnz1L8aqqDixqrcX/preview',
-    },
+    principale: { algo_sujet: bw(2024,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2024,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2024,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2024,'controle','informatique','bd.pdf') },
   },
   2023: {
-    principale: {
-      math_sujet: bw(2023,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2023,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2023,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2023,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2023,'principale','informatique','bd_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/19XiR5gq-lLYq_-h4rFuLF1ZgRPmdblTO/preview',
-    },
-    controle: {
-      math_sujet: bw(2023,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2023,'controle','informatique','algorithme.pdf'),
-      algo_corr:  bw(2023,'controle','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2023,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/11DsIHkxUmezQLfTNs3OEg_oSJ0gLum2h/preview',
-    },
+    principale: { algo_sujet: bw(2023,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2023,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2023,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2023,'controle','informatique','bd.pdf') },
   },
   2022: {
-    principale: {
-      math_sujet: bw(2022,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2022,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2022,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2022,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2022,'principale','informatique','bd_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1p5X6W8Rn4aICClqqWOOgq8KHQ_mdOFCq/preview',
-    },
-    controle: {
-      math_sujet: bw(2022,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2022,'controle','informatique','algorithme.pdf'),
-      algo_corr:  bw(2022,'controle','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2022,'controle','informatique','math_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/142j9Q7_aM4QnT1WfrtI4mfw-YYeJhBp3/preview',
-    },
+    principale: { algo_sujet: bw(2022,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2022,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2022,'controle','informatique','algorithme.pdf'),   algo_corr: bw(2022,'controle','informatique','algorithme_nr_c.pdf'), bd_sujet: bw(2022,'controle','informatique','bd.pdf') },
   },
   2021: {
-    principale: {
-      math_sujet: bw(2021,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2021,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2021,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2021,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2021,'principale','informatique','bd_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/10AOLJdUOvVRZqrbkr9VdM-L5OHagFn-A/preview',
-    },
-    controle: {
-      math_sujet: bw(2021,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2021,'controle','informatique','algorithme.pdf'),
-      algo_corr:  bw(2021,'controle','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2021,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/106k8Qskna7Q_8XccLt-jLjo_5x0ZtRzF/preview',
-    },
+    principale: { algo_sujet: bw(2021,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2021,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2021,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2021,'controle','informatique','bd.pdf') },
   },
   2020: {
-    principale: {
-      math_sujet: bw(2020,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2020,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2020,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2020,'principale','informatique','bd.pdf'),
-      bd_corr:    bw(2020,'principale','informatique','bd_c.pdf'),
-      math_corr:  'https://drive.google.com/file/d/11KQMWgr48YWt--gtllRI9lnpazWhJtCj/preview',
-    },
-    controle: {
-      math_sujet: bw(2020,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2020,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2020,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/11O367Pf3zm1TJXRcvafUYynNTs5QKhBs/preview',
-    },
+    principale: { algo_sujet: bw(2020,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2020,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2020,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2020,'controle','informatique','bd.pdf') },
   },
   2019: {
-    principale: {
-      math_sujet: bw(2019,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2019,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2019,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2019,'principale','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1Oo1OyffA6NCzR8O1t3w6WB3QC98B2Tcx/preview',
-    },
-    controle: {
-      math_sujet: bw(2019,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2019,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2019,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1-5baL-udA49bG3XEnH89x9scVyOoX519/preview',
-    },
+    principale: { algo_sujet: bw(2019,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2019,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2019,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2019,'controle','informatique','bd.pdf'), bd_corr: bw(2019,'controle','informatique','bd_c.pdf') },
   },
   2018: {
-    principale: {
-      math_sujet: bw(2018,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2018,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2018,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2018,'principale','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1XmiDInrNkssOpc_MtMWLwCNf9yIfX5cU/preview',
-    },
-    controle: {
-      math_sujet: bw(2018,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2018,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2018,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1fRuvW4dvbQj_Nddoy4ogIrFbvPmjXKfP/preview',
-    },
+    principale: { algo_sujet: bw(2018,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2018,'principale','informatique','bd.pdf'), bd_corr: bw(2018,'principale','informatique','bd_c.pdf') },
+    controle:   { algo_sujet: bw(2018,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2018,'controle','informatique','bd.pdf') },
   },
   2017: {
-    principale: {
-      math_sujet: bw(2017,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2017,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2017,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2017,'principale','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/1NivH_LThBS2Ji2FWAQ2Or_EvAnTUOOXI/preview',
-    },
-    controle: {
-      math_sujet: bw(2017,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2017,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2017,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/13Y151Ip-AZGssnWu2b-yFONNzGk1D8qB/preview',
-    },
+    principale: { algo_sujet: bw(2017,'principale','informatique','algorithme.pdf'), algo_corr: bw(2017,'principale','informatique','algorithme_c.pdf'), bd_sujet: bw(2017,'principale','informatique','bd.pdf') },
+    controle:   { algo_sujet: bw(2017,'controle','informatique','algorithme.pdf'),   algo_corr: bw(2017,'controle','informatique','algorithme_c.pdf'),   bd_sujet: bw(2017,'controle','informatique','bd.pdf') },
   },
   2016: {
-    principale: {
-      math_sujet: bw(2016,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2016,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2016,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2016,'principale','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/0B1eOU1dDIRvaQV9qRjI1U3Fwdmc/preview',
-    },
-    controle: {
-      math_sujet: bw(2016,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2016,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2016,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/0B1eOU1dDIRvaYkZ3dFhnSk1ycTg/preview',
-    },
+    principale: { algo_sujet: bw(2016,'principale','informatique','algorithme.pdf'), algo_corr: bw(2016,'principale','informatique','algorithme_c.pdf'), bd_sujet: bw(2016,'principale','informatique','bd.pdf'), bd_corr: bw(2016,'principale','informatique','bd_c.pdf') },
+    controle:   { algo_sujet: bw(2016,'controle','informatique','algorithme.pdf'),   algo_corr: bw(2016,'controle','informatique','algorithme_c.pdf'),   bd_sujet: bw(2016,'controle','informatique','bd.pdf'), bd_corr: bw(2016,'controle','informatique','bd_c.pdf') },
   },
   2015: {
-    principale: {
-      math_sujet: bw(2015,'principale','informatique','math.pdf'),
-      algo_sujet: bw(2015,'principale','informatique','algorithme.pdf'),
-      algo_corr:  bw(2015,'principale','informatique','algorithme_nr_c.pdf'),
-      bd_sujet:   bw(2015,'principale','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/0B1eOU1dDIRvaWVFvdjlqVFRqZ1k/preview',
-    },
-    controle: {
-      math_sujet: bw(2015,'controle','informatique','math.pdf'),
-      algo_sujet: bw(2015,'controle','informatique','algorithme.pdf'),
-      bd_sujet:   bw(2015,'controle','informatique','bd.pdf'),
-      math_corr:  'https://drive.google.com/file/d/0B1eOU1dDIRvaZ0I1S0R4alJDczQ/preview',
-    },
+    principale: { algo_sujet: bw(2015,'principale','informatique','algorithme.pdf'), algo_corr: bw(2015,'principale','informatique','algorithme_c.pdf'), bd_sujet: bw(2015,'principale','informatique','bd.pdf'), bd_corr: bw(2015,'principale','informatique','bd_c.pdf') },
+    controle:   { algo_sujet: bw(2015,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2015,'controle','informatique','bd.pdf') },
   },
-}
-
-// ════════════════════════════════════════════════════════════════
+}// ════════════════════════════════════════════════════════════════
 //  DONNÉES EXERCICES — thèmes par année (résumé pédagogique)
 // ════════════════════════════════════════════════════════════════
 const BAC_MATHS_DATA: AnneeData[] = [
@@ -862,69 +728,58 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
 
 const BAC_INFO_DATA: AnneeData[] = [
   { year:2025, note:'🆕', exercices:[
-    {titre:'Exercice 1',theme:'Analyse — étude de fonction, logarithme, exponentielle',pts:5},
-    {titre:'Exercice 2',theme:'Arithmétique — congruences, divisibilité',pts:5},
-    {titre:'Exercice 3',theme:'Probabilités — dénombrement, variable aléatoire',pts:4},
-    {titre:'Exercice 4',theme:'Nombres complexes — transformations, affixes',pts:6},
+    {titre:'⚙️ Algorithmique',theme:'Algorithmes récursifs — factorielle, Fibonacci, résolution Python/Pascal',pts:7},
+    {titre:'🗄️ Bases de données',theme:'SQL avancé — sous-requêtes, GROUP BY HAVING, fonctions agrégat',pts:6},
+    {titre:'🌐 TIC & Réseaux',theme:'Architecture réseau TCP/IP, HTML5/CSS3, sécurité informatique',pts:7},
   ]},
   { year:2024, note:'🔥', exercices:[
     {titre:'⚙️ Algorithmique',theme:'Tri rapide (Quick Sort), récursivité, complexité O(n log n)',pts:7},
     {titre:'🗄️ Bases de données',theme:'SQL avancé — jointures multiples, GROUP BY, sous-requêtes',pts:6},
-    {titre:'📐 Mathématiques',theme:'Nombres complexes, probabilités, statistiques',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'HTML5/CSS3, JavaScript DOM, validation formulaire',pts:3},
   ]},
   { year:2023, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Tri fusion (Merge Sort), arbres binaires de recherche ABR',pts:7},
     {titre:'🗄️ Bases de données',theme:'Modélisation E/A, normalisation 3FN, SQL DDL/DML',pts:6},
-    {titre:'📐 Mathématiques',theme:'Arithmétique — PGCD, identité de Bézout, congruences',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'PHP côté serveur, sessions et cookies, traitement POST/GET',pts:3},
   ]},
   { year:2022, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Listes chaînées — insertion en tête/queue, suppression nœud',pts:7},
     {titre:'🗄️ Bases de données',theme:'SQL SELECT imbriqué, sous-requêtes corrélées',pts:6},
-    {titre:'📐 Mathématiques',theme:'Suites, dérivabilité, applications numériques',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'CSS3 flexbox, JavaScript et manipulation des événements DOM',pts:3},
   ]},
   { year:2021, exercices:[
     {titre:'⚙️ Algorithmique',theme:"Récursivité — Tours de Hanoï, analyse de la pile d'appels",pts:7},
     {titre:'🗄️ Bases de données',theme:'Normalisation 1FN/2FN/3FN, modèle relationnel, clés',pts:6},
-    {titre:'📐 Mathématiques',theme:"Complexes — affixe, vecteurs, géométrie de l'espace",pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'HTML5 sémantique + formulaires PHP, validation serveur',pts:3},
   ]},
   { year:2020, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Tri par insertion, fichiers séquentiels Pascal et Python',pts:7},
     {titre:'🗄️ Bases de données',theme:'Modèle relationnel — clés primaires/étrangères, contraintes',pts:6},
-    {titre:'📐 Mathématiques',theme:'Logarithme, primitives, probabilités conditionnelles',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'JavaScript — manipulation DOM, ajout/modification nœuds',pts:3},
   ]},
   { year:2019, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Recherche dichotomique, tri bulles, comparaison complexités',pts:7},
     {titre:'🗄️ Bases de données',theme:'SQL DDL — CREATE TABLE, ALTER TABLE, contraintes intégrité',pts:6},
-    {titre:'📐 Mathématiques',theme:'Exponentielle — croissance comparée, intégrales, calcul',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'PHP + MySQL PDO, requêtes préparées, anti-injection SQL',pts:3},
   ]},
   { year:2018, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Enregistrements, fichiers séquentiels, accès direct Pascal',pts:7},
     {titre:'🗄️ Bases de données',theme:'INNER JOIN, LEFT JOIN, fonctions agrégat COUNT/AVG/SUM',pts:6},
-    {titre:'📐 Mathématiques',theme:'Suites récurrentes — convergence, limite, démonstration',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'HTML/CSS — box model, sélecteurs CSS3, mise en page',pts:3},
   ]},
   { year:2017, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Algorithmes arithmétiques — PGCD itératif, décomposition',pts:7},
     {titre:'🗄️ Bases de données',theme:'COUNT, SUM, AVG, HAVING, GROUP BY — requêtes complexes',pts:6},
-    {titre:'📐 Mathématiques',theme:'Dérivées — étude complète de fonction, tableau de variation',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'JavaScript — validation formulaire côté client, regex',pts:3},
   ]},
   { year:2016, exercices:[
     {titre:'⚙️ Algorithmique',theme:"Tri sélection — analyse, trace d'exécution, complexité O(n²)",pts:7},
     {titre:'🗄️ Bases de données',theme:'Modélisation — contraintes, tables de jonction N-M',pts:6},
-    {titre:'📐 Mathématiques',theme:'Complexes, forme exponentielle, arithmétique de base',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'PHP — sessions, cookies, authentification utilisateur',pts:3},
   ]},
   { year:2015, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Récursivité — factorielle, Fibonacci, PGCD, Tours de Hanoï',pts:7},
     {titre:'🗄️ Bases de données',theme:'SQL LMD complet — INSERT, UPDATE, DELETE, SELECT',pts:6},
-    {titre:'📐 Mathématiques',theme:'Probabilités — arbre, conditionnelle, statistiques descriptives',pts:4},
     {titre:'🌐 STI (Web/Réseau)',theme:'HTML — structure sémantique, formulaires, liens hypertext',pts:3},
   ]},
 ]
@@ -1596,15 +1451,15 @@ const BAC_INFO_PHYS_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — MATIÈRES ET SECTIONS
 // ════════════════════════════════════════════════════════════════
-type Matiere = 'maths' | 'physique'
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys'
+type Matiere = 'maths' | 'physique' | 'informatique' | 'informatique'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'info-algo' | 'info-bd' | 'info-algo' | 'info-bd'
 
 const SECTIONS_MATHS = [
   { key:'maths'    as SKey, icon:'🧮', label:'Bac Maths',      color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,       links:mathsLinks,      desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
   { key:'sc-exp'   as SKey, icon:'🔬', label:'Sciences Exp.',   color:'#06d6a0', coeff:'Coeff. 3', data:BAC_SC_EXP_DATA,      links:scExpLinks,      desc:'Analyse · Complexes · Probabilités · Géométrie espace' },
   { key:'sc-tech'  as SKey, icon:'⚙️', label:'Sciences Tech.',  color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_DATA,     links:scTechLinks,     desc:'Mathématiques · Analyse · Arithmétique · Probabilités' },
   { key:'eco'      as SKey, icon:'💹', label:'Éco-Gestion',      color:'#10b981', coeff:'Coeff. 2', data:BAC_ECO_GESTION_DATA, links:ecoGestionLinks, desc:'Analyse · Probabilités · Matrices · Mathématiques Financières ★' },
-  { key:'info'     as SKey, icon:'💻', label:'Informatique',     color:'#6366f1', coeff:'Coeff. 3', data:BAC_INFO_DATA,        links:infoLinks,       desc:'Mathématiques · Sujet + Correction officielle' },
+  { key:'info'     as SKey, icon:'💻', label:'Sc. Informatiques', color:'#6366f1', coeff:'Coeff. 4', data:BAC_INFO_DATA, links:infoLinks, desc:'Algorithmique · Bases de données · TIC — Sujets + Corrections (bacweb.tn · kiteb.net)' },
 ]
 
 const SECTIONS_PHYS = [
@@ -1612,6 +1467,28 @@ const SECTIONS_PHYS = [
   { key:'sc-tech-phys' as SKey, icon:'⚙️', label:'Sciences Tech.',  color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_PHYS_DATA, links:scTechPhysLinks, desc:'Chimie (7 pts) · Physique (15 pts) · Applications technologiques' },
   { key:'math-phys'    as SKey, icon:'🧮', label:'Bac Maths',       color:'#4f6ef7', coeff:'Coeff. 3', data:BAC_MATH_PHYS_DATA,    links:mathPhysLinks,   desc:'Chimie (8 pts) · Physique (12 pts) · Niveau le plus exigeant' },
   { key:'info-phys'    as SKey, icon:'💻', label:'Informatique',    color:'#6366f1', coeff:'Coeff. 3', data:BAC_INFO_PHYS_DATA,    links:infoPhysLinks,   desc:'Chimie (8 pts) · Physique (12 pts) · Programme spécialisé' },
+]
+
+// ════════════════════════════════════════════════════════════════
+//  SECTIONS INFORMATIQUE
+// ════════════════════════════════════════════════════════════════
+const BAC_INFO_ALGO_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[{titre:'⚙️ Algorithmique',theme:'Algorithmes récursifs — factorielle, Fibonacci, Python/Pascal',pts:7},{titre:'🗄️ Bases de données',theme:'SQL avancé — sous-requêtes, GROUP BY HAVING',pts:6},{titre:'🌐 TIC',theme:'Réseaux TCP/IP, HTML5/CSS3, sécurité',pts:7}]},
+  { year:2024, note:'🔥', exercices:[{titre:'⚙️ Algorithmique',theme:'Tri rapide (Quick Sort), récursivité, complexité',pts:7},{titre:'🗄️ Bases de données',theme:'SQL — jointures multiples, GROUP BY, sous-requêtes',pts:6},{titre:'🌐 TIC',theme:'HTML5/CSS3, JavaScript DOM',pts:7}]},
+  { year:2023, exercices:[{titre:'⚙️ Algorithmique',theme:'Tri fusion (Merge Sort), arbres binaires ABR',pts:7},{titre:'🗄️ Bases de données',theme:'Modélisation E/A, normalisation 3FN, SQL DDL/DML',pts:6},{titre:'🌐 TIC',theme:'PHP serveur, sessions, cookies',pts:7}]},
+  { year:2022, exercices:[{titre:'⚙️ Algorithmique',theme:'Listes chaînées — insertion, suppression nœud',pts:7},{titre:'🗄️ Bases de données',theme:'SQL SELECT imbriqué, sous-requêtes corrélées',pts:6},{titre:'🌐 TIC',theme:'CSS3 flexbox, JavaScript DOM',pts:7}]},
+  { year:2021, exercices:[{titre:'⚙️ Algorithmique',theme:"Récursivité — Tours de Hanoï",pts:7},{titre:'🗄️ Bases de données',theme:'Normalisation 1FN/2FN/3FN, modèle relationnel',pts:6},{titre:'🌐 TIC',theme:'HTML5 + formulaires PHP',pts:7}]},
+  { year:2020, exercices:[{titre:'⚙️ Algorithmique',theme:'Tri par insertion, fichiers séquentiels',pts:7},{titre:'🗄️ Bases de données',theme:'Modèle relationnel — clés, contraintes',pts:6},{titre:'🌐 TIC',theme:'JavaScript — manipulation DOM',pts:7}]},
+  { year:2019, exercices:[{titre:'⚙️ Algorithmique',theme:'Recherche dichotomique, tri bulles',pts:7},{titre:'🗄️ Bases de données',theme:'SQL DDL — CREATE TABLE, contraintes',pts:6},{titre:'🌐 TIC',theme:'PHP + MySQL PDO, anti-injection SQL',pts:7}]},
+  { year:2018, exercices:[{titre:'⚙️ Algorithmique',theme:'Enregistrements, fichiers séquentiels Pascal',pts:7},{titre:'🗄️ Bases de données',theme:'INNER JOIN, LEFT JOIN, COUNT/AVG/SUM',pts:6},{titre:'🌐 TIC',theme:'HTML/CSS — box model, sélecteurs CSS3',pts:7}]},
+  { year:2017, exercices:[{titre:'⚙️ Algorithmique',theme:'Algorithmes arithmétiques — PGCD itératif',pts:7},{titre:'🗄️ Bases de données',theme:'COUNT, SUM, AVG, HAVING, GROUP BY',pts:6},{titre:'🌐 TIC',theme:'JavaScript — validation formulaire',pts:7}]},
+  { year:2016, exercices:[{titre:'⚙️ Algorithmique',theme:"Tri sélection — complexité O(n²)",pts:7},{titre:'🗄️ Bases de données',theme:'Modélisation — contraintes, tables jonction N-M',pts:6},{titre:'🌐 TIC',theme:'PHP — sessions, cookies',pts:7}]},
+  { year:2015, exercices:[{titre:'⚙️ Algorithmique',theme:'Récursivité — factorielle, Fibonacci, PGCD',pts:7},{titre:'🗄️ Bases de données',theme:'SQL LMD — INSERT, UPDATE, DELETE, SELECT',pts:6},{titre:'🌐 TIC',theme:'HTML — structure sémantique, formulaires',pts:7}]},
+]
+
+const SECTIONS_INFO_EXAM = [
+  { key:'info-algo' as SKey, icon:'💻', label:'Sc. Informatiques', color:'#6366f1', coeff:'Coeff. 4', data:BAC_INFO_ALGO_DATA, links:infoLinks, desc:'⚙️ Algorithmique · 🗄️ Bases de données · 🌐 TIC — Sujets officiels bacweb.tn' },
+  { key:'info-bd'   as SKey, icon:'🎓', label:'Autres Sections (TIC)', color:'#f59e0b', coeff:'TIC Commun', data:BAC_INFO_ALGO_DATA, links:infoLinks, desc:'Maths · Sc.Exp · Sc.Tech · Éco-Gestion' },
 ]
 
 // ════════════════════════════════════════════════════════════════
@@ -1698,23 +1575,61 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
     { label:'🔄 Session de Contrôle', key:'controle'  as const, border:'rgba(245,158,11,0.4)', bg:'rgba(245,158,11,0.06)' },
   ]
   const isPhys = secKey === 'sc-exp-phys' || secKey === 'sc-tech-phys'
-  const label  = isPhys ? 'Physique-Chimie' : 'Mathématiques'
+  const isInfo_sec = secKey === 'info-algo'
+  const label  = isPhys ? 'Physique-Chimie' : isInfo_sec ? 'Informatique' : 'Mathématiques'
 
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14,marginBottom:20}}>
       {sessions.map(s => {
-        if (secKey === 'info') {
+        if (secKey === 'info' || secKey === 'info-algo') {
           const il = infoL?.[s.key]
           return (
             <div key={s.key} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:14,padding:18}}>
-              <p style={{margin:'0 0 12px',fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label} {year}</p>
-              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                <BtnLink label="📐 Sujet Maths" url={il?.math_sujet} color={color} onOpen={(u)=>onOpen(u,`Sujet Mathématiques — Bac Informatique ${year} — ${s.label}`)} />
-                <BtnLink label="✅ Correction Maths" url={il?.math_corr} color="#06d6a0" onOpen={(u)=>onOpen(u,`Correction Mathématiques — Bac Informatique ${year} — ${s.label}`)} />
+              <p style={{margin:'0 0 14px',fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label} {year}</p>
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                <div>
+                  <p style={{margin:'0 0 5px',fontSize:11,color:'#4f6ef7',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}}>⚙️ Algorithmique & Programmation</p>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
+                    <BtnLink label="📄 Sujet Algo" url={il?.algo_sujet} color="#4f6ef7" onOpen={(u)=>onOpen(u,`Sujet Algorithmique — Bac Sc.Info ${year}`)} />
+                    <BtnLink label="✅ Correction Algo" url={il?.algo_corr} color="#06d6a0" onOpen={(u)=>onOpen(u,`Correction Algorithmique — Bac Sc.Info ${year}`)} />
+                  </div>
+                </div>
+                <div>
+                  <p style={{margin:'0 0 5px',fontSize:11,color:'#8b5cf6',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}}>🗄️ Bases de données</p>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
+                    <BtnLink label="📄 Sujet BD" url={il?.bd_sujet} color="#8b5cf6" onOpen={(u)=>onOpen(u,`Sujet Bases de données — Bac Sc.Info ${year}`)} />
+                    <BtnLink label="✅ Correction BD" url={il?.bd_corr} color="#06d6a0" onOpen={(u)=>onOpen(u,`Correction BD — Bac Sc.Info ${year}`)} />
+                  </div>
+                </div>
               </div>
-              {!il?.math_sujet && !il?.math_corr && (
-                <p style={{margin:0,fontSize:12,color:'var(--muted)'}}>Session non disponible cette année</p>
+              {!il?.algo_sujet && !il?.bd_sujet && (
+                <div style={{marginTop:10,padding:'10px 14px',background:'rgba(99,102,241,0.06)',borderRadius:9,border:'1px solid rgba(99,102,241,0.15)'}}>
+                  <p style={{margin:'0 0 6px',fontSize:12,color:'#818cf8',fontWeight:600}}>📂 Ressources disponibles en ligne</p>
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                    <a href="https://www.kiteb.net/education/informatique/bac/" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(99,102,241,0.1)',color:'#818cf8',textDecoration:'none',fontWeight:600}}>kiteb.net →</a>
+                    <a href="https://bac-done.com/sections/informatique/corrections/28" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(139,92,246,0.1)',color:'#a78bfa',textDecoration:'none',fontWeight:600}}>bac-done.com →</a>
+                    <a href="https://mathinfo.tn/info/p4inf.php" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(6,214,160,0.1)',color:'#06d6a0',textDecoration:'none',fontWeight:600}}>mathinfo.tn →</a>
+                  </div>
+                </div>
               )}
+            </div>
+          )
+        } else if (secKey === 'info-bd') {
+          const W = 'http://www.bacweb.tn/bac'
+          const urlP = `${W}/${year}/principale/math/info.pdf`
+          const urlC = `${W}/${year}/controle/math/info.pdf`
+          const color = '#4f6ef7'
+          const label = '🧮 Maths · Sc.Exp · Sc.Tech · Éco-Gestion'
+          return (
+            <div key={s.key} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:14,padding:18}}>
+              <p style={{margin:'0 0 14px',fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label} {year}</p>
+              <div>
+                <p style={{margin:'0 0 5px',fontSize:11,color,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</p>
+                <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+                  {s.key === 'principale' && <BtnLink label="📄 Session Principale" url={urlP} color={color} onOpen={(u)=>onOpen(u,`Sujet TIC Bac ${year} — Session Principale`)} />}
+                  {s.key === 'controle'   && <BtnLink label="📄 Session Contrôle"   url={urlC} color={color} onOpen={(u)=>onOpen(u,`Sujet TIC Bac ${year} — Session Contrôle`)} />}
+                </div>
+              </div>
             </div>
           )
         } else {
@@ -1754,15 +1669,20 @@ export default function ExamensTunisiePage() {
   const [modal,         setModal]         = useState<{url:string;title:string}|null>(null)
 
   const isMaths  = activeMatiere === 'maths'
-  const sections = isMaths ? SECTIONS_MATHS : SECTIONS_PHYS
+  const isInfo_m = activeMatiere === 'informatique'
+  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : SECTIONS_PHYS
   const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
   const detail   = sec.data.find(a => a.year === selectedYear)
-  const isInfo   = activeSec === 'info'
+  const isInfo   = activeSec === 'info' || activeSec === 'info-algo' || activeSec === 'info-bd'
   const ptTotal  = detail?.exercices.reduce((s,e) => s+e.pts, 0) ?? 0
 
   const switchMatiere = (m: Matiere) => {
     setActiveMatiere(m)
-    setActiveSec(m === 'maths' ? 'maths' : 'sc-exp-phys')
+    setActiveSec(
+      m === 'maths' ? 'maths' :
+      m === 'physique' ? 'sc-exp-phys' :
+      'info-algo'
+    )
     setSelectedYear(null)
   }
 
@@ -1774,6 +1694,8 @@ export default function ExamensTunisiePage() {
       'sc-tech':      'sc-tech',
       'eco':          'eco',
       'info':         'info',
+      'info-algo':    'info',
+      'info-bd':      'info',
       'sc-exp-phys':  'sc-exp',    // Physique Sc.Exp → section scexp dans simulation
       'sc-tech-phys': 'sc-tech',   // Physique Sc.Tech → section sctech dans simulation
       'math-phys':    'maths',     // Physique Maths → section maths dans simulation
@@ -1814,8 +1736,9 @@ export default function ExamensTunisiePage() {
           {/* ── NIVEAU 1 : MATIÈRE ── */}
           <div style={{display:'flex',gap:8,marginBottom:20,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:6,width:'fit-content'}}>
             {([
-              { key:'maths'    as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
-              { key:'physique' as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+              { key:'maths'        as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
+              { key:'physique'     as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+              { key:'informatique' as Matiere, icon:'💻', label:'Informatique',    color:'#6366f1' },
             ]).map(m => (
               <button key={m.key} onClick={() => switchMatiere(m.key)}
                 style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
@@ -1846,7 +1769,7 @@ export default function ExamensTunisiePage() {
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
                   <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
-                    {isMaths ? 'Mathématiques' : 'Physique-Chimie'}
+                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : 'Physique-Chimie'}
                   </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>
@@ -1901,7 +1824,7 @@ export default function ExamensTunisiePage() {
               <div style={{marginBottom:24}}>
                 <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
                   <span style={{fontSize:22}}>{sec.icon}</span>
-                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
+                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
                     ✅ Sujets + Corrections disponibles
                   </span>
@@ -1919,7 +1842,7 @@ export default function ExamensTunisiePage() {
                 secKey={activeSec}
                 color={sec.color}
                 links={(sec.links as Record<number,AnneeLinks>)[selectedYear!]}
-                infoL={activeSec==='info' ? infoLinks[selectedYear!] : undefined}
+                infoL={(['info','info-algo'].includes(activeSec)) ? infoLinks[selectedYear!] : undefined}
                 onOpen={openPdf}
               />
 

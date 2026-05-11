@@ -44,6 +44,23 @@ const MATIERES = [
     ],
   },
   {
+    key: 'informatique',
+    icon: '💻',
+    label: 'Informatique',
+    desc: 'Simulation Bac Info · Chat Prof · Solveur étape/étape · Bac Blanc IA',
+    color: '#6366f1',
+    gradient: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.07))',
+    border: 'rgba(99,102,241,0.35)',
+    available: true,
+    accesPayant: ['Simulation Bac Informatique IA','Chat Professeur Informatique','Solveur Algo & BD','Remédiation & Analyse'],
+    accesFree: [
+      'Cours Informatique officiels (Algorithmique, BD, TIC)',
+      'Examens officiels Informatique + sujets (2015→2025)',
+      'Annales Bac Informatique Tunisie (Algo + BD)',
+      'Programme complet section Sc. Informatiques',
+    ],
+  },
+  {
     key: 'svt',
     icon: '🧬',
     label: 'SVT',
@@ -67,18 +84,7 @@ const MATIERES = [
     accesPayant: [],
     accesFree: [],
   },
-  {
-    key: 'informatique',
-    icon: '💻',
-    label: 'Informatique',
-    desc: 'Algo · SQL · Réseaux · Python — Bientôt disponible',
-    color: '#8b5cf6',
-    gradient: 'linear-gradient(135deg,rgba(139,92,246,0.12),rgba(109,40,217,0.05))',
-    border: 'rgba(139,92,246,0.25)',
-    available: false,
-    accesPayant: [],
-    accesFree: [],
-  },
+
 ]
 
 // ── Quotas par plan ───────────────────────────────────────────────

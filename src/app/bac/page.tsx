@@ -9,7 +9,7 @@ import Link from 'next/link'
 //  Programme officiel CNP Tunisie — 4ème année secondaire
 // ═══════════════════════════════════════════════════════════════
 
-type Matiere = 'maths' | 'physique-chimie' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | null
 
 // ──────────────────────────────────────────────────────────────
 //  DONNÉES MATHÉMATIQUES — Programme officiel CNP mis à jour
@@ -596,6 +596,30 @@ export default function BacTunisiePage() {
                 </span>
               </button>
 
+              {/* INFORMATIQUE */}
+              <button
+                onClick={() => setMatiere('informatique')}
+                style={{ padding: '36px 28px', background: 'rgba(99,102,241,0.06)', border: '1.5px solid rgba(99,102,241,0.25)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.55)'; e.currentTarget.style.background = 'rgba(99,102,241,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)'; e.currentTarget.style.background = 'rgba(99,102,241,0.06)' }}
+              >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#6366f1,#a78bfa)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>💻</div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#818cf8' }}>Informatique</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                  Algorithmique · Bases de données · TIC<br />
+                  Section Info + TIC commun toutes sections
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  {['Sc. Informatiques', 'Autres sections (TIC)'].map(t => (
+                    <span key={t} style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(99,102,241,0.12)', color: '#818cf8', fontWeight: 600 }}>{t}</span>
+                  ))}
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#818cf8', fontWeight: 700, fontSize: 13 }}>
+                  Voir les programmes →
+                </span>
+              </button>
+
               {/* SVT */}
               <button
                 disabled
@@ -619,7 +643,7 @@ export default function BacTunisiePage() {
                 { num: '5', label: 'Sections', icon: '🎓' },
                 { num: '57+', label: 'Chapitres Maths', icon: '📐' },
                 { num: '45+', label: 'Chapitres PC', icon: '⚗️' },
-                { num: '500+', label: 'Exercices', icon: '📝' },
+                { num: '16', label: 'Chapitres Info', icon: '💻' },
               ].map(s => (
                 <div key={s.label} className="card" style={{ textAlign: 'center', padding: '16px 10px' }}>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
@@ -740,6 +764,7 @@ export default function BacTunisiePage() {
   }
 
   // ── PAGE PHYSIQUE-CHIMIE ────────────────────────────────────
+  if (matiere === 'physique-chimie') {
   return (
     <>
       <Navbar />
@@ -818,4 +843,75 @@ export default function BacTunisiePage() {
       `}</style>
     </>
   )
+
+  // ── PAGE INFORMATIQUE ────────────────────────────────────────────
+  }
+
+  if (matiere === 'informatique') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+            <div style={{ marginBottom: 40 }}>
+              <button
+                onClick={() => setMatiere(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16 }}
+              >← Toutes les matières</button>
+              <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+                💻 Informatique<br />
+                <span style={{ color: '#818cf8' }}>Bac 4ème Année Secondaire</span>
+              </h1>
+              <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
+                Programme complet pour la <strong style={{ color: '#818cf8' }}>Section Sc. Informatiques</strong> (Algo + BD + TIC)
+                et TIC commun pour les <strong style={{ color: '#f59e0b' }}>autres sections</strong>.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20, marginBottom: 48 }}>
+              <Link href="/bac/info/informatique" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(99,102,241,0.08)', border: '1.5px solid rgba(99,102,241,0.3)', borderRadius: 20, padding: '28px 24px', transition: 'transform 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                  <span style={{ fontSize: 38 }}>💻</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#818cf8', margin: '12px 0 4px' }}>Section Sc. Informatiques</div>
+                  <span style={{ fontSize: 11, background: 'rgba(99,102,241,0.15)', color: '#818cf8', padding: '2px 10px', borderRadius: 20 }}>Coefficient 4 · 16 chapitres</span>
+                  <div style={{ margin: '14px 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {['🧮 Bloc 1 — Algorithmique & Programmation (6 ch.)','🗄️ Bloc 2 — Bases de données (6 ch.)','🌐 Bloc 3 — TIC (4 ch.)'].map(b => (
+                      <div key={b} style={{ fontSize: 12, color: 'var(--text2)' }}>{b}</div>
+                    ))}
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#6366f1,#a78bfa)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    📚 Voir les 16 chapitres →
+                  </span>
+                </div>
+              </Link>
+              <Link href="/bac/info/autres-sections" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.25)', borderRadius: 20, padding: '28px 24px', transition: 'transform 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                  <span style={{ fontSize: 38 }}>🎓</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#f59e0b', margin: '12px 0 4px' }}>Autres Sections (TIC Commun)</div>
+                  <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', padding: '2px 10px', borderRadius: 20 }}>Maths · Sc.Exp · Sc.Tech · Éco-Gestion</span>
+                  <div style={{ margin: '14px 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {['🌐 Internet & Réseaux','💡 Web — HTML/CSS/JS','🖥️ Systèmes informatiques','🔒 Sécurité informatique'].map(t => (
+                      <div key={t} style={{ fontSize: 12, color: 'var(--text2)' }}>{t}</div>
+                    ))}
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    🌐 Voir les 4 thèmes →
+                  </span>
+                </div>
+              </Link>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac →</Link>
+              <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
 }
