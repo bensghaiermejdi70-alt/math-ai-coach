@@ -453,7 +453,104 @@ RÉPONSE JSON OBLIGATOIRE :
   ]
 }`
 
-  // Utiliser askClaude() — même fonction que generateBacBlanc (maths)
+  // ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC INFORMATIQUE
+// ════════════════════════════════════════════════════════════════
+async function generateBacBlancInfo(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en Informatique (programme CNP officiel).
+Tu crées des sujets BAC BLANC INFORMATIQUE originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION INFORMATIQUE OBLIGATOIRE :
+- Algorithmes : utiliser la notation Pascal/Python officielle tunisienne
+- SQL : majuscules pour les mots-clés (SELECT, FROM, WHERE, JOIN, GROUP BY, HAVING)
+- Bases de données : schéma relationnel avec clés primaires (#) et étrangères (*)
+- TIC : utiliser les termes techniques officiels du programme CNP
+
+STRUCTURE DU SUJET INFORMATIQUE BAC TUNISIE :
+- Exercice 1 : Algorithmique & Programmation (7 pts) — Pascal ou Python
+- Exercice 2 : Bases de données (6 pts) — SQL + Modélisation
+- Exercice 3 : TIC & Réseaux (7 pts) — Internet, Web, Sécurité
+Total : 20 points`
+
+  const prompt = `Graine de variation : ${seed}
+Date : ${dateStr}
+Section : ${candidat.section}
+Candidat : ${candidat.prenom} ${candidat.nom}
+
+Crée un sujet BAC BLANC INFORMATIQUE ORIGINAL variante jour ${dayNum}.
+
+EXERCICE 1 — ALGORITHMIQUE (7 pts) :
+Crée un exercice complet sur un algorithme de tri OU récursivité OU structures de données.
+- Partie A (3 pts) : Analyse et trace d'exécution
+- Partie B (4 pts) : Écriture de l'algorithme complet en Pascal ou Python
+
+EXERCICE 2 — BASES DE DONNÉES (6 pts) :
+Crée un exercice sur une base de données réaliste (bibliothèque, hôpital, école, commerce...).
+- Partie A (2 pts) : Modèle relationnel — clés primaires/étrangères
+- Partie B (4 pts) : 4 requêtes SQL progressives (SELECT, JOIN, GROUP BY, sous-requête)
+
+EXERCICE 3 — TIC & RÉSEAUX (7 pts) :
+Crée un exercice sur Internet, Web (HTML/CSS/JS/PHP) ou Sécurité informatique.
+- Questions progressives couvrant les notions théoriques et pratiques du programme
+
+Réponds EXACTEMENT avec ce JSON :
+{
+  "title": "Bac Blanc Informatique — Variante Jour ${dayNum}",
+  "section": "${candidat.section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — Algorithmique & Programmation",
+      "theme": "Algorithmique",
+      "points": 7,
+      "graph": null,
+      "statement": "Énoncé complet exercice algorithmique. Minimum 200 mots. Sous-parties numérotées 1), 2), 3)..."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — Bases de données",
+      "theme": "Bases de données",
+      "points": 6,
+      "graph": null,
+      "statement": "Présenter le schéma relationnel puis les requêtes SQL. Minimum 150 mots."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — TIC & Réseaux",
+      "theme": "TIC",
+      "points": 7,
+      "graph": null,
+      "statement": "Énoncé complet TIC. Minimum 150 mots. Sous-parties numérotées."
+    }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 6000, 'informatique')
+  const fallback: Omit<BacExam,'id'|'index'> = {
+    title:`Bac Blanc Informatique — Variante Jour ${dayNum}`,
+    section: candidat.section,
+    sectionKey: candidat.sectionKey,
+    day: dayNum,
+    date: new Date().toLocaleDateString('fr-TN'),
+    duration:180, totalPoints:20,
+    exercises:[
+      {num:1,title:'Exercice 1 — Algorithmique & Programmation',theme:'Algorithmique',points:7,graph:undefined,statement:'Exercice algorithmique en cours de génération…'},
+      {num:2,title:'Exercice 2 — Bases de données',theme:'Bases de données',points:6,graph:undefined,statement:'Exercice bases de données en cours de génération…'},
+      {num:3,title:'Exercice 3 — TIC & Réseaux',theme:'TIC',points:7,graph:undefined,statement:'Exercice TIC en cours de génération…'},
+    ]
+  }
+  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
+  return { ...parsed, id:`bb-info-${dayNum}-${Date.now()}`, index:0 }
+}
+
+// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
   const raw = await askClaude(prompt, system, 5000)
 
   const parsed = parseJSON<BacExam>(raw, {
@@ -1455,13 +1552,14 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onRetour,
+  candidat, dayNum, onMaths, onPhysique, onInfo, onRetour,
   hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
   onPhysique: () => void
+  onInfo: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
   checkMatiereAccess?: (m: any) => boolean
@@ -1491,6 +1589,18 @@ function PhaseChoixMatiere({
       color: '#06d6a0',
       gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
       border: 'rgba(6,214,160,0.35)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'informatique',
+      icon: '💻',
+      label: 'Informatique',
+      desc: 'Algorithmique · Bases de données · TIC & Réseaux · Correction IA · Analyse des faiblesses',
+      color: '#6366f1',
+      gradient: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.06))',
+      border: 'rgba(99,102,241,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
@@ -1565,7 +1675,7 @@ function PhaseChoixMatiere({
           {/* Grille matières */}
         <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
           {MATIERES.map(m => {
-            const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
+            const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key === 'informatique' ? 'informatique' : m.key
             const isLk = m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
             return (
               <button
@@ -1575,6 +1685,7 @@ function PhaseChoixMatiere({
                   if (!m.available || isLk) return
                   if (m.key === 'maths') { onMaths(); return }
                   if (m.key === 'physique') { onPhysique(); return }
+                  if (m.key === 'informatique') { onInfo(); return }
                 }}
                 style={{
                   width:'100%',
@@ -3160,6 +3271,31 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  const handleStartInfo = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('informatique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique pour accéder au Bac Blanc Info.\n→ mathsbac.com/abonnement?matiere=informatique')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('informatique')) {
+      alert('✅ Vous avez déjà passé votre examen Informatique aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancInfo(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('informatique')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3209,6 +3345,7 @@ function BacBlancInner() {
       dayNum={dayNum}
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
+      onInfo={handleStartInfo}
       onRetour={()=>setPhase('inscription')}
       hasActiveSubscription={hasActiveSubscription}
       checkMatiereAccess={checkMatiereAccess}
