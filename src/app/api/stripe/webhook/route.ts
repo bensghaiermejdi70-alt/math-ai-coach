@@ -226,6 +226,7 @@ export async function POST(req: Request) {
           user_id:                profile?.id || null,
           plan_type:              planType,
           status:                 "active",
+          is_active:              true,
           price_paid:             (session.amount_total || 1500) / 100,
           payment_method:         "stripe",
           payment_reference:      session.id,
@@ -234,6 +235,8 @@ export async function POST(req: Request) {
           stripe_price_id:        priceId,
           starts_at:              new Date().toISOString(),
           ends_at:                endDate.toISOString(),
+          subscription_start:     new Date().toISOString(),
+          subscription_end:       endDate.toISOString(),
         })
 
       if (subErr) console.error("Erreur insert subscriptions:", subErr)
