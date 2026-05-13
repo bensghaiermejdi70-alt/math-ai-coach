@@ -39,16 +39,21 @@ function renderKaTeX(text: string): string {
     }
   })
 
-  // ✅ $...$ → INLINE (avec data-latex pour copie)
-  result = result.replace(/\$([^$]+?)\$/g, (_: string, math: string) => {
+  // ✅ $...$ → INLINE — seulement si contenu ressemble à du LaTeX
+  result = result.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
+    const trimmed = math.trim()
+    // Ignorer si ce n'est pas du LaTeX (pas de commande \ ni opérateur math)
+    const isLaTeX = /[\\{}^_]|\\[a-zA-Z]|[≠≤≥±∞∑∫√π]/.test(trimmed)
+      || /^[0-9a-zA-Z\s+\-*/=<>(),.^_]+$/.test(trimmed)
+    if (!isLaTeX) return _  // retourner tel quel si pas du LaTeX
     try {
       const katex = (window as any).katex
-      if (!katex) return `<span style="font-style:italic">${math}</span>`
-      const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: false })
-      const safeMath = math.trim().replace(/"/g, '&quot;')
-      return `<span data-latex="$${safeMath}$" style="display:inline">${rendered}</span>`
+      if (!katex) return `<em>${trimmed}</em>`
+      const rendered = katex.renderToString(trimmed, { throwOnError: false, displayMode: false })
+      // Ne pas mettre data-latex dans le span pour éviter le double affichage
+      return `<span class="katex-inline">${rendered}</span>`
     } catch {
-      return `<code>${math}</code>`
+      return `<em>${trimmed}</em>`
     }
   })
 
@@ -1232,7 +1237,7 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 }
 
 export default function ChatPage() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription } = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1253,7 +1258,10 @@ export default function ChatPage() {
 
   const totalQuota = sumQuotasAcrossMatiere(quotas)
   // Quota cumulé : somme de tous les abonnements actifs (multi-matières)
-  const chatUsed  = totalQuota.chat_used || 0
+  const [localChatUsed, setLocalChatUsed] = useState(0)
+  // Sync local avec Supabase quand quotas se recharge
+  useEffect(() => { setLocalChatUsed(totalQuota.chat_used || 0) }, [totalQuota.chat_used])
+  const chatUsed  = localChatUsed
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
@@ -1330,6 +1338,7 @@ export default function ChatPage() {
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
       await incrementQuota('chat')
+      setLocalChatUsed(prev => prev + 1)  // Mise à jour immédiate du compteur
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
       setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
