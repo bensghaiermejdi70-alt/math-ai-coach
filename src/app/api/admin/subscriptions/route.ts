@@ -53,22 +53,25 @@ export async function PATCH(req: NextRequest) {
 
       // Construire le plan_type final avec matière
       // body.matiere est passé depuis le panel admin (ex: 'mathematiques')
-      const matiere = body.matiere || 'mathematiques'
+      const matiereKey = body.matiere || 'mathematiques'
       const basePlan = plan_type?.split('_')[0] === 'sprint'
         ? 'sprint_bac'
         : (plan_type?.split('_')[0] || 'mensuel')
-      const finalPlanType = `${basePlan}_${matiere}`
+      const finalPlanType = `${basePlan}_${matiereKey}`
 
       // Insérer subscription active
       await supabase.from('subscriptions').insert({
-        user_id:           profile.id,
-        plan_type:         finalPlanType,
-        status:            'active',
-        price_paid:        0,
-        payment_method:    'especes',
-        payment_reference: 'ADMIN_MANUAL',
-        starts_at:         new Date().toISOString(),
-        ends_at:           endDate.toISOString(),
+        user_id:              profile.id,
+        plan_type:            finalPlanType,
+        status:               'active',
+        is_active:            true,
+        price_paid:           0,
+        payment_method:       'especes',
+        payment_reference:    'ADMIN_MANUAL',
+        starts_at:            new Date().toISOString(),
+        ends_at:              endDate.toISOString(),
+        subscription_start:   new Date().toISOString(),
+        subscription_end:     endDate.toISOString(),
       })
 
       // Mettre à jour le profil — RESET current_session_id pour éviter blocage
@@ -97,7 +100,9 @@ export async function PATCH(req: NextRequest) {
       .from('subscriptions')
       .update({
         status,
-        ends_at: status === 'active' ? endDate : null,
+        is_active:        status === 'active',
+        ends_at:          status === 'active' ? endDate : null,
+        subscription_end: status === 'active' ? endDate : null,
       })
       .eq('id', id)
 
