@@ -310,9 +310,14 @@ export function sumQuotasAcrossMatiere(quotasRecord: Record<MatiereType, UserQuo
     analyses_used: 0,
   }
 
+  // Déduplication: si même id (même enregistrement stocké sous plusieurs clés), compter une seule fois
+  const seenIds = new Set<string>()
   for (const matiere in quotasRecord) {
     const quota = quotasRecord[matiere as MatiereType]
     if (quota) {
+      const uniqueKey = quota.id || `${quota.user_id}_${quota.week_start}_${matiere}`
+      if (seenIds.has(uniqueKey)) continue  // Ignorer les doublons
+      seenIds.add(uniqueKey)
       total.simulations_used += quota.simulations_used
       total.chat_used += quota.chat_used
       total.solver_used += quota.solver_used

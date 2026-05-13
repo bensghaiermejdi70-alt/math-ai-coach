@@ -331,15 +331,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const error = response.error
 
     if (error || !data) {
-      if (error) {
-        console.error('Error loading quotas:', error)
-      }
+      if (error) console.error('Error loading quotas:', error)
       setQuotas(null)
     } else {
       const quotasMap: Partial<Record<MatiereType, UserQuotas>> = {}
       data.forEach((q: UserQuotas) => {
-        quotasMap[q.matiere] = q
+        const key = (q.matiere as MatiereType) || 'mathematiques'
+        quotasMap[key] = q
       })
+      // Si pas de colonne matiere (1 seul enregistrement sans matiere):
+      // NE PAS dupliquer — sumQuotasAcrossMatiere compterait x3
+      // Stocker seulement sous 'mathematiques' pour usage global
       setQuotas(quotasMap as Record<MatiereType, UserQuotas>)
     }
   }
