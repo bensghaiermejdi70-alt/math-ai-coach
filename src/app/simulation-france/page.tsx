@@ -2020,15 +2020,15 @@ const CHAPITRES_INFO_FR: Record<string, {
 }
 
 const SECTION_CONFIGS_PHYS_FR = [
-  { key:'terminale-phys', label:'Terminale Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
+  { key:'terminale-phys', label:'Terminale-Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
     themes:['Ondes et signaux','Mécanique','Énergie','Chimie organique','Optique','Électricité'] },
-  { key:'premiere-phys',  label:'Première Spécialité — Physique-Chimie', color:'#4f6ef7', icon:'🔬',
+  { key:'premiere-phys',  label:'Première-Spécialité — Physique-Chimie', color:'#4f6ef7', icon:'🔬',
     themes:['Constitution matière','Mécanique','Ondes','Chimie','Électricité','Optique'] },
   { key:'seconde-phys',   label:'Seconde — Physique-Chimie',              color:'#f97316', icon:'🔬',
     themes:['Atomes','Transformations chimiques','Mouvement','Forces','Ondes','Énergie'] },
-  { key:'sti2d-phys',    label:'Terminale STI2D — Physique-Chimie',      color:'#10b981', icon:'⚙️',
+  { key:'sti2d-phys',    label:'Terminale-STI2D — Physique-Chimie',      color:'#10b981', icon:'⚙️',
     themes:['Mécanique','Électricité','Ondes','Thermodynamique','Chimie des matériaux'] },
-  { key:'st2s-phys',     label:'Terminale ST2S — CBPH',                   color:'#8b5cf6', icon:'🏥',
+  { key:'st2s-phys',     label:'Terminale-ST2S — CBPH',                   color:'#8b5cf6', icon:'🏥',
     themes:['Chimie biologie','Acide-base','Oxydoréduction','Ondes médicales','Physique santé'] },
 ]
 

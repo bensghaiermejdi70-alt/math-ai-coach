@@ -8309,7 +8309,7 @@ const SECTIONS: {
     desc:'Option Maths Expertes · Arithmétique · Complexes · Matrices & Graphes',
     data:dataExpertes, links:linksExpertes },
   { key:'premiere-specialite', label:'Première · Maths', icon:'📗', color:'#f59e0b', coeff:'DS lycées · 2h',
-    desc:"Pas d'examen national en Première. DS de lycées (Henri-IV, LLG) couvrant tout le programme.",
+    desc:"Pas d'examen national en Première. Choisissez un chapitre pour vous entraîner.",
     data:[], links:{} },
   { key:'seconde-maths', label:'Seconde · Maths', icon:'📘', color:'#10b981', coeff:'Enseignement commun',
     desc:'Mathématiques Seconde · Enseignement commun · Fonctions · Géométrie · Probabilités · Statistiques',
@@ -8462,15 +8462,6 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
   const chap = chapitres.find(c => c.id === selectedChap)
 
   return (
-    <div>
-      {/* NOTE INFO */}
-      <div style={{background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.3)',
-        borderRadius:12,padding:'14px 18px',marginBottom:24,fontSize:13}}>
-        ℹ️ <strong>Pas d'examen national en Première</strong> — Ces exercices proviennent des livrets
-        officiels du <strong>Lycée Henri-IV</strong> (Paris, 2024) et de <strong>Louis-le-Grand &amp; Henri-IV</strong> (LLG 2022),
-        couvrant tout le programme de Première Spécialité. Choisissez un chapitre ci-dessous.
-      </div>
-
       {/* GRILLE CHAPITRES */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:28}}>
         {chapitres.map(c => {
@@ -8841,7 +8832,7 @@ export default function ExamensFrancePage() {
             <div style={{fontSize:12,color:'var(--muted)',textAlign:'right'}}>
               {activeSec === 'premiere-specialite' ? (<>
                 <div>📗 {CHAPITRES_PREMIERE.length} chapitres · {CHAPITRES_PREMIERE.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
-                <div style={{marginTop:4}}>📚 Sources : Lycée Henri-IV (2024) + LLG (2022)</div>
+
               </>) : (<>
                 <div>📅 2021 → 2025 · 5 années</div>
                 <div style={{marginTop:4}}>📄 Sujet + ✅ Correction par centre d'examen</div>
