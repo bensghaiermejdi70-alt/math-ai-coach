@@ -1944,6 +1944,81 @@ const CHAPITRES_PAR_SECTION: Record<string, {
 //  Sections : Terminale + Première + STI2D + ST2S
 // ════════════════════════════════════════════════════════════════════
 
+
+// ══════════════════════════════════════════════════════════════════════
+//  INFORMATIQUE NSI FRANCE
+// ══════════════════════════════════════════════════════════════════════
+
+const SECTION_CONFIGS_INFO_FR = [
+  { key:'terminale-nsi', label:'Terminale NSI — Spécialité', color:'#8b5cf6', icon:'🎓',
+    themes:['Structures de données','Algorithmes & Complexité','Bases de données SQL','POO Python','Réseaux & OS','Récursivité'] },
+  { key:'premiere-nsi',  label:'Première NSI — Spécialité',  color:'#06b6d4', icon:'📗',
+    themes:['Types construits','Traitement de données','Web & HTTP','Architecture & OS','Algorithmique','Python'] },
+  { key:'seconde-snt',   label:'Seconde — SNT',               color:'#10b981', icon:'📘',
+    themes:['Internet','Le Web','Réseaux sociaux','Données structurées','Géolocalisation','Photographie numérique','Objets connectés'] },
+]
+
+const ARCHIVES_INFO_FR: Archive[] = [
+  // ── Terminale NSI (sujetdebac.fr) ───────────────────────────────────
+  { id:'tnsi-2025-m1', year:2025, session:'Terminale NSI · Métropole J1 · 17 juin 2025',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-1-sujet-officiel.pdf',         themes:['Structures de données','SQL avancé','Algorithmes Python','Récursivité'] },
+  { id:'tnsi-2025-m2', year:2025, session:'Terminale NSI · Métropole J2 · 18 juin 2025',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-2-sujet-officiel.pdf',         themes:['Graphes','Bases de données','POO Python','Complexité'] },
+  { id:'tnsi-2025-s1', year:2025, session:'Terminale NSI · Remplacement J1 · sept. 2025',    section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-1-remplacement-sujet-officiel.pdf', themes:['Piles & Files','SQL','Algorithmes','Réseaux'] },
+  { id:'tnsi-2024-m1', year:2024, session:'Terminale NSI · Métropole J1 · 19 juin 2024',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-1-sujet-officiel.pdf',         themes:['Graphes DFS/BFS','SQL jointures','Classes Python','Tri fusion'] },
+  { id:'tnsi-2024-m2', year:2024, session:'Terminale NSI · Métropole J2 · 20 juin 2024',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-2-sujet-officiel.pdf',         themes:['Arbres binaires','Bases de données','Récursivité','Algorithmique'] },
+  { id:'tnsi-2024-s1', year:2024, session:'Terminale NSI · Remplacement · sept. 2024',        section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-1-remplacement-sujet-officiel.pdf', themes:['Structures de données','SQL','Python','Réseaux'] },
+  { id:'tnsi-2023-m1', year:2023, session:'Terminale NSI · Métropole J1 · 20 mars 2023',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-2023-metropole-1-sujet-officiel.pdf',         themes:['Récursivité & arbres','Bases de données','Tri & complexité','Réseaux'] },
+  { id:'tnsi-2023-m2', year:2023, session:'Terminale NSI · Métropole J2 · 21 mars 2023',     section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-2023-metropole-2-sujet-officiel.pdf',         themes:['Graphes','SQL avancé','POO Python','Algorithmique'] },
+  { id:'tnsi-2022-m1', year:2022, session:'Terminale NSI · Métropole J1 · 11 mai 2022',      section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-2022-metropole-1-sujet-officiel.pdf',         themes:['Piles LIFO','SQL GROUP BY','Dichotomie Python','Réseau & OS'] },
+  { id:'tnsi-2022-m2', year:2022, session:'Terminale NSI · Métropole J2 · 12 mai 2022',      section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-2022-metropole-2-sujet-officiel.pdf',         themes:['Arbres','Bases de données','Algorithmes de tri','Python avancé'] },
+  { id:'tnsi-2021-m1', year:2021, session:'Terminale NSI · Métropole J1 · mai 2021',          section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2021/spe-numerique-informatique-2021-metropole-1-sujet-officiel.pdf',         themes:['Récursivité','SQL DDL/DML','Recherche dichotomique','Von Neumann'] },
+  { id:'tnsi-2021-m2', year:2021, session:'Terminale NSI · Métropole J2 · mai 2021',          section:'Terminale NSI — Spécialité', sectionKey:'terminale-nsi', color:'#8b5cf6', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2021/spe-numerique-informatique-2021-metropole-2-sujet-officiel.pdf',         themes:['Fibonacci & Hanoï','Bases de données','Tri insertion','Réseaux'] },
+  // ── Première NSI — archive vide (pas d'examen officiel) ─────────────
+  // ── Seconde SNT — archive vide ──────────────────────────────────────
+]
+
+const CHAPITRES_INFO_FR: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'terminale-nsi': {
+    key:'terminale-nsi', label:'Terminale NSI — Spécialité', color:'#8b5cf6', icon:'🎓',
+    chapitres: [
+      { slug:'structures-donnees',    titre:'Structures de données',           badge:'Avancé',      desc:'Piles LIFO, Files FIFO, Arbres binaires, ABR, Graphes — Implémentations Python' },
+      { slug:'algorithmes-avances',   titre:'Algorithmes & Complexité',        badge:'Top Bac',     desc:'Tri fusion, Quicksort, DFS/BFS, Dijkstra — Notation Big-O, preuves de terminaison' },
+      { slug:'bases-donnees-sql',     titre:'Bases de données SQL',            badge:'Top Bac',     desc:'Modèle relationnel, SELECT/JOIN/GROUP BY/HAVING, normalisation 3NF, sous-requêtes' },
+      { slug:'programmation-avancee', titre:'Programmation avancée Python',    badge:'Top Bac',     desc:'Récursivité, POO — Classes/héritage/polymorphisme, encapsulation, méthodes spéciales' },
+      { slug:'architecture-reseaux',  titre:'Architecture, OS & Réseaux',      badge:'Système',     desc:'Von Neumann, cycle machine, processus, TCP/IP, HTTP, sécurité web XSS/injection SQL' },
+      { slug:'enjeux-numerique',      titre:'Enjeux du numérique',             badge:'Société',     desc:'RGPD, cybersécurité, IA — biais algorithmiques, deepfakes, empreinte carbone' },
+      { slug:'projet-nsi-terminale',  titre:'Projet NSI',                      badge:'Obligatoire', desc:'Git, architecture MVC, tests pytest, documentation, présentation soutenance' },
+    ]
+  },
+  'premiere-nsi': {
+    key:'premiere-nsi', label:'Première NSI — Spécialité', color:'#06b6d4', icon:'📗',
+    chapitres: [
+      { slug:'representation-donnees', titre:'Représentation des données',     badge:'Fondamental', desc:'Binaire, hexadécimal, complément à deux, IEEE 754, ASCII, Unicode, UTF-8' },
+      { slug:'types-construits',       titre:'Types construits Python',         badge:'Python',      desc:'Listes, tuples, dictionnaires, ensembles, compréhensions, slicing' },
+      { slug:'traitement-donnees',     titre:'Traitement de données en tables', badge:'Données',     desc:'CSV, sélection, projection, tri, agrégation, jointure de tables' },
+      { slug:'web-interaction',        titre:'Web & Interactions HTTP',         badge:'Web',         desc:'HTML, CSS, JavaScript, DOM, GET/POST, cookies, sessions, API REST' },
+      { slug:'architecture-os-1re',    titre:'Architecture & OS',               badge:'Système',     desc:'Von Neumann, hiérarchie mémoire, processus, Linux, commandes shell' },
+      { slug:'langages-python',        titre:'Langages & Programmation Python', badge:'Python',      desc:'Fonctions, récursivité, modules, gestion des erreurs, portée des variables' },
+      { slug:'algorithmique-1re',      titre:'Algorithmique',                   badge:'Algo',        desc:'Recherche séquentielle/dichotomique, tri sélection/insertion, complexité, glouton' },
+      { slug:'projet-nsi-premiere',    titre:'Projet NSI Première',             badge:'Projet',      desc:'Git, tests assert, documentation, refactoring, cahier des charges, GitHub' },
+    ]
+  },
+  'seconde-snt': {
+    key:'seconde-snt', label:'Seconde — SNT', color:'#10b981', icon:'📘',
+    chapitres: [
+      { slug:'snt-internet',          titre:'Internet',                        badge:'Réseaux',     desc:'Architecture TCP/IP, DNS, routage, client/serveur, IPv4/IPv6, sécurité réseau' },
+      { slug:'snt-web',               titre:'Le Web',                          badge:'Web',         desc:'HTML, CSS, URL, HTTP, moteurs de recherche, PageRank, accessibilité' },
+      { slug:'snt-reseaux-sociaux',   titre:'Réseaux sociaux',                 badge:'Graphes',     desc:'Graphes, degré, communautés, algorithmes de recommandation, bulle de filtre' },
+      { slug:'snt-donnees',           titre:'Données structurées',             badge:'Données',     desc:'CSV, tables, RGPD, métadonnées, open data, types de données' },
+      { slug:'snt-geolocalisation',   titre:'Géolocalisation',                 badge:'GPS',         desc:'GPS, satellites, trilateralisation, cartographie, vie privée, géofencing' },
+      { slug:'snt-photographie',      titre:'Photographie numérique',          badge:'Image',       desc:'Pixels, RGB, résolution, compression, formats PNG/JPEG, deepfake, traitement' },
+      { slug:'snt-objets-connectes',  titre:'Objets connectés & IA',           badge:'IoT',         desc:'IoT, capteurs, actionneurs, protocoles, intelligence artificielle, biais' },
+    ]
+  },
+}
+
 const SECTION_CONFIGS_PHYS_FR = [
   { key:'terminale-phys', label:'Terminale Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
     themes:['Ondes et signaux','Mécanique','Énergie','Chimie organique','Optique','Électricité'] },
@@ -1966,10 +2041,6 @@ const ARCHIVES_PHYS_FR: Archive[] = [
   { id:'tphys-2021-m', year:2021, session:'Terminale · Physique-Chimie · Métropole · juin 2021', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2021/terminale-physique-chimie-2021-metropole-sujet-officiel.pdf`, themes:['Optique','Mécanique','Chimie organique'] },
   { id:'tphys-2024-an', year:2024, session:'Terminale · Physique-Chimie · Amérique du Nord 2024', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2024/terminale-physique-chimie-2024-amerique-du-nord-sujet-officiel.pdf`, themes:['Mécanique quantique','Ondes','Chimie'] },
   { id:'tphys-2023-an', year:2023, session:'Terminale · Physique-Chimie · Amérique du Nord 2023', section:'Terminale Générale — Physique-Chimie', sectionKey:'terminale-phys', color:'#f59e0b', icon:'⚗️', url:`${SD}/2023/terminale-physique-chimie-2023-amerique-du-nord-sujet-officiel.pdf`, themes:['Physique quantique','Mécanique','Chimie'] },
-  // ── Première Spécialité Physique-Chimie ───────────────────────────────────
-  { id:'pphys-2024-m', year:2024, session:'Première · Physique-Chimie · Métropole · 2024', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2024/premiere-spe-physique-chimie-2024-metropole-sujet-officiel.pdf`, themes:['Constitution matière','Ondes','Mécanique','Chimie'] },
-  { id:'pphys-2023-m', year:2023, session:'Première · Physique-Chimie · Métropole · 2023', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2023/premiere-spe-physique-chimie-2023-metropole-sujet-officiel.pdf`, themes:['Optique','Mécanique','Chimie','Constitution'] },
-  { id:'pphys-2022-m', year:2022, session:'Première · Physique-Chimie · Métropole · 2022', section:'Première Spécialité — Physique-Chimie', sectionKey:'premiere-phys', color:'#4f6ef7', icon:'🔬', url:`${SD}/2022/premiere-spe-physique-chimie-2022-metropole-sujet-officiel.pdf`, themes:['Constitution','Ondes','Mécanique','Chimie'] },
   // ── Terminale STI2D Physique-Chimie ───────────────────────────────────────
   { id:'sti-2025-m', year:2025, session:'STI2D · Physique-Chimie-Maths · Métropole · juin 2025', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-sujet-officiel.pdf`, themes:['Mécanique','Électricité','Ondes','Chimie matériaux'] },
   { id:'sti-2025-s', year:2025, session:'STI2D · Remplacement · sept. 2025', section:'Terminale STI2D — Physique-Chimie', sectionKey:'sti2d-phys', color:'#10b981', icon:'⚙️', url:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-remplacement-sujet-officiel.pdf`, themes:['Mécanique','Électricité','Chimie'] },
@@ -2167,7 +2238,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'
+  matiere?: 'maths'|'physique'|'informatique'
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -4565,9 +4636,9 @@ function SimulationFrancePageInner() {
   globalMatiere = matiereActive
 
   // ── Matière : maths ou physique ──────────────────────────────────
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'>(() => {
     if (typeof window === 'undefined') return 'maths'
-    return new URLSearchParams(window.location.search).get('subject') === 'physique' ? 'physique' : 'maths'
+    const s = new URLSearchParams(window.location.search).get('subject'); return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
@@ -4692,8 +4763,9 @@ function SimulationFrancePageInner() {
           {phase === 'select' && (
             <div style={{display:'flex',gap:8,marginBottom:24,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
               {([
-                { key:'maths'    as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
-                { key:'physique' as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+                { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
+                { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+                { key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6', matiere:'informatique' },
               ]).map(m => {
                 const locked = false
                 return (
@@ -4717,9 +4789,9 @@ function SimulationFrancePageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

@@ -7665,7 +7665,7 @@ const CHAPITRES_PREMIERE_PC: ChapitreData[] = [
 ]
 
 
-type SKey = 'terminale-generale' | 'terminale-physique-chimie' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde-maths' | 'seconde-physique-chimie' | 'premiere-physique-chimie' | 'sti2d-physique-chimie' | 'stes-physique-chimie'
+type SKey = 'terminale-nsi' | 'premiere-nsi' | 'seconde-snt' | 'terminale-generale' | 'terminale-physique-chimie' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde-maths' | 'seconde-physique-chimie' | 'premiere-physique-chimie' | 'sti2d-physique-chimie' | 'stes-physique-chimie'
 
 
 // ════════════════════════════════════════════════════════════════
@@ -7834,6 +7834,459 @@ const linksSTESPC: Record<number, AnneeLinks> = {
       correction:`https://www.apmep.fr/IMG/pdf/st2s-1995-2020.pdf` },
   ]},
 }
+
+// ════════════════════════════════════════════════════════════════
+//  NSI — Données (même structure AnneeData / AnneeLinks)
+// ════════════════════════════════════════════════════════════════
+const SDI = 'https://www.annabac.com/annales-bac/annales-pdf'
+
+type NSILinks = Record<number, Record<string, {sujet:string; correction?:string; label?:string}[]>>
+
+const linksNSITerminale: NSILinks = {
+  // ─── 2025 ─────────────────────────────────────────────────────────
+  2025: {
+    'Métropole — Juin': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-1-sujet-officiel.pdf', correction:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-1-corrige.pdf', label:'25-NSIJ1ME1 · Jour 1 · 17 juin 2025' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-2-sujet-officiel.pdf', label:'25-NSIJ2ME1 · Jour 2 · 18 juin 2025' },
+    ],
+    'Métropole — Septembre (remplacement)': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-1-remplacement-sujet-officiel.pdf', label:'25-NSIJ1G31 · Remplacement Jour 1 · 9 sept. 2025' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2025/spe-numerique-informatique-2025-metropole-2-remplacement-sujet-officiel.pdf', label:'25-NSIJ2G31 · Remplacement Jour 2 · 10 sept. 2025' },
+    ],
+  },
+  // ─── 2024 ─────────────────────────────────────────────────────────
+  2024: {
+    'Métropole — Juin': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-1-sujet-officiel.pdf', label:'24-NSIJ1ME1 · Jour 1 · 19 juin 2024' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-2-sujet-officiel.pdf', label:'24-NSIJ2ME1 · Jour 2 · 20 juin 2024' },
+    ],
+    'Métropole — Septembre (remplacement)': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-1-remplacement-sujet-officiel.pdf', label:'24-NSIJ1G31 · Remplacement Jour 1 · sept. 2024' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-2024-metropole-2-remplacement-sujet-officiel.pdf', label:'24-NSIJ2G31 · Remplacement Jour 2 · sept. 2024' },
+    ],
+  },
+  // ─── 2023 ─────────────────────────────────────────────────────────
+  2023: {
+    'Métropole — Mars': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-2023-metropole-1-sujet-officiel.pdf', label:'23-NSIJ1ME1 · Jour 1 · 20 mars 2023' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-2023-metropole-2-sujet-officiel.pdf', label:'23-NSIJ2ME1 · Jour 2 · 21 mars 2023' },
+    ],
+  },
+  // ─── 2022 ─────────────────────────────────────────────────────────
+  2022: {
+    'Métropole — Mai': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-2022-metropole-1-sujet-officiel.pdf', label:'22-NSIJ1ME1 · Jour 1 · 11 mai 2022' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-2022-metropole-2-sujet-officiel.pdf', label:'22-NSIJ2ME1 · Jour 2 · 12 mai 2022' },
+    ],
+    'Métropole — Septembre (remplacement)': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-2022-metropole-remplacement-sujet-officiel.pdf', label:'22-NSIJ1G31 · Remplacement · sept. 2022' },
+    ],
+  },
+  // ─── 2021 ─────────────────────────────────────────────────────────
+  2021: {
+    'Métropole — Mai': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2021/spe-numerique-informatique-2021-metropole-1-sujet-officiel.pdf', label:'21-NSIJ1ME1 · Jour 1 · mai 2021' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2021/spe-numerique-informatique-2021-metropole-2-sujet-officiel.pdf', label:'21-NSIJ2ME1 · Jour 2 · mai 2021' },
+    ],
+    'Métropole — Septembre (remplacement)': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2021/spe-numerique-informatique-2021-metropole-remplacement-sujet-officiel.pdf', label:'21-NSIJ1G31 · Remplacement · sept. 2021' },
+    ],
+  },
+}
+
+const linksNSIPremiereAnticipee: NSILinks = {
+  2024: {
+    'Métropole': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-premiere-2024-metropole-1-sujet-officiel.pdf', label:'24-NSI1PRE · Jour 1 · 2024' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2024/spe-numerique-informatique-premiere-2024-metropole-2-sujet-officiel.pdf', label:'24-NSI2PRE · Jour 2 · 2024' },
+    ],
+  },
+  2023: {
+    'Métropole': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-premiere-2023-metropole-1-sujet-officiel.pdf', label:'23-NSI1PRE · Jour 1 · 2023' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2023/spe-numerique-informatique-premiere-2023-metropole-2-sujet-officiel.pdf', label:'23-NSI2PRE · Jour 2 · 2023' },
+    ],
+  },
+  2022: {
+    'Métropole': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2022/spe-numerique-informatique-premiere-2022-metropole-sujet-officiel.pdf', label:'22-NSI1PRE · 2022' },
+    ],
+  },
+}
+
+const dataNSITerminale: AnneeData[] = [
+  { year:2025, exercices:[{titre:'Exercice 1 — Structures de données',theme:'Piles, Files, Arbres binaires',pts:7},{titre:'Exercice 2 — Bases de données SQL',theme:'JOIN, GROUP BY, HAVING, sous-requêtes',pts:6},{titre:'Exercice 3 — Algorithmique Python',theme:'Tri fusion, récursivité, complexité',pts:7}]},
+  { year:2024, exercices:[{titre:'Exercice 1 — Graphes',theme:'DFS / BFS — parcours et plus court chemin',pts:7},{titre:'Exercice 2 — SQL',theme:'Normalisation, jointures, sous-requêtes',pts:6},{titre:'Exercice 3 — POO Python',theme:'Classes, héritage, polymorphisme',pts:7}]},
+  { year:2023, exercices:[{titre:'Exercice 1 — Récursivité',theme:'Arbres binaires, parcours préfixe/infixe',pts:7},{titre:'Exercice 2 — Bases de données',theme:'Modèle E/A, SQL SELECT avec jointures',pts:6},{titre:'Exercice 3 — Algorithmes de tri',theme:'Tri fusion, complexité Big-O',pts:7}]},
+  { year:2022, exercices:[{titre:'Exercice 1 — Structures de données',theme:'Piles LIFO — parenthèses équilibrées',pts:7},{titre:'Exercice 2 — SQL',theme:'Agrégation, GROUP BY, HAVING, jointures',pts:6},{titre:'Exercice 3 — Python',theme:'Dichotomie, listes, compréhensions',pts:7}]},
+  { year:2021, exercices:[{titre:'Exercice 1 — Récursivité',theme:'Fibonacci, factorielle, Tours de Hanoï',pts:7},{titre:'Exercice 2 — Bases de données',theme:'Schéma relationnel, SQL DDL/DML',pts:6},{titre:'Exercice 3 — Algorithmique',theme:'Recherche dichotomique, complexité',pts:7}]},
+]
+const dataNSIPremiere: AnneeData[] = [
+  { year:2024, exercices:[{titre:'Exercice 1 — Python',theme:'Fonctions, boucles, listes',pts:8},{titre:'Exercice 2 — Web',theme:'HTML/CSS, HTTP, formulaires',pts:6},{titre:'Exercice 3 — Système',theme:'Architecture Von Neumann, OS, processus',pts:6}]},
+  { year:2023, exercices:[{titre:'Exercice 1 — Python',theme:'Variables, conditions, types construits',pts:8},{titre:'Exercice 2 — Données',theme:'Tables CSV, tri, filtrage',pts:6},{titre:'Exercice 3 — Réseaux',theme:'Internet, TCP/IP, DNS',pts:6}]},
+  { year:2022, exercices:[{titre:'Exercice 1 — Python',theme:'Fonctions récursives, listes',pts:8},{titre:'Exercice 2 — Web',theme:'URL, HTML, CSS, JavaScript',pts:6},{titre:'Exercice 3 — Codage',theme:'Binaire, hexadécimal, ASCII',pts:6}]},
+]
+
+
+const CHAPITRES_SECONDE_NSI: ChapitreData[] = [
+  { id:'snt-internet', numero:1,
+    titre:'Internet',
+    sousTitre:'Architecture · Protocoles TCP/IP · DNS · Routage · Client/Serveur',
+    icon:'🌐', color:'#06b6d4',
+    notions:['Architecture réseau','TCP/IP','DNS','Routage','IP','Client/Serveur'],
+    exercices:[
+      {id:'S01-01',difficulte:1,titre:'Définir Internet',enonce:'1. Définir Internet.  2. Différence Internet et Web.  3. Qu\'est-ce qu\'un FAI?  4. Quand est né Internet?',correction:'1. Réseau mondial de réseaux interconnectés\n2. Internet=infrastructure physique, Web=service (pages HTML) sur Internet\n3. Fournisseur d\'Accès Internet (Orange, Free, SFR...)\n4. 1969 (ARPANET, réseau militaire américain)',notions:['Architecture réseau']},
+      {id:'S01-02',difficulte:1,titre:'Adresse IP',enonce:'1. À quoi sert une adresse IP?  2. Format IPv4.  3. Exemple d\'IP privée et publique.  4. Pourquoi IPv6?',correction:'1. Identifier de façon unique chaque machine sur le réseau\n2. 4 nombres de 0 à 255 séparés par des points (ex: 192.168.1.1)\n3. Privée: 192.168.x.x | Publique: 82.64.32.1\n4. IPv4 épuisé (~4 milliards), IPv6 offre 2¹²⁸ adresses',notions:['IP']},
+      {id:'S01-03',difficulte:1,titre:'Protocoles TCP/IP',enonce:'1. Rôle de TCP.  2. Rôle d\'IP.  3. Pourquoi découper en paquets?  4. Que garantit TCP?',correction:'1. TCP: découpe données en paquets, garantit la livraison et l\'ordre\n2. IP: adressage et routage des paquets d\'un réseau à l\'autre\n3. Paquets peuvent emprunter des chemins différents, plus robuste\n4. Livraison complète et dans l\'ordre (accusé de réception)',notions:['TCP/IP']},
+      {id:'S01-04',difficulte:1,titre:'DNS — Annuaire d\'Internet',enonce:'1. DNS = acronyme et rôle.  2. Que traduit le DNS?  3. Exemple concret.  4. Pourquoi le cache DNS?',correction:'1. Domain Name System — traduit noms de domaines en adresses IP\n2. Nom de domaine → adresse IP numérique\n3. google.com → 142.250.74.46\n4. Mémoriser les traductions récentes pour accélérer la navigation',notions:['DNS']},
+      {id:'S01-05',difficulte:2,titre:'Routage des paquets',enonce:'1. Rôle d\'un routeur.  2. Comment choisit-il le chemin?  3. Les paquets d\'un même message prennent-ils le même chemin?  4. Que se passe-t-il si un routeur tombe en panne?',correction:'1. Aiguiller les paquets vers le prochain nœud du réseau\n2. Table de routage: choisit le meilleur chemin disponible\n3. Non, chaque paquet peut suivre un chemin différent\n4. Les paquets empruntent un chemin alternatif (réseau décentralisé)',notions:['Routage']},
+      {id:'S01-06',difficulte:2,titre:'Modèle client/serveur',enonce:'1. Définir client et serveur.  2. Que fait un navigateur web (client)?  3. Que fait un serveur web?  4. Donner 2 exemples de serveurs.',correction:'1. Client=machine qui demande un service, Serveur=machine qui répond\n2. Envoie requête HTTP, reçoit et affiche la page HTML\n3. Reçoit la requête, traite, renvoie la page (HTML, images...)\n4. Apache, Nginx (serveurs web); MySQL, PostgreSQL (serveurs BDD)',notions:['Client/Serveur']},
+      {id:'S01-07',difficulte:2,titre:'Chemin d\'une requête web',enonce:'Décrire les 5 étapes quand on tape "www.exemple.fr" dans le navigateur.',correction:'1. Navigateur interroge le DNS → obtient l\'IP du serveur\n2. Navigateur établit connexion TCP avec le serveur\n3. Navigateur envoie requête HTTP GET /\n4. Serveur traite et renvoie la page HTML\n5. Navigateur affiche la page',notions:['DNS','Client/Serveur','TCP/IP']},
+      {id:'S01-08',difficulte:2,titre:'TCP vs UDP',enonce:'1. Différence TCP et UDP.  2. Quand utiliser UDP?  3. Pourquoi le streaming vidéo utilise UDP?',correction:'1. TCP: fiable (accusé réception, ordre garanti). UDP: rapide (sans garantie)\n2. Streaming, jeux en ligne, vidéoconférence, DNS\n3. Mieux vaut perdre quelques images que ralentir la diffusion',notions:['TCP/IP']},
+      {id:'S01-09',difficulte:2,titre:'Architecture d\'Internet',enonce:'1. Qu\'est-ce qu\'un backbone?  2. Pourquoi Internet est décentralisé?  3. Combien de câbles sous-marins existent?  4. Qui gère Internet?',correction:'1. Réseau central à très haut débit reliant les FAI et pays\n2. Conçu pour résister aux pannes (origine militaire)\n3. Plus de 400 câbles sous-marins dans le monde\n4. Personne ne "gère" Internet — organismes: ICANN (noms), IETF (protocoles)',notions:['Architecture réseau']},
+      {id:'S01-10',difficulte:2,titre:'Réseau local (LAN)',enonce:'1. Différence LAN et Internet.  2. Rôle d\'un switch.  3. Adresse MAC.  4. Différence switch et routeur.',correction:'1. LAN=réseau local (maison, entreprise). Internet=réseau mondial\n2. Switch: relie les machines d\'un même réseau local\n3. Adresse physique unique gravée sur la carte réseau (ex: 00:1A:2B:3C:4D:5E)\n4. Switch=réseau local, Routeur=entre réseaux différents',notions:['Architecture réseau']},
+      {id:'S01-11',difficulte:2,titre:'Sécurité réseau',enonce:'1. Qu\'est-ce qu\'un pare-feu (firewall)?  2. Rôle d\'un VPN.  3. Que signifie HTTPS?  4. Pourquoi le chiffrement est-il important?',correction:'1. Filtre les connexions réseau selon des règles de sécurité\n2. VPN: tunnel chiffré pour naviguer de façon sécurisée et anonyme\n3. HTTP Sécurisé (chiffrement TLS)\n4. Empêche l\'interception des données (mots de passe, données bancaires)',notions:['Architecture réseau']},
+      {id:'S01-12',difficulte:3,titre:'Simulation de routage',enonce:'Réseau: A-B-C-D en ligne. A veut envoyer un paquet à D. Si le lien B-C est coupé, que se passe-t-il?',correction:'Si réseau maillé: paquet prend chemin alternatif A-E-D\nSi réseau linéaire sans alternative: transmission impossible\n→ Illustre pourquoi Internet a une topologie maillée pour la résilience',notions:['Routage']},
+      {id:'S01-13',difficulte:2,titre:'Ports réseau',enonce:'1. Qu\'est-ce qu\'un port?  2. Port HTTP.  3. Port HTTPS.  4. Port SSH.  5. Pourquoi différents ports?',correction:'1. Numéro identifiant un service sur une machine\n2. Port 80 (HTTP)\n3. Port 443 (HTTPS)\n4. Port 22 (SSH)\n5. Permet plusieurs services simultanés sur la même machine',notions:['TCP/IP']},
+      {id:'S01-14',difficulte:2,titre:'Résolution DNS',enonce:'Décrire les étapes de résolution DNS pour "wikipedia.org".',correction:'1. Navigateur vérifie cache local DNS\n2. Si absent: interroge serveur DNS du FAI\n3. DNS FAI interroge serveur racine (.)\n4. Serveur racine → serveur TLD (.org)\n5. Serveur TLD → serveur autoritaire wikipedia.org\n6. Retourne l\'adresse IP: 185.15.58.224',notions:['DNS']},
+      {id:'S01-15',difficulte:3,titre:'Calcul d\'adressage IP',enonce:'Réseau 192.168.0.0/24. 1. Combien d\'hôtes max?  2. Première adresse utilisable.  3. Adresse broadcast.  4. Si on utilise /25?',correction:'1. 254 hôtes (256-2: réseau et broadcast)\n2. 192.168.0.1\n3. 192.168.0.255\n4. /25 → 2 sous-réseaux de 126 hôtes chacun',notions:['IP']},
+    ]
+  },
+  { id:'snt-web', numero:2,
+    titre:'Le Web',
+    sousTitre:'HTML · CSS · URL · HTTP · Moteurs de recherche · PageRank',
+    icon:'🕸️', color:'#8b5cf6',
+    notions:['HTML','CSS','URL','HTTP','Moteurs de recherche','PageRank'],
+    exercices:[
+      {id:'S02-01',difficulte:1,titre:'Web vs Internet',enonce:'1. Qui a inventé le Web?  2. En quelle année?  3. Différence Web/Internet.  4. Quels services utilisent Internet sans être le Web?',correction:'1. Tim Berners-Lee\n2. 1989 (au CERN, Genève)\n3. Internet=infrastructure réseau, Web=service de pages liées par hyperliens\n4. Email, FTP, streaming, jeux en ligne, SSH',notions:['URL']},
+      {id:'S02-02',difficulte:1,titre:'Anatomie d\'une URL',enonce:'Décomposer : https://www.education.gouv.fr/actualites/article?id=42#contenu',correction:'Protocole: https\nSous-domaine: www\nDomaine: education.gouv.fr\nChemin: /actualites/article\nParamètre: id=42\nFragment: #contenu (ancre dans la page)',notions:['URL']},
+      {id:'S02-03',difficulte:1,titre:'Structure HTML de base',enonce:'Écrire le squelette HTML d\'une page "Ma classe de SNT" avec un titre h1 et 2 paragraphes.',correction:'<!DOCTYPE html>\n<html lang="fr">\n<head>\n  <meta charset="UTF-8">\n  <title>Ma classe de SNT</title>\n</head>\n<body>\n  <h1>Ma classe de SNT</h1>\n  <p>Bienvenue en SNT.</p>\n  <p>Nous étudions le numérique.</p>\n</body>\n</html>',notions:['HTML']},
+      {id:'S02-04',difficulte:1,titre:'Balises HTML essentielles',enonce:'Donner la balise HTML pour : 1. Titre principal  2. Lien  3. Image  4. Liste à puces  5. Tableau',correction:'1. <h1>  2. <a href="url">  3. <img src="..." alt="...">  4. <ul><li>  5. <table><tr><td>',notions:['HTML']},
+      {id:'S02-05',difficulte:1,titre:'CSS de base',enonce:'Écrire le CSS pour : 1. Fond rouge body  2. Texte blanc tous les h1  3. Classe ".important" en gras, taille 18px',correction:'body { background-color: red; }\nh1 { color: white; }\n.important { font-weight: bold; font-size: 18px; }',notions:['CSS']},
+      {id:'S02-06',difficulte:2,titre:'HTTP — Requête et réponse',enonce:'1. Que signifie HTTP?  2. Différence HTTP et HTTPS.  3. Code 200, 404, 500.  4. Méthode GET vs POST.',correction:'1. HyperText Transfer Protocol\n2. HTTPS = HTTP + chiffrement TLS (cadenas dans navigateur)\n3. 200=OK, 404=Page non trouvée, 500=Erreur serveur\n4. GET=récupérer (URL visible), POST=envoyer des données (formulaire)',notions:['HTTP']},
+      {id:'S02-07',difficulte:2,titre:'Moteurs de recherche',enonce:'Expliquer les 3 phases de fonctionnement d\'un moteur de recherche (Google, Bing).',correction:'1. Exploration (crawling): robots parcourent le Web en suivant les liens\n2. Indexation: contenu analysé et stocké dans une base de données\n3. Classement (ranking): algorithme (PageRank) classe les résultats selon la pertinence',notions:['Moteurs de recherche']},
+      {id:'S02-08',difficulte:2,titre:'PageRank',enonce:'1. Qui a inventé PageRank?  2. Principe de base.  3. Si A→B→C et D→B, quel site est le plus populaire?  4. Limite du PageRank?',correction:'1. Larry Page et Sergey Brin (Google, 1998)\n2. Plus un site reçoit de liens d\'autres sites, plus il est jugé populaire\n3. Site B (reçoit liens de A et D)\n4. Peut être manipulé (fermes de liens); ne mesure pas la qualité du contenu',notions:['PageRank']},
+      {id:'S02-09',difficulte:2,titre:'Créer une page avec CSS externe',enonce:'Comment lier un fichier style.css à une page HTML? Donner la balise complète.',correction:'Dans la section <head> :\n<link rel="stylesheet" href="style.css">\n\nOu en style inline :\n<p style="color:red;">texte</p>\n\nOu en style interne :\n<style> p { color: red; } </style>',notions:['HTML','CSS']},
+      {id:'S02-10',difficulte:2,titre:'Sélecteurs CSS avancés',enonce:'Écrire CSS pour : 1. Tous les <p> dans un <div>  2. Premier enfant  3. Survol d\'un lien  4. Attribut spécifique',correction:'1. div p { color: blue; }\n2. p:first-child { font-weight: bold; }\n3. a:hover { text-decoration: underline; }\n4. input[type="text"] { border: 1px solid gray; }',notions:['CSS']},
+      {id:'S02-11',difficulte:2,titre:'Formulaire HTML',enonce:'Créer un formulaire de contact : nom, email, message (textarea), bouton envoyer. Méthode POST.',correction:'<form action="/contact" method="POST">\n  <input type="text" name="nom" placeholder="Votre nom">\n  <input type="email" name="email" placeholder="Email">\n  <textarea name="message" rows="4"></textarea>\n  <button type="submit">Envoyer</button>\n</form>',notions:['HTML']},
+      {id:'S02-12',difficulte:2,titre:'Référencement (SEO)',enonce:'1. SEO vs SEA.  2. 3 critères de référencement naturel.  3. Rôle de la balise <title>.  4. Rôle de meta description.',correction:'1. SEO=référencement naturel(gratuit), SEA=payant(Google Ads)\n2. Contenu pertinent, liens entrants, rapidité du site\n3. Titre dans les résultats de recherche\n4. Résumé affiché sous le titre dans les résultats',notions:['Moteurs de recherche']},
+      {id:'S02-13',difficulte:3,titre:'Simuler le PageRank',enonce:'3 sites: A→B, A→C, B→C, C→A. Quel site a le plus de liens entrants? Classer par popularité.',correction:'Liens entrants:\nA: reçoit de C → 1 lien\nB: reçoit de A → 1 lien\nC: reçoit de A et B → 2 liens\n\nClassement: C (2 liens) > A = B (1 lien)\nC est le plus populaire',notions:['PageRank']},
+      {id:'S02-14',difficulte:2,titre:'Web sémantique',enonce:'Donner les balises HTML5 sémantiques pour : 1. En-tête  2. Navigation  3. Contenu principal  4. Pied de page  5. Article',correction:'1. <header>  2. <nav>  3. <main>  4. <footer>  5. <article>',notions:['HTML']},
+      {id:'S02-15',difficulte:3,titre:'Accessibilité web',enonce:'1. Définir accessibilité web.  2. Rôle attribut alt d\'une image.  3. Contraste de couleurs.  4. Navigation clavier.',correction:'1. Rendre le Web utilisable par tous (personnes handicapées)\n2. alt: description pour lecteurs d\'écran (aveugles)\n3. Ratio 4.5:1 minimum pour texte/fond (WCAG)\n4. Tab pour naviguer, Enter pour activer (sans souris)',notions:['HTML','CSS']},
+    ]
+  },
+  { id:'snt-reseaux-sociaux', numero:3,
+    titre:'Réseaux sociaux',
+    sousTitre:'Graphes · Degré · Communautés · Algorithmes · Enjeux',
+    icon:'👥', color:'#ec4899',
+    notions:['Graphe','Degré','Communautés','Recommandation','Bulle de filtre','Cyberharcèlement'],
+    exercices:[
+      {id:'S03-01',difficulte:1,titre:'Définir un graphe',enonce:'1. Qu\'est-ce qu\'un graphe?  2. Graphe orienté vs non orienté.  3. Exemple de réseau social orienté.  4. Exemple de réseau non orienté.',correction:'1. Ensemble de sommets (nœuds) reliés par des arêtes\n2. Orienté: arête avec direction (→). Non orienté: lien mutuel (—)\n3. Twitter/X (je peux suivre sans être suivi)\n4. Facebook (amitié mutuelle)',notions:['Graphe']},
+      {id:'S03-02',difficulte:1,titre:'Degré d\'un sommet',enonce:'Graphe: Alice—Bob, Alice—Clara, Bob—David, Clara—David. 1. Degré de chaque sommet.  2. Qui est le plus connecté?  3. Diamètre du graphe.',correction:'deg(Alice)=2, deg(Bob)=2, deg(Clara)=2, deg(David)=2\n2. Tous au même niveau\n3. Diamètre=2 (max distance entre 2 sommets: Alice→David via Bob ou Clara)',notions:['Degré']},
+      {id:'S03-03',difficulte:1,titre:'Réseaux sociaux du quotidien',enonce:'Citer 5 réseaux sociaux, leur usage principal, et le type de graphe (orienté/non orienté).',correction:'Instagram: photos, orienté (abonnements)\nFacebook: partage, non orienté (amis)\nTwitter/X: actualités, orienté (following)\nLinkedIn: professionnel, non orienté\nTikTok: vidéos courtes, orienté',notions:['Graphe']},
+      {id:'S03-04',difficulte:2,titre:'Théorie des 6 degrés',enonce:'1. Qu\'est-ce que la théorie des 6 degrés?  2. Origine.  3. Comment les réseaux sociaux réduisent-ils ce nombre?',correction:'1. 2 personnes quelconques sont séparées par au plus 6 intermédiaires\n2. Expérience de Milgram (1967) — enveloppes à faire passer de main en main\n3. Réseaux sociaux: distance réduite à ~3.5 (étude Facebook 2016)',notions:['Degré']},
+      {id:'S03-05',difficulte:2,titre:'Algorithme de recommandation',enonce:'1. Filtrage collaboratif.  2. Filtrage par contenu.  3. Comment YouTube décide ce qu\'il te recommande?  4. Effet de bulle.',correction:'1. "Les utilisateurs similaires à toi ont aimé..."\n2. Analyse de ce que tu as regardé/liké\n3. Maximiser le temps de visionnage (engagement)\n4. Tu vois de moins en moins de contenus différents de tes goûts',notions:['Recommandation','Bulle de filtre']},
+      {id:'S03-06',difficulte:2,titre:'Bulle de filtre',enonce:'1. Définir la bulle de filtre.  2. Comment se forme-t-elle?  3. Conséquences sur l\'opinion.  4. Comment y échapper?',correction:'1. Voir surtout les contenus qui confirment nos opinions existantes\n2. Algorithme apprend nos préférences et optimise l\'engagement\n3. Radicalisation, désinformation, manque de pluralisme\n4. Chercher activement d\'autres sources, désactiver personnalisation',notions:['Bulle de filtre']},
+      {id:'S03-07',difficulte:2,titre:'Communautés dans un graphe',enonce:'1. Définir une communauté dans un graphe.  2. Comment les détecter?  3. Exemple concret dans un réseau social.',correction:'1. Sous-ensemble de nœuds densément connectés entre eux\n2. Algorithmes de clustering (ex: Louvain, Girvan-Newman)\n3. Groupes de fans d\'un même artiste, membres d\'un forum, amis du lycée',notions:['Communautés']},
+      {id:'S03-08',difficulte:2,titre:'Cyberharcèlement',enonce:'1. Définir le cyberharcèlement.  2. 3 formes différentes.  3. Que faire si on en est victime?  4. Pourquoi Internet amplifie-t-il le phénomène?',correction:'1. Harcèlement répété via les outils numériques\n2. Insultes publiques, usurpation d\'identité, exclusion délibérée\n3. En parler à un adulte, signaler (pf-harcèlement.interieur.gouv.fr), conserver preuves\n4. Anonymat, vitesse de propagation, public illimité, disponible 24h/24',notions:['Cyberharcèlement']},
+      {id:'S03-09',difficulte:2,titre:'Modèle économique des réseaux',enonce:'1. Les réseaux sociaux sont-ils gratuits?  2. Comment Facebook gagne-t-il de l\'argent?  3. Quelle est la vraie valeur vendue?',correction:'1. Non: "si c\'est gratuit, tu es le produit"\n2. Publicité ciblée grâce aux données utilisateurs\n3. Les données personnelles et le profil comportemental des utilisateurs',notions:['Recommandation']},
+      {id:'S03-10',difficulte:2,titre:'Désinformation et fake news',enonce:'1. Pourquoi les fake news se propagent-elles vite?  2. Comment vérifier une information?  3. Rôle des algorithmes.',correction:'1. Émotionnellement engageantes, partagées sans vérification\n2. Vérifier la source, croiser plusieurs médias, fact-checking (AFP, Snopes)\n3. Favorisent les contenus "viraux" même faux car ils génèrent de l\'engagement',notions:['Recommandation','Bulle de filtre']},
+      {id:'S03-11',difficulte:3,titre:'Influenceur = nœud central',enonce:'Dans un graphe d\'abonnements, un influenceur a 500 000 abonnés. 1. Son degré entrant.  2. Son degré sortant si il suit 200 personnes.  3. Centralité?',correction:'1. Degré entrant = 500 000\n2. Degré sortant = 200\n3. Très forte centralité: sa publication atteint 500 000 personnes directement\n→ Nœud hub critique du réseau',notions:['Degré','Communautés']},
+      {id:'S03-12',difficulte:2,titre:'Vie privée sur les réseaux',enonce:'1. Quelles données un réseau social collecte-t-il?  2. Que faire avec les paramètres de confidentialité?  3. RGPD et réseaux sociaux.',correction:'1. Profil, publications, likes, heures connexion, localisation, contacts\n2. Limiter la visibilité, désactiver la géoloc, revérifier régulièrement\n3. Droit d\'accès, suppression du compte et des données, consentement',notions:['Cyberharcèlement']},
+      {id:'S03-13',difficulte:2,titre:'Graphe du lycée',enonce:'Si 30 élèves d\'une classe sont tous amis entre eux sur Instagram : 1. Nombre d\'arêtes.  2. Degré de chaque élève.  3. Diamètre du graphe.',correction:'1. 30×29/2 = 435 arêtes (graphe complet)\n2. Degré = 29 (ami de tous les autres)\n3. Diamètre = 1 (tout le monde est directement connecté)',notions:['Graphe','Degré']},
+      {id:'S03-14',difficulte:3,titre:'Addiction aux réseaux',enonce:'1. Mécanisme psychologique.  2. Rôle de la dopamine.  3. Techniques d\'engagement des plateformes.',correction:'1. Système de récompense variable (like, commentaire) → addiction comportementale\n2. Dopamine libérée à chaque notification → renforcement positif\n3. Scroll infini, notifications, streaks, likes visibles',notions:['Recommandation']},
+      {id:'S03-15',difficulte:3,titre:'Analyser un graphe social simple',enonce:'Graphe: A→B, A→C, B→D, C→D, D→A. 1. Graphe orienté ou non?  2. Degré entrant de D.  3. Y a-t-il un cycle?  4. Distance A→D.',correction:'1. Orienté (flèches)\n2. Degré entrant de D = 2 (de B et C)\n3. Oui: A→B→D→A\n4. Distance A→D = 2 (A→B→D ou A→C→D)',notions:['Graphe','Degré']},
+    ]
+  },
+  { id:'snt-donnees', numero:4,
+    titre:'Données structurées et leur traitement',
+    sousTitre:'CSV · Types · Tables · RGPD · Vie privée',
+    icon:'🗄️', color:'#10b981',
+    notions:['Données','CSV','Table','RGPD','Métadonnées','Types de données'],
+    exercices:[
+      {id:'S04-01',difficulte:1,titre:'Qu\'est-ce qu\'une donnée?',enonce:'1. Définir donnée numérique.  2. 5 types de données.  3. Différence donnée et information.  4. Exemples de données non numériques numérisées.',correction:'1. Représentation d\'une information sous forme binaire\n2. Texte, entier, décimal, booléen, date\n3. Donnée=fait brut, Information=donnée interprétée\n4. Photo, son, vidéo, texte, température',notions:['Données','Types de données']},
+      {id:'S04-02',difficulte:1,titre:'Métadonnées',enonce:'1. Définir métadonnée.  2. Exemples pour une photo.  3. Pourquoi les métadonnées peuvent-elles poser un problème de vie privée?',correction:'1. Donnée qui décrit une autre donnée\n2. Date, heure, GPS, modèle appareil, résolution, logiciel\n3. Révèlent lieu, horaires, habitudes même si la photo est floue',notions:['Métadonnées']},
+      {id:'S04-03',difficulte:1,titre:'Format CSV',enonce:'Lire ce CSV : nom,age,ville\nAlice,16,Paris\nBob,17,Lyon\n1. Nombre de colonnes  2. Nombre d\'enregistrements  3. Âge de Bob  4. Ville d\'Alice',correction:'1. 3 colonnes (nom, age, ville)\n2. 2 enregistrements\n3. 17 ans\n4. Paris',notions:['CSV']},
+      {id:'S04-04',difficulte:1,titre:'Structure d\'une table',enonce:'1. Définir table de données.  2. Différence ligne et colonne.  3. Qu\'est-ce qu\'une clé primaire?  4. Exemple de table élèves.',correction:'1. Ensemble d\'enregistrements avec les mêmes attributs\n2. Ligne=1 enregistrement complet, Colonne=1 attribut pour tous\n3. Identifiant unique de chaque ligne (ex: numéro élève)\n4. id | nom | classe | note',notions:['Table']},
+      {id:'S04-05',difficulte:2,titre:'Sélection dans une table',enonce:'Table: [{nom:"Alice",note:15,sport:"natation"},{nom:"Bob",note:8,sport:"foot"},{nom:"Clara",note:12,sport:"natation"}]\n1. Élèves avec note≥10  2. Élèves qui font natation',correction:'1. Alice (15) et Clara (12)\n2. Alice et Clara font natation',notions:['Table']},
+      {id:'S04-06',difficulte:2,titre:'Trier et agréger',enonce:'Table notes: [Alice:15, Bob:12, Clara:9, David:17]. 1. Trier par note décroissante.  2. Moyenne.  3. Meilleur élève.',correction:'1. David(17), Alice(15), Bob(12), Clara(9)\n2. (15+12+9+17)/4 = 13.25\n3. David (17)',notions:['Table']},
+      {id:'S04-07',difficulte:2,titre:'RGPD — Règlement européen',enonce:'1. RGPD = acronyme et date.  2. 3 droits des personnes.  3. Qu\'est-ce que la CNIL?  4. Amende maximum.',correction:'1. Règlement Général Protection Données, 2018\n2. Accès, rectification, effacement (droit à l\'oubli)\n3. Commission Nationale Informatique et Libertés (autorité française)\n4. 4% du chiffre d\'affaires mondial ou 20M€',notions:['RGPD']},
+      {id:'S04-08',difficulte:2,titre:'Consentement RGPD',enonce:'1. Qu\'est-ce que le consentement selon le RGPD?  2. Peut-on accepter les cookies par défaut?  3. Donner un exemple de collecte illégale.',correction:'1. Accord libre, spécifique, éclairé et non ambigu\n2. Non: le consentement ne doit pas être imposé par défaut\n3. Collecter des emails sans permission pour faire du spam',notions:['RGPD']},
+      {id:'S04-09',difficulte:2,titre:'Données personnelles',enonce:'Parmi ces données, lesquelles sont personnelles? Nom, IP, couleur préférée, numéro de sécu, pseudonyme, code postal seul.',correction:'Personnelles: Nom ✓, IP ✓ (identifie l\'accès), Numéro sécu ✓, Pseudonyme ✓ (si traçable)\nNon personnelles: Couleur préférée (si isolée), Code postal seul',notions:['RGPD','Données']},
+      {id:'S04-10',difficulte:2,titre:'Projeter des colonnes',enonce:'Table complète : id, nom, age, email, note, adresse. Donner uniquement les colonnes utiles pour : 1. Afficher un annuaire.  2. Afficher les résultats d\'examen.',correction:'1. Annuaire: nom + email (pas besoin de note ni adresse)\n2. Résultats: nom + note (pas besoin d\'email ni adresse)',notions:['Table']},
+      {id:'S04-11',difficulte:2,titre:'Open data',enonce:'1. Définir open data.  2. Exemples de jeux de données publics.  3. Format commun.  4. À quoi ça sert?',correction:'1. Données publiques accessibles librement\n2. Data.gouv.fr: statistiques, résultats élections, accidents, météo\n3. CSV, JSON, XML\n4. Transparence, recherche, création d\'applications citoyennes',notions:['CSV','Données']},
+      {id:'S04-12',difficulte:2,titre:'Joindre deux tables',enonce:'Élèves: [{id:1,nom:"Alice"},{id:2,nom:"Bob"}]\nNotes: [{id_el:1,matiere:"NSI",note:15},{id_el:2,matiere:"NSI",note:12}]\nAfficher nom + note.',correction:'Résultat de la jointure sur id=id_el:\nAlice | NSI | 15\nBob   | NSI | 12',notions:['Table']},
+      {id:'S04-13',difficulte:3,titre:'Données sensibles',enonce:'Citez les catégories de données sensibles selon le RGPD et expliquer pourquoi elles méritent une protection renforcée.',correction:'Données sensibles: santé, origine ethnique, opinions politiques/religieuses, orientation sexuelle, données génétiques/biométriques, condamnations pénales\nProtection renforcée: discrimination, chantage, persécution possibles',notions:['RGPD']},
+      {id:'S04-14',difficulte:2,titre:'Collecter des données éthiquement',enonce:'Une appli collecte: localisation, contacts, historique navigation. 1. Quels problèmes RGPD?  2. Comment la rendre conforme?',correction:'1. Collecte excessive sans consentement explicite, données sensibles (localisation)\n2. Demander consentement par fonctionnalité, expliquer l\'usage, permettre le refus, minimiser la collecte',notions:['RGPD','Données']},
+      {id:'S04-15',difficulte:3,titre:'Analyser un fichier CSV',enonce:'CSV: prenom,sport,section\nLéa,natation,2ndeA\nMax,foot,2ndeB\nSara,natation,2ndeA\nTom,tennis,2ndeB\n1. Élèves de 2ndeA  2. Sports pratiqués  3. Élève faisant natation en 2ndeA',correction:'1. Léa, Sara\n2. natation, foot, tennis\n3. Léa et Sara font natation en 2ndeA',notions:['CSV','Table']},
+    ]
+  },
+  { id:'snt-geolocalisation', numero:5,
+    titre:'Localisation, cartographie et mobilité',
+    sousTitre:'GPS · Satellites · Trilateralisation · Cartographie · Vie privée',
+    icon:'📍', color:'#f59e0b',
+    notions:['GPS','Satellites','Trilateralisation','Cartographie','Vie privée'],
+    exercices:[
+      {id:'S05-01',difficulte:1,titre:'Le GPS',enonce:'1. GPS = acronyme.  2. Qui gère le GPS?  3. Combien de satellites?  4. Précision civile vs militaire.',correction:'1. Global Positioning System\n2. Armée américaine (DoD)\n3. Au moins 24 satellites opérationnels (souvent ~30)\n4. Civil: quelques mètres | Militaire: centimètres',notions:['GPS','Satellites']},
+      {id:'S05-02',difficulte:1,titre:'Principe du GPS',enonce:'1. Comment un satellite GPS fonctionne-t-il?  2. Quelle information émet-il?  3. Combien de satellites minimum pour se localiser en 2D?  4. Pourquoi 4 pour la 3D?',correction:'1. Émet un signal radio en continu avec sa position et l\'heure exacte\n2. Position du satellite + heure d\'émission\n3. 3 satellites minimum pour position 2D\n4. 4e satellite pour corriger les erreurs d\'horloge et calculer l\'altitude',notions:['GPS','Satellites']},
+      {id:'S05-03',difficulte:2,titre:'Calcul de distance GPS',enonce:'Un signal GPS voyage à 3×10⁸ m/s. Il est reçu 0.067 secondes après l\'émission. 1. Distance au satellite.  2. Donner l\'ordre de grandeur.',correction:'d = v × t = 3×10⁸ × 0.067\nd = 20 100 000 m ≈ 20 100 km\nOrdre de grandeur: ~20 000 km (altitude orbite GPS)',notions:['GPS']},
+      {id:'S05-04',difficulte:2,titre:'Trilateralisation',enonce:'1. Différence triangulation et trilateralisation.  2. Expliquer le principe de la trilateralisation en 2D.  3. Pourquoi 3 cercles?',correction:'1. Triangulation=angles, Trilateralisation=distances\n2. Chaque satellite définit un cercle. L\'intersection de 3 cercles donne la position unique\n3. 2 cercles se croisent en 2 points, le 3e cercle identifie le bon',notions:['Trilateralisation']},
+      {id:'S05-05',difficulte:2,titre:'Autres systèmes de localisation',enonce:'1. GLONASS.  2. Galileo.  3. Beidou.  4. Localisation par WiFi.  5. Localisation par GSM.',correction:'1. GLONASS: système russe\n2. Galileo: système européen (plus précis, civil)\n3. Beidou: système chinois\n4. WiFi: base de données réseaux géoréférencés, quelques mètres\n5. GSM: triangulation antennes, 100m-1km',notions:['GPS','Trilateralisation']},
+      {id:'S05-06',difficulte:2,titre:'Cartographie numérique',enonce:'1. Différence Google Maps et OpenStreetMap.  2. Qu\'est-ce que le crowdsourcing cartographique?  3. Format des coordonnées GPS.',correction:'1. Google Maps=propriétaire/commercial. OSM=libre/collaboratif\n2. Des milliers de bénévoles ajoutent et vérifient les données cartographiques\n3. Latitude (−90 à 90) et Longitude (−180 à 180) en degrés décimaux',notions:['Cartographie']},
+      {id:'S05-07',difficulte:2,titre:'Vie privée et géolocalisation',enonce:'1. Quels risques pose l\'historique GPS?  2. Quelles applications ont accès à votre position?  3. Comment limiter le traçage?',correction:'1. Révèle domicile, travail, habitudes, fréquentations, opinions\n2. Toutes celles ayant la permission (maps, météo, livreurs, réseaux sociaux...)\n3. Désactiver géoloc des apps inutiles, utiliser "seulement en cours d\'utilisation"',notions:['Vie privée']},
+      {id:'S05-08',difficulte:2,titre:'Applications de la géolocalisation',enonce:'Citer 5 usages de la géolocalisation (professionnels, grand public, scientifiques).',correction:'1. Navigation routière (Waze, Maps)\n2. Livraison et logistique (suivi colis)\n3. Agriculture de précision\n4. Sauvetage et secours (localiser une personne)\n5. Sciences: suivi d\'animaux, météo, tectoni des plaques',notions:['GPS','Cartographie']},
+      {id:'S05-09',difficulte:2,titre:'Coordonnées GPS',enonce:'Paris est à 48.8566°N, 2.3522°E. 1. Que signifie N et E?  2. New York est à 40.71°N, 74.01°W. Que signifie W?  3. Calcul: point à l\'équateur et méridien de Greenwich?',correction:'1. N=Nord (latitude positive), E=Est (longitude positive)\n2. W=Ouest (longitude négative)\n3. Latitude=0°, Longitude=0°',notions:['Cartographie','GPS']},
+      {id:'S05-10',difficulte:2,titre:'Erreurs GPS',enonce:'Quels facteurs peuvent réduire la précision du GPS? Citer 4 causes.',correction:'1. Multipath: signal rebondit sur les bâtiments (canyon urbain)\n2. Masquage: satellite caché par une montagne ou bâtiment\n3. Conditions atmosphériques: ionosphère perturbe le signal\n4. Nombre de satellites visibles insuffisant\n5. Précision de l\'horloge du récepteur',notions:['GPS','Satellites']},
+      {id:'S05-11',difficulte:2,titre:'GPS et urgences',enonce:'1. Comment le 112 utilise le GPS?  2. eCall (voiture).  3. Balises de détresse.',correction:'1. Localise l\'appelant automatiquement via "Advanced Mobile Location"\n2. eCall: déclenche automatiquement un appel d\'urgence en cas d\'accident avec coordonnées GPS\n3. Balises EPIRB (mer), ELT (avion): envoient position aux satellites de secours',notions:['GPS']},
+      {id:'S05-12',difficulte:3,titre:'Traçage publicitaire et GPS',enonce:'Google Maps est gratuit. 1. Comment Google gagne-t-il de l\'argent avec?  2. Quelles données collecte-t-il?  3. Conséquences?',correction:'1. Publicité ciblée selon les lieux fréquentés (restaurants, magasins)\n2. Historique complet des déplacements, temps passé par lieu\n3. Profil très précis: opinions politiques (manifestations), santé (hôpitaux), religion (lieux de culte)',notions:['Vie privée']},
+      {id:'S05-13',difficulte:2,titre:'Géofencing',enonce:'1. Définir le géofencing.  2. Exemples légitimes.  3. Risques.',correction:'1. Déclencher une action quand on entre/sort d\'une zone géographique\n2. Notification promotion magasin, alerte zone scolaire, suivi flotte véhicules\n3. Surveillance, traçage à l\'insu, marketing agressif',notions:['GPS','Vie privée']},
+      {id:'S05-14',difficulte:2,titre:'Comparaison GPS et boussole',enonce:'1. Différence GPS et boussole.  2. Avantages du GPS.  3. Quand préférer la boussole?  4. Que faire si le GPS ne fonctionne plus?',correction:'1. GPS=position absolue. Boussole=direction\n2. Précision, altitude, vitesse, sans entraînement\n3. Sans batterie, zones sans signal, navigation maritime/randonnée\n4. Carte papier + boussole + étoiles',notions:['GPS']},
+      {id:'S05-15',difficulte:3,titre:'Calcul de trilateralisation',enonce:'En 2D, 3 points émetteurs: A(0,0), B(10,0), C(5,8). Distances: dA=5, dB=7, dC=4. Est-ce que le point P(3,4) est cohérent? Vérifier.',correction:'dA = √(3²+4²) = √25 = 5 ✓\ndB = √((3-10)²+4²) = √(49+16) = √65 ≈ 8.06 ✗ (≠7)\ndC = √((3-5)²+(4-8)²) = √(4+16) = √20 ≈ 4.47 ✗ (≠4)\nP(3,4) n\'est pas le bon point',notions:['Trilateralisation']},
+    ]
+  },
+  { id:'snt-photographie', numero:6,
+    titre:'Photographie numérique',
+    sousTitre:'Pixels · RGB · Résolution · Formats · Compression · Traitement',
+    icon:'📷', color:'#6366f1',
+    notions:['Pixel','RGB','Résolution','Compression','Formats','Traitement d\'image'],
+    exercices:[
+      {id:'S06-01',difficulte:1,titre:'Pixel et image numérique',enonce:'1. Définir pixel.  2. Que contient chaque pixel?  3. Image 1920×1080: combien de pixels?  4. À quoi correspond un mégapixel?',correction:'1. Plus petite unité d\'une image numérique (carré de couleur uniforme)\n2. 3 valeurs de couleur (R, G, B) de 0 à 255\n3. 1920×1080 = 2 073 600 pixels (≈2 Mpx)\n4. 1 Mpx = 1 000 000 pixels',notions:['Pixel']},
+      {id:'S06-02',difficulte:1,titre:'Codage RGB',enonce:'Donner la couleur RGB de : 1. Rouge pur  2. Blanc  3. Noir  4. Vert pur  5. Jaune',correction:'1. (255, 0, 0)\n2. (255, 255, 255)\n3. (0, 0, 0)\n4. (0, 255, 0)\n5. (255, 255, 0)',notions:['RGB']},
+      {id:'S06-03',difficulte:1,titre:'Résolution et qualité',enonce:'1. Différence résolution et taille.  2. Qu\'est-ce que le DPI?  3. Résolution pour l\'écran.  4. Résolution pour l\'impression.',correction:'1. Résolution=nb pixels (ex 1920×1080). Taille=dimensions physiques (ex 15 pouces)\n2. Dots Per Inch = pixels par pouce\n3. 72-96 DPI pour l\'écran\n4. 300 DPI pour impression qualité photo',notions:['Résolution']},
+      {id:'S06-04',difficulte:2,titre:'Taille d\'une image non compressée',enonce:'Image 800×600 pixels en RGB. 1. Nb de pixels.  2. Taille en octets.  3. Taille en Mo.  4. Taille si 32 bits/pixel (RGBA).',correction:'1. 800×600 = 480 000 pixels\n2. 480 000 × 3 = 1 440 000 octets\n3. 1 440 000 / 1 000 000 ≈ 1.44 Mo\n4. 480 000 × 4 = 1 920 000 octets ≈ 1.92 Mo',notions:['Pixel','RGB']},
+      {id:'S06-05',difficulte:2,titre:'Formats d\'image',enonce:'Pour chaque format, donner : avec/sans perte, usage principal. 1. JPEG  2. PNG  3. GIF  4. WebP',correction:'1. JPEG: avec perte, photos\n2. PNG: sans perte, logos/graphiques/fond transparent\n3. GIF: sans perte, animations simples (256 couleurs max)\n4. WebP (Google): avec/sans perte, web (plus compressé que JPEG/PNG)',notions:['Formats']},
+      {id:'S06-06',difficulte:2,titre:'Compression avec perte vs sans perte',enonce:'1. Définir compression sans perte.  2. Compression avec perte.  3. Pourquoi utiliser JPEG malgré la perte?  4. Qu\'est-ce qu\'un artefact JPEG?',correction:'1. Sans perte: reconstruction pixel parfait (PNG, ZIP)\n2. Avec perte: supprime infos jugées invisibles à l\'œil (JPEG)\n3. Taille réduite x5 à x10 avec perte quasi invisible\n4. Blocs carrés visibles à fort taux de compression',notions:['Compression']},
+      {id:'S06-07',difficulte:2,titre:'Identifier une couleur RGB',enonce:'Donner la couleur de : 1. (128, 0, 128)  2. (255, 165, 0)  3. (0, 128, 255)  4. (200, 200, 200)',correction:'1. Violet (rouge + bleu, sans vert)\n2. Orange\n3. Bleu ciel (cyan foncé)\n4. Gris clair (R=V=B → gris)',notions:['RGB']},
+      {id:'S06-08',difficulte:2,titre:'Traitement d\'image',enonce:'1. Qu\'est-ce qu\'un filtre?  2. Principe du filtre flou (moyenne).  3. Principe du contraste.  4. Qu\'est-ce que la convolution?',correction:'1. Transformation mathématique appliquée aux pixels\n2. Remplacer chaque pixel par la moyenne de ses voisins\n3. Étirer la plage des valeurs (sombres plus sombres, clairs plus clairs)\n4. Opération mathématique: multiplier la matrice de pixels par un noyau',notions:['Traitement d\'image']},
+      {id:'S06-09',difficulte:2,titre:'Métadonnées photo (EXIF)',enonce:'1. Que contiennent les données EXIF?  2. Pourquoi peut-on localiser le photographe via une photo?  3. Comment supprimer les EXIF?',correction:'1. Date/heure, coordonnées GPS, modèle appareil, ouverture, vitesse, ISO\n2. Coordonnées GPS enregistrées automatiquement si option activée\n3. Exiftool, Paint (Windows), services en ligne de nettoyage EXIF',notions:['Résolution','Formats']},
+      {id:'S06-10',difficulte:2,titre:'Calcul de compression',enonce:'Image 1440×1080 px, 24 bits/px. Fichier JPEG résultant: 450 Ko. 1. Taille brute.  2. Taux de compression.  3. Est-ce raisonnable?',correction:'1. 1440×1080×3 = 4 665 600 octets ≈ 4.67 Mo\n2. Taux = 4.67 Mo / 0.45 Mo ≈ 10.4:1\n3. Oui, 10:1 est typique JPEG qualité normale',notions:['Compression','Résolution']},
+      {id:'S06-11',difficulte:2,titre:'Deepfake et manipulation',enonce:'1. Qu\'est-ce qu\'un deepfake?  2. Technologie utilisée.  3. Risques.  4. Comment détecter?',correction:'1. Image/vidéo générée par IA imitant une vraie personne de façon convaincante\n2. Réseaux de neurones (GAN: générateur vs discriminateur)\n3. Désinformation, usurpation d\'identité, chantage\n4. Analyser les yeux, transitions, artefacts aux bords du visage',notions:['Traitement d\'image']},
+      {id:'S06-12',difficulte:3,titre:'Choisir le bon format',enonce:'Pour chaque cas, choisir le meilleur format (JPEG/PNG/GIF/WebP) et justifier: 1. Photo portrait  2. Logo entreprise  3. Animation bannière  4. Photo pour site web rapide',correction:'1. JPEG: photo naturelle, compression efficace\n2. PNG: fond transparent, formes nettes, sans perte\n3. GIF: animation simple, largement compatible\n4. WebP: meilleure compression, moderne',notions:['Formats']},
+      {id:'S06-13',difficulte:2,titre:'Synthèse additive vs soustractive',enonce:'1. Couleurs primaires en synthèse additive (lumière).  2. En synthèse soustractive (impression).  3. Pourquoi l\'impression utilise CMJN?',correction:'1. Additive (écran): Rouge + Vert + Bleu (RVB)\n2. Soustractive (impression): Cyan + Magenta + Jaune + Noir (CMJN)\n3. Encre absorbe la lumière, encres additionnées donnent le noir',notions:['RGB']},
+      {id:'S06-14',difficulte:2,titre:'Reconnaissance d\'image par IA',enonce:'1. Comment l\'IA reconnaît-elle des objets dans une image?  2. Qu\'est-ce qu\'un réseau de neurones convolutif (CNN)?  3. Exemple d\'application.',correction:'1. Analyse des motifs de pixels par couches successives\n2. CNN: filtre automatiquement les caractéristiques visuelles (bords, formes, textures)\n3. Face ID, Google Lens, tri photos, voiture autonome, détection cancer sur IRM',notions:['Traitement d\'image']},
+      {id:'S06-15',difficulte:3,titre:'Tableau de pixels',enonce:'Image 3×3 pixels (niveaux de gris 0-255):\n[[120,80,200],[60,180,100],[240,40,160]]\n1. Pixel le plus sombre  2. Pixel le plus clair  3. Moyenne  4. Appliquer filtre: remplacer chaque pixel par son opposé (255-val)',correction:'1. 40 (position [2][1])\n2. 240 (position [2][0])\n3. (120+80+200+60+180+100+240+40+160)/9 = 1180/9 ≈ 131\n4. [[135,175,55],[195,75,155],[15,215,95]]',notions:['Pixel','Traitement d\'image']},
+    ]
+  },
+  { id:'snt-objets-connectes', numero:7,
+    titre:'Informatique embarquée et objets connectés',
+    sousTitre:'IoT · Capteurs · Actionneurs · IA · Protocoles · Enjeux',
+    icon:'🤖', color:'#ef4444',
+    notions:['IoT','Capteurs','Actionneurs','IA','Protocoles IoT','Données IoT'],
+    exercices:[
+      {id:'S07-01',difficulte:1,titre:'Système embarqué',enonce:'1. Définir système embarqué.  2. Différence avec un ordinateur.  3. 5 exemples d\'objets embarqués.  4. Composant central?',correction:'1. Ordinateur miniaturisé intégré dans un objet pour une tâche spécifique\n2. Ordinateur=polyvalent, Embarqué=tâche dédiée, souvent sans interface\n3. Four connecté, montre intelligente, thermostat, ABS voiture, stimulateur cardiaque\n4. Microcontrôleur (processeur+mémoire+E/S sur une puce)',notions:['IoT']},
+      {id:'S07-02',difficulte:1,titre:'Capteur vs Actionneur',enonce:'1. Définir capteur.  2. Définir actionneur.  3. Classer: thermomètre, moteur, microphone, LED, accéléromètre, haut-parleur.',correction:'1. Capteur: convertit grandeur physique → signal numérique\n2. Actionneur: convertit signal numérique → action physique\n3. Capteurs: thermomètre, microphone, accéléromètre\nActionneurs: moteur, LED, haut-parleur',notions:['Capteurs','Actionneurs']},
+      {id:'S07-03',difficulte:1,titre:'Internet des Objets (IoT)',enonce:'1. IoT = acronyme.  2. Ordre de grandeur du nombre d\'objets connectés.  3. Architecture générale.  4. 3 exemples de maison connectée.',correction:'1. Internet of Things\n2. 15+ milliards d\'objets (2024)\n3. Objet → Passerelle → Cloud → Application\n4. Thermostat intelligent, ampoule connectée, serrure connectée, capteur de fumée',notions:['IoT']},
+      {id:'S07-04',difficulte:2,titre:'Protocoles IoT',enonce:'Citer 4 protocoles IoT, leur usage et leur portée.',correction:'WiFi: haut débit, courte portée (maison)\nBluetooth: courte portée, faible conso (wearables)\nZigBee: très faible conso, courte portée (domotique)\nLoRa: longue portée, très faible conso (agriculture, compteurs)',notions:['Protocoles IoT']},
+      {id:'S07-05',difficulte:2,titre:'Boucle capteur-traitement-actionneur',enonce:'Thermostat intelligent: 1. Capteur.  2. Traitement.  3. Actionneur.  4. Consigne.',correction:'1. Capteur température ambiante\n2. Microcontrôleur compare temp. mesurée vs consigne\n3. Actionneur: ouvre/ferme vanne chaudière, commande climatisation\n4. Consigne: température désirée réglée par l\'utilisateur',notions:['Capteurs','Actionneurs']},
+      {id:'S07-06',difficulte:2,titre:'Enjeux de sécurité IoT',enonce:'1. Pourquoi les objets connectés sont-ils vulnérables?  2. Exemple d\'attaque.  3. Mesures de sécurité.',correction:'1. Mots de passe par défaut, mises à jour rares, faible puissance de calcul pour chiffrement\n2. Botnet Mirai (2016): 600 000 caméras IP piratées → attaque DDoS massive\n3. Changer mots de passe, mettre à jour firmware, réseau IoT séparé',notions:['IoT']},
+      {id:'S07-07',difficulte:2,titre:'Bases de l\'intelligence artificielle',enonce:'1. Définir IA.  2. Différence IA classique et Machine Learning.  3. Qu\'est-ce que l\'apprentissage supervisé?  4. Exemple concret.',correction:'1. Systèmes simulant des capacités cognitives humaines\n2. IA classique=règles programmées. ML=apprend à partir de données\n3. Entraîner sur des données étiquetées (photo de chat → "chat")\n4. Reconnaissance faciale, filtre spam, recommandation Netflix',notions:['IA']},
+      {id:'S07-08',difficulte:2,titre:'Biais algorithmique',enonce:'1. Qu\'est-ce qu\'un biais algorithmique?  2. Exemple concret.  3. Pourquoi est-ce dangereux?  4. Solutions.',correction:'1. L\'IA reproduit et amplifie les biais présents dans les données d\'entraînement\n2. Reconnaissance faciale: 35% erreurs sur peaux foncées (données trop peu diversifiées)\n3. Discrimination automatisée à grande échelle\n4. Diversifier données, audits réguliers, équipes diversifiées',notions:['IA']},
+      {id:'S07-09',difficulte:2,titre:'Smart city (ville intelligente)',enonce:'1. Définir smart city.  2. Donner 3 applications.  3. Avantages.  4. Risques de surveillance.',correction:'1. Ville utilisant IoT et données pour optimiser les services urbains\n2. Feux tricolores adaptatifs, capteurs de stationnement, gestion des déchets\n3. Économies d\'énergie, mobilité, réactivité services d\'urgence\n4. Surveillance de masse, profilage des citoyens, cybersécurité',notions:['IoT','Données IoT']},
+      {id:'S07-10',difficulte:2,titre:'Données IoT et vie privée',enonce:'Un bracelet de sport collecte: rythme cardiaque, GPS, sommeil, calories. 1. Qui accède à ces données?  2. Risques.  3. RGPD.',correction:'1. Fabricant, assureurs, employeurs (parfois), publicitaires\n2. Profil santé utilisé pour discriminer (assurance, embauche)\n3. Données de santé = données sensibles, consentement explicite requis',notions:['Données IoT']},
+      {id:'S07-11',difficulte:2,titre:'Arduino et microcontrôleur',enonce:'1. Qu\'est-ce qu\'Arduino?  2. Différence Arduino / Raspberry Pi.  3. Quel langage de programmation?  4. Exemples de projets.',correction:'1. Carte microcontrôleur open-source pour prototypage\n2. Arduino=microcontrôleur (temps réel, peu puissant). Raspberry Pi=mini-ordinateur Linux\n3. C/C++ (simplifié)\n4. Robot, station météo, arrosage automatique, alarme',notions:['IoT','Capteurs']},
+      {id:'S07-12',difficulte:2,titre:'Réseau de neurones — bases',enonce:'1. Qu\'est-ce qu\'un neurone artificiel?  2. Structure d\'un réseau de neurones simple.  3. Qu\'est-ce que l\'entraînement?',correction:'1. Unité de calcul: reçoit entrées, applique poids, fonction d\'activation → sortie\n2. Couche d\'entrée → couches cachées → couche de sortie\n3. Ajuster les poids du réseau pour minimiser l\'erreur sur les données d\'entraînement',notions:['IA']},
+      {id:'S07-13',difficulte:3,titre:'Objet connecté complet',enonce:'Concevoir une serre automatique. 1. Capteurs nécessaires.  2. Actionneurs.  3. Protocole WiFi ou LoRa?  4. Données collectées.',correction:'1. Capteurs: humidité sol, température air, luminosité, CO₂\n2. Actionneurs: pompe arrosage, ventilateur, éclairage, serre chauffante\n3. WiFi si proche, LoRa si serre distante (longue portée, faible conso)\n4. Historique temp., humidité, arrosages → optimisation',notions:['IoT','Capteurs','Actionneurs']},
+      {id:'S07-14',difficulte:2,titre:'Empreinte carbone du numérique',enonce:'1. Quelle est la part du numérique dans les émissions mondiales?  2. Qu\'est-ce qu\'un data center?  3. Impact d\'un email avec pièce jointe.  4. Gestes éco-numériques.',correction:'1. ≈4% des émissions mondiales CO₂\n2. Entrepôt de serveurs informatiques (refroidissement énergivore)\n3. Email lourd ≈ 50g CO₂ (serveurs + transmission + stockage)\n4. Vider les spams, streaming en basse qualité, garder son téléphone plus longtemps',notions:['Données IoT']},
+      {id:'S07-15',difficulte:3,titre:'IA et santé',enonce:'L\'IA peut détecter un cancer du sein sur une mammographie avec 94% de précision vs 88% pour un radiologue. 1. Avantages.  2. Risques.  3. Faut-il remplacer le médecin?',correction:'1. Plus rapide, disponible 24h/24, pas de fatigue, traite + de patients\n2. Faux positifs/négatifs, données d\'entraînement biaisées, responsabilité juridique\n3. Non: outil d\'aide au diagnostic. Décision finale = humain. Complémentarité',notions:['IA']},
+    ]
+  },
+]
+
+const CHAPITRES_PREMIERE_NSI: ChapitreData[] = [
+  { id:'representation-donnees', numero:1,
+    titre:'Représentation des données',
+    sousTitre:'Binaire · Hexadécimal · Entiers signés · IEEE 754 · ASCII/Unicode',
+    icon:'🔢', color:'#8b5cf6',
+    notions:['Binaire','Hexadécimal','Complément à deux','IEEE 754','ASCII','Unicode','UTF-8'],
+    exercices:[
+      {id:'N01-01',difficulte:1,titre:'Conversion décimal → binaire',enonce:'Convertir en binaire : 1. 42  2. 137  3. 255  4. 1024',correction:'1. 101010₂  2. 10001001₂  3. 11111111₂  4. 10000000000₂',notions:['Binaire']},
+      {id:'N01-02',difficulte:1,titre:'Conversion binaire → décimal',enonce:'Convertir : 1. 1101₂  2. 10110₂  3. 11111₂  4. 1001010₂',correction:'1. 13  2. 22  3. 31  4. 74',notions:['Binaire']},
+      {id:'N01-03',difficulte:1,titre:'Hexadécimal',enonce:'1. 0xAF → décimal  2. 0x1B → binaire  3. 255 → hex  4. 11010111₂ → hex',correction:'1. 175  2. 00011011₂  3. 0xFF  4. 0xD7',notions:['Hexadécimal']},
+      {id:'N01-04',difficulte:1,titre:'Nombre de valeurs encodables',enonce:'Valeurs sur : 1. 4 bits  2. 8 bits  3. 16 bits',correction:'1. 16  2. 256  3. 65536',notions:['Binaire']},
+      {id:'N01-05',difficulte:2,titre:'Complément à deux',enonce:'Sur 8 bits : 1. Coder -5  2. Coder -128  3. Décoder 11110011₂',correction:'1. 11111011₂  2. 10000000₂  3. -13',notions:['Complément à deux']},
+      {id:'N01-06',difficulte:2,titre:'Plage entiers signés',enonce:'1. Plage 8 bits  2. Plage 16 bits  3. Max 4 bits signé',correction:'1. -128 à 127  2. -32768 à 32767  3. +7',notions:['Complément à deux']},
+      {id:'N01-07',difficulte:2,titre:'Addition binaire',enonce:'1. 1011₂+0101₂  2. 11001₂+01110₂  3. 200+100 sur 8 bits non signés',correction:'1. 10000₂=16  2. 100111₂=39  3. Overflow: 44 (300-256)',notions:['Binaire']},
+      {id:'N01-08',difficulte:2,titre:'IEEE 754 simple précision',enonce:'Structure 32 bits : 1. Signe/exposant/mantisse  2. Biais  3. Valeur de 0 10000000 10000000000000000000000',correction:'1. 1+8+23 bits  2. Biais=127  3. +1×2¹×1.5=3.0',notions:['IEEE 754']},
+      {id:'N01-09',difficulte:1,titre:'ASCII et Unicode',enonce:'1. Code ASCII de A, a, 0  2. chr(65)  3. ord("Z")  4. Diff ASCII/Unicode',correction:'1. 65, 97, 48  2. "A"  3. 90  4. ASCII=128 car, Unicode=140000+',notions:['ASCII','Unicode']},
+      {id:'N01-10',difficulte:2,titre:'UTF-8',enonce:'Taille UTF-8 : 1. "A" (U+0041)  2. "é" (U+00E9)  3. Avantage vs UTF-32',correction:'1. 1 octet  2. 2 octets  3. Économie mémoire pour textes latins',notions:['UTF-8']},
+      {id:'N01-11',difficulte:2,titre:'Opérations logiques bit à bit',enonce:'1. 1010₂ AND 1100₂  2. 1010₂ OR 1100₂  3. NOT 10110011₂  4. 1111₂ XOR 1010₂',correction:'1. 1000₂  2. 1110₂  3. 01001100₂  4. 0101₂',notions:['Binaire']},
+      {id:'N01-12',difficulte:2,titre:'Masque réseau',enonce:'IP 192.168.1.45 masque 255.255.255.0 : 1. Réseau  2. Broadcast  3. Nb hôtes',correction:'1. 192.168.1.0  2. 192.168.1.255  3. 254',notions:['Hexadécimal']},
+      {id:'N01-13',difficulte:3,titre:'Dépassement de capacité',enonce:'8 bits non signés : 1. 200+100  2. Explication  3. Signé 127+1',correction:'1. 44 (overflow 300-256)  2. Dépassement, 8 bits conservés  3. -128',notions:['Binaire','Complément à deux']},
+      {id:'N01-14',difficulte:2,titre:'Encoder/décoder ASCII',enonce:'Encoder "NSI" en hex ASCII. Décoder 48 65 6C 6C 6F',correction:'"NSI" → 4E 53 49  |  "Hello"',notions:['ASCII']},
+      {id:'N01-15',difficulte:3,titre:'Taille fichier image',enonce:'800×600 px, 24 bits/px : 1. Taille brute  2. En Mo  3. PNG vs JPEG',correction:'1. 1 440 000 octets  2. ≈1.37 Mo  3. PNG sans perte, JPEG compressé',notions:['Binaire']},
+    ]
+  },
+  { id:'types-construits', numero:2,
+    titre:'Types construits',
+    sousTitre:'Listes · Tuples · Dictionnaires · Ensembles · Compréhensions',
+    icon:'📦', color:'#06b6d4',
+    notions:['list','tuple','dict','set','Indexation','Slicing','Compréhension de liste'],
+    exercices:[
+      {id:'N02-01',difficulte:1,titre:'Opérations liste',enonce:'lst=[1,2,3,4,5]. 1. lst[0]  2. lst[-1]  3. lst[1:3]  4. len(lst)',correction:'1. 1  2. 5  3. [2,3]  4. 5',notions:['list']},
+      {id:'N02-02',difficulte:1,titre:'Modifier une liste',enonce:'lst=[10,20,30]. 1. Ajouter 40  2. Insérer 15 pos 1  3. Supprimer 20',correction:'1. lst.append(40)  2. lst.insert(1,15)  3. lst.remove(20)',notions:['list']},
+      {id:'N02-03',difficulte:1,titre:'Tuple',enonce:'t=(1,2,3). 1. t[0]  2. Mutable?  3. Déballer (a,b,c)=t',correction:'1. 1  2. Non, immuable → TypeError  3. a=1,b=2,c=3',notions:['tuple']},
+      {id:'N02-04',difficulte:1,titre:'Dictionnaire',enonce:'d={"nom":"Alice","age":16}. 1. d["nom"]  2. Ajouter ville  3. Clés  4. Supprimer age',correction:'1. "Alice"  2. d["ville"]="Paris"  3. list(d.keys())  4. del d["age"]',notions:['dict']},
+      {id:'N02-05',difficulte:2,titre:'Compréhension de liste',enonce:'1. [x**2 for x in range(5)]  2. [x for x in range(10) if x%2==0]  3. [s.upper() for s in ["nsi","math"]]',correction:'1. [0,1,4,9,16]  2. [0,2,4,6,8]  3. ["NSI","MATH"]',notions:['Compréhension de liste']},
+      {id:'N02-06',difficulte:2,titre:'Matrice (liste de listes)',enonce:'M=[[1,2],[3,4],[5,6]]. 1. M[1][0]  2. len(M)  3. Ajouter [7,8]  4. M[0][1]=9',correction:'1. 3  2. 3  3. M.append([7,8])  4. M=[[1,9],[3,4],[5,6]]',notions:['list']},
+      {id:'N02-07',difficulte:2,titre:'Slicing avancé',enonce:'lst=[0..9]. 1. lst[2:7:2]  2. lst[::-1]  3. lst[::3]  4. lst[-3:]',correction:'1. [2,4,6]  2. [9,8,...,0]  3. [0,3,6,9]  4. [7,8,9]',notions:['Slicing']},
+      {id:'N02-08',difficulte:2,titre:'Itérer dictionnaire',enonce:'notes={"Alice":15,"Bob":12,"Clara":17}. 1. Afficher  2. Moyenne  3. Meilleur',correction:'1. for k,v in notes.items()  2. ≈14.67  3. max(notes,key=notes.get)="Clara"',notions:['dict']},
+      {id:'N02-09',difficulte:2,titre:'Ensemble (set)',enonce:'A={1,2,3,4} B={3,4,5,6}. 1. A∩B  2. A∪B  3. A\\B  4. 2 in A',correction:'1. {3,4}  2. {1,2,3,4,5,6}  3. {1,2}  4. True',notions:['set']},
+      {id:'N02-10',difficulte:2,titre:'Copie vs référence',enonce:'a=[1,2,3] b=a b[0]=99. 1. a?  2. Pourquoi?  3. Copie indépendante?',correction:'1. [99,2,3]  2. Même référence  3. b=a.copy()',notions:['list']},
+      {id:'N02-11',difficulte:3,titre:'Tri de dicts',enonce:'Trier [{"nom":"Bob","note":12},{"nom":"Alice","note":15}] par note desc.',correction:'sorted(lst, key=lambda e: e["note"], reverse=True)',notions:['list','dict']},
+      {id:'N02-12',difficulte:2,titre:'Dict compréhension',enonce:'1. {n:len(n) for n in ["Alice","Bob"]}  2. {k:v**2 for k,v in {"a":1,"b":2}.items()}',correction:'1. {"Alice":5,"Bob":3}  2. {"a":1,"b":4}',notions:['dict']},
+      {id:'N02-13',difficulte:2,titre:'Anagramme',enonce:'est_anagramme(s1,s2) → True si anagrammes.',correction:'def est_anagramme(s1,s2): return sorted(s1.lower())==sorted(s2.lower())',notions:['list']},
+      {id:'N02-14',difficulte:3,titre:'Table de données',enonce:'table=[{"nom":"A","note":15},{"nom":"B","note":9}]. 1. Filtrer  2. Projeter  3. Moyenne',correction:'1. [e for e in table if e["note"]>=10]  2. [e["nom"] for e in table]  3. 12',notions:['list','dict']},
+      {id:'N02-15',difficulte:3,titre:'Compter occurrences',enonce:'Compter les lettres dans "abracadabra".',correction:'freq={}\nfor c in "abracadabra": freq[c]=freq.get(c,0)+1',notions:['dict']},
+    ]
+  },
+  { id:'traitement-donnees', numero:3,
+    titre:'Traitement de données en tables',
+    sousTitre:'CSV · Sélection · Tri · Agrégation · Jointure',
+    icon:'📊', color:'#10b981',
+    notions:['CSV','Sélection','Projection','Tri','Agrégation','Jointure'],
+    exercices:[
+      {id:'N03-01',difficulte:1,titre:'Lire un CSV',enonce:'Lire "notes.csv" en liste de dicts.',correction:'import csv\nwith open("notes.csv") as f: data=list(csv.DictReader(f))',notions:['CSV']},
+      {id:'N03-02',difficulte:1,titre:'Sélection (filtre)',enonce:'Sélectionner élèves avec note≥10.',correction:'[e for e in table if int(e["note"])>=10]',notions:['Sélection']},
+      {id:'N03-03',difficulte:1,titre:'Projection',enonce:'Extraire uniquement les noms.',correction:'[e["nom"] for e in table]',notions:['Projection']},
+      {id:'N03-04',difficulte:1,titre:'Tri',enonce:'Trier par note croissante puis décroissante.',correction:'sorted(table,key=lambda e:e["note"])  # asc\nsorted(table,key=lambda e:e["note"],reverse=True)  # desc',notions:['Tri']},
+      {id:'N03-05',difficulte:2,titre:'Agrégation',enonce:'[{"ville":"Paris","pop":2161000},{"ville":"Lyon","pop":513275}]. Total, max, moyenne.',correction:'sum(), max(...,key=lambda e:e["pop"]), sum()/len()',notions:['Agrégation']},
+      {id:'N03-06',difficulte:2,titre:'Jointure',enonce:'eleves=[{id:1,nom:"Alice"}] notes=[{id_el:1,note:15}]. Joindre.',correction:'[{"nom":e["nom"],"note":n["note"]} for e in eleves for n in notes if e["id"]==n["id_el"]]',notions:['Jointure']},
+      {id:'N03-07',difficulte:2,titre:'Conversion types CSV',enonce:'CSV donne des strings. Problème pour calculs numériques?',correction:'Convertir: for e in data: e["note"]=int(e["note"])',notions:['CSV']},
+      {id:'N03-08',difficulte:2,titre:'Statistiques par groupe',enonce:'Moyenne par matière depuis une table de notes.',correction:'for m in set(e["mat"] for e in notes):\n    moy=sum(e["note"] for e in notes if e["mat"]==m)/...',notions:['Agrégation']},
+      {id:'N03-09',difficulte:2,titre:'Supprimer doublons',enonce:'Supprimer les doublons d\'une liste de dicts.',correction:'[dict(t) for t in set(tuple(sorted(e.items())) for e in table)]',notions:['Sélection']},
+      {id:'N03-10',difficulte:3,titre:'Regroupement',enonce:'[{"produit":"A","qte":10},{"produit":"A","qte":8}]. Total par produit.',correction:'totaux={}\nfor v in ventes: totaux[v["produit"]]=totaux.get(v["produit"],0)+v["qte"]',notions:['Agrégation']},
+      {id:'N03-11',difficulte:2,titre:'Recherche',enonce:'1. Trouver produit code "P02"  2. Filtrer prix<10.',correction:'1. next(e for e in table if e["code"]=="P02")\n2. [e for e in table if e["prix"]<10]',notions:['Sélection']},
+      {id:'N03-12',difficulte:2,titre:'Mise à jour table',enonce:'Appliquer -10% sur tous les prix.',correction:'for e in table: e["prix"]=round(e["prix"]*0.9,2)',notions:['Projection']},
+      {id:'N03-13',difficulte:3,titre:'Fusion 3 tables',enonce:'Joindre eleves, notes, cours.',correction:'res=[]\nfor e in eleves:\n  for n in notes:\n    if n["id_el"]==e["id"]:\n      for c in cours:\n        if c["id"]==n["id_cours"]:\n          res.append({"eleve":e["nom"],"cours":c["nom"],"note":n["note"]})',notions:['Jointure']},
+      {id:'N03-14',difficulte:2,titre:'Export CSV',enonce:'Écrire liste de dicts dans un fichier CSV.',correction:'import csv\nwith open("out.csv","w",newline="") as f:\n    w=csv.DictWriter(f,fieldnames=["nom","note"])\n    w.writeheader(); w.writerows(table)',notions:['CSV']},
+      {id:'N03-15',difficulte:3,titre:'Rang classement',enonce:'Ajouter champ "rang" (1=meilleur).',correction:'triee=sorted(table,key=lambda e:e["note"],reverse=True)\nfor i,e in enumerate(triee): e["rang"]=i+1',notions:['Tri','Projection']},
+    ]
+  },
+  { id:'interactions-web', numero:4,
+    titre:'Interactions Homme-Machine sur le Web',
+    sousTitre:'HTML · CSS · JavaScript · HTTP · Formulaires · DOM',
+    icon:'🌐', color:'#f59e0b',
+    notions:['HTML','CSS','JavaScript','HTTP','GET/POST','DOM','Client/Serveur'],
+    exercices:[
+      {id:'N04-01',difficulte:1,titre:'Squelette HTML',enonce:'Page "NSI" avec h1 et paragraphe.',correction:'<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>NSI</title></head><body><h1>NSI</h1><p>Bienvenue.</p></body></html>',notions:['HTML']},
+      {id:'N04-02',difficulte:1,titre:'Sélecteurs CSS',enonce:'CSS : 1. h1 en bleu  2. .important en gras  3. #menu fond gris',correction:'h1{color:blue} .important{font-weight:bold} #menu{background:gray}',notions:['CSS']},
+      {id:'N04-03',difficulte:1,titre:'Anatomie URL',enonce:'Décomposer https://api.ex.com:8080/search?q=nsi&page=2#top',correction:'protocole:https, domaine:api.ex.com, port:8080, chemin:/search, params:q=nsi,page=2, fragment:#top',notions:['HTTP']},
+      {id:'N04-04',difficulte:1,titre:'GET vs POST',enonce:'GET ou POST : 1. Recherche  2. Login  3. Image  4. Commande',correction:'1. GET  2. POST  3. GET  4. POST',notions:['GET/POST']},
+      {id:'N04-05',difficulte:2,titre:'Formulaire HTML',enonce:'Formulaire inscription : nom, email, age, bouton. POST /register.',correction:'<form action="/register" method="POST"><input type="text" name="nom"><input type="email" name="email"><input type="number" name="age"><button type="submit">Envoyer</button></form>',notions:['HTML','GET/POST']},
+      {id:'N04-06',difficulte:1,titre:'Codes statut HTTP',enonce:'Signification : 1. 200  2. 301  3. 404  4. 500  5. 403',correction:'1. OK  2. Redirect  3. Not Found  4. Erreur serveur  5. Interdit',notions:['HTTP']},
+      {id:'N04-07',difficulte:2,titre:'DOM JavaScript',enonce:'1. getElementById  2. Changer texte  3. Écouteur clic  4. Créer élément',correction:'1. document.getElementById("id")\n2. el.textContent="txt"\n3. el.addEventListener("click",cb)\n4. document.createElement("p")',notions:['JavaScript','DOM']},
+      {id:'N04-08',difficulte:2,titre:'Fetch API',enonce:'Récupérer JSON /api/users, afficher noms.',correction:'fetch("/api/users").then(r=>r.json()).then(data=>data.forEach(u=>console.log(u.nom)))',notions:['JavaScript','HTTP']},
+      {id:'N04-09',difficulte:2,titre:'Cookies et sessions',enonce:'1. Cookie  2. Cookie vs session  3. HttpOnly  4. Vie privée',correction:'1. Fichier client  2. Cookie=client, Session=serveur  3. Inaccessible JS  4. Traçage',notions:['HTTP']},
+      {id:'N04-10',difficulte:2,titre:'Flexbox',enonce:'Centrer un div h+v avec Flexbox.',correction:'body{display:flex;justify-content:center;align-items:center;min-height:100vh}',notions:['CSS']},
+      {id:'N04-11',difficulte:2,titre:'Validation JS',enonce:'validerForm(email,age) : "@" dans email, âge 10-120.',correction:'function validerForm(e,a){return e.includes("@")&&a>=10&&a<=120}',notions:['JavaScript']},
+      {id:'N04-12',difficulte:2,titre:'Client vs serveur',enonce:'1. Client/serveur  2. JS côté?  3. Python côté?  4. Protocole',correction:'1. Client=navigateur, Serveur=distant\n2. Client\n3. Serveur\n4. HTTP/HTTPS',notions:['Client/Serveur']},
+      {id:'N04-13',difficulte:3,titre:'Attaque XSS',enonce:'Site affiche $nom sans filtrage. 1. Risque  2. Payload  3. Protection',correction:'1. Injection script\n2. <script>alert("hack")</script>\n3. Échapper < > &',notions:['HTML','JavaScript']},
+      {id:'N04-14',difficulte:3,titre:'API REST',enonce:'API livres : 1. Lister  2. Détail id=5  3. Créer  4. Supprimer id=3',correction:'1. GET /livres  2. GET /livres/5  3. POST /livres  4. DELETE /livres/3',notions:['HTTP','GET/POST']},
+      {id:'N04-15',difficulte:2,titre:'Responsive design',enonce:'1. Définition  2. Media query <600px  3. px vs em vs %',correction:'1. Adaptation écran\n2. @media(max-width:600px){}\n3. px=fixe,em=relatif,%= conteneur',notions:['CSS']},
+    ]
+  },
+  { id:'architecture-os', numero:5,
+    titre:'Architecture matérielle et OS',
+    sousTitre:'Von Neumann · CPU · Mémoire · OS · Processus · Linux',
+    icon:'⚙️', color:'#ef4444',
+    notions:['Von Neumann','CPU','RAM','OS','Processus','Fichiers','Linux'],
+    exercices:[
+      {id:'N05-01',difficulte:1,titre:'Von Neumann',enonce:'1. 4 composants  2. UAL  3. UC  4. Bus',correction:'1. UAL+UC+Mémoire+E/S  2. Calculs  3. Séquencement  4. Liaison',notions:['Von Neumann']},
+      {id:'N05-02',difficulte:1,titre:'Cycle machine',enonce:'3 étapes pour ADD R1,R2.',correction:'1. FETCH: charger  2. DECODE: identifier  3. EXECUTE: calculer',notions:['Von Neumann','CPU']},
+      {id:'N05-03',difficulte:1,titre:'Hiérarchie mémoire',enonce:'Classer rapide→lent : SSD,RAM,Registres,Cache L1,HDD',correction:'Registres > Cache L1 > RAM > SSD > HDD',notions:['RAM']},
+      {id:'N05-04',difficulte:2,titre:'Commandes Linux',enonce:'1. Lister droits  2. Créer dossier  3. Copier  4. Afficher contenu',correction:'1. ls -la  2. mkdir projet  3. cp a.txt bak/  4. cat main.py',notions:['Linux']},
+      {id:'N05-05',difficulte:2,titre:'Droits Unix',enonce:'-rwxr-xr-- : 1. Proprio  2. Groupe  3. Autres  4. chmod 755',correction:'1. rwx  2. r-x  3. r--  4. rwxr-xr-x',notions:['Linux']},
+      {id:'N05-06',difficulte:2,titre:'Processus',enonce:'1. Définition  2. Prog vs processus  3. États  4. kill -9',correction:'1. Programme en exécution\n2. Fichier vs instance\n3. Nouveau→Prêt→Exec⇄Bloqué→Terminé\n4. Arrêt forcé',notions:['Processus']},
+      {id:'N05-07',difficulte:2,titre:'Système fichiers',enonce:'/home/alice/NSI/main.py : 1. Rel depuis /home/alice  2. Parent  3. Nom  4. Ext',correction:'1. NSI/main.py  2. /home/alice/NSI  3. main.py  4. .py',notions:['Fichiers']},
+      {id:'N05-08',difficulte:2,titre:'Ordonnancement',enonce:'P1=10ms P2=5ms P3=8ms. FIFO puis RR quantum=4ms.',correction:'FIFO: P1→P2→P3\nRR: P1(4)→P2(4)→P3(4)→P1(4)→P2(1)→P3(4)→P1(2)',notions:['OS','Processus']},
+      {id:'N05-09',difficulte:1,titre:'Rôles OS',enonce:'Citer 5 rôles.',correction:'1. Processus  2. Mémoire  3. Fichiers  4. Périphériques  5. Sécurité',notions:['OS']},
+      {id:'N05-10',difficulte:2,titre:'Mémoire virtuelle',enonce:'1. Définition  2. Swap  3. Avantage',correction:'1. Espace adressage illimité  2. Extension RAM sur disque  3. Isolation processus',notions:['RAM','OS']},
+      {id:'N05-11',difficulte:2,titre:'Redirections Linux',enonce:'1. ls>f  2. cmd 2>&1  3. ls|grep .py  4. cat a>>b',correction:'1. Sortie→fichier  2. Stderr→stdout  3. Filtrer  4. Ajouter',notions:['Linux']},
+      {id:'N05-12',difficulte:3,titre:'Interblocage',enonce:'P1 tient R1 attend R2. P2 tient R2 attend R1.',correction:'Deadlock. Solution: ordre acquisition ou timeout.',notions:['Processus']},
+      {id:'N05-13',difficulte:2,titre:'Script bash',enonce:'1. Echo  2. 3 dossiers  3. Boucle 1→5',correction:'#!/bin/bash\necho "Bonjour"\nmkdir d1 d2 d3\nfor i in 1 2 3 4 5; do echo $i; done',notions:['Linux']},
+      {id:'N05-14',difficulte:2,titre:'Performance CPU',enonce:'3GHz. 1. Cycles/s  2. Durée cycle  3. IPC=2',correction:'1. 3×10⁹  2. ≈0.33ns  3. 6×10⁹ inst/s',notions:['CPU']},
+      {id:'N05-15',difficulte:3,titre:'Comparaison OS',enonce:'Linux vs Windows vs macOS.',correction:'Linux: open source, serveurs\nWindows: propriétaire, bureautique\nmacOS: propriétaire, Unix',notions:['OS']},
+    ]
+  },
+  { id:'langages-python', numero:6,
+    titre:'Langages et Programmation Python',
+    sousTitre:'Variables · Fonctions · Récursivité · Modules · Boucles',
+    icon:'🐍', color:'#6366f1',
+    notions:['Variables','Fonctions','Récursivité','Modules','Boucles'],
+    exercices:[
+      {id:'N06-01',difficulte:1,titre:'Types Python',enonce:'Type de : 1. 3.14  2. "NSI"  3. True  4. (1,2)  5. type(42)',correction:'1. float  2. str  3. bool  4. tuple  5. int',notions:['Variables']},
+      {id:'N06-02',difficulte:1,titre:'Fonctions simples',enonce:'1. carre(x)  2. est_pair(n)  3. maximum(a,b)',correction:'def carre(x): return x**2\ndef est_pair(n): return n%2==0\ndef maximum(a,b): return a if a>b else b',notions:['Fonctions']},
+      {id:'N06-03',difficulte:1,titre:'Boucles',enonce:'1. Somme 1→n  2. Pairs 0→20 while  3. Compter "a" dans chaîne',correction:'1. sum(range(1,n+1))  2. while i<=20: print(i); i+=2  3. sum(1 for c in s if c=="a")',notions:['Boucles']},
+      {id:'N06-04',difficulte:2,titre:'Récursivité — factorielle',enonce:'1. fact(n) récursif  2. Cas de base  3. fact(5)  4. n<0?',correction:'def fact(n): return 1 if n==0 else n*fact(n-1)\nfact(5)=120  |  n<0 → récursion infinie',notions:['Récursivité']},
+      {id:'N06-05',difficulte:2,titre:'Fibonacci',enonce:'1. Coder fib  2. fib(7)  3. Problème perf?',correction:'def fib(n): return n if n<=1 else fib(n-1)+fib(n-2)\nfib(7)=13  |  O(2ⁿ) recalculs',notions:['Récursivité']},
+      {id:'N06-06',difficulte:2,titre:'Portée variables',enonce:'x=10 def f(): x=20 print(x). f() puis print(x).',correction:'20 puis 10. Utiliser "global x" pour modifier globale.',notions:['Variables','Fonctions']},
+      {id:'N06-07',difficulte:2,titre:'Fonctions ordre supérieur',enonce:'1. map(lambda x:x**2,[1,2,3])  2. filter(>2,[1,2,3,4])  3. sorted par clé',correction:'1. [1,4,9]  2. [3,4]  3. sorted(lst,key=lambda x:x["nom"])',notions:['Fonctions']},
+      {id:'N06-08',difficulte:2,titre:'Modules',enonce:'1. math.sqrt(16)  2. random.randint  3. date.today  4. Créer module',correction:'1. 4.0  2. 1-6  3. date actuelle  4. Fichier .py importable',notions:['Modules']},
+      {id:'N06-09',difficulte:2,titre:'Gestion erreurs',enonce:'1. try/except  2. ValueError+TypeError  3. finally  4. raise',correction:'try: ...\nexcept (ValueError,TypeError) as e: print(e)\nfinally: ...\nraise ValueError("msg")',notions:['Fonctions']},
+      {id:'N06-10',difficulte:2,titre:'Paramètres avancés',enonce:'1. Défaut  2. *args  3. **kwargs  4. Return multiple',correction:'1. def f(x,y=0)  2. def f(*args)  3. def f(**kw)  4. return a,b',notions:['Fonctions']},
+      {id:'N06-11',difficulte:3,titre:'Tours de Hanoï',enonce:'Coder hanoi(n,src,dst,inter). Nb mouvements?',correction:'def hanoi(n,s,d,i):\n    if n==1: print(f"{s}→{d}"); return\n    hanoi(n-1,s,i,d); print(f"{s}→{d}"); hanoi(n-1,i,d,s)\nNb = 2ⁿ-1',notions:['Récursivité']},
+      {id:'N06-12',difficulte:2,titre:'Chaînes',enonce:'"NSI Terminale". 1. split()  2. lower()  3. replace  4. [4:13]',correction:'1. ["NSI","Terminale"]  2. "nsi terminale"  3. ...  4. "Terminale"',notions:['Variables']},
+      {id:'N06-13',difficulte:3,titre:'Mémoïsation',enonce:'fib avec dict cache.',correction:'cache={}\ndef fib_m(n):\n    if n in cache: return cache[n]\n    if n<=1: return n\n    cache[n]=fib_m(n-1)+fib_m(n-2); return cache[n]',notions:['Récursivité']},
+      {id:'N06-14',difficulte:2,titre:'Tests assert',enonce:'5 tests pour carre(x).',correction:'assert carre(0)==0\nassert carre(3)==9\nassert carre(-2)==4',notions:['Fonctions']},
+      {id:'N06-15',difficulte:3,titre:'PGCD Euclide',enonce:'1. pgcd récursif  2. pgcd(48,18)  3. Itératif',correction:'def pgcd(a,b): return a if b==0 else pgcd(b,a%b)\npgcd(48,18)=6\ndef pgcd_it(a,b):\n    while b: a,b=b,a%b; return a',notions:['Récursivité']},
+    ]
+  },
+  { id:'algorithmique-premiere', numero:7,
+    titre:'Algorithmique',
+    sousTitre:'Recherche · Tri · Glouton · Complexité · Invariant de boucle',
+    icon:'🧮', color:'#ec4899',
+    notions:['Recherche séquentielle','Recherche dichotomique','Tri selection','Tri insertion','Complexité','Glouton'],
+    exercices:[
+      {id:'N07-01',difficulte:1,titre:'Recherche séquentielle',enonce:'recherche_seq(lst,val). Complexité?',correction:'def recherche_seq(lst,val):\n    for i in range(len(lst)):\n        if lst[i]==val: return i\n    return -1\nO(n)',notions:['Recherche séquentielle']},
+      {id:'N07-02',difficulte:2,titre:'Recherche dichotomique',enonce:'recherche_dicho(lst,val). Complexité? Prérequis?',correction:'def recherche_dicho(lst,val):\n    g,d=0,len(lst)-1\n    while g<=d:\n        m=(g+d)//2\n        if lst[m]==val: return m\n        elif lst[m]<val: g=m+1\n        else: d=m-1\n    return -1\nO(log n), liste triée',notions:['Recherche dichotomique']},
+      {id:'N07-03',difficulte:2,titre:'Trace tri sélection',enonce:'Trier [5,2,8,1,9,3] étape par étape.',correction:'[5,2,8,1,9,3]→[1,2,8,5,9,3]→[1,2,3,5,9,8]→[1,2,3,5,8,9]',notions:['Tri selection']},
+      {id:'N07-04',difficulte:2,titre:'Tri par insertion',enonce:'tri_insertion(lst). Complexité?',correction:'def tri_insertion(lst):\n    for i in range(1,len(lst)):\n        cle=lst[i]; j=i-1\n        while j>=0 and lst[j]>cle: lst[j+1]=lst[j]; j-=1\n        lst[j+1]=cle\n    return lst\nO(n) si trié, O(n²) pire cas',notions:['Tri insertion']},
+      {id:'N07-05',difficulte:2,titre:'Complexité Big-O',enonce:'1. lst[i]  2. Recherche  3. Sélection  4. Dichotomie  5. Double boucle',correction:'1. O(1)  2. O(n)  3. O(n²)  4. O(log n)  5. O(n²)',notions:['Complexité']},
+      {id:'N07-06',difficulte:2,titre:'Invariant de boucle',enonce:'Invariant tri sélection. Init, Conservation, Terminaison.',correction:'Invariant: k premiers=k plus petits triés\nInit: k=0 ✓ | Conservation: on ajoute min ✓ | Fin: k=n ✓',notions:['Tri selection']},
+      {id:'N07-07',difficulte:2,titre:'Glouton — monnaie',enonce:'Rendre 47¢ avec [50,20,10,5,2,1]¢.',correction:'20+20+5+2=47 (4 pièces). Pas toujours optimal.',notions:['Glouton']},
+      {id:'N07-08',difficulte:3,titre:'Sac à dos fractionnable',enonce:'A(60€,10kg) B(100€,20kg) C(120€,30kg). Cap=50kg.',correction:'Ratio: A=6,B=5,C=4. Prendre A+B+20/30 C = 240€',notions:['Glouton']},
+      {id:'N07-09',difficulte:2,titre:'Trace dichotomie',enonce:'[2,5,8,12,16,23,38,56,72,91]. Chercher 23.',correction:'m=4→16<23→g=5; m=7→56>23→d=6; m=5→23 ✓ (3 étapes)',notions:['Recherche dichotomique']},
+      {id:'N07-10',difficulte:2,titre:'Stabilité du tri',enonce:'1. Stable?  2. Insertion  3. Sélection  4. Pourquoi?',correction:'1. Préserve ordre égaux  2. Stable ✓  3. Non stable  4. Tri multi-critères',notions:['Tri insertion','Tri selection']},
+      {id:'N07-11',difficulte:3,titre:'Tri de chaînes',enonce:'["banana","apple","cherry"]. 1. Alpha  2. Longueur  3. Dernière lettre',correction:'1. sorted(lst)  2. sorted(lst,key=len)  3. sorted(lst,key=lambda s:s[-1])',notions:['Tri insertion']},
+      {id:'N07-12',difficulte:2,titre:'Compter opérations',enonce:'Sélection n=100 : 1. Comparaisons  2. Échanges  3. n=1000?',correction:'1. 4950  2. 99  3. 499500 comparaisons',notions:['Complexité']},
+      {id:'N07-13',difficulte:3,titre:'Palindrome récursif',enonce:'est_palindrome(s). Tracer "radar".',correction:'def est_palindrome(s):\n    if len(s)<=1: return True\n    return s[0]==s[-1] and est_palindrome(s[1:-1])',notions:['Récursivité']},
+      {id:'N07-14',difficulte:2,titre:'Exponentiation rapide',enonce:'puissance(b,n) en O(log n).',correction:'def puissance(b,n):\n    if n==0: return 1\n    if n%2==0: h=puissance(b,n//2); return h*h\n    return b*puissance(b,n-1)',notions:['Récursivité','Complexité']},
+      {id:'N07-15',difficulte:3,titre:'Insertion vs Sélection',enonce:'Comparer complexité, stabilité, presque trié, mémoire.',correction:'Complexité: tous deux O(n²)\nStabilité: insertion ✓, sélection ✗\nPresque trié: insertion O(n)\nMémoire: tous deux O(1)',notions:['Tri selection','Tri insertion']},
+    ]
+  },
+  { id:'projet-nsi-premiere', numero:8,
+    titre:'Projet NSI Première',
+    sousTitre:'Git · Tests · Documentation · Conception · Équipe',
+    icon:'🚀', color:'#f59e0b',
+    notions:['Git','Tests','Documentation','Conception','Débogage'],
+    exercices:[
+      {id:'N08-01',difficulte:1,titre:'Commandes Git',enonce:'1. init  2. Ajouter tout  3. Commiter  4. Push  5. Pull',correction:'1. git init  2. git add .  3. git commit -m "msg"  4. git push  5. git pull',notions:['Git']},
+      {id:'N08-02',difficulte:2,titre:'Branches Git',enonce:'1. Créer feature/login  2. Switcher  3. Merger  4. Supprimer',correction:'1. git branch feature/login  2. git checkout feature/login\n3. git checkout main && git merge feature/login  4. git branch -d feature/login',notions:['Git']},
+      {id:'N08-03',difficulte:1,titre:'Tests assert',enonce:'5 tests pour addition(a,b).',correction:'assert addition(2,3)==5\nassert addition(0,0)==0\nassert addition(-1,1)==0\nassert addition(-5,-3)==-8\nassert addition(100,200)==300',notions:['Tests']},
+      {id:'N08-04',difficulte:2,titre:'Docstring',enonce:'max_liste(lst) avec docstring complète (description, args, returns, raises).',correction:'def max_liste(lst):\n    """Retourne le max.\n    Args: lst(list) non vide\n    Returns: plus grand élément\n    Raises: ValueError si vide\n    """\n    if not lst: raise ValueError("vide")\n    return max(lst)',notions:['Documentation']},
+      {id:'N08-05',difficulte:2,titre:'Déboguer',enonce:'somme_pairs([1,2,3,4,5])=5 au lieu de 6. Trouver et corriger.',correction:'Debug: afficher x et x%2 à chaque étape\n2+4=6, pas 5 → vérifier données ou bug dans appel\ndef somme_pairs(lst): return sum(x for x in lst if x%2==0)',notions:['Débogage']},
+      {id:'N08-06',difficulte:2,titre:'Cahier des charges',enonce:'CdC pour appli de notes scolaires.',correction:'1. Contexte: gérer notes\n2. Features: CRUD, moyennes, bulletins\n3. Contraintes: Python, SQLite\n4. Délai: 3 semaines',notions:['Conception']},
+      {id:'N08-07',difficulte:2,titre:'README.md',enonce:'README pour calculatrice Python.',correction:'# Calculatrice\n## Installation\npip install -r requirements.txt\n## Usage\npython calc.py\n## Auteur\nAlice',notions:['Documentation']},
+      {id:'N08-08',difficulte:2,titre:'Conflits Git',enonce:'1. Comment détecté?  2. Résoudre?  3. Prévenir?',correction:'1. <<<, ===, >>>  2. Choisir+git add+commit  3. Branches séparées',notions:['Git']},
+      {id:'N08-09',difficulte:2,titre:'Refactoring',enonce:'calculer_taxe_france() et _allemagne() dupliquées. Refactorer.',correction:'def calculer_taxe(prix,taux): return prix*taux\ncalculer_taxe(100,0.20)  # France\ncalculer_taxe(100,0.19)  # Allemagne',notions:['Conception']},
+      {id:'N08-10',difficulte:3,titre:'Tests pytest',enonce:'pytest pour diviser(a,b) avec ZeroDivisionError si b=0.',correction:'import pytest\ndef test_ok(): assert diviser(10,2)==5.0\ndef test_zero():\n    with pytest.raises(ZeroDivisionError): diviser(1,0)',notions:['Tests']},
+      {id:'N08-11',difficulte:2,titre:'GitHub Pages',enonce:'1. Définition  2. Héberger  3. URL',correction:'1. Hébergement statique gratuit\n2. Settings→Pages→Source=main\n3. username.github.io/repo',notions:['Git']},
+      {id:'N08-12',difficulte:2,titre:'Versionnage sémantique',enonce:'2.4.1 : signification? Quand incrémenter?',correction:'2=majeur, 4=mineur, 1=patch\nbug→.patch, feature→mineur, refonte→majeur',notions:['Git']},
+      {id:'N08-13',difficulte:3,titre:'Pattern MVC',enonce:'MVC pour bibliothèque.',correction:'Model: Livre, BDD\nView: afficher_catalogue()\nController: ajouter(), emprunter()\nAvantage: séparation responsabilités',notions:['Conception']},
+      {id:'N08-14',difficulte:2,titre:'Revue de code',enonce:'5 éléments à vérifier.',correction:'1. Nommage  2. Docstrings  3. Tests  4. Erreurs  5. Duplication',notions:['Documentation','Tests']},
+      {id:'N08-15',difficulte:3,titre:'Présentation projet 10min',enonce:'Structurer une présentation.',correction:'1min contexte | 2min démo | 2min architecture | 2min choix tech | 1min difficultés | 1min améliorations | 1min questions',notions:['Conception']},
+    ]
+  },
+]
+
+const SECTIONS_NSI: {
+  key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
+  data:AnneeData[]; links:NSILinks;
+}[] = [
+  { key:'terminale-nsi', label:'Terminale NSI', icon:'🎓', color:'#8b5cf6', coeff:'Coef. 16 · 3h30', desc:'Spécialité NSI · Structures de données · Algorithmes · SQL · POO · Réseaux', data:dataNSITerminale, links:linksNSITerminale },
+  { key:'premiere-nsi',  label:'Première NSI',  icon:'📗', color:'#06b6d4', coeff:'Épreuve anticipée · 2h', desc:'NSI Première · Python · Web · Données · Architecture · Algorithmique', data:dataNSIPremiere, links:linksNSIPremiereAnticipee },
+  { key:'seconde-snt',   label:'Seconde SNT',   icon:'📘', color:'#10b981', coeff:'Épreuve commune', desc:'SNT Seconde · 7 thèmes · Internet · Web · Données · IA', data:[], links:{} as NSILinks },
+]
 
 const SECTIONS: {
   key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
@@ -8146,7 +8599,7 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
   )
 }
 
-type Matiere = 'maths' | 'physique-chimie' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | null
 
 export default function ExamensFrancePage() {
   const router = useRouter()
@@ -8155,9 +8608,10 @@ export default function ExamensFrancePage() {
   const [selectedYear,setSelectedYear] = useState<number|null>(null)
   const [modal,setModal]               = useState<{url:string;title:string}|null>(null)
 
-  const sec        = SECTIONS.find(s=>s.key===activeSec)!
-  const detail     = sec.data.find(a=>a.year===selectedYear)
-  const anneeLinks = selectedYear ? sec.links[selectedYear] : null
+  const secNSI     = SECTIONS_NSI.find(s=>s.key===activeSec)
+  const sec        = secNSI || SECTIONS.find(s=>s.key===activeSec)!
+  const detail     = sec.data.find((a:any)=>a.year===selectedYear)
+  const anneeLinks = selectedYear ? (sec.links as any)[selectedYear] : null
   const ptTotal    = detail?.exercices.reduce((t,e)=>t+e.pts,0)??0
 
   const openPdf = (url:string,title:string) => setModal({url,title})
@@ -8166,9 +8620,10 @@ export default function ExamensFrancePage() {
   const goSec = (key:SKey) => {
     setActiveSec(key)
     setSelectedYear(null)
+    const nsiKeys:SKey[]  = ['terminale-nsi','premiere-nsi','seconde-snt']
     const mathKeys:SKey[] = ['terminale-generale','terminale-maths-expertes','terminale-technologique','premiere-specialite','seconde-maths']
     const pcKeys:SKey[] = ['terminale-physique-chimie','seconde-physique-chimie','sti2d-physique-chimie','stes-physique-chimie']
-    setMatiere(mathKeys.includes(key) ? 'maths' : 'physique-chimie')
+    setMatiere(mathKeys.includes(key) ? 'maths' : nsiKeys.includes(key) ? 'informatique' : 'physique-chimie')
   }
 
   // ── PAGE INTERMÉDIAIRE ──────────────────────────────────────
@@ -8240,17 +8695,21 @@ export default function ExamensFrancePage() {
                 </span>
               </button>
 
-              {/* SVT — bientôt */}
-              <button disabled
-                style={{padding:'36px 28px',background:'rgba(255,255,255,0.02)',border:'1.5px solid rgba(255,255,255,0.07)',borderRadius:20,cursor:'not-allowed',textAlign:'left',fontFamily:'var(--font-body)',opacity:0.45}}>
-                <div style={{fontSize:52,marginBottom:14}}>🌱</div>
-                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'var(--muted)'}}>SVT</h2>
-                <p style={{fontSize:13,color:'var(--muted)',lineHeight:1.65,margin:'0 0 18px'}}>
-                  Sciences de la Vie et de la Terre · Bientôt disponible
-                </p>
-                <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 14px',borderRadius:8,background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:12,fontWeight:600}}>
-                  🚧 En construction
-                </span>
+              {/* INFORMATIQUE NSI */}
+              <button
+                onClick={()=>{ setMatiere('informatique'); setActiveSec('terminale-nsi') }}
+                style={{padding:'36px 28px',background:'rgba(139,92,246,0.06)',border:'1.5px solid rgba(139,92,246,0.25)',borderRadius:20,cursor:'pointer',textAlign:'left',transition:'all 0.2s',fontFamily:'var(--font-body)',color:'var(--text)'}}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-5px)';e.currentTarget.style.borderColor='rgba(139,92,246,0.55)';e.currentTarget.style.boxShadow='0 20px 60px rgba(139,92,246,0.18)'}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.borderColor='rgba(139,92,246,0.25)';e.currentTarget.style.boxShadow='none'}}>
+                <div style={{fontSize:52,marginBottom:14}}>💻</div>
+                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'#a78bfa'}}>Informatique NSI</h2>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.65,margin:'0 0 18px'}}>Spécialité NSI Terminale · Première NSI · Seconde SNT</p>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:20}}>
+                  {['Terminale NSI','Première NSI','Seconde SNT'].map(t=>(
+                    <span key={t} style={{fontSize:10,padding:'3px 9px',borderRadius:20,background:'rgba(139,92,246,0.12)',color:'#a78bfa',fontWeight:600}}>{t}</span>
+                  ))}
+                </div>
+                <span style={{display:'inline-flex',alignItems:'center',gap:6,color:'#a78bfa',fontWeight:700,fontSize:13}}>Voir les annales →</span>
               </button>
             </div>
 
@@ -8288,7 +8747,7 @@ export default function ExamensFrancePage() {
               ← Toutes les matières
             </button>
             <span className="label" style={{marginLeft:8,fontSize:11}}>
-              {matiere==='maths'?'📐 Mathématiques':'⚗️ Physique-Chimie'}
+              {matiere==='maths'?'📐 Mathématiques':matiere==='informatique'?'💻 Informatique NSI':'⚗️ Physique-Chimie'}
             </span>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',marginBottom:14}}>
               5 Ans d'Examens Officiels<br/>
@@ -8316,6 +8775,21 @@ export default function ExamensFrancePage() {
                     <span>{s.icon}</span>
                     <span>{s.label}</span>
                     <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}20`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)'}}>{s.coeff}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Ligne Informatique NSI */}
+            {matiere==='informatique' && (
+              <div style={{display:'flex',gap:3,alignItems:'center',flexWrap:'wrap'}}>
+                <span style={{fontSize:11,paddingLeft:6,paddingRight:6,color:'var(--muted)',fontWeight:700}}>💻</span>
+                {SECTIONS_NSI.map(s=>(
+                  <button key={s.key} onClick={()=>goSec(s.key)}
+                    style={{display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:12,transition:'all 0.15s',
+                      background:activeSec===s.key?`${s.color}16`:'transparent',
+                      color:activeSec===s.key?s.color:'var(--muted)'}}>
+                    <span>{s.icon}</span><span>{s.label}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}22`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)',marginLeft:2}}>{s.coeff}</span>
                   </button>
                 ))}
               </div>
@@ -8388,6 +8862,67 @@ export default function ExamensFrancePage() {
           </div>
 
           {/* GRILLE ANNÉES ou DS PREMIÈRE ou SECONDE */}
+          {/* ═══ NSI ═══ */}
+          {matiere==='informatique' && activeSec==='premiere-nsi' && (
+            <PremiereView chapitres={CHAPITRES_PREMIERE_NSI}/>
+          )}
+          {matiere==='informatique' && activeSec==='terminale-nsi' && (() => {
+            const s = SECTIONS_NSI.find(x=>x.key===activeSec)!
+            const years = Object.keys(s.links).map(Number).sort((a,b)=>b-a)
+            return (
+              <div>
+                <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16}}>Sélectionnez une année</p>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(145px,1fr))',gap:12,marginBottom:32}}>
+                  {Object.keys(s.links).map(Number).sort((a,b)=>b-a).map((yr)=>{
+                    const sel = selectedYear===yr
+                    const nbSujets = Object.values((s.links as NSILinks)[yr]).reduce((t:number,pdfs:any)=>t+pdfs.length,0)
+                    const hasCorr = Object.values((s.links as NSILinks)[yr]).some((pdfs:any)=>pdfs.some((p:any)=>p.correction))
+                    return (
+                      <div key={yr} onClick={()=>setSelectedYear(sel?null:yr)}
+                        style={{cursor:'pointer',textAlign:'center',padding:'18px 10px',background:sel?`${s.color}18`:'var(--surface)',border:sel?`2px solid ${s.color}`:'1px solid var(--border)',borderRadius:14,transition:'all 0.2s',boxShadow:sel?`0 6px 24px ${s.color}30`:'none',transform:sel?'translateY(-3px)':'none'}}
+                        onMouseEnter={e=>{if(!sel)e.currentTarget.style.borderColor=`${s.color}70`}}
+                        onMouseLeave={e=>{if(!sel)e.currentTarget.style.borderColor='var(--border)'}}>
+                        <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:30,color:sel?s.color:'var(--text)',marginBottom:6}}>{yr}</div>
+                        <div style={{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}}>
+                          <span style={{fontSize:9,background:`${s.color}15`,color:s.color,padding:'1px 6px',borderRadius:5}}>{nbSujets} sujet{nbSujets>1?'s':''}</span>
+                          {hasCorr && <span style={{fontSize:9,background:'rgba(6,214,160,0.12)',color:'#06d6a0',padding:'1px 6px',borderRadius:5}}>✅ corrigé</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                {selectedYear && (()=>{
+                  const d = s.data.find((a:any)=>a.year===selectedYear)
+                  const centres = (s.links as any)[selectedYear] || (s.links as any)[String(selectedYear)] || {}
+                  return (
+                    <div>
+                      <h3 style={{fontSize:15,fontWeight:700,marginBottom:12,color:s.color}}>📄 Sujets & Corrections {selectedYear}</h3>
+                      {Object.entries(centres).map(([centre,pdfs]:[string,any])=>(
+                        <div key={centre} style={{background:'var(--surface)',border:'1px solid var(--border)',borderLeft:`3px solid ${s.color}`,borderRadius:12,padding:'14px 18px',marginBottom:10}}>
+                          <div style={{fontWeight:700,fontSize:13,marginBottom:10}}>{centre}</div>
+                          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                            {pdfs.map((pdf:any,i:number)=>(
+                              <div key={i} style={{display:'flex',gap:6}}>
+                                <button onClick={()=>openPdf(pdf.sujet,(pdf as any).label||`NSI ${selectedYear} — ${centre}${pdfs.length>1?' '+(i+1):''}`)}
+                                  style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 14px',background:`${s.color}14`,border:`1px solid ${s.color}30`,borderRadius:9,color:s.color,fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'var(--font-body)'}}>
+                                  📄 {(pdf as any).label||(pdfs.length>1?`Sujet ${i+1}`:'Sujet')}
+                                </button>
+                                {pdf.correction&&<button onClick={()=>openPdf(pdf.correction,`NSI ${selectedYear} — ${centre} Correction${pdfs.length>1?' '+(i+1):''}`)}
+                                  style={{display:'inline-flex',alignItems:'center',gap:5,padding:'7px 14px',background:'rgba(6,214,160,0.1)',border:'1px solid rgba(6,214,160,0.3)',borderRadius:9,color:'#06d6a0',fontWeight:700,fontSize:12,cursor:'pointer',fontFamily:'var(--font-body)'}}>
+                                  ✅ Correction{pdfs.length>1?` ${i+1}`:''}
+                                </button>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+              </div>
+            )
+          })()}
+{matiere==='informatique' && activeSec==='seconde-snt' && (<PremiereView chapitres={CHAPITRES_SECONDE_NSI}/>)}
           {activeSec === 'seconde-maths' ? (
             <PremiereView chapitres={CHAPITRES_SECONDE}/>
           ) : activeSec === 'premiere-specialite' ? (
@@ -8398,9 +8933,10 @@ export default function ExamensFrancePage() {
             <PremiereView chapitres={CHAPITRES_PREMIERE_PC}/>
           ) : (
             <div>
-          <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14,fontWeight:600}}>
+          {matiere !== 'informatique' && <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14,fontWeight:600}}>
             Sélectionnez une année pour accéder aux sujets et corrections
-          </p>
+          </p>}
+{!secNSI && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(145px,1fr))',gap:12,marginBottom:32}}>
             {sec.data.map(a=>{
               const sel = selectedYear===a.year
@@ -8424,9 +8960,10 @@ export default function ExamensFrancePage() {
               )
             })}
           </div>
+          )}
 
           {/* DÉTAIL ANNÉE */}
-          {selectedYear && detail && anneeLinks && (
+          {selectedYear && detail && anneeLinks && !secNSI && (
             <div style={{background:'var(--surface)',border:`2px solid ${sec.color}40`,borderRadius:20,padding:28,animation:'fadeInUp 0.25s ease both'}}>
 
               <div style={{marginBottom:24}}>
@@ -8434,7 +8971,7 @@ export default function ExamensFrancePage() {
                   <span style={{fontSize:22}}>{sec.icon}</span>
                   <h3 style={{margin:0}}>Bac {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
-                    ✅ {anneeLinks.sessions.length} sessions disponibles
+                    ✅ {anneeLinks?.sessions?.length ?? Object.keys(anneeLinks||{}).length} sessions disponibles
                   </span>
                 </div>
                 <p style={{fontSize:13,color:'var(--muted)',margin:0}}>
@@ -8443,7 +8980,7 @@ export default function ExamensFrancePage() {
               </div>
 
               {/* Sessions */}
-              <SessionsBlock lnk={anneeLinks} color={sec.color} year={selectedYear} onOpen={openPdf} />
+              {!secNSI && <SessionsBlock lnk={anneeLinks} color={sec.color} year={selectedYear} onOpen={openPdf} />}
 
               {/* BARÈME */}
               <div style={{background:`${sec.color}08`,border:`1px solid ${sec.color}20`,borderRadius:12,padding:'14px 18px',marginBottom:20}}>
@@ -8451,7 +8988,7 @@ export default function ExamensFrancePage() {
                   📊 Contenu du sujet — Métropole Jour 1
                 </p>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:10}}>
-                  {detail.exercices.map((ex,i)=>(
+                  {(detail?.exercices||[]).map((ex:any,i:number)=>(
                     <div key={i} style={{background:'var(--surface)',border:'1px solid var(--border)',borderLeft:`3px solid ${sec.color}`,borderRadius:10,padding:'12px 14px'}}>
                       <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,alignItems:'flex-start',gap:8}}>
                         <span style={{fontWeight:700,fontSize:12,color:sec.color}}>{ex.titre}</span>
@@ -8479,11 +9016,11 @@ export default function ExamensFrancePage() {
             </button>
             <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
               <button
-                onClick={()=>{const next=matiere==='maths'?'physique-chimie':'maths';const sec=next==='maths'?'terminale-generale':'terminale-physique-chimie';setMatiere(next as Matiere);setActiveSec(sec as SKey);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
+                onClick={()=>{const next=matiere==='maths'?'physique-chimie':matiere==='physique-chimie'?'informatique':'maths';const sec=next==='maths'?'terminale-generale':'terminale-physique-chimie';setMatiere(next as Matiere);setActiveSec(sec as SKey);setSelectedYear(null);window.scrollTo({top:0,behavior:'smooth'})}}
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,cursor:'pointer',fontFamily:'var(--font-body)',fontWeight:600,fontSize:12,color:'var(--muted)',transition:'all 0.18s'}}
                 onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(6,182,212,0.4)'}
                 onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
-                {matiere==='maths'?'⚗️ Aller en Physique-Chimie':'📐 Aller en Mathématiques'}
+                {matiere==='maths'?'⚗️ Aller en Physique-Chimie':matiere==='physique-chimie'?'💻 Aller en Informatique':'📐 Aller en Mathématiques'}
               </button>
               <a href='/examens'
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 16px',background:'var(--surface)',border:'1px solid var(--border)',borderRadius:11,textDecoration:'none',fontWeight:600,fontSize:12,color:'var(--muted)',transition:'all 0.18s'}}

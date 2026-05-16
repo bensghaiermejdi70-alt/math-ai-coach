@@ -55,6 +55,53 @@ const SECTIONS_FR = [
      {theme:'Matrices',             sousTh:'Calcul matriciel, matrice inverse, puissances M^n, suites vectorielles V(n+1)=M*V(n)'},
      {theme:'Chaines de Markov',    sousTh:'Matrice de transition, evolution P(n)=P0*M^n, etat stable pi=pi*M, convergence'},
    ]},
+  {key:'seconde',label:'Seconde Générale',icon:'📘',color:'#06b6d4',duration:60,coeff:1,
+   themes:['Fonctions & Variations','Second degré','Probabilités','Géométrie','Algorithmique Python'],
+   programme:[
+     {theme:'Fonctions et variations', sousTh:'Fonctions affines, carrées, valeur absolue, extremums, tableaux de variations, signe'},
+     {theme:'Second degre',            sousTh:'Trinome ax2+bx+c, discriminant, forme factorisée, tableau de signes, applications'},
+     {theme:'Probabilites',            sousTh:'Probabilité, événements, loi des grands nombres, fréquence relative'},
+     {theme:'Geometrie analytique',    sousTh:'Vecteurs, coordonnées, produit scalaire, équations de droite, distance'},
+     {theme:'Algorithmique Python',    sousTh:'Variables, boucles for/while, conditions if/else, fonctions, listes'},
+   ]},
+  {key:'terminale-st2s',label:'Terminale ST2S',icon:'🏥',color:'#ec4899',duration:120,coeff:3,
+   themes:['Statistiques & Probabilités ST2S','Fonctions & Modélisation ST2S','Suites & Finances ST2S'],
+   programme:[
+     {theme:'Statistiques ST2S',      sousTh:'Statistiques descriptives, moyenne, médiane, quartiles, écart-type, séries statistiques'},
+     {theme:'Probabilites ST2S',      sousTh:'Probabilités conditionnelles, loi binomiale, espérance, intervalle de confiance, loi normale'},
+     {theme:'Fonctions ST2S',         sousTh:'Fonctions affines et polynomiales, exponentielles, logarithme, applications médicales'},
+     {theme:'Suites et finances',     sousTh:'Suites arithmétiques et géométriques, intérêts composés, annuités, emprunts'},
+   ]},
+]
+
+const SECTIONS_NSI_FR = [
+  {key:'terminale-nsi', label:'Terminale NSI', icon:'🎓', color:'#8b5cf6', duration:210, coeff:16,
+   themes:['Structures de données','Algorithmes & Complexité','SQL','POO Python','Réseaux & OS'],
+   programme:[
+     {theme:'Structures de donnees',   sousTh:'Piles LIFO push/pop, Files FIFO, Arbres binaires racine/feuilles/hauteur/parcours, ABR, Graphes G=(V,E) oriente/non-oriente, DFS/BFS'},
+     {theme:'Algorithmes complexite',  sousTh:'Tri fusion O(n log n), Quicksort pivot, dichotomie O(log n), Dijkstra plus court chemin, Big-O, invariant de boucle, preuve terminaison'},
+     {theme:'Bases de donnees SQL',    sousTh:'Modele relationnel, cle primaire/etrangere, SELECT/WHERE/JOIN/GROUP BY/HAVING, sous-requetes, normalisation 3NF, integrite referentielle'},
+     {theme:'POO Python',              sousTh:'Classes __init__ self, encapsulation, heritage super(), polymorphisme, methodes speciales __str__ __len__, decorateurs @property'},
+     {theme:'Reseaux et OS',           sousTh:'Von Neumann UAL/UC/memoire/bus, cycle fetch-decode-execute, processus etats, TCP/IP, DNS, HTTP/HTTPS, securite XSS injection SQL'},
+   ]},
+  {key:'premiere-nsi', label:'Première NSI', icon:'📗', color:'#06b6d4', duration:120, coeff:2,
+   themes:['Types construits','Traitement données','Web & HTTP','Algorithmique','Python'],
+   programme:[
+     {theme:'Types construits Python', sousTh:'Listes mutables append/pop/slicing, tuples immuables, dictionnaires, ensembles set, comprehensions, copie vs reference'},
+     {theme:'Traitement donnees CSV',  sousTh:'Lecture CSV DictReader, selection filtre, projection colonnes, tri sorted(key=lambda), agregation, jointure tables, export DictWriter'},
+     {theme:'Web et HTTP',             sousTh:'HTML balises semantiques, CSS selecteurs flexbox, URL anatomie, HTTP GET/POST codes 200/404, DOM JavaScript, formulaires, cookies'},
+     {theme:'Algorithmique',           sousTh:'Recherche sequentielle O(n), dichotomie O(log n) sur liste triee, tri selection, tri insertion stable, Big-O, glouton'},
+     {theme:'Python fonctions',        sousTh:'Fonctions def/return, parametres par defaut *args **kwargs, recursivite cas-de-base, portee variables, modules, try/except'},
+   ]},
+  {key:'seconde-snt', label:'Seconde SNT', icon:'📘', color:'#10b981', duration:60, coeff:1,
+   themes:['Internet & Web','Éseaux sociaux','Données','Géolocalisation','Photo numérique'],
+   programme:[
+     {theme:'Internet et Web',         sousTh:'TCP/IP paquets routage, DNS nom vers IP, HTTP requete/reponse, HTML structure, CSS, PageRank, moteurs recherche crawl/index'},
+     {theme:'Reseaux sociaux graphes', sousTh:'Graphe G=(V,E) oriente/non-oriente, degre sommet, diametre, communautes, filtrage collaboratif, bulle de filtre, cyberharcelement'},
+     {theme:'Donnees et RGPD',         sousTh:'Donnee numerique, metadonnees, format CSV, cle primaire, selection/projection/tri, RGPD droits acces/rectification/effacement'},
+     {theme:'Geolocalisation GPS',     sousTh:'GPS satellites trilateralisation 3 spheres, distance d=v*t, coordonnees latitude/longitude, GLONASS/Galileo, vie privee traçage'},
+     {theme:'Image numerique',         sousTh:'Pixel RGB (0-255) synthese additive, resolution DPI, taille=largeur*hauteur*3 octets, PNG sans perte, JPEG avec perte artefacts'},
+   ]},
 ]
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -868,6 +915,78 @@ function getProgrammeJourPhysiqueFR(sectionKey: string, dayNum: number) {
   return prog[(dayNum - 1) % prog.length]
 }
 
+async function generateBacBlancInformatique(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secNSI = SECTIONS_NSI_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_NSI_FR[0]
+  const secLabel = secNSI.label
+  const today = new Date()
+  const dd = String(today.getDate()).padStart(2,'0')
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const yyyy = today.getFullYear()
+  const dateStr = dd+'/'+mm+'/'+yyyy
+  const seed = 'BBFR_NSI_'+candidat.sectionKey+'_J'+dayNum+'_'+yyyy
+
+  const nEx = candidat.sectionKey==='seconde-snt' ? 2 : 3
+  const ptsArr = nEx===2 ? [10,10] : [7,7,6]
+  const totalPts = ptsArr.reduce((a,b)=>a+b, 0)
+  const prog = secNSI.programme.slice(0, nEx)
+
+  const progStr = prog.map((p,i)=>'- Exercice '+(i+1)+' ('+ptsArr[i]+'pts) : '+p.theme+' | '+p.sousTh).join('\n')
+  const exJson = prog.map((p,i)=>'    {"num":'+(i+1)+',"title":"Exercice '+(i+1)+' - '+p.theme+'","theme":"'+p.theme+'","points":'+ptsArr[i]+',"statement":"TODO","graph":null}').join(',\n')
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France NSI/Informatique (programme officiel Éducation Nationale).
+Tu crées des sujets BAC BLANC NSI originaux, rigoureux, de niveau Bac France.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION NSI :
+- Code Python : indentation 4 espaces, syntaxe correcte
+- SQL : majuscules SELECT FROM WHERE JOIN GROUP BY
+- Complexité : notation O(n), O(log n), O(n²)
+- Pas de LaTeX — texte brut uniquement`
+
+  const prompt = `Crée un sujet BAC BLANC NSI ORIGINAL pour ${secLabel}. Graine : ${seed}
+STRUCTURE BAC BLANC NSI FRANCE :
+Durée : ${secNSI.duration/60}h · Total : ${totalPts} points
+${progStr}
+
+RÈGLES :
+- Sujet ORIGINAL varié, jamais répétitif
+- Questions progressives a) b) c) avec sous-parties
+- Code Python syntaxiquement correct et lisible
+- SQL réaliste avec vraies tables et données
+- Minimum 100 mots par exercice
+
+RÉPONSE JSON EXACTE :
+{"id":"BBF-NSI-${seed}","day":${dayNum},"date":"${dateStr}","section":"${secLabel}","sectionKey":"${candidat.sectionKey}","duration":${secNSI.duration},"totalPoints":${totalPts},"title":"Bac Blanc NSI ${yyyy} — ${secLabel}","exercises":[
+${exJson}
+]}`
+
+  const raw = await askClaude(prompt, system, 5000, 'informatique')
+  let data: any
+  try {
+    const clean = raw.replace(/```json|```/g,'').trim()
+    data = JSON.parse(clean)
+  } catch {
+    data = {
+      id: 'BBF-NSI-'+seed, day: dayNum, date: dateStr,
+      section: secLabel, sectionKey: candidat.sectionKey,
+      duration: secNSI.duration, totalPoints: totalPts,
+      title: 'Bac Blanc NSI '+yyyy+' — '+secLabel,
+      exercises: prog.map((p,i)=>({
+        num:i+1, title:'Exercice '+(i+1)+' - '+p.theme,
+        theme:p.theme, points:ptsArr[i],
+        statement:'Exercice sur '+p.theme+' : '+p.sousTh
+      }))
+    }
+  }
+  data.id         = data.id         || ('BBF-NSI-'+seed)
+  data.day        = data.day        || dayNum
+  data.date       = data.date       || dateStr
+  data.section    = data.section    || secLabel
+  data.sectionKey = data.sectionKey || candidat.sectionKey
+  data.title      = data.title      || ('Bac Blanc NSI '+yyyy+' — '+secLabel)
+  return data as BacExam
+}
+
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)!
   const today = new Date()
@@ -1240,12 +1359,13 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onRetour
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
   onPhysique: () => void
+  onInfo: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -1314,13 +1434,13 @@ function PhaseChoixMatiereFR({
       key: 'informatique',
       icon: '💻',
       label: 'NSI / Informatique',
-      desc: 'Algorithmique · Python · SQL · Réseaux · Architecture — Bientôt disponible',
+      desc: 'Examen complet NSI · Algorithmique · Python · SQL · Réseaux · Correction IA · Analyse faiblesses',
       color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.12),rgba(109,40,217,0.05))',
-      border: 'rgba(139,92,246,0.25)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
+      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.18),rgba(109,40,217,0.08))',
+      border: 'rgba(139,92,246,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
     },
   ]
 
@@ -1367,6 +1487,7 @@ function PhaseChoixMatiereFR({
                 if (!m.available) return
                 if (m.key === 'maths') { onMaths(); return }
                 if (m.key === 'physique') { onPhysique(); return }
+                if (m.key === 'informatique') { onInfo(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -1422,6 +1543,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'>('maths')
   const [err,setErr]=useState('')
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
@@ -1431,7 +1553,11 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const dayNum=Math.max(1,Math.floor((today.getTime()-periodeStart.getTime())/(1000*60*60*24))+1)
   const monthNum=today.getMonth()+1
   const isMay=monthNum===5||monthNum===6
-  const sec=SECTIONS_FR.find(s=>s.key===sectionKey)
+  const sec = SECTIONS_FR.find(s=>s.key===sectionKey)
+    || SECTIONS_NSI_FR?.find((s:any)=>s.key===sectionKey)
+    || (sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
+        ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
+        : undefined)
 
   const handleSubmit=()=>{
     if(!nom.trim()||!prenom.trim()||!lycee.trim()||!sectionKey){setErr('Veuillez remplir tous les champs.');return}
@@ -1502,14 +1628,51 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
 
           <div style={{marginBottom:20}}>
-            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Section</label>
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {SECTIONS_FR.map(s=>(
+            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>
+              Matière & Section
+            </label>
+
+            {/* Niveau 1 — Matière */}
+            <div style={{display:'flex',gap:8,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:5}}>
+              {([
+                {key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b'},
+                {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0'},
+                {key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6'},
+              ]).map(m=>(
+                <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
+                  style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px 8px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,transition:'all 0.2s',
+                    background:activeMatiereFiche===m.key?m.color:'transparent',
+                    color:activeMatiereFiche===m.key?'white':'rgba(255,255,255,0.4)',
+                    boxShadow:activeMatiereFiche===m.key?`0 4px 16px ${m.color}40`:'none'}}>
+                  <span style={{fontSize:16}}>{m.icon}</span>
+                  <span style={{fontSize:11}}>{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Niveau 2 — Sections selon matière */}
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {(activeMatiereFiche==='maths' ? [
+                {key:'terminale',      label:'Terminale Générale',        icon:'🎓', color:'#f59e0b', duration:240, coeff:16},
+                {key:'premiere',       label:'Première Spécialité',       icon:'📗', color:'#4f6ef7', duration:120, coeff:2},
+                {key:'techno',         label:'Terminale STMG / STI2D',    icon:'📊', color:'#10b981', duration:180, coeff:5},
+                {key:'expertes',       label:'Option Maths Expertes',     icon:'★',  color:'#8b5cf6', duration:180, coeff:3},
+                {key:'seconde',        label:'Seconde Générale',          icon:'📘', color:'#06b6d4', duration:60,  coeff:1},
+              ] : activeMatiereFiche==='physique' ? [
+                {key:'terminale-phys', label:'Terminale Générale',        icon:'🎓', color:'#06d6a0', duration:210, coeff:6},
+                {key:'premiere-phys',  label:'Première Spécialité',       icon:'📗', color:'#06b6d4', duration:120, coeff:2},
+                {key:'sti2d-phys',     label:'Terminale STI2D',           icon:'⚙️', color:'#f59e0b', duration:180, coeff:4},
+                {key:'st2s-phys',      label:'Terminale ST2S',            icon:'🏥', color:'#ec4899', duration:120, coeff:3},
+              ] : [
+                {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
+                {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
+                {key:'seconde-snt',    label:'Seconde SNT',               icon:'📘', color:'#10b981', duration:60,  coeff:1},
+              ]).map(s=>(
                 <button key={s.key} onClick={()=>setSectionKey(s.key)}
-                  style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:12,border:`2px solid ${sectionKey===s.key?s.color:'rgba(255,255,255,0.1)'}`,background:sectionKey===s.key?s.color+'15':'rgba(255,255,255,0.03)',cursor:'pointer',textAlign:'left',transition:'all 0.2s',width:'100%'}}>
-                  <span style={{fontSize:22}}>{s.icon}</span>
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:12,border:`1.5px solid ${sectionKey===s.key?s.color:'rgba(255,255,255,0.08)'}`,cursor:'pointer',background:sectionKey===s.key?`${s.color}15`:'rgba(255,255,255,0.03)',transition:'all 0.2s',fontFamily:'inherit',textAlign:'left'}}>
+                  <span style={{fontSize:20}}>{s.icon}</span>
                   <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:13,color:'white',marginBottom:2}}>{s.label}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:sectionKey===s.key?s.color:'white',marginBottom:2}}>{s.label}</div>
                     <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>Durée {s.duration/60}h · Coeff {s.coeff}</div>
                   </div>
                   {sectionKey===s.key&&<span style={{color:s.color,fontSize:18,fontWeight:900}}>✓</span>}
@@ -2937,6 +3100,31 @@ function BacBlancFranceInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  const handleStartInfo = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('informatique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique NSI pour accéder au Bac Blanc.')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('informatique')) {
+      alert('✅ Vous avez déjà passé votre examen Informatique aujourd\'hui.\n\nRevenez demain pour un nouveau sujet.')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert('⚠️ Limite atteinte.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancInformatique(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('informatique')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -2986,6 +3174,7 @@ function BacBlancFranceInner() {
       dayNum={dayNum}
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
+      onInfo={handleStartInfo}
       onRetour={()=>setPhase('inscription')}
     />
   )
