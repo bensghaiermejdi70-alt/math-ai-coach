@@ -8462,6 +8462,7 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
   const chap = chapitres.find(c => c.id === selectedChap)
 
   return (
+    <div>
       {/* GRILLE CHAPITRES */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:12,marginBottom:28}}>
         {chapitres.map(c => {
