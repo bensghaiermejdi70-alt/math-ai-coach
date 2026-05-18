@@ -6,453 +6,1077 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 
 // ══════════════════════════════════════════════════════════════════════
-// SECTION MATHÉMATIQUES / [SLUG]
+// SECTION MATHÉMATIQUES — [SLUG] DÉTAIL COMPLET
 // Route : /bac/maths/[slug]
 // Programme officiel CNP Tunisie — 4ème Mathématiques · Coeff 4
+// Structure identique à physique terminale France : souschapitres + blocs
 // ══════════════════════════════════════════════════════════════════════
 
-const C = { thm:'#a78bfa', def:'#4f6ef7', formule:'#f5c842', prop:'#06d6a0', corollaire:'#f97316' }
-const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', corollaire:'Corollaire' }
+const C = { thm:'#a78bfa', def:'#4f6ef7', formule:'#f5c842', prop:'#06d6a0', methode:'#ec4899', corollaire:'#f97316' }
+const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', corollaire:'Corollaire' }
 
 const NAV_ORDER = [
   'second-degre','complexes','matrices-systemes',
   'suites','limites-continuite','derivation','etude-fonctions',
-  'geometrie-plane','geometrie-espace',
-  'graphes',
+  'geometrie-plane','geometrie-espace','graphes',
 ]
-const TITRES: Record<string,string> = {
-  'second-degre':       'Problèmes du second degré',
-  'complexes':          'Nombres Complexes',
-  'matrices-systemes':  'Systèmes Linéaires & Matrices',
-  'suites':             'Suites Numériques',
-  'limites-continuite': 'Limites et Continuité',
-  'derivation':         'Dérivation',
-  'etude-fonctions':    'Étude de Fonctions',
-  'geometrie-plane':    'Géométrie Plane',
-  'geometrie-espace':   'Géométrie dans l\'Espace',
-  'graphes':            'Graphes & Algorithmique',
+const TITRES_NAV: Record<string,string> = {
+  'second-degre':       'CH 01 — Second degré',
+  'complexes':          'CH 02 — Complexes',
+  'matrices-systemes':  'CH 03 — Matrices & Systèmes',
+  'suites':             'CH 04 — Suites Numériques',
+  'limites-continuite': 'CH 05 — Limites & Continuité',
+  'derivation':         'CH 06 — Dérivation',
+  'etude-fonctions':    'CH 07 — Étude de Fonctions',
+  'geometrie-plane':    'CH 08 — Géométrie Plane',
+  'geometrie-espace':   'CH 09 — Géométrie Espace',
+  'graphes':            'CH 10 — Graphes & Algo',
 }
-const NUMS: Record<string,string> = {
-  'second-degre':'CH 01','complexes':'CH 02','matrices-systemes':'CH 03',
-  'suites':'CH 04','limites-continuite':'CH 05','derivation':'CH 06','etude-fonctions':'CH 07',
-  'geometrie-plane':'CH 08','geometrie-espace':'CH 09','graphes':'CH 10',
-}
-const SEC_COLOR: Record<string,string> = {
+const SEC_COLORS: Record<string,string> = {
   'second-degre':'#a78bfa','complexes':'#a78bfa','matrices-systemes':'#a78bfa',
   'suites':'#4f6ef7','limites-continuite':'#4f6ef7','derivation':'#4f6ef7','etude-fonctions':'#4f6ef7',
   'geometrie-plane':'#06d6a0','geometrie-espace':'#06d6a0',
   'graphes':'#f5c842',
 }
-const SECTIONS_LABEL: Record<string,string> = {
-  'second-degre':'Partie 1 — Algèbre','complexes':'Partie 1 — Algèbre','matrices-systemes':'Partie 1 — Algèbre',
-  'suites':'Partie 2 — Analyse','limites-continuite':'Partie 2 — Analyse','derivation':'Partie 2 — Analyse','etude-fonctions':'Partie 2 — Analyse',
-  'geometrie-plane':'Partie 3 — Géométrie','geometrie-espace':'Partie 3 — Géométrie',
-  'graphes':'Partie 4 — Graphes & Algorithmique',
+
+// ══════════════════════════════════════════════════════════════════════
+// TYPE
+// ══════════════════════════════════════════════════════════════════════
+type Thm  = { id:string; type:string; nom:string; enonce:string; remarque?:string }
+type Exo  = { id:string; niveau:string; titre:string; enonce:string; correction:string }
+type Bloc = { notion:string; theoremes:Thm[]; exercices:Exo[] }
+type SC   = { id:string; titre:string; notions:string[]; blocs:Bloc[] }
+type Chap = { id:string; titre:string; badge:string; color:string; emoji:string; desc:string; souschapitres:SC[] }
+
+// ══════════════════════════════════════════════════════════════════════
+// DONNÉES — 10 CHAPITRES COMPLETS
+// ══════════════════════════════════════════════════════════════════════
+const ALL_CHAPTERS: Record<string,Chap> = {
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 01 — SECOND DEGRÉ
+// ─────────────────────────────────────────────────────────────────────
+'second-degre': {
+  id:'second-degre', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
+  titre:'Problèmes du second degré',
+  desc:"Trinôme ax²+bx+c, discriminant, forme canonique, signe, équations, inéquations et systèmes linéaires (pivot de Gauss).",
+  souschapitres:[
+    {
+      id:'sc-trinome', titre:'1.1 Trinôme du second degré',
+      notions:['Discriminant Δ=b²−4ac','Racines réelles (Δ>0, =0, <0)','Forme canonique et sommet','Relations coefficients-racines'],
+      blocs:[
+        {
+          notion:'📐 Discriminant et racines',
+          theoremes:[
+            { id:'D-SD1', type:'def', nom:'Trinôme et discriminant',
+              enonce:"Soit f(x)=ax²+bx+c avec a≠0 (trinôme du second degré).\nDiscriminant : Δ = b²−4ac\n\n• Δ > 0 : deux racines réelles distinctes\n  x₁ = (−b−√Δ)/(2a)  et  x₂ = (−b+√Δ)/(2a)\n\n• Δ = 0 : une racine double (réelle)\n  x₀ = −b/(2a)\n\n• Δ < 0 : pas de racine réelle\n  (mais deux racines complexes conjuguées)"},
+            { id:'F-SD1', type:'formule', nom:'Forme canonique et sommet',
+              enonce:"f(x) = a(x − α)² + β\n\nα = −b/(2a)   (abscisse du sommet)\nβ = −Δ/(4a)  = f(α)  (ordonnée du sommet)\n\nSommet S(α ; β) = extremum de la parabole :\n• a > 0 : minimum en S\n• a < 0 : maximum en S\n\nForte utilisation pour résoudre les problèmes d'optimisation." },
+            { id:'P-SD1', type:'prop', nom:'Relations coefficients-racines',
+              enonce:"Si x₁ et x₂ sont les deux racines de ax²+bx+c=0 :\n\nx₁ + x₂ = −b/a\nx₁ × x₂ = c/a\n\nFactorisation : ax²+bx+c = a(x−x₁)(x−x₂)  (si Δ>0)\n\nRecherche de trinôme connaissant les racines :\nx²−(x₁+x₂)x + x₁x₂ = 0",
+              remarque:"Ces relations permettent souvent d'éviter de calculer √Δ." },
+          ],
+          exercices:[
+            { id:'EX-SD1', niveau:'Facile', titre:"Résolution d'équation",
+              enonce:'Résoudre dans ℝ : 2x²−5x+2=0.',
+              correction:'Δ=25−16=9 > 0. √Δ=3.\nx₁=(5−3)/4=1/2  ;  x₂=(5+3)/4=2.\nS={1/2 ; 2}.' },
+            { id:'EX-SD2', niveau:'Intermédiaire', titre:'Forme canonique',
+              enonce:'Écrire f(x)=2x²−8x+5 sous forme canonique et donner le sommet.',
+              correction:'α=8/(2×2)=2  ;  β=f(2)=8−16+5=−3.\nf(x)=2(x−2)²−3.\nSommet : S(2;−3). Minimum car a=2>0.' },
+            { id:'EX-SD3', niveau:'Difficile', titre:'Problème de relations',
+              enonce:"Les racines x₁,x₂ de x²−5x+k=0 vérifient x₁²+x₂²=13. Trouver k.",
+              correction:'x₁+x₂=5, x₁x₂=k.\nx₁²+x₂²=(x₁+x₂)²−2x₁x₂=25−2k=13\n→ 2k=12 → k=6.' },
+          ]
+        },
+        {
+          notion:'📊 Signe du trinôme et inéquations',
+          theoremes:[
+            { id:'P-SD2', type:'prop', nom:'Tableau de signe du trinôme',
+              enonce:"f(x) = ax²+bx+c (a>0)\n\nSi Δ>0 :\n  x  | −∞   x₁       x₂   +∞\n  f  |  +    0    −    0    +\n\nSi Δ=0 :\n  f(x) ≥ 0 pour tout x (nul en x₀)\n\nSi Δ<0 :\n  f(x) > 0 pour tout x (même signe que a)" },
+            { id:'M-SD1', type:'methode', nom:'Résoudre une inéquation du second degré',
+              enonce:"1. Mettre sous la forme ax²+bx+c [≥] 0\n2. Calculer Δ et les racines si Δ>0\n3. Dresser le tableau de signe\n4. Lire la solution\n\nExemple : x²−3x+2 ≤ 0\nΔ=1, x₁=1, x₂=2, a=1>0\nf(x)≤0 ↔ x∈[1;2]" },
+          ],
+          exercices:[
+            { id:'EX-SD4', niveau:'Facile', titre:'Inéquation',
+              enonce:'Résoudre : x²−3x+2 ≤ 0.',
+              correction:'Δ=9−8=1. x₁=1, x₂=2. a>0.\nf≤0 entre les racines : S=[1;2].' },
+            { id:'EX-SD5', niveau:'Intermédiaire', titre:'Inéquation avec paramètre',
+              enonce:"Pour quelles valeurs de k l'équation x²−2kx+k+2=0 a-t-elle deux racines réelles distinctes ?",
+              correction:'Δ=4k²−4(k+2)>0\n4k²−4k−8>0\nk²−k−2>0\n(k−2)(k+1)>0\nk∈]−∞;−1[∪]2;+∞[.' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-gauss', titre:'1.2 Systèmes linéaires — Méthode de Gauss',
+      notions:['Matrice augmentée [A|b]','Opérations élémentaires sur lignes','Forme triangulaire et remontée','3 types de systèmes'],
+      blocs:[
+        {
+          notion:'⚙️ Pivot de Gauss',
+          theoremes:[
+            { id:'M-GA1', type:'methode', nom:'Algorithme du pivot de Gauss',
+              enonce:"Pour résoudre AX=b (n équations, n inconnues) :\n\n1. Écrire la matrice augmentée [A|b]\n2. Opérations élémentaires sur les lignes :\n   • Lᵢ ← Lᵢ − k·Lⱼ  (éliminer un terme)\n   • Lᵢ ↔ Lⱼ  (permuter)\n   • Lᵢ ← k·Lᵢ  (normaliser, k≠0)\n3. Obtenir forme triangulaire (ou échelon)\n4. Remonter par substitution\n\nPossibilités :\n  • Système déterminé : rang = n → solution unique\n  • Système indéterminé : rang < n → infinité de solutions\n  • Système incompatible : 0=c (c≠0) → aucune solution" },
+          ],
+          exercices:[
+            { id:'EX-GA1', niveau:'Intermédiaire', titre:'Système 2×2',
+              enonce:'Résoudre : { 3x+2y=7 ; x+4y=9 }.',
+              correction:'[3,2|7] ; [1,4|9]\nL₁↔L₂ : [1,4|9] ; [3,2|7]\nL₂←L₂−3L₁ : [1,4|9] ; [0,−10|−20]\ny=2. x=9−8=1.\nSolution : (1;2).' },
+            { id:'EX-GA2', niveau:'Difficile', titre:'Système 3×3',
+              enonce:'Résoudre : { x+y+z=6 ; 2x−y+z=3 ; x+2y−z=2 }.',
+              correction:'[1,1,1|6] ; [2,−1,1|3] ; [1,2,−1|2]\nL₂←L₂−2L₁ : [0,−3,−1|−9]\nL₃←L₃−L₁   : [0,1,−2|−4]\nL₂←L₂+3L₃  : [0,0,−7|−21] → z=3\nDe L₃+L₂ amélioré : y=2. De L₁ : x=1.\nSolution : (1;2;3).' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 02 — NOMBRES COMPLEXES
+// ─────────────────────────────────────────────────────────────────────
+'complexes': {
+  id:'complexes', emoji:'ℂ', badge:'Algèbre', color:'#a78bfa',
+  titre:'Nombres Complexes',
+  desc:"Formes algébrique, trigonométrique et exponentielle d'Euler, module, argument, formule de Moivre, racines n-ièmes, géométrie complexe.",
+  souschapitres:[
+    {
+      id:'sc-forms', titre:'2.1 Formes et opérations',
+      notions:['Forme algébrique z=a+ib','Module |z| et argument arg(z)','Forme exponentielle reiθ','Conjugué et inverse'],
+      blocs:[
+        {
+          notion:'📐 Forme algébrique et opérations',
+          theoremes:[
+            { id:'D-CP1', type:'def', nom:'Ensemble ℂ et opérations',
+              enonce:"z = a+ib,  a,b∈ℝ,  i²=−1\nRe(z)=a (partie réelle) ; Im(z)=b (partie imaginaire)\nConjugué : z̄ = a−ib\n\nPropriétés du conjugué :\nz+z̄ = 2Re(z)  ;  z−z̄ = 2i·Im(z)\nz·z̄ = |z|²     ;  z̄̄ = z\n\nz réel ↔ Im(z)=0 ↔ z=z̄\nz imaginaire pur ↔ Re(z)=0 ↔ z=−z̄\n\nInverse : z⁻¹ = z̄/|z|²  (z≠0)" },
+            { id:'F-CP1', type:'formule', nom:'Module et argument',
+              enonce:"|z| = √(a²+b²)  (module, toujours ≥ 0)\narg(z) = θ : cosθ=a/|z|,  sinθ=b/|z|  (mod 2π)\n\nPropriétés :\n|z₁z₂| = |z₁|·|z₂|\narg(z₁z₂) = arg(z₁)+arg(z₂)  (mod 2π)\n|z₁/z₂| = |z₁|/|z₂|  ;  arg(z₁/z₂) = arg(z₁)−arg(z₂)\n|z̄| = |z|  ;  arg(z̄) = −arg(z)\n|zⁿ| = |z|ⁿ  ;  arg(zⁿ) = n·arg(z)" },
+            { id:'F-CP2', type:'formule', nom:"Formule d'Euler — Forme exponentielle",
+              enonce:"eⁱᶿ = cosθ + i sinθ  (formule d'Euler)\n\nForme exponentielle : z = r·eⁱᶿ  avec r=|z|, θ=arg(z)\n\nLinéarisation (très utile pour Moivre) :\ncosθ = (eⁱᶿ + e⁻ⁱᶿ)/2\nsinθ = (eⁱᶿ − e⁻ⁱᶿ)/(2i)\n\nIdentité d'Euler : eⁱᵖ + 1 = 0",
+              remarque:"La forme exponentielle est la plus efficace pour les calculs de puissance et racines." },
+          ],
+          exercices:[
+            { id:'EX-CP1', niveau:'Facile', titre:'Forme exponentielle',
+              enonce:'Écrire z=−1+i√3 sous forme exponentielle.',
+              correction:'|z|=√(1+3)=2.\ncosθ=−1/2, sinθ=√3/2 → θ=2π/3.\nz=2·e^(i·2π/3).' },
+            { id:'EX-CP2', niveau:'Intermédiaire', titre:'Calcul de module et argument',
+              enonce:'z=(1+i)⁸. Calculer |z| et arg(z).',
+              correction:'|1+i|=√2, arg(1+i)=π/4.\n|z|=(√2)⁸=2⁴=16.\narg(z)=8×π/4=2π≡0 (mod 2π).\nz=16 (réel).' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-moivre', titre:'2.2 Formule de Moivre et applications',
+      notions:['Moivre : (cosθ+i sinθ)ⁿ=cos(nθ)+i sin(nθ)','Linéarisation de cosⁿθ et sinⁿθ','Formules de duplication et triplication','Racines n-ièmes'],
+      blocs:[
+        {
+          notion:'⚡ Formule de Moivre et linéarisation',
+          theoremes:[
+            { id:'T-CP1', type:'thm', nom:'Formule de Moivre',
+              enonce:"(cosθ + i sinθ)ⁿ = cos(nθ) + i sin(nθ)  pour tout n∈ℤ\n\nDémonstration (n>0) : par récurrence ou via eⁱⁿᶿ=(eⁱᶿ)ⁿ.\n\nApplications directes :\ncos(2θ) = cos²θ − sin²θ = 2cos²θ−1 = 1−2sin²θ\nsin(2θ) = 2sinθcosθ\n\ncos(3θ) = 4cos³θ − 3cosθ\nsin(3θ) = 3sinθ − 4sin³θ\n\nMéthode : développer (cosθ+i sinθ)ⁿ par Newton puis identifier Re et Im." },
+            { id:'M-CP1', type:'methode', nom:'Linéarisation de cosⁿθ ou sinⁿθ',
+              enonce:"But : exprimer cosⁿθ ou sinⁿθ en somme de cos(kθ) ou sin(kθ).\n\nÉtapes :\n1. Écrire cosθ=(eⁱᶿ+e⁻ⁱᶿ)/2  ou  sinθ=(eⁱᶿ−e⁻ⁱᶿ)/(2i)\n2. Élever à la puissance n et développer par Newton\n3. Regrouper les termes conjugués eⁱᵏᶿ+e⁻ⁱᵏᶿ=2cos(kθ)\n\nExemple : cos²θ = (eⁱᶿ+e⁻ⁱᶿ)²/4 = (e²ⁱᶿ+2+e⁻²ⁱᶿ)/4 = (1+cos2θ)/2",
+              remarque:"Utilisé pour calculer des primitives de cosⁿ ou sinⁿ." },
+          ],
+          exercices:[
+            { id:'EX-MV1', niveau:'Intermédiaire', titre:'Linéarisation de cos³θ',
+              enonce:'Exprimer cos³θ en fonction de cos3θ et cosθ.',
+              correction:'cosθ=(eⁱᶿ+e⁻ⁱᶿ)/2.\ncos³θ=(eⁱᶿ+e⁻ⁱᶿ)³/8\n=(e³ⁱᶿ+3eⁱᶿ+3e⁻ⁱᶿ+e⁻³ⁱᶿ)/8\n=(2cos3θ+6cosθ)/8.\ncos³θ=(cos3θ+3cosθ)/4.' },
+            { id:'EX-MV2', niveau:'Difficile', titre:'Formule de triplication',
+              enonce:'Montrer que cos(3θ)=4cos³θ−3cosθ en développant (cosθ+i sinθ)³.',
+              correction:'(c+is)³=c³+3c²(is)+3c(is)²+(is)³\n=c³+3ic²s−3cs²−is³\n=Re : c³−3cs²=cos³θ−3cosθsin²θ\n=cos³θ−3cosθ(1−cos²θ)\n=4cos³θ−3cosθ=cos(3θ) ✓' },
+          ]
+        },
+        {
+          notion:'🔄 Racines n-ièmes',
+          theoremes:[
+            { id:'F-CP3', type:'formule', nom:'Racines n-ièmes',
+              enonce:"zⁿ = w = r·eⁱᵅ  (w≠0, n∈ℕ*)\n\nSolutions : zₖ = r^(1/n) · e^(i(α+2kπ)/n)  pour k=0,1,…,n−1\n\nRacines n-ièmes de l'unité (w=1) :\nωₖ = e^(2iπk/n)  ;  k=0,1,…,n−1\n→ Représentées par un polygone régulier n côtés inscrit dans |z|=1\n\nPropriétés :\nSomme des n racines = 0 (n≥2)\nProduit des n racines = (−1)^(n+1)\nω = e^(2iπ/n) est une racine primitive : toutes les racines sont ωᵏ" },
+          ],
+          exercices:[
+            { id:'EX-RN1', niveau:'Intermédiaire', titre:'Racines cubiques de −8',
+              enonce:'Calculer les racines cubiques de −8.',
+              correction:'−8=8·eⁱᵖ.\nzₖ=2·e^(i(π+2kπ)/3), k=0,1,2.\nz₀=2e^(iπ/3)=2(1/2+i√3/2)=1+i√3\nz₁=2e^(iπ)=−2\nz₂=2e^(i5π/3)=1−i√3' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-geocomplex', titre:'2.3 Géométrie complexe',
+      notions:['Distance |zA−zB|','Argument et angle','Transformations : translation, rotation, homothétie','Alignement et cocyclicité'],
+      blocs:[
+        {
+          notion:'📍 Transformations dans ℂ',
+          theoremes:[
+            { id:'D-GC1', type:'def', nom:'Points, distances et angles',
+              enonce:"Point M d'affixe z dans le plan complexe.\n\nDistance : |zA−zB| = distance entre A et B\nAngle orienté (AB,AC) = arg((zC−zA)/(zB−zA))\n\nAlignement A,B,C :\n(zC−zA)/(zB−zA) est réel\n↔ arg(...) = 0 ou π\n\nOrthogonalité AB⊥AC :\narg((zC−zA)/(zB−zA)) = ±π/2\n↔ (zC−zA)/(zB−zA) est imaginaire pur" },
+            { id:'F-GC1', type:'formule', nom:'Transformations complexes',
+              enonce:"Translation de vecteur u=a+ib :\nz' = z + a+ib\n\nRotation de centre Ω, angle θ :\nz'−zΩ = eⁱᶿ(z−zΩ)\n\nHomothétie de centre Ω, rapport k∈ℝ* :\nz'−zΩ = k(z−zΩ)\n\nSimilitude directe (rotation + homothétie) :\nz'−zΩ = k·eⁱᶿ(z−zΩ)\n\nSymétrie centrale de centre Ω :\nz' = 2zΩ − z\n\nSymétrie axiale (axe réel) :\nz' = z̄" },
+          ],
+          exercices:[
+            { id:'EX-GC1', niveau:'Intermédiaire', titre:'Rotation',
+              enonce:'Rotation de centre O, angle π/2. Image de A(1+2i).',
+              correction:"z'=e^(iπ/2)·z=i(1+2i)=i+2i²=i−2=−2+i.\nA'(−2;1)." },
+            { id:'EX-GC2', niveau:'Difficile', titre:'Similitude',
+              enonce:'Trouver la similitude z\'=az+b sachant que A(0)→A\'(1+i) et B(1)→B\'(i).',
+              correction:'z\'=az+b.\nA: b=1+i.\nB: a+b=i → a=i−(1+i)=−1.\nz\'=−z+(1+i).' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 03 — MATRICES & SYSTÈMES
+// ─────────────────────────────────────────────────────────────────────
+'matrices-systemes': {
+  id:'matrices-systemes', emoji:'▦', badge:'Algèbre', color:'#a78bfa',
+  titre:'Systèmes Linéaires & Matrices',
+  desc:"Opérations matricielles, déterminant d'ordre 2 et 3 (règle de Sarrus), matrice inverse, résolution par Cramer et Gauss-Jordan.",
+  souschapitres:[
+    {
+      id:'sc-matops', titre:'3.1 Opérations matricielles',
+      notions:['Addition et multiplication scalaire','Produit AB (m×n)×(n×p)','Matrice identité Iₙ','Transposée Aᵀ'],
+      blocs:[
+        {
+          notion:'▦ Produit matriciel et propriétés',
+          theoremes:[
+            { id:'D-MA1', type:'def', nom:'Définitions et opérations',
+              enonce:"Matrice A=(aᵢⱼ) de taille m×n  (m lignes, n colonnes).\n\nAddition (même taille) : (A+B)ᵢⱼ = aᵢⱼ+bᵢⱼ\nMultiplication scalaire : (kA)ᵢⱼ = k·aᵢⱼ\n\nProduit AB (défini si A est m×n et B est n×p) :\n(AB)ᵢⱼ = Σₖ₌₁ⁿ aᵢₖ·bₖⱼ  →  résultat m×p\n\nMatrice identité Iₙ (n×n, diagonale=1, reste=0) :\nA·Iₙ = Iₙ·A = A\n\nTransposée : (Aᵀ)ᵢⱼ = aⱼᵢ\n(AB)ᵀ = BᵀAᵀ",
+              remarque:"⚠️ AB ≠ BA en général (non-commutativité du produit matriciel)." },
+          ],
+          exercices:[
+            { id:'EX-MA1', niveau:'Facile', titre:'Produit de matrices',
+              enonce:'Calculer AB : A=[[1,2],[3,4]], B=[[5,0],[1,2]].',
+              correction:'AB=[[1×5+2×1, 1×0+2×2],[3×5+4×1, 3×0+4×2]]\n=[[7,4],[19,8]].' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-det', titre:'3.2 Déterminant et inverse',
+      notions:['det d\'ordre 2 : ad−bc','Règle de Sarrus (ordre 3)','A inversible ↔ det(A)≠0','Inverse A⁻¹ et Cramer'],
+      blocs:[
+        {
+          notion:'🔑 Déterminant',
+          theoremes:[
+            { id:'F-DT1', type:'formule', nom:'Déterminant d\'ordre 2 et 3',
+              enonce:"Ordre 2 :\ndet(A) = det[[a,b],[c,d]] = ad−bc\n\nOrdre 3 — Règle de Sarrus :\ndet[[a,b,c],[d,e,f],[g,h,i]]\n= aei + bfg + cdh\n  − ceg − afh − bdi\n\n(Diagonales descendantes + ; diagonales montantes −)\n\nPropriétés :\n• det(AB) = det(A)·det(B)\n• det(Aᵀ) = det(A)\n• A inversible ⟺ det(A) ≠ 0\n• Deux lignes égales ou proportionnelles → det = 0",
+              remarque:"Cofacteur Cᵢⱼ = (−1)^(i+j)·Mᵢⱼ où Mᵢⱼ est le mineur (det de la sous-matrice)." },
+            { id:'F-DT2', type:'formule', nom:'Matrice inverse et règle de Cramer',
+              enonce:"Inverse (ordre 2) :\nA⁻¹ = (1/det(A))·[[d,−b],[−c,a]]\n\nInverse (ordre n) — Gauss-Jordan :\n[A | Iₙ]  →  opérations élémentaires  →  [Iₙ | A⁻¹]\n\nRègle de Cramer (AX=B, det(A)≠0) :\nxᵢ = det(Aᵢ)/det(A)\noù Aᵢ = A avec la colonne i remplacée par B." },
+          ],
+          exercices:[
+            { id:'EX-DT1', niveau:'Facile', titre:'Déterminant 2×2',
+              enonce:'Calculer det(A) pour A=[[3,2],[1,4]].',
+              correction:'det(A)=3×4−2×1=10.' },
+            { id:'EX-DT2', niveau:'Intermédiaire', titre:'Cramer 2×2',
+              enonce:'Résoudre { 3x+2y=7 ; x+4y=9 } par Cramer.',
+              correction:'det(A)=12−2=10.\ndet(A₁)=7×4−2×9=28−18=10 → x=1.\ndet(A₂)=3×9−7×1=27−7=20 → y=2.\nSolution : (1;2).' },
+            { id:'EX-DT3', niveau:'Difficile', titre:'Sarrus + inverse',
+              enonce:"Calculer det(A) par Sarrus et A⁻¹ par Gauss-Jordan pour A=[[1,2,0],[0,1,3],[2,0,1]].",
+              correction:'Sarrus : d=1×1×1+2×3×2+0×0×0−0×1×0−1×3×2−2×0×1\n=1+12+0−0−6−0=7.\nGauss-Jordan : [A|I₃] → ... → [I₃|A⁻¹].\nA⁻¹=(1/7)·[[1,−2,6],[6,1,−3],[−2,4,1]].' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 04 — SUITES NUMÉRIQUES
+// ─────────────────────────────────────────────────────────────────────
+'suites': {
+  id:'suites', emoji:'uₙ', badge:'Analyse', color:'#4f6ef7',
+  titre:'Suites Numériques',
+  desc:"Suites arithmétiques, géométriques, récurrentes affines (uₙ₊₁=auₙ+b) et homographiques, convergence, principe de récurrence.",
+  souschapitres:[
+    {
+      id:'sc-arith-geo', titre:'4.1 Suites arithmétiques et géométriques',
+      notions:['Définition et terme général','Somme des n premiers termes','Comportement à l\'infini','Comparaison arith./géom.'],
+      blocs:[
+        {
+          notion:'📈 Arithmétiques et géométriques',
+          theoremes:[
+            { id:'D-SU1', type:'def', nom:'Définitions et formules',
+              enonce:"Suite arithmétique (raison r) :\nuₙ₊₁ = uₙ + r  (la différence est constante)\nuₙ = u₀ + n·r  (terme général)\nSomme : Σᵢ₌₀ⁿ⁻¹ uᵢ = n·(u₀+uₙ₋₁)/2 = n·(2u₀+(n−1)r)/2\n\nSuite géométrique (raison q≠0) :\nuₙ₊₁ = q·uₙ  (le rapport est constant)\nuₙ = u₀·qⁿ  (terme général)\nSomme : Σᵢ₌₀ⁿ⁻¹ uᵢ = u₀·(1−qⁿ)/(1−q)  si q≠1\n           = n·u₀  si q=1\n\nComportement de qⁿ :\n|q|<1 → 0 ; q=1 → 1 ; q>1 → +∞ ; q<−1 → diverge (oscillation)",
+              remarque:"Somme des n premiers entiers : 1+2+…+n = n(n+1)/2\nSomme des n premiers carrés : 1²+…+n² = n(n+1)(2n+1)/6" },
+          ],
+          exercices:[
+            { id:'EX-SU1', niveau:'Facile', titre:'Suite géométrique',
+              enonce:'u₀=4, q=1/2. Calculer u₄, S₅ et lim uₙ.',
+              correction:'u₄=4×(1/2)⁴=1/4.\nS₅=4×(1−(1/2)⁵)/(1−1/2)=4×31/32/(1/2)=4×31/16=31/4.\n|1/2|<1 → lim uₙ=0.' },
+            { id:'EX-SU2', niveau:'Intermédiaire', titre:'Suite arithmétique — somme',
+              enonce:'(uₙ) arithmétique, u₁=3, u₁₀=30. Trouver r, u₁₀₀ et S₁₀₀.',
+              correction:'r=(30−3)/(10−1)=3.\nu₁₀₀=3+(99)×3=300.\nS₁₀₀=100×(3+300)/2=15150.' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-recurrente', titre:'4.2 Suites récurrentes',
+      notions:['Suite affine uₙ₊₁=auₙ+b : point fixe et changement de variable','Suite homographique : deux points fixes','Monotonie par uₙ₊₁−uₙ','Convergence et limite'],
+      blocs:[
+        {
+          notion:'🔄 Suite affine uₙ₊₁=auₙ+b',
+          theoremes:[
+            { id:'M-SU1', type:'methode', nom:'Résolution de uₙ₊₁=auₙ+b (a≠1)',
+              enonce:"1. Trouver le point fixe ℓ : ℓ=aℓ+b → ℓ=b/(1−a)\n\n2. Poser vₙ=uₙ−ℓ :\n   vₙ₊₁=uₙ₊₁−ℓ=auₙ+b−ℓ=a(uₙ−ℓ)=a·vₙ\n   → vₙ est géométrique de raison a\n\n3. vₙ = v₀·aⁿ = (u₀−ℓ)·aⁿ\n\n4. uₙ = ℓ + (u₀−ℓ)·aⁿ\n\nComportement :\n  |a|<1 : uₙ → ℓ (convergente)\n  a>1  : |uₙ| → +∞ (divergente)\n  a=−1 : oscille entre deux valeurs",
+              remarque:"Si a=1 : uₙ₊₁=uₙ+b → suite arithmétique de raison b." },
+            { id:'D-SU2', type:'def', nom:'Suite homographique uₙ₊₁=(auₙ+b)/(cuₙ+d)',
+              enonce:"Points fixes : ℓ=(aℓ+b)/(cℓ+d)\n→ cℓ²+(d−a)ℓ−b=0\n\nCas 1 : deux points fixes ℓ₁≠ℓ₂\nPoser vₙ=(uₙ−ℓ₁)/(uₙ−ℓ₂)\n→ vₙ₊₁=k·vₙ (géométrique)\nk=(a−cℓ₁)/(a−cℓ₂)\n\nCas 2 : un point fixe double ℓ₁=ℓ₂=ℓ\nPoser wₙ=1/(uₙ−ℓ) → arithmétique" },
+          ],
+          exercices:[
+            { id:'EX-RC1', niveau:'Facile', titre:'Suite affine',
+              enonce:'uₙ₊₁=2uₙ−3, u₀=1. Exprimer uₙ.',
+              correction:'ℓ=3/(1−2)=−3. vₙ=uₙ+3, v₀=4.\nvₙ=4×2ⁿ → uₙ=4·2ⁿ−3.' },
+            { id:'EX-RC2', niveau:'Difficile', titre:'Suite homographique',
+              enonce:'uₙ₊₁=(uₙ+3)/(uₙ+1), u₀=2. Étudier la convergence.',
+              correction:'Points fixes : ℓ=(ℓ+3)/(ℓ+1) → ℓ²=3 → ℓ=√3 (>0 car u₀>0).\nvₙ=(uₙ−√3)/(uₙ+√3).\nvₙ₊₁=vₙ·(1−√3)/(1+√3)=k·vₙ, |k|<1.\nuₙ→√3.' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-recurrence', titre:'4.3 Principe de récurrence',
+      notions:['Initialisation P(n₀)','Hérédité P(n)→P(n+1)','Récurrence forte','Applications classiques'],
+      blocs:[
+        {
+          notion:'🔁 Démonstration par récurrence',
+          theoremes:[
+            { id:'T-SU1', type:'thm', nom:'Principe de récurrence',
+              enonce:"Pour montrer P(n) vraie pour tout n≥n₀ :\n\n1. INITIALISATION : vérifier P(n₀) directement\n\n2. HÉRÉDITÉ : supposer P(n) vraie pour un n≥n₀\n   (hypothèse de récurrence)\n   → Montrer que P(n+1) est vraie\n\n3. CONCLUSION : P(n) est vraie pour tout n≥n₀\n\nRécurrence forte : supposer P(k) vraie pour tout k≤n\npuis montrer P(n+1).  [Utile pour les suites récurrentes d'ordre 2]" },
+          ],
+          exercices:[
+            { id:'EX-PR1', niveau:'Intermédiaire', titre:'Somme des carrés',
+              enonce:'Montrer par récurrence : Σᵢ₌₁ⁿ i²=n(n+1)(2n+1)/6.',
+              correction:'n=1 : 1=1×2×3/6=1 ✓\nHérédité : Σⁿ⁺¹ i²=n(n+1)(2n+1)/6+(n+1)²\n=(n+1)[n(2n+1)+6(n+1)]/6\n=(n+1)(2n²+7n+6)/6\n=(n+1)(n+2)(2n+3)/6 ✓' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 05 — LIMITES ET CONTINUITÉ
+// ─────────────────────────────────────────────────────────────────────
+'limites-continuite': {
+  id:'limites-continuite', emoji:'∞', badge:'Analyse', color:'#4f6ef7',
+  titre:'Limites et Continuité',
+  desc:"Limites finies et infinies, formes indéterminées, TVI, théorème de la bijection, asymptotes, croissances comparées.",
+  souschapitres:[
+    {
+      id:'sc-limites', titre:'5.1 Limites d\'une fonction',
+      notions:['Limite en un point a (finie, infinie)','Limite à l\'infini','Opérations sur les limites','Formes indéterminées : 0/0, ∞/∞, ∞−∞, 0·∞'],
+      blocs:[
+        {
+          notion:'∞ Limites et opérations',
+          theoremes:[
+            { id:'D-LI1', type:'def', nom:'Définition de la limite',
+              enonce:"lim(x→a) f(x) = ℓ\n↔ f(x) se rapproche de ℓ quand x se rapproche de a (x≠a)\n\nLimites unilatérales :\nlim(x→a⁻) f(x) = ℓ₁  (par la gauche)\nlim(x→a⁺) f(x) = ℓ₂  (par la droite)\nlim(x→a) f(x) existe ↔ ℓ₁=ℓ₂\n\nOPÉRATIONS :\n• Somme : lim(f+g)=lim f+lim g\n• Produit : lim(fg)=lim f × lim g\n• Quotient : lim(f/g)=lim f / lim g  (si lim g≠0)\n• Composition : si lim(x→a)g=b et lim(x→b)f=ℓ → lim(x→a)(f∘g)=ℓ" },
+            { id:'M-LI1', type:'methode', nom:'Lever les formes indéterminées',
+              enonce:"0/0 → factoriser numérateur et dénominateur (racines, identités remarquables)\n\n∞/∞ → diviser par le terme de plus haut degré\n\n∞−∞ → factoriser ou multiplier par conjugué\n   Conjugué de √A−√B : multiplier par (√A+√B)/(√A+√B)\n\n0×∞ → réécrire f×g = f/(1/g) puis appliquer 0/0 ou ∞/∞\n\nLimites fondamentales :\nlim(x→0) sin x/x = 1\nlim(x→0) (eˣ−1)/x = 1\nlim(x→0) ln(1+x)/x = 1",
+              remarque:"Pour les polynômes et fractions rationnelles : terme dominant en ±∞." },
+          ],
+          exercices:[
+            { id:'EX-LI1', niveau:'Facile', titre:'Forme 0/0',
+              enonce:'Calculer lim(x→1) (x²−1)/(x−1).',
+              correction:'=(x+1)(x−1)/(x−1)=x+1 → 2.' },
+            { id:'EX-LI2', niveau:'Intermédiaire', titre:'Forme ∞−∞',
+              enonce:'Calculer lim(x→+∞) [√(x²+x)−x].',
+              correction:'Multiplier par conjugué :\nx/[√(x²+x)+x]=1/[√(1+1/x)+1]→1/2.' },
+            { id:'EX-LI3', niveau:'Difficile', titre:'Croissances comparées',
+              enonce:'Calculer lim(x→+∞) x⁵/eˣ et lim(x→0⁺) x·ln x.',
+              correction:'eˣ≫xⁿ → lim x⁵/eˣ=0.\nlim x·ln x=lim(ln x)/(1/x) [L\'Hôpital : (1/x)/(−1/x²)]=lim(−x)=0.' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-continuite', titre:'5.2 Continuité et théorèmes',
+      notions:['Définition de la continuité','TVI : f(a)f(b)<0 → racine','Théorème de la bijection','Méthode de dichotomie','Asymptotes (AV, AH, AO)'],
+      blocs:[
+        {
+          notion:'📊 TVI et théorème de la bijection',
+          theoremes:[
+            { id:'T-LI1', type:'thm', nom:'Théorème des Valeurs Intermédiaires (TVI)',
+              enonce:"f continue sur [a,b] et k∈[min(f(a),f(b));max(f(a),f(b))] :\n∃c∈[a,b] : f(c)=k\n\nCas pratique : si f(a)·f(b)<0 → ∃ au moins une racine dans ]a,b[\n\nUnicitée : si de plus f est strictement monotone → c est unique\n\nDichotomie (encadrement de la racine) :\n• Évaluer f au milieu m=(a+b)/2\n• f(m)·f(a)<0 → racine dans [a;m]\n• f(m)·f(b)<0 → racine dans [m;b]\n• Répéter jusqu'à la précision souhaitée",
+              remarque:"Le TVI garantit l'existence mais pas l'unicité. Il faut la monotonie pour l'unicité." },
+            { id:'T-LI2', type:'thm', nom:'Théorème de la bijection',
+              enonce:"f continue et strictement monotone sur I=[a,b] :\nf réalise une bijection de [a,b] vers J=[f(a),f(b)] (ou [f(b),f(a)])\n→ Pour tout k∈J, ∃! c∈[a,b] : f(c)=k\n\nApplication : existence et unicité d'une racine\n→ Résolution graphique, numérique ou analytique." },
+            { id:'D-LI2', type:'def', nom:'Asymptotes',
+              enonce:"Asymptote Verticale (AV) x=a :\nlim(x→a) |f(x)| = +∞\n\nAsymptote Horizontale (AH) y=ℓ en ±∞ :\nlim(x→±∞) f(x) = ℓ\n\nAsymptote Oblique (AO) y=mx+p en ±∞ :\n• m = lim(x→±∞) f(x)/x  (pente)\n• p = lim(x→±∞) [f(x)−mx]  (ordonnée à l'origine)\n\nPosition de C_f par rapport à y=mx+p :\nÉtudier le signe de f(x)−(mx+p)" },
+          ],
+          exercices:[
+            { id:'EX-CO1', niveau:'Intermédiaire', titre:'TVI — existence et unicité',
+              enonce:'Montrer que x³+x−1=0 a une solution unique dans ]0;1[.',
+              correction:'f(x)=x³+x−1 continue.\nf(0)=−1<0 ; f(1)=1>0 → ∃c∈]0;1[ (TVI).\nf\'(x)=3x²+1>0 → f croissante → c unique.' },
+            { id:'EX-CO2', niveau:'Difficile', titre:'Asymptote oblique + position',
+              enonce:'f(x)=(x²+2x)/(x+1). AO, puis position de C_f par rapport à l\'AO.',
+              correction:'a=lim f/x=1 ; b=lim[f−x]=lim[x/(x+1)]=1.\nAO : y=x+1.\nf(x)−(x+1)=[(x²+2x)−(x+1)(x+1)]/(x+1)=[−1]/(x+1).\nSur x>−1 : négatif → C_f en dessous de l\'AO.\nSur x<−1 : positif → C_f au-dessus de l\'AO.' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 06 — DÉRIVATION
+// ─────────────────────────────────────────────────────────────────────
+'derivation': {
+  id:'derivation', emoji:"f'", badge:'Analyse', color:'#4f6ef7',
+  titre:'Dérivation',
+  desc:"Nombre dérivé, dérivées usuelles et règles de calcul, tangente, approximation affine, théorèmes de Rolle, TAF et règle de L'Hôpital.",
+  souschapitres:[
+    {
+      id:'sc-calcul-der', titre:'6.1 Calcul des dérivées',
+      notions:['Nombre dérivé f\'(a) — taux d\'accroissement','Dérivées usuelles','Règles : somme, produit, quotient, composée','Tangente et approximation affine'],
+      blocs:[
+        {
+          notion:"📐 Dérivées usuelles et règles",
+          theoremes:[
+            { id:'D-DE1', type:'def', nom:'Nombre dérivé et tangente',
+              enonce:"f'(a) = lim(x→a) [f(x)−f(a)]/(x−a)\n     = lim(h→0) [f(a+h)−f(a)]/h\n\nInterprétation géométrique :\nf'(a) = pente de la tangente en M(a,f(a))\n\nÉquation de la tangente en a :\ny = f'(a)·(x−a) + f(a)\n\nApproximation affine au voisinage de a :\nf(x) ≈ f(a) + f'(a)·(x−a)  pour x proche de a" },
+            { id:'F-DE1', type:'formule', nom:'Table des dérivées usuelles',
+              enonce:"(c)' = 0  (constante)\n(xⁿ)' = n·xⁿ⁻¹  (n∈ℤ, x≠0 si n<0)\n(√x)' = 1/(2√x)\n(1/x)' = −1/x²\n\n(eˣ)' = eˣ\n(ln x)' = 1/x  (x>0)\n\n(sin x)' = cos x\n(cos x)' = −sin x\n(tan x)' = 1+tan²x = 1/cos²x" },
+            { id:'F-DE2', type:'formule', nom:'Règles de dérivation',
+              enonce:"Somme : (u+v)' = u'+v'\nProduit : (uv)' = u'v + uv'\nQuotient : (u/v)' = (u'v−uv')/v²\nComposée : (f∘g)' = (f'∘g)·g'\n\nFormes chaîne (très utilisées) :\n(uⁿ)' = n·u'·uⁿ⁻¹\n(eᵘ)' = u'·eᵘ\n(ln u)' = u'/u  (u>0)\n(√u)' = u'/(2√u)",
+              remarque:"La dérivée d'une composée (f∘g)' = f'(g(x))·g'(x) est la règle la plus utilisée." },
+          ],
+          exercices:[
+            { id:'EX-DE1', niveau:'Facile', titre:'Dérivée composée',
+              enonce:"f(x)=e^(x²). Calculer f'(x).",
+              correction:"u=x², u'=2x.\nf'(x)=2x·e^(x²)." },
+            { id:'EX-DE2', niveau:'Facile', titre:'Dérivée logarithme composé',
+              enonce:"f(x)=ln(2x²+1). Calculer f'(x).",
+              correction:"u=2x²+1, u'=4x.\nf'(x)=4x/(2x²+1)." },
+            { id:'EX-DE3', niveau:'Intermédiaire', titre:'Tangente et approximation',
+              enonce:"f(x)=x³−x. Tangente en x=1 et approx. de f(1,1).",
+              correction:"f(1)=0. f'(x)=3x²−1, f'(1)=2.\nTangente : y=2(x−1).\nf(1,1)≈2×0,1=0,2.\nExact : 1,331−1,1=0,231." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-theoremes-der', titre:'6.2 Théorèmes fondamentaux',
+      notions:['Théorème de Rolle : f(a)=f(b) → f\'(c)=0','TAF : pente de la sécante = f\'(c)','Inégalité des accroissements finis','Règle de L\'Hôpital (0/0, ∞/∞)'],
+      blocs:[
+        {
+          notion:'📏 Rolle, TAF et L\'Hôpital',
+          theoremes:[
+            { id:'T-DE1', type:'thm', nom:'Théorème de Rolle',
+              enonce:"f continue sur [a,b], dérivable sur ]a,b[ et f(a)=f(b) :\n→ ∃c∈]a,b[ tel que f'(c)=0\n\nInterprétation : la courbe a au moins un point à tangente horizontale.\n\nConséquence pratique :\nEntre deux racines consécutives de f il existe au moins une racine de f'.\n(Utile pour localiser les extrema).",
+              remarque:"Les 3 hypothèses sont nécessaires : si l'une manque le résultat peut être faux." },
+            { id:'T-DE2', type:'thm', nom:'Théorème des Accroissements Finis (TAF)',
+              enonce:"f continue sur [a,b], dérivable sur ]a,b[ :\n→ ∃c∈]a,b[ : f'(c) = [f(b)−f(a)]/(b−a)\n\nInterprétation : la pente de la tangente en c = pente de la corde AB.\n\nInégalité des accroissements finis :\nSi m≤f'(x)≤M sur ]a,b[ :\nm(b−a) ≤ f(b)−f(a) ≤ M(b−a)\n\nApplication : encadrement de f(b)−f(a) quand m,M sont connus." },
+            { id:'F-DE3', type:'formule', nom:"Règle de L'Hôpital",
+              enonce:"Si lim f(x)=0 et lim g(x)=0  (ou les deux →±∞) :\nlim f(x)/g(x) = lim f'(x)/g'(x)\n(sous réserve que cette dernière limite existe)\n\nApplicable aux formes indéterminées : 0/0, ∞/∞\n\nExemple :\nlim(x→0) sinx/x = lim cosx/1 = 1\n\nlim(x→0) (eˣ−1)/x = lim eˣ/1 = 1\n\nlim(x→0) (sinx−x)/x³ : appliquer 3 fois → −1/6" },
+          ],
+          exercices:[
+            { id:'EX-TH1', niveau:'Intermédiaire', titre:"Rolle — existence d'un extremum",
+              enonce:"f(x)=x³−3x. Montrer que f a un maximum sur ]−∞;0[ et le localiser.",
+              correction:"f'(x)=3x²−3=3(x−1)(x+1).\nf'(−1)=0. f'(x)<0 sur ]−∞;−1[ et f'(x)<0 sur ]−1;0[\nAttention : f'<0 sur ]−∞;−1[ et f'>0 sur ... Non.\nf'(x)=3(x+1)(x−1)>0 sur ]−∞;−1[, <0 sur ]−1;1[.\nDonc maximum en x=−1 : f(−1)=−1+3=2." },
+            { id:'EX-TH2', niveau:'Difficile', titre:"L'Hôpital",
+              enonce:"Calculer lim(x→0) (sinx−x)/x³.",
+              correction:"0/0 → L'Hôpital :\n(cosx−1)/3x² → 0/0 → (−sinx)/6x → 0/0 → (−cosx)/6 → −1/6." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 07 — ÉTUDE DE FONCTIONS
+// ─────────────────────────────────────────────────────────────────────
+'etude-fonctions': {
+  id:'etude-fonctions', emoji:'📈', badge:'Analyse', color:'#4f6ef7',
+  titre:'Étude de Fonctions',
+  desc:"Variations, extrema, étude complète de fonctions polynômes, rationnelles, irrationnelles, circulaires, exponentielle et logarithme.",
+  souschapitres:[
+    {
+      id:'sc-methode', titre:'7.1 Méthode d\'étude complète',
+      notions:['Domaine de définition','Parité (pair/impair)','Limites aux bornes et asymptotes','Tableau de variations et extrema','Représentation graphique'],
+      blocs:[
+        {
+          notion:'📋 Étape par étape',
+          theoremes:[
+            { id:'P-EF1', type:'prop', nom:'Plan d\'étude complète d\'une fonction',
+              enonce:"1. DOMAINE 𝒟_f :\n   Exclure les zéros du dénominateur, ln de négatif, racine de négatif...\n\n2. PARITÉ :\n   Calculer f(−x) :\n   f(−x)=f(x) → paire (symétrie par rapport à Oy)\n   f(−x)=−f(x) → impaire (symétrie par rapport à O)\n\n3. LIMITES AUX BORNES → asymptotes\n\n4. DÉRIVÉE f'(x) :\n   Calculer, factoriser, dresser le tableau de signe\n   → déduire le tableau de variations\n\n5. EXTREMA LOCAUX/GLOBAUX :\n   Comparer valeurs aux extrema et aux bornes\n\n6. REPRÉSENTATION GRAPHIQUE :\n   Placer quelques points remarquables, tracer" },
+          ],
+          exercices:[
+            { id:'EX-EF1', niveau:'Intermédiaire', titre:'Étude rationnelle',
+              enonce:"Étudier f(x)=(x²+1)/(x−1) : domaine, asymptotes, variations, tableau complet.",
+              correction:"𝒟_f=ℝ\\{1}. AV : x=1.\na=1, b=1 → AO : y=x+1.\nf'(x)=(x²−2x−1)/(x−1)².\nRacines f'=0 : x=1±√2≈2,41 et −0,41.\nTableau : décroissante sur ]−∞;1−√2], croissante sur [1−√2;1[,\ndécroissante sur ]1;1+√2], croissante sur [1+√2;+∞[." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-fonctions-ref', titre:'7.2 Fonctions de référence',
+      notions:['Exponentielle eˣ et eᵘ','Logarithme ln x et ln u','Fonctions irrationnelles √f(x)','Fonctions circulaires sin, cos, tan'],
+      blocs:[
+        {
+          notion:'📉 Exponentielle et logarithme',
+          theoremes:[
+            { id:'F-EF1', type:'formule', nom:'Propriétés de exp et ln',
+              enonce:"EXPONENTIELLE eˣ :\neˣ⁺ʸ=eˣeʸ ; (eˣ)'=eˣ ; 𝒟=ℝ ; Im=]0;+∞[\nlim(x→−∞)eˣ=0 ; lim(x→+∞)eˣ=+∞\n(eᵘ)'=u'eᵘ ; eˣ>0 toujours\n\nLOGARITHME NATUREL ln x :\nln(ab)=lna+lnb ; ln(aⁿ)=nlna ; (ln x)'=1/x\n𝒟=]0;+∞[ ; Im=ℝ ; ln1=0 ; lne=1\nlim(x→0⁺)lnx=−∞ ; lim(x→+∞)lnx=+∞\n(ln u)'=u'/u ; ln et exp sont réciproques\n\nCroissances comparées :\nxⁿ/eˣ→0 ; (ln x)/xᵅ→0 ; x·ln x→0 (x→0⁺)",
+              remarque:"log_a(x)=ln x/ln a. En pratique : log₁₀(x)=ln x/ln 10≈ln x/2,303." },
+          ],
+          exercices:[
+            { id:'EX-EF2', niveau:'Facile', titre:'Variations de xe^(−x)',
+              enonce:"Étudier f(x)=xe^(−x) sur ℝ.",
+              correction:"f'(x)=e^(−x)−xe^(−x)=e^(−x)(1−x).\nf'(x)>0 sur ]−∞;1[ → croissante.\nMax en x=1 : f(1)=1/e.\nf'(x)<0 sur ]1;+∞[ → décroissante.\nlim(x→+∞)f=0 ; lim(x→−∞)f=−∞." },
+            { id:'EX-EF3', niveau:'Intermédiaire', titre:'Fonction irrationnelle',
+              enonce:"f(x)=√(x²−4x). Domaine et variations.",
+              correction:"x(x−4)≥0 → 𝒟=]−∞;0]∪[4;+∞[.\nf'(x)=(2x−4)/(2√(x²−4x))=(x−2)/√(x²−4x).\nSur ]−∞;0[ : x<2 → f'<0 → décroissante.\nSur ]4;+∞[ : x>2 → f'>0 → croissante." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 08 — GÉOMÉTRIE PLANE
+// ─────────────────────────────────────────────────────────────────────
+'geometrie-plane': {
+  id:'geometrie-plane', emoji:'📐', badge:'Géométrie', color:'#06d6a0',
+  titre:'Géométrie Plane',
+  desc:"Vecteurs, produit scalaire, équations de droites (cartésiennes, réduites, paramétriques), cercles (équation, tangente), distances et positions relatives.",
+  souschapitres:[
+    {
+      id:'sc-vecteurs-plan', titre:'8.1 Vecteurs et produit scalaire',
+      notions:['Colinéarité det(u⃗,v⃗)=0','Produit scalaire u⃗·v⃗=|u||v|cosθ','Orthogonalité u⃗·v⃗=0','Distance et projeté'],
+      blocs:[
+        {
+          notion:'🔷 Vecteurs dans le plan',
+          theoremes:[
+            { id:'D-GP1', type:'def', nom:'Vecteurs et colinéarité',
+              enonce:"Dans le repère orthonormé (O;i⃗;j⃗) :\nu⃗(a;b) et v⃗(c;d)\n\n|u⃗| = √(a²+b²)\n\nColinéarité : u⃗ ∥ v⃗ ↔ det(u⃗,v⃗) = ad−bc = 0\n\nBase (u⃗;v⃗) libre ↔ det≠0\nCoordin. de M dans la base : M=αu⃗+βv⃗\n\nMillieu de [AB] : I((xA+xB)/2 ; (yA+yB)/2)" },
+            { id:'F-GP1', type:'formule', nom:'Produit scalaire',
+              enonce:"u⃗(a;b)·v⃗(c;d) = ac+bd  (formule coordonnées)\nu⃗·v⃗ = |u⃗|·|v⃗|·cosθ  (formule géométrique)\n\nOrthogonalité : u⃗·v⃗ = 0\n\nPropriétés :\n• u⃗·u⃗ = |u⃗|²\n• (u⃗+v⃗)·w⃗ = u⃗·w⃗ + v⃗·w⃗\n• u⃗·v⃗ = ½(|u⃗+v⃗|²−|u⃗|²−|v⃗|²)\n\nProjeté orthogonal de u⃗ sur v⃗ :\np = (u⃗·v⃗)/|v⃗|²·v⃗" },
+          ],
+          exercices:[
+            { id:'EX-GP1', niveau:'Facile', titre:'Produit scalaire',
+              enonce:"u⃗(3;4), v⃗(−4;3). Calculer u⃗·v⃗ et déduire l'angle.",
+              correction:"u⃗·v⃗=3×(−4)+4×3=−12+12=0.\nOrthogonaux : angle=90°." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-droites-cercles', titre:'8.2 Droites et cercles',
+      notions:['Équation cartésienne ax+by+c=0','Équation réduite y=mx+p','Distance point-droite','Équation cercle, tangente','Intersection droite-cercle'],
+      blocs:[
+        {
+          notion:'📏 Droites dans le plan',
+          theoremes:[
+            { id:'F-GP2', type:'formule', nom:'Équations de droites',
+              enonce:"Cartésienne : ax+by+c=0  (n⃗(a;b) vecteur normal)\nRéduite : y=mx+p  (m=pente, p=ordonnée à l'origine)\nParamétrique : {x=x₀+at ; y=y₀+bt}  (u⃗(a;b) vecteur directeur)\n\nRelation normale-directeur :\nSi directeur u⃗(a;b) → normale n⃗(−b;a)\n\nPente de la droite (A,B) : m=(yB−yA)/(xB−xA)\n\nDistance de M₀(x₀;y₀) à la droite ax+by+c=0 :\nd = |ax₀+by₀+c| / √(a²+b²)\n\nPositions relatives :\n• Parallèles : même n⃗ (prop.) mais c différent\n• Confondues : même équation\n• Sécantes : résoudre le système → 1 point" },
+            { id:'F-GP3', type:'formule', nom:'Cercles dans le plan',
+              enonce:"Cercle Γ de centre Ω(a;b) et rayon r>0 :\n(x−a)²+(y−b)²=r²\n\nForme développée : x²+y²+Ax+By+C=0\nCentre=(−A/2;−B/2) ; r=√(A²/4+B²/4−C)\n\nTangente à Γ en M₀(x₀;y₀)∈Γ :\n(x₀−a)(x−a)+(y₀−b)(y−b)=r²\n\nPosition de M par rapport à Γ :\nd(M,Ω)<r : intérieur\nd(M,Ω)=r : sur le cercle\nd(M,Ω)>r : extérieur" },
+          ],
+          exercices:[
+            { id:'EX-DR1', niveau:'Facile', titre:'Équation de droite',
+              enonce:'Droite par A(1;2) et B(3;−2). Équation cartésienne.',
+              correction:"u⃗AB=(2;−4), n⃗(4;2)=(2;1).\n2(x−1)+1(y−2)=0 → 2x+y−4=0." },
+            { id:'EX-DR2', niveau:'Intermédiaire', titre:'Tangente au cercle',
+              enonce:'Γ:(x−1)²+(y+2)²=25. Vérifier A(4;2)∈Γ, tangente en A.',
+              correction:"d(A,Ω)=√(9+16)=5=r ✓\nTangente : 3(x−1)+4(y+2)=25 → 3x+4y=20." },
+            { id:'EX-DR3', niveau:'Difficile', titre:'Intersection droite-cercle',
+              enonce:'Δ:y=2x+1. Γ:x²+y²=5. Intersections.',
+              correction:"Substituer : x²+(2x+1)²=5\n5x²+4x−4=0.\nΔ'=4+20=24. x=(−4±4√6)/10=(−2±2√6)/5.\nDeux points d'intersection." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 09 — GÉOMÉTRIE DANS L'ESPACE
+// ─────────────────────────────────────────────────────────────────────
+'geometrie-espace': {
+  id:'geometrie-espace', emoji:'🧊', badge:'Géométrie', color:'#06d6a0',
+  titre:"Géométrie dans l'Espace",
+  desc:"Vecteurs 3D, droites et plans (équations paramétriques et cartésiennes), positions relatives, produit scalaire et vectoriel, distances.",
+  souschapitres:[
+    {
+      id:'sc-droites-plans', titre:'9.1 Droites et plans dans l\'espace',
+      notions:['Paramétrique droite : M=A+t·u⃗','Plan : ax+by+cz+d=0','Positions relatives droite-plan, plan-plan','Angle entre deux plans'],
+      blocs:[
+        {
+          notion:'🗂️ Plans et droites — Équations',
+          theoremes:[
+            { id:'F-GE1', type:'formule', nom:'Équations dans l\'espace',
+              enonce:"DROITE (A,u⃗) — paramétrique :\n{x=x₀+at ; y=y₀+bt ; z=z₀+ct}  t∈ℝ\n\nPLAN — équation cartésienne :\nax+by+cz+d=0  où n⃗(a;b;c) est la normale\n\nPlan par A₀(x₀;y₀;z₀), normale n⃗(a;b;c) :\na(x−x₀)+b(y−y₀)+c(z−z₀)=0\n\nPositions droite-plan :\nu⃗·n⃗=0 et A∉plan → droite ∥ plan\nu⃗·n⃗=0 et A∈plan  → droite ⊂ plan\nu⃗·n⃗≠0           → intersection en un point\n\nPositions plan-plan :\nn⃗₁ ∥ n⃗₂ → parallèles ou confondus\nn⃗₁ ∦ n⃗₂ → intersection = droite" },
+          ],
+          exercices:[
+            { id:'EX-GE1', niveau:'Facile', titre:'Équation d\'un plan',
+              enonce:"Plan par A(1;0;2) de normale n⃗(2;−1;3).",
+              correction:"2(x−1)−1(y−0)+3(z−2)=0\n2x−y+3z−8=0." },
+            { id:'EX-GE2', niveau:'Intermédiaire', titre:'Intersection droite-plan',
+              enonce:"D:{x=1+t;y=2t;z=−1+3t}. P:2x−y+z=3.",
+              correction:"2(1+t)−2t+(−1+3t)=3\n3t+1=3 → t=2/3.\nPoint (5/3;4/3;1)." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-distances-espace', titre:'9.2 Produit scalaire et distances',
+      notions:['Produit scalaire 3D : u⃗·v⃗=aa\'+bb\'+cc\'','Produit vectoriel u⃗∧v⃗','Distance point-plan','Projeté orthogonal'],
+      blocs:[
+        {
+          notion:'📏 Distances dans l\'espace',
+          theoremes:[
+            { id:'F-GE2', type:'formule', nom:'Produit vectoriel et distances',
+              enonce:"Produit vectoriel u⃗(a₁;b₁;c₁) ∧ v⃗(a₂;b₂;c₂) :\n= (b₁c₂−c₁b₂ ; c₁a₂−a₁c₂ ; a₁b₂−b₁a₂)\n\nu⃗∧v⃗ est perpendiculaire à u⃗ et v⃗\n|u⃗∧v⃗|=|u⃗||v⃗|sinθ = aire du parallélogramme\n\nDistance du point M₀(x₀;y₀;z₀) au plan ax+by+cz+d=0 :\nd = |ax₀+by₀+cz₀+d| / √(a²+b²+c²)\n\nProjeté orthogonal H de A sur le plan Π :\nH = A + t₀·n⃗  où  t₀ = −(n⃗·A+d)/|n⃗|²\n\nAngle de deux plans (dièdre) :\ncosθ = |n⃗₁·n⃗₂| / (|n⃗₁|·|n⃗₂|)" },
+          ],
+          exercices:[
+            { id:'EX-GE3', niveau:'Intermédiaire', titre:'Distance point-plan',
+              enonce:"Distance de M(3;−1;2) au plan x+2y−2z+1=0.",
+              correction:"d=|3+2(−1)−2(2)+1|/√(1+4+4)=|−2|/3=2/3." },
+            { id:'EX-GE4', niveau:'Difficile', titre:'Produit vectoriel et normale',
+              enonce:"Plan passant par A(1;0;0), B(0;2;0), C(0;0;3). Équation.",
+              correction:"AB⃗=(−1;2;0), AC⃗=(−1;0;3).\nn⃗=AB⃗∧AC⃗=(2×3−0×0; 0×(−1)−(−1)×3; (−1)×0−2×(−1))\n=(6;3;2).\nPlan : 6(x−1)+3(y)+2(z)=0 → 6x+3y+2z=6." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 10 — GRAPHES & ALGORITHMIQUE
+// ─────────────────────────────────────────────────────────────────────
+'graphes': {
+  id:'graphes', emoji:'🕸️', badge:'Info', color:'#f5c842',
+  titre:'Graphes & Algorithmique',
+  desc:"Définitions (sommets, arêtes, degré), théorème d'Euler, algorithme de Dijkstra, matrice d'adjacence, graphe orienté, graphe probabiliste.",
+  souschapitres:[
+    {
+      id:'sc-graphes-def', titre:'10.1 Définitions et propriétés',
+      notions:['Graphe G=(V,E), ordre, degré','Graphe connexe, chemin, cycle','Théorème des poignées de main','Chaîne et circuit eulériens (Euler)'],
+      blocs:[
+        {
+          notion:'🕸️ Graphes — Vocabulaire et Euler',
+          theoremes:[
+            { id:'D-GR1', type:'def', nom:'Définitions fondamentales',
+              enonce:"Graphe non orienté G=(V,E) :\nV = ensemble de sommets, E = ensemble d'arêtes\n\nOrdre = |V| (nombre de sommets)\nDegré d(v) = nombre d'arêtes incidentes à v\n\nGraphe connexe : il existe un chemin entre toute paire de sommets\n\nThéorème des poignées de main :\nΣᵢ d(vᵢ) = 2|E|\nCorollaire : le nombre de sommets de degré impair est pair\n\nGraphe complet Kₙ :\nChaque sommet relié à tous les autres : |E|=n(n−1)/2",
+              remarque:"Chaîne : suite de sommets liés par des arêtes (arête visitée une seule fois).\nCycle : chaîne fermée." },
+            { id:'T-GR1', type:'thm', nom:"Théorème d'Euler",
+              enonce:"CHAÎNE EULÉRIENNE (traverse chaque arête exactement une fois) :\n↔ G connexe  ET  exactement 0 ou 2 sommets de degré impair\n\nCIRCUIT EULÉRIEN (chaîne eulérienne fermée) :\n↔ G connexe  ET  tous les sommets de degré pair\n\nSi 2 sommets impairs → ce sont les extrémités de la chaîne eulérienne\nSi 0 sommet impair → on peut commencer par n'importe quel sommet\n\nAlgorithme de construction : algorithme de Hierholzer",
+              remarque:"Chemin hamiltonien (chaque SOMMET une fois) ≠ eulérien. Le problème hamiltonien est NP-complet." },
+          ],
+          exercices:[
+            { id:'EX-GR1', niveau:'Facile', titre:'Somme des degrés',
+              enonce:'Graphe : 6 sommets et 9 arêtes. Somme de tous les degrés ?',
+              correction:'Σd(vᵢ)=2|E|=18.' },
+            { id:'EX-GR2', niveau:'Intermédiaire', titre:'Chaîne eulérienne ?',
+              enonce:"Sommets {A,B,C,D,E}, arêtes AB,AC,BC,BD,CD,DE. Chaîne eulérienne ?",
+              correction:'d(A)=2, d(B)=3, d(C)=3, d(D)=3, d(E)=1.\n4 sommets impairs → pas de chaîne eulérienne (il en faut 0 ou 2).' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-dijkstra', titre:'10.2 Algorithme de Dijkstra',
+      notions:['Plus court chemin depuis source s','Initialisation d(s)=0, d(v)=+∞','Mise à jour des voisins','Marquage et terminaison'],
+      blocs:[
+        {
+          notion:'🗺️ Dijkstra — Plus court chemin',
+          theoremes:[
+            { id:'M-GR1', type:'methode', nom:'Algorithme de Dijkstra (étape par étape)',
+              enonce:"But : trouver les plus courts chemins depuis un sommet source s vers tous les autres.\n\nINITIALISATION :\n  d(s)=0 ; d(v)=+∞ pour tout v≠s\n  Prédécesseur(v)=∅ pour tout v\n  M = ∅ (ensemble des sommets marqués)\n\nRÉPÉTER :\n  1. Choisir u ∉ M avec d(u) minimal\n  2. Pour chaque voisin v de u avec v∉M :\n     Si d(u)+w(u,v) < d(v) :\n       d(v) ← d(u)+w(u,v)\n       prédécesseur(v) ← u\n  3. M ← M∪{u}\nJUSQU'À M=V\n\nReconstruire le chemin : remonter depuis la destination via les prédécesseurs.",
+              remarque:"⚠️ Ne fonctionne que pour des poids positifs ou nuls. Pour poids négatifs : algorithme de Bellman-Ford." },
+          ],
+          exercices:[
+            { id:'EX-DJ1', niveau:'Intermédiaire', titre:'Dijkstra — 5 sommets',
+              enonce:'Graphe : A−B(4), A−C(2), C−B(1), B−D(3), C−D(5). Plus court chemin A→D.',
+              correction:'Init: d(A)=0,d(B)=∞,d(C)=∞,d(D)=∞.\nTraiter A : d(B)=4, d(C)=2.\nTraiter C (min=2) : d(B)=min(4,3)=3, d(D)=min(∞,7)=7.\nTraiter B (min=3) : d(D)=min(7,6)=6.\nTraiter D. Chemin : A→C→B→D (longueur 6).' },
+            { id:'EX-DJ2', niveau:'Difficile', titre:'Tableau complet Dijkstra',
+              enonce:'Réseau : A−B(3), A−C(1), B−D(2), B−E(4), C−B(1), C−D(5), D−E(1). Source A, trouver d(E).',
+              correction:'d(A)=0.\nA→C=1, A→B=3.\nTraiter C : d(B)=min(3,1+1)=2, d(D)=min(∞,6)=6.\nTraiter B : d(D)=min(6,2+2)=4, d(E)=min(∞,2+4)=6.\nTraiter D : d(E)=min(6,4+1)=5.\nd(E)=5. Chemin : A→C→B→D→E.' },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-matrices-graphes', titre:'10.3 Matrices et graphes probabilistes',
+      notions:['Matrice d\'adjacence A=(aᵢⱼ)','Aᵏ donne les chemins de longueur k','Graphe probabiliste','Matrice de transition T et distribution stationnaire π*'],
+      blocs:[
+        {
+          notion:'📊 Matrice d\'adjacence et probabiliste',
+          theoremes:[
+            { id:'D-GR2', type:'def', nom:"Matrice d'adjacence",
+              enonce:"Matrice A=(aᵢⱼ) de taille n×n (n=ordre du graphe) :\naᵢⱼ = 1 si arête (vᵢ,vⱼ) existe ; 0 sinon\n\nGraphe non orienté → A symétrique (aᵢⱼ=aⱼᵢ)\nd(vᵢ) = Σⱼ aᵢⱼ  (somme de la ligne i)\n\nPropriété fondamentale :\n(Aᵏ)ᵢⱼ = nombre de chemins de longueur exactement k entre vᵢ et vⱼ\n\nApplication : compter les triangles (circuits de longueur 3) = trace(A³)/6" },
+            { id:'D-GR3', type:'def', nom:'Graphe probabiliste et matrice de transition',
+              enonce:"Graphe orienté où pour chaque sommet i :\nΣⱼ tᵢⱼ = 1  (la somme des probabilités sortantes = 1)\n\nMatrice de transition T=(tᵢⱼ) :\ntᵢⱼ = probabilité de passer de l'état i à l'état j\nChaque LIGNE somme à 1 (matrice stochastique)\n\nDistribution à l'étape n :\nπ⁽ⁿ⁾ = π⁽⁰⁾ · Tⁿ  (π vecteur ligne)\n\nDistribution stationnaire π* :\nπ*·T = π*  et  Σᵢ π*ᵢ = 1\n→ Résoudre le système (enlever une équation redondante)\n\nConvergence : si T est régulière (Tᵏ à entrées >0), alors π⁽ⁿ⁾→π*.",
+              remarque:"Interprétation : π*ᵢ = proportion de temps passé dans l'état i sur le long terme." },
+          ],
+          exercices:[
+            { id:'EX-MA2', niveau:'Intermédiaire', titre:'Matrice de transition',
+              enonce:"T=[[0.7,0.3],[0.4,0.6]], π⁽⁰⁾=[1,0]. Calculer π⁽¹⁾ et π⁽²⁾.",
+              correction:'π⁽¹⁾=[1,0]·T=[0.7,0.3].\nπ⁽²⁾=[0.7,0.3]·T=[0.7×0.7+0.3×0.4, 0.7×0.3+0.3×0.6]\n=[0.49+0.12, 0.21+0.18]=[0.61,0.39].' },
+            { id:'EX-MA3', niveau:'Difficile', titre:'Distribution stationnaire',
+              enonce:"Même T. Trouver π*=(π₁,π₂).",
+              correction:'π*T=π* :\n0.7π₁+0.4π₂=π₁ → −0.3π₁+0.4π₂=0 → π₂=0.75π₁.\nπ₁+π₂=1 → 1.75π₁=1 → π₁=4/7, π₂=3/7.\nπ*=(4/7, 3/7)≈(0.571, 0.429).' },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+} // fin ALL_CHAPTERS
+
+// ══════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════════════════
+
+function TypeBadge({ type }: { type: string }) {
+  const color = C[type as keyof typeof C] || C.def
+  return (
+    <span style={{ fontSize:10, padding:'2px 10px', borderRadius:20, fontWeight:700,
+      background:`${color}20`, color, whiteSpace:'nowrap' }}>
+      {L[type] || type}
+    </span>
+  )
 }
-const BADGES: Record<string,string> = {
-  'second-degre':'Algèbre','complexes':'Algèbre','matrices-systemes':'Algèbre',
-  'suites':'Analyse','limites-continuite':'Analyse','derivation':'Analyse','etude-fonctions':'Analyse',
-  'geometrie-plane':'Géométrie','geometrie-espace':'Géométrie',
-  'graphes':'Info',
+
+function NiveauBadge({ niveau }: { niveau: string }) {
+  const cfg = niveau==='Facile'
+    ? { bg:'rgba(6,214,160,0.15)', color:'#06d6a0' }
+    : niveau==='Difficile'
+    ? { bg:'rgba(239,68,68,0.15)', color:'#ef4444' }
+    : { bg:'rgba(245,158,11,0.15)', color:'#f59e0b' }
+  return (
+    <span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, fontWeight:600,
+      background:cfg.bg, color:cfg.color }}>{niveau}</span>
+  )
 }
 
-const CHAPITRES: Record<string,{
-  ch:string; titre:string; badge:string; desc:string; duree:string; section:string;
-  theoremes:{id:string;type:string;nom:string;enonce:string;remarque?:string}[];
-  exercices:{id:string;niveau:string;titre:string;enonce:string;correction:string}[];
-}> = {
-
-  'second-degre': {
-    ch:'CH 01', titre:'Problèmes du second degré', badge:'Algèbre', duree:'~5h', section:'Partie 1 — Algèbre',
-    desc:'Trinôme ax²+bx+c, discriminant Δ, signe, équations et inéquations du 2nd degré, systèmes linéaires (pivot de Gauss).',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Trinôme du second degré',
-       enonce:'Soit f(x)=ax²+bx+c avec a≠0.\nDiscriminant : Δ=b²−4ac\n\n• Δ>0 : deux racines réelles x₁=(−b−√Δ)/(2a) et x₂=(−b+√Δ)/(2a)\n• Δ=0 : racine double x₀=−b/(2a)\n• Δ<0 : pas de racine réelle\n\nForme canonique : f(x)=a(x+b/(2a))²−Δ/(4a)\nSommet : S(−b/(2a) ; −Δ/(4a))'},
-      {id:'P1',type:'prop',nom:'Signe du trinôme',
-       enonce:'Si Δ>0 : f(x) a le signe de a à l\'extérieur de [x₁;x₂] et le signe de −a entre x₁ et x₂.\nSi Δ≤0 : f(x) a le signe de a pour tout x∈ℝ.\n\nRelations coefficients-racines :\nx₁+x₂=−b/a\nx₁×x₂=c/a'},
-      {id:'F1',type:'formule',nom:'Inéquations du second degré',
-       enonce:'Méthode : calculer Δ, trouver les racines, utiliser le tableau de signe.\n\nax²+bx+c≥0 :\n• Si Δ>0 : x≤x₁ ou x≥x₂ (si a>0) ; x₁≤x≤x₂ (si a<0)\n• Si Δ<0 et a>0 : solution = ℝ\n• Si Δ<0 et a<0 : pas de solution\n\nFactorisation : ax²+bx+c = a(x−x₁)(x−x₂)  (si Δ>0)'},
-      {id:'D2',type:'def',nom:'Systèmes linéaires — Méthode de Gauss',
-       enonce:'Pour résoudre un système de n équations à n inconnues :\n1. Écrire la matrice augmentée [A|b]\n2. Opérations élémentaires sur les lignes (L_i ← L_i − k·L_j)\n3. Remonter le système triangulaire (substitution)\n\nPossibilités : système compatible déterminé (une solution unique), indéterminé (infinité), ou incompatible (pas de solution).'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Résolution d\'équation',
-       enonce:'Résoudre : 2x²−5x+2=0.',
-       correction:'Δ=25−16=9. √Δ=3.\nx₁=(5−3)/4=1/2  ;  x₂=(5+3)/4=2.\nSolutions : {1/2 ; 2}.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Inéquation',
-       enonce:'Résoudre : x²−3x+2≤0.',
-       correction:'Δ=9−8=1. Racines : x₁=1, x₂=2.\na=1>0 → f(x)≤0 entre les racines.\nSolution : [1;2].'},
-    ],
-  },
-
-  'complexes': {
-    ch:'CH 02', titre:'Nombres Complexes', badge:'Algèbre', duree:'~7h', section:'Partie 1 — Algèbre',
-    desc:'Formes algébrique, trigonométrique et exponentielle (Euler), module, argument, formule de Moivre, racines n-ièmes, géométrie complexe.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Forme algébrique',
-       enonce:'z=a+ib, a,b∈ℝ, i²=−1.\nRe(z)=a ; Im(z)=b ; Conjugué : z̄=a−ib\nz+z̄=2a ; z·z̄=|z|²\n1/z=z̄/|z|²  (si z≠0)'},
-      {id:'F1',type:'formule',nom:'Module et argument',
-       enonce:'|z|=√(a²+b²)\narg(z)=θ : cosθ=a/|z|, sinθ=b/|z| (mod 2π)\n\n|z₁z₂|=|z₁||z₂| ; arg(z₁z₂)=arg(z₁)+arg(z₂)\n|z₁/z₂|=|z₁|/|z₂| ; arg(z₁/z₂)=arg(z₁)−arg(z₂)'},
-      {id:'F2',type:'formule',nom:'Euler et forme exponentielle',
-       enonce:'eⁱᶿ=cosθ+i sinθ\nz=r·eⁱᶿ  (r=|z|, θ=arg(z))\n\nLinéarisation :\ncosθ=(eⁱᶿ+e⁻ⁱᶿ)/2\nsinθ=(eⁱᶿ−e⁻ⁱᶿ)/(2i)'},
-      {id:'T1',type:'thm',nom:'Formule de Moivre',
-       enonce:'(cosθ+i sinθ)ⁿ=cos(nθ)+i sin(nθ)\n\nApplications :\ncos(2θ)=cos²θ−sin²θ ; sin(2θ)=2sinθcosθ\ncos(3θ)=4cos³θ−3cosθ'},
-      {id:'F3',type:'formule',nom:'Racines n-ièmes',
-       enonce:'Solutions de zⁿ=r·eⁱᵅ :\nzₖ=r^(1/n)·eⁱ⁽ᵅ⁺²ᵏᵖⁱ⁾/ⁿ  (k=0,…,n−1)\n\nRacines de l\'unité : polygone régulier n côtés inscrit dans le cercle |z|=1.'},
-      {id:'D2',type:'def',nom:'Géométrie complexe',
-       enonce:'|z₁−z₂| = distance entre points d\'affixes z₁ et z₂\narg(z₂−z₁) = angle de la droite z₁z₂\n\nTranslation u⃗(a;b) : z\'=z+a+ib\nRotation angle θ, centre ω : z\'−ω=eⁱᶿ(z−ω)\nHomothetie centre ω, rapport k : z\'−ω=k(z−ω)'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Forme exponentielle',
-       enonce:'Écrire z=−1+i√3 en forme exponentielle.',
-       correction:'|z|=√(1+3)=2.\ncosθ=−1/2 ; sinθ=√3/2 → θ=2π/3.\nz=2·e^(2iπ/3).'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Racines cubiques de −8',
-       enonce:'Trouver les racines cubiques de −8.',
-       correction:'−8=8·eⁱᵖⁱ.\nzₖ=2·e^(i(π+2kπ)/3) pour k=0,1,2.\nz₀=2·eⁱᵖⁱ/³=2(1/2+i√3/2)=1+i√3\nz₁=2·eⁱᵖⁱ=−2\nz₂=2·e^(5iπ/3)=1−i√3'},
-    ],
-  },
-
-  'matrices-systemes': {
-    ch:'CH 03', titre:'Systèmes Linéaires & Matrices', badge:'Algèbre', duree:'~5h', section:'Partie 1 — Algèbre',
-    desc:'Opérations matricielles, déterminant d\'ordre 2 et 3 (Sarrus), inverse, systèmes linéaires (Gauss, Cramer).',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Opérations matricielles',
-       enonce:'Matrice A=(aᵢⱼ) de taille m×n.\n\nAddition : (A+B)ᵢⱼ=aᵢⱼ+bᵢⱼ  (même taille)\nMultiplication scalaire : (kA)ᵢⱼ=k·aᵢⱼ\nProduit : (AB)ᵢⱼ=Σₖ aᵢₖ·bₖⱼ  (m×n)×(n×p)=(m×p)\n\nMatrice identité Iₙ : AIn=IₙA=A\nTransposée : (Aᵀ)ᵢⱼ=aⱼᵢ'},
-      {id:'F1',type:'formule',nom:'Déterminant',
-       enonce:'Ordre 2 : det[[a,b],[c,d]] = ad−bc\n\nOrdre 3 (règle de Sarrus) :\ndet[[a,b,c],[d,e,f],[g,h,i]]\n= aei+bfg+cdh − ceg−afh−bdi\n\nPropriétés :\ndet(AB)=det(A)·det(B)\ndet(Aᵀ)=det(A)\nA inversible ⟺ det(A)≠0'},
-      {id:'F2',type:'formule',nom:'Matrice inverse',
-       enonce:'Pour A 2×2 : A⁻¹=(1/det(A))·[[d,−b],[−c,a]]\n\nPour A n×n : A⁻¹=(1/det(A))·cof(A)ᵀ\n(cof(A)ᵀ = matrice des cofacteurs transposée)\n\nMéthode pratique (Gauss-Jordan) :\n[A|Iₙ] → opérations élémentaires → [Iₙ|A⁻¹]'},
-      {id:'T1',type:'thm',nom:'Systèmes linéaires',
-       enonce:'AX=B avec A inversible ⟹ X=A⁻¹B (solution unique)\n\nRègle de Cramer (2×2) :\nx=det([B,A₂])/det(A)  ;  y=det([A₁,B])/det(A)\n(A₁,A₂ colonnes de A)\n\nMéthode de Gauss-Jordan :\nÉcrire [A|B] et réduire par opérations élémentaires.'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Déterminant 2×2',
-       enonce:'Calculer det(A) pour A=[[3,2],[1,4]].',
-       correction:'det(A)=3×4−2×1=12−2=10.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Système de Cramer',
-       enonce:'Résoudre : {3x+2y=7 ; x+4y=9}.',
-       correction:'A=[[3,2],[1,4]], det(A)=10.\nx=det([[7,2],[9,4]])/10=(28−18)/10=1.\ny=det([[3,7],[1,9]])/10=(27−7)/10=2.\nSolution : (1;2).'},
-    ],
-  },
-
-  'suites': {
-    ch:'CH 04', titre:'Suites Numériques', badge:'Analyse', duree:'~7h', section:'Partie 2 — Analyse',
-    desc:'Suites arithmétiques, géométriques, récurrentes (affine, homographique), limite, principe de récurrence, comportement asymptotique.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Suites arithmétiques et géométriques',
-       enonce:'Arithmétique (raison r) : uₙ₊₁=uₙ+r\n• uₙ=u₀+nr\n• Sₙ=n(u₁+uₙ)/2\n\nGéométrique (raison q≠0) : uₙ₊₁=q·uₙ\n• uₙ=u₀·qⁿ\n• Sₙ=u₁(1−qⁿ)/(1−q) si q≠1\n\nComportement : |q|<1→0 ; q>1→+∞ ; q=1 constante ; q<−1 diverge par oscillation'},
-      {id:'T1',type:'thm',nom:'Suite monotone bornée',
-       enonce:'• Croissante et majorée → converge\n• Décroissante et minorée → converge\n\nThéorème des gendarmes :\nvₙ≤uₙ≤wₙ et lim vₙ=lim wₙ=ℓ → lim uₙ=ℓ'},
-      {id:'D2',type:'def',nom:'Suite récurrente uₙ₊₁=f(uₙ)',
-       enonce:'Cas affine : uₙ₊₁=auₙ+b (a≠1)\n• Point fixe ℓ=b/(1−a)\n• Poser vₙ=uₙ−ℓ → géométrique de raison a\n• uₙ=ℓ+(u₀−ℓ)·aⁿ\n\nCas homographique : uₙ₊₁=(auₙ+b)/(cuₙ+d)\n• Point fixe : ℓ²−(a−d)ℓ/c−b/c=0\n• Changement vₙ=1/(uₙ−ℓ) → affine'},
-      {id:'T2',type:'thm',nom:'Principe de récurrence',
-       enonce:'Pour montrer P(n) pour tout n≥n₀ :\n1. Initialisation : vérifier P(n₀)\n2. Hérédité : supposer P(n) et montrer P(n+1)\n→ P(n) vraie pour tout n≥n₀\n\nRécurrence forte : supposer P(k) pour tous k<n et montrer P(n).'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Suite géométrique',
-       enonce:'uₙ géométrique, u₀=4, q=1/2. Calculer u₄ et lim uₙ.',
-       correction:'u₄=4×(1/2)⁴=4/16=1/4.\n|1/2|<1 → lim uₙ=0.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Suite affine',
-       enonce:'uₙ₊₁=2uₙ−3, u₀=1. Exprimer uₙ.',
-       correction:'ℓ=3/(1−2)=−3. vₙ=uₙ+3, v₀=4.\nvₙ=4×2ⁿ → uₙ=4×2ⁿ−3.'},
-    ],
-  },
-
-  'limites-continuite': {
-    ch:'CH 05', titre:'Limites et Continuité', badge:'Analyse', duree:'~7h', section:'Partie 2 — Analyse',
-    desc:'Limite finie/infinie, TVI, théorème de la bijection, asymptotes, formes indéterminées, croissances comparées.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Limite en un point',
-       enonce:'lim(x→a) f(x)=ℓ si f(x)→ℓ quand x→a (sans atteindre a).\nLimite à gauche/droite : existent et sont égales → limite existe.\n\nOpérations : somme, produit, quotient (dénominateur ≠0).\nFormes indéterminées : 0/0, ∞/∞, ∞−∞, 0·∞ → lever.'},
-      {id:'T1',type:'thm',nom:'Théorème des Valeurs Intermédiaires',
-       enonce:'f continue sur [a,b] et k compris entre f(a) et f(b) :\n∃ c∈[a,b] : f(c)=k\n\nCorollaire (unicité) : si f strictement monotone → c unique.\nSi f(a)·f(b)<0 → ∃ racine dans ]a,b[.'},
-      {id:'T2',type:'thm',nom:'Théorème de la bijection',
-       enonce:'f continue et strictement monotone sur [a,b] :\nf réalise une bijection de [a,b] sur [f(a),f(b)] (ou [f(b),f(a)]).\n→ Pour tout k∈[f(a),f(b)] il existe un unique c tel que f(c)=k.'},
-      {id:'D2',type:'def',nom:'Asymptotes',
-       enonce:'Verticale x=a : lim(x→a) |f(x)|=+∞\nHorizontale y=ℓ : lim(x→±∞) f(x)=ℓ\nOblique y=ax+b : lim(x→±∞)[f(x)−ax−b]=0\n  avec a=lim f(x)/x et b=lim[f(x)−ax]\n\nBranche parabolique : lim f(x)/x=±∞'},
-      {id:'F1',type:'formule',nom:'Croissances comparées',
-       enonce:'x→+∞ : eˣ≫xⁿ≫ln x pour tout n>0\nlim eˣ/xⁿ=+∞ ; lim (ln x)/xᵅ=0 (α>0)\nx→0⁺ : lim x·ln x=0\n\nLimites fondamentales :\nlim(x→0) sin x/x=1 ; lim(x→0) (eˣ−1)/x=1'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Asymptote oblique',
-       enonce:'Trouver l\'asymptote oblique de f(x)=(x²+2x)/(x+1).',
-       correction:'a=lim f(x)/x=lim(x+2)/(1+1/x)=1.\nb=lim[f(x)−x]=lim[(x²+2x−x(x+1))/(x+1)]=lim[x/(x+1)]=1.\nAsymptote : y=x+1.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'TVI — Existence',
-       enonce:'Montrer que x³+x−1=0 a une solution unique dans ]0;1[.',
-       correction:'f(x)=x³+x−1 continue.\nf(0)=−1<0 ; f(1)=1>0 → ∃ c∈]0;1[ avec f(c)=0 (TVI).\nf\'(x)=3x²+1>0 → f strictement croissante → c unique.'},
-    ],
-  },
-
-  'derivation': {
-    ch:'CH 06', titre:'Dérivation', badge:'Analyse', duree:'~6h', section:'Partie 2 — Analyse',
-    desc:'Nombre dérivé, dérivées usuelles, règles, tangente, approximation affine, théorème de Rolle, TAF, règle de L\'Hôpital.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Nombre dérivé et tangente',
-       enonce:'f\'(a)=lim(x→a) (f(x)−f(a))/(x−a)\n\nTangente en (a,f(a)) : y=f\'(a)(x−a)+f(a)\nApproximation affine : f(x)≈f(a)+f\'(a)(x−a) au voisinage de a'},
-      {id:'F1',type:'formule',nom:'Dérivées usuelles et règles',
-       enonce:'(xⁿ)\'=nxⁿ⁻¹ ; (√x)\'=1/(2√x) ; (1/x)\'=−1/x²\n(eˣ)\'=eˣ ; (ln x)\'=1/x\n(sin x)\'=cos x ; (cos x)\'=−sin x ; (tan x)\'=1/cos²x\n(arcsin x)\'=1/√(1−x²) ; (arctan x)\'=1/(1+x²)\n\nRègles : (u+v)\'=u\'+v\' ; (uv)\'=u\'v+uv\'\n(u/v)\'=(u\'v−uv\')/v² ; (f∘g)\'=f\'(g)·g\''},
-      {id:'T1',type:'thm',nom:'Théorème de Rolle & TAF',
-       enonce:'Rolle : f continue sur [a,b], dérivable sur ]a,b[, f(a)=f(b)\n→ ∃ c∈]a,b[ : f\'(c)=0\n\nTAF : f continue sur [a,b], dérivable sur ]a,b[\n→ ∃ c∈]a,b[ : f\'(c)=(f(b)−f(a))/(b−a)'},
-      {id:'T2',type:'thm',nom:'Règle de L\'Hôpital',
-       enonce:'Si lim f(x)=lim g(x)=0 (ou ±∞) et lim f\'(x)/g\'(x) existe :\nlim f(x)/g(x) = lim f\'(x)/g\'(x)\n\nConvexité : f\'\'(x)≥0 ⟺ f convexe\nPoint d\'inflexion : f\'\' change de signe.'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Dérivée composée',
-       enonce:'f(x)=sin(3x²+1). Calculer f\'(x).',
-       correction:'f\'(x)=6x·cos(3x²+1).'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'L\'Hôpital',
-       enonce:'Calculer lim(x→0) (eˣ−1−x)/x².',
-       correction:'0/0 → L\'Hôpital : lim(eˣ−1)/(2x)=0/0 → lim eˣ/2=1/2.'},
-    ],
-  },
-
-  'etude-fonctions': {
-    ch:'CH 07', titre:'Étude de Fonctions', badge:'Analyse', duree:'~6h', section:'Partie 2 — Analyse',
-    desc:'Polynômes (deg 2,3, bicarrées), rationnelles (3 types), irrationnelles, circulaires, logarithme, exponentielle — étude complète.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Méthode d\'étude complète',
-       enonce:'Plan d\'étude d\'une fonction :\n1. Domaine de définition D_f\n2. Parité/périodicité (si applicable)\n3. Limites aux bornes et asymptotes\n4. Dérivée f\', signe, variations\n5. Tableau de variations\n6. Convexité f\'\', points d\'inflexion\n7. Courbe représentative (repère, points clés)'},
-      {id:'F1',type:'formule',nom:'Fonctions polynômes',
-       enonce:'Deg 2 : f(x)=ax²+bx+c\n• Sommet S(−b/2a ; −Δ/4a)\n• Factorisation si Δ>0 : a(x−x₁)(x−x₂)\n\nDeg 3 : f(x)=ax³+bx²+cx+d\n• f\'(x)=3ax²+2bx+c\n• Inflexion en −b/(3a)\n\nBicarrée : f(x)=ax⁴+bx²+c\n• Substitution X=x² → aX²+bX+c'},
-      {id:'F2',type:'formule',nom:'Fonctions rationnelles',
-       enonce:'Type 1 : f(x)=(ax+b)/(cx+d)\n• Centre de symétrie (−d/c ; a/c)\n• Asymptote verticale x=−d/c\n• Asymptote horizontale y=a/c\n\nType 2 : f(x)=(ax²+bx+c)/(dx+e)\n• Division euclidienne → asymptote oblique\n\nType 3 : f(x)=(ax²+bx+c)/(dx²+ex+f)\n• Forme générale, étudier le signe du dénominateur'},
-      {id:'F3',type:'formule',nom:'Fonctions irrationnelles et circulaires',
-       enonce:'√(ax+b) : domaine ax+b≥0, dérivée a/(2√(ax+b))\n√(ax²+bx+c) : signe du trinôme\n\nCirculaires :\nsin(ax+b) : période 2π/a, amplitude 1\ncos(ax+b) : période 2π/a, amplitude 1\ntan(ax+b) : période π/a, asymptotes\n\nLogarithme ln(f(x)) : domaine f(x)>0\nExponentielle e^(f(x)) : domaine ℝ entier'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Intermédiaire',titre:'Étude d\'une rationnelle',
-       enonce:'f(x)=(x+1)/(x−2). Trouver asymptotes et tableau de variations.',
-       correction:'Asymptote verticale x=2. lim(x→±∞)f(x)=1 → horizontale y=1.\nf\'(x)=(x−2−(x+1))/(x−2)²=−3/(x−2)²<0 pour tout x≠2.\nf décroissante sur ]−∞;2[ et sur ]2;+∞[.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Bicarrée',
-       enonce:'f(x)=x⁴−5x²+4. Trouver les racines.',
-       correction:'X=x² : X²−5X+4=0 → (X−1)(X−4)=0.\nX=1 → x=±1 ; X=4 → x=±2.\nRacines : {−2;−1;1;2}.'},
-    ],
-  },
-
-  'geometrie-plane': {
-    ch:'CH 08', titre:'Géométrie Plane', badge:'Géométrie', duree:'~5h', section:'Partie 3 — Géométrie',
-    desc:'Vecteurs du plan, colinéarité, droites (équations cartésiennes, réduites), cercles (équation, tangente, intersection).',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Vecteurs du plan',
-       enonce:'u⃗(x;y) dans repère (O;i⃗;j⃗).\n‖u⃗‖=√(x²+y²)\n\nColinéarité : u⃗(x;y)∥v⃗(x\';y\') ⟺ xy\'−yx\'=0\n\nBase du plan : (i⃗;j⃗) deux vecteurs non colinéaires.\nTout vecteur u⃗=xi⃗+yj⃗.'},
-      {id:'F1',type:'formule',nom:'Équations de droite',
-       enonce:'Droite passant par A(x₀;y₀) de vecteur directeur u⃗(a;b) :\n• Paramétrique : x=x₀+at ; y=y₀+bt\n• Cartésienne : bx−ay+c=0  (c=−bx₀+ay₀)\n• Réduite : y=mx+p  (m=−b/a si a≠0)\n\nDroite passant par A(x₁;y₁) et B(x₂;y₂) :\nm=(y₂−y₁)/(x₂−x₁) puis y−y₁=m(x−x₁)'},
-      {id:'F2',type:'formule',nom:'Cercles',
-       enonce:'Cercle de centre Ω(a;b) et rayon r :\n(x−a)²+(y−b)²=r²\n\nÉquation générale : x²+y²+dx+ey+f=0\nCentre (−d/2;−e/2) ; rayon r=√(d²/4+e²/4−f)\n\nTangente en M(x₀;y₀) au cercle :\n(x₀−a)(x−a)+(y₀−b)(y−b)=r²'},
-      {id:'D2',type:'def',nom:'Positions relatives droite-cercle',
-       enonce:'Distance du centre Ω à la droite D :\nd=|aΩ+bΩ+c|/√(a²+b²)  (droite ax+by+c=0)\n\nd<r : droite sécante (2 points)\nd=r : droite tangente (1 point)\nd>r : droite sans intersection'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Équation d\'une droite',
-       enonce:'Droite passant par A(1;2) et B(3;6). Trouver son équation réduite.',
-       correction:'m=(6−2)/(3−1)=2. y−2=2(x−1) → y=2x.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Tangente au cercle',
-       enonce:'Cercle (x−1)²+(y−2)²=25. Tangente en M(4;6).',
-       correction:'(4−1)(x−1)+(6−2)(y−2)=25 → 3(x−1)+4(y−2)=25 → 3x+4y=36.'},
-    ],
-  },
-
-  'geometrie-espace': {
-    ch:'CH 09', titre:'Géométrie dans l\'Espace', badge:'Géométrie', duree:'~7h', section:'Partie 3 — Géométrie',
-    desc:'Vecteurs 3D, bases, produit scalaire, vectoriel, droites et plans (équations), positions relatives, distances, sphères.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Vecteurs et bases de l\'espace',
-       enonce:'Vecteur u⃗(x;y;z) dans repère orthonormé (O;i⃗;j⃗;k⃗).\n‖u⃗‖=√(x²+y²+z²)\n\nBase : 3 vecteurs non coplanaires.\nColinéarité : u⃗∥v⃗ ⟺ v⃗=k·u⃗\nCoplanarité de 3 vecteurs : det=0'},
-      {id:'F1',type:'formule',nom:'Produit scalaire',
-       enonce:'u⃗·v⃗=xx\'+yy\'+zz\'=‖u⃗‖‖v⃗‖cosθ\nu⃗⊥v⃗ ⟺ u⃗·v⃗=0\n‖u⃗‖²=u⃗·u⃗\n(u⃗+v⃗)²=‖u⃗‖²+2u⃗·v⃗+‖v⃗‖²'},
-      {id:'F2',type:'formule',nom:'Produit vectoriel',
-       enonce:'u⃗∧v⃗=(y₁z₂−z₁y₂ ; z₁x₂−x₁z₂ ; x₁y₂−y₁x₂)\n\nu⃗∧v⃗⊥u⃗ et ⊥v⃗\n‖u⃗∧v⃗‖=‖u⃗‖‖v⃗‖|sinθ|\nu⃗∥v⃗ ⟺ u⃗∧v⃗=0⃗\n\nProduit mixte : (u⃗∧v⃗)·w⃗ = volume du parallélépipède'},
-      {id:'D2',type:'def',nom:'Plans et droites',
-       enonce:'Plan ax+by+cz+d=0, vecteur normal n⃗(a;b;c)\nPlan passant par A(x₀;y₀;z₀), normale n⃗ :\na(x−x₀)+b(y−y₀)+c(z−z₀)=0\n\nDroite passant par A, vecteur directeur u⃗(a;b;c) :\n{x=x₀+at ; y=y₀+bt ; z=z₀+ct}\n\nSphère centre Ω(a;b;c), rayon r :\n(x−a)²+(y−b)²+(z−c)²=r²'},
-      {id:'F3',type:'formule',nom:'Distances',
-       enonce:'Point M → plan ax+by+cz+d=0 :\nd=|ax₀+by₀+cz₀+d|/√(a²+b²+c²)\n\nPoint M → droite D (A∈D, u⃗ directeur) :\nd=‖AM⃗∧u⃗‖/‖u⃗‖'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Équation d\'un plan',
-       enonce:'Plan passant par A(2;1;3), normale n⃗(1;−2;1). Équation.',
-       correction:'1(x−2)−2(y−1)+1(z−3)=0 → x−2y+z−3=0.'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Distance point-plan',
-       enonce:'Distance de M(1;2;3) au plan 2x−y+2z−6=0.',
-       correction:'d=|2−2+6−6|/√(4+1+4)=|0|/3=0. M est dans le plan !'},
-    ],
-  },
-
-  'graphes': {
-    ch:'CH 10', titre:'Graphes & Algorithmique', badge:'Info', duree:'~4h', section:'Partie 4 — Graphes & Algorithmique',
-    desc:'Définitions, théorème d\'Euler, chaînes eulériennes, algorithme de Dijkstra, matrice d\'adjacence, graphes orientés, graphes probabilistes.',
-    theoremes:[
-      {id:'D1',type:'def',nom:'Vocabulaire des graphes',
-       enonce:'Graphe G=(S,A) : S=sommets, A=arêtes.\nOrdre : |S|. Degré d(v)=nombre d\'arêtes incidentes à v.\n\nChaîne : suite de sommets reliés par des arêtes.\nCycle : chaîne dont le départ = arrivée.\nGraphe connexe : toute paire de sommets est reliée par une chaîne.\n\nMatrice d\'adjacence : M[i][j]=nb d\'arêtes entre i et j.'},
-      {id:'T1',type:'thm',nom:'Théorème d\'Euler',
-       enonce:'Un graphe connexe admet une chaîne eulérienne (passant par chaque arête une fois) ⟺ il a exactement 0 ou 2 sommets de degré impair.\n\nCircuit eulérien (chaîne eulérienne fermée) ⟺ tous les sommets ont un degré pair.\n\nSomme des degrés = 2×|A|  (lemme des poignées de mains)'},
-      {id:'D2',type:'def',nom:'Algorithme de Dijkstra',
-       enonce:'Trouve le plus court chemin d\'un sommet source s à tous les autres sommets (poids positifs).\n\nAlgorithme :\n1. dist[s]=0 ; dist[v]=∞ pour tout v≠s\n2. Non visités = tous les sommets\n3. Choisir u = sommet non visité à dist minimale\n4. Pour chaque voisin v de u :\n   si dist[u]+poids(u,v)<dist[v] → mettre à jour dist[v]\n5. Marquer u comme visité\n6. Répéter jusqu\'à ce que tous soient visités'},
-      {id:'D3',type:'def',nom:'Graphe probabiliste',
-       enonce:'Graphe orienté où chaque sommet représente un état.\nLes arêtes portent des probabilités de transition.\nLa somme des probabilités sortantes de chaque sommet = 1.\n\nMatrice de transition M : Mᵢⱼ = probabilité de passer de l\'état i à j.\nÉtat au temps n+1 : P(n+1)=P(n)·M\nÉtat stable π : π=π·M (distribution stationnaire)'},
-    ],
-    exercices:[
-      {id:'EX01',niveau:'Facile',titre:'Degrés et Euler',
-       enonce:'Graphe à 4 sommets A,B,C,D. Arêtes : AB, AC, AD, BC, BD. Vérifier s\'il admet une chaîne eulérienne.',
-       correction:'degrés : d(A)=3, d(B)=3, d(C)=2, d(D)=2.\n2 sommets de degré impair (A et B) → admet une chaîne eulérienne de A à B (ou B à A).'},
-      {id:'EX02',niveau:'Intermédiaire',titre:'Dijkstra',
-       enonce:'Graphe : A−(3)−B, A−(5)−C, B−(2)−C, B−(4)−D, C−(1)−D. Plus court chemin de A à D.',
-       correction:'A:0 ; B:3 ; C:min(5,3+2)=5 ; D:min(3+4,5+1)=6.\nChemin A→B→C→D=6 (ou A→B→D=7 → A→C→D=6).\nPlus court chemin : A→B→C→D, longueur 6.'},
-    ],
-  },
-}
-
-function TypeBadge({type}:{type:string}) {
-  const color = C[type as keyof typeof C]||C.def
-  return <span style={{fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,background:`${color}20`,color,border:`1px solid ${color}30`,flexShrink:0}}>{L[type as keyof typeof L]||type}</span>
-}
+// ══════════════════════════════════════════════════════════════════════
+// PAGE
+// ══════════════════════════════════════════════════════════════════════
 
 export default function MathsSlugPage() {
   const params = useParams()
-  const slug = params?.slug as string
-  const ch = CHAPITRES[slug]
+  const slug = (params?.slug as string) || 'second-degre'
+  const chapter = ALL_CHAPTERS[slug]
   const [openEx, setOpenEx] = useState<string|null>(null)
-  const secColor = SEC_COLOR[slug]||'#4f6ef7'
-  const idx = NAV_ORDER.indexOf(slug)
-  const prevSlug = idx>0 ? NAV_ORDER[idx-1] : null
-  const nextSlug = idx<NAV_ORDER.length-1 ? NAV_ORDER[idx+1] : null
+  const [openSc, setOpenSc] = useState<string|null>(null)
 
-  if (!ch) return (
-    <><Navbar />
-      <main style={{paddingTop:80,minHeight:'50vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
-        <div style={{textAlign:'center'}}>
-          <div style={{fontSize:48,marginBottom:16}}>📭</div>
-          <h2 style={{marginBottom:12}}>Chapitre non trouvé</h2>
-          <Link href="/bac/maths" style={{color:'#4f6ef7'}}>← Retour Section Mathématiques</Link>
-        </div>
-      </main><Footer /></>
-  )
+  if (!chapter) {
+    return (
+      <>
+        <Navbar />
+        <main style={{ paddingTop:80, textAlign:'center', padding:'120px 20px' }}>
+          <h1>Chapitre introuvable</h1>
+          <Link href="/bac/maths" style={{ color:'#4f6ef7' }}>← Retour Section Maths</Link>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  const idx = NAV_ORDER.indexOf(slug)
+  const prevSlug = idx > 0 ? NAV_ORDER[idx-1] : null
+  const nextSlug = idx < NAV_ORDER.length-1 ? NAV_ORDER[idx+1] : null
+  const secColor = SEC_COLORS[slug] || '#4f6ef7'
 
   return (
-    <><Navbar />
-      <main style={{position:'relative',zIndex:1,paddingTop:80}}>
-        <div style={{borderBottom:'1px solid var(--border)',padding:'14px clamp(20px,5vw,60px)',display:'flex',gap:8,fontSize:13,color:'var(--muted)',alignItems:'center',flexWrap:'wrap'}}>
-          <Link href="/bac" style={{color:'var(--muted)',textDecoration:'none'}}>Bac</Link><span>›</span>
-          <Link href="/bac/maths" style={{color:'var(--muted)',textDecoration:'none'}}>Section Mathématiques</Link><span>›</span>
-          <span style={{color:secColor,fontWeight:600}}>{ch.ch} — {ch.titre}</span>
+    <>
+      <Navbar />
+      <main style={{ position:'relative', zIndex:1, paddingTop:80 }}>
+
+        {/* BREADCRUMB */}
+        <div style={{ borderBottom:'1px solid var(--border)', padding:'12px clamp(20px,5vw,60px)',
+          display:'flex', gap:8, fontSize:13, color:'var(--muted)', alignItems:'center', flexWrap:'wrap' }}>
+          <Link href="/bac" style={{ color:'var(--muted)', textDecoration:'none' }}>Bac</Link><span>›</span>
+          <Link href="/bac/maths" style={{ color:'var(--muted)', textDecoration:'none' }}>Mathématiques</Link><span>›</span>
+          <span style={{ color:secColor, fontWeight:600 }}>{chapter.titre}</span>
         </div>
-        <div className="container" style={{paddingTop:40,paddingBottom:80}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 275px',gap:32,alignItems:'start'}}>
+
+        <div className="container" style={{ paddingTop:36, paddingBottom:80 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 270px', gap:32, alignItems:'start' }}>
+
+            {/* ═══════════════════════════ CONTENU ═══════════════════════════ */}
             <div>
-              {/* Header */}
-              <div style={{marginBottom:32}}>
-                <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
-                  <span style={{fontFamily:'var(--font-mono)',fontSize:12,background:'var(--surface2)',color:'var(--muted)',padding:'3px 10px',borderRadius:8}}>Sc. Maths · {ch.ch}</span>
-                  <span style={{fontSize:12,background:`${secColor}20`,color:secColor,padding:'3px 10px',borderRadius:12,fontWeight:600}}>{ch.badge}</span>
-                  <span style={{fontSize:11,background:'rgba(79,110,247,0.1)',color:'#4f6ef7',padding:'3px 10px',borderRadius:12}}>Bac Tunisie · Coef. 4</span>
+              {/* HEADER */}
+              <div style={{ marginBottom:36 }}>
+                <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:12, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:28 }}>{chapter.emoji}</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:12, color:secColor,
+                    background:`${secColor}18`, padding:'3px 10px', borderRadius:8, fontWeight:700 }}>
+                    {TITRES_NAV[slug]?.split(' — ')[0]}
+                  </span>
+                  <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20,
+                    background:`${secColor}14`, color:secColor, fontWeight:700 }}>{chapter.badge}</span>
+                  <span style={{ fontSize:11, background:'rgba(79,110,247,0.12)',
+                    color:'#818cf8', padding:'2px 9px', borderRadius:10 }}>Coeff 4</span>
                 </div>
-                <h1 style={{fontSize:'clamp(22px,3.5vw,36px)',marginBottom:8}}>{ch.titre}</h1>
-                <div style={{fontSize:12,color:secColor,marginBottom:8}}>📂 {ch.section}</div>
-                <p style={{color:'var(--text2)',fontSize:14,lineHeight:1.65,marginBottom:14,maxWidth:640}}>{ch.desc}</p>
-                <div style={{display:'flex',gap:16,fontSize:12,color:'var(--muted)',flexWrap:'wrap'}}>
-                  <span>📊 {ch.theoremes.length} théorèmes & formules</span><span>·</span>
-                  <span>📝 {ch.exercices.length} exercices</span><span>·</span>
-                  <span>⏱ {ch.duree}</span>
-                </div>
-              </div>
-              {/* Légende */}
-              <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:24,padding:'10px 14px',background:'var(--surface)',borderRadius:12,border:'1px solid var(--border)'}}>
-                <span style={{fontSize:12,color:'var(--muted)',marginRight:4}}>Légende :</span>
-                {Object.entries(L).map(([k,v])=>(<span key={k} style={{fontSize:11,padding:'2px 10px',borderRadius:20,background:`${C[k as keyof typeof C]}18`,color:C[k as keyof typeof C],border:`1px solid ${C[k as keyof typeof C]}25`,fontWeight:600}}>{v}</span>))}
-              </div>
-              {/* Cours */}
-              <div style={{marginBottom:44}}>
-                <h2 style={{fontSize:20,marginBottom:18}}>📐 Cours officiel — Théorèmes & Formules</h2>
-                <div style={{display:'flex',flexDirection:'column',gap:13}}>
-                  {ch.theoremes.map(t=>{
-                    const color=C[t.type as keyof typeof C]||C.def
-                    return (
-                      <div key={t.id} style={{borderLeft:`3px solid ${color}`,background:`${color}07`,borderRadius:'0 12px 12px 0',padding:'15px 20px',border:`1px solid ${color}18`}}>
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8,gap:10,flexWrap:'wrap'}}>
-                          <div style={{fontWeight:700,fontSize:14}}>{t.nom}</div>
-                          <TypeBadge type={t.type}/>
-                        </div>
-                        <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.8,whiteSpace:'pre-line',fontFamily:t.type==='formule'?'var(--font-mono)':'inherit'}}>{t.enonce}</div>
-                        {t.remarque&&(<div style={{marginTop:10,paddingLeft:12,borderLeft:'2px solid rgba(245,200,66,0.5)',fontSize:12,color:'rgba(245,200,66,0.9)',fontStyle:'italic',lineHeight:1.6}}>⚡ {t.remarque}</div>)}
-                      </div>
-                    )
-                  })}
+                <h1 style={{ fontSize:'clamp(22px,3vw,36px)', fontWeight:800, marginBottom:10 }}>{chapter.titre}</h1>
+                <p style={{ color:'var(--text2)', fontSize:14, lineHeight:1.7, maxWidth:620, marginBottom:18 }}>{chapter.desc}</p>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  <Link href={`/solve?q=${encodeURIComponent('Explique '+chapter.titre+' Bac Tunisie Maths')}`}
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 16px',
+                      borderRadius:10, background:`linear-gradient(135deg,${secColor},${secColor}cc)`,
+                      color:'white', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                    🤖 Chat IA — ce chapitre
+                  </Link>
+                  <Link href="/examens"
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 16px',
+                      borderRadius:10, background:'rgba(255,255,255,0.06)',
+                      border:'1px solid rgba(255,255,255,0.12)', color:'var(--text2)',
+                      fontSize:13, fontWeight:600, textDecoration:'none' }}>
+                    📋 Exercices type Bac
+                  </Link>
+                  <Link href="/simulation"
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 16px',
+                      borderRadius:10, background:`${secColor}10`,
+                      border:`1px solid ${secColor}30`, color:secColor,
+                      fontSize:13, fontWeight:600, textDecoration:'none' }}>
+                    🎯 Simulation Bac
+                  </Link>
                 </div>
               </div>
-              {/* Exercices */}
-              <div style={{marginBottom:44}}>
-                <h2 style={{fontSize:20,marginBottom:18}}>📝 Exercices</h2>
-                <div style={{display:'flex',flexDirection:'column',gap:11}}>
-                  {ch.exercices.map(ex=>(
-                    <div key={ex.id} style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:14,overflow:'hidden'}}>
-                      <div style={{padding:'15px 20px'}}>
-                        <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:8,flexWrap:'wrap'}}>
-                          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--muted)',background:'var(--surface2)',padding:'2px 8px',borderRadius:6}}>{ex.id}</span>
-                          <span style={{fontSize:11,padding:'2px 8px',borderRadius:10,fontWeight:600,background:ex.niveau==='Facile'?'rgba(6,214,160,0.15)':'rgba(245,158,11,0.15)',color:ex.niveau==='Facile'?'#06d6a0':'#f59e0b'}}>{ex.niveau}</span>
-                          <span style={{fontWeight:600,fontSize:14}}>{ex.titre}</span>
-                        </div>
-                        <p style={{fontSize:13,color:'var(--text2)',margin:0,lineHeight:1.6,whiteSpace:'pre-line'}}>{ex.enonce}</p>
+
+              {/* SOUS-CHAPITRES */}
+              {chapter.souschapitres.map((sc, scIdx) => (
+                <div key={sc.id} style={{ marginBottom:28,
+                  background:`${secColor}05`, border:`1px solid ${secColor}20`,
+                  borderRadius:18, overflow:'hidden' }}>
+
+                  {/* En-tête sous-chapitre */}
+                  <button
+                    onClick={() => setOpenSc(openSc===sc.id ? null : sc.id)}
+                    style={{ width:'100%', background:`${secColor}12`,
+                      borderBottom:`1px solid ${secColor}20`, padding:'16px 22px',
+                      display:'flex', justifyContent:'space-between', alignItems:'center',
+                      cursor:'pointer', border:'none', textAlign:'left' }}>
+                    <div>
+                      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:6, flexWrap:'wrap' }}>
+                        <span style={{ fontFamily:'var(--font-mono)', fontSize:10,
+                          color:secColor, fontWeight:700 }}>
+                          {String(scIdx+1).padStart(2,'0')}
+                        </span>
+                        <h2 style={{ fontSize:16, fontWeight:800, color:'var(--text)', margin:0 }}>{sc.titre}</h2>
                       </div>
-                      <div style={{borderTop:'1px solid var(--border)',padding:'10px 20px',display:'flex',gap:10,flexWrap:'wrap'}}>
-                        <Link href={`/solve?q=${encodeURIComponent('Bac Tunisie Sc.Maths, '+ch.titre+' — '+ex.enonce)}`} className="btn btn-primary" style={{fontSize:12,padding:'6px 14px'}}>🧮 Résoudre avec IA</Link>
-                        <button onClick={()=>setOpenEx(openEx===ex.id?null:ex.id)} style={{fontSize:12,padding:'6px 14px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text2)',cursor:'pointer',fontFamily:'inherit'}}>
-                          📋 {openEx===ex.id?'Masquer':'Correction'}
-                        </button>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                        {sc.notions.map(n => (
+                          <span key={n} style={{ fontSize:10, padding:'2px 9px', borderRadius:12,
+                            background:`${secColor}12`, color:'var(--text2)',
+                            border:`1px solid ${secColor}18` }}>{n}</span>
+                        ))}
                       </div>
-                      {openEx===ex.id&&(
-                        <div style={{padding:'13px 20px',borderTop:'1px solid var(--border)',background:`${secColor}06`}}>
-                          <div style={{fontSize:11,color:secColor,fontWeight:700,marginBottom:5}}>✅ Correction</div>
-                          <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.75,whiteSpace:'pre-line'}}>{ex.correction}</div>
-                        </div>
-                      )}
                     </div>
-                  ))}
+                    <span style={{ fontSize:18, color:secColor, marginLeft:12 }}>
+                      {openSc===sc.id ? '▲' : '▼'}
+                    </span>
+                  </button>
+
+                  {/* Contenu blocs */}
+                  {(openSc===sc.id || scIdx===0) && (
+                    <div style={{ padding:'18px 22px', display:'flex', flexDirection:'column', gap:28 }}>
+                      {sc.blocs.map(bloc => (
+                        <div key={bloc.notion}>
+
+                          {/* Titre notion */}
+                          <div style={{ fontSize:14, fontWeight:800, color:secColor,
+                            marginBottom:14, display:'flex', alignItems:'center', gap:8 }}>
+                            {bloc.notion}
+                          </div>
+
+                          {/* Théorèmes / Définitions / Formules */}
+                          <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
+                            {bloc.theoremes.map(t => {
+                              const color = C[t.type as keyof typeof C] || C.def
+                              return (
+                                <div key={t.id} style={{ borderLeft:`3px solid ${color}`,
+                                  background:`${color}07`, borderRadius:'0 12px 12px 0',
+                                  padding:'14px 18px', border:`1px solid ${color}18` }}>
+                                  <div style={{ display:'flex', justifyContent:'space-between',
+                                    alignItems:'flex-start', marginBottom:8, gap:10, flexWrap:'wrap' }}>
+                                    <div style={{ fontWeight:700, fontSize:13 }}>{t.nom}</div>
+                                    <TypeBadge type={t.type} />
+                                  </div>
+                                  <div style={{ fontSize:12, color:'var(--text2)', lineHeight:1.85,
+                                    whiteSpace:'pre-line',
+                                    fontFamily:t.type==='formule'?'var(--font-mono)':'inherit' }}>
+                                    {t.enonce}
+                                  </div>
+                                  {t.remarque && (
+                                    <div style={{ marginTop:10, paddingLeft:12,
+                                      borderLeft:'2px solid rgba(245,200,66,0.5)',
+                                      fontSize:11, color:'rgba(245,200,66,0.9)',
+                                      fontStyle:'italic', lineHeight:1.6 }}>
+                                      ⚡ {t.remarque}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* Exercices */}
+                          {bloc.exercices.length > 0 && (
+                            <div>
+                              <div style={{ fontSize:12, color:'var(--muted)', fontWeight:700,
+                                textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>
+                                Exercices
+                              </div>
+                              <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+                                {bloc.exercices.map(ex => (
+                                  <div key={ex.id} style={{ background:'var(--surface)',
+                                    border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
+                                    <div style={{ padding:'12px 16px' }}>
+                                      <div style={{ display:'flex', gap:7, alignItems:'center',
+                                        marginBottom:7, flexWrap:'wrap' }}>
+                                        <span style={{ fontFamily:'var(--font-mono)', fontSize:10,
+                                          color:'var(--muted)', background:'var(--surface2)',
+                                          padding:'2px 7px', borderRadius:5 }}>{ex.id}</span>
+                                        <NiveauBadge niveau={ex.niveau} />
+                                        <span style={{ fontWeight:600, fontSize:13 }}>{ex.titre}</span>
+                                      </div>
+                                      <p style={{ fontSize:12, color:'var(--text2)', margin:0,
+                                        lineHeight:1.65, whiteSpace:'pre-line' }}>{ex.enonce}</p>
+                                    </div>
+                                    <div style={{ borderTop:'1px solid var(--border)',
+                                      padding:'8px 16px', display:'flex', gap:8, flexWrap:'wrap' }}>
+                                      <Link href={`/solve?q=${encodeURIComponent('Bac Tunisie Maths — '+ex.enonce)}`}
+                                        className="btn btn-primary"
+                                        style={{ fontSize:11, padding:'5px 12px' }}>
+                                        🧮 Résoudre avec IA
+                                      </Link>
+                                      <button onClick={() => setOpenEx(openEx===ex.id?null:ex.id)}
+                                        style={{ fontSize:11, padding:'5px 12px', borderRadius:7,
+                                          border:'1px solid var(--border)', background:'transparent',
+                                          color:'var(--text2)', cursor:'pointer', fontFamily:'inherit' }}>
+                                        📋 {openEx===ex.id?'Masquer':'Correction'}
+                                      </button>
+                                    </div>
+                                    {openEx===ex.id && (
+                                      <div style={{ padding:'10px 16px',
+                                        borderTop:'1px solid var(--border)',
+                                        background:`${secColor}06` }}>
+                                        <div style={{ fontSize:10, color:secColor,
+                                          fontWeight:700, marginBottom:4 }}>✅ Correction</div>
+                                        <div style={{ fontSize:12, color:'var(--text2)',
+                                          lineHeight:1.75, whiteSpace:'pre-line' }}>{ex.correction}</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-              {/* Nav prev/next */}
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,borderTop:'1px solid var(--border)',paddingTop:22}}>
-                {prevSlug?(<Link href={`/bac/maths/${prevSlug}`} style={{textDecoration:'none'}}><div className="card" style={{padding:'13px 16px',transition:'transform 0.15s'}} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}><div style={{fontSize:11,color:'var(--muted)',marginBottom:3}}>← Précédent</div><div style={{fontWeight:700,fontSize:13}}>{TITRES[prevSlug]}</div></div></Link>):<div/>}
-                {nextSlug?(<Link href={`/bac/maths/${nextSlug}`} style={{textDecoration:'none'}}><div className="card" style={{padding:'13px 16px',textAlign:'right',transition:'transform 0.15s'}} onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}><div style={{fontSize:11,color:'var(--muted)',marginBottom:3}}>Suivant →</div><div style={{fontWeight:700,fontSize:13}}>{TITRES[nextSlug]}</div></div></Link>):<div/>}
+              ))}
+
+              {/* NAV PREV / NEXT */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12,
+                borderTop:'1px solid var(--border)', paddingTop:22, marginTop:8 }}>
+                {prevSlug ? (
+                  <Link href={`/bac/maths/${prevSlug}`} style={{ textDecoration:'none' }}>
+                    <div className="card" style={{ padding:'12px 15px', transition:'transform 0.15s' }}
+                      onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+                      onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:2 }}>← Précédent</div>
+                      <div style={{ fontWeight:700, fontSize:12 }}>
+                        {TITRES_NAV[prevSlug].replace(/CH \d+ — /,'')}
+                      </div>
+                    </div>
+                  </Link>
+                ) : <div/>}
+                {nextSlug ? (
+                  <Link href={`/bac/maths/${nextSlug}`} style={{ textDecoration:'none' }}>
+                    <div className="card" style={{ padding:'12px 15px', textAlign:'right',
+                      transition:'transform 0.15s' }}
+                      onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+                      onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:2 }}>Suivant →</div>
+                      <div style={{ fontWeight:700, fontSize:12 }}>
+                        {TITRES_NAV[nextSlug].replace(/CH \d+ — /,'')}
+                      </div>
+                    </div>
+                  </Link>
+                ) : <div/>}
               </div>
             </div>
-            {/* Sidebar */}
-            <aside style={{position:'sticky',top:88}}>
-              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,overflow:'hidden',marginBottom:14}}>
-                <div style={{padding:'11px 15px',borderBottom:'1px solid var(--border)',fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em'}}>📐 Sc. Maths · 10 chapitres</div>
-                {[
-                  {label:'Partie 1 — Algèbre', slugs:NAV_ORDER.slice(0,3)},
-                  {label:'Partie 2 — Analyse', slugs:NAV_ORDER.slice(3,7)},
-                  {label:'Partie 3 — Géométrie', slugs:NAV_ORDER.slice(7,9)},
-                  {label:'Partie 4 — Graphes', slugs:NAV_ORDER.slice(9)},
-                ].map(group=>(
-                  <div key={group.label}>
-                    <div style={{padding:'7px 15px 3px',fontSize:10,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',background:'rgba(255,255,255,0.02)'}}>{group.label}</div>
-                    {group.slugs.map((s,i)=>(
-                      <Link key={s} href={`/bac/maths/${s}`} style={{textDecoration:'none'}}>
-                        <div style={{padding:'8px 15px',borderBottom:'1px solid var(--border)',background:s===slug?`${SEC_COLOR[s]}12`:'transparent',borderLeft:s===slug?`3px solid ${SEC_COLOR[s]}`:'3px solid transparent',transition:'all 0.15s'}}
-                          onMouseEnter={e=>{if(s!==slug)e.currentTarget.style.background='rgba(255,255,255,0.03)'}}
-                          onMouseLeave={e=>{if(s!==slug)e.currentTarget.style.background='transparent'}}>
-                          <div style={{fontSize:10,color:'var(--muted)',marginBottom:1,fontFamily:'var(--font-mono)'}}>{NUMS[s]}</div>
-                          <div style={{fontSize:11,fontWeight:s===slug?700:400,color:s===slug?SEC_COLOR[s]:'var(--text2)'}}>{TITRES[s]}</div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
+
+            {/* ═══════════════════════════ SIDEBAR ═══════════════════════════ */}
+            <aside style={{ position:'sticky', top:88 }}>
+              {/* Navigation chapitres */}
+              <div style={{ background:'var(--surface)', border:'1px solid var(--border)',
+                borderRadius:14, overflow:'hidden', marginBottom:12 }}>
+                <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--border)',
+                  fontSize:11, color:'var(--muted)', fontWeight:700,
+                  textTransform:'uppercase', letterSpacing:'0.08em' }}>
+                  📐 Sc. Maths · 10 chapitres
+                </div>
+                {NAV_ORDER.map((s,i) => (
+                  <Link key={s} href={`/bac/maths/${s}`} style={{ textDecoration:'none' }}>
+                    <div style={{ padding:'9px 15px',
+                      borderBottom:i<NAV_ORDER.length-1?'1px solid var(--border)':'none',
+                      background:s===slug?`${SEC_COLORS[s]}12`:'transparent',
+                      borderLeft:s===slug?`3px solid ${SEC_COLORS[s]}`:'3px solid transparent',
+                      transition:'all 0.15s', cursor:'pointer' }}
+                      onMouseEnter={e=>{ if(s!==slug) e.currentTarget.style.background='rgba(255,255,255,0.03)' }}
+                      onMouseLeave={e=>{ if(s!==slug) e.currentTarget.style.background='transparent' }}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:1,
+                        fontFamily:'var(--font-mono)' }}>
+                        {TITRES_NAV[s].split(' — ')[0]}
+                      </div>
+                      <div style={{ fontSize:11, fontWeight:s===slug?700:400,
+                        color:s===slug?SEC_COLORS[s]:'var(--text2)' }}>
+                        {TITRES_NAV[s].replace(/CH \d+ — /,'')}
+                      </div>
+                    </div>
+                  </Link>
                 ))}
               </div>
-              <div style={{background:'var(--surface)',border:'1px solid var(--border)',borderRadius:13,padding:'14px'}}>
-                <div style={{fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>Actions</div>
-                <div style={{display:'flex',flexDirection:'column',gap:7}}>
-                  <Link href={`/solve?q=${encodeURIComponent('Explique-moi '+ch.titre+' Section Maths Bac Tunisie')}`} className="btn btn-primary" style={{textAlign:'center',fontSize:12}}>🤖 Chat IA — {ch.titre}</Link>
-                  <Link href="/examens" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>📋 Exercice type Bac</Link>
-                  <Link href="/bac/maths" className="btn btn-secondary" style={{textAlign:'center',fontSize:12}}>← Retour Section Maths</Link>
+
+              {/* Actions */}
+              <div style={{ background:'var(--surface)', border:'1px solid var(--border)',
+                borderRadius:12, padding:'13px' }}>
+                <div style={{ fontSize:11, color:'var(--muted)', fontWeight:700,
+                  textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:9 }}>Actions</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  <Link href={`/solve?q=${encodeURIComponent('Explique '+chapter.titre+' Bac Tunisie')}`}
+                    className="btn btn-primary" style={{ textAlign:'center', fontSize:12 }}>
+                    🤖 Chat IA — {chapter.badge}
+                  </Link>
+                  <Link href="/examens" className="btn btn-secondary"
+                    style={{ textAlign:'center', fontSize:12 }}>📋 Exercice type Bac</Link>
+                  <Link href="/simulation" className="btn btn-secondary"
+                    style={{ textAlign:'center', fontSize:12 }}>🎯 Simulation Bac</Link>
+                  <Link href="/bac/maths" className="btn btn-secondary"
+                    style={{ textAlign:'center', fontSize:12 }}>↩ Tous les chapitres</Link>
                 </div>
               </div>
             </aside>
+
           </div>
         </div>
       </main>
       <Footer />
-      <style>{`@media(max-width:900px){div[style*="grid-template-columns: 1fr 275px"]{grid-template-columns:1fr!important;}aside{display:none;}}`}</style>
+      <style>{`
+        @media(max-width:900px){
+          div[style*="grid-template-columns: 1fr 270px"]{
+            grid-template-columns:1fr!important;
+          }
+          aside{display:none;}
+        }
+      `}</style>
     </>
   )
 }
