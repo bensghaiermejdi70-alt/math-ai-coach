@@ -8,385 +8,846 @@ import { useParams } from 'next/navigation'
 // ══════════════════════════════════════════════════════════════════════
 // TERMINALE TECHNOLOGIQUE / [SLUG]
 // Route : /bac-france/terminale-techno/[slug]
-// Branches : STMG · STI2D · STL
+// Branches : STMG (6 ch.) · STI2D/STL (7 ch.) · Total 13 chapitres
+// Structure : souschapitres + blocs
 // ══════════════════════════════════════════════════════════════════════
 
-const C = { thm: '#4f6ef7', def: '#06d6a0', formule: '#f59e0b', prop: '#8b5cf6', methode: '#ec4899' }
-const L: Record<string, string> = { thm: 'Théorème', def: 'Définition', formule: 'Formule clé', prop: 'Propriété', methode: 'Méthode' }
+const C = { thm:'#4f6ef7', def:'#06d6a0', formule:'#f59e0b', prop:'#8b5cf6', methode:'#ec4899', corollaire:'#f97316' }
+const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', corollaire:'Corollaire' }
 
 const NAV_ORDER = [
-  'stmg-fonctions', 'stmg-suites', 'stmg-stats-2var', 'stmg-probas', 'stmg-pourcentages', 'stmg-financier',
-  'sti-suites', 'sti-exp-ln', 'sti-integration', 'sti-probas-cont', 'sti-stat-inf', 'sti-geometrie', 'sti-eq-diff'
+  'stmg-fonctions','stmg-suites','stmg-stats-2var','stmg-probas','stmg-pourcentages','stmg-financier',
+  'sti-suites','sti-exp-ln','sti-integration','sti-probas-cont','sti-stat-inf','sti-geometrie','sti-eq-diff',
 ]
-const TITRES: Record<string, string> = {
-  'stmg-fonctions':   'Fonctions (approfondissement)',
-  'stmg-suites':      'Suites numériques',
-  'stmg-stats-2var':  'Statistiques à deux variables',
-  'stmg-probas':      'Probabilités conditionnelles',
-  'stmg-pourcentages':'Pourcentages & Évolutions',
-  'stmg-financier':   'Calculs financiers',
-  'sti-suites':       'Suites & Modélisation',
-  'sti-exp-ln':       'Exponentielle & Logarithme',
-  'sti-integration':  'Intégration',
-  'sti-probas-cont':  'Probabilités continues',
-  'sti-stat-inf':     'Statistiques inférentielles',
-  'sti-geometrie':    'Géométrie dans l\'espace',
-  'sti-eq-diff':      'Équations différentielles & Compléments',
+const TITRES_NAV: Record<string,string> = {
+  'stmg-fonctions':   'CH 01 — Fonctions (approfondissement)',
+  'stmg-suites':      'CH 02 — Suites numériques',
+  'stmg-stats-2var':  'CH 03 — Statistiques 2 variables',
+  'stmg-probas':      'CH 04 — Probabilités conditionnelles',
+  'stmg-pourcentages':'CH 05 — Pourcentages & Évolutions',
+  'stmg-financier':   'CH 06 — Calculs financiers',
+  'sti-suites':       'CH 07 — Suites & Modélisation',
+  'sti-exp-ln':       'CH 08 — Exponentielle & Logarithme',
+  'sti-integration':  'CH 09 — Intégration',
+  'sti-probas-cont':  'CH 10 — Probabilités continues',
+  'sti-stat-inf':     'CH 11 — Statistiques inférentielles',
+  'sti-geometrie':    "CH 12 — Géométrie dans l'Espace",
+  'sti-eq-diff':      'CH 13 — Équations Différentielles',
 }
-const SEC_COLOR: Record<string, string> = {
-  'stmg-fonctions': '#4f6ef7', 'stmg-suites': '#4f6ef7', 'stmg-stats-2var': '#4f6ef7',
-  'stmg-probas': '#4f6ef7', 'stmg-pourcentages': '#4f6ef7', 'stmg-financier': '#4f6ef7',
-  'sti-suites': '#10b981', 'sti-exp-ln': '#10b981', 'sti-integration': '#10b981',
-  'sti-probas-cont': '#10b981', 'sti-stat-inf': '#10b981', 'sti-geometrie': '#10b981', 'sti-eq-diff': '#10b981',
+const SEC_COLORS: Record<string,string> = {
+  'stmg-fonctions':'#4f6ef7','stmg-suites':'#4f6ef7','stmg-stats-2var':'#4f6ef7',
+  'stmg-probas':'#4f6ef7','stmg-pourcentages':'#4f6ef7','stmg-financier':'#4f6ef7',
+  'sti-suites':'#10b981','sti-exp-ln':'#10b981','sti-integration':'#10b981',
+  'sti-probas-cont':'#10b981','sti-stat-inf':'#10b981','sti-geometrie':'#10b981','sti-eq-diff':'#10b981',
 }
-const BRANCH_LABEL: Record<string, string> = {
-  'stmg-fonctions': '📊 STMG', 'stmg-suites': '📊 STMG', 'stmg-stats-2var': '📊 STMG',
-  'stmg-probas': '📊 STMG', 'stmg-pourcentages': '📊 STMG', 'stmg-financier': '📊 STMG',
-  'sti-suites': '⚙️ STI2D/STL', 'sti-exp-ln': '⚙️ STI2D/STL', 'sti-integration': '⚙️ STI2D/STL',
-  'sti-probas-cont': '⚙️ STI2D/STL', 'sti-stat-inf': '⚙️ STI2D/STL',
-  'sti-geometrie': '⚙️ STI2D/STL', 'sti-eq-diff': '⚙️ STI2D/STL',
-}
-
-const CHAPITRES: Record<string, {
-  ch: string; titre: string; badge: string; desc: string; duree: string; section: string;
-  theoremes: { id: string; type: string; nom: string; enonce: string }[];
-  exercices: { id: string; niveau: string; titre: string; enonce: string; correction: string }[];
-}> = {
-
-  // ── STMG ──────────────────────────────────────────────────────────
-
-  'stmg-fonctions': {
-    ch: 'CH 01', titre: 'Fonctions (approfondissement)', badge: 'Analyse', duree: '~5h', section: 'STMG · Section 1 — Analyse & Données',
-    desc: 'Fonctions affines, second degré forme canonique, fonction exponentielle eˣ, applications économiques.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Fonctions affines et second degré', enonce: 'Fonction affine : f(x) = ax + b  (a = pente, b = ordonnée à l\'origine).\nVariations : croissante si a > 0, décroissante si a < 0, constante si a = 0.\n\nFonction du second degré : f(x) = ax² + bx + c.\nForme canonique : a(x−α)² + β   avec α = −b/(2a), β = f(α).\nSommet S(α,β) : minimum si a > 0, maximum si a < 0.' },
-      { id: 'P1', type: 'prop', nom: 'Fonction exponentielle eˣ — propriétés', enonce: 'Définition : l\'unique fonction dérivable telle que f\' = f et f(0) = 1.\nPropriétés algébriques :\neᵃ × eᵇ = eᵃ⁺ᵇ   ;   eᵃ/eᵇ = eᵃ⁻ᵇ   ;   (eᵃ)ⁿ = eⁿᵃ\ne⁰ = 1   ;   eˣ > 0 pour tout x ∈ ℝ\n\nVariations : strictement croissante sur ℝ.\nLimites : lim(x→−∞) eˣ = 0  ;  lim(x→+∞) eˣ = +∞\nDérivée : (eˣ)\' = eˣ  ;  (e^(ax))\' = a·e^(ax)' },
-      { id: 'P2', type: 'prop', nom: 'Croissance comparée (introduction STMG)', enonce: 'L\'exponentielle "gagne" finalement sur tout polynôme :\nlim(x→+∞) eˣ/xⁿ = +∞  pour tout n ∈ ℕ\nlim(x→−∞) xⁿ eˣ = 0\n\nApplication économique : modèle de croissance exponentielle P(t) = P₀·eˡᵗ\n(population, capital avec intérêts composés en temps continu).' },
-      { id: 'M1', type: 'methode', nom: 'Résoudre une équation avec eˣ', enonce: 'eᵘ = eᵛ ⟺ u = v  (la fonction est injective)\neˣ = k (k > 0) ⟺ x = ln k  (utiliser le logarithme)\n\nExemple : e^(2x−1) = e³ → 2x−1 = 3 → x = 2.\nExemple : e^x = 5 → x = ln 5 ≈ 1,609.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Forme canonique', enonce: 'Mettre f(x) = 2x² − 8x + 5 sous forme canonique. Trouver le minimum.', correction: 'α = 8/4 = 2. β = 2×4 − 8×2 + 5 = 8−16+5 = −3. Forme : 2(x−2)² − 3. Minimum en x=2 : f(2) = −3.' },
-      { id: 'EX02', niveau: 'Facile', titre: 'Exponentielle', enonce: 'Simplifier : A = e³ × e⁻¹ / e². Résoudre e^(x+1) = e⁴.', correction: 'A = e^(3−1−2) = e⁰ = 1. e^(x+1) = e⁴ → x+1 = 4 → x = 3.' },
-      { id: 'EX03', niveau: 'Intermédiaire', titre: 'Croissance économique', enonce: 'Une entreprise a un chiffre d\'affaires modélisé par C(t) = 50·e^(0,1t) (en milliers d\'€, t en années). Quel est le CA après 5 ans ?', correction: 'C(5) = 50·e^0,5 ≈ 50 × 1,6487 ≈ 82,4 k€.' },
-    ],
-  },
-
-  'stmg-suites': {
-    ch: 'CH 02', titre: 'Suites numériques', badge: 'Algèbre', duree: '~5h', section: 'STMG · Section 1 — Analyse & Données',
-    desc: 'Suites arithmétiques/géométriques, sommes, intérêts simples/composés, amortissements, évolution de populations.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Suite arithmétique', enonce: 'Suite (uₙ) arithmétique de raison r : uₙ₊₁ = uₙ + r.\nFormule du terme général : uₙ = u₀ + n·r  (ou uₙ = u₁ + (n−1)·r).\nSomme des n+1 premiers termes (u₀ à uₙ) :\nS = (n+1)(u₀ + uₙ)/2\n\nApplication : intérêts simples — capital C après n années à taux annuel t% :\nCₙ = C₀ + n·(C₀·t/100) = C₀(1 + nt/100) → suite arithmétique de raison C₀t/100.' },
-      { id: 'D2', type: 'def', nom: 'Suite géométrique', enonce: 'Suite (uₙ) géométrique de raison q (q ≠ 0) : uₙ₊₁ = q·uₙ.\nFormule du terme général : uₙ = u₀·qⁿ.\nSomme des n+1 premiers termes (u₀ à uₙ), pour q ≠ 1 :\nS = u₀·(1−qⁿ⁺¹)/(1−q)\n\nApplication : intérêts composés — capital C après n années à taux t% :\nCₙ = C₀×(1+t/100)ⁿ → suite géométrique de raison q = 1+t/100.' },
-      { id: 'F1', type: 'formule', nom: 'Intérêts composés & Amortissement', enonce: 'Intérêts composés : Cₙ = C₀×(1+t/100)ⁿ\nValeur acquise = capital + intérêts cumulés.\n\nAmortissement linéaire (constant) : annuité = valeur initiale / durée.\nAmortissement dégressif : annuité = valeur comptable × taux dégressif.\n\nRemboursement d\'emprunt (annuités constantes) :\nAnnuité a = C₀·t/[1−(1+t)⁻ⁿ]  où t = taux par période, n = nombre de périodes.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Intérêts composés', enonce: 'On place 5 000 € à 3% par an (intérêts composés). Quel est le capital après 10 ans ?', correction: 'C₁₀ = 5 000 × 1,03¹⁰ ≈ 5 000 × 1,3439 ≈ 6 720 €.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Somme géométrique', enonce: 'On verse 1 000 € chaque année pendant 5 ans à un taux de 2% par an. Calculer la valeur finale de ces versements.', correction: 'S = 1000×(1,02⁵−1)/(1,02−1) = 1000×(1,1041−1)/0,02 = 1000×5,204 ≈ 5 204 €.' },
-    ],
-  },
-
-  'stmg-stats-2var': {
-    ch: 'CH 03', titre: 'Statistiques à deux variables', badge: 'Stats', duree: '~4h', section: 'STMG · Section 2 — Probabilités & Statistiques',
-    desc: 'Nuage de points, point moyen, ajustement affine (moindres carrés), coefficient de corrélation, prévisions.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Nuage de points et point moyen', enonce: 'Pour une série statistique à deux variables (xᵢ, yᵢ) :\n• Nuage de points : représenter chaque couple (xᵢ, yᵢ) dans un repère.\n• Point moyen G(x̄, ȳ) : x̄ = (Σxᵢ)/n  ;  ȳ = (Σyᵢ)/n\n\nLe point moyen G appartient toujours à la droite de régression.' },
-      { id: 'F1', type: 'formule', nom: 'Droite de régression (moindres carrés)', enonce: 'La droite de régression de y en x minimise la somme des carrés des écarts verticaux.\nSon équation est y = ax + b avec :\na = [Σ(xᵢ−x̄)(yᵢ−ȳ)] / Σ(xᵢ−x̄)²  =  cov(X,Y) / V(X)\nb = ȳ − a·x̄\n\nEn pratique : calculatrice → mode stats/reg → données → linReg.' },
-      { id: 'D2', type: 'def', nom: 'Coefficient de corrélation linéaire', enonce: 'Le coefficient de corrélation r est un réel entre −1 et 1 mesurant la force du lien linéaire :\nr = cov(X,Y) / (σ_X × σ_Y)\n\nInterprétation :\n|r| proche de 1 → forte corrélation linéaire\n|r| proche de 0 → pas de corrélation linéaire\nr > 0 → corrélation positive (y augmente quand x augmente)\nr < 0 → corrélation négative\n\nSeuil usuel : si |r| ≥ 0,87, l\'ajustement est pertinent.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Point moyen', enonce: 'Série : (1;3), (2;5), (3;4), (4;7), (5;6). Calculer le point moyen G.', correction: 'x̄ = (1+2+3+4+5)/5 = 3. ȳ = (3+5+4+7+6)/5 = 25/5 = 5. G(3 ; 5).' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Droite de régression', enonce: 'a = 0,9 et b = 2,3 sont les coefficients de la droite de régression y = ax + b. Prévoir y pour x = 8.', correction: 'y = 0,9×8 + 2,3 = 7,2 + 2,3 = 9,5. (Extrapolation → utiliser avec prudence si x=8 est hors de la plage observée).' },
-    ],
-  },
-
-  'stmg-probas': {
-    ch: 'CH 04', titre: 'Probabilités conditionnelles', badge: 'Probas', duree: '~4h', section: 'STMG · Section 2 — Probabilités & Statistiques',
-    desc: 'P_A(B), probabilités totales, arbres, indépendance, variable aléatoire, espérance, loi binomiale.',
-    theoremes: [
-      { id: 'F1', type: 'formule', nom: 'Probabilité conditionnelle et totales', enonce: 'P_A(B) = P(A∩B) / P(A)  avec P(A) ≠ 0\nFormule des probabilités composées : P(A∩B) = P(A)·P_A(B)\n\nFormule des probabilités totales (partition A, Ā) :\nP(B) = P(A)·P_A(B) + P(Ā)·P_Ā(B)\n\nApplication : arbres de probabilités — la probabilité d\'un chemin est le produit des branches ; additionner les chemins arrivant en B.' },
-      { id: 'D1', type: 'def', nom: 'Variable aléatoire et espérance', enonce: 'X est une variable aléatoire prenant les valeurs x₁, x₂, …, xₙ avec les probabilités p₁, p₂, …, pₙ (Σpᵢ = 1).\n\nEspérance : E(X) = Σ xᵢ·pᵢ = x₁p₁ + x₂p₂ + … + xₙpₙ\nÉcart-type : σ(X) = √V(X)  avec V(X) = E(X²) − [E(X)]²\n\nInterprétation : E(X) est la valeur moyenne à long terme.' },
-      { id: 'F2', type: 'formule', nom: 'Loi binomiale B(n,p)', enonce: 'X suit B(n,p) si X = nombre de succès dans n épreuves de Bernoulli indépendantes (prob. succès = p).\nP(X=k) = C(n,k) × pᵏ × (1−p)ⁿ⁻ᵏ\nE(X) = n·p   ;   V(X) = n·p·(1−p)\n\nExemple STMG : taux de clients satisfaits p = 0,75, sondage n = 10.\nP(X=8) = C(10,8)×0,75⁸×0,25² ≈ 0,282.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Probabilité conditionnelle', enonce: 'P(A) = 0,6 ; P(B|A) = 0,3 ; P(B|Ā) = 0,5. Calculer P(B).', correction: 'P(B) = P(A)·P_A(B) + P(Ā)·P_Ā(B) = 0,6×0,3 + 0,4×0,5 = 0,18 + 0,20 = 0,38.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Loi binomiale STMG', enonce: 'Taux de retour clients : p = 0,4, n = 5 clients. Calculer P(X ≥ 2).', correction: 'P(X≥2) = 1 − P(X=0) − P(X=1). P(X=0) = 0,6⁵ = 0,0778. P(X=1) = 5×0,4×0,6⁴ = 0,2592. P(X≥2) = 1 − 0,0778 − 0,2592 = 0,663.' },
-    ],
-  },
-
-  'stmg-pourcentages': {
-    ch: 'CH 05', titre: 'Pourcentages & Évolutions', badge: 'Calcul', duree: '~3h', section: 'STMG · Section 3 — Calculs commerciaux',
-    desc: 'Taux d\'évolution, coefficients multiplicateurs, évolutions successives, taux réciproque, échelles.',
-    theoremes: [
-      { id: 'F1', type: 'formule', nom: 'Taux d\'évolution et coefficient multiplicateur', enonce: 'Taux d\'évolution t% (exprimé en décimal) :\nNouvelle valeur = ancienne × (1 + t)  → coefficient multiplicateur CM = 1 + t\n\nAugmentation de t% : CM = 1 + t  (ex: +20% → CM = 1,2)\nRéduction de t% : CM = 1 − t   (ex: −15% → CM = 0,85)\n\nTaux d\'évolution depuis une valeur initiale V₀ vers V₁ :\nt = (V₁ − V₀)/V₀  (en décimal, ×100 pour avoir le %)\nCM = V₁/V₀' },
-      { id: 'F2', type: 'formule', nom: 'Évolutions successives & réciproque', enonce: 'Évolutions successives t₁ puis t₂ :\nCM global = CM₁ × CM₂ = (1+t₁)(1+t₂)\nt global = CM global − 1\n\nATTENTION : t global ≠ t₁ + t₂ en général !\nExemple : +10% puis −10% → CM = 1,1×0,9 = 0,99 → −1% au total.\n\nÉvolution réciproque (taux inverse) :\nSi CM = 1 + t, le taux inverse est t\' = 1/CM − 1 = −t/(1+t).' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Évolution successive', enonce: 'Un prix augmente de 20% puis de 10%. Quel est le taux global ?', correction: 'CM = 1,2 × 1,1 = 1,32 → augmentation globale de 32%.' },
-      { id: 'EX02', niveau: 'Facile', titre: 'Taux réciproque', enonce: 'Après une augmentation de 25%, de combien faut-il diminuer pour revenir au prix initial ?', correction: 'CM initial = 1,25. Taux inverse = 1/1,25 − 1 = 0,8 − 1 = −0,2 → réduction de 20%.' },
-    ],
-  },
-
-  'stmg-financier': {
-    ch: 'CH 06', titre: 'Calculs financiers', badge: 'Finance', duree: '~4h', section: 'STMG · Section 3 — Calculs commerciaux',
-    desc: 'Intérêts simples et composés, valeur actuelle/acquise, amortissements (linéaire, dégressif), rentes, emprunts.',
-    theoremes: [
-      { id: 'F1', type: 'formule', nom: 'Intérêts simples vs composés', enonce: 'Intérêts simples (court terme) :\nI = C₀ × t × n   ;   Cn = C₀(1 + nt)\n(C₀ = capital initial, t = taux par période, n = nb de périodes)\n\nIntérêts composés (long terme) :\nCn = C₀ × (1+t)ⁿ\nValeur actuelle : C₀ = Cₙ / (1+t)ⁿ = Cₙ × (1+t)⁻ⁿ\n\nEquivalence : (1+t_annuel) = (1+t_mensuel)¹²' },
-      { id: 'F2', type: 'formule', nom: 'Amortissements', enonce: 'Amortissement linéaire (constant) :\nAnnuité = Valeur initiale / Durée (en années)\nValeur résiduelle année k = V₀ − k × annuité\n\nAmortissement dégressif :\nTaux dégressif = taux linéaire × coefficient (1,25 ; 1,75 ou 2,25 selon durée)\nAnnuité k = Valeur comptable × taux dégressif\nPassage au linéaire quand le linéaire devient plus avantageux.' },
-      { id: 'F3', type: 'formule', nom: 'Rentes et remboursement d\'emprunt', enonce: 'Rente (versements réguliers de a pendant n périodes au taux t) :\nValeur acquise = a × [(1+t)ⁿ − 1] / t\nValeur actuelle = a × [1 − (1+t)⁻ⁿ] / t\n\nMensualité d\'un emprunt C à taux t sur n mois :\nm = C × t / [1 − (1+t)⁻ⁿ]' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Intérêts composés', enonce: 'Capital de 10 000 € à 4% par an sur 8 ans. Valeur acquise ?', correction: 'C₈ = 10000 × 1,04⁸ ≈ 10000 × 1,3686 ≈ 13 686 €.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Mensualité d\'emprunt', enonce: 'Emprunt de 15 000 € à 6% par an (soit 0,5%/mois) sur 36 mois. Calculer la mensualité.', correction: 't = 0,005 ; n = 36. m = 15000 × 0,005 / (1 − 1,005⁻³⁶) = 75 / (1 − 0,8356) = 75/0,1644 ≈ 456 €.' },
-    ],
-  },
-
-  // ── STI2D / STL ────────────────────────────────────────────────────
-
-  'sti-suites': {
-    ch: 'CH 07', titre: 'Suites & Modélisation', badge: 'Algèbre', duree: '~4h', section: 'STI2D/STL · Section A — Analyse',
-    desc: 'Suites arithmétiques/géométriques, modèles discrets croissance/décroissance, algorithme de seuil.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Suites arithmétiques et géométriques', enonce: 'Suite arithmétique (raison r) : uₙ = u₀ + nr\nSuite géométrique (raison q) : uₙ = u₀ × qⁿ\n\nModèle discret de croissance : P(n) = P₀ × (1 + α)ⁿ  (taux α > 0)\nModèle discret de décroissance : Q(n) = Q₀ × (1 − β)ⁿ  (taux β, 0 < β < 1)\nExemples : population, décharge d\'un condensateur par paliers, amortissement.' },
-      { id: 'M1', type: 'methode', nom: 'Algorithme de seuil', enonce: 'Pour trouver le rang n à partir duquel uₙ > S (ou < S) :\n1. Méthode analytique : résoudre uₙ > S → n > log(S/u₀)/log(q) (suite géom.)\n2. Méthode algorithmique :\n  n ← 0\n  u ← u₀\n  Tant que u ≤ S :\n      u ← u × q  (ou u + r)\n      n ← n + 1\n  Afficher n' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Modèle de décroissance', enonce: 'Quantité de médicament dans le sang : Q(0) = 200 mg, chaque heure il reste 70%. Après combien d\'heures Q < 10 mg ?', correction: 'Q(n) = 200 × 0,7ⁿ. 200 × 0,7ⁿ < 10 → 0,7ⁿ < 0,05 → n·ln(0,7) < ln(0,05) → n > ln(0,05)/ln(0,7) ≈ 8,4. Donc n = 9 heures.' },
-    ],
-  },
-
-  'sti-exp-ln': {
-    ch: 'CH 08', titre: 'Exponentielle & Logarithme', badge: 'Analyse', duree: '~6h', section: 'STI2D/STL · Section A — Analyse',
-    desc: 'Fonction eˣ : propriétés, équations. Logarithme ln : primitive de 1/x, propriétés, résolution, croissances comparées. Modélisations physiques.',
-    theoremes: [
-      { id: 'P1', type: 'prop', nom: 'Fonction exponentielle — rappels STI2D', enonce: '(eˣ)\' = eˣ  ;  (e^(ax+b))\' = a·e^(ax+b)\nPropriétés algébriques : eᵃ × eᵇ = eᵃ⁺ᵇ  ;  eᵃ/eᵇ = eᵃ⁻ᵇ\neᵃ = eᵇ ⟺ a = b  (injectivité)\neˣ > 0 toujours ; lim(x→−∞) eˣ = 0 ; lim(x→+∞) eˣ = +∞\n\nÉquations/inéquations : isoler l\'exponentielle puis comparer les exposants.' },
-      { id: 'D1', type: 'def', nom: 'Logarithme népérien', enonce: 'ln est l\'unique primitive de x ↦ 1/x sur ]0;+∞[ qui s\'annule en 1.\n(ln x)\' = 1/x  pour x > 0\nln(eˣ) = x  ;  e^(ln x) = x\n\nPropriétés algébriques :\nln(ab) = ln a + ln b\nln(a/b) = ln a − ln b\nln(aⁿ) = n·ln a\nln(1) = 0  ;  ln(e) = 1\n\nVariations : strictement croissante ; lim(x→0⁺) ln x = −∞ ; lim(x→+∞) ln x = +∞' },
-      { id: 'F1', type: 'formule', nom: 'Croissances comparées & Modélisation physique', enonce: 'lim(x→+∞) ln(x)/x = 0   (ln croit moins vite que x)\nlim(x→0⁺) x·ln x = 0\n\nDécharge de condensateur : U(t) = U₀·e^(−t/RC)\n  → ln(U/U₀) = −t/RC  → t = −RC·ln(U/U₀)\n\nLoi de Newton (refroidissement) :\nT(t) = Text + (T₀−Text)·e^(−kt)\n→ utiliser le logarithme pour trouver k ou t.' },
-      { id: 'M1', type: 'methode', nom: 'Résoudre équations avec ln', enonce: 'ln(u) = ln(v) ⟺ u = v  (u,v > 0)\nln(u) > ln(v) ⟺ u > v  (croissance stricte)\nln(u) = k ⟺ u = eᵏ\n\nStratégie générale :\n1. Isoler ln(x).\n2. Appliquer eˣ des deux côtés.\n3. Vérifier que les solutions vérifient les conditions de domaine (x > 0).\n\nExemple : 2·ln(x) = ln(9) → ln(x²) = ln(9) → x² = 9 → x = 3 (x > 0).' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Propriétés du logarithme', enonce: 'Simplifier : A = ln(6) + 2·ln(3) − ln(54)', correction: 'A = ln(6) + ln(9) − ln(54) = ln(6×9/54) = ln(54/54) = ln(1) = 0.' },
-      { id: 'EX02', niveau: 'Facile', titre: 'Équation avec ln', enonce: 'Résoudre : ln(2x−1) = ln(x+3)', correction: '2x−1 = x+3 → x = 4. Vérif : 2×4−1=7>0 et 4+3=7>0 ✓. Solution : x=4.' },
-      { id: 'EX03', niveau: 'Intermédiaire', titre: 'Décharge de condensateur', enonce: 'U(t) = 12·e^(−t/0,5) (en volts, t en ms). À quel instant U = 4 V ?', correction: '4 = 12·e^(−t/0,5) → e^(−t/0,5) = 1/3 → −t/0,5 = ln(1/3) = −ln3 → t = 0,5·ln3 ≈ 0,549 ms.' },
-    ],
-  },
-
-  'sti-integration': {
-    ch: 'CH 09', titre: 'Intégration', badge: 'Analyse', duree: '~5h', section: 'STI2D/STL · Section A — Analyse',
-    desc: 'Primitives usuelles, intégrale définie (aire, Chasles), valeur moyenne, applications physiques.',
-    theoremes: [
-      { id: 'F1', type: 'formule', nom: 'Primitives usuelles', enonce: 'f(x) → F(x)\nxⁿ → xⁿ⁺¹/(n+1)  (n ≠ −1)\n1/x → ln|x|\neˣ → eˣ\ne^(ax) → e^(ax)/a\ncos x → sin x\nsin x → −cos x\n1/√x → 2√x\n\nLinéarité : primitive de (αf+βg) = α·F + β·G' },
-      { id: 'F2', type: 'formule', nom: 'Intégrale définie — propriétés', enonce: '∫ₐᵇ f(x)dx = [F(x)]ₐᵇ = F(b) − F(a)\n\nPropriétés :\n• Relation de Chasles : ∫ₐᶜ f = ∫ₐᵇ f + ∫ᵦᶜ f\n• Linéarité : ∫(αf+βg) = α∫f + β∫g\n• Positivité : f ≥ 0 → ∫ₐᵇ f ≥ 0\n• ∫ₐᵃ f = 0  ;  ∫ᵦᵃ f = −∫ₐᵇ f\n\nInterprétation : ∫ₐᵇ f(x)dx = aire algébrique entre la courbe et l\'axe des x.' },
-      { id: 'F3', type: 'formule', nom: 'Valeur moyenne & applications physiques', enonce: 'Valeur moyenne de f sur [a;b] :\nm = (1/(b−a)) × ∫ₐᵇ f(x)dx\n\nApplications STI2D/STL :\n• Travail d\'une force : W = ∫ₐᵇ F(x)dx  (en joules)\n• Charge électrique : Q = ∫ₐᵇ i(t)dt  (en coulombs)\n• Centre d\'inertie : x_G = (∫x·ρ(x)dx) / (∫ρ(x)dx)' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Calcul d\'intégrale', enonce: 'Calculer ∫₁³ (2x + e^x) dx.', correction: '[x² + eˣ]₁³ = (9 + e³) − (1 + e) = 8 + e³ − e ≈ 8 + 20,09 − 2,72 ≈ 25,37.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Valeur moyenne', enonce: 'Calculer la valeur moyenne de f(x) = 2eˣ sur [0 ; ln2].', correction: 'Longueur : ln2−0 = ln2. ∫₀^(ln2) 2eˣ dx = [2eˣ]₀^(ln2) = 2×2−2×1 = 2. m = 2/ln2 ≈ 2,885.' },
-    ],
-  },
-
-  'sti-probas-cont': {
-    ch: 'CH 10', titre: 'Probabilités continues', badge: 'Probas', duree: '~4h', section: 'STI2D/STL · Section B — Probabilités',
-    desc: 'Loi uniforme sur [a;b], loi normale N(μ,σ²), standardisation, intervalles μ±σ et μ±2σ, approximation binomiale.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Loi uniforme sur [a;b]', enonce: 'X suit la loi uniforme sur [a;b] si sa densité est constante :\nf(x) = 1/(b−a) si x ∈ [a;b], 0 sinon.\n\nEspérance : E(X) = (a+b)/2\nVariance : V(X) = (b−a)²/12\n\nProbabilité : P(c ≤ X ≤ d) = (d−c)/(b−a)  pour a ≤ c ≤ d ≤ b.\n\nExemple STI2D : temps d\'attente d\'un bus arrivant toutes les 15 min : X ∼ U[0;15].' },
-      { id: 'F1', type: 'formule', nom: 'Loi normale N(μ,σ²)', enonce: 'X ∼ N(μ,σ²) → courbe en cloche symétrique autour de μ.\nStandardisation : Z = (X−μ)/σ ∼ N(0,1)\n\nIntervalles usuels :\nP(μ−σ ≤ X ≤ μ+σ) ≈ 0,683  (68%)\nP(μ−2σ ≤ X ≤ μ+2σ) ≈ 0,954  (95%)\nP(μ−3σ ≤ X ≤ μ+3σ) ≈ 0,997  (99,7%)\n\nSymétrie : P(Z ≤ −a) = 1 − P(Z ≤ a)' },
-      { id: 'T1', type: 'thm', nom: 'Moivre-Laplace : approximation binomiale par normale', enonce: 'Si X ∼ B(n,p) avec n grand (np ≥ 5 et n(1−p) ≥ 5) :\nX ≈ N(np ; np(1−p))\nZ = (X−np)/√(np(1−p)) ≈ N(0,1)\n\nApplication : calculer P(X ≥ k) par standardisation au lieu d\'utiliser la formule binomiale terme par terme.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Loi uniforme', enonce: 'Un bus passe toutes les 20 min. X ∼ U[0;20]. Proba d\'attendre plus de 12 min ?', correction: 'P(X > 12) = (20−12)/20 = 8/20 = 0,4 = 40%.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Loi normale', enonce: 'Durée de vie d\'une pièce : X ∼ N(500 ; 30²) heures. P(440 ≤ X ≤ 560) ?', correction: '440 = 500 − 2×30 et 560 = 500 + 2×30. Donc c\'est l\'intervalle μ±2σ → P ≈ 0,954 = 95,4%.' },
-    ],
-  },
-
-  'sti-stat-inf': {
-    ch: 'CH 11', titre: 'Statistiques inférentielles', badge: 'Stats', duree: '~3h', section: 'STI2D/STL · Section B — Probabilités',
-    desc: 'Fluctuation d\'échantillonnage, intervalle de confiance 95% [f±1/√n], estimation de proportion.',
-    theoremes: [
-      { id: 'F1', type: 'formule', nom: 'Intervalle de confiance (seuil 95%)', enonce: 'Pour un échantillon de taille n (n ≥ 30), la fréquence observée f estime la proportion réelle p :\nIC₉₅% = [f − 1/√n  ;  f + 1/√n]\n\nInterprétation : on a une "confiance" de 95% que p est dans cet intervalle.\n\nTaille minimale pour une précision e :\nn ≥ 1/e²  (ex : précision 2% → n ≥ 2 500)' },
-      { id: 'D1', type: 'def', nom: 'Fluctuation d\'échantillonnage', enonce: 'Si la proportion réelle est p (connue), et qu\'on réalise des échantillons de taille n, la fréquence F varie selon l\'échantillon.\nIntervalle de fluctuation asymptotique à 95% :\nI = [p − 1/√n  ;  p + 1/√n]\n\nDifférence avec IC :\n• Fluctuation : p connu, F inconnue → on encadre F\n• Confiance : F observée, p inconnu → on encadre p' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Intervalle de confiance', enonce: 'Sondage de 400 personnes, 56% satisfaites. Construire l\'IC95%.', correction: '1/√400 = 0,05. IC = [0,56−0,05 ; 0,56+0,05] = [0,51 ; 0,61]. On estime p ∈ [51% ; 61%].' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Taille d\'échantillon', enonce: 'Pour une précision de ±3%, quelle taille d\'échantillon faut-il ?', correction: 'e = 0,03. n ≥ 1/0,03² = 1/0,0009 ≈ 1 112. Prendre n ≥ 1 112.' },
-    ],
-  },
-
-  'sti-geometrie': {
-    ch: 'CH 12', titre: 'Géométrie dans l\'espace', badge: 'Géométrie', duree: '~4h', section: 'STI2D/STL · Section C — Géométrie',
-    desc: 'Vecteurs de l\'espace, coplanarité, équation cartésienne du plan, représentation paramétrique droite, intersection, orthogonalité.',
-    theoremes: [
-      { id: 'D1', type: 'def', nom: 'Vecteurs et repère de l\'espace', enonce: 'Repère (O ; i⃗, j⃗, k⃗) : tout vecteur u⃗ = x·i⃗ + y·j⃗ + z·k⃗ a pour coordonnées (x;y;z).\nNorme : ‖u⃗‖ = √(x²+y²+z²)\nRelation de Chasles : AB⃗ + BC⃗ = AC⃗\n\nCoplanarité : u⃗, v⃗, w⃗ coplanaires ⟺ w⃗ = αu⃗ + βv⃗ (combinaison linéaire).' },
-      { id: 'F1', type: 'formule', nom: 'Plan et droite dans l\'espace', enonce: 'Équation cartésienne d\'un plan : ax + by + cz + d = 0\nVecteur normal : n⃗(a;b;c) ⊥ au plan.\nPlan passant par A(x₀;y₀;z₀) de normale n⃗(a;b;c) :\na(x−x₀)+b(y−y₀)+c(z−z₀)=0\n\nReprésen. paramétrique d\'une droite (A point, u⃗ vecteur directeur) :\nx=x₀+at ; y=y₀+bt ; z=z₀+ct   (t∈ℝ)\n\nOrthogonalité droite-plan : u⃗ directeur ∥ n⃗ normal au plan.' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Équation d\'un plan', enonce: 'Plan passant par A(2;1;3) avec vecteur normal n⃗(1;−2;4). Équation ?', correction: '1(x−2)−2(y−1)+4(z−3)=0 → x−2−2y+2+4z−12=0 → x−2y+4z−12=0.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Intersection droite-plan', enonce: 'Droite : x=1+t ; y=2−t ; z=3+2t. Plan : 2x+y−z+1=0. Trouver l\'intersection.', correction: 'Substituer : 2(1+t)+(2−t)−(3+2t)+1=0 → 2+2t+2−t−3−2t+1=0 → −t+2=0 → t=2. Point : x=3, y=0, z=7. Intersection : M(3;0;7).' },
-    ],
-  },
-
-  'sti-eq-diff': {
-    ch: 'CH 13', titre: 'Équations différentielles & Compléments', badge: 'Analyse', duree: '~5h', section: 'STI2D/STL · Section D — Spécialité PCM',
-    desc: 'y\'=ay → Ceᵃˣ ; y\'=ay+b → Ceᵃˣ−b/a ; condition initiale ; circuits RC ; refroidissement Newton. Convexité f\'\', IPP.',
-    theoremes: [
-      { id: 'T1', type: 'thm', nom: 'Équations différentielles du 1er ordre', enonce: 'y\' = ay   (a ∈ ℝ) → y(x) = C·eᵃˣ  (C constante réelle)\n\ny\' = ay + b  (a ≠ 0) :\n• Solution particulière constante yₚ = −b/a\n• Solution générale : y(x) = C·eᵃˣ − b/a\n\nCondition initiale y(0) = y₀ → C = y₀ + b/a\n\nSolution unique : y(x) = (y₀+b/a)·eᵃˣ − b/a' },
-      { id: 'D1', type: 'def', nom: 'Applications physiques STI2D/STL', enonce: 'Circuit RC (charge du condensateur) :\nRC·u\'(t) + u(t) = E  →  u(t) = E + (U₀−E)·e^(−t/RC)\n\nLoi de Newton (refroidissement) :\nT\'(t) = −k(T−Text) → T(t) = Text + (T₀−Text)·e^(−kt)\n\nCroissance bactérienne :\nN\'(t) = α·N(t) → N(t) = N₀·e^(αt)' },
-      { id: 'P1', type: 'prop', nom: 'Convexité (rappel) & IPP (complément)', enonce: 'Convexité :\nf\'\'(x) ≥ 0 → f convexe (courbe au-dessus des tangentes)\nf\'\'(x) ≤ 0 → f concave\nPoint d\'inflexion : f\'\' change de signe.\n\nIntégration par parties (IPP) :\n∫u\'(x)·v(x)dx = [u(x)·v(x)] − ∫u(x)·v\'(x)dx\n\nChangement de variable affine :\n∫f(ax+b)dx = (1/a)·F(ax+b) + C' },
-    ],
-    exercices: [
-      { id: 'EX01', niveau: 'Facile', titre: 'Circuit RC', enonce: 'RC = 0,01 s, E = 10 V, U₀ = 0. Écrire l\'expression de u(t) et calculer u(0,02).', correction: 'u(t) = 10·(1 − e^(−t/0,01)) = 10(1−e^(−100t)). u(0,02) = 10(1−e⁻²) ≈ 10×0,865 ≈ 8,65 V.' },
-      { id: 'EX02', niveau: 'Intermédiaire', titre: 'Refroidissement Newton', enonce: 'Café chaud : T₀ = 90°C, Text = 20°C, k = 0,05 min⁻¹. Après 10 min, quelle est la température ?', correction: 'T(t) = 20 + 70·e^(−0,05t). T(10) = 20 + 70·e^(−0,5) ≈ 20 + 70×0,607 ≈ 20 + 42,5 ≈ 62,5°C.' },
-    ],
-  },
+const BRANCH_LABEL: Record<string,string> = {
+  'stmg-fonctions':'📊 STMG','stmg-suites':'📊 STMG','stmg-stats-2var':'📊 STMG',
+  'stmg-probas':'📊 STMG','stmg-pourcentages':'📊 STMG','stmg-financier':'📊 STMG',
+  'sti-suites':'⚙️ STI2D/STL','sti-exp-ln':'⚙️ STI2D/STL','sti-integration':'⚙️ STI2D/STL',
+  'sti-probas-cont':'⚙️ STI2D/STL','sti-stat-inf':'⚙️ STI2D/STL',
+  'sti-geometrie':'⚙️ STI2D/STL','sti-eq-diff':'⚙️ STI2D/STL',
 }
 
+type Thm  = { id:string; type:string; nom:string; enonce:string; remarque?:string }
+type Exo  = { id:string; niveau:string; titre:string; enonce:string; correction:string }
+type Bloc = { notion:string; theoremes:Thm[]; exercices:Exo[] }
+type SC   = { id:string; titre:string; notions:string[]; blocs:Bloc[] }
+type Chap = { id:string; titre:string; badge:string; color:string; emoji:string; desc:string; branch:string; souschapitres:SC[] }
+
+// ══════════════════════════════════════════════════════════════════════
+// DONNÉES — 13 CHAPITRES
+// ══════════════════════════════════════════════════════════════════════
+const ALL_CHAPTERS: Record<string,Chap> = {
+
+// ══════════════════════════════════════════════════════════════════════
+// ████  STMG — 6 CHAPITRES
+// ══════════════════════════════════════════════════════════════════════
+
+'stmg-fonctions': {
+  id:'stmg-fonctions', emoji:'📊', badge:'Analyse', color:'#4f6ef7', branch:'STMG',
+  titre:'Fonctions — Approfondissement',
+  desc:"Fonctions affines, second degré (forme canonique, sommet, signe), exponentielle eˣ, croissance comparée, applications économiques (coût, recette, bénéfice).",
+  souschapitres:[
+    {
+      id:'sc-f1', titre:'1.1 Fonctions du second degré et exponentielle',
+      notions:['f(x)=ax²+bx+c : sommet, forme canonique','Signe du trinôme selon Δ','Exponentielle eˣ : propriétés, (eˣ)\'=eˣ','Croissance comparée : eˣ≫xⁿ en +∞'],
+      blocs:[
+        {
+          notion:'📐 Second degré et exponentielle',
+          theoremes:[
+            { id:'D-SF1', type:'def', nom:'Fonctions du second degré',
+              enonce:"f(x)=ax²+bx+c (a≠0)\nForme canonique : f(x)=a(x−α)²+β\nα=−b/(2a) (sommet), β=f(α)=−Δ/(4a)\nΔ=b²−4ac\n\nSIGNE :\nΔ>0 : racines x₁<x₂ ; f(x) signe de a hors [x₁;x₂]\nΔ=0 : racine double x₀ ; f(x)≥0 si a>0 (≤0 si a<0)\nΔ<0 : f(x) signe de a sur ℝ" },
+            { id:'D-SF2', type:'def', nom:'Fonction exponentielle eˣ',
+              enonce:"Propriétés :\neᵃ⁺ᵇ=eᵃ·eᵇ ; (eˣ)'=eˣ ; eˣ>0 ∀x\nDomaine ℝ ; image ]0;+∞[\nlim(x→−∞) eˣ=0 (AH y=0) ; lim(x→+∞) eˣ=+∞\n\nCROISSANCE COMPARÉE :\nlim(x→+∞) eˣ/xⁿ=+∞ ; lim xⁿ/eˣ=0\nlim(x→+∞) xⁿ·e^(−x)=0\n\nApplication STMG :\nModèle exponentiel : q(t)=q₀·e^(rt)\nDoubler : e^(rt₂)=2 → t₂=ln2/r",
+              remarque:"En STMG, l'exponentielle sert à modéliser la croissance et la décroissance économique ou démographique." },
+          ],
+          exercices:[
+            { id:'EX-SF1', niveau:'Facile', titre:'Signe du trinôme',
+              enonce:"f(x)=2x²−8x+6. Trouver les racines, le sommet et signer f.",
+              correction:"Δ=64−48=16. x₁=1, x₂=3. α=2, β=f(2)=8−16+6=−2.\nf(x)=2(x−2)²−2. f(x)≥0 pour x≤1 ou x≥3." },
+            { id:'EX-SF2', niveau:'Intermédiaire', titre:'Modèle exponentiel',
+              enonce:"Entreprise : CA(t)=50000·e^(0,05t). CA en t=0 et t=10. Quand CA double ?",
+              correction:"CA(0)=50000. CA(10)=50000·e^(0,5)≈82436.\ne^(0,05t)=2 → t=ln2/0,05≈13,9 ans." },
+          ]
+        },
+        {
+          notion:'💼 Applications économiques',
+          theoremes:[
+            { id:'M-SF1', type:'methode', nom:'Optimisation du bénéfice',
+              enonce:"B(q)=R(q)−C(q) (Recette − Coût)\n\nMaximum de B :\nB'(q)=0 ↔ R'(q)=C'(q) (recette marg. = coût marg.)\n\nCoût moyen : CM(q)=C(q)/q\nMin CM quand CM'(q)=0 ↔ Cm(q)=CM(q)\n\nSeuil de rentabilité : R(q)=C(q) → B(q)=0\nRésoudre par TVI ou graphiquement" },
+          ],
+          exercices:[
+            { id:'EX-SF3', niveau:'Intermédiaire', titre:'Seuil de rentabilité',
+              enonce:"C(q)=2q+100, R(q)=5q. Seuil de rentabilité.",
+              correction:"R(q)=C(q) → 5q=2q+100 → q=100/3≈33,3 unités." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'stmg-suites': {
+  id:'stmg-suites', emoji:'uₙ', badge:'Algèbre', color:'#4f6ef7', branch:'STMG',
+  titre:'Suites Numériques',
+  desc:"Suites arithmétiques et géométriques, formules explicites et récurrentes, sommes de termes, intérêts simples/composés, amortissements.",
+  souschapitres:[
+    {
+      id:'sc-su1', titre:'2.1 Suites arithmétiques et géométriques',
+      notions:['Arithmétique uₙ=u₀+nr, somme Sₙ=n(u₀+uₙ₋₁)/2','Géométrique uₙ=u₀qⁿ, Sₙ=u₀(1−qⁿ)/(1−q)','Intérêts simples ↔ arithmétique','Intérêts composés ↔ géométrique'],
+      blocs:[
+        {
+          notion:'💰 Suites et finances',
+          theoremes:[
+            { id:'D-SU1', type:'def', nom:'Suites arithmétiques et géométriques',
+              enonce:"ARITHMÉTIQUE (raison r) :\nuₙ₊₁=uₙ+r ; uₙ=u₀+nr\nSomme Sₙ=n(u₀+uₙ₋₁)/2\n\nINTÉRÊTS SIMPLES :\nCₙ=C₀(1+ni) → suite arithmétique de raison C₀·i\n\nGÉOMÉTRIQUE (raison q) :\nuₙ₊₁=q·uₙ ; uₙ=u₀·qⁿ\nSomme Sₙ=u₀(1−qⁿ)/(1−q) (q≠1)\n\nINTÉRÊTS COMPOSÉS :\nCₙ=C₀(1+i)ⁿ → suite géométrique de raison q=1+i\n\nComportement :\n|q|<1 → 0 ; q>1 → +∞ ; q=1 → u₀" },
+            { id:'F-SU1', type:'formule', nom:'Annuités et amortissements',
+              enonce:"ANNUITÉS (versement constant a) :\nValeur acquise après n versements :\nVA = a·[(1+i)ⁿ−1]/i\n\nValeur actuelle :\nV₀ = a·[1−(1+i)^(−n)]/i\n\nAMORTISSEMENT d'un emprunt K en n années à taux i :\nAnnuité constante a = K·i/[1−(1+i)^(−n)]",
+              remarque:"En STMG, toujours bien distinguer intérêts simples (arith.) et composés (géom.). La règle de 70 : doublement en 70/i% ans." },
+          ],
+          exercices:[
+            { id:'EX-SU1', niveau:'Facile', titre:'Intérêts composés',
+              enonce:"Placement 10000€ à 3%/an. Valeur après 5 ans et 10 ans.",
+              correction:"C₅=10000×1,03⁵=10000×1,1593≈11593€.\nC₁₀=10000×1,03¹⁰≈13439€." },
+            { id:'EX-SU2', niveau:'Intermédiaire', titre:'Mensualités emprunt',
+              enonce:"Emprunt 15000€ à 4%/an sur 3 ans. Mensualité ?",
+              correction:"i=4%/12≈0,00333. n=36.\na=15000×0,00333/[1−1,00333^(−36)]≈15000×0,00333/0,1136≈443€/mois." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'stmg-stats-2var': {
+  id:'stmg-stats-2var', emoji:'📉', badge:'Stats', color:'#4f6ef7', branch:'STMG',
+  titre:'Statistiques à deux variables',
+  desc:"Nuage de points, point moyen G(x̄;ȳ), ajustement affine (moindres carrés), coefficient de corrélation r, prévisions par interpolation et extrapolation.",
+  souschapitres:[
+    {
+      id:'sc-s2v', titre:'3.1 Nuage, régression et corrélation',
+      notions:['Point moyen G(x̄;ȳ)','Droite y=ax+b : a=cov/σx², b=ȳ−ax̄','r=cov/(σxσy) ∈[−1;1]','Prévision : valide si |r|≥0,9 env.'],
+      blocs:[
+        {
+          notion:'📊 Régression et prévisions',
+          theoremes:[
+            { id:'F-S2V1', type:'formule', nom:'Droite de régression et coefficient r',
+              enonce:"x̄=(1/n)Σxᵢ ; ȳ=(1/n)Σyᵢ\nG(x̄;ȳ) : la droite passe TOUJOURS par G\n\nPENTE : a=cov(X,Y)/σx²\n  cov(X,Y)=(1/n)Σxᵢyᵢ−x̄·ȳ\n  σx²=(1/n)Σxᵢ²−x̄²\n\nORDONNÉE : b=ȳ−a·x̄\n\nCOEFFICIENT r=cov/(σx·σy)\n−1≤r≤1\n|r|→1 : forte corrélation linéaire\n|r|→0 : faible corrélation\n\nPRÉVISION pour x=x₀ : ŷ=ax₀+b",
+              remarque:"En STMG : utiliser la calculatrice pour obtenir a, b et r. Toujours interpréter r avant de prédire." },
+            { id:'M-S2V1', type:'methode', nom:'Tableau de calcul',
+              enonce:"| xᵢ | yᵢ | xᵢ² | yᵢ² | xᵢyᵢ |\n\n1. Calculer Σxᵢ, Σyᵢ, Σxᵢ², Σyᵢ², Σxᵢyᵢ\n2. x̄=Σxᵢ/n, ȳ=Σyᵢ/n\n3. cov=Σxᵢyᵢ/n−x̄·ȳ\n4. σx²=Σxᵢ²/n−x̄²\n5. a=cov/σx², b=ȳ−ax̄\n6. r=cov/(√σx²·√σy²)\n7. Vérifier G(x̄,ȳ) sur la droite" },
+          ],
+          exercices:[
+            { id:'EX-S2V1', niveau:'Intermédiaire', titre:'Régression et prévision',
+              enonce:"CA (millions) : x={1,2,3,4,5}, y={3,5,4,7,6}. Trouver la droite et estimer y pour x=7.",
+              correction:"x̄=3, ȳ=5.\nΣxᵢyᵢ=3+10+12+28+30=83. Σxᵢ²=55.\ncov=83/5−15=16,6−15=1,6.\nσx²=55/5−9=11−9=2.\na=1,6/2=0,8. b=5−0,8×3=2,6.\ny=0,8x+2,6.\nPour x=7 : ŷ=5,6+2,6=8,2 millions." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'stmg-probas': {
+  id:'stmg-probas', emoji:'🎲', badge:'Probas', color:'#4f6ef7', branch:'STMG',
+  titre:'Probabilités conditionnelles',
+  desc:"P(A|B), formule des probabilités totales, arbres pondérés, indépendance, variable aléatoire, espérance E(X), loi binomiale B(n,p).",
+  souschapitres:[
+    {
+      id:'sc-pc1', titre:'4.1 Probabilités conditionnelles et loi binomiale',
+      notions:['P(A|B)=P(A∩B)/P(B)','Indépendance : P(A∩B)=P(A)P(B)','Formule des probabilités totales','B(n,p) : P(X=k)=Cₙᵏpᵏ(1−p)ⁿ⁻ᵏ, E(X)=np'],
+      blocs:[
+        {
+          notion:'🎲 Conditionnement et loi binomiale',
+          theoremes:[
+            { id:'D-PC1', type:'def', nom:'Probabilité conditionnelle',
+              enonce:"P(A|B)=P(A∩B)/P(B)  (P(B)>0)\n«Probabilité de A sachant B»\n\nP(A∩B)=P(B)·P(A|B)\n\nINDÉPENDANCE :\nA,B indép. ↔ P(A∩B)=P(A)·P(B) ↔ P(A|B)=P(A)\n\nARBRE DE PROBABILITÉS :\nMultiplier les branches pour P(∩)\nAdditionner les chemins aboutissant au même événement" },
+            { id:'T-PC1', type:'thm', nom:'Probabilités totales',
+              enonce:"B,B̄ partition de Ω :\nP(A)=P(A|B)·P(B)+P(A|B̄)·P(B̄)\n\nFORMULE DE BAYES :\nP(B|A)=P(A|B)·P(B)/P(A)" },
+            { id:'F-PC1', type:'formule', nom:'Loi binomiale B(n,p)',
+              enonce:"n épreuves de Bernoulli indép., succès prob. p\nX=nb de succès\n\nP(X=k)=Cₙᵏ·pᵏ·(1−p)ⁿ⁻ᵏ  k=0,…,n\n\nE(X)=np\nV(X)=np(1−p)\nσ=√(np(1−p))\n\nCALCULATRICE : binomFdp(k,n,p) ou binomRép(k,n,p)",
+              remarque:"En STMG, utiliser la calculatrice pour les calculs de B(n,p). Savoir reconnaître un schéma de Bernoulli." },
+          ],
+          exercices:[
+            { id:'EX-PC1', niveau:'Facile', titre:'Arbre et probabilités totales',
+              enonce:"P(M)=0,3 (matin), P(P|M)=0,8 (ponctuel matin), P(P|M̄)=0,6. P(ponctuel) ?",
+              correction:"P(P)=0,8×0,3+0,6×0,7=0,24+0,42=0,66." },
+            { id:'EX-PC2', niveau:'Intermédiaire', titre:'Loi binomiale',
+              enonce:"Quiz 10 questions, P(bonne rép.)=0,7 par question. P(X≥8) ?",
+              correction:"X~B(10;0,7).\nP(X=8)=C₁₀⁸×0,7⁸×0,3²=45×0,0576×0,09≈0,233.\nP(X=9)=C₁₀⁹×0,7⁹×0,3¹=10×0,0403×0,3≈0,121.\nP(X=10)=0,7¹⁰≈0,028.\nP(X≥8)≈0,382." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'stmg-pourcentages': {
+  id:'stmg-pourcentages', emoji:'%', badge:'Calcul', color:'#4f6ef7', branch:'STMG',
+  titre:'Pourcentages & Évolutions',
+  desc:"Taux d'évolution, coefficients multiplicateurs, évolutions successives et réciproques, taux moyen, indice.",
+  souschapitres:[
+    {
+      id:'sc-pct', titre:'5.1 Taux d\'évolution et coefficients multiplicateurs',
+      notions:['Taux t%→CM=1+t/100','Évolutions successives : CM=CM₁×CM₂×…','Évolution réciproque : CM\'=1/CM','Taux moyen : CM=(1+r)ⁿ → r=CM^(1/n)−1'],
+      blocs:[
+        {
+          notion:'📈 Évolutions et coefficients multiplicateurs',
+          theoremes:[
+            { id:'D-PCT1', type:'def', nom:'Coefficient multiplicateur et taux',
+              enonce:"Taux d'évolution t% ↔ Coefficient multiplicateur CM=1+t/100\n\nHausse de 20% → CM=1,20\nBaisse de 15% → CM=0,85\n\nDe CM au taux : t=(CM−1)×100\n\nÉVOLUTIONS SUCCESSIVES :\nCM_total = CM₁×CM₂×…×CMₖ\n\nÉVOLUTION RÉCIPROQUE :\nCM' = 1/CM\nTaux r'=(1/CM−1)×100\n\nHausse de 20% puis retour : CM'=1/1,20≈0,833 → baisse de 16,7% (et non −20%!)" },
+            { id:'F-PCT1', type:'formule', nom:'Taux moyen et indices',
+              enonce:"TAUX MOYEN SUR n PÉRIODES :\nSi CM global connu sur n périodes :\nCM moyen = CM^(1/n)\nTaux moyen r = (CM^(1/n)−1)×100\n\nINDICE (base 100) :\nIₙ = (Valeurₙ/Valeur_base)×100\n\nÉvolution d'un indice :\n(Iₙ−I₀)/I₀×100 = taux d'évolution",
+              remarque:"Toujours travailler avec les CM (multiplicatifs), jamais additionner les taux." },
+          ],
+          exercices:[
+            { id:'EX-PCT1', niveau:'Facile', titre:'Évolution réciproque',
+              enonce:"Les prix augmentent de 25%. Quel taux de baisse pour revenir au prix initial ?",
+              correction:"CM=1,25. CM'=1/1,25=0,80.\nBaisse de (0,80−1)×100=−20%." },
+            { id:'EX-PCT2', niveau:'Intermédiaire', titre:'Taux moyen annuel',
+              enonce:"PIB passe de 100 à 133 en 5 ans. Taux moyen de croissance annuel ?",
+              correction:"CM global=1,33. CM moyen=1,33^(1/5)≈1,0588.\nTaux moyen≈5,88%/an." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'stmg-financier': {
+  id:'stmg-financier', emoji:'💳', badge:'Finance', color:'#4f6ef7', branch:'STMG',
+  titre:'Calculs financiers',
+  desc:"Intérêts simples et composés, valeur actuelle/acquise, amortissements (linéaire, dégressif), rentes et mensualités d'emprunt.",
+  souschapitres:[
+    {
+      id:'sc-fin1', titre:'6.1 Valeur actuelle, acquise et amortissements',
+      notions:['Valeur acquise Vₙ=V₀(1+i)ⁿ','Valeur actuelle VA=VF/(1+i)ⁿ','Amortissement linéaire : annuité constante A=K/n','Amortissement dégressif : taux appliqué à la VNC'],
+      blocs:[
+        {
+          notion:'💰 Valeurs et amortissements',
+          theoremes:[
+            { id:'D-FIN1', type:'def', nom:'Valeur acquise et actuelle',
+              enonce:"VALEUR ACQUISE (capitalisation) :\nVₙ = V₀·(1+i)ⁿ\n(Valeur future d'un capital V₀ placé n années au taux i)\n\nVALEUR ACTUELLE (actualisation) :\nV₀ = Vₙ·(1+i)^(−n) = Vₙ/(1+i)ⁿ\n(Valeur aujourd'hui d'un flux futur Vₙ)\n\nANNUITÉS CONSTANTES a, n périodes, taux i :\nValeur acquise : VF = a·[(1+i)ⁿ−1]/i\nValeur actuelle : V₀ = a·[1−(1+i)^(−n)]/i" },
+            { id:'D-FIN2', type:'def', nom:'Amortissements',
+              enonce:"LINÉAIRE :\nAnnuité A=K/n (K coût, n durée vie)\nVNC après k ans : K−k·A\n\nDÉGRESSIF :\nTaux t=2/n (ou selon méthode)\nAnnuité k : Aₖ=VNCₖ₋₁·t\nVNC décroissante de façon géométrique\n\nTableau d'amortissement :\nAnnée | Dotation | Amort. cumulé | VNC\n  1   |    A     |       A       | K−A\n  2   |    A     |      2A       | K−2A\n  …   |    …     |       …       |  …\n  n   |    A     |       K       |  0",
+              remarque:"En pratique STMG : remplir le tableau ligne par ligne. VNC finale doit être 0." },
+          ],
+          exercices:[
+            { id:'EX-FIN1', niveau:'Facile', titre:'Amortissement linéaire',
+              enonce:"Machine coût 24000€, durée 4 ans. Tableau d'amortissement linéaire.",
+              correction:"A=24000/4=6000€/an.\nAn 1 : dotation 6000, cumulé 6000, VNC 18000.\nAn 2 : 6000, 12000, 12000.\nAn 3 : 6000, 18000, 6000.\nAn 4 : 6000, 24000, 0." },
+            { id:'EX-FIN2', niveau:'Intermédiaire', titre:'Mensualité de remboursement',
+              enonce:"Emprunt 20000€ à 3,6%/an sur 3 ans. Mensualité ?",
+              correction:"i=3,6/12/100=0,003. n=36.\na=20000×0,003/[1−1,003^(−36)]=60/[1−0,898]=60/0,102≈588€/mois." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ══════════════════════════════════════════════════════════════════════
+// ████  STI2D/STL — 7 CHAPITRES
+// ══════════════════════════════════════════════════════════════════════
+
+'sti-suites': {
+  id:'sti-suites', emoji:'∿', badge:'Algèbre', color:'#10b981', branch:'STI2D/STL',
+  titre:'Suites & Modélisation',
+  desc:"Suites arithmétiques et géométriques, modèles discrets (croissance exponentielle, décroissance), algorithme de seuil, récurrences.",
+  souschapitres:[
+    {
+      id:'sc-sti-su1', titre:'7.1 Suites et algorithme de seuil',
+      notions:['Arithmétique uₙ=u₀+nr ; géométrique uₙ=u₀qⁿ','Modèle discret : Xₙ₊₁=k·Xₙ → géom.','Algorithme de seuil : trouver n tel que uₙ≥S','Suite récurrente affine : point fixe'],
+      blocs:[
+        {
+          notion:'⚙️ Suites et modélisation physique',
+          theoremes:[
+            { id:'D-STI-SU1', type:'def', nom:'Suites arithmétiques et géométriques',
+              enonce:"ARITHMÉTIQUE (raison r) :\nuₙ₊₁=uₙ+r ; uₙ=u₀+nr\nSomme=n(u₀+uₙ₋₁)/2\n\nGÉOMÉTRIQUE (raison q) :\nuₙ₊₁=q·uₙ ; uₙ=u₀·qⁿ\nSomme=u₀(1−qⁿ)/(1−q)\n\nMODÈLES PHYSIQUES :\nDécharge RC : uₙ=U₀·e^(−nτ) ≈ U₀·(e^(−1/τ))ⁿ → géom.\nRefroidissement : Tₙ₊₁=k·Tₙ+(1−k)·T_amb → affine" },
+            { id:'M-STI-SU1', type:'methode', nom:'Algorithme de seuil',
+              enonce:"Trouver n tel que uₙ≥S (ou ≤S) :\n\nMÉTHODE 1 (analytique) :\nuₙ=u₀·qⁿ≥S → qⁿ≥S/u₀\n→ n≥ln(S/u₀)/ln(q)  (si q>1)\n\nMÉTHODE 2 (algorithmique) :\nn←0 ; u←u₀\nTant que u<S :\n  n←n+1 ; u←f(u)\nRetourner n\n\nExemple : bactéries doublent/heure. Quand dépasse 10000 si n₀=100 ?\n100×2ⁿ≥10000 → n≥log₂(100)=6,64 → n=7 heures" },
+          ],
+          exercices:[
+            { id:'EX-STI-SU1', niveau:'Facile', titre:'Suite géométrique — charge batterie',
+              enonce:"Batterie : charge initiale 500mAh. Perd 2% par cycle. Après 30 cycles ?",
+              correction:"q=0,98. u₃₀=500×0,98³⁰=500×0,545≈273mAh." },
+            { id:'EX-STI-SU2', niveau:'Intermédiaire', titre:'Seuil',
+              enonce:"Population bactérienne double toutes les 2h. Départ 200. Quand dépasse 10000 ?",
+              correction:"uₙ=200×2ⁿ≥10000 → 2ⁿ≥50 → n≥log₂(50)≈5,64 → n=6 doublings=12h." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-exp-ln': {
+  id:'sti-exp-ln', emoji:'eˣ', badge:'Analyse', color:'#10b981', branch:'STI2D/STL',
+  titre:'Exponentielle & Logarithme',
+  desc:"Fonction eˣ : propriétés, équations eᵃ=eᵇ⟺a=b. Logarithme ln : primitive de 1/x, propriétés algébriques, résolution, croissances comparées. Modélisations physiques.",
+  souschapitres:[
+    {
+      id:'sc-sti-el1', titre:'8.1 Propriétés et dérivées',
+      notions:['(eˣ)\'=eˣ ; (eᵘ)\'=u\'eᵘ','ln x : (ln x)\'=1/x ; (ln u)\'=u\'/u','Résolution : eˣ=k ↔ x=ln k','Croissances comparées : eˣ≫xⁿ≫ln x'],
+      blocs:[
+        {
+          notion:'📐 Exponentielle et logarithme',
+          theoremes:[
+            { id:'F-EL1', type:'formule', nom:'Propriétés de eˣ',
+              enonce:"eᵃ⁺ᵇ=eᵃ·eᵇ ; (eˣ)'=eˣ ; eˣ>0 ∀x\nlim(x→−∞) eˣ=0 ; lim(x→+∞) eˣ=+∞\n(eᵘ)'=u'·eᵘ\n\nRÉSOLUTIONS :\neˣ=k (k>0) → x=ln k\neˣ=eᵃ → x=a\n\nAPPLICATIONS STI2D :\nLoi de refroidissement : T(t)=T_amb+(T₀−T_amb)·e^(−kt)\nDécharge RC : u(t)=U₀·e^(−t/RC)" },
+            { id:'F-EL2', type:'formule', nom:'Propriétés de ln x',
+              enonce:"ln(ab)=ln a+ln b ; ln(aⁿ)=n·ln a (a,b>0)\n(ln x)'=1/x ; (ln u)'=u'/u\nlim(x→0⁺) ln x=−∞ ; lim(x→+∞) ln x=+∞\n\nRÉSOLUTIONS :\nln x=k → x=eᵏ\nln x=ln a → x=a\n\nCROISSANCES COMPARÉES :\nlim eˣ/xⁿ=+∞ ; lim xⁿ/eˣ=0\nlim (ln x)/xᵅ=0 (α>0)",
+              remarque:"En STI2D/STL : résoudre les équations du type ln(f(x))=k en passant à l'exponentielle." },
+          ],
+          exercices:[
+            { id:'EX-EL1', niveau:'Facile', titre:'Résolution',
+              enonce:"Résoudre : e^(2x−1)=4 et ln(3x+1)=2.",
+              correction:"e^(2x−1)=4 → 2x−1=ln4 → x=(1+ln4)/2≈1,19.\nln(3x+1)=2 → 3x+1=e²≈7,39 → x≈2,13." },
+            { id:'EX-EL2', niveau:'Intermédiaire', titre:'Demi-vie',
+              enonce:"Désintégration : N(t)=N₀·e^(−0,02t). Demi-vie (quand N=N₀/2) ?",
+              correction:"e^(−0,02t)=1/2 → −0,02t=−ln2 → t=ln2/0,02≈34,7 unités de temps." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-integration': {
+  id:'sti-integration', emoji:'∫', badge:'Analyse', color:'#10b981', branch:'STI2D/STL',
+  titre:'Intégration',
+  desc:"Primitives usuelles, intégrale définie (aire, relation de Chasles), valeur moyenne, applications : énergie, travail d'une force, centre d'inertie.",
+  souschapitres:[
+    {
+      id:'sc-sti-int1', titre:'9.1 Primitives et intégrale définie',
+      notions:['Table des primitives usuelles','∫ₐᵇf(x)dx=F(b)−F(a)','Relation de Chasles, linéarité','Valeur moyenne μ=(1/(b−a))∫ₐᵇf'],
+      blocs:[
+        {
+          notion:'∫ Calcul intégral et applications physiques',
+          theoremes:[
+            { id:'F-INT1', type:'formule', nom:'Primitives usuelles et intégrale',
+              enonce:"PRIMITIVES :\n∫xⁿdx=xⁿ⁺¹/(n+1)+C (n≠−1)\n∫eˣdx=eˣ+C ; ∫(1/x)dx=ln|x|+C\n∫cos x dx=sin x+C ; ∫sin x dx=−cos x+C\n∫u'eᵘ dx=eᵘ+C ; ∫u'/u dx=ln|u|+C\n\nINTÉGRALE :\n∫ₐᵇf(x)dx=F(b)−F(a)\nChasles : ∫ₐᶜ=∫ₐᵇ+∫ᵦᶜ\nf≥0 → ∫ₐᵇf≥0" },
+            { id:'F-INT2', type:'formule', nom:'Valeur moyenne et applications',
+              enonce:"Valeur moyenne de f sur [a,b] :\nμ=(1/(b−a))·∫ₐᵇf(x)dx\n\nAPPLICATIONS STI2D :\nTRAVAIL d'une force F(x) sur [a,b] :\nW=∫ₐᵇF(x)dx  (en Joules)\n\nÉNERGIE électrique :\nE=∫₀ᵀP(t)dt  (P puissance)\n\nAIRE entre C_f et Ox :\nA=∫ₐᵇ|f(x)|dx\n\nAIRE entre C_f et C_g :\nA=∫ₐᵇ|f(x)−g(x)|dx" },
+          ],
+          exercices:[
+            { id:'EX-INT1', niveau:'Facile', titre:'Calcul d\'intégrale',
+              enonce:"Calculer ∫₀³(2x+e^x)dx.",
+              correction:"[x²+eˣ]₀³=(9+e³)−(0+1)=8+e³≈28,09." },
+            { id:'EX-INT2', niveau:'Intermédiaire', titre:'Valeur moyenne',
+              enonce:"I(t)=5e^(−0,1t) (ampères). Valeur moyenne sur [0;10] ?",
+              correction:"μ=(1/10)∫₀¹⁰5e^(−0,1t)dt=(1/10)×[5e^(−0,1t)/(−0,1)]₀¹⁰\n=(1/10)×(−50)(e⁻¹−1)=5(1−e⁻¹)≈3,16 A." },
+            { id:'EX-INT3', niveau:'Difficile', titre:'Travail d\'une force',
+              enonce:"Force F(x)=3x²+2 (N). Travail pour déplacer de x=0 à x=4 m.",
+              correction:"W=∫₀⁴(3x²+2)dx=[x³+2x]₀⁴=64+8=72 J." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-probas-cont': {
+  id:'sti-probas-cont', emoji:'🔔', badge:'Probas', color:'#10b981', branch:'STI2D/STL',
+  titre:'Probabilités continues',
+  desc:"Loi uniforme sur [a;b] (densité, espérance), loi normale N(μ,σ²), standardisation Z=(X−μ)/σ, intervalles μ±σ, μ±2σ, approximation binomiale.",
+  souschapitres:[
+    {
+      id:'sc-sti-pc1', titre:'10.1 Loi uniforme et loi normale',
+      notions:['Loi uniforme U([a,b]) : f=1/(b−a), E=( a+b)/2','Loi normale N(μ,σ²) : densité en cloche','Standardisation Z=(X−μ)/σ~N(0,1)','P(μ−2σ≤X≤μ+2σ)≈95%'],
+      blocs:[
+        {
+          notion:'🔔 Lois continues et applications',
+          theoremes:[
+            { id:'D-PC1', type:'def', nom:'Loi uniforme et loi normale',
+              enonce:"LOI UNIFORME U([a,b]) :\nDensité f(x)=1/(b−a) sur [a,b], 0 ailleurs\nE(X)=(a+b)/2 ; V(X)=(b−a)²/12\nP(c≤X≤d)=(d−c)/(b−a)\n\nLOI NORMALE N(μ,σ²) :\nCloche symétrique centrée en μ\n68% des valeurs dans [μ−σ;μ+σ]\n95% des valeurs dans [μ−2σ;μ+2σ]\n99,7% dans [μ−3σ;μ+3σ]" },
+            { id:'F-PC1', type:'formule', nom:'Standardisation',
+              enonce:"X~N(μ,σ²) → Z=(X−μ)/σ~N(0,1)\n\nP(a≤X≤b)=P((a−μ)/σ≤Z≤(b−μ)/σ)\n\nSYMÉTRIE de N(0,1) :\nP(Z≤−z)=1−P(Z≤z)\nP(−z≤Z≤z)=2Φ(z)−1\n\nAPPROXIMATION BINOMIALE :\nSi X~B(n,p) avec n≥30, np≥5, n(1−p)≥5 :\nX ≈ N(np ; np(1−p))",
+              remarque:"En STI2D : toujours standardiser avant de lire la table. Φ(z)=P(Z≤z)." },
+          ],
+          exercices:[
+            { id:'EX-PC1', niveau:'Facile', titre:'Loi uniforme',
+              enonce:"Bus toutes les 8min. Attente X~U([0;8]). P(X≤3) ?",
+              correction:"P(X≤3)=(3−0)/(8−0)=3/8=0,375=37,5%." },
+            { id:'EX-PC2', niveau:'Intermédiaire', titre:'Loi normale — contrôle qualité',
+              enonce:"Pièce L~N(50;0,04), σ=0,2mm. Tolérance [49,5;50,5]. P(pièce bonne) ?",
+              correction:"P(49,5≤L≤50,5)=P(−2,5≤Z≤2,5)=2Φ(2,5)−1≈2×0,9938−1=0,9876≈98,8%." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-stat-inf': {
+  id:'sti-stat-inf', emoji:'📊', badge:'Stats', color:'#10b981', branch:'STI2D/STL',
+  titre:'Statistiques inférentielles',
+  desc:"Fluctuation d'échantillonnage, intervalle de confiance 95% [f±1/√n], estimation d'une proportion, taille d'échantillon.",
+  souschapitres:[
+    {
+      id:'sc-sti-si1', titre:'11.1 Intervalles de fluctuation et de confiance',
+      notions:['Intervalle de fluctuation : p₀ dans [p₀−1/√n;p₀+1/√n]','Test de conformité : f∈IC ?','IC 95% : [f−1/√n;f+1/√n]','Taille n minimale pour précision donnée'],
+      blocs:[
+        {
+          notion:'📏 Intervalles et tests',
+          theoremes:[
+            { id:'F-SI1', type:'formule', nom:'Intervalle de fluctuation et de confiance',
+              enonce:"FLUCTUATION (niveau 95%) :\nI=[p₀−1/√n ; p₀+1/√n]\nSi la fréquence observée f∈I → compatible avec p₀\nSinon → résultat significatif\n\nCONFIANCE (niveau 95%) :\nIC=[f−1/√n ; f+1/√n]\n(intervalle centré sur la fréquence obs. f)\n\nCONDITIONS : n≥30, np₀≥5, n(1−p₀)≥5\n\nTAILLE MINIMALE pour précision ε :\n1/√n≤ε → n≥(1/ε)²\nε=0,05 → n≥400\nε=0,02 → n≥2500",
+              remarque:"En STI2D : le test de conformité est utilisé en contrôle qualité (taux de défaut, non-conformité)." },
+          ],
+          exercices:[
+            { id:'EX-SI1', niveau:'Facile', titre:'Test de conformité',
+              enonce:"Machine : taux défaut théorique p₀=2%. Contrôle de 500 pièces : 15 défectueuses. Compatible ?",
+              correction:"f=15/500=0,03=3%.\nI=[0,02−1/√500;0,02+1/√500]=[0,02−0,045;0,02+0,045]=[-0,025;0,065].\nf=0,03∈I ✓ → compatible avec p₀=2%." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-geometrie': {
+  id:'sti-geometrie', emoji:'📐', badge:'Géométrie', color:'#10b981', branch:'STI2D/STL',
+  titre:"Géométrie dans l'Espace",
+  desc:"Vecteurs de l'espace, coplanarité, équation cartésienne du plan ax+by+cz+d=0, droite paramétrique, intersection, orthogonalité, distance.",
+  souschapitres:[
+    {
+      id:'sc-sti-geo1', titre:'12.1 Plans, droites et distances',
+      notions:['Vecteur u⃗(a;b;c), produit scalaire','Plan ax+by+cz+d=0 : normale n⃗(a;b;c)','Droite M=A+t·u⃗','Distance point-plan'],
+      blocs:[
+        {
+          notion:'🌐 Géométrie 3D pour STI2D',
+          theoremes:[
+            { id:'F-GEO1', type:'formule', nom:'Plan, droite et distance',
+              enonce:"PRODUIT SCALAIRE :\nu⃗(a;b;c)·v⃗(a';b';c')=aa'+bb'+cc'\nOrthogonalité : u⃗·v⃗=0\n\nPLAN :\nPassant par A₀, de normale n⃗(a;b;c) :\na(x−x₀)+b(y−y₀)+c(z−z₀)=0\n\nDROITE (A,u⃗) :\n{x=x_A+at ; y=y_A+bt ; z=z_A+ct}\n\nPositions droite-plan :\nu⃗·n⃗=0 et A∉plan → ∥\nu⃗·n⃗≠0 → intersection\n\nDISTANCE M₀ au plan ax+by+cz+d=0 :\nd=|ax₀+by₀+cz₀+d|/√(a²+b²+c²)\n\nAPPLICATION STI2D :\nCoordonnées d'un point d'une pièce mécanique\nCalcul de distance entre composants" },
+          ],
+          exercices:[
+            { id:'EX-GEO1', niveau:'Facile', titre:'Équation d\'un plan',
+              enonce:"Plan par A(2;1;−1) de normale n⃗(1;2;3).",
+              correction:"1(x−2)+2(y−1)+3(z+1)=0 → x+2y+3z−3=0." },
+            { id:'EX-GEO2', niveau:'Intermédiaire', titre:'Distance point-plan',
+              enonce:"Distance de M(1;2;0) au plan 2x−y+2z+5=0.",
+              correction:"d=|2−2+0+5|/√(4+1+4)=5/3." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+'sti-eq-diff': {
+  id:'sti-eq-diff', emoji:'dy', badge:'Analyse', color:'#10b981', branch:'STI2D/STL',
+  titre:'Équations Différentielles & Compléments',
+  desc:"y'=ay → y=Ceᵃˣ ; y'=ay+b → Ceᵃˣ−b/a ; condition initiale ; circuits RC, refroidissement Newton, croissance bactérienne. Convexité f'', IPP.",
+  souschapitres:[
+    {
+      id:'sc-sti-ed1', titre:'13.1 Équations différentielles',
+      notions:['y\'=ay : y=Ce^(ax)','y\'=ay+b : sol. part. + homogène','Condition initiale → déterminer C','Applications : RC, Newton, biologie'],
+      blocs:[
+        {
+          notion:'⚡ EDO et modèles physiques',
+          theoremes:[
+            { id:'T-ED1', type:'thm', nom:'Solution de y\'=ay et y\'=ay+b',
+              enonce:"y'=ay :\nSolution générale : y=Ce^(ax), C∈ℝ\n\ny'=ay+b :\nSolution particulière constante : y*=−b/a (si a≠0)\nSolution générale : y=Ce^(ax)−b/a\n\nCONDITION INITIALE y(t₀)=y₀ → C=(y₀+b/a)e^(−at₀)\n\nMODÈLES STI2D :\nCircuit RC : dU/dt=−U/(RC)+E/(RC)\n→ U(t)=E+(U₀−E)·e^(−t/RC)\n\nRefroidissement Newton : dT/dt=−k(T−T_amb)\n→ T(t)=T_amb+(T₀−T_amb)·e^(−kt)\n\nBactéries : dN/dt=rN\n→ N(t)=N₀·e^(rt)",
+              remarque:"Identifier le type (homogène ou inhomogène) avant de résoudre. La solution particulière constante est souvent l'état d'équilibre physique." },
+          ],
+          exercices:[
+            { id:'EX-ED1', niveau:'Facile', titre:'Circuit RC',
+              enonce:"RC : RC=10ms, E=5V, U₀=0. U(t)=? U après 20ms ?",
+              correction:"U(t)=5(1−e^(−t/10ms)).\nU(20ms)=5(1−e⁻²)=5(1−0,135)≈4,32V." },
+            { id:'EX-ED2', niveau:'Intermédiaire', titre:'Refroidissement',
+              enonce:"Corps : T₀=80°C, T_amb=20°C, k=0,05/min. T après 30min ? Quand T=30°C ?",
+              correction:"T(t)=20+60·e^(−0,05t).\nT(30)=20+60·e^(−1,5)=20+60×0,223≈33,4°C.\nT=30 : 60·e^(−0,05t)=10 → e^(−0,05t)=1/6 → t=ln6/0,05≈35,8min." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-sti-compl', titre:'13.2 Compléments : convexité et IPP',
+      notions:['Dérivée seconde f\'\' : convexité et inflexion','IPP : ∫u\'v=[uv]−∫uv\'','Applications : aires, valeurs moyennes complexes'],
+      blocs:[
+        {
+          notion:'📈 Convexité et intégration par parties',
+          theoremes:[
+            { id:'D-CP1', type:'def', nom:'Convexité et IPP',
+              enonce:"CONVEXITÉ :\nf''(x)>0 → f convexe (courbe au-dessus des tangentes)\nf''(x)<0 → f concave\nf''(a)=0 et changement de signe → point d'inflexion\n\nIPP :\n∫ₐᵇu'v dx=[uv]ₐᵇ−∫ₐᵇuv' dx\n\nCas classiques STI2D :\n∫t·e^(at)dt : u'=e^(at), v=t\n∫t·sin(ωt)dt : u'=sin(ωt), v=t",
+              remarque:"En STI2D : l'IPP sert souvent dans les calculs d'énergie (P(t)=u(t)·i(t)) et de valeur efficace." },
+          ],
+          exercices:[
+            { id:'EX-CP1', niveau:'Intermédiaire', titre:'IPP — énergie',
+              enonce:"Calculer ∫₀¹t·eᵗdt (énergie absorbée).",
+              correction:"u'=eᵗ→u=eᵗ ; v=t→v'=1.\n[t·eᵗ]₀¹−∫₀¹eᵗdt=e−[eᵗ]₀¹=e−(e−1)=1." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+} // fin ALL_CHAPTERS
+
+// ══════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════════════════
 function TypeBadge({ type }: { type: string }) {
   const color = C[type as keyof typeof C] || C.def
-  return <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: `${color}20`, color, border: `1px solid ${color}30`, flexShrink: 0 }}>{L[type as keyof typeof L] || type}</span>
+  return (
+    <span style={{ fontSize:10, padding:'2px 10px', borderRadius:20, fontWeight:700,
+      background:`${color}20`, color, whiteSpace:'nowrap' }}>
+      {L[type] || type}
+    </span>
+  )
+}
+function NiveauBadge({ niveau }: { niveau: string }) {
+  const cfg = niveau==='Facile'
+    ? { bg:'rgba(6,214,160,0.15)', color:'#06d6a0' }
+    : niveau==='Difficile'
+    ? { bg:'rgba(239,68,68,0.15)', color:'#ef4444' }
+    : { bg:'rgba(245,158,11,0.15)', color:'#f59e0b' }
+  return <span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, fontWeight:600,
+    background:cfg.bg, color:cfg.color }}>{niveau}</span>
 }
 
-export default function TechnoChapterPage() {
+// ══════════════════════════════════════════════════════════════════════
+// PAGE
+// ══════════════════════════════════════════════════════════════════════
+export default function TerminaleTechnoSlugPage() {
   const params = useParams()
-  const slug = params?.slug as string
-  const ch = CHAPITRES[slug]
-  const [openEx, setOpenEx] = useState<string | null>(null)
-  const secColor = SEC_COLOR[slug] || '#10b981'
-  const branchLabel = BRANCH_LABEL[slug] || ''
+  const slug = (params?.slug as string) || 'stmg-fonctions'
+  const chapter = ALL_CHAPTERS[slug]
+  const [openEx, setOpenEx] = useState<string|null>(null)
+  const [openSc, setOpenSc] = useState<string|null>(null)
 
-  if (!ch) return (
-    <><Navbar /><main style={{ paddingTop: 80, minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📭</div>
-        <h2 style={{ marginBottom: 12 }}>Chapitre non trouvé</h2>
-        <Link href="/bac-france/terminale-techno" style={{ color: '#34d399' }}>← Retour Terminale Technologique</Link>
-      </div>
-    </main><Footer /></>
+  if (!chapter) return (
+    <><Navbar/>
+      <main style={{ paddingTop:80, minHeight:'50vh', display:'flex',
+        alignItems:'center', justifyContent:'center' }}>
+        <div style={{ textAlign:'center' }}>
+          <div style={{ fontSize:48, marginBottom:16 }}>📭</div>
+          <h2>Chapitre non trouvé</h2>
+          <Link href="/bac-france/terminale-techno" style={{ color:'#10b981' }}>
+            ← Retour Terminale Technologique
+          </Link>
+        </div>
+      </main><Footer/></>
   )
 
   const idx = NAV_ORDER.indexOf(slug)
-  const prevSlug = idx > 0 ? NAV_ORDER[idx - 1] : null
-  const nextSlug = idx < NAV_ORDER.length - 1 ? NAV_ORDER[idx + 1] : null
+  const prevSlug = idx>0 ? NAV_ORDER[idx-1] : null
+  const nextSlug = idx<NAV_ORDER.length-1 ? NAV_ORDER[idx+1] : null
+  const secColor = SEC_COLORS[slug] || '#10b981'
+  const isSTMG = chapter.branch==='STMG'
+
+  const STMG_SLUGS = NAV_ORDER.slice(0,6)
+  const STI_SLUGS  = NAV_ORDER.slice(6)
 
   return (
-    <>
-      <Navbar />
-      <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
-        <div style={{ borderBottom: '1px solid var(--border)', padding: '14px clamp(20px,5vw,60px)', display: 'flex', gap: 8, fontSize: 13, color: 'var(--muted)', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Link href="/bac-france" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Bac France</Link><span>›</span>
-          <Link href="/bac-france/terminale-techno" style={{ color: 'var(--muted)', textDecoration: 'none' }}>Terminale Techno</Link><span>›</span>
-          <span style={{ color: secColor, fontWeight: 600 }}>{ch.ch} — {ch.titre}</span>
+    <><Navbar/>
+      <main style={{ position:'relative', zIndex:1, paddingTop:80 }}>
+
+        {/* BREADCRUMB */}
+        <div style={{ borderBottom:'1px solid var(--border)',
+          padding:'12px clamp(20px,5vw,60px)',
+          display:'flex', gap:8, fontSize:13, color:'var(--muted)',
+          alignItems:'center', flexWrap:'wrap' }}>
+          <Link href="/bac-france" style={{ color:'var(--muted)', textDecoration:'none' }}>🇫🇷 France</Link><span>›</span>
+          <Link href="/bac-france/terminale-techno" style={{ color:'var(--muted)', textDecoration:'none' }}>
+            Terminale Techno
+          </Link><span>›</span>
+          <span style={{ color:secColor, fontWeight:600 }}>{chapter.titre}</span>
         </div>
 
-        <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 275px', gap: 32, alignItems: 'start' }}>
+        <div className="container" style={{ paddingTop:36, paddingBottom:80 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 270px', gap:32, alignItems:'start' }}>
+
+            {/* ═══════ CONTENU ═══════ */}
             <div>
-              {/* Header */}
-              <div style={{ marginBottom: 32 }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, background: 'var(--surface2)', color: 'var(--muted)', padding: '3px 10px', borderRadius: 8 }}>Term. Techno · {ch.ch}</span>
-                  <span style={{ fontSize: 12, background: `${secColor}20`, color: secColor, padding: '3px 10px', borderRadius: 12, fontWeight: 600 }}>{ch.badge}</span>
-                  <span style={{ fontSize: 11, background: `${secColor}12`, color: secColor, padding: '3px 10px', borderRadius: 12 }}>{branchLabel}</span>
+              {/* HEADER */}
+              <div style={{ marginBottom:36 }}>
+                <div style={{ display:'flex', gap:10, alignItems:'center', marginBottom:12, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:28 }}>{chapter.emoji}</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:12, color:secColor,
+                    background:`${secColor}18`, padding:'3px 10px', borderRadius:8, fontWeight:700 }}>
+                    {TITRES_NAV[slug]?.split(' — ')[0]}
+                  </span>
+                  <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20,
+                    background:`${secColor}14`, color:secColor, fontWeight:700 }}>{chapter.badge}</span>
+                  <span style={{ fontSize:11, padding:'2px 9px', borderRadius:10,
+                    background: isSTMG ? 'rgba(79,110,247,0.15)' : 'rgba(16,185,129,0.15)',
+                    color: isSTMG ? '#818cf8' : '#34d399', fontWeight:700 }}>
+                    {BRANCH_LABEL[slug]}
+                  </span>
                 </div>
-                <h1 style={{ fontSize: 'clamp(22px,3.5vw,36px)', marginBottom: 8 }}>{ch.titre}</h1>
-                <div style={{ fontSize: 12, color: secColor, marginBottom: 8 }}>📂 {ch.section}</div>
-                <p style={{ color: 'var(--text2)', fontSize: 14, lineHeight: 1.65, marginBottom: 14, maxWidth: 640 }}>{ch.desc}</p>
-                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap' }}>
-                  <span>📊 {ch.theoremes.length} théorèmes & formules</span><span>·</span>
-                  <span>📝 {ch.exercices.length} exercices</span><span>·</span>
-                  <span>⏱ {ch.duree}</span>
-                </div>
-              </div>
-
-              {/* Légende */}
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24, padding: '10px 14px', background: 'var(--surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                <span style={{ fontSize: 12, color: 'var(--muted)', marginRight: 4, alignSelf: 'center' }}>Légende :</span>
-                {Object.entries(L).map(([k, v]) => <span key={k} style={{ fontSize: 11, padding: '2px 10px', borderRadius: 20, background: `${C[k as keyof typeof C]}18`, color: C[k as keyof typeof C], border: `1px solid ${C[k as keyof typeof C]}25`, fontWeight: 600 }}>{v}</span>)}
-              </div>
-
-              {/* Cours */}
-              <div style={{ marginBottom: 44 }}>
-                <h2 style={{ fontSize: 20, marginBottom: 18 }}>📐 Cours officiel — Théorèmes & Formules</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
-                  {ch.theoremes.map(t => {
-                    const color = C[t.type as keyof typeof C] || C.def
-                    return (
-                      <div key={t.id} style={{ borderLeft: `3px solid ${color}`, background: `${color}07`, borderRadius: '0 12px 12px 0', padding: '15px 20px', border: `1px solid ${color}18` }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 10, flexWrap: 'wrap' }}>
-                          <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)' }}>{t.nom}</div>
-                          <TypeBadge type={t.type} />
-                        </div>
-                        <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.8, whiteSpace: 'pre-line', fontFamily: (t.type === 'formule' || t.type === 'methode') ? 'var(--font-mono)' : 'inherit' }}>{t.enonce}</div>
-                      </div>
-                    )
-                  })}
+                <h1 style={{ fontSize:'clamp(22px,3vw,36px)', fontWeight:800, marginBottom:10 }}>
+                  {chapter.titre}
+                </h1>
+                <p style={{ color:'var(--text2)', fontSize:14, lineHeight:1.7,
+                  maxWidth:620, marginBottom:18 }}>{chapter.desc}</p>
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  <Link href={`/solve?q=${encodeURIComponent('Explique '+chapter.titre+' Terminale '+chapter.branch+' France')}`}
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 16px',
+                      borderRadius:10, background:`linear-gradient(135deg,${secColor},${secColor}cc)`,
+                      color:'white', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                    🤖 Chat IA — ce chapitre
+                  </Link>
+                  <Link href="/examens-france"
+                    style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'8px 16px',
+                      borderRadius:10, background:'rgba(255,255,255,0.06)',
+                      border:'1px solid rgba(255,255,255,0.12)', color:'var(--text2)',
+                      fontSize:13, fontWeight:600, textDecoration:'none' }}>
+                    📋 Sujets Bac France
+                  </Link>
                 </div>
               </div>
 
-              {/* Exercices */}
-              <div style={{ marginBottom: 44 }}>
-                <h2 style={{ fontSize: 20, marginBottom: 18 }}>📝 Exercices</h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-                  {ch.exercices.map(ex => (
-                    <div key={ex.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-                      <div style={{ padding: '15px 20px' }}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 6 }}>{ex.id}</span>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 600, background: ex.niveau === 'Facile' ? 'rgba(6,214,160,0.15)' : 'rgba(245,158,11,0.15)', color: ex.niveau === 'Facile' ? '#06d6a0' : '#f59e0b' }}>{ex.niveau}</span>
-                          <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)' }}>{ex.titre}</span>
-                        </div>
-                        <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0, lineHeight: 1.6, whiteSpace: 'pre-line' }}>{ex.enonce}</p>
+              {/* SOUS-CHAPITRES */}
+              {chapter.souschapitres.map((sc, scIdx) => (
+                <div key={sc.id} style={{ marginBottom:24,
+                  background:`${secColor}05`, border:`1px solid ${secColor}20`,
+                  borderRadius:18, overflow:'hidden' }}>
+
+                  <button
+                    onClick={() => setOpenSc(openSc===sc.id ? null : sc.id)}
+                    style={{ width:'100%', background:`${secColor}12`,
+                      borderBottom:`1px solid ${secColor}20`, padding:'16px 22px',
+                      display:'flex', justifyContent:'space-between', alignItems:'center',
+                      cursor:'pointer', border:'none', textAlign:'left' }}>
+                    <div>
+                      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:6 }}>
+                        <span style={{ fontFamily:'var(--font-mono)', fontSize:10, color:secColor, fontWeight:700 }}>
+                          {String(scIdx+1).padStart(2,'0')}
+                        </span>
+                        <h2 style={{ fontSize:15, fontWeight:800, color:'var(--text)', margin:0 }}>{sc.titre}</h2>
                       </div>
-                      <div style={{ borderTop: '1px solid var(--border)', padding: '10px 20px', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Link href={`/solve?q=${encodeURIComponent('Terminale Techno, ' + ch.titre + ' — ' + ex.enonce)}`} className="btn btn-primary" style={{ fontSize: 12, padding: '6px 14px' }}>🧮 Résoudre avec IA</Link>
-                        <button onClick={() => setOpenEx(openEx === ex.id ? null : ex.id)} style={{ fontSize: 12, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                          📋 {openEx === ex.id ? 'Masquer' : 'Correction'}
-                        </button>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                        {sc.notions.map(n => (
+                          <span key={n} style={{ fontSize:10, padding:'2px 9px', borderRadius:12,
+                            background:`${secColor}12`, color:'var(--text2)',
+                            border:`1px solid ${secColor}18` }}>{n}</span>
+                        ))}
                       </div>
-                      {openEx === ex.id && (
-                        <div style={{ padding: '13px 20px', borderTop: '1px solid var(--border)', background: `${secColor}06` }}>
-                          <div style={{ fontSize: 11, color: secColor, fontWeight: 700, marginBottom: 5 }}>✅ Correction</div>
-                          <div style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.75, whiteSpace: 'pre-line' }}>{ex.correction}</div>
-                        </div>
-                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <span style={{ fontSize:18, color:secColor, marginLeft:12 }}>
+                      {(openSc===sc.id || scIdx===0) ? '▲' : '▼'}
+                    </span>
+                  </button>
 
-              {/* Navigation */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 22 }}>
-                {prevSlug ? (<Link href={`/bac-france/terminale-techno/${prevSlug}`} style={{ textDecoration: 'none' }}><div className="card" style={{ padding: '13px 16px', transition: 'transform 0.15s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}><div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 3 }}>← Précédent</div><div style={{ fontWeight: 700, fontSize: 13 }}>{TITRES[prevSlug]}</div></div></Link>) : <div />}
-                {nextSlug ? (<Link href={`/bac-france/terminale-techno/${nextSlug}`} style={{ textDecoration: 'none' }}><div className="card" style={{ padding: '13px 16px', textAlign: 'right', transition: 'transform 0.15s' }} onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}><div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 3 }}>Suivant →</div><div style={{ fontWeight: 700, fontSize: 13 }}>{TITRES[nextSlug]}</div></div></Link>) : <div />}
+                  {(openSc===sc.id || scIdx===0) && (
+                    <div style={{ padding:'18px 22px', display:'flex', flexDirection:'column', gap:24 }}>
+                      {sc.blocs.map(bloc => (
+                        <div key={bloc.notion}>
+                          <div style={{ fontSize:14, fontWeight:800, color:secColor, marginBottom:14 }}>{bloc.notion}</div>
+
+                          <div style={{ display:'flex', flexDirection:'column', gap:11, marginBottom:14 }}>
+                            {bloc.theoremes.map(t => {
+                              const color = C[t.type as keyof typeof C] || C.def
+                              return (
+                                <div key={t.id} style={{ borderLeft:`3px solid ${color}`,
+                                  background:`${color}07`, borderRadius:'0 12px 12px 0',
+                                  padding:'14px 18px', border:`1px solid ${color}18` }}>
+                                  <div style={{ display:'flex', justifyContent:'space-between',
+                                    alignItems:'flex-start', marginBottom:8, gap:10, flexWrap:'wrap' }}>
+                                    <div style={{ fontWeight:700, fontSize:13 }}>{t.nom}</div>
+                                    <TypeBadge type={t.type} />
+                                  </div>
+                                  <div style={{ fontSize:12, color:'var(--text2)', lineHeight:1.85,
+                                    whiteSpace:'pre-line',
+                                    fontFamily:t.type==='formule'?'var(--font-mono)':'inherit' }}>
+                                    {t.enonce}
+                                  </div>
+                                  {t.remarque && (
+                                    <div style={{ marginTop:10, paddingLeft:12,
+                                      borderLeft:'2px solid rgba(245,158,11,0.5)',
+                                      fontSize:11, color:'rgba(245,158,11,0.9)',
+                                      fontStyle:'italic', lineHeight:1.6 }}>
+                                      ⚡ {t.remarque}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {bloc.exercices.length > 0 && (
+                            <div>
+                              <div style={{ fontSize:11, color:'var(--muted)', fontWeight:700,
+                                textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:9 }}>
+                                Exercices
+                              </div>
+                              <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+                                {bloc.exercices.map(ex => (
+                                  <div key={ex.id} style={{ background:'var(--surface)',
+                                    border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
+                                    <div style={{ padding:'12px 16px' }}>
+                                      <div style={{ display:'flex', gap:7, alignItems:'center',
+                                        marginBottom:7, flexWrap:'wrap' }}>
+                                        <span style={{ fontFamily:'var(--font-mono)', fontSize:10,
+                                          color:'var(--muted)', background:'var(--surface2)',
+                                          padding:'2px 7px', borderRadius:5 }}>{ex.id}</span>
+                                        <NiveauBadge niveau={ex.niveau} />
+                                        <span style={{ fontWeight:600, fontSize:13 }}>{ex.titre}</span>
+                                      </div>
+                                      <p style={{ fontSize:12, color:'var(--text2)', margin:0,
+                                        lineHeight:1.65, whiteSpace:'pre-line' }}>{ex.enonce}</p>
+                                    </div>
+                                    <div style={{ borderTop:'1px solid var(--border)',
+                                      padding:'8px 16px', display:'flex', gap:8, flexWrap:'wrap' }}>
+                                      <Link href={`/solve?q=${encodeURIComponent(chapter.branch+' France — '+ex.enonce)}`}
+                                        className="btn btn-primary" style={{ fontSize:11, padding:'5px 12px' }}>
+                                        🧮 Résoudre avec IA
+                                      </Link>
+                                      <button onClick={() => setOpenEx(openEx===ex.id?null:ex.id)}
+                                        style={{ fontSize:11, padding:'5px 12px', borderRadius:7,
+                                          border:'1px solid var(--border)', background:'transparent',
+                                          color:'var(--text2)', cursor:'pointer', fontFamily:'inherit' }}>
+                                        📋 {openEx===ex.id?'Masquer':'Correction'}
+                                      </button>
+                                    </div>
+                                    {openEx===ex.id && (
+                                      <div style={{ padding:'10px 16px',
+                                        borderTop:'1px solid var(--border)',
+                                        background:`${secColor}06` }}>
+                                        <div style={{ fontSize:10, color:secColor, fontWeight:700, marginBottom:4 }}>✅ Correction</div>
+                                        <div style={{ fontSize:12, color:'var(--text2)',
+                                          lineHeight:1.75, whiteSpace:'pre-line' }}>{ex.correction}</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* NAV PREV / NEXT */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12,
+                borderTop:'1px solid var(--border)', paddingTop:22, marginTop:8 }}>
+                {prevSlug ? (
+                  <Link href={`/bac-france/terminale-techno/${prevSlug}`} style={{ textDecoration:'none' }}>
+                    <div className="card" style={{ padding:'12px 15px', transition:'transform 0.15s' }}
+                      onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+                      onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:2 }}>← Précédent</div>
+                      <div style={{ fontWeight:700, fontSize:12 }}>{TITRES_NAV[prevSlug].replace(/CH \d+ — /,'')}</div>
+                    </div>
+                  </Link>
+                ) : <div/>}
+                {nextSlug ? (
+                  <Link href={`/bac-france/terminale-techno/${nextSlug}`} style={{ textDecoration:'none' }}>
+                    <div className="card" style={{ padding:'12px 15px', textAlign:'right', transition:'transform 0.15s' }}
+                      onMouseEnter={e=>e.currentTarget.style.transform='translateY(-2px)'}
+                      onMouseLeave={e=>e.currentTarget.style.transform='translateY(0)'}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:2 }}>Suivant →</div>
+                      <div style={{ fontWeight:700, fontSize:12 }}>{TITRES_NAV[nextSlug].replace(/CH \d+ — /,'')}</div>
+                    </div>
+                  </Link>
+                ) : <div/>}
               </div>
             </div>
 
-            {/* Sidebar */}
-            <aside style={{ position: 'sticky', top: 88 }}>
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 14 }}>
-                <div style={{ padding: '11px 15px', borderBottom: '1px solid var(--border)', fontSize: 11, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>⚙️ Techno — 13 chapitres</div>
-                {NAV_ORDER.map((s, i) => (
-                  <Link key={s} href={`/bac-france/terminale-techno/${s}`} style={{ textDecoration: 'none' }}>
-                    <div style={{ padding: '8px 15px', borderBottom: i < NAV_ORDER.length - 1 ? '1px solid var(--border)' : 'none', background: s === slug ? `${SEC_COLOR[s]}12` : 'transparent', borderLeft: s === slug ? `3px solid ${SEC_COLOR[s]}` : '3px solid transparent', transition: 'all 0.15s', cursor: 'pointer' }}
-                      onMouseEnter={e => { if (s !== slug) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
-                      onMouseLeave={e => { if (s !== slug) e.currentTarget.style.background = 'transparent' }}>
-                      <div style={{ fontSize: 9, color: 'var(--muted)', marginBottom: 1, fontFamily: 'var(--font-mono)' }}>{BRANCH_LABEL[s]} · CH {String(i + 1).padStart(2, '0')}</div>
-                      <div style={{ fontSize: 11, fontWeight: s === slug ? 700 : 400, color: s === slug ? SEC_COLOR[s] : 'var(--text2)' }}>{TITRES[s]}</div>
+            {/* ═══════ SIDEBAR ═══════ */}
+            <aside style={{ position:'sticky', top:88 }}>
+              <div style={{ background:'var(--surface)', border:'1px solid var(--border)',
+                borderRadius:14, overflow:'hidden', marginBottom:12 }}>
+                {/* STMG */}
+                <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--border)',
+                  fontSize:11, color:'#818cf8', fontWeight:700,
+                  textTransform:'uppercase', letterSpacing:'0.08em',
+                  background:'rgba(79,110,247,0.08)' }}>📊 STMG — 6 chapitres</div>
+                {STMG_SLUGS.map(s => (
+                  <Link key={s} href={`/bac-france/terminale-techno/${s}`} style={{ textDecoration:'none' }}>
+                    <div style={{ padding:'8px 15px', borderBottom:'1px solid var(--border)',
+                      background:s===slug?`${SEC_COLORS[s]}12`:'transparent',
+                      borderLeft:s===slug?`3px solid ${SEC_COLORS[s]}`:'3px solid transparent',
+                      transition:'all 0.15s', cursor:'pointer' }}
+                      onMouseEnter={e=>{ if(s!==slug) e.currentTarget.style.background='rgba(255,255,255,0.03)' }}
+                      onMouseLeave={e=>{ if(s!==slug) e.currentTarget.style.background='transparent' }}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:1, fontFamily:'var(--font-mono)' }}>
+                        {TITRES_NAV[s].split(' — ')[0]}
+                      </div>
+                      <div style={{ fontSize:11, fontWeight:s===slug?700:400,
+                        color:s===slug?SEC_COLORS[s]:'var(--text2)' }}>
+                        {TITRES_NAV[s].replace(/CH \d+ — /,'').slice(0,28)}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+                {/* STI2D */}
+                <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--border)',
+                  fontSize:11, color:'#34d399', fontWeight:700,
+                  textTransform:'uppercase', letterSpacing:'0.08em',
+                  background:'rgba(16,185,129,0.08)' }}>⚙️ STI2D/STL — 7 chapitres</div>
+                {STI_SLUGS.map(s => (
+                  <Link key={s} href={`/bac-france/terminale-techno/${s}`} style={{ textDecoration:'none' }}>
+                    <div style={{ padding:'8px 15px', borderBottom:'1px solid var(--border)',
+                      background:s===slug?`${SEC_COLORS[s]}12`:'transparent',
+                      borderLeft:s===slug?`3px solid ${SEC_COLORS[s]}`:'3px solid transparent',
+                      transition:'all 0.15s', cursor:'pointer' }}
+                      onMouseEnter={e=>{ if(s!==slug) e.currentTarget.style.background='rgba(255,255,255,0.03)' }}
+                      onMouseLeave={e=>{ if(s!==slug) e.currentTarget.style.background='transparent' }}>
+                      <div style={{ fontSize:10, color:'var(--muted)', marginBottom:1, fontFamily:'var(--font-mono)' }}>
+                        {TITRES_NAV[s].split(' — ')[0]}
+                      </div>
+                      <div style={{ fontSize:11, fontWeight:s===slug?700:400,
+                        color:s===slug?SEC_COLORS[s]:'var(--text2)' }}>
+                        {TITRES_NAV[s].replace(/CH \d+ — /,'').slice(0,28)}
+                      </div>
                     </div>
                   </Link>
                 ))}
               </div>
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 13, padding: '14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Actions</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                  <Link href={`/solve?q=${encodeURIComponent('Explique-moi ' + ch.titre + ' en Terminale Technologique')}`} className="btn btn-primary" style={{ textAlign: 'center', fontSize: 12 }}>🤖 Chat IA — {ch.titre}</Link>
-                  <Link href="/simulation" className="btn btn-secondary" style={{ textAlign: 'center', fontSize: 12 }}>📋 Exercice type</Link>
-                  <Link href="/bac-france/terminale-generale" className="btn btn-secondary" style={{ textAlign: 'center', fontSize: 12 }}>🎓 Terminale Générale</Link>
+              <div style={{ background:'var(--surface)', border:'1px solid var(--border)',
+                borderRadius:12, padding:'13px' }}>
+                <div style={{ fontSize:11, color:'var(--muted)', fontWeight:700,
+                  textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:9 }}>Actions</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  <Link href={`/solve?q=${encodeURIComponent('Explique '+chapter.titre+' '+chapter.branch+' France')}`}
+                    className="btn btn-primary" style={{ textAlign:'center', fontSize:12 }}>
+                    🤖 Chat IA — {chapter.badge}
+                  </Link>
+                  <Link href="/examens-france" className="btn btn-secondary"
+                    style={{ textAlign:'center', fontSize:12 }}>📋 Sujets Bac France</Link>
+                  <Link href="/bac-france/terminale-techno" className="btn btn-secondary"
+                    style={{ textAlign:'center', fontSize:12 }}>↩ Tous les chapitres</Link>
                 </div>
               </div>
             </aside>
+
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer/>
+      <style>{`
+        @media(max-width:900px){
+          div[style*="grid-template-columns: 1fr 270px"]{grid-template-columns:1fr!important;}
+          aside{display:none;}
+        }
+      `}</style>
     </>
   )
 }
