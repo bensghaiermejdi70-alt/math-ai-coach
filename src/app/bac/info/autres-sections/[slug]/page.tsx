@@ -275,14 +275,13 @@ function TypeBadge({ type }: { type: string }) {
   )
 }
 function NiveauBadge({ niveau }: { niveau: string }) {
-  const cfg = niveau==='Facile' || niveau==='Intermediaire'&&niveau!=='Intermédiaire'
-    ? { bg:'rgba(6,214,160,0.15)', color:'#06d6a0' }
-    : niveau==='Difficile'
+  const cfg = niveau==='Difficile'
     ? { bg:'rgba(239,68,68,0.15)', color:'#ef4444' }
+    : niveau==='Facile'
+    ? { bg:'rgba(6,214,160,0.15)', color:'#06d6a0' }
     : { bg:'rgba(245,158,11,0.15)', color:'#f59e0b' }
-  const label = niveau==='Intermediaire' ? 'Intermédiaire' : niveau
   return <span style={{ fontSize:10, padding:'2px 8px', borderRadius:10, fontWeight:600,
-    background:cfg.bg, color:cfg.color }}>{label}</span>
+    background:cfg.bg, color:cfg.color }}>{niveau}</span>
 }
 
 // ══════════════════════════════════════════════════════════════════════
