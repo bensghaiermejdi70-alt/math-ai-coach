@@ -985,7 +985,21 @@ function PrimaryBtn({onClick,disabled=false,loading=false,children,fullWidth=fal
 
 // ── correctOneExercise (identique simulation) ─────────────────────
 async function correctOneExercise(exercise: Exercise, totalPoints: number, studentWork: string, examTitle: string): Promise<string> {
-  const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
+  // Détecter si c'est un examen Anglais
+  const isAnglaisCorrection =
+    examTitle.toLowerCase().includes('anglais') ||
+    examTitle.toLowerCase().includes('english') ||
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language')
+
+  const system = isAnglaisCorrection
+    ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
+CRITICAL RULE: ALL your correction MUST be written in ENGLISH — never use French, even a single word.
+Use markdown: ### for sections, **bold** for key answers, > for important points.`
+    : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
@@ -1057,9 +1071,13 @@ SOMMES : ∑ (k=1 à n)  JAMAIS \\sum_{k=1}^{n}
 GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
 
   const withWork = studentWork.trim().length > 10
-  const prompt = withWork
-    ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
-    : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`
+  const prompt = isAnglaisCorrection
+    ? (withWork
+      ? `EXAM: ${examTitle}\nEXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nSTUDENT'S ANSWER:\n${studentWork}\n\nWrite the COMPLETE correction of this exercise. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Detailed Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule / approach — WHY this method applies here]\n**Step-by-step answer:**\n- Step 1: [Action] → [Result]\n> **Answer:** [Final answer clearly stated]\n**Marking scheme — Question X:** [X] pts\n**Student's answer analysis:**\n✅ Correct: [what the student did well]\n❌ Incorrect: [what is wrong or missing]\n💡 Tip: [how to correct this error]\n---\n> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
+      : `EXAM: ${examTitle}\nEXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nWrite the COMPLETE and EXHAUSTIVE correction. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Complete Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule — explain WHY this approach is chosen]\n**Complete answer:**\n- Step 1: [Action + justification] → [Working] = [Result]\n> **Answer:** [Final answer]\n**Marking scheme:** [X] pts\n**Pedagogical note:** [Key grammar rule or writing tip]\n**Common mistake:** [Frequent error on this type of question and why it is wrong]\n---\n> **Key takeaway:** [2-3 rules or strategies to remember]`)
+    : (withWork
+      ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
+      : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`)
 
   return askClaude(prompt, system, 8000)
 }
@@ -1078,9 +1096,43 @@ async function analyzeOneExercise(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
+  const isAnglaisTheme =
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language') ||
+    exercise.title.toLowerCase().includes('part i') ||
+    exercise.title.toLowerCase().includes('part ii') ||
+    exercise.title.toLowerCase().includes('part iii')
+
+  const system = isAnglaisTheme
+    ? `You are an expert English language teacher and Bac examiner. Analyse ONE English Bac Blanc exercise.
+RESPOND ONLY IN VALID JSON. ALL text fields (description, advice, statements, corrections) MUST be in ENGLISH.`
+    : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
-  const prompt = `Analyse cet exercice de Bac et génère une remédiation ciblée.
+
+  const prompt = isAnglaisTheme
+    ? `Analyse this English Bac Blanc exercise and generate targeted remediation.
+
+EXERCISE ${exIdx+1}: ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
+${exercise.statement.substring(0,250)}
+
+STUDENT ANSWER: ${studentAnswer||'(No answer provided)'}
+CORRECTION: ${correction.substring(0,800)}
+
+Required JSON (ALL text in ENGLISH):
+{
+  "estimatedScore": [0 to ${exercise.points}],
+  "maxScore": ${exercise.points},
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Precise analysis in English]","priority":1}],
+  "strengths": ["[What the student did well]"],
+  "globalAdvice": ["[Targeted advice on ${exercise.theme} in English]","[Strategy to remember]"],
+  "remediationExercises": [
+    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolidate the weakness]","statement":"Short English practice exercise on ${exercise.theme}. 2-3 sub-questions. Minimum 60 words. Written in ENGLISH.","hint":"[Methodological hint in English]","officialCorrection":"[Complete correction in ENGLISH]"},
+    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Deepen understanding]","statement":"Standard English exercise on ${exercise.theme}. Minimum 60 words. Written in ENGLISH.","hint":"[Method hint in English]","officialCorrection":"[Correction in ENGLISH]"}
+  ]
+}`
+    : `Analyse cet exercice de Bac et génère une remédiation ciblée.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
 ${exercise.statement.substring(0,250)}
@@ -1110,8 +1162,17 @@ JSON requis :
 }
 
 async function analyzeStudentWork(exam: BacExam, studentWork: string, correction: string): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
-  const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n  "strengths": ["[Point fort 1]", "[Point fort 2]"],\n  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
+  const isAnglaisExam =
+    exam.title.toLowerCase().includes('anglais') ||
+    exam.title.toLowerCase().includes('english') ||
+    (exam.exercises?.[0]?.theme?.toLowerCase().includes('reading') ?? false)
+
+  const system = isAnglaisExam
+    ? `You are an expert English language teacher and educational coach for the Tunisian Baccalaureate.\nYou analyse student work and build a personalised improvement plan.\nCRITICAL: ALL text in your JSON (descriptions, advice, statements, corrections) MUST be written in ENGLISH.\nRESPOND ONLY IN VALID JSON.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const prompt = isAnglaisExam
+    ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n  "strengths": ["[Strength 1 in English]", "[Strength 2 in English]"],\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
+    : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n  "strengths": ["[Point fort 1]", "[Point fort 2]"],\n  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
   const raw = await askClaude(prompt, system, 5000)
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
@@ -1123,11 +1184,28 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
 
 // ── correctRemediationExercise (identique simulation) ─────────────
 async function correctRemediationExercise(exercise: AnalysisResult['remediationExercises'][number], studentAnswer: string): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
-  return askClaude(
-    `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
-    system, 2000
-  )
+  const isAnglaisRem =
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language') ||
+    exercise.theme.toLowerCase().includes('vocabulary') ||
+    exercise.statement.toLowerCase().startsWith('read') ||
+    exercise.statement.toLowerCase().startsWith('write') ||
+    exercise.statement.toLowerCase().startsWith('complete')
+
+  const system = isAnglaisRem
+    ? `You are a supportive but demanding English language tutor for the Tunisian Baccalaureate.
+You correct student answers on remediation exercises.
+CRITICAL RULE: ALL your feedback MUST be written in ENGLISH — never use French.
+Be precise, encouraging, and identify exactly what is missing.`
+    : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
+
+  const prompt = isAnglaisRem
+    ? `REMEDIATION EXERCISE — ${exercise.theme}\nObjective: ${exercise.objective}\n\nStatement:\n${exercise.statement}\n\nStudent's answer:\n${studentAnswer || '(No answer provided)'}\n\nModel correction:\n${exercise.officialCorrection}\n\nProvide (ALL IN ENGLISH):\n## Assessment of the answer\n[What is correct, incomplete, or wrong]\n\n## Commented correction\n[Step-by-step correction with explanations]\n\n## Key points to remember\n[Grammar rule, vocabulary or writing strategy — max 3 essential points]\n\n## Next step\n[One concrete action to keep improving on this skill]`
+    : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`
+
+  return askClaude(prompt, system, 2000)
 }
 
 
