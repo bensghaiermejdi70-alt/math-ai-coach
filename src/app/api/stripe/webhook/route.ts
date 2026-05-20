@@ -1,5 +1,10 @@
 // src/app/api/stripe/webhook/route.ts
-// Version finale — compatible API Stripe 2025-11-17
+// Version corrigée — fix triple paiement sur abonnement annulé
+// Corrections :
+//   1. Vérifier cancel_at_period_end AVANT de traiter invoice.payment_succeeded
+//   2. Vérifier status cancelled dans Supabase avant de prolonger
+//   3. Déduplication invoice par invoice.id (pas seulement session.id)
+//   4. Ne pas traiter invoice si subscription Stripe est cancelled/incomplete
 
 import Stripe from "stripe"
 import { NextResponse } from "next/server"
@@ -16,26 +21,27 @@ const PRICE_TO_PLAN: Record<string, string> = {
   "price_1TLNKLERX5ozBo4IelzRW5rG": "mensuel",
 }
 
-
 // ── Notification email client + admin via Resend ─────────────────
 async function sendConfirmationEmails(email: string, planType: string, amount: number) {
   const RESEND_KEY = process.env.RESEND_API_KEY
   if (!RESEND_KEY) return
 
-  const planLabels: Record<string,string> = {
-    mensuel: 'MathBac Mensuel — 15h/semaine',
-    sprint:  'Sprint Bac — 30h/semaine · Bac Blanc inclus',
-    annuel:  'MathBac Annuel — tout inclus',
+  const planLabels: Record<string, string> = {
+    mensuel: "MathBac Mensuel — 15h/semaine",
+    sprint:  "Sprint Bac — 30h/semaine · Bac Blanc inclus",
+    annuel:  "MathBac Annuel — tout inclus",
   }
 
-  // Email au client
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_KEY}`,
+    },
     body: JSON.stringify({
-      from: 'MathBac.AI <noreply@mathsbac.com>',
-      to:   [email],
-      subject: '✅ Votre abonnement MathBac.AI est activé !',
+      from: "MathBac.AI <noreply@mathsbac.com>",
+      to: [email],
+      subject: "✅ Votre abonnement MathBac.AI est activé !",
       html: `
         <div style="font-family:system-ui;max-width:480px;margin:0 auto;padding:24px;background:#0a0a1a;color:white;border-radius:12px">
           <h2 style="color:#4f6ef7;margin-bottom:8px">✅ Abonnement activé !</h2>
@@ -46,28 +52,30 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
             <p style="margin:0;color:#4f6ef7;font-weight:bold">${planLabels[planType] || planType}</p>
             <p style="margin:4px 0 0;color:#10b981;font-size:20px;font-weight:bold">${amount} €/mois</p>
           </div>
-          <a href="https://app.mathsbac.com/profile" style="display:inline-block;background:#4f6ef7;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:8px 0;font-size:16px">
+          <a href="https://app.mathsbac.com/profile"
+            style="display:inline-block;background:#4f6ef7;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:8px 0;font-size:16px">
             ✅ Voir mon abonnement actif →
           </a>
           <p style="color:#aaa;font-size:13px;margin-top:8px">
             Connectez-vous avec l'email : <strong style="color:white">${email}</strong>
           </p>
           <p style="color:#666;font-size:12px;margin-top:24px">
-            Pour toute question : WhatsApp 99 268 970<br/>
-            app.mathsbac.com
+            Pour toute question : WhatsApp 99 268 970<br/>app.mathsbac.com
           </p>
         </div>
       `,
     }),
-  }).catch(e => console.error('Email client error:', e))
+  }).catch((e) => console.error("Email client error:", e))
 
-  // Email à l'admin
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${RESEND_KEY}` },
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_KEY}`,
+    },
     body: JSON.stringify({
-      from: 'MathBac.AI <noreply@mathsbac.com>',
-      to:   ['bensghaiermejdi70@gmail.com'],
+      from: "MathBac.AI <noreply@mathsbac.com>",
+      to: ["bensghaiermejdi70@gmail.com"],
       subject: `💰 Nouveau paiement Stripe — ${planType} · ${amount}€`,
       html: `
         <h2>💰 Paiement confirmé</h2>
@@ -75,12 +83,13 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
         <p><strong>Plan :</strong> ${planLabels[planType] || planType}</p>
         <p><strong>Montant :</strong> ${amount} €</p>
         <p>L'abonnement a été activé automatiquement.</p>
-        <a href="https://app.mathsbac.com/admin/payments" style="background:#4f6ef7;color:white;padding:10px 20px;border-radius:8px;text-decoration:none">
+        <a href="https://app.mathsbac.com/admin/payments"
+          style="background:#4f6ef7;color:white;padding:10px 20px;border-radius:8px;text-decoration:none">
           Panel admin →
         </a>
       `,
     }),
-  }).catch(e => console.error('Email admin error:', e))
+  }).catch((e) => console.error("Email admin error:", e))
 }
 
 export async function POST(req: Request) {
@@ -101,13 +110,14 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!.trim()
     )
 
-    console.log(`Webhook: ${event.type}`)
+    console.log(`Webhook reçu: ${event.type}`)
 
-    // ── checkout.session.completed ────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // checkout.session.completed — Premier paiement
+    // ══════════════════════════════════════════════════════════════
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
 
-      // API 2025 : email dans customer_details
       const email =
         session.customer_details?.email ||
         (session as any).customer_email ||
@@ -143,14 +153,13 @@ export async function POST(req: Request) {
       if (planType === "annuel") endDate.setFullYear(endDate.getFullYear() + 1)
       else endDate.setMonth(endDate.getMonth() + 1)
 
-      // Trouver le profil Supabase par email
+      // Trouver le profil Supabase
       const { data: profile } = await supabase
         .from("profiles")
         .select("id")
         .eq("email", email.toLowerCase())
         .single()
 
-      // Mettre à jour profiles
       if (profile?.id) {
         const { error: profErr } = await supabase
           .from("profiles")
@@ -165,26 +174,27 @@ export async function POST(req: Request) {
         if (profErr) console.error("Erreur update profiles:", profErr)
         else console.log(`✅ Profile activé: ${email} → ${planType}`)
       } else {
-        // Chercher dans auth.users par email (cas insensible)
-        const { data: { users }, error: authErr } = await supabase.auth.admin.listUsers()
-        const authUser = users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+        const { data: { users } } = await supabase.auth.admin.listUsers()
+        const authUser = users?.find(
+          (u) => u.email?.toLowerCase() === email.toLowerCase()
+        )
         if (authUser) {
-          // Créer le profil si absent
-          await supabase.from("profiles").upsert({
-            id: authUser.id,
-            email: email.toLowerCase(),
-            is_active: true,
-            plan_type: planType,
-            subscription_end: endDate.toISOString(),
-            stripe_customer_id: customerId,
-          }, { onConflict: 'id' })
+          await supabase.from("profiles").upsert(
+            {
+              id:                 authUser.id,
+              email:              email.toLowerCase(),
+              is_active:          true,
+              plan_type:          planType,
+              subscription_end:   endDate.toISOString(),
+              stripe_customer_id: customerId,
+            },
+            { onConflict: "id" }
+          )
           console.log(`✅ Profil créé/mis à jour via auth.users: ${email}`)
-        } else {
-          console.log(`⚠️ Profil non trouvé pour ${email} — abonnement enregistré sans user_id`)
         }
       }
 
-      // Vérifier si abonnement déjà existant pour cette session
+      // Déduplication : vérifier si cet invoice/session déjà traité
       const { data: existingSub } = await supabase
         .from("subscriptions")
         .select("id")
@@ -192,24 +202,23 @@ export async function POST(req: Request) {
         .single()
 
       if (existingSub) {
-        console.log(`⚠️ Abonnement déjà existant pour session ${session.id} — skip`)
+        console.log(`⚠️ Session ${session.id} déjà traitée — skip`)
         return NextResponse.json({ received: true })
       }
 
-      // Vérifier s'il existe déjà un abonnement actif pour la même matière (si profile trouvé)
+      // Vérifier doublon actif par matière
       if (profile?.id) {
         const matiere = extractMatiere(planType)
-        const now = new Date().toISOString()
-
+        const now     = new Date().toISOString()
         const { data: existingByMatiere } = await supabase
-          .from('subscriptions')
-          .select('id, plan_type, ends_at, status')
-          .eq('user_id', profile.id)
-          .eq('status', 'active')
+          .from("subscriptions")
+          .select("id, plan_type, ends_at, status")
+          .eq("user_id", profile.id)
+          .eq("status", "active")
 
-        const duplicateActive = existingByMatiere?.some(sub => {
+        const duplicateActive = existingByMatiere?.some((sub) => {
           const subMatiere = extractMatiere(sub.plan_type)
-          const isExpired = !sub.ends_at || new Date(sub.ends_at) <= new Date(now)
+          const isExpired  = !sub.ends_at || new Date(sub.ends_at) <= new Date(now)
           return subMatiere === matiere && !isExpired
         })
 
@@ -220,57 +229,143 @@ export async function POST(req: Request) {
       }
 
       // Insérer dans subscriptions
-      const { error: subErr } = await supabase
-        .from("subscriptions")
-        .insert({
-          user_id:                profile?.id || null,
-          plan_type:              planType,
-          status:                 "active",
-          is_active:              true,
-          price_paid:             (session.amount_total || 1500) / 100,
-          payment_method:         "stripe",
-          payment_reference:      session.id,
-          stripe_customer_id:     customerId,
-          stripe_subscription_id: subscriptionId || null,
-          stripe_price_id:        priceId,
-          starts_at:              new Date().toISOString(),
-          ends_at:                endDate.toISOString(),
-          subscription_start:     new Date().toISOString(),
-          subscription_end:       endDate.toISOString(),
-        })
+      const { error: subErr } = await supabase.from("subscriptions").insert({
+        user_id:                profile?.id || null,
+        plan_type:              planType,
+        status:                 "active",
+        is_active:              true,
+        price_paid:             (session.amount_total || 1500) / 100,
+        payment_method:         "stripe",
+        payment_reference:      session.id,
+        stripe_customer_id:     customerId,
+        stripe_subscription_id: subscriptionId || null,
+        stripe_price_id:        priceId,
+        starts_at:              new Date().toISOString(),
+        ends_at:                endDate.toISOString(),
+        subscription_start:     new Date().toISOString(),
+        subscription_end:       endDate.toISOString(),
+      })
 
       if (subErr) console.error("Erreur insert subscriptions:", subErr)
 
-      // Envoyer emails de confirmation
-      await sendConfirmationEmails(email, planType, (session.amount_total || 1500) / 100)
+      await sendConfirmationEmails(
+        email,
+        planType,
+        (session.amount_total || 1500) / 100
+      )
     }
 
-    // ── invoice.payment_succeeded (nouveau nom API 2025) ──────────
-    // ── invoice.paid (ancien nom) ─────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // invoice.payment_succeeded / invoice.paid — Renouvellements
+    // FIX : vérifier cancel_at_period_end + status Supabase
+    // ══════════════════════════════════════════════════════════════
     if (
       event.type === "invoice.payment_succeeded" ||
       event.type === "invoice.paid"
     ) {
       const invoice = event.data.object as any
 
-      // Ne pas traiter la première facture (gérée par checkout.session.completed)
+      // FIX 1 : ne pas traiter la première facture (gérée par checkout.session.completed)
       if (invoice.billing_reason === "subscription_create") {
+        console.log("⏭️ Premier paiement — géré par checkout.session.completed")
         return NextResponse.json({ received: true })
       }
 
-      const customerId = invoice.customer as string
-      const endDate    = new Date()
+      const customerId     = invoice.customer as string
+      const subscriptionId = invoice.subscription as string
+
+      // FIX 2 : VÉRIFIER LE STATUT DE L'ABONNEMENT STRIPE ────────
+      // Si cancel_at_period_end=true → l'abonnement est en cours d'annulation
+      // Si status !== 'active' → ne pas renouveler
+      if (subscriptionId) {
+        try {
+          const stripeSub = await stripe.subscriptions.retrieve(subscriptionId)
+
+          // BLOQUÉ si cancel_at_period_end = true
+          if (stripeSub.cancel_at_period_end) {
+            console.log(
+              `🚫 Abonnement ${subscriptionId} en cours d'annulation (cancel_at_period_end=true) — renouvellement BLOQUÉ`
+            )
+            return NextResponse.json({ received: true })
+          }
+
+          // BLOQUÉ si statut pas 'active'
+          if (stripeSub.status !== "active") {
+            console.log(
+              `🚫 Abonnement ${subscriptionId} non actif (status=${stripeSub.status}) — renouvellement BLOQUÉ`
+            )
+            return NextResponse.json({ received: true })
+          }
+        } catch (e) {
+          console.error("Erreur vérification subscription Stripe:", e)
+          // En cas d'erreur API Stripe, bloquer par sécurité
+          return NextResponse.json({ received: true })
+        }
+      }
+
+      // FIX 3 : VÉRIFIER LE STATUT SUPABASE ─────────────────────
+      // Si l'abonnement est cancelled dans Supabase → ne pas renouveler
+      const { data: supabaseSub } = await supabase
+        .from("subscriptions")
+        .select("id, status")
+        .eq("stripe_customer_id", customerId)
+        .eq("status", "active")
+        .single()
+
+      if (!supabaseSub) {
+        console.log(
+          `🚫 Aucun abonnement actif dans Supabase pour ${customerId} — renouvellement BLOQUÉ`
+        )
+        return NextResponse.json({ received: true })
+      }
+
+      // FIX 4 : DÉDUPLICATION PAR INVOICE ID ────────────────────
+      // Evite de traiter le même invoice plusieurs fois (retry Stripe)
+      const invoiceId = invoice.id as string
+      const { data: existingInvoice } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("payment_reference", invoiceId)
+        .single()
+
+      if (existingInvoice) {
+        console.log(`⚠️ Invoice ${invoiceId} déjà traité — skip`)
+        return NextResponse.json({ received: true })
+      }
+
+      // ✅ Tous les checks passés → renouveler
+      const endDate = new Date()
       endDate.setMonth(endDate.getMonth() + 1)
 
       const { error } = await supabase
         .from("profiles")
-        .update({ is_active: true, subscription_end: endDate.toISOString() })
+        .update({
+          is_active:        true,
+          subscription_end: endDate.toISOString(),
+        })
         .eq("stripe_customer_id", customerId)
 
-      if (!error) console.log(`🔄 Renouvellement pour ${customerId}`)
+      if (!error) {
+        console.log(`🔄 Renouvellement validé pour ${customerId} → fin: ${endDate.toISOString()}`)
+
+        // Marquer l'invoice comme traitée dans subscriptions
+        await supabase
+          .from("subscriptions")
+          .update({
+            payment_reference: invoiceId,
+            ends_at:           endDate.toISOString(),
+            subscription_end:  endDate.toISOString(),
+          })
+          .eq("stripe_customer_id", customerId)
+          .eq("status", "active")
+      } else {
+        console.error("Erreur renouvellement:", error)
+      }
     }
 
-    // ── invoice.payment_failed ────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // invoice.payment_failed — Échec de paiement
+    // ══════════════════════════════════════════════════════════════
     if (event.type === "invoice.payment_failed") {
       const invoice    = event.data.object as Stripe.Invoice
       const customerId = invoice.customer as string
@@ -283,7 +378,9 @@ export async function POST(req: Request) {
       console.log(`❌ Paiement échoué: ${customerId}`)
     }
 
-    // ── customer.subscription.deleted ────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // customer.subscription.deleted — Annulation finale
+    // ══════════════════════════════════════════════════════════════
     if (event.type === "customer.subscription.deleted") {
       const sub        = event.data.object as Stripe.Subscription
       const customerId = sub.customer as string
@@ -295,11 +392,40 @@ export async function POST(req: Request) {
 
       await supabase
         .from("subscriptions")
-        .update({ status: "cancelled" })
+        .update({ status: "cancelled", is_active: false })
         .eq("stripe_customer_id", customerId)
         .eq("status", "active")
 
-      console.log(`🚫 Annulation: ${customerId}`)
+      console.log(`🚫 Annulation définitive: ${customerId}`)
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // customer.subscription.updated — Mise à jour (cancel_at_period_end)
+    // FIX : détecter cancel_at_period_end=true et marquer en Supabase
+    // ══════════════════════════════════════════════════════════════
+    if (event.type === "customer.subscription.updated") {
+      const sub        = event.data.object as Stripe.Subscription
+      const customerId = sub.customer as string
+
+      // Si l'utilisateur vient d'annuler (cancel_at_period_end devient true)
+      if (sub.cancel_at_period_end) {
+        const cancelAt = sub.cancel_at
+          ? new Date(sub.cancel_at * 1000).toISOString()
+          : null
+
+        console.log(`⚠️ Abonnement ${sub.id} marqué cancel_at_period_end — fin: ${cancelAt}`)
+
+        // Marquer dans Supabase comme "cancelling" (pas encore cancelled)
+        await supabase
+          .from("subscriptions")
+          .update({
+            status:    "cancelling",
+            // Conserver ends_at jusqu'à la vraie fin de période
+            ...(cancelAt ? { ends_at: cancelAt, subscription_end: cancelAt } : {}),
+          })
+          .eq("stripe_customer_id", customerId)
+          .eq("status", "active")
+      }
     }
 
     return NextResponse.json({ received: true })
