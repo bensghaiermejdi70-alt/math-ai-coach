@@ -518,10 +518,18 @@ async function generateOneExam(
   const section = archives[0]?.section ?? 'Mathématiques'
   const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
 
-  // Détecter si c'est un examen physique-chimie (sectionKey contient 'phys')
-  const isPhysExam = archives[0]?.sectionKey?.includes('phys') ?? false
+  // Détecter la matière pour adapter le system prompt
+  const isPhysExam    = archives[0]?.sectionKey?.includes('phys') ?? false
+  const isAnglaisExam = archives[0]?.sectionKey?.includes('anglais') ?? false
 
-  const system = isPhysExam
+  const system = isAnglaisExam
+    ? `You are an expert author of official Tunisian Baccalaureate English exam papers (CNP official programme).
+You create ORIGINAL, authentic papers at official Bac level.
+RESPOND ONLY IN VALID JSON — no backticks, no comments.
+
+IMPORTANT LANGUAGE RULE: ALL content (statements, questions, passages, answer keys) MUST be written in ENGLISH.
+The correction and model answers MUST also be entirely in ENGLISH.`
+    : isPhysExam
     ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques et des contextes scientifiques précis.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
@@ -529,7 +537,16 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
-  const physExtraRules = isPhysExam ? `
+  const physExtraRules = isAnglaisExam ? `
+ENGLISH EXAM RULES — MANDATORY :
+ALL text MUST be in ENGLISH — passages, questions, instructions, model answers.
+Structure officielle Bac Anglais Tunisie :
+- Exercise 1 — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions (Q1=1pt, Q2=2pts, Q3=2pts, Q4=2pts, Q5=1pt)
+- Exercise 2 — Writing (8 pts) : essay or article task with clear instructions, 180-200 words minimum
+- Exercise 3 — Language (4 pts) : grammar exercises (Exercise A 2pts + Exercise B 2pts)
+Total : 20 points — Duration : 2 hours
+NEVER use French in the exam — every word must be in English.
+The model correction must also be entirely in English.` : isPhysExam ? `
 RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
 - Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
 - Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
@@ -576,7 +593,38 @@ RÈGLES ABSOLUES :
 - Dans "statement", écrire : "Soit f la fonction représentée ci-dessous. [voir graphique] 1) ..."
 
 Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
-{
+${isAnglaisExam ? `{
+  "title": "${section} — English Simulation Variant ${idx+1}",
+  "section": "${section}",
+  "duration": 120,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Part I — Reading Comprehension",
+      "theme": "Reading",
+      "points": 8,
+      "graph": null,
+      "statement": "Read the following passage carefully.\n\n[AUTHENTIC ENGLISH TEXT — 280-320 words on a relevant topic]\n\nQUESTIONS:\nQ1 (1 pt) — [Global comprehension: What is the main idea of the text?]\nQ2 (2 pts) — Say whether these statements are True (T), False (F) or Not Mentioned (NM). Justify from the text:\n  a) [statement]  b) [statement]\nQ3 (2 pts) — [Inference question requiring evidence from the text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition]  b) [definition]\nQ5 (1 pt) — What does the underlined word in line X refer to?"
+    },
+    {
+      "num": 2,
+      "title": "Part II — Writing",
+      "theme": "Writing",
+      "points": 8,
+      "graph": null,
+      "statement": "WRITING TASK:\n[Clear essay or article task related to the reading theme — 180-200 words]\n\nYour writing should include:\n• A clear introduction with your position\n• Two or three well-developed arguments with examples\n• A conclusion\n\nMarking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)"
+    },
+    {
+      "num": 3,
+      "title": "Part III — Language",
+      "theme": "Grammar & Vocabulary",
+      "points": 4,
+      "graph": null,
+      "statement": "EXERCISE A (2 pts) — Fill in the blanks / Transform the sentences:\n1. [sentence]  2. [sentence]  3. [sentence]  4. [sentence]\n\nEXERCISE B (2 pts) — Rewrite / Vocabulary matching:\n1. [item]  2. [item]  3. [item]  4. [item]"
+    }
+  ]
+}` : `{
   "title": "${section} — Simulation IA Variante ${idx+1}",
   "section": "${section}",
   "duration": 180,
@@ -615,7 +663,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
       "statement": "Énoncé complet. Minimum 80 mots."
     }
   ]
-}`
+}`}`
 
   const raw = await askClaude(prompt, system, 5000)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
@@ -633,7 +681,19 @@ async function correctOneExercise(
   studentWork: string,
   examTitle: string
 ): Promise<string> {
-  const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
+  // Détecter Anglais depuis le titre de l'exercice ou l'examTitle
+  const isAnglaisCorrection = examTitle.toLowerCase().includes('english') ||
+    examTitle.toLowerCase().includes('anglais') ||
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar')
+
+  const system = isAnglaisCorrection
+    ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
+IMPORTANT: ALL your correction must be written in ENGLISH — never use French.
+Use markdown: ### for sections, **bold** for key answers, > for important points.`
+    : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
@@ -704,7 +764,78 @@ QUAND UTILISER (OBLIGATOIRE dans la correction) :
     ? "\n\nNOTE : L'élève a soumis des photos de sa copie papier. Traite sa réponse comme si tu avais vu sa copie (tu ne peux pas réellement voir les images mais utilise le contexte disponible pour une correction personnalisée)."
     : ''
 
-  const prompt = withWork
+  const prompt = isAnglaisCorrection
+    ? (withWork
+      ? `EXAM: ${examTitle}
+EXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+STUDENT'S ANSWER:
+${studentWork}${imageNote}
+
+Write the COMPLETE correction of this exercise ONLY. ALL text must be in ENGLISH. Mandatory structure:
+
+## ${exercise.title} — Detailed Correction (${exercise.points} pts)
+
+[For EACH numbered question in the statement:]
+
+### Question X —
+**Concept and method:** [Rule / approach — WHY this method applies here specifically]
+
+**Step-by-step answer:**
+- Step 1: [Precise action] → [Intermediate result]
+- Step 2: [Precise action] → [Intermediate result]
+- Step 3: [Precise action] → [Final answer]
+
+> **Answer:** [Final answer clearly stated]
+
+**Marking scheme — Question X:** [X] pts
+- [X] pt: [for what exactly]
+
+**Student's answer analysis:**
+✅ Correct: [what the student did well]
+❌ Incorrect: [what is wrong or missing, with explanation]
+💡 Tip: [how to correct this specific error]
+
+**Common mistake:** [Most frequent error on this type of question and why it is wrong]
+
+---
+
+> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
+      : `EXAM: ${examTitle}
+EXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+Write the COMPLETE and EXHAUSTIVE correction of this exercise ONLY. ALL text MUST be in ENGLISH. Mandatory structure:
+
+## ${exercise.title} — Complete Correction (${exercise.points} pts)
+
+[For EACH numbered question:]
+
+### Question X —
+**Concept and method:** [Rule or approach — explain WHY this method is chosen. State the exact rule with its conditions.]
+
+**Complete answer:**
+- Step 1: [Action + theoretical justification] → [Full working] = [Result]
+- Step 2: [Action + justification] → [Working] = [Result]
+- Step 3: ... (continue to the final result, NO step skipped)
+
+> **Answer:** [Final answer]
+
+**Marking scheme:** [X] pts — [Detail: X pt for approach, X pt for language, X pt for conclusion]
+
+**Important pedagogical note:** [Key grammar rule, writing tip, or vocabulary point]
+
+**Common mistake:** [Frequent error on THIS type of question — detailed explanation of why it is wrong]
+
+---
+
+> **Key takeaway for ${exercise.title}:** [2-3 grammar rules, vocabulary items or writing strategies to remember]`)
+    : (withWork
     ? `EXAMEN : ${examTitle}
 EXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
 
@@ -774,7 +905,7 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 
 ---
 
-> **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`
+> **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`)
 
   return askClaude(prompt, system, 8000)
 }
