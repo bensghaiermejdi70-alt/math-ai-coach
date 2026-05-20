@@ -15,6 +15,11 @@ const PLAN_PRICES: Record<string, number> = {
 }
 const PLAN_LABELS: Record<string, string> = {
   mensuel: 'MathBac Mensuel', sprint: 'Sprint Bac', annuel: 'MathBac Annuel',
+  mensuel_mathematiques: 'Maths Mensuel', sprint_mathematiques: 'Maths Sprint', annuel_mathematiques: 'Maths Annuel',
+  mensuel_physique: 'Physique Mensuel', sprint_physique: 'Physique Sprint', annuel_physique: 'Physique Annuel',
+  mensuel_informatique: 'Info Mensuel', sprint_informatique: 'Info Sprint', annuel_informatique: 'Info Annuel',
+  mensuel_anglais: 'Anglais Mensuel', sprint_anglais: 'Anglais Sprint', annuel_anglais: 'Anglais Annuel',
+  mensuel_svt: 'SVT Mensuel', sprint_svt: 'SVT Sprint', annuel_svt: 'SVT Annuel',
 }
 
 // ── 2 méthodes uniquement ─────────────────────────────────────────
@@ -107,9 +112,31 @@ function AdminPanel() {
           <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:5, fontWeight:600 }}>Plan</label>
           <select value={planTarget} onChange={e => setPlanTarget(e.target.value)}
             className="input" style={{ borderRadius:9, background:'var(--surface)', color:'var(--text)', cursor:'pointer' }}>
-            <option value="mensuel">MathBac Mensuel — 60 DT</option>
-            <option value="sprint">Sprint Bac — 90 DT</option>
-            <option value="annuel">MathBac Annuel — 600 DT</option>
+            <optgroup label="🧮 Mathématiques">
+              <option value="mensuel_mathematiques">Maths Mensuel — 60 DT</option>
+              <option value="sprint_mathematiques">Maths Sprint — 90 DT</option>
+              <option value="annuel_mathematiques">Maths Annuel — 600 DT</option>
+            </optgroup>
+            <optgroup label="⚗️ Physique-Chimie">
+              <option value="mensuel_physique">Physique Mensuel — 60 DT</option>
+              <option value="sprint_physique">Physique Sprint — 90 DT</option>
+              <option value="annuel_physique">Physique Annuel — 600 DT</option>
+            </optgroup>
+            <optgroup label="💻 Informatique">
+              <option value="mensuel_informatique">Info Mensuel — 60 DT</option>
+              <option value="sprint_informatique">Info Sprint — 90 DT</option>
+              <option value="annuel_informatique">Info Annuel — 600 DT</option>
+            </optgroup>
+            <optgroup label="🇬🇧 Anglais">
+              <option value="mensuel_anglais">Anglais Mensuel — 60 DT</option>
+              <option value="sprint_anglais">Anglais Sprint — 90 DT</option>
+              <option value="annuel_anglais">Anglais Annuel — 600 DT</option>
+            </optgroup>
+            <optgroup label="🧬 SVT">
+              <option value="mensuel_svt">SVT Mensuel — 60 DT</option>
+              <option value="sprint_svt">SVT Sprint — 90 DT</option>
+              <option value="annuel_svt">SVT Annuel — 600 DT</option>
+            </optgroup>
           </select>
         </div>
         <button type="submit" disabled={loading}

@@ -76,13 +76,23 @@ const MATIERES = [
     key: 'anglais',
     icon: '🇬🇧',
     label: 'Anglais',
-    desc: 'Grammar · Essay · Axes thématiques — Bientôt disponible',
+    desc: 'Reading · Essay · Grammar · Bac Blanc Anglais · Programme CNP officiel',
     color: '#f59e0b',
-    gradient: 'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.05))',
-    border: 'rgba(245,158,11,0.25)',
-    available: false,
-    accesPayant: [],
-    accesFree: [],
+    gradient: 'linear-gradient(135deg,rgba(245,158,11,0.15),rgba(236,72,153,0.07))',
+    border: 'rgba(245,158,11,0.4)',
+    available: true,
+    accesPayant: [
+      'Simulation Bac Anglais IA',
+      'Chat Professeur Anglais',
+      'Correction Essay & Writing IA',
+      'Bac Blanc Anglais (mai-juin)',
+    ],
+    accesFree: [
+      'Cours Anglais officiels — 4 Units · Programme CNP',
+      'Examens officiels + sujets Section Lettres & Toutes sections (2015→2025)',
+      'Annales Bac Anglais Tunisie — Lettres · Sciences · Éco',
+      'Grammar Focus · Vocabulary · Writing tips gratuits',
+    ],
   },
 
 ]
@@ -146,7 +156,7 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 
 export default function AbonnementPage() {
   const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut } = useAuth()
-  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel' }
+  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel', mensuel_anglais:'Anglais Mensuel', sprint_anglais:'Anglais Sprint', annuel_anglais:'Anglais Annuel' }
   const [payment, setPayment] = useState('d17')
   const [matiereKey, setMatiereKey] = useState<string>('')
   const matiere = MATIERES.find(m => m.key === matiereKey)

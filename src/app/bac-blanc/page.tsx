@@ -1130,6 +1130,183 @@ async function correctRemediationExercise(exercise: AnalysisResult['remediationE
   )
 }
 
+
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC ANGLAIS
+// Structure officielle Bac Tunisie :
+//   Part I   — Reading Comprehension (8 pts)
+//   Part II  — Writing               (8 pts)
+//   Part III — Language              (4 pts)
+//   Total : 20 pts · Durée : 2h
+// Sections : lettres / toutes (sauf lettres)
+// ════════════════════════════════════════════════════════════════
+
+const PROGRAMME_JOUR_ANGLAIS = [
+  { theme:'Art Shows & Museums',    writing:'Opinion essay — role of art in modern society',           grammar:'Present/Past · Expressing opinion' },
+  { theme:'Space Tourism',          writing:'For & Against — space tourism: dream or danger?',         grammar:'Future forms · Comparatives' },
+  { theme:'A Package Tour',         writing:'Article — advantages of travelling independently',         grammar:'Past Simple/Continuous · Linking words' },
+  { theme:'Education for All',      writing:'Essay — education: a right or a privilege?',              grammar:'Modals · Passive voice' },
+  { theme:'Higher Education',       writing:'Opinion essay — should university be free?',              grammar:'Conditionals type 1 & 2' },
+  { theme:'Online Learning',        writing:'Article — e-learning: the future of education?',          grammar:'Relative clauses · Gerund/Infinitive' },
+  { theme:'Lifelong Learning',      writing:'Essay — why learning never stops',                        grammar:'Reported speech · Complex sentences' },
+  { theme:'Comparing Systems',      writing:'Compare & Contrast — two educational systems',            grammar:'Comparatives · Superlatives' },
+  { theme:'Creativity',             writing:'Essay — is creativity dying in the digital age?',         grammar:'Gerund/Infinitive · Relative clauses' },
+  { theme:'Innovation',             writing:'Article — how innovation changes our world',              grammar:'Passive voice · Future forms' },
+  { theme:'Inventions & Inventors', writing:'Essay — the invention that changed humanity',             grammar:'Past Simple · Relative clauses' },
+  { theme:'Modern Technology & AI', writing:'Essay — AI: threat or opportunity for humanity?',        grammar:'Modals · Conditionals type 2' },
+  { theme:'Environmental Issues',   writing:'Problem/Solution essay — fighting climate change',        grammar:'Future forms · Complex sentences' },
+  { theme:'Social Issues',          writing:'Essay — poverty and inequality in modern society',        grammar:'Reported speech · Passive voice' },
+  { theme:'Health & Lifestyle',     writing:'Article — healthy living in a stressful world',           grammar:'Comparatives · Linking words' },
+  { theme:'Teen Issues & Society',  writing:'Essay — social media: connecting or isolating us?',      grammar:'Modals · Conditionals' },
+  { theme:'Cultural Heritage',      writing:'Opinion essay — preserving our cultural identity',        grammar:'Relative clauses · Present/Past' },
+  { theme:'Science & Discovery',    writing:'Article — a scientific breakthrough that amazed the world',grammar:'Past Simple · Passive voice' },
+  { theme:'Globalization',          writing:'Essay — globalization: benefits and drawbacks',           grammar:'Comparatives · Linking words' },
+  { theme:'Media & Journalism',     writing:'Opinion essay — fake news in the digital age',           grammar:'Reported speech · Future forms' },
+  { theme:'Sports & Achievement',   writing:'Article — the role of sport in personal development',    grammar:'Present/Past · Comparatives' },
+  { theme:'Volunteering & Charity', writing:'Essay — why volunteering matters for society',           grammar:'Modals · Gerund/Infinitive' },
+  { theme:'Urban Life & Migration', writing:'Essay — city vs countryside: where should we live?',     grammar:'Comparatives · Conditionals' },
+  { theme:'Youth & Activism',       writing:'Essay — can young people really change the world?',      grammar:'Modals · Complex sentences' },
+  { theme:'Work & Career',          writing:'Article — the jobs of the future',                       grammar:'Future forms · Passive voice' },
+  { theme:'Technology & Privacy',   writing:'Essay — are we losing our privacy in the digital world?',grammar:'Relative clauses · Reported speech' },
+  { theme:'Food & Nutrition',       writing:'Article — why healthy eating habits matter',             grammar:'Comparatives · Gerund/Infinitive' },
+  { theme:'Tourism & Culture',      writing:'Essay — the impact of tourism on local cultures',        grammar:'Present/Past · Linking words' },
+  { theme:'Gender Equality',        writing:'Essay — gender equality: progress and challenges',        grammar:'Passive voice · Reported speech' },
+  { theme:'The Digital Revolution', writing:'Essay — how technology has transformed daily life',      grammar:'Present Perfect · Comparatives' },
+]
+
+function getProgrammeJourAnglais(dayNum: number) {
+  return PROGRAMME_JOUR_ANGLAIS[(dayNum - 1) % PROGRAMME_JOUR_ANGLAIS.length]
+}
+
+async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_ANGLAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const isLettres = candidat.sectionKey === 'lettres'
+  const sectionLabel = isLettres ? 'Section Lettres' : 'Toutes sections (sauf Lettres)'
+  const sectionFocus = isLettres
+    ? 'literary and cultural texts · expressive and narrative writing · personal voice and description'
+    : 'scientific and technical texts · argumentative essay · logical analysis and structured reasoning'
+
+  const prog = getProgrammeJourAnglais(dayNum)
+
+  const system = `You are an expert author of official Tunisian Baccalaureate English papers (CNP official programme).
+You create original BAC BLANC ANGLAIS papers of official level.
+RESPOND ONLY IN VALID JSON — no backticks, no comments.
+
+OFFICIAL STRUCTURE — BAC ANGLAIS TUNISIE :
+Part I   — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions
+Part II  — Writing (8 pts) : structured essay or article, 180-200 words minimum
+Part III — Language (4 pts) : grammar + vocabulary exercises (4+4 items)
+
+REQUIREMENTS :
+- Text must be authentic and engaging at B2 level
+- Questions progress from literal to inferential to evaluative
+- Writing task must have clear instructions including word count
+- Grammar exercises must be varied and clearly labeled
+- The paper must match the difficulty level of official Bac Tunisie exams`
+
+  const prompt = `Create an official BAC BLANC ANGLAIS paper — National Contest — DAY ${dayNum} — ${sectionLabel}.
+
+SEED (all students same day = same paper): ${seed}
+DATE: ${dateStr}
+THEME: ${prog.theme}
+WRITING TASK: ${prog.writing}
+GRAMMAR FOCUS: ${prog.grammar}
+SECTION FOCUS: ${sectionFocus}
+
+PART I — READING COMPREHENSION (8 pts):
+Write an authentic text of 280-320 words about "${prog.theme}".
+${isLettres
+  ? 'Style: literary/journalistic — descriptive, personal voice, cultural references, emotional engagement.'
+  : 'Style: informative/scientific — logical structure, facts, examples, objective analysis.'}
+Then write 5 questions:
+  Q1 (1 pt): Global comprehension — What is the main idea of the text?
+  Q2 (2 pts): True/False/Not Mentioned — 2 statements with justification from the text
+  Q3 (2 pts): Open question — Find evidence and infer the author's point of view
+  Q4 (2 pts): Vocabulary — define or find synonyms for 2 words from context
+  Q5 (1 pt): Referent or cohesion — What does "it/they/this" refer to in line X?
+
+PART II — WRITING (8 pts):
+Task: ${prog.writing}
+Instructions: Write a well-structured essay/article of 180-200 words.
+Include: clear introduction · 2-3 well-developed arguments with examples · conclusion
+Marking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)
+
+PART III — LANGUAGE (4 pts):
+Focus: ${prog.grammar}
+Exercise A (2 pts): 4 fill-in-the-blank or sentence transformation items
+Exercise B (2 pts): 4 rewriting or vocabulary matching items
+
+RESPOND WITH THIS EXACT JSON:
+{
+  "id": "bb-anglais-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Anglais — ${sectionLabel} — Day ${dayNum}",
+  "section": "${sectionLabel}",
+  "sectionKey": "${candidat.sectionKey}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 120,
+  "exercises": [
+    {
+      "num": 1,
+      "theme": "${prog.theme}",
+      "title": "Part I — Reading Comprehension",
+      "points": 8,
+      "graph": null,
+      "statement": "TEXT:\n[Full authentic text 280-320 words about ${prog.theme} — ${sectionFocus}]\n\nQUESTIONS:\nQ1 (1 pt) — [global comprehension question]\nQ2 (2 pts) — Say whether the following statements are True (T), False (F) or Not Mentioned (NM). Justify with a quote from the text:\n  a) [statement 1]\n  b) [statement 2]\nQ3 (2 pts) — [open inference question requiring evidence from text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition 1]\n  b) [definition 2]\nQ5 (1 pt) — What does the underlined word \'[word]\' in paragraph X refer to?"
+    },
+    {
+      "num": 2,
+      "theme": "Writing — ${prog.theme}",
+      "title": "Part II — Writing",
+      "points": 8,
+      "graph": null,
+      "statement": "TASK: ${prog.writing}\n\nWrite a well-structured essay or article (180-200 words).\nYour writing should include:\n• A clear introduction presenting your topic or position\n• Two or three well-developed paragraphs with arguments and examples\n• A conclusion summarising your point of view\n\nMARKING SCHEME:\n• Content and Ideas: 4 pts\n• Language, Grammar and Vocabulary: 2 pts\n• Organisation and Cohesion: 2 pts"
+    },
+    {
+      "num": 3,
+      "theme": "Language — ${prog.grammar}",
+      "title": "Part III — Language",
+      "points": 4,
+      "graph": null,
+      "statement": "GRAMMAR FOCUS: ${prog.grammar}\n\nEXERCISE A (2 pts) — Fill in the blanks or transform the sentences:\n1. [sentence 1 — item requiring ${prog.grammar.split('·')[0].trim()}]\n2. [sentence 2]\n3. [sentence 3]\n4. [sentence 4]\n\nEXERCISE B (2 pts) — Rewrite the sentences without changing the meaning / Match the words:\n1. [sentence or matching item 1]\n2. [sentence or matching item 2]\n3. [sentence or matching item 3]\n4. [sentence or matching item 4]"
+    }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-anglais-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: `Bac Blanc Anglais — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 120,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || `bb-anglais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 120,
+  }
+}
+
 // ── Génération examen Bac Blanc (distinct de simulation) ──────────
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
@@ -1571,10 +1748,14 @@ const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: s
     { key:'info',   label:'Section Informatique',   icon:'⌨',  color:'#8b5cf6' },
     { key:'autres', label:'Autres sections (TIC)',   icon:'🌐', color:'#06b6d4' },
   ],
+  anglais: [
+    { key:'lettres', label:'Section Lettres',                icon:'📚', color:'#ec4899' },
+    { key:'toutes',  label:'Toutes sections (sauf Lettres)', icon:'🔬', color:'#6366f1' },
+  ],
 }
 
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onRetour,
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onRetour,
   hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
 }: {
   candidat: Candidat
@@ -1582,6 +1763,7 @@ function PhaseChoixMatiere({
   onMaths: () => void
   onPhysique: () => void
   onInfo: () => void
+  onAnglais: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
   checkMatiereAccess?: (m: any) => boolean
@@ -1638,13 +1820,13 @@ function PhaseChoixMatiere({
       key: 'anglais',
       icon: '🇬🇧',
       label: 'Anglais',
-      desc: 'Grammar · Essay · Reading Comprehension · Writing',
+      desc: 'Reading Comprehension · Essay Writing · Language · 2 sections · Programme officiel CNP',
       color: '#f59e0b',
-      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.08),rgba(249,115,22,0.04))',
-      border: 'rgba(245,158,11,0.18)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
+      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.15),rgba(236,72,153,0.06))',
+      border: 'rgba(245,158,11,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
     },
     {
       key: 'svt',
@@ -1679,6 +1861,7 @@ function PhaseChoixMatiere({
     if (selectedMatiere === 'maths') { onMaths(); return }
     if (selectedMatiere === 'physique') { onPhysique(); return }
     if (selectedMatiere === 'informatique') { onInfo(); return }
+    if (selectedMatiere === 'anglais') { onAnglais(); return }
   }
 
   const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
@@ -3387,6 +3570,33 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+
+  // ── Lancer le bac blanc Anglais ─────────────────────────────────────
+  const handleStartAnglais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('anglais')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('anglais')) {
+      alert("✅ Vous avez déjà passé votre examen Anglais aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancAnglais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('anglais')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3437,6 +3647,7 @@ function BacBlancInner() {
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
       onInfo={handleStartInfo}
+      onAnglais={handleStartAnglais}
       onRetour={()=>setPhase('inscription')}
       hasActiveSubscription={hasActiveSubscription}
       checkMatiereAccess={checkMatiereAccess}

@@ -9,7 +9,7 @@ import Link from 'next/link'
 //  Programme officiel CNP Tunisie — 4ème année secondaire
 // ═══════════════════════════════════════════════════════════════
 
-type Matiere = 'maths' | 'physique-chimie' | 'informatique' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | null
 
 // ──────────────────────────────────────────────────────────────
 //  DONNÉES MATHÉMATIQUES — Programme officiel CNP mis à jour
@@ -620,6 +620,30 @@ export default function BacTunisiePage() {
                 </span>
               </button>
 
+              {/* ANGLAIS */}
+              <button
+                onClick={() => setMatiere('anglais')}
+                style={{ padding: '36px 28px', background: 'rgba(245,158,11,0.06)', border: '1.5px solid rgba(245,158,11,0.22)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.55)'; e.currentTarget.style.background = 'rgba(245,158,11,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.22)'; e.currentTarget.style.background = 'rgba(245,158,11,0.06)' }}
+              >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>🇬🇧</div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#fbbf24' }}>Anglais</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                  4 Units · Reading · Writing · Grammar<br />
+                  Programme unique — toutes sections
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  {['🔬 Sciences', '📊 Éco-Gestion', '📚 Lettres'].map(t => (
+                    <span key={t} style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(245,158,11,0.12)', color: '#fbbf24', fontWeight: 600 }}>{t}</span>
+                  ))}
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#fbbf24', fontWeight: 700, fontSize: 13 }}>
+                  Voir les Units →
+                </span>
+              </button>
+
               {/* SVT */}
               <button
                 disabled
@@ -640,10 +664,10 @@ export default function BacTunisiePage() {
             {/* Stats globales */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 40 }}>
               {[
-                { num: '5', label: 'Sections', icon: '🎓' },
+                { num: '5', label: 'Matières', icon: '📚' },
                 { num: '57+', label: 'Chapitres Maths', icon: '📐' },
                 { num: '45+', label: 'Chapitres PC', icon: '⚗️' },
-                { num: '16', label: 'Chapitres Info', icon: '💻' },
+                { num: '17', label: 'Chapitres Anglais', icon: '🇬🇧' },
               ].map(s => (
                 <div key={s.label} className="card" style={{ textAlign: 'center', padding: '16px 10px' }}>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
@@ -905,6 +929,126 @@ export default function BacTunisiePage() {
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac →</Link>
+              <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  // ── PAGE ANGLAIS ──────────────────────────────────────────────
+  if (matiere === 'anglais') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+
+            {/* Retour */}
+            <button
+              onClick={() => setMatiere(null)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16 }}
+            >← Toutes les matières</button>
+
+            <span className="label" style={{ marginBottom: 12, display: 'block' }}>
+              🇹🇳 Programme officiel CNP Tunisie — 🇬🇧 Anglais
+            </span>
+            <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+              🇬🇧 Anglais — Toutes Sections<br />
+              <span style={{ color: '#fbbf24' }}>Bac 4ème Année Secondaire</span>
+            </h1>
+            <p style={{ maxWidth: 620, color: 'var(--text2)', marginBottom: 24, lineHeight: 1.7 }}>
+              Programme <strong style={{ color: '#fbbf24' }}>unique commun</strong> à toutes sections.
+              4 Units · Reading · Writing · Grammar · Spécificités Sciences / Éco / Lettres.
+            </p>
+
+            {/* 2 cartes : Units + Spécificités */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20, marginBottom: 48 }}>
+
+              {/* Carte : 4 Units */}
+              <Link href="/bac/anglais/toutes-sections" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.28)', borderRadius: 20, padding: '28px 24px', transition: 'transform 0.2s', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                  <span style={{ fontSize: 38 }}>📖</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#fbbf24', margin: '12px 0 4px' }}>
+                    Programme complet — 4 Units
+                  </div>
+                  <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.15)', color: '#fbbf24', padding: '2px 10px', borderRadius: 20 }}>
+                    Toutes sections · 17 chapitres
+                  </span>
+                  <div style={{ margin: '14px 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[
+                      '🎨 Unit 1 — Art Shows & Holidaying',
+                      '📚 Unit 2 — Education Matters',
+                      '💡 Unit 3 — Creative & Inventive Minds',
+                      '🌍 Unit 4 — Life Issues',
+                    ].map(u => (
+                      <div key={u} style={{ fontSize: 12, color: 'var(--text2)' }}>{u}</div>
+                    ))}
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#f59e0b,#d97706)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    📚 Voir les 4 Units →
+                  </span>
+                </div>
+              </Link>
+
+              {/* Carte : Spécificités */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '28px 24px' }}>
+                <span style={{ fontSize: 38 }}>✨</span>
+                <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--text)', margin: '12px 0 4px' }}>
+                  Spécificités par section
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 14 }}>
+                  Chaque chapitre contient un bloc adapté à votre section
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { icon: '🔬', label: 'Sciences / Math / Info / Tech', desc: 'Logique · IA · Technologie · Vocab scientifique', color: '#6366f1' },
+                    { icon: '📊', label: 'Éco-Gestion', desc: 'Économie · Business · Impact économique · Marché', color: '#10b981' },
+                    { icon: '📚', label: 'Lettres', desc: 'Expression · Narration · Culture · Philosophie', color: '#ec4899' },
+                  ].map(s => (
+                    <div key={s.label} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 10, background: `${s.color}08`, border: `1px solid ${s.color}20` }}>
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: s.color, marginBottom: 2 }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Accès direct aux Units */}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
+                Accès direct aux chapitres
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 10 }}>
+                {[
+                  { slug: 'unit1-art-shows-holidaying',    label: '🎨 Unit 1 — Art Shows & Holidaying',     color: '#f59e0b' },
+                  { slug: 'unit2-education-matters',       label: '📚 Unit 2 — Education Matters',          color: '#6366f1' },
+                  { slug: 'unit3-creative-inventive-minds',label: '💡 Unit 3 — Creative & Inventive Minds', color: '#06d6a0' },
+                  { slug: 'unit4-life-issues',             label: '🌍 Unit 4 — Life Issues',               color: '#ec4899' },
+                ].map(u => (
+                  <Link key={u.slug} href={`/bac/anglais/toutes-sections/${u.slug}`} style={{ textDecoration: 'none' }}>
+                    <div style={{ padding: '12px 16px', borderRadius: 12, background: `${u.color}08`, border: `1px solid ${u.color}22`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'transform 0.15s', cursor: 'pointer' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: u.color }}>{u.label}</span>
+                      <span style={{ color: u.color, fontWeight: 700 }}>→</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <Link href="/bac/anglais" className="btn btn-primary" style={{ textDecoration: 'none' }}>🇬🇧 Page Anglais complète →</Link>
+              <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac</Link>
               <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
             </div>
           </div>

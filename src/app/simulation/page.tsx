@@ -234,6 +234,73 @@ const CHAPITRES_INFO: Record<string, {
   },
 }
 
+
+// ════════════════════════════════════════════════════════════════
+//  ANGLAIS — Configs sections et archives
+//  Dossier bacweb : lettre/ (Lettres) · math/ (Toutes sections)
+// ════════════════════════════════════════════════════════════════
+const SECTION_CONFIGS_ANGLAIS = [
+  {
+    key:'anglais-lettres',
+    label:'Section-Lettres',
+    color:'#ec4899',
+    icon:'📚',
+    folder:'lettre',
+    file:'anglais.pdf',
+    themes:['Reading Comprehension','Essay Writing','Argumentative Text','Grammar & Vocabulary','Opinion & Description']
+  },
+  {
+    key:'anglais-toutes',
+    label:'Toutes-Sections',
+    color:'#6366f1',
+    icon:'🔬',
+    folder:'math',
+    file:'anglais.pdf',
+    themes:['Reading Comprehension','Essay Writing','Technical Text','Grammar & Vocabulary','Science & Technology']
+  },
+]
+
+const bwAnglais = (y: number, session: 'principale'|'controle', folder: string) =>
+  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/anglais.pdf`
+
+const ARCHIVES_ANGLAIS: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_ANGLAIS.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwAnglais(y,'principale',sc.folder), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwAnglais(y,'controle',sc.folder), themes:sc.themes },
+  ])
+)
+
+// ── Chapitres Anglais par section ─────────────────────────────────
+const CHAPITRES_ANGLAIS: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'anglais-lettres': {
+    key:'anglais-lettres', label:'Section Lettres', color:'#ec4899', icon:'📚',
+    chapitres: [
+      { slug:'reading-comprehension', titre:'Reading Comprehension', badge:'Reading', desc:'Compréhension de textes — True/False, questions ouvertes, inférences, référents, synonymes.' },
+      { slug:'essay-writing',         titre:'Essay Writing',          badge:'Writing', desc:'Essay argumentatif structuré — introduction, développement, conclusion, exemples.' },
+      { slug:'article-writing',       titre:'Article & Opinion',      badge:'Writing', desc:'Article de journal, lettre, email formel — formats et registres de langue.' },
+      { slug:'grammar-focus',         titre:'Grammar Focus',          badge:'Language', desc:'Reported speech, passive voice, modals, conditionals, relative clauses.' },
+      { slug:'vocabulary',            titre:'Vocabulary in Context',  badge:'Language', desc:'Vocabulaire thématique — Art, Education, Creativity, Environment, Society.' },
+    ],
+  },
+  'anglais-toutes': {
+    key:'anglais-toutes', label:'Toutes sections (sauf Lettres)', color:'#6366f1', icon:'🔬',
+    chapitres: [
+      { slug:'reading-sciences',  titre:'Reading — Sciences & Tech', badge:'Reading', desc:'Textes scientifiques — AI, innovation, space, environment — compréhension et analyse.' },
+      { slug:'essay-sciences',    titre:'Essay — Sciences & Society', badge:'Writing', desc:'Essay argumentatif — technologie, IA, changement climatique, innovation.' },
+      { slug:'grammar-sciences',  titre:'Grammar & Language',         badge:'Language', desc:'Relative clauses, gerund/infinitive, passive, future forms, linking words.' },
+      { slug:'vocabulary-sci',    titre:'Scientific Vocabulary',      badge:'Language', desc:'Vocabulaire des sciences — technology, AI, environment, innovation, discovery.' },
+      { slug:'reading-eco',       titre:'Reading — Economy & Society',badge:'Reading', desc:'Textes économiques et sociaux — commerce, mondialisation, entrepreneuriat.' },
+    ],
+  },
+}
+
 const CHAPITRES_PHYS: Record<string, {
   key: string; label: string; color: string; icon: string
   chapitres: { slug: string; titre: string; badge: string; desc: string }[]
@@ -2217,7 +2284,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'|'informatique'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
@@ -4615,10 +4682,10 @@ function SimulationIAPageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s === 'physique' ? 'physique' : 'maths'
+    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
@@ -4717,8 +4784,8 @@ function SimulationIAPageInner() {
           <div style={{marginBottom:28}}>
             <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
               <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':'#6366f1',animation:'pulse 2s ease infinite'}}/>
-              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : '🧮 Simulation Mathématiques'}
+              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='anglais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
+                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : '🧮 Simulation Mathématiques'}
               </span>
             </div>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
@@ -4727,7 +4794,7 @@ function SimulationIAPageInner() {
                 ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)'
                 : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : 'Personnalisée par l\'IA'}
+                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : 'Personnalisée par l\'IA'}
               </span>
             </h1>
             <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
@@ -4745,6 +4812,7 @@ function SimulationIAPageInner() {
                 { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
                 { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
+                { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais',          color:'#ec4899', matiere:'anglais' },
               ]).map(m => {
                 return (
                 <div key={m.key} style={{position:'relative'}}>
@@ -4774,9 +4842,9 @@ function SimulationIAPageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

@@ -863,6 +863,244 @@ const BAC_ECO_GESTION_DATA: AnneeData[] = [
   ]},
 ]
 
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS PDF — BAC ANGLAIS · SECTION LETTRES
+//  Dossier bacweb.tn : lettre/  (sans s — vérifié)
+//  Fichier sujet : anglais.pdf
+//  Pas de correction (même pattern que autres sections)
+// ════════════════════════════════════════════════════════════════
+const anglaisLettresLinks: Record<number, AnneeLinks> = {
+  // ── Dossier bacweb.tn : "lettre" (sans s) — vérifié
+  // ── Sujet uniquement — pas de correction (même pattern que autres sections)
+  // ── URL : bacweb.tn/bac/{year}/{session}/lettre/anglais.pdf
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2022,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2021,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2020,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2019,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2018,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2017,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2016,'controle','lettre','anglais.pdf'), correction:undefined }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2015,'controle','lettre','anglais.pdf'), correction:undefined }},
+}
+
+// Liens commun : Sc. Maths / Sc. Exp / Sc. Tech / Informatique / Éco-Gestion
+// Dossier bacweb : math/ — fichier : anglais.pdf (programme unique commun)
+const anglaisSciencesLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','math','anglais.pdf'), correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','math','anglais.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','math','anglais.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2022,'controle','math','anglais.pdf'), correction:undefined }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2021,'controle','math','anglais.pdf'), correction:undefined }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2020,'controle','math','anglais.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2019,'controle','math','anglais.pdf'), correction:undefined }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2018,'controle','math','anglais.pdf'), correction:undefined }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2017,'controle','math','anglais.pdf'), correction:undefined }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2016,'controle','math','anglais.pdf'), correction:undefined }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2015,'controle','math','anglais.pdf'), correction:undefined }},
+}
+
+// Liens Éco-Gestion (dossier eco_gestion/)
+const anglaisEcoLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2022,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2021,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2020,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2019,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2018,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2017,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2016,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','eco_gestion','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2015,'controle','eco_gestion','anglais.pdf'), correction:undefined }},
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DONNÉES THÉMATIQUES — ANGLAIS SECTION LETTRES (principale)
+//  Structure : Reading (8 pts) + Writing (8 pts) + Language (4 pts)
+// ════════════════════════════════════════════════════════════════
+const BAC_ANGLAIS_LETTRES_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte argumentatif — analyse et compréhension · Justification · Inférences · Vocabulaire en contexte',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay argumentatif — Art & société · Expression personnelle · Structure introduction/développement/conclusion',pts:8},
+    {titre:'Language (4 pts)',theme:'Grammar : Reported speech · Passive voice · Relative clauses · Vocabulary in context',pts:4},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Reading (8 pts)',theme:"Texte sur l\'éducation — compréhension globale · détails précis · référents · synonymes",pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — Education Matters : accès à l\'éducation · inégalités · solutions proposées",pts:8},
+    {titre:'Language (4 pts)',theme:'Modals · Conditionals type 1 & 2 · Reported speech · Linking words',pts:4},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Creativity & Technology · True/False/Not Mentioned · Justification · Résumé',pts:8},
+    {titre:'Writing (8 pts)',theme:'Article de journal — Innovation et créativité humaine · Argumentation et exemples',pts:8},
+    {titre:'Language (4 pts)',theme:'Relative clauses · Gerund vs infinitive · Vocabulary : creativity & invention',pts:4},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Life Issues : environnement et responsabilité · Compréhension · Vocabulaire',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Solutions au changement climatique · Argumentation structurée',pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Complex sentences · Unless / provided that · Vocabulary in context',pts:4},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Reading (8 pts)',theme:"Texte narratif — expérience personnelle de voyage · Compréhension et analyse d\'atmosphère",pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — Le tourisme : avantages et inconvénients · Structuration de l\'argumentation",pts:8},
+    {titre:'Language (4 pts)',theme:'Comparatives & superlatives · Past tenses · Expressing opinion · Vocabulary travel',pts:4},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Social media & Teen life · Multiple choice · True/False · Inference questions',pts:8},
+    {titre:'Writing (8 pts)',theme:'Article — Réseaux sociaux : danger ou opportunité · Point de vue personnel',pts:8},
+    {titre:'Language (4 pts)',theme:'Reported speech · Passive voice · Modals · Vocabulary : social issues',pts:4},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Higher Education & Career choices · Compréhension · Synonymes · Référents',pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — Faut-il faire des études supérieures ? · Arguments pour et contre",pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals type 1, 2, 3 · Linking words · Vocabulary : education',pts:4},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Famous inventors & their impact · Compréhension globale et détaillée',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay argumentatif — La technologie améliore-t-elle notre vie ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Relative clauses · Gerund/Infinitive · Vocabulary : innovation & science',pts:4},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Reading (8 pts)',theme:"Texte — Art & Cultural heritage · Compréhension · Inférences · Sens de l\'implicite",pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — L\'art est-il nécessaire dans la société moderne ?",pts:8},
+    {titre:'Language (4 pts)',theme:'Present/Past tenses · Expressing opinion · Comparatives · Vocabulary : arts',pts:4},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Lifelong learning & adult education · True/False · Questions ouvertes',pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — L\'éducation tout au long de la vie · Importance et exemples",pts:8},
+    {titre:'Language (4 pts)',theme:'Modals (must/should/have to) · Passive · Vocabulary : education & learning',pts:4},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Reading (8 pts)',theme:"Texte — Environmental issues & solutions · Compréhension et analyse d\'arguments",pts:8},
+    {titre:'Writing (8 pts)',theme:"Essay — La protection de l\'environnement : notre responsabilité",pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Complex sentences · Reported speech · Vocabulary : environment',pts:4},
+  ]},
+]
+
+const BAC_ANGLAIS_SCIENCES_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte scientifique — AI & Technology · Analyse logique · Questions de compréhension',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Impact de l\'intelligence artificielle sur la société · Argumentation technique',pts:8},
+    {titre:'Language (4 pts)',theme:'Relative clauses · Passive · Future forms · Vocabulary : science & technology',pts:4},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Space exploration & innovation · Compréhension · Inférences · Vocabulaire scientifique',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Les bénéfices de l\'exploration spatiale pour l\'humanité',pts:8},
+    {titre:'Language (4 pts)',theme:'Comparatives · Modals · Reported speech · Vocabulary : space & technology',pts:4},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Renewable energy & climate change · Analyse scientifique · Vocabulary',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Les énergies renouvelables : solution au changement climatique ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals · Complex sentences · Linking words · Vocabulary : energy & environment',pts:4},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Robotics & automation · True/False · Questions ouvertes · Inférences',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — L\'automatisation va-t-elle remplacer les travailleurs ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Gerund/Infinitive · Passive · Relative clauses · Vocabulary : robotics',pts:4},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Online learning & EdTech · Compréhension · Synonymes · Points de vue',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — L\'enseignement en ligne : avantages et limites · Vision scientifique',pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals type 1 & 2 · Reported speech · Vocabulary : education & technology',pts:4},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Genetic engineering & ethics · Compréhension logique · Vocabulaire scientifique',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay argumentatif — Les OGM : progrès ou danger ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Passive voice · Modals · Vocabulary : biology & genetics',pts:4},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Inventors & scientific breakthroughs · Timeline · Compréhension détaillée',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Quel inventeur a le plus changé le monde ? · Argumentation avec preuves',pts:8},
+    {titre:'Language (4 pts)',theme:'Relative clauses · Gerund · Vocabulary : inventions & science',pts:4},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Digital revolution & society · Analyse critique · Compréhension',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Internet : a tool for knowledge or a source of danger ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Complex sentences · Vocabulary : digital & society',pts:4},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Nanotechnology & medicine · Compréhension scientifique · Vocabulary',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — La nanotechnologie va-t-elle révolutionner la médecine ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Reported speech · Passive · Modals · Vocabulary : medicine & technology',pts:4},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Sustainable development & green economy · Analyse · Compréhension',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — L\'économie verte : nécessité ou utopie ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals · Unless · Vocabulary : environment & sustainability',pts:4},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Space tourism & future travel · Compréhension · True/False · Inférences',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le tourisme spatial : rêve ou réalité prochaine ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Comparatives · Vocabulary : space & travel',pts:4},
+  ]},
+]
+
+const BAC_ANGLAIS_ECO_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Global trade & economic inequality · Compréhension · Analyse économique',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — La mondialisation profite-t-elle à tous ? · Argumentation économique',pts:8},
+    {titre:'Language (4 pts)',theme:'Passive · Reported speech · Vocabulary : economics & trade',pts:4},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Entrepreneurship & startups · Compréhension · Business vocabulary',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le rôle des startups dans l\'économie moderne',pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals · Modals · Vocabulary : business & entrepreneurship',pts:4},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Tourism economics & sustainable travel · Analyse · Compréhension',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le tourisme durable : enjeu économique et environnemental',pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Linking words · Vocabulary : tourism & economy',pts:4},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Digital economy & e-commerce · Compréhension · Inférences',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le commerce électronique transforme-t-il l\'économie mondiale ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Relative clauses · Passive · Vocabulary : e-commerce & digital economy',pts:4},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Green economy & employment · Analyse · Vocabulary économique',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — L\'économie verte crée-t-elle de nouveaux emplois ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Modals · Conditionals · Vocabulary : environment & economy',pts:4},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Financial crisis & recovery · Compréhension · Analyse économique',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Comment les pays se remettent-ils d\'une crise économique ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Reported speech · Past tenses · Vocabulary : finance & economy',pts:4},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Microfinance & poverty reduction · Compréhension · Vocabulary',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — La microfinance peut-elle réduire la pauvreté dans le monde ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Conditionals type 2 · Modals · Vocabulary : finance & social issues',pts:4},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Globalization & cultural identity · Compréhension · Analyse',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — La mondialisation menace-t-elle les cultures locales ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Passive · Relative clauses · Vocabulary : globalization & culture',pts:4},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — International trade & protectionism · Analyse · Compréhension',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le libre-échange est-il bénéfique pour les pays en développement ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Future forms · Complex sentences · Vocabulary : trade & economy',pts:4},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Youth unemployment & education · Analyse économique et sociale',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Comment lutter contre le chômage des jeunes ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Modals · Reported speech · Vocabulary : employment & education',pts:4},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Reading (8 pts)',theme:'Texte — Business travel & cultural exchange · Compréhension · Vocabulary',pts:8},
+    {titre:'Writing (8 pts)',theme:'Essay — Le voyage d\'affaires favorise-t-il les échanges culturels ?',pts:8},
+    {titre:'Language (4 pts)',theme:'Comparatives · Past tenses · Vocabulary : business & culture',pts:4},
+  ]},
+]
+
+const SECTIONS_ANGLAIS = [
+  { key:'anglais-lettres'  as SKey, icon:'📚', label:'Section Lettres',    color:'#ec4899', coeff:'Principale', data:BAC_ANGLAIS_LETTRES_DATA,   links:anglaisLettresLinks,  desc:'Reading · Writing · Language — Essay · Article · Narration · Argumentation' },
+  { key:'anglais-sciences' as SKey, icon:'🔬', label:'Toutes sections (sauf Lettres)', color:'#6366f1', coeff:'Programme commun', data:BAC_ANGLAIS_SCIENCES_DATA, links:anglaisSciencesLinks, desc:'Sc. Maths · Sc. Exp · Sc. Tech · Informatique · Éco-Gestion — Reading · Writing · Language' },
+]
+
 // ════════════════════════════════════════════════════════════════
 //  CONFIG SECTIONS
 // ════════════════════════════════════════════════════════════════
@@ -1451,8 +1689,8 @@ const BAC_INFO_PHYS_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — MATIÈRES ET SECTIONS
 // ════════════════════════════════════════════════════════════════
-type Matiere = 'maths' | 'physique' | 'informatique' | 'informatique'
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'info-algo' | 'info-bd' | 'info-algo' | 'info-bd'
+type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences'
 
 const SECTIONS_MATHS = [
   { key:'maths'    as SKey, icon:'🧮', label:'Bac Maths',      color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,       links:mathsLinks,      desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
@@ -1576,7 +1814,8 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
   ]
   const isPhys = secKey === 'sc-exp-phys' || secKey === 'sc-tech-phys'
   const isInfo_sec = secKey === 'info-algo'
-  const label  = isPhys ? 'Physique-Chimie' : isInfo_sec ? 'Informatique' : 'Mathématiques'
+  const isAnglaisSec = secKey === 'anglais-lettres' || secKey === 'anglais-sciences'
+  const label  = isPhys ? 'Physique-Chimie' : isInfo_sec ? 'Informatique' : isAnglaisSec ? 'Anglais' : 'Mathématiques'
 
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14,marginBottom:20}}>
@@ -1632,6 +1871,28 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
               </div>
             </div>
           )
+        } else if (isAnglaisSec) {
+          const sess = links?.[s.key]
+          const secLabel = secKey === 'anglais-lettres' ? 'Section Lettres' : 'Sc. Math / Info / Tech / Éco-Gestion'
+          return (
+            <div key={s.key} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:14,padding:18}}>
+              <p style={{margin:'0 0 12px',fontWeight:700,fontSize:13,color:'var(--text)'}}>{s.label} {year}</p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:12}}>
+                <BtnLink label="📄 Sujet Anglais" url={sess?.sujet} color={color} onOpen={(u)=>onOpen(u,`Sujet Anglais — ${secLabel} Bac ${year} — ${s.label}`)} />
+                <BtnLink label="✅ Correction" url={sess?.correction} color="#06d6a0" onOpen={(u)=>onOpen(u,`Correction Anglais — ${secLabel} Bac ${year} — ${s.label}`)} />
+              </div>
+              {!sess?.sujet && (
+                <div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',borderRadius:9,border:'1px solid rgba(245,158,11,0.18)'}}>
+                  <p style={{margin:'0 0 6px',fontSize:12,color:'#fbbf24',fontWeight:600}}>📂 Liens alternatifs</p>
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                    <a href="https://www.bac-done.com/sections/lettres/corrections/anglais" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(245,158,11,0.1)',color:'#fbbf24',textDecoration:'none',fontWeight:600}}>bac-done.com →</a>
+                    <a href="https://www.reviserbac.tn/sujets?matiere=anglais" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(236,72,153,0.1)',color:'#ec4899',textDecoration:'none',fontWeight:600}}>reviserbac.tn →</a>
+                    <a href={`http://www.bacweb.tn/bac/${year}/principale/lettres/anglais.pdf`} target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(79,110,247,0.1)',color:'#818cf8',textDecoration:'none',fontWeight:600}}>bacweb.tn →</a>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
         } else {
           const sess = links?.[s.key]
           const btnSujet  = isPhys ? '📄 Sujet' : (secKey === 'sc-tech' || secKey === 'eco' ? '📐 Sujet Maths' : '📄 Sujet')
@@ -1668,9 +1929,10 @@ export default function ExamensTunisiePage() {
   const [selectedYear,  setSelectedYear]  = useState<number|null>(null)
   const [modal,         setModal]         = useState<{url:string;title:string}|null>(null)
 
-  const isMaths  = activeMatiere === 'maths'
-  const isInfo_m = activeMatiere === 'informatique'
-  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : SECTIONS_PHYS
+  const isMaths    = activeMatiere === 'maths'
+  const isInfo_m   = activeMatiere === 'informatique'
+  const isAnglais  = activeMatiere === 'anglais'
+  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : SECTIONS_PHYS
   const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
   const detail   = sec.data.find(a => a.year === selectedYear)
   const isInfo   = activeSec === 'info' || activeSec === 'info-algo' || activeSec === 'info-bd'
@@ -1700,6 +1962,8 @@ export default function ExamensTunisiePage() {
       'sc-tech-phys': 'sc-tech',   // Physique Sc.Tech → section sctech dans simulation
       'math-phys':    'maths',     // Physique Maths → section maths dans simulation
       'info-phys':    'info',      // Physique Info → section info dans simulation
+      'anglais-lettres':  'maths',
+      'anglais-sciences': 'maths',
     }
     const simSection = simSectionMap[activeSec] ?? activeSec
     const isPhysSection = activeSec.endsWith('-phys')
@@ -1739,6 +2003,7 @@ export default function ExamensTunisiePage() {
               { key:'maths'        as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
               { key:'physique'     as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
               { key:'informatique' as Matiere, icon:'💻', label:'Informatique',    color:'#6366f1' },
+              { key:'anglais'      as Matiere, icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
             ]).map(m => (
               <button key={m.key} onClick={() => switchMatiere(m.key)}
                 style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
@@ -1769,7 +2034,7 @@ export default function ExamensTunisiePage() {
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
                   <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
-                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : 'Physique-Chimie'}
+                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : 'Physique-Chimie'}
                   </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>
@@ -1824,7 +2089,7 @@ export default function ExamensTunisiePage() {
               <div style={{marginBottom:24}}>
                 <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
                   <span style={{fontSize:22}}>{sec.icon}</span>
-                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
+                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : isAnglais ? '🇬🇧 Anglais' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
                     ✅ Sujets + Corrections disponibles
                   </span>
