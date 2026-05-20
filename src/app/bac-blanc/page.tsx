@@ -1672,8 +1672,10 @@ function PhaseChoixMatiere({
   // Lancer l'examen avec la sous-section choisie
   const handleLancer = () => {
     if (!selectedMatiere || !selectedSousSection) return
-    // Injecter la sous-section dans le candidat (modif globale temporaire)
-    ;(candidat as any).sousSection = selectedSousSection
+    // Mettre à jour sectionKey ET section label dans le candidat
+    const ss = (SECTIONS_PAR_MATIERE[selectedMatiere] || []).find(x => x.key === selectedSousSection)
+    candidat.sectionKey = selectedSousSection
+    candidat.section = ss?.label || selectedSousSection
     if (selectedMatiere === 'maths') { onMaths(); return }
     if (selectedMatiere === 'physique') { onPhysique(); return }
     if (selectedMatiere === 'informatique') { onInfo(); return }
@@ -1872,9 +1874,9 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const sec=SECTIONS.find(s=>s.key===sectionKey)
 
   const handleSubmit=()=>{
-    if(!nom.trim()||!prenom.trim()||!lycee.trim()||!gouvernorat||!sectionKey){setErr('Veuillez remplir tous les champs.');return}
+    if(!nom.trim()||!prenom.trim()||!lycee.trim()||!gouvernorat){setErr('Veuillez remplir tous les champs.');return}
     setErr('')
-    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),gouvernorat,section:sec!.label,sectionKey})
+    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),gouvernorat,section:'',sectionKey:'maths'})
   }
 
   return(
@@ -1938,18 +1940,6 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
               style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
           </div>
 
-          <div style={{marginBottom:16}}>
-            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:8,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Section</label>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-              {SECTIONS.map(s=>(
-                <button key={s.key} onClick={()=>setSectionKey(s.key)}
-                  style={{padding:'10px 12px',borderRadius:9,border:`2px solid ${sectionKey===s.key?s.color:'rgba(255,255,255,0.1)'}`,background:sectionKey===s.key?`${s.color}18`:'transparent',color:sectionKey===s.key?s.color:'rgba(255,255,255,0.55)',fontSize:12,fontWeight:700,cursor:'pointer',textAlign:'left',display:'flex',alignItems:'center',gap:8,transition:'all 0.2s'}}>
-                  <span style={{fontSize:16}}>{s.icon}</span><span style={{lineHeight:1.2}}>{s.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div style={{marginBottom:24}}>
             <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Gouvernorat</label>
             <select value={gouvernorat} onChange={e=>setGouvernorat(e.target.value)}
@@ -1958,14 +1948,6 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
               {GOUVERNORATS.map(g=><option key={g} value={g}>{g}</option>)}
             </select>
           </div>
-
-          {sec&&(
-            <div style={{background:`${sec.color}10`,border:`1px solid ${sec.color}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
-              <div style={{color:sec.color,fontWeight:700,marginBottom:4}}>{sec.icon} {sec.label}</div>
-              <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Bac Blanc · Concours National · 1 Mai – 30 Juin</div>
-              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Choisissez votre matière à l'étape suivante</div>
-            </div>
-          )}
 
           {err&&<div style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#fca5a5',marginBottom:16}}>{err}</div>}
 
