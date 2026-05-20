@@ -1551,6 +1551,28 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // ════════════════════════════════════════════════════════════════════
 // PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
 // ════════════════════════════════════════════════════════════════════
+
+// Sous-sections autorisées par matière
+const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: string; color: string }[]> = {
+  maths: [
+    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
+    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
+    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
+    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
+    { key:'eco',    label:'Éco-Gestion',             icon:'💹', color:'#10b981' },
+  ],
+  physique: [
+    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
+    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
+    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
+    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
+  ],
+  informatique: [
+    { key:'info',   label:'Section Informatique',   icon:'⌨',  color:'#8b5cf6' },
+    { key:'autres', label:'Autres sections (TIC)',   icon:'🌐', color:'#06b6d4' },
+  ],
+}
+
 function PhaseChoixMatiere({
   candidat, dayNum, onMaths, onPhysique, onInfo, onRetour,
   hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
@@ -1568,6 +1590,13 @@ function PhaseChoixMatiere({
 }) {
   const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
 
+  // État : matière sélectionnée (null = pas encore choisi)
+  const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null)
+
+  // Sous-section sélectionnée pour la matière choisie
+  const [selectedSousSection, setSelectedSousSection] = useState<string>('')
+
+  // Définition des matières
   const MATIERES = [
     {
       key: 'maths',
@@ -1598,50 +1627,59 @@ function PhaseChoixMatiere({
       icon: '💻',
       label: 'Informatique',
       desc: 'Algorithmique · Bases de données · TIC & Réseaux · Correction IA · Analyse des faiblesses',
-      color: '#6366f1',
-      gradient: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.06))',
-      border: 'rgba(99,102,241,0.35)',
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(109,40,217,0.06))',
+      border: 'rgba(139,92,246,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
     {
-      key: 'svt',
-      icon: '🧬',
-      label: 'SVT',
-      desc: 'Génétique · Immunologie · Physiologie · Géologie — Bientôt disponible',
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.05))',
-      border: 'rgba(16,185,129,0.25)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
-    },
-    {
       key: 'anglais',
       icon: '🇬🇧',
       label: 'Anglais',
-      desc: 'Grammar · Essay · Reading Comprehension · Writing — Bientôt disponible',
+      desc: 'Grammar · Essay · Reading Comprehension · Writing',
       color: '#f59e0b',
-      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.05))',
-      border: 'rgba(245,158,11,0.25)',
+      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.08),rgba(249,115,22,0.04))',
+      border: 'rgba(245,158,11,0.18)',
       available: false,
       badge: '🔜 Prochainement',
       badgeColor: '#fbbf24',
     },
     {
-      key: 'informatique',
-      icon: '💻',
-      label: 'Informatique',
-      desc: 'Algorithmique · SQL · Réseaux · Pascal · Python — Bientôt disponible',
-      color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.12),rgba(109,40,217,0.05))',
-      border: 'rgba(139,92,246,0.25)',
+      key: 'svt',
+      icon: '🧬',
+      label: 'SVT',
+      desc: 'Génétique · Immunologie · Physiologie · Géologie',
+      color: '#10b981',
+      gradient: 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(5,150,105,0.04))',
+      border: 'rgba(16,185,129,0.18)',
       available: false,
       badge: '🔜 Prochainement',
       badgeColor: '#fbbf24',
     },
   ]
+
+  // Quand une matière disponible est cliquée → afficher ses sous-sections
+  const handleMatiereClick = (key: string, available: boolean) => {
+    if (!available) return
+    setSelectedMatiere(key)
+    // Pré-sélectionner la première sous-section de la matière
+    const sousSecs = SECTIONS_PAR_MATIERE[key] || []
+    setSelectedSousSection(sousSecs[0]?.key || '')
+  }
+
+  // Lancer l'examen avec la sous-section choisie
+  const handleLancer = () => {
+    if (!selectedMatiere || !selectedSousSection) return
+    // Injecter la sous-section dans le candidat (modif globale temporaire)
+    ;(candidat as any).sousSection = selectedSousSection
+    if (selectedMatiere === 'maths') { onMaths(); return }
+    if (selectedMatiere === 'physique') { onPhysique(); return }
+    if (selectedMatiere === 'informatique') { onInfo(); return }
+  }
+
+  const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
 
   return (
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
@@ -1658,7 +1696,7 @@ function PhaseChoixMatiere({
             Choisissez votre matière
           </h1>
           {/* Candidat info */}
-          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 20px',marginTop:10}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 20px',marginTop:10,flexWrap:'wrap',justifyContent:'center'}}>
             <span style={{fontSize:20}}>🎓</span>
             <span style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>
               {candidat.prenom} {candidat.nom}
@@ -1670,60 +1708,132 @@ function PhaseChoixMatiere({
           </div>
         </div>
 
-        {/* Grille matières */}
-        <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
-          {/* Grille matières */}
-        <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
-          {MATIERES.map(m => {
-            const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key === 'informatique' ? 'informatique' : m.key
-            const isLk = m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
-            return (
-              <button
-                key={m.key}
-                disabled={!m.available || isLk}
-                onClick={() => {
-                  if (!m.available || isLk) return
-                  if (m.key === 'maths') { onMaths(); return }
-                  if (m.key === 'physique') { onPhysique(); return }
-                  if (m.key === 'informatique') { onInfo(); return }
-                }}
-                style={{
-                  width:'100%',
-                  background:m.gradient,
-                  border:`1.5px solid ${m.border}`,
-                  borderRadius:16,padding:'22px 24px',display:'flex',alignItems:'center',
-                  gap:20,cursor:(m.available&&!isLk)?'pointer':'not-allowed',
-                  opacity:(m.available&&!isLk)?1:0.6,
-                  transition:'transform 0.15s, box-shadow 0.15s',
-                  textAlign:'left',fontFamily:'inherit',
-                }}
-                onMouseEnter={e=>{ if(m.available&&!isLk){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
-                onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
-              >
-                <div style={{width:56,height:56,borderRadius:14,background:`${m.color}20`,border:`1.5px solid ${m.color}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
-                  {isLk ? '🔒' : m.icon}
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5,flexWrap:'wrap'}}>
-                    <span style={{fontSize:17,fontWeight:800,color:'white'}}>{m.label}</span>
-                    <span style={{fontSize:10,fontWeight:700,color:isLk?'#f59e0b':m.badgeColor,background:isLk?'rgba(245,158,11,0.15)':`${m.badgeColor}18`,border:`1px solid ${isLk?'rgba(245,158,11,0.3)':m.badgeColor+30}`,borderRadius:20,padding:'2px 10px'}}>
-                      {isLk ? '🔒 Abonnement requis' : m.badge}
-                    </span>
+        {/* ─── ÉTAPE 1 : Choisir la matière ─── */}
+        {!selectedMatiere ? (
+          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:28}}>
+            {MATIERES.map(m => {
+              const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
+              const isLk = m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
+              return (
+                <button
+                  key={m.key}
+                  disabled={isLk}
+                  onClick={() => handleMatiereClick(m.key, m.available)}
+                  style={{
+                    width:'100%',
+                    background: m.available ? m.gradient : 'rgba(255,255,255,0.02)',
+                    border:`1.5px solid ${m.available ? m.border : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius:16, padding:'20px 24px', display:'flex', alignItems:'center',
+                    gap:20, cursor: m.available ? 'pointer' : 'default',
+                    opacity: m.available ? 1 : 0.45,
+                    transition:'transform 0.15s, box-shadow 0.15s',
+                    textAlign:'left', fontFamily:'inherit',
+                  }}
+                  onMouseEnter={e=>{ if(m.available){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
+                  onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
+                >
+                  <div style={{width:52,height:52,borderRadius:13,background:`${m.color}${m.available?'20':'10'}`,border:`1.5px solid ${m.color}${m.available?'40':'20'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0}}>
+                    {isLk ? '🔒' : m.available ? m.icon : '🔒'}
                   </div>
-                  <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.5}}>
-                    {isLk
-                      ? <span>S'abonner à <strong style={{color:m.color}}>{m.label}</strong> → <a href={`/abonnement?matiere=${matiereKey}`} style={{color:m.color,textDecoration:'underline'}}>Voir les plans</a></span>
-                      : m.desc
-                    }
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4,flexWrap:'wrap'}}>
+                      <span style={{fontSize:16,fontWeight:800,color: m.available ? 'white' : 'rgba(255,255,255,0.35)'}}>{m.label}</span>
+                      <span style={{fontSize:10,fontWeight:700,
+                        color: isLk ? '#f59e0b' : m.available ? m.badgeColor : '#64748b',
+                        background: isLk ? 'rgba(245,158,11,0.15)' : m.available ? `${m.badgeColor}18` : 'rgba(100,116,139,0.12)',
+                        border:`1px solid ${isLk ? 'rgba(245,158,11,0.3)' : m.available ? m.badgeColor+'30' : 'rgba(100,116,139,0.2)'}`,
+                        borderRadius:20, padding:'2px 10px'}}>
+                        {isLk ? '🔒 Abonnement requis' : m.badge}
+                      </span>
+                    </div>
+                    <div style={{fontSize:12,color: m.available ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',lineHeight:1.5}}>
+                      {isLk
+                        ? <span>S'abonner à <strong style={{color:m.color}}>{m.label}</strong> → <a href={`/abonnement?matiere=${matiereKey}`} style={{color:m.color,textDecoration:'underline'}}>Voir les plans</a></span>
+                        : m.available
+                          ? <>{m.desc} · <span style={{color:m.color,fontWeight:600}}>{(SECTIONS_PAR_MATIERE[m.key]||[]).length} sections disponibles</span></>
+                          : m.desc
+                      }
+                    </div>
                   </div>
-                </div>
-                {m.available && !isLk && <span style={{fontSize:22,color:m.color,flexShrink:0,fontWeight:700}}>→</span>}
-              </button>
-            )
-          })}
-        </div>
+                  {m.available && !isLk && <span style={{fontSize:20,color:m.color,flexShrink:0}}>›</span>}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          /* ─── ÉTAPE 2 : Choisir la sous-section ─── */
+          <div style={{marginBottom:28}}>
 
-        {/* Retour */}
+            {/* Breadcrumb retour */}
+            <button onClick={()=>setSelectedMatiere(null)}
+              style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'none',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',marginBottom:20,padding:0}}>
+              ← Changer de matière
+            </button>
+
+            {/* Titre matière sélectionnée */}
+            {(() => {
+              const m = MATIERES.find(x => x.key === selectedMatiere)!
+              return (
+                <div style={{background:m.gradient,border:`1.5px solid ${m.border}`,borderRadius:14,padding:'16px 20px',marginBottom:22,display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{width:44,height:44,borderRadius:11,background:`${m.color}25`,border:`1.5px solid ${m.color}50`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{m.icon}</div>
+                  <div>
+                    <div style={{fontSize:16,fontWeight:800,color:'white',marginBottom:2}}>{m.label}</div>
+                    <div style={{fontSize:12,color:'rgba(255,255,255,0.45)'}}>Choisissez votre section pour personnaliser le sujet</div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Label section */}
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>
+              Votre section
+            </div>
+
+            {/* Grille sous-sections */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:24}}>
+              {sousSectionsDisponibles.map(ss => {
+                const isSelected = selectedSousSection === ss.key
+                return (
+                  <button key={ss.key} onClick={()=>setSelectedSousSection(ss.key)}
+                    style={{
+                      padding:'12px 16px', borderRadius:11,
+                      border:`2px solid ${isSelected ? ss.color : 'rgba(255,255,255,0.1)'}`,
+                      background: isSelected ? `${ss.color}18` : 'rgba(255,255,255,0.03)',
+                      color: isSelected ? ss.color : 'rgba(255,255,255,0.55)',
+                      fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'left',
+                      display:'flex', alignItems:'center', gap:10,
+                      transition:'all 0.15s', fontFamily:'inherit',
+                    }}>
+                    <span style={{fontSize:18}}>{ss.icon}</span>
+                    <span style={{lineHeight:1.3}}>{ss.label}</span>
+                    {isSelected && <span style={{marginLeft:'auto',fontSize:16}}>✓</span>}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Bouton lancer */}
+            <button
+              onClick={handleLancer}
+              disabled={!selectedSousSection}
+              style={{
+                width:'100%', padding:'15px', borderRadius:12, border:'none',
+                background: selectedSousSection
+                  ? 'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)'
+                  : 'rgba(255,255,255,0.08)',
+                color: selectedSousSection ? '#0a0a1a' : 'rgba(255,255,255,0.3)',
+                fontSize:15, fontWeight:900, cursor: selectedSousSection ? 'pointer' : 'not-allowed',
+                boxShadow: selectedSousSection ? '0 4px 24px rgba(245,158,11,0.45)' : 'none',
+                letterSpacing:'0.03em', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+                fontFamily:'inherit', transition:'all 0.2s',
+              }}>
+              <span style={{fontSize:18}}>🏆</span>
+              Lancer le concours · Jour {dayNum}
+            </button>
+          </div>
+        )}
+
+        {/* Retour fiche */}
         <div style={{textAlign:'center'}}>
           <button onClick={onRetour}
             style={{padding:'10px 24px',borderRadius:10,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>
@@ -1736,7 +1846,6 @@ function PhaseChoixMatiere({
         </p>
       </div>
       <Footer/>
-    </div>
     </div>
   )
 }
