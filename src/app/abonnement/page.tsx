@@ -99,7 +99,7 @@ const MATIERES = [
 
 // ── Quotas par plan ───────────────────────────────────────────────
 const QUOTAS_MENSUEL = [
-  { label:'Simulation Bac',        val:'2 / sem' },
+  { label:'Simulation Bac',        val:'5 / sem' },
   { label:'Chat IA Professeur',    val:'20 / sem' },
   { label:'Solveur étape/étape',  val:'20 / sem' },
   { label:'Remédiation IA',        val:'10 / sem' },
@@ -110,9 +110,9 @@ const QUOTAS_MENSUEL = [
 ]
 
 const QUOTAS_SPRINT = [
-  { label:'Simulation Bac',        val:'5 / sem' },
+  { label:'Simulation Bac',        val:'10 / sem' },
   { label:'Chat IA Professeur',    val:'30 / sem' },
-  { label:'Solveur étape/étape',  val:'♾️ Illimité' },
+  { label:'Solveur étape/étape',   val:'30 / sem' },
   { label:'Remédiation IA',        val:'20 / sem' },
   { label:'Analyses performance',  val:'10 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
@@ -121,11 +121,11 @@ const QUOTAS_SPRINT = [
 ]
 
 const QUOTAS_ANNUEL = [
-  { label:'Simulation Bac',        val:'2→5 / sem', note:'15h hors sprint · 30h mai-juin' },
-  { label:'Chat IA Professeur',    val:'20→30 / sem' },
-  { label:'Solveur étape/étape',  val:'20/sem → ♾️' },
-  { label:'Remédiation IA',        val:'10→20 / sem' },
-  { label:'Analyses performance',  val:'5→10 / sem' },
+  { label:'Simulation Bac',        val:'10 / sem', note:'15h hors sprint · 30h mai-juin' },
+  { label:'Chat IA Professeur',    val:'30 / sem' },
+  { label:'Solveur étape/étape',   val:'20 / sem ' },
+  { label:'Remédiation IA',        val:'20 / sem' },
+  { label:'Analyses performance',  val:'10 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
   { label:'Programme personnalisé',val:'✅ Inclus + Avancé' },
   { label:'Bac Blanc (mai-juin)',  val:'✅ Inclus' },
@@ -492,7 +492,7 @@ export default function AbonnementPage() {
             </p>
             <p style={{ fontSize:12, color:'var(--text2)' }}>
               Numéro de réception :{' '}
-              <strong style={{ fontFamily:'var(--font-mono)', color:'var(--accent)' }}>25 268 970</strong>
+              <strong style={{ fontFamily:'var(--font-mono)', color:'var(--accent)' }}>99 268 970</strong>
             </p>
           </div>
 
@@ -502,7 +502,7 @@ export default function AbonnementPage() {
             {[
               { q:'Quelle est la différence entre Mensuel et Sprint Bac ?', a:'L\'abonnement Mensuel (60 DT/mois) est pour toute l\'année hors mai-juin : 15h/semaine de quota. Le Sprint Bac (90 DT/mois) est réservé aux mois intensifs mai-juin : 30h/semaine, Bac Blanc débloqué, tous les quotas boostés.' },
               { q:'L\'abonnement Annuel inclut-il le Sprint Bac ?', a:'Oui ! L\'abonnement Annuel (600 DT) inclut automatiquement l\'Abonnement Mensuel pour 10 mois ET Sprint Bac pour mai-juin. Vous passez automatiquement en mode Sprint en mai et juin sans rien payer en plus.' },
-              { q:'Comment payer avec D17 ?', a:'Ouvrez l\'app D17, transférez le montant exact vers 25 268 970, copiez la référence de transaction et soumettez-la sur la page d\'activation.' },
+              { q:'Comment payer avec D17 ?', a:'Ouvrez l\'app D17, transférez le montant exact vers 99 268 970, copiez la référence de transaction et soumettez-la sur la page d\'activation.' },
               { q:'Mon abonnement est lié à quel appareil ?', a:'À votre première connexion, l\'abonnement se lie automatiquement à votre ordinateur. Contactez le support si vous changez d\'appareil.' },
               { q:'Combien de temps pour activer ?', a:'Moins de 5 minutes après soumission de votre référence. Vérification manuelle par l\'admin puis activation immédiate + email de confirmation.' },
             ].map((item, i) => (
