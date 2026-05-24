@@ -49,6 +49,7 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: string = 'mathematiques'
+// Sync globalMatiere whenever activeMatiere changes (called in component)
 
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Simulation IA (géré par Supabase via AuthContext)
@@ -229,12 +230,61 @@ async function generateOneExam(
   const section = archives[0]?.section ?? 'Mathématiques'
   const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat français (programme officiel Éducation nationale).
+  // Détecter si matière Anglais → tout le contenu en anglais
+  const isAnglais = matiere === 'anglais'
+
+  const system = isAnglais
+    ? `You are an expert author of French Baccalauréat LLCER English exams (official curriculum).
+You create ORIGINAL, realistic exam papers based on the 8 official thematic axes.
+RESPOND ONLY IN VALID JSON, no backticks, no comments.
+ALL TEXT (titles, statements, document excerpts, questions) MUST BE IN ENGLISH.`
+    : `Tu es un auteur expert de sujets du Baccalauréat français (programme officiel Éducation nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 NOTATION FRANÇAISE : f'(x), ∫, √, ℝ, ∈, ≤, ≥, →, Δ, θ, xₙ, uₙ₊₁, x², eˣ — JAMAIS \frac ni \sqrt ni LaTeX brut.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
-  const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+  const prompt = isAnglais
+    ? `Create an ORIGINAL LLCER English Baccalauréat paper number ${idx+1} (out of 5 variants) inspired by these sources:
+${contextLines}
+${customText ? `\nStudent reference text:\n${customText.substring(0,800)}` : ''}
+
+STRICT RULES:
+- Create a NEW original paper, never copy. Always change theme, authors, documents, context
+- Keep the official French Baccalauréat LLCER structure and level
+- 2 subjects at choice (Sujet 1 and Sujet 2), each with a different thematic axis
+- Each subject: Part 1 = Document synthesis in English (~500 words) | Part 2 = Translation into French
+- Documents: 2-3 authentic-style excerpts (literary, press, image description) + questions
+- Total: ${totalPts} points (Synthesis 16pts + Translation 4pts)
+- ALL text in ENGLISH (titles, statements, document excerpts, questions)
+- Thematic axes: Identities & Exchanges / Private & Public Sphere / Art & Power / Citizenship & Virtual Worlds / Fictions & Realities / Scientific Innovation & Responsibility / Diversity & Inclusion / Territory & Memory
+
+Respond EXACTLY with this JSON (no text before or after):
+
+{
+  "title": "LLCER Anglais — Simulation IA Variante ${idx+1}",
+  "section": "Terminale LLCER Anglais",
+  "duration": 210,
+  "totalPoints": ${totalPts},
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Subject 1 — [Thematic Axis Name]",
+      "theme": "[Axis: e.g. Identities & Exchanges]",
+      "points": ${totalPts},
+      "graph": null,
+      "statement": "THEMATIC AXIS: [Axis Title]\n\nDOCUMENT A — [Author, Title, Year]:\n[Realistic literary or journalistic excerpt, 8-12 lines]\n\nDOCUMENT B — [Author/Source, Title, Year]:\n[Realistic excerpt from a different register, 6-10 lines]\n\nDOCUMENT C — [Artist/Photographer, Title, Year]:\n[Detailed description of an image, painting or photograph, 4-6 lines]\n\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---\nPaying particular attention to the specificities of the three documents, show how they interact to [precise synthesis question linked to the axis].\n(approximately 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate the following passage from Document A into French:\n[Extract of 4-6 lines from Document A that are rich and representative]"
+    },
+    {
+      "num": 2,
+      "title": "Subject 2 — [Different Thematic Axis]",
+      "theme": "[Different Axis]",
+      "points": ${totalPts},
+      "graph": null,
+      "statement": "THEMATIC AXIS: [Different Axis Title]\n\nDOCUMENT A — [Author, Title, Year]:\n[Realistic literary or journalistic excerpt, 8-12 lines]\n\nDOCUMENT B — [Author/Source, Title, Year]:\n[Realistic excerpt from a different register, 6-10 lines]\n\nDOCUMENT C — [Artist/Photographer, Title, Year]:\n[Detailed description of an image, painting or photograph, 4-6 lines]\n\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---\nPaying particular attention to the specificities of the three documents, show how they interact to [precise synthesis question linked to the axis].\n(approximately 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate the following passage from Document A into French:\n[Extract of 4-6 lines from Document A]"
+    }
+  ]
+}`
+    : `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
 ${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
 
@@ -327,9 +377,11 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
 
   const raw = await askClaude(prompt, system, 5000, matiere)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
-    title:`${section} — Simulation Variante ${idx+1}`,
-    section, duration:180, totalPoints:totalPts,
-    exercises:[{num:1,title:'Exercice 1',theme:'Analyse',points:20,statement:'Erreur de génération — veuillez réessayer.'}]
+    title: isAnglais ? `LLCER Anglais — Simulation Variante ${idx+1}` : `${section} — Simulation Variante ${idx+1}`,
+    section: isAnglais ? 'Terminale LLCER Anglais' : section,
+    duration: isAnglais ? 210 : 180,
+    totalPoints:totalPts,
+    exercises:[{num:1,title: isAnglais ? 'Subject 1' : 'Exercice 1',theme: isAnglais ? 'Identities & Exchanges' : 'Analyse',points:20,statement: isAnglais ? 'Generation error — please retry.' : 'Erreur de génération — veuillez réessayer.'}]
   })
   return { ...parsed, id:`exam-${idx}-${Date.now()}`, index:idx }
 }
@@ -341,7 +393,16 @@ async function correctOneExercise(
   studentWork: string,
   examTitle: string
 ): Promise<string> {
-  const system = `Tu es un professeur correcteur du Baccalaureat français, specialiste en mathematiques.
+  // Détecter la matière via globalMatiere
+  const isAnglaisCorrect = globalMatiere === 'anglais'
+
+  const system = isAnglaisCorrect
+    ? `You are an expert LLCER English examiner and teacher correcting a French Baccalauréat paper.
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
+NEVER summarise a step. Develop EVERYTHING. The student must understand without any other resource.
+Use markdown: ### for parts, **bold** for results, > for important points.
+ALL your correction text MUST BE IN ENGLISH — vocabulary, explanations, feedback, everything.`
+    : `Tu es un professeur correcteur du Baccalaureat français, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
@@ -418,6 +479,100 @@ QUAND UTILISER (OBLIGATOIRE dans la correction) :
 - Exercice mixte → graphique "function" ET graphique "geometry" séparés`
 
   const withWork = studentWork.trim().length > 10
+
+  // ── ANGLAIS LLCER : prompt spécialisé en anglais ──────────────────
+  if (isAnglaisCorrect) {
+    const anglaisPrompt = withWork
+      ? `EXAM: ${examTitle}
+SUBJECT TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+STUDENT'S WORK:
+${studentWork}
+
+Write the COMPLETE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Detailed Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Synthesis approach:**
+- Introduce the thematic axis and the synthesis question
+- Show how to write the introduction (thematic statement + synthesis question + outline)
+- Develop a model synthesis with: introduction, 2-3 structured paragraphs, conclusion
+
+**Model synthesis:**
+[Write a complete model synthesis (~500 words) responding to the synthesis question]
+
+**Document analysis:**
+For each document:
+- Document A: [Key ideas + how it relates to the synthesis question]
+- Document B: [Key ideas + how it illustrates/contrasts with A]
+- Document C: [How the image/visual reinforces the theme]
+
+**Assessment of student's work:**
+✅ Correct: [What the student did well]
+❌ To improve: [What is missing or inaccurate]
+💡 Advice: [Specific methodological advice]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Precise, idiomatic French translation of the passage]
+
+**Translation notes:**
+- [Key translation choices and why]
+- [Difficult phrases and how to handle them]
+- [Register and style considerations]
+
+**Student assessment:**
+[Evaluation of student's translation]
+
+> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Pedagogical comment]`
+      : `EXAM: ${examTitle}
+SUBJECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Complete Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Methodological approach:**
+1. How to read and analyse the three documents
+2. How to identify the synthesis question and thematic axis
+3. Structure of an effective synthesis: introduction + 2-3 paragraphs + conclusion
+
+**Complete model synthesis (~500 words):**
+[Write a full, structured synthesis responding precisely to the question, using all three documents with clear cross-references]
+
+**Document-by-document analysis:**
+- Document A — [Author, Year]: [Main ideas, register, purpose, how it answers the question]
+- Document B — [Author, Year]: [Main ideas, how it develops/contrasts with A]
+- Document C — [Image]: [Visual argument, how it reinforces the thematic axis]
+
+**Key vocabulary and expressions:**
+[10-15 thematic vocabulary items useful for this axis]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Complete, precise and idiomatic French translation]
+
+**Translation commentary:**
+- Syntactic and lexical choices explained
+- Difficult expressions handled
+- Register maintained
+
+> **Key points to remember for ${exercise.title}:** [Synthesis method + translation rules]`
+
+    return askClaude(anglaisPrompt, system, 8000)
+  }
 
   // Détecter si l'élève a soumis des images (photos de copie)
   const hasImages = studentWork.includes('[Image jointe :')
@@ -519,7 +674,10 @@ async function analyzeOneExerciseSim(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const isAnglaisAnalyze = globalMatiere === 'anglais'
+  const system = isAnglaisAnalyze
+    ? `You are an expert LLCER English pedagogy specialist. Analyse ONE exercise and generate targeted remediation. RESPOND ONLY IN VALID JSON. ALL text fields in ENGLISH.`
+    : `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de simulation Bac.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
@@ -553,7 +711,12 @@ JSON requis :
 async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.
+  const isAnglaisAnalyzeFull = globalMatiere === 'anglais'
+  const system = isAnglaisAnalyzeFull
+    ? `You are an expert LLCER English pedagogy specialist and student work analyst.
+You analyse student work and build a personalised improvement plan.
+RESPOND ONLY IN VALID JSON. ALL text fields in ENGLISH.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.
 Tu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
@@ -611,7 +774,13 @@ async function correctRemediationExercise(
   exercise: AnalysisResult['remediationExercises'][number],
   studentAnswer: string
 ): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.
+  const isAnglaisRem = globalMatiere === 'anglais'
+  const system = isAnglaisRem
+    ? `You are a supportive but demanding LLCER English tutor.
+You correct student responses on remediation exercises.
+Be precise, encouraging, and identify exactly what is missing.
+ALL your feedback MUST BE IN ENGLISH.`
+    : `Tu es un tuteur mathématiques bienveillant mais exigeant.
 Tu corriges les réponses d'élèves sur des exercices de remédiation.
 Sois précis, encourageant, et identifie exactement ce qui manque.`
 
@@ -631,7 +800,11 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
   breakdown: {title:string;pts:number;max:number;reason:string}[]
 }> {
   const hasWork = studentWork.trim().length > 10
-  const system = `Tu es un correcteur du Baccalaureat français. Tu donnes une note RAPIDE et JUSTE.
+  const isAnglaisGrade = globalMatiere === 'anglais'
+  const system = isAnglaisGrade
+    ? `You are a French Baccalauréat LLCER English examiner. Give a QUICK and FAIR grade.
+Respond ONLY in valid JSON, no markdown, no explanation outside JSON. ALL text fields in ENGLISH.`
+    : `Tu es un correcteur du Baccalaureat français. Tu donnes une note RAPIDE et JUSTE.
 Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
 
   const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${e.statement.slice(0,180)}`).join(' | ')
@@ -2019,6 +2192,87 @@ const CHAPITRES_INFO_FR: Record<string, {
   },
 }
 
+
+// ══════════════════════════════════════════════════════════════════════
+//  ANGLAIS LLCER FRANCE — Archives 2021-2025 + Chapitres par section
+// ══════════════════════════════════════════════════════════════════════
+
+const SECTION_CONFIGS_ANGLAIS_FR = [
+  { key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', color:'#f43f5e', icon:'🎓',
+    themes:['Synthèse de documents','Traduction en français','Identities & Exchanges','Expression et construction de soi','Arts et débats','Voyages & territoires'] },
+  { key:'premiere-anglais', label:'Première — Anglais (Épreuve anticipée)', color:'#8b5cf6', icon:'📗',
+    themes:['Identities & Exchanges','Private & Public Sphere','Art & Power','Citizenship & Virtual Worlds','Fictions & Realities','Scientific Innovation'] },
+  { key:'seconde-anglais', label:'Seconde — Anglais (Contrôle continu)', color:'#06b6d4', icon:'📘',
+    themes:['Communication & Interaction','Reading Comprehension','Written Expression','Listening Comprehension','Grammar','Vocabulary & Culture'] },
+]
+
+const ARCHIVES_ANGLAIS_FR: Archive[] = [
+  // ── Terminale LLCER Anglais (sujetdebac.fr — URLs vérifiées) ─────────
+  { id:'tang-2025-m',  year:2025, session:'LLCER Anglais · Métropole · 18 juin 2025',      section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-llcer-anglais-2025-metropole-sujet-officiel.pdf',           themes:['Expression et construction de soi','Voyages & territoires','Synthèse de documents'] },
+  { id:'tang-2025-an', year:2025, session:'LLCER Anglais · Amérique du Nord · 2025',       section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-llcer-anglais-2025-amerique-nord-sujet-officiel.pdf',       themes:['Synthèse de documents','Traduction en français'] },
+  { id:'tang-2025-as', year:2025, session:'LLCER Anglais · Asie · 2025',                   section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-llcer-anglais-2025-asie-sujet-officiel.pdf',                 themes:['Synthèse de documents','Arts et débats'] },
+  { id:'tang-2025-po', year:2025, session:'LLCER Anglais · Polynésie · 2025',              section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-llcer-anglais-2025-polynesie-sujet-officiel.pdf',             themes:['Synthèse de documents','Identities & Exchanges'] },
+  { id:'tang-2025-nc', year:2025, session:'LLCER Anglais · Nouvelle-Calédonie · 2025',     section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2025/spe-llcer-anglais-2025-nouvelle-caledonie-sujet-officiel.pdf',   themes:['Synthèse de documents','Voyages & territoires'] },
+  { id:'tang-2024-m',  year:2024, session:'LLCER Anglais · Métropole · 20 juin 2024',      section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-llcer-anglais-2024-metropole-sujet-officiel.pdf',           themes:['Arts & debates d\'ideas','Expression and construction of identity'] },
+  { id:'tang-2024-an', year:2024, session:'LLCER Anglais · Amérique du Nord · 2024',       section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-llcer-anglais-2024-amerique-nord-sujet-officiel.pdf',       themes:['Synthèse de documents','Identities & Exchanges'] },
+  { id:'tang-2024-as', year:2024, session:'LLCER Anglais · Asie · 2024',                   section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-llcer-anglais-2024-asie-sujet-officiel.pdf',                 themes:['Synthèse de documents','Voyages & territoires'] },
+  { id:'tang-2024-po', year:2024, session:'LLCER Anglais · Polynésie · 2024',              section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2024/spe-llcer-anglais-2024-polynesie-sujet-officiel.pdf',             themes:['Synthèse de documents','Arts et debats'] },
+  { id:'tang-2023-m',  year:2023, session:'LLCER Anglais · Métropole · Juin 2023',         section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2023/spe-llcer-anglais-2023-metropole-sujet-officiel.pdf',           themes:['Voyages & territoires','Arts et debats','Identities & Exchanges'] },
+  { id:'tang-2023-po', year:2023, session:'LLCER Anglais · Polynésie · 2023',              section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2023/spe-llcer-anglais-2023-polynesie-sujet-officiel.pdf',             themes:['Synthèse de documents','Expression de soi'] },
+  { id:'tang-2022-m',  year:2022, session:'LLCER Anglais · Métropole · Juin 2022',         section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-llcer-anglais-2022-metropole-sujet-officiel.pdf',           themes:['Fictions & Realities','Expressions politiques'] },
+  { id:'tang-2022-an', year:2022, session:'LLCER Anglais · Amérique du Nord · 2022',       section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-llcer-anglais-2022-amerique-nord-sujet-officiel.pdf',       themes:['Synthèse de documents','Identities & Exchanges'] },
+  { id:'tang-2022-as', year:2022, session:'LLCER Anglais · Asie · 2022',                   section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-llcer-anglais-2022-asie-sujet-officiel.pdf',                 themes:['Arts et debats','Voyages & territoires'] },
+  { id:'tang-2022-po', year:2022, session:'LLCER Anglais · Polynésie · 2022',              section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2022/spe-llcer-anglais-2022-polynesie-sujet-officiel.pdf',             themes:['Synthèse de documents','Expression de soi'] },
+  { id:'tang-2021-an', year:2021, session:'LLCER Anglais · Amérique du Nord · 2021',       section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2021/spe-llcer-anglais-2021-amerique-nord-sujet-officiel.pdf',       themes:['Identities & Exchanges','Synthèse de documents'] },
+  { id:'tang-2021-as', year:2021, session:'LLCER Anglais · Asie · 2021',                   section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2021/spe-llcer-anglais-2021-asie-sujet-officiel.pdf',                 themes:['Synthèse de documents','Arts et debats'] },
+  { id:'tang-2021-po', year:2021, session:'LLCER Anglais · Polynésie · 2021',              section:'Terminale — Spé LLCER Anglais', sectionKey:'terminale-anglais', color:'#f43f5e', icon:'🎓', url:'https://www.sujetdebac.fr/annales-pdf/2021/spe-llcer-anglais-2021-polynesie-sujet-officiel.pdf',             themes:['Voyages & territoires','Identities & Exchanges'] },
+]
+
+const CHAPITRES_ANGLAIS_FR: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'terminale-anglais': {
+    key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', color:'#f43f5e', icon:'🎓',
+    chapitres: [
+      { slug:'identities-exchanges',    titre:'Identities & Exchanges',           badge:'Top Bac', desc:'American Dream, multiculturalism, migration, brain drain, Brexit, globalization' },
+      { slug:'private-public',          titre:'Private & Public Sphere',          badge:'Top Bac', desc:'Social media, surveillance capitalism, GDPR, fake news, filter bubble, echo chamber' },
+      { slug:'art-power',               titre:'Art & Power',                      badge:'LLCER',   desc:'Protest art, Banksy, propaganda, censorship, soft power, Fahrenheit 451, 1984' },
+      { slug:'citizenship-virtual',     titre:'Citizenship & Virtual Worlds',     badge:'Top Bac', desc:'Online activism, deepfakes, AI and democracy, cyberbullying, digital rights' },
+      { slug:'fictions-realities',      titre:'Fictions & Realities',             badge:'LLCER',   desc:'Dystopia, 1984, Lord of the Flies, narrative voice, science fiction, Orwell' },
+      { slug:'scientific-innovation',   titre:'Scientific Innovation',            badge:'Top Bac', desc:'AI ethics, algorithmic bias, climate change, CRISPR, green economy, automation' },
+      { slug:'diversity-inclusion',     titre:'Diversity & Inclusion',            badge:'Societe', desc:'Gender equality, intersectionality, affirmative action, MeToo, social mobility' },
+      { slug:'territory-memory',        titre:'Territory & Memory',               badge:'Culture', desc:'Colonial legacy, commemoration, postcolonial literature, historical narratives' },
+      { slug:'synthese-traduction',     titre:'Synthèse + Traduction',            badge:'Methode', desc:'Document synthesis methodology, translation techniques, thematic vocabulary' },
+    ]
+  },
+  'premiere-anglais': {
+    key:'premiere-anglais', label:'Première — Anglais (E.A.)', color:'#8b5cf6', icon:'📗',
+    chapitres: [
+      { slug:'identities-exchanges-p',    titre:'Identities & Exchanges',          badge:'Top Bac', desc:'American Dream, multiculturalism, migration, brain drain, Brexit, globalization, cultural identity, glocalization' },
+      { slug:'private-public-p',          titre:'Private & Public Sphere',         badge:'Top Bac', desc:'Filter bubble, surveillance capitalism, GDPR, fake news, social media addiction, freedom of expression, echo chambers' },
+      { slug:'art-power-p',               titre:'Art & Power',                     badge:'LLCER',   desc:'Banksy, protest art, propaganda, censorship, soft power, K-pop, Fahrenheit 451, cultural appropriation, museum restitution' },
+      { slug:'citizenship-virtual-p',     titre:'Citizenship & Virtual Worlds',    badge:'Top Bac', desc:'Online activism, deepfakes, AI and democracy, #MeToo, cyberbullying, digital rights, e-democracy, fact-checking' },
+      { slug:'fictions-realities-p',      titre:'Fictions & Realities',            badge:'LLCER',   desc:'Dystopia, 1984 Orwell, Lord of the Flies, Fahrenheit 451, narrative voice, science fiction, The Handmaid Tale, Atwood' },
+      { slug:'scientific-innovation-p',   titre:'Scientific Innovation',           badge:'Top Bac', desc:'AI ethics, algorithmic bias, CRISPR, green economy, autonomous weapons, EU AI Act, climate psychology, Snowden' },
+      { slug:'diversity-inclusion-p',     titre:'Diversity & Inclusion',           badge:'Societe', desc:'Gender pay gap, intersectionality, #MeToo, affirmative action, LGBTQ+ rights, systemic racism, social mobility, Popper' },
+      { slug:'territory-memory-p',        titre:'Territory & Memory',              badge:'Culture', desc:'Colonial statues, postcolonial literature, war commemoration, TRC, collective memory, Halbwachs, France & Algeria, memory laws' },
+      { slug:'synthese-traduction-p',     titre:'Synthèse + Traduction (Methode)', badge:'Methode', desc:'Document synthesis structure, translation techniques, thematic vocabulary, introduction/conclusion, cohesive devices, register' },
+    ]
+  },
+  'seconde-anglais': {
+    key:'seconde-anglais', label:'Seconde — Anglais', color:'#06b6d4', icon:'📘',
+    chapitres: [
+      { slug:'communication-interaction', titre:'Communication & Interaction',  badge:'Oral',     desc:'Indirect questions, opinions, debate, comparatives, signposting, turn-taking' },
+      { slug:'reading-grammar',          titre:'Reading Comprehension & Grammar',badge:'Ecrit',   desc:'Tenses, passive voice, reported speech, conditionals, inference, text analysis' },
+      { slug:'written-expression-2',     titre:'Written Expression',            badge:'Ecrit',    desc:'Essays, formal emails, narratives, for/against, descriptive, argumentative' },
+      { slug:'listening',                titre:'Listening Comprehension',        badge:'Oral',     desc:'Predicting content, British vs American English, discourse markers, tone' },
+      { slug:'grammar',                  titre:'Grammar',                        badge:'Grammaire',desc:'Tenses, modals, conditionals, relative clauses, error correction, advanced structures' },
+      { slug:'vocabulary-culture',       titre:'Vocabulary & Cultural Themes',   badge:'Culture', desc:'English-speaking world, idioms, word formation, false friends, academic register' },
+    ]
+  },
+}
+
 const SECTION_CONFIGS_PHYS_FR = [
   { key:'terminale-phys', label:'Terminale-Générale — Physique-Chimie', color:'#f59e0b', icon:'⚗️',
     themes:['Ondes et signaux','Mécanique','Énergie','Chimie organique','Optique','Électricité'] },
@@ -2236,9 +2490,9 @@ ${chapitres.map((c,i)=>`    {
 function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
   archives?: Archive[]
-  chapitresParSection?: typeof CHAPITRES_PAR_SECTION
-  sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'|'informatique'
+  chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
+  sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -4635,11 +4889,19 @@ function SimulationFrancePageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
   globalMatiere = matiereActive
 
-  // ── Matière : maths ou physique ──────────────────────────────────
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'>(() => {
+  // ── Matière : maths, physique, informatique ou anglais ──────────
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
     if (typeof window === 'undefined') return 'maths'
-    const s = new URLSearchParams(window.location.search).get('subject'); return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : 'maths'
+    const s = new URLSearchParams(window.location.search).get('subject')
+    return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : 'maths'
   })
+  // Synchroniser globalMatiere pour les fonctions IA (generateOneExam, correctOneExercise, etc.)
+  useEffect(() => {
+    const matiereMap: Record<string,string> = {
+      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+    }
+    globalMatiere = matiereMap[activeMatiere] || 'mathematiques'
+  }, [activeMatiere])
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
   const [customText, setCustomText] = useState('')
@@ -4766,6 +5028,7 @@ function SimulationFrancePageInner() {
                 { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
                 { key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6', matiere:'informatique' },
+                { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e', matiere:'anglais' },
               ]).map(m => {
                 const locked = false
                 return (
@@ -4789,9 +5052,9 @@ function SimulationFrancePageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

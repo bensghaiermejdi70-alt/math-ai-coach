@@ -46,6 +46,23 @@ const MATIERES = [
     ],
   },
   {
+    slug: 'anglais',
+    icon: '🇬🇧',
+    titre: 'Anglais',
+    sous: 'Seconde · Première · Terminale — Tous parcours',
+    couleur: '#f43f5e',
+    gradient: 'linear-gradient(135deg,rgba(244,63,94,0.14),rgba(245,158,11,0.07))',
+    border: 'rgba(244,63,94,0.3)',
+    badgeColor: '#fb7185',
+    badge: 'Bac 2027 · Obligatoire',
+    stats: { voies: 3, chapitres: 22, thm: 160, ex: 130 },
+    apercu: [
+      { label: '📘 Seconde',   items: ['Communication','Reading','Writing','Grammar','Culture'] },
+      { label: '📗 Première',  items: ['Identities','Private/Public','Art & Power','Citizenship','Fictions'] },
+      { label: '🎓 Terminale', items: ['Sci. Innovation','Diversity','Territory','LLCER','AMC'] },
+    ],
+  },
+  {
     slug: 'physique',
     icon: '⚛️',
     titre: 'Physique-Chimie',
@@ -78,7 +95,7 @@ export default function BacFrancePage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 14 }}>
               Programme France<br />
               <span style={{ background: 'linear-gradient(90deg,#f59e0b,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Maths · Physique-Chimie · Informatique
+                Maths · Physique-Chimie · Informatique · Anglais
               </span>
             </h1>
             <p style={{ maxWidth: 600, color: 'var(--text2)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
@@ -86,10 +103,10 @@ export default function BacFrancePage() {
               Cours, théorèmes, formules et exercices corrigés avec IA professeur.
             </p>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
-              <span>🏫 3 matières</span><span>·</span>
-              <span>📚 130 chapitres</span><span>·</span>
-              <span>📊 1019+ théorèmes</span><span>·</span>
-              <span>📝 859+ exercices</span>
+              <span>🏫 4 matières</span><span>·</span>
+              <span>📚 152 chapitres</span><span>·</span>
+              <span>📊 1179+ notions</span><span>·</span>
+              <span>📝 989+ exercices</span>
             </div>
           </div>
 
@@ -167,7 +184,7 @@ export default function BacFrancePage() {
           {/* CTA IA */}
           <div style={{ marginTop: 52, background: 'linear-gradient(135deg,rgba(79,110,247,0.1),rgba(124,58,237,0.06))', border: '1px solid rgba(79,110,247,0.2)', borderRadius: 18, padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · Physique · Informatique France</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · Physique · Informatique · Anglais France</div>
               <h3 style={{ fontSize: 17, marginBottom: 4 }}>Prof IA — Résous n'importe quel exercice</h3>
               <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Solveur étape par étape · Chat professeur · Simulation Bac</p>
             </div>

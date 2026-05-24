@@ -74,6 +74,41 @@ const SECTIONS_FR = [
    ]},
 ]
 
+
+const SECTIONS_ANGLAIS_FR = [
+  {key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', icon:'🎓', color:'#f43f5e', duration:210, coeff:16,
+   themes:['Identities & Exchanges','Private & Public Sphere','Art & Power','Citizenship & Virtual Worlds','Fictions & Realities','Scientific Innovation','Diversity & Inclusion','Territory & Memory'],
+   programme:[
+     {theme:'Identities & Exchanges',      sousTh:'American Dream, multiculturalism, migration, brain drain, Brexit, globalization, cultural identity, glocalization'},
+     {theme:'Private & Public Sphere',     sousTh:'Filter bubble, surveillance capitalism, GDPR, fake news, social media addiction, echo chambers, attention economy'},
+     {theme:'Art & Power',                 sousTh:'Protest art, Banksy, propaganda, censorship, soft power, K-pop, Fahrenheit 451, 1984, cultural appropriation'},
+     {theme:'Citizenship & Virtual Worlds',sousTh:'Online activism, deepfakes, AI and democracy, cyberbullying, digital rights, e-democracy, fact-checking, MeToo'},
+     {theme:'Fictions & Realities',        sousTh:'Dystopia, 1984 Orwell, Lord of the Flies, narrative voice, science fiction, speculative fiction, Atwood'},
+     {theme:'Scientific Innovation',       sousTh:'AI ethics, algorithmic bias, CRISPR, green economy, autonomous weapons, EU AI Act, climate psychology, Snowden'},
+     {theme:'Diversity & Inclusion',       sousTh:'Gender pay gap, intersectionality, affirmative action, LGBTQ+ rights, systemic racism, social mobility, Popper'},
+     {theme:'Territory & Memory',          sousTh:'Colonial legacy, commemoration, postcolonial literature, TRC, collective memory, Halbwachs, memory laws'},
+   ]},
+  {key:'premiere-anglais', label:'Première — Anglais (Epreuve anticipee)', icon:'📗', color:'#8b5cf6', duration:120, coeff:3,
+   themes:['Communication & Oral Interaction','Reading Comprehension','Written Expression','Listening Comprehension','Grammar','Vocabulary & Culture'],
+   programme:[
+     {theme:'Communication & Interaction', sousTh:'Turn-taking, debate, presentations, opinions, indirect questions, question tags, signposting, comparatives'},
+     {theme:'Reading Comprehension',       sousTh:'Text types, inference, T/F/NM, vocabulary in context, author purpose, tone, literary analysis'},
+     {theme:'Written Expression',          sousTh:'Essays, formal emails, narratives, cohesive devices, for/against, descriptive writing, argumentation'},
+     {theme:'Listening Comprehension',     sousTh:'British vs American English, discourse markers, tone, predicting content, inferring attitude'},
+     {theme:'Grammar',                     sousTh:'Tenses, passive voice, reported speech, conditionals, relative clauses, modals, error correction'},
+     {theme:'Vocabulary & Culture',        sousTh:'English-speaking world, idioms, word formation, false friends, academic register, cultural knowledge'},
+   ]},
+  {key:'seconde-anglais', label:'Seconde — Anglais (Controle continu)', icon:'📘', color:'#06b6d4', duration:60, coeff:2,
+   themes:['Communication & Interaction','Reading & Grammar','Written Expression','Listening','Vocabulary'],
+   programme:[
+     {theme:'Communication & Interaction', sousTh:'Indirect questions, opinions, debate, comparatives, signposting, turn-taking, polite requests'},
+     {theme:'Reading & Grammar',           sousTh:'Tenses, passive, reported speech, conditionals, True/False/NM, inference, vocabulary in context'},
+     {theme:'Written Expression',          sousTh:'Cohesive devices, formal email, narrative, for/against essay, descriptive paragraph'},
+     {theme:'Listening Comprehension',     sousTh:'British vs American, discourse markers, identifying tone, numbers and data, inferring attitude'},
+     {theme:'Vocabulary & Culture',        sousTh:'English-speaking world, idioms, word formation, false friends, register, cultural knowledge'},
+   ]},
+]
+
 const SECTIONS_NSI_FR = [
   {key:'terminale-nsi', label:'Terminale NSI', icon:'🎓', color:'#8b5cf6', duration:210, coeff:16,
    themes:['Structures de données','Algorithmes & Complexité','SQL','POO Python','Réseaux & OS'],
@@ -631,6 +666,117 @@ function PrimaryBtn({onClick,disabled=false,loading=false,children,fullWidth=fal
 
 // ── correctOneExercise (identique simulation) ─────────────────────
 async function correctOneExercise(exercise: Exercise, totalPoints: number, studentWork: string, examTitle: string): Promise<string> {
+  // Détecter Anglais via globalMatiere ou le titre/thème de l'exercice
+  const isAnglais = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('identit')
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('fiction')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || examTitle?.toLowerCase().includes('llcer')
+    || examTitle?.toLowerCase().includes('anglais')
+
+  if (isAnglais) {
+    const systemEN = `You are an expert LLCER English Baccalauréat examiner correcting a French Bac Blanc paper.
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
+NEVER summarise a step. Develop EVERYTHING. The student must understand without any other resource.
+Use markdown: ### for parts, **bold** for results, > for important points.
+ALL correction text MUST BE IN ENGLISH — vocabulary, explanations, feedback, model answers, everything.`
+
+    const withWorkEN = studentWork.trim().length > 10
+    const promptEN = withWorkEN
+      ? `EXAM: ${examTitle}
+SUBJECT TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+STUDENT'S WORK:
+${studentWork}
+
+Write the COMPLETE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Detailed Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Synthesis approach and thematic axis:**
+[Introduce the axis and the synthesis question — explain what the student must demonstrate]
+
+**Model synthesis introduction:**
+[Write a complete model introduction: thematic statement + synthesis question + outline (3-4 sentences)]
+
+**Document analysis:**
+- Document A: [Key ideas, register, purpose, how it answers the synthesis question]
+- Document B: [Key ideas, how it develops or contrasts with A, register difference]
+- Document C: [Visual argument, how the image reinforces or illustrates the thematic axis]
+
+**Model synthesis (key paragraphs):**
+[Write 2-3 developed paragraphs demonstrating how the documents interact]
+
+**Assessment of student's synthesis:**
+✅ Correct: [What the student did well — structure, ideas, language]
+❌ To improve: [What is missing or inaccurate — with precise explanation]
+💡 Advice: [Specific methodological advice]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Precise, idiomatic French translation of the passage]
+
+**Translation commentary:**
+- [Key translation choices explained]
+- [Difficult phrases and how to handle them]
+- [Register and style considerations]
+
+**Student's translation assessment:**
+[Specific evaluation of student's choices]
+
+> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Pedagogical global comment]`
+      : `EXAM: ${examTitle}
+SUBJECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Complete Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Methodology for LLCER synthesis:**
+1. How to read and analyse the three documents
+2. How to identify the synthesis question and thematic axis
+3. Structure: introduction + 2-3 paragraphs + conclusion
+4. Key language for synthesis: linking ideas, cross-referencing documents
+
+**Complete model synthesis (~500 words):**
+[Write a full, structured synthesis responding precisely to the question, using all three documents with clear cross-references and thematic analysis]
+
+**Document-by-document analysis:**
+- Document A — [Author, Year]: [Main ideas, register, purpose, connection to synthesis question]
+- Document B — [Author, Year]: [Main ideas, how it develops/contrasts with A, different register]
+- Document C — [Image description]: [Visual argument, how it reinforces the thematic axis]
+
+**Key thematic vocabulary:**
+[10-15 vocabulary items essential for this axis, with usage examples]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Complete, precise and idiomatic French translation of the passage]
+
+**Translation commentary:**
+- Syntactic and lexical choices explained
+- Difficult expressions handled with alternatives
+- Register maintained throughout
+
+> **Key points to remember for ${exercise.title}:** [Synthesis method + translation rules + axis vocabulary]`
+
+    return askClaude(promptEN, systemEN, 8000, 'anglais')
+  }
+
   const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -808,7 +954,16 @@ async function analyzeOneExercise(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
+  const isAnglaisAnalyze = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || exercise.theme?.toLowerCase().includes('fiction')
+
+  const system = isAnglaisAnalyze
+    ? `You are an expert LLCER English pedagogy specialist. Analyse ONE Bac Blanc exercise and generate targeted remediation.
+RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de Bac et génère une remédiation ciblée.
 
@@ -840,7 +995,16 @@ JSON requis :
 }
 
 async function analyzeStudentWork(exam: BacExam, studentWork: string, correction: string): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const isAnglaisStudentWork = globalMatiere === 'anglais'
+    || exam.title?.toLowerCase().includes('llcer')
+    || exam.title?.toLowerCase().includes('anglais')
+    || exam.section?.toLowerCase().includes('anglais')
+
+  const system = isAnglaisStudentWork
+    ? `You are an expert LLCER English pedagogy specialist and student work analyst.
+You analyse student work on LLCER English Bac Blanc papers and build a personalised improvement plan.
+RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n  "strengths": ["[Point fort 1]", "[Point fort 2]"],\n  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
   const raw = await askClaude(prompt, system, 5000)
   return parseJSON<AnalysisResult>(raw, {
@@ -853,7 +1017,18 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
 
 // ── correctRemediationExercise (identique simulation) ─────────────
 async function correctRemediationExercise(exercise: AnalysisResult['remediationExercises'][number], studentAnswer: string): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
+  const isAnglaisRem = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('synthesis')
+    || exercise.statement?.toLowerCase().includes('document')
+    || exercise.statement?.toLowerCase().includes('thematic')
+
+  const system = isAnglaisRem
+    ? `You are a supportive but demanding LLCER English tutor correcting student responses on remediation exercises.
+Be precise, encouraging, and identify exactly what is missing.
+ALL feedback MUST BE IN ENGLISH — evaluation, commentary, key points, next steps.`
+    : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
   return askClaude(
     `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
     system, 2000
@@ -985,6 +1160,100 @@ ${exJson}
   data.sectionKey = data.sectionKey || candidat.sectionKey
   data.title      = data.title      || ('Bac Blanc NSI '+yyyy+' — '+secLabel)
   return data as BacExam
+}
+
+// ── Génération examen Bac Blanc LLCER Anglais France ─────────────
+async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secAnglais = SECTIONS_ANGLAIS_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_ANGLAIS_FR[0]
+  const secLabel = secAnglais.label
+  const today = new Date()
+  const dd = String(today.getDate()).padStart(2,'0')
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const yyyy = today.getFullYear()
+  const dateStr = dd + '/' + mm + '/' + yyyy
+  const seed = 'BBFR_ANGLAIS_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  // Sélectionner 2 axes thématiques du jour (rotation basée sur dayNum)
+  const axes = secAnglais.programme
+  const ax1 = axes[dayNum % axes.length]
+  const ax2 = axes[(dayNum + 1) % axes.length]
+
+  const system = 'You are an expert author of French Baccalauréat LLCER English exams (official curriculum).'
+    + ' You create ORIGINAL, realistic exam papers based on the 8 official thematic axes.'
+    + ' RESPOND ONLY IN VALID JSON, no backticks, no comments.'
+    + ' ALL exam content MUST BE IN ENGLISH.'
+
+  const stmt1 = 'THEMATIC AXIS: ' + ax1.theme
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
+    + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
+    + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
+    + '\\nPaying particular attention to the specificities of the three documents, show how they interact to [synthesis question linked to ' + ax1.theme + '].'
+    + '\\n(approximately 500 words, in English)'
+    + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
+    + '\\nTranslate the following passage from Document A into French:'
+    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+
+  const stmt2 = 'THEMATIC AXIS: ' + ax2.theme
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
+    + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
+    + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
+    + '\\nPaying particular attention to the specificities of the three documents, show how they interact to [synthesis question linked to ' + ax2.theme + '].'
+    + '\\n(approximately 500 words, in English)'
+    + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
+    + '\\nTranslate the following passage from Document A into French:'
+    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+
+  const prompt = 'Create an ORIGINAL LLCER English Bac Blanc paper for ' + secLabel + '. Seed: ' + seed + '.'
+    + ' OFFICIAL LLCER STRUCTURE — 2 subjects at choice, student chooses ONE.'
+    + ' Duration: ' + Math.round(secAnglais.duration/60) + 'h | Total: 20 points.'
+    + ' Subject 1 axis: ' + ax1.theme + ' (' + ax1.sousTh + ').'
+    + ' Subject 2 axis: ' + ax2.theme + ' (' + ax2.sousTh + ').'
+    + ' Rules: create ORIGINAL documents (literary + journalistic + image).'
+    + ' Each subject: Part 1 = synthesis in English ~500 words (16pts) | Part 2 = translation into French (4pts).'
+    + ' ALL TEXT IN ENGLISH except translation instruction.'
+    + ' Respond with exactly this JSON: '
+    + '{"id":"bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '"'
+    + ',"day":' + dayNum
+    + ',"title":"Bac Blanc LLCER Anglais — ' + secLabel + ' — Jour ' + dayNum + '"'
+    + ',"section":"' + secLabel + '"'
+    + ',"date":"' + dateStr + '"'
+    + ',"totalPoints":20'
+    + ',"duration":' + secAnglais.duration
+    + ',"exercises":['
+    + '{"num":1,"theme":"' + ax1.theme + '","title":"Subject 1 — ' + ax1.theme + '","points":20,"statement":"' + stmt1.replace(/"/g, '\\"') + '"}'
+    + ',{"num":2,"theme":"' + ax2.theme + '","title":"Subject 2 — ' + ax2.theme + '","points":20,"statement":"' + stmt2.replace(/"/g, '\\"') + '"}'
+    + ']}'
+
+  const raw = await askClaude(prompt, system, 6000, 'anglais')
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc LLCER Anglais — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secAnglais.duration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('IA response invalid — please retry')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secAnglais.duration,
+  }
 }
 
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
@@ -1359,13 +1628,14 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onRetour
 }: {
   candidat: Candidat
   dayNum: number
   onMaths: () => void
   onPhysique: () => void
   onInfo: () => void
+  onAnglais: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -1421,14 +1691,14 @@ function PhaseChoixMatiereFR({
     {
       key: 'anglais',
       icon: '🇬🇧',
-      label: 'Anglais',
-      desc: '8 axes thématiques · Essay · Synthesis · LLCER · AMC — Bientôt disponible',
-      color: '#f59e0b',
-      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.05))',
-      border: 'rgba(245,158,11,0.25)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
+      label: 'Anglais LLCER',
+      desc: '8 axes thématiques · Synthèse de documents · Traduction · Programme officiel LLCER France · Correction IA en anglais',
+      color: '#f43f5e',
+      gradient: 'linear-gradient(135deg,rgba(244,63,94,0.18),rgba(239,68,68,0.08))',
+      border: 'rgba(244,63,94,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
     },
     {
       key: 'informatique',
@@ -1488,6 +1758,7 @@ function PhaseChoixMatiereFR({
                 if (m.key === 'maths') { onMaths(); return }
                 if (m.key === 'physique') { onPhysique(); return }
                 if (m.key === 'informatique') { onInfo(); return }
+                if (m.key === 'anglais') { onAnglais(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -1543,7 +1814,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
-  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'>('maths')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'>('maths')
   const [err,setErr]=useState('')
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
@@ -1555,6 +1826,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const isMay=monthNum===5||monthNum===6
   const sec = SECTIONS_FR.find(s=>s.key===sectionKey)
     || SECTIONS_NSI_FR?.find((s:any)=>s.key===sectionKey)
+    || SECTIONS_ANGLAIS_FR?.find((s:any)=>s.key===sectionKey)
     || (sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
         ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
         : undefined)
@@ -1638,6 +1910,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b'},
                 {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0'},
                 {key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6'},
+                {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
               ]).map(m=>(
                 <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
                   style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px 8px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,transition:'all 0.2s',
@@ -1663,6 +1936,10 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'premiere-phys',  label:'Première Spécialité',       icon:'📗', color:'#06b6d4', duration:120, coeff:2},
                 {key:'sti2d-phys',     label:'Terminale STI2D',           icon:'⚙️', color:'#f59e0b', duration:180, coeff:4},
                 {key:'st2s-phys',      label:'Terminale ST2S',            icon:'🏥', color:'#ec4899', duration:120, coeff:3},
+              ] : activeMatiereFiche==='anglais' ? [
+                {key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', icon:'🎓', color:'#f43f5e', duration:210, coeff:16},
+                {key:'premiere-anglais',  label:'Première — Anglais (E.A.)',      icon:'📗', color:'#8b5cf6', duration:120, coeff:3},
+                {key:'seconde-anglais',   label:'Seconde — Anglais',              icon:'📘', color:'#06b6d4', duration:60,  coeff:2},
               ] : [
                 {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
                 {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
@@ -3062,6 +3339,7 @@ function BacBlancFranceInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'mathematiques'
     setPhase('generating')
     try {
       const e = await generateBacBlanc(candidat, dayNum)
@@ -3089,6 +3367,7 @@ function BacBlancFranceInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'physique'
     setPhase('generating')
     try {
       const e = await generateBacBlancPhysiqueFR(candidat, dayNum)
@@ -3114,11 +3393,38 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite atteinte.')
       return
     }
+    globalMatiere = 'informatique'
     setPhase('generating')
     try {
       const e = await generateBacBlancInformatique(candidat, dayNum)
       await incrementQuotaSub('simulations')
       markPassedTodayForMatiere('informatique')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
+  const handleStartAnglais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('anglais')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc LLCER Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('anglais')) {
+      alert('✅ Vous avez déjà passé votre examen Anglais aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert('⚠️ Limite atteinte.')
+      return
+    }
+    globalMatiere = 'anglais'
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancAnglais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
     } catch {
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
@@ -3175,6 +3481,7 @@ function BacBlancFranceInner() {
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
       onInfo={handleStartInfo}
+      onAnglais={handleStartAnglais}
       onRetour={()=>setPhase('inscription')}
     />
   )
