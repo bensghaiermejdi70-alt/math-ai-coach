@@ -45,6 +45,9 @@ async function askClaudeWithImage(
   prompt: string, system: string, base64: string,
   mediaType: string, maxTokens = 1500
 ): Promise<string> {
+  const _subj2 = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+  const _matiereMap2: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiere = _matiereMap2[_subj2] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
