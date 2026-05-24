@@ -1237,7 +1237,7 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 }
 
 export default function ChatPage() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription, quotaVersion } = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1261,8 +1261,9 @@ export default function ChatPage() {
   // Utiliser totalQuota directement (pas de state local qui se reset au remontage)
   const [localChatUsed, setLocalChatUsed] = useState(() => totalQuota.chat_used || 0)
   // Sync local avec Supabase quand quotas se recharge (montage + changement)
-  useEffect(() => { setLocalChatUsed(totalQuota.chat_used || 0) }, [totalQuota.chat_used])
-  // Forcer rechargement des quotas au montage du composant
+  // Sync sur quotaVersion — se déclenche à CHAQUE mise à jour de loadQuotas
+  useEffect(() => { setLocalChatUsed(totalQuota.chat_used || 0) }, [quotaVersion, totalQuota.chat_used])
+  // Forcer rechargement au montage
   useEffect(() => { refreshSubscription?.() }, [])
   const chatUsed  = localChatUsed
   const chatLimit = quotaLimits.chat_per_week
@@ -1341,6 +1342,7 @@ export default function ChatPage() {
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
       await incrementQuota('chat')
+      setLocalChatUsed(prev => prev + 1) // Mise à jour immédiate
       setLocalChatUsed(prev => prev + 1)  // Mise à jour immédiate du compteur
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]

@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription, quotaVersion} = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1304,8 +1304,8 @@ function SolvePageInner() {
   const totalQuota = sumQuotasAcrossMatiere(quotas)
   // State local pour mise à jour immédiate sans attendre rechargement Supabase
   const [localSolverUsed, setLocalSolverUsed] = useState(() => totalQuota.solver_used || 0)
-  // Sync avec Supabase quand quotas se recharge
-  useEffect(() => { setLocalSolverUsed(totalQuota.solver_used || 0) }, [totalQuota.solver_used])
+  // Sync sur quotaVersion — se déclenche à CHAQUE mise à jour de loadQuotas
+  useEffect(() => { setLocalSolverUsed(totalQuota.solver_used || 0) }, [quotaVersion, totalQuota.solver_used])
   // Forcer rechargement des quotas au montage
   useEffect(() => { refreshSubscription?.() }, [])
   const solverUsed  = localSolverUsed

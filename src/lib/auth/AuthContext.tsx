@@ -82,6 +82,7 @@ interface AuthContextType {
   hasActiveSubscription: boolean
   daysRemaining: number | null
   matiereActive: MatiereType   // matière de l'abonnement actif
+  quotaVersion: number          // Incrémenté après chaque mise à jour de quota
   checkMatiereAccess: (matiere: MatiereType) => boolean
   getSubjectQuotaLimit: (type: QuotaType, matiere?: MatiereType) => number
   activePlanTypes: string[]
@@ -107,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [quotas, setQuotas] = useState<Record<MatiereType, UserQuotas> | null>(null)
+  const [quotaVersion, setQuotaVersion] = useState(0) // Force re-render après incrément
   const [activePlanTypes, setActivePlanTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   
@@ -344,6 +346,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // NE PAS dupliquer — sumQuotasAcrossMatiere compterait x3
       // Stocker seulement sous 'mathematiques' pour usage global
       setQuotas(quotasMap as Record<MatiereType, UserQuotas>)
+      setQuotaVersion(v => v + 1) // Forcer re-render des composants
     }
   }
 
@@ -489,20 +492,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
-  // Recharger les quotas quand la fenêtre reprend le focus (navigation entre pages)
+  // Recharger les quotas lors de la navigation Next.js (visibilitychange)
   useEffect(() => {
-    const handleFocus = () => {
-      if (user) loadQuotas(user.id)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && user) {
+        loadQuotas(user.id)
+      }
     }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [user])
-
-  // Recharger les quotas toutes les 30 secondes si actif
-  useEffect(() => {
-    if (!user) return
-    const interval = setInterval(() => loadQuotas(user.id), 30000)
-    return () => clearInterval(interval)
+    document.addEventListener('visibilitychange', handleVisibility)
+    // Aussi sur focus (onglet/fenêtre)
+    window.addEventListener('focus', handleVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', handleVisibility)
+    }
   }, [user])
 
   useEffect(() => {
@@ -623,6 +626,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasActiveSubscription,
         daysRemaining,
         matiereActive,
+        quotaVersion,
         checkMatiereAccess,
         getSubjectQuotaLimit,
 
