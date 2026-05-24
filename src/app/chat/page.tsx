@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect, useCallback , useMemo } from 'react'   
+import { useState, useRef, useEffect, useCallback } from 'react'   
 import Navbar from '@/components/layout/Navbar'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
@@ -39,21 +39,16 @@ function renderKaTeX(text: string): string {
     }
   })
 
-  // ✅ $...$ → INLINE — seulement si contenu ressemble à du LaTeX
-  result = result.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
-    const trimmed = math.trim()
-    // Ignorer si ce n'est pas du LaTeX (pas de commande \ ni opérateur math)
-    const isLaTeX = /[\\{}^_]|\\[a-zA-Z]|[≠≤≥±∞∑∫√π]/.test(trimmed)
-      || /^[0-9a-zA-Z\s+\-*/=<>(),.^_]+$/.test(trimmed)
-    if (!isLaTeX) return _  // retourner tel quel si pas du LaTeX
+  // ✅ $...$ → INLINE (avec data-latex pour copie)
+  result = result.replace(/\$([^$]+?)\$/g, (_: string, math: string) => {
     try {
       const katex = (window as any).katex
-      if (!katex) return `<em>${trimmed}</em>`
-      const rendered = katex.renderToString(trimmed, { throwOnError: false, displayMode: false })
-      // Ne pas mettre data-latex dans le span pour éviter le double affichage
-      return `<span class="katex-inline">${rendered}</span>`
+      if (!katex) return `<span style="font-style:italic">${math}</span>`
+      const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: false })
+      const safeMath = math.trim().replace(/"/g, '&quot;')
+      return `<span data-latex="$${safeMath}$" style="display:inline">${rendered}</span>`
     } catch {
-      return `<em>${trimmed}</em>`
+      return `<code>${math}</code>`
     }
   })
 
@@ -70,8 +65,7 @@ function renderKaTeX(text: string): string {
 // ══════════════════════════════════════════════════════════════════════
 // HISTORIQUE — Sauvegarde / Restauration localStorage
 // ══════════════════════════════════════════════════════════════════════
-const CHAT_HISTORY_PREFIX = 'bacai_chat_history_' 
-const CHAT_HISTORY_LEGACY_KEY = 'bacai_chat_history'
+const HISTORY_KEY = 'bacai_chat_history'
 const MAX_SESSIONS = 20  // max sessions sauvegardées
 
 interface ChatSession {
@@ -82,27 +76,10 @@ interface ChatSession {
   preview: string
 }
 
-function getChatHistoryKey(userId?: string): string {
-  return userId ? `${CHAT_HISTORY_PREFIX}${userId}` : `${CHAT_HISTORY_PREFIX}guest`
-}
-
-function migrateChatHistory(userId?: string): void {
-  const newKey = getChatHistoryKey(userId)
-  if (localStorage.getItem(newKey)) return
-  const legacyValue = localStorage.getItem(CHAT_HISTORY_LEGACY_KEY)
-  if (!legacyValue) return
-  try {
-    const parsed = JSON.parse(legacyValue)
-    if (Array.isArray(parsed)) {
-      localStorage.setItem(newKey, JSON.stringify(parsed.slice(0, MAX_SESSIONS)))
-    }
-  } catch {}
-}
-
-function saveSession(messages: { role: string; content: string; id: number }[], userId?: string): void {
+function saveSession(messages: { role: string; content: string; id: number }[]): void {
   if (messages.length < 2) return  // Pas de session vide
   try {
-    const sessions: ChatSession[] = JSON.parse(localStorage.getItem(getChatHistoryKey(userId)) || '[]')
+    const sessions: ChatSession[] = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
     const firstUser = messages.find(m => m.role === 'user')
     const title = firstUser ? firstUser.content.slice(0, 60) : 'Conversation'
     const preview = messages.filter(m => m.role === 'assistant')[0]?.content.slice(0, 100) || ''
@@ -114,22 +91,19 @@ function saveSession(messages: { role: string; content: string; id: number }[], 
       preview,
     }
     const updated = [session, ...sessions.filter(s => s.id !== session.id)].slice(0, MAX_SESSIONS)
-    localStorage.setItem(getChatHistoryKey(userId), JSON.stringify(updated))
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated))
   } catch {}
 }
 
-function loadSessions(userId?: string): ChatSession[] {
-  try {
-    migrateChatHistory(userId)
-    return JSON.parse(localStorage.getItem(getChatHistoryKey(userId)) || '[]')
-  }
+function loadSessions(): ChatSession[] {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') }
   catch { return [] }
 }
 
-function deleteSession(id: string, userId?: string): void {
+function deleteSession(id: string): void {
   try {
-    const sessions = loadSessions(userId).filter(s => s.id !== id)
-    localStorage.setItem(getChatHistoryKey(userId), JSON.stringify(sessions))
+    const sessions = loadSessions().filter(s => s.id !== id)
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(sessions))
   } catch {}
 }
 
@@ -359,22 +333,17 @@ function fallbackCopy(text: string): Promise<void> {
   })
 }
 
-const SYSTEM_PROMPT = `⚠️ RÈGLE ABSOLUE PRIORITAIRE — LIS CECI EN PREMIER :
-Tu n'es PAS uniquement un prof de maths. Tu NE REFUSES JAMAIS une question. Tu ne dis JAMAIS "je suis spécialisé uniquement dans les matières scientifiques". Tu ne dis JAMAIS "je ne peux pas faire des rédactions en anglais". Tu traites TOUTE question d'un élève, quelle que soit la matière.
-
-Tu es le Professeur IA de MathBac.AI — enseignant polyvalent expert, couvrant TOUTES les matières du Bac tunisien ET du Bac français.
-Tu maîtrises : Mathématiques, Physique-Chimie, SVT, Informatique, Anglais (toutes thématiques y compris voyages, société, culture), Littérature française, Français, Rédaction.
+const SYSTEM_PROMPT = `Tu es le Professeur IA de MathBac.AI — enseignant polyvalent expert, couvrant TOUTES les matières du Bac tunisien ET du Bac français.
+Tu maîtrises : Mathématiques, Physique-Chimie, SVT, Informatique, Anglais, Littérature française, Français.
 Tu réponds en français ET en anglais selon la langue de la question de l'élève.
 
 ## TON IDENTITÉ
 - Tu t'appelles "Prof IA" ou "Professeur MathBac"
 - Tu es bienveillant, pédagogique, encourageant et rigoureux
-- Tu n'as AUCUNE restriction de matière ni de sujet : toute question mérite une réponse complète
-- Si la question est en anglais → tu réponds ENTIÈREMENT en anglais (essay, travel, society, culture — tout)
+- Tu n'as AUCUNE restriction de matière : toute question d'un élève mérite une réponse complète
+- Si la question est en anglais → tu réponds ENTIÈREMENT en anglais
 - Si la question est en français → tu réponds en français
 - Tu ne refuses JAMAIS une question en disant que tu es limité à une matière
-- Tu n'envoies JAMAIS le message "je suis spécialisé uniquement dans les matières scientifiques"
-- Pour l'anglais : tu traites TOUS les sujets (voyages, société, environnement, culture, littérature, grammaire, essay writing)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## 🎨 CAPACITÉ GRAPHIQUE — RÈGLE ABSOLUE
@@ -613,7 +582,7 @@ const SUGGESTIONS = [
     'Représente graphiquement ln(x) et eˣ sur le même repère',
     'Comment calculer lim(x→0) sin(x)/x ?',
     'Explique le TVI avec un graphique',
-    "Résoudre y' − 2y = e^(2x)",
+    'Résoudre y\' − 2y = e^(2x)',
     '∫₀¹ xeˣ dx par intégration par parties',
   ]},
   { cat: '🔢 Complexes', color: '#7c3aed', questions: [
@@ -621,7 +590,7 @@ const SUGGESTIONS = [
     'Écrire z = −1 + i en forme exponentielle',
     'Trouver les racines 4ièmes de −16',
     'Résoudre z² − (2+i)z + (1+2i) = 0 dans ℂ',
-    "Calculer l'argument de z = (1+i)⁸",
+    'Calculer l\'argument de z = (1+i)⁸',
   ]},
   { cat: '📊 Probas', color: '#06d6a0', questions: [
     'Trace la courbe de la loi normale N(0,1)',
@@ -633,70 +602,39 @@ const SUGGESTIONS = [
   { cat: '📏 Géométrie', color: '#f59e0b', questions: [
     'Trace un triangle et ses trois médianes',
     'Représente une rotation de centre O et angle 60°',
-    "Équation d'un plan dans l'espace 3D",
-    "Distance d'un point A à un plan P",
+    'Équation d\'un plan dans l\'espace 3D',
+    'Distance d\'un point A à un plan P',
     'Montrer que deux droites sont gauches',
   ]},
-  { cat: '⚗️ Physique', color: '#06d6a0', questions: [
-    'Trace les courbes de charge et décharge du condensateur RC',
-    'Schéma du circuit RC : charge, décharge, constante τ=RC',
-    'Oscillations libres circuit LC : trace u_C(t)',
-    'Trace la courbe de dosage pH-métrique avec le point équivalent',
-    'Schéma pendule simple avec vecteur poids et tension',
-    'Trace u_C(t) oscillations RLC amorties vs non amorties',
-    'Cinétique chimique : trace [A](t) pour une réaction ordre 1',
-  ]},
-  { cat: '🇬🇧 Anglais', color: '#f97316', questions: [
-    'Explain the difference between Present Perfect and Past Simple',
-    'Write an argumentative essay about artificial intelligence',
-    'Identify the literary devices in this extract: "The world is a stage"',
-    'Analyse the themes of power in Lord of the Flies',
-    'Write a synthesis of these two documents about climate change',
-    'Explain AXE 6 — Scientific Innovation & Responsibility (Bac France)',
-    'Correct my essay introduction and suggest improvements',
-  ]},
-  { cat: '🧬 SVT', color: '#10b981', questions: [
-    "Explique la réplication de l'ADN étape par étape",
-    'Dessine un arbre généalogique : hérédité autosomique récessive',
-    'Comment fonctionne la réponse immunitaire adaptative ?',
-    'Explique la photosynthèse : phase claire et phase sombre (Calvin)',
-    'Mécanisme de la transmission synaptique avec schéma',
-    'Tectonique des plaques : subduction et collision avec schéma',
-    'Calcule la probabilité génotypique pour AaBb × AaBb',
-  ]},
-  { cat: '📚 Littérature', color: '#a78bfa', questions: [
-    "Analyse le sonnet \"L'Albatros\" de Baudelaire : figures de style et registre",
-    'Comment rédiger un commentaire composé sur un extrait de Candide ?',
-    'Identifie les figures de style : anaphore, chiasme, oxymore dans ce texte',
-    'Dissertation : "La littérature doit-elle être engagée ?" (plan détaillé)',
-    "Analyse la structure narrative de L'Étranger de Camus",
-    'Quelles sont les caractéristiques du romantisme ? (Hugo, Lamartine)',
-    'Rédige une introduction de commentaire sur Madame Bovary de Flaubert',
+  { cat: '💹 Éco-Gestion', color: '#10b981', questions: [
+    'Calculer la valeur actuelle d\'annuités constantes',
+    'Tableau d\'amortissement d\'un emprunt 10 000€',
+    'Résoudre un système 3×3 par matrices',
+    'Intérêts composés : capital doublé en combien d\'années ?',
   ]},
   { cat: '💻 Info', color: '#6366f1', questions: [
     'Trace la complexité des algorithmes de tri',
     'Récursivité : factorielle et suite de Fibonacci',
     'Requête SQL avec JOIN et GROUP BY',
     'Différence entre pile et file (stack/queue)',
-    'Algo de tri par sélection en Pascal ET Python avec tableau évolution',
-    'Calcul de sous-réseaux : IP 192.168.1.0/24, 4 sous-réseaux',
   ]},
   { cat: '🇫🇷 France', color: '#4f6ef7', questions: [
     'Terminale France : étude de f(x) = x·ln(x)',
     'Loi normale N(0,1) : calculer P(-1 ≤ X ≤ 1)',
-    "Complexes Terminale : racines n-ièmes de l'unité",
-    "STI2D : équation différentielle circuit RC y'=ay+b",
-    "Maths Expertes : PGCD(84, 36) par algorithme d'Euclide",
+    'Complexes Terminale : racines n-ièmes de l\'unité',
+    'Première France : variations de f(x) = x²-3x+2',
+    'STI2D : équation différentielle circuit RC y\'=ay+b',
+    'Maths Expertes : PGCD(84, 36) par algorithme d\'Euclide',
   ]},
 ]
 
 const STARTERS = [
-  { icon: '📈', text: 'Trace f(x) = x² − 2x + 1 avec son sommet et tableau de variations', tag: 'Maths' },
-  { icon: '🔌', text: 'Schéma circuit RC + courbes charge/décharge u_C(t) avec τ = RC', tag: 'Physique' },
-  { icon: '🇬🇧', text: 'Write an essay: "Should social media be regulated?" — plan + introduction', tag: 'Anglais' },
-  { icon: '🔢', text: "Complexes : racines cubiques de l'unité sur le plan avec module et argument", tag: 'Complexes' },
-  { icon: '🧬', text: 'Explique la mitose en 4 phases avec schéma cellulaire et rôle génétique', tag: 'SVT' },
-  { icon: '📚', text: "Analyse L'Albatros de Baudelaire : figures de style, registre lyrique, plan", tag: 'Littérature' },
+  { icon: '📈', text: 'Trace f(x) = x² − 2x + 1 avec son sommet', tag: 'Graphique' },
+  { icon: '📐', text: 'Trace le cercle trigonométrique avec cos(π/3)', tag: 'Trigo' },
+  { icon: '🔢', text: 'Représente z = 1+i√3 sur le plan complexe', tag: 'Complexes' },
+  { icon: '∫', text: '∫₀¹ xeˣ dx — étapes détaillées', tag: 'Intégrales' },
+  { icon: '📊', text: 'Représente graphiquement la loi normale N(0,1)', tag: 'Probas' },
+  { icon: '📏', text: 'Trace un triangle ABC et ses médianes', tag: 'Géométrie' },
 ]
 
 // ══════════════════════════════════════════
@@ -1203,41 +1141,9 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 // ══════════════════════════════════════════
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════
-// ── Composant verrou matière (Option C) ────────────────────────────
-function MatiereLockOverlay({ matiere, label, color, icon }: {
-  matiere: string; label: string; color: string; icon: string
-}) {
-  return (
-    <div style={{
-      position:'absolute', inset:0, zIndex:20,
-      background:'rgba(10,10,26,0.88)', backdropFilter:'blur(4px)',
-      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-      borderRadius:'inherit', gap:12,
-    }}>
-      <div style={{ fontSize:36 }}>🔒</div>
-      <div style={{ textAlign:'center', maxWidth:260 }}>
-        <div style={{ fontSize:15, fontWeight:800, color:'white', marginBottom:6 }}>
-          {icon} {label}
-        </div>
-        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:16 }}>
-          Cette matière nécessite un abonnement séparé.
-          Tes cours et examens restent accessibles gratuitement.
-        </div>
-        <a href={`/abonnement?matiere=${matiere}`}
-          style={{ display:'inline-flex', alignItems:'center', gap:6,
-            background:`linear-gradient(135deg,${color},${color}cc)`,
-            color:'white', padding:'9px 20px', borderRadius:10,
-            fontWeight:700, fontSize:13, textDecoration:'none',
-            boxShadow:`0 4px 16px ${color}40` }}>
-          S'abonner à {label} →
-        </a>
-      </div>
-    </div>
-  )
-}
-
 export default function ChatPage() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription, quotaVersion, getUsed } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits } = useAuth()
+  const _totalQuota = sumQuotasAcrossMatiere(quotas as any)
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1253,13 +1159,10 @@ export default function ChatPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [copyMsg, setCopyMsg] = useState('')
   const [pdfMsg, setPdfMsg] = useState('')
-  // Charger l'historique au montage et à chaque changement d'utilisateur
-  useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
+  // Charger l'historique au montage
+  useEffect(() => { setSessions(loadSessions()) }, [])
 
-  const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // chatUsed dépend de quotaVersion pour que React re-render à chaque mise à jour quotas
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const chatUsed  = useMemo(() => getUsed ? getUsed('chat') : (totalQuota.chat_used || 0), [quotaVersion, quotas])
+  const chatUsed = _totalQuota.chat_used || 0
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
@@ -1274,25 +1177,14 @@ export default function ChatPage() {
   }, [messages, loading])
   const getId = useCallback(() => { const id = nextMsgId; setNextMsgId(p => p + 1); return id }, [nextMsgId])
 
-  // Détecter si un message parle d'une matière non abonnée
-  const getMatiereFromMessage = useCallback((text: string): string | null => {
-    const t = text.toLowerCase()
-    if (t.includes('physique') || t.includes('chimie') || t.includes('circuit') || t.includes('condensateur') || t.includes('mécanique') || t.includes('newton') || t.includes('ondes')) return 'physique'
-    if (t.includes('svt') || t.includes('génétique') || t.includes('cellule') || t.includes('adn') || t.includes('mitose') || t.includes('immunité')) return 'svt'
-    if (t.includes('english') || t.includes('essay') || t.includes('grammar') || t.includes('vocabulary') || t.includes('anglais')) return 'anglais'
-    if (t.includes('algorithme') || t.includes('pascal') || t.includes('python') || t.includes('sql') || t.includes('réseau ip') || t.includes('informatique')) return 'informatique'
-    return null // maths par défaut ou indéterminé
-  }, [])
-
   const sendMessage = useCallback(async (text?: string) => {
     const content = (text ?? input).trim()
     if (!content || loading) return
 
     if (!isAdmin && !checkQuota('chat')) {
-      alert(`Quota atteint — ${chatUsed}/${chatLimit} messages cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an\n\n💡 Multi-abonnements : quotas cumulés\n→ mathsbac.com/abonnement`)
+      alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement`)
       return
     }
-
 
     const userMsg: Msg = { role: 'user', content, id: nextMsgId }
     setNextMsgId(p => p + 1)
@@ -1310,18 +1202,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4000,
-          system: hasActiveSubscription && !isAdmin
-            ? SYSTEM_PROMPT + `\n\n## MATIÈRE ABONNÉE\nL'élève est abonné à : ${
-                matiereActive === 'physique' ? '⚗️ Physique-Chimie'
-                : matiereActive === 'svt' ? '🧬 SVT'
-                : matiereActive === 'anglais' ? '🇬🇧 Anglais'
-                : matiereActive === 'informatique' ? '💻 Informatique'
-                : '🧮 Mathématiques'
-              }. Priorise les explications dans cette matière.`
-            : SYSTEM_PROMPT,
+          system: SYSTEM_PROMPT,
           messages: history,
-          type: 'chat',
-          matiere: matiereActive
         }),
       })
       const data = await res.json()
@@ -1341,7 +1223,7 @@ export default function ChatPage() {
       setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
       setNextMsgId(p => p + 1)
       // Sauvegarder dans l'historique
-      setTimeout(() => { saveSession(updatedMsgs, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)) }, 100)
+      setTimeout(() => { saveSession(updatedMsgs); setSessions(loadSessions()) }, 100)
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Erreur de connexion. Vérifie que le serveur est bien démarré.', id: nextMsgId }])
       setNextMsgId(p => p + 1)
@@ -1381,11 +1263,9 @@ export default function ChatPage() {
                           <div style={{ fontSize:10, color:'var(--muted)' }}>{s.date} · {s.messages.length} msg</div>
                           <div style={{ fontSize:10, color:'var(--muted)', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.preview.slice(0,50)}…</div>
                         </button>
-                        <button onClick={e => { e.stopPropagation(); deleteSession(s.id, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)) }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.6)', fontSize:18, flexShrink:0, padding:'0 2px', transition:'color 0.2s' }}
-                          onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,1)'}
-                          onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.6)'}
-                          title="Supprimer cette conversation">×</button>
+                        <button onClick={e => { e.stopPropagation(); deleteSession(s.id); setSessions(loadSessions()) }}
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.5)', fontSize:14, flexShrink:0, padding:'0 2px' }}
+                          title="Supprimer">×</button>
                       </div>
                     </div>
                   ))}
@@ -1399,16 +1279,7 @@ export default function ChatPage() {
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#06d6a0,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🤖</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>Prof IA</div>
-                  <div style={{ fontSize: 10, color: '#06d6a0' }}>
-                    ● En ligne · Toutes matières
-                    {hasActiveSubscription && !isAdmin && (
-                      <span style={{marginLeft:8, padding:'1px 8px', borderRadius:20,
-                        background:'rgba(99,102,241,0.15)', border:'1px solid rgba(99,102,241,0.3)',
-                        color:'#a5b4fc', fontSize:9, fontWeight:700}}>
-                        {matiereActive==='physique'?'⚗️ PC':matiereActive==='svt'?'🧬 SVT':matiereActive==='anglais'?'🇬🇧 Anglais':matiereActive==='informatique'?'💻 Info':'🧮 Maths'}
-                      </span>
-                    )}
-                  </div>
+                  <div style={{ fontSize: 10, color: '#06d6a0' }}>● En ligne · Maths Tunisie & France</div>
                 </div>
               </div>
               <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text2)', lineHeight: 1.5, background: 'rgba(99,102,241,0.08)', borderRadius: 7, padding: '6px 8px' }}>
@@ -1461,7 +1332,7 @@ export default function ChatPage() {
                   style={{ padding:'8px 14px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:10, cursor:'pointer', fontSize:12, color: pdfMsg ? '#6ee7b7' : 'rgba(255,255,255,0.5)', fontFamily:'inherit', width:'100%', textAlign:'center' }}>
                   {pdfMsg ? `✓ ${pdfMsg}` : '📋 Copier la conversation'}
                 </button>
-                <button onClick={() => { saveSession(messages, user?.id ?? undefined); setSessions(loadSessions(user?.id ?? undefined)); setMessages([]); setShowWelcome(true); setInput('') }}
+                <button onClick={() => { saveSession(messages); setSessions(loadSessions()); setMessages([]); setShowWelcome(true); setInput('') }}
                   style={{ padding:'7px 14px', borderRadius:10, border:'1px solid var(--border)', background:'transparent', color:'var(--muted)', fontSize:11, cursor:'pointer', width:'100%', textAlign:'center' }}>
                   🗑 Nouvelle conversation
                 </button>
@@ -1571,7 +1442,7 @@ export default function ChatPage() {
                 onBlurCapture={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
                 <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : 'Pose ta question en français ou en anglais… maths, physique, chimie, anglais, littérature, SVT, informatique'}
+                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
                   rows={1} style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5, maxHeight: 120, overflow: 'auto' }}
                   onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }} />
                 <button onClick={() => sendMessage()} disabled={loading || !input.trim() || isQuotaFull}
