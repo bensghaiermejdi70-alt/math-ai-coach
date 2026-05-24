@@ -1144,6 +1144,15 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 export default function ChatPage() {
   const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits } = useAuth()
   const _totalQuota = sumQuotasAcrossMatiere(quotas as any)
+  // State local pour mise à jour immédiate après incrementQuota
+  const [localChatExtra, setLocalChatExtra] = useState(0)
+  // Sync avec Supabase quand quotas change (après loadQuotas)
+  const [lastSyncedChatUsed, setLastSyncedChatUsed] = useState(_totalQuota.chat_used || 0)
+  useEffect(() => {
+    const fromDb = _totalQuota.chat_used || 0
+    setLastSyncedChatUsed(fromDb)
+    setLocalChatExtra(0) // Reset le local car Supabase est à jour
+  }, [_totalQuota.chat_used])
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1162,7 +1171,7 @@ export default function ChatPage() {
   // Charger l'historique au montage
   useEffect(() => { setSessions(loadSessions()) }, [])
 
-  const chatUsed = _totalQuota.chat_used || 0
+  const chatUsed = lastSyncedChatUsed + localChatExtra
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
@@ -1218,6 +1227,7 @@ export default function ChatPage() {
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
       await incrementQuota('chat')
+      setLocalChatExtra(prev => prev + 1) // Mise à jour immédiate affichage
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
       setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
