@@ -1337,7 +1337,6 @@ export default function ChatPage() {
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
       await incrementQuota('chat')
-      setLocalChatUsed(prev => prev + 1)  // Mise à jour immédiate du compteur
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
       setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
