@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect, useCallback } from 'react'   
+import { useState, useRef, useEffect, useCallback , useMemo } from 'react'   
 import Navbar from '@/components/layout/Navbar'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
@@ -1257,11 +1257,10 @@ export default function ChatPage() {
   useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // getUsed() lit directement depuis AuthContext — toujours frais après loadQuotas
-  const chatUsed  = getUsed ? getUsed('chat') : (totalQuota.chat_used || 0)
+  // chatUsed dépend de quotaVersion pour que React re-render à chaque mise à jour quotas
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const chatUsed  = useMemo(() => getUsed ? getUsed('chat') : (totalQuota.chat_used || 0), [quotaVersion, quotas])
   const chatLimit = quotaLimits.chat_per_week
-  // Forcer rechargement des quotas au montage du composant
-  useEffect(() => { refreshSubscription?.() }, [])
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
     ? 999

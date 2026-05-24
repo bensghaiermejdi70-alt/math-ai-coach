@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
+import { useState, useRef, useCallback, useEffect, Suspense , useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -1304,9 +1304,9 @@ function SolvePageInner() {
   const totalQuota = sumQuotasAcrossMatiere(quotas)
   // getUsed() lit directement depuis AuthContext — toujours synchrone avec Supabase
   // Pas de state local qui se désynchronise après navigation
-  const solverUsed  = getUsed ? getUsed('solver') : (totalQuota.solver_used || 0)
-  // Forcer rechargement des quotas au montage
-  useEffect(() => { refreshSubscription?.() }, [])
+  // solverUsed dépend de quotaVersion pour que React re-render à chaque mise à jour quotas
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const solverUsed  = useMemo(() => getUsed ? getUsed('solver') : (totalQuota.solver_used || 0), [quotaVersion, quotas])
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
   const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
