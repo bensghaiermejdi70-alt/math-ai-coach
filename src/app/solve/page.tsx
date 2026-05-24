@@ -1944,8 +1944,10 @@ Structure OBLIGATOIRE :
         setError(sol); setPhase('input'); return
       }
 
-      // Incrémenter quota dans Supabase
-      await incrementQuota('solver')
+      // Incrémenter quota dans Supabase — passer la matière depuis URL
+      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+      const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
+      await incrementQuota('solver', _matiereForInc)
 
       setSolution(sol)
       setPhase('done')

@@ -171,7 +171,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
     if (isAdmin) return true
-    if (!quotas) return true
+    // Si pas encore de quotas chargés mais abonnement actif → autoriser
+    if (!quotas) return hasActiveSubscription ? true : false
 
     const limitKey: Record<QuotaType, string> = {
       simulations: 'simulations_per_week',
@@ -476,7 +477,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
-    if (!user || !quotas) return
+    if (!user) return
+    // Ne pas bloquer si quotas est null — la RPC crée la ligne si elle n'existe pas
 
     await supabase.rpc('increment_quota', {
       p_user_id: user.id,
