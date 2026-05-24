@@ -393,8 +393,20 @@ async function correctOneExercise(
   studentWork: string,
   examTitle: string
 ): Promise<string> {
-  // Détecter la matière via globalMatiere
+  // Détecter la matière via globalMatiere ET le titre/thème de l'exercice (double sécurité)
   const isAnglaisCorrect = globalMatiere === 'anglais'
+    || examTitle?.toLowerCase().includes('llcer')
+    || examTitle?.toLowerCase().includes('anglais')
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || exercise.theme?.toLowerCase().includes('fiction')
+    || exercise.theme?.toLowerCase().includes('territory')
+    || exercise.theme?.toLowerCase().includes('diversity')
+    || exercise.theme?.toLowerCase().includes('innovation')
+    || exercise.theme?.toLowerCase().includes('art &')
+    || exercise.title?.toLowerCase().includes('subject 1')
+    || exercise.title?.toLowerCase().includes('subject 2')
 
   const system = isAnglaisCorrect
     ? `You are an expert LLCER English examiner and teacher correcting a French Baccalauréat paper.
@@ -675,6 +687,12 @@ async function analyzeOneExerciseSim(
   exIdx: number
 ): Promise<AnalysisResult> {
   const isAnglaisAnalyze = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || exercise.theme?.toLowerCase().includes('fiction')
+    || exercise.theme?.toLowerCase().includes('territory')
+    || exercise.title?.toLowerCase().includes('subject')
   const system = isAnglaisAnalyze
     ? `You are an expert LLCER English pedagogy specialist. Analyse ONE exercise and generate targeted remediation. RESPOND ONLY IN VALID JSON. ALL text fields in ENGLISH.`
     : `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
@@ -712,6 +730,11 @@ async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
   const isAnglaisAnalyzeFull = globalMatiere === 'anglais'
+    || exam.title?.toLowerCase().includes('llcer')
+    || exam.title?.toLowerCase().includes('anglais')
+    || exam.section?.toLowerCase().includes('anglais')
+    || (exam.exercises?.[0]?.theme?.toLowerCase().includes('exchange') ?? false)
+    || (exam.exercises?.[0]?.title?.toLowerCase().includes('subject') ?? false)
   const system = isAnglaisAnalyzeFull
     ? `You are an expert LLCER English pedagogy specialist and student work analyst.
 You analyse student work and build a personalised improvement plan.
@@ -775,6 +798,11 @@ async function correctRemediationExercise(
   studentAnswer: string
 ): Promise<string> {
   const isAnglaisRem = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('synthesis')
+    || exercise.statement?.toLowerCase().includes('thematic axis')
+    || exercise.statement?.toLowerCase().includes('document a')
   const system = isAnglaisRem
     ? `You are a supportive but demanding LLCER English tutor.
 You correct student responses on remediation exercises.
@@ -801,6 +829,9 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
 }> {
   const hasWork = studentWork.trim().length > 10
   const isAnglaisGrade = globalMatiere === 'anglais'
+    || exam.title?.toLowerCase().includes('llcer')
+    || exam.title?.toLowerCase().includes('anglais')
+    || (exam.exercises?.[0]?.title?.toLowerCase().includes('subject') ?? false)
   const system = isAnglaisGrade
     ? `You are a French Baccalauréat LLCER English examiner. Give a QUICK and FAIR grade.
 Respond ONLY in valid JSON, no markdown, no explanation outside JSON. ALL text fields in ENGLISH.`
@@ -4887,7 +4918,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
 
 function SimulationFrancePageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
-  globalMatiere = matiereActive
+  // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
@@ -4895,13 +4926,18 @@ function SimulationFrancePageInner() {
     const s = new URLSearchParams(window.location.search).get('subject')
     return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : 'maths'
   })
-  // Synchroniser globalMatiere pour les fonctions IA (generateOneExam, correctOneExercise, etc.)
+  // Synchroniser globalMatiere — activeMatiere (UI) prime sur matiereActive (AuthContext)
   useEffect(() => {
     const matiereMap: Record<string,string> = {
       maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
     }
     globalMatiere = matiereMap[activeMatiere] || 'mathematiques'
   }, [activeMatiere])
+  // Sync initial immédiat (avant le premier render du useEffect)
+  const matiereMapImmediat: Record<string,string> = {
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+  }
+  globalMatiere = matiereMapImmediat[activeMatiere] || 'mathematiques'
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
   const [customText, setCustomText] = useState('')
