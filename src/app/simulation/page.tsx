@@ -2735,11 +2735,15 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 2 — GÉNÉRATION EN COURS (quota via Supabase AuthContext)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseGenerating({ archives, customText, onDone }: {
-  archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void
+function PhaseGenerating({ archives, customText, onDone, matiere }: {
+  archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void; matiere?:string
 }) {
   const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
-  globalMatiere = matiereActive
+  // Utiliser matiere (UI) en priorité sur matiereActive (abonnement AuthContext)
+  const matiereMap: Record<string,string> = {
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+  }
+  globalMatiere = (matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques'
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
@@ -4681,12 +4685,17 @@ function PhaseAnalysis({ analysis, onRestart }: {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE GÉNÉRATION — MODE CHAPITRE (1 seul examen ciblé)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone }: {
+function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: {
   chapitres: {titre:string;badge:string;desc:string}[]
   sectionLabel: string
   onDone: (exams: GeneratedExam[]) => void
+  matiere?: string
 }) {
   const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
+  const matiereMapC: Record<string,string> = {
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+  }
+  globalMatiere = (matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques'
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
@@ -4844,6 +4853,21 @@ function SimulationIAPageInner() {
     chapitres?: {titre:string;badge:string;desc:string}[],
     sectionLabel?: string
   ) => {
+    // Vérification abonnement : la matière sélectionnée doit correspondre à l'abonnement actif
+    // Exception : admin bypass + matières gratuites bypass
+    if (!isAdmin && hasActiveSubscription && matiereActive) {
+      const matiereToCheck = activeMatiere
+      const matiereAbonnement = matiereActive // ex: 'mathematiques', 'physique', 'anglais'
+      const matiereMapCheck: Record<string,string> = {
+        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+      }
+      const matiereUIKey = matiereMapCheck[matiereToCheck] || matiereToCheck
+      // Si l'abonnement est pour une matière spécifique et que l'UI est différente → bloquer
+      if (matiereAbonnement !== 'mathematiques' && matiereUIKey !== matiereAbonnement) {
+        alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nVous essayez de lancer une simulation "${matiereUIKey}".\n\nChangez de matière ou abonnez-vous à la matière souhaitée.`)
+        return
+      }
+    }
     if (chapitres && chapitres.length > 0) {
       setChapitresMode(true)
       setSelectedChapitres(chapitres)
@@ -4852,7 +4876,7 @@ function SimulationIAPageInner() {
       setChapitresMode(false)
     }
     setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[])
+  },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere])
 
   const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
     setGeneratedExams(exams); setPhase('choose-exam')
@@ -4985,8 +5009,9 @@ function SimulationIAPageInner() {
                 ? <PhaseGeneratingChapitres
                     chapitres={selectedChapitres}
                     sectionLabel={chapSectionLabel}
-                    onDone={handleExamsReady}/>
-                : <PhaseGenerating archives={archives} customText={customText} onDone={handleExamsReady}/>
+                    onDone={handleExamsReady}
+                    matiere={activeMatiere}/>
+                : <PhaseGenerating archives={archives} customText={customText} onDone={handleExamsReady} matiere={activeMatiere}/>
             )}
 
             {phase==='choose-exam'&&

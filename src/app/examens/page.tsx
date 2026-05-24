@@ -1941,8 +1941,9 @@ export default function ExamensTunisiePage() {
   const switchMatiere = (m: Matiere) => {
     setActiveMatiere(m)
     setActiveSec(
-      m === 'maths' ? 'maths' :
-      m === 'physique' ? 'sc-exp-phys' :
+      m === 'maths'        ? 'maths' :
+      m === 'physique'     ? 'sc-exp-phys' :
+      m === 'anglais'      ? 'anglais-lettres' :
       'info-algo'
     )
     setSelectedYear(null)
@@ -1962,12 +1963,13 @@ export default function ExamensTunisiePage() {
       'sc-tech-phys': 'sc-tech',   // Physique Sc.Tech → section sctech dans simulation
       'math-phys':    'maths',     // Physique Maths → section maths dans simulation
       'info-phys':    'info',      // Physique Info → section info dans simulation
-      'anglais-lettres':  'maths',
-      'anglais-sciences': 'maths',
+      'anglais-lettres':  'anglais-lettres',
+      'anglais-sciences': 'anglais-sciences',
     }
     const simSection = simSectionMap[activeSec] ?? activeSec
     const isPhysSection = activeSec.endsWith('-phys')
-    const subjectParam = isPhysSection ? '&subject=physique' : ''
+    const isAnglaisSection = activeSec.startsWith('anglais-')
+    const subjectParam = isPhysSection ? '&subject=physique' : isAnglaisSection ? '&subject=anglais' : ''
     router.push(`/simulation?section=${simSection}${subjectParam}`)
   }
   const openPdf = (url:string, title:string) => setModal({url,title})
@@ -2107,7 +2109,7 @@ export default function ExamensTunisiePage() {
                 secKey={activeSec}
                 color={sec.color}
                 links={(sec.links as Record<number,AnneeLinks>)[selectedYear!]}
-                infoL={(['info','info-algo'].includes(activeSec)) ? infoLinks[selectedYear!] : undefined}
+                infoL={(['info','info-algo'].includes(activeSec) && !activeSec.startsWith('anglais-')) ? infoLinks[selectedYear!] : undefined}
                 onOpen={openPdf}
               />
 
