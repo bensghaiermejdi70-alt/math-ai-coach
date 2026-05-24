@@ -489,6 +489,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
+  // Recharger les quotas quand la fenêtre reprend le focus (navigation entre pages)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) loadQuotas(user.id)
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [user])
+
+  // Recharger les quotas toutes les 30 secondes si actif
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(() => loadQuotas(user.id), 30000)
+    return () => clearInterval(interval)
+  }, [user])
+
   useEffect(() => {
     const {
       data: { subscription }
@@ -635,16 +651,14 @@ export function useAuth() {
 }
 
 function getWeekStart(): string {
+  // Utiliser UTC pour correspondre exactement à PostgreSQL (serveur en UTC)
   const now = new Date()
-  const day = now.getDay() // 0=dim, 1=lun...6=sam
-  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(now)
-  monday.setDate(diff)
-  monday.setHours(0, 0, 0, 0)
-  // Utiliser la date LOCALE (pas UTC) pour éviter le décalage fuseau horaire
-  const yyyy = monday.getFullYear()
-  const mm   = String(monday.getMonth() + 1).padStart(2, '0')
-  const dd   = String(monday.getDate()).padStart(2, '0')
+  const dowUTC = now.getUTCDay() // 0=dim, 1=lun...6=sam en UTC
+  const diffUTC = now.getUTCDate() - dowUTC + (dowUTC === 0 ? -6 : 1)
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diffUTC))
+  const yyyy = monday.getUTCFullYear()
+  const mm   = String(monday.getUTCMonth() + 1).padStart(2, '0')
+  const dd   = String(monday.getUTCDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
 
