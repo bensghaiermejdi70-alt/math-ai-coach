@@ -1237,7 +1237,7 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 }
 
 export default function ChatPage() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription, quotaVersion } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive, refreshSubscription, quotaVersion, getUsed } = useAuth()
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1257,16 +1257,11 @@ export default function ChatPage() {
   useEffect(() => { setSessions(loadSessions(user?.id ?? undefined)) }, [user?.id])
 
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // Quota cumulé : somme de tous les abonnements actifs (multi-matières)
-  // Utiliser totalQuota directement (pas de state local qui se reset au remontage)
-  const [localChatUsed, setLocalChatUsed] = useState(() => totalQuota.chat_used || 0)
-  // Sync local avec Supabase quand quotas se recharge (montage + changement)
-  // Sync sur quotaVersion — se déclenche à CHAQUE mise à jour de loadQuotas
-  useEffect(() => { setLocalChatUsed(totalQuota.chat_used || 0) }, [quotaVersion, totalQuota.chat_used])
-  // Forcer rechargement au montage
-  useEffect(() => { refreshSubscription?.() }, [])
-  const chatUsed  = localChatUsed
+  // getUsed() lit directement depuis AuthContext — toujours frais après loadQuotas
+  const chatUsed  = getUsed ? getUsed('chat') : (totalQuota.chat_used || 0)
   const chatLimit = quotaLimits.chat_per_week
+  // Forcer rechargement des quotas au montage du composant
+  useEffect(() => { refreshSubscription?.() }, [])
   const isQuotaFull = !isAdmin && !checkQuota('chat')
   const quotaRemaining = isAdmin || chatLimit === -1
     ? 999
@@ -1342,7 +1337,6 @@ export default function ChatPage() {
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
       await incrementQuota('chat')
-      setLocalChatUsed(prev => prev + 1) // Mise à jour immédiate
       setLocalChatUsed(prev => prev + 1)  // Mise à jour immédiate du compteur
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]

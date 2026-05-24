@@ -83,6 +83,7 @@ interface AuthContextType {
   daysRemaining: number | null
   matiereActive: MatiereType   // matière de l'abonnement actif
   quotaVersion: number          // Incrémenté après chaque mise à jour de quota
+  getUsed: (type: QuotaType) => number  // Retourne le nombre d'utilisations (toujours frais)
   checkMatiereAccess: (matiere: MatiereType) => boolean
   getSubjectQuotaLimit: (type: QuotaType, matiere?: MatiereType) => number
   activePlanTypes: string[]
@@ -201,6 +202,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Helper pour afficher le quota total dans les messages d'alerte
+  function getUsed(type: QuotaType): number {
+    const usedKey: Record<QuotaType, keyof UserQuotas> = {
+      simulations: 'simulations_used',
+      chat:        'chat_used',
+      solver:      'solver_used',
+      remediation: 'remediation_used',
+      analyses:    'analyses_used',
+    }
+    const total = sumQuotasAcrossMatiere(quotas)
+    return (total[usedKey[type]] as number) ?? 0
+  }
+
   function getQuotaUsage(type: QuotaType): { used: number; limit: number } {
     const limitKey: Record<QuotaType, string> = {
       simulations: 'simulations_per_week',
@@ -336,6 +349,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error || !data) {
       if (error) console.error('Error loading quotas:', error)
       setQuotas(null)
+      setQuotaVersion(v => v + 1)
     } else {
       const quotasMap: Partial<Record<MatiereType, UserQuotas>> = {}
       data.forEach((q: UserQuotas) => {
@@ -345,7 +359,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Si pas de colonne matiere (1 seul enregistrement sans matiere):
       // NE PAS dupliquer — sumQuotasAcrossMatiere compterait x3
       // Stocker seulement sous 'mathematiques' pour usage global
-      setQuotas(quotasMap as Record<MatiereType, UserQuotas>)
+      // Spread pour garantir une nouvelle référence → React détecte le changement
+      setQuotas({ ...quotasMap } as Record<MatiereType, UserQuotas>)
       setQuotaVersion(v => v + 1) // Forcer re-render des composants
     }
   }
@@ -483,12 +498,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
     // Ne pas bloquer si quotas est null — la RPC crée la ligne si elle n'existe pas
 
-    await supabase.rpc('increment_quota', {
+    const { error: rpcError } = await supabase.rpc('increment_quota', {
       p_user_id: user.id,
       p_matiere: matiere,
       p_type: type
     })
 
+    if (rpcError) console.error('incrementQuota RPC error:', rpcError)
+
+    // Recharger immédiatement depuis Supabase
     await loadQuotas(user.id)
   }
 
@@ -627,6 +645,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         daysRemaining,
         matiereActive,
         quotaVersion,
+        getUsed,
         checkMatiereAccess,
         getSubjectQuotaLimit,
 

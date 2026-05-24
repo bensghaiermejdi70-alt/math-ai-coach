@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription, quotaVersion} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription, quotaVersion, getUsed} = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1302,13 +1302,11 @@ function SolvePageInner() {
 
   // Quota depuis AuthContext (Supabase)
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // State local pour mise à jour immédiate sans attendre rechargement Supabase
-  const [localSolverUsed, setLocalSolverUsed] = useState(() => totalQuota.solver_used || 0)
-  // Sync sur quotaVersion — se déclenche à CHAQUE mise à jour de loadQuotas
-  useEffect(() => { setLocalSolverUsed(totalQuota.solver_used || 0) }, [quotaVersion, totalQuota.solver_used])
+  // getUsed() lit directement depuis AuthContext — toujours synchrone avec Supabase
+  // Pas de state local qui se désynchronise après navigation
+  const solverUsed  = getUsed ? getUsed('solver') : (totalQuota.solver_used || 0)
   // Forcer rechargement des quotas au montage
   useEffect(() => { refreshSubscription?.() }, [])
-  const solverUsed  = localSolverUsed
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
   const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
@@ -1953,7 +1951,6 @@ Structure OBLIGATOIRE :
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
-      setLocalSolverUsed(prev => prev + 1) // Mise à jour immédiate du compteur
 
       setSolution(sol)
       setPhase('done')
