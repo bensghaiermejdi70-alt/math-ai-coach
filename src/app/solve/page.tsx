@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive} = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription} = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1302,8 +1302,13 @@ function SolvePageInner() {
 
   // Quota depuis AuthContext (Supabase)
   const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // Quota cumulé tous abonnements
-  const solverUsed  = totalQuota.solver_used || 0
+  // State local pour mise à jour immédiate sans attendre rechargement Supabase
+  const [localSolverUsed, setLocalSolverUsed] = useState(() => totalQuota.solver_used || 0)
+  // Sync avec Supabase quand quotas se recharge
+  useEffect(() => { setLocalSolverUsed(totalQuota.solver_used || 0) }, [totalQuota.solver_used])
+  // Forcer rechargement des quotas au montage
+  useEffect(() => { refreshSubscription?.() }, [])
+  const solverUsed  = localSolverUsed
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
   const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
@@ -1948,6 +1953,7 @@ Structure OBLIGATOIRE :
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
+      setLocalSolverUsed(prev => prev + 1) // Mise à jour immédiate du compteur
 
       setSolution(sol)
       setPhase('done')

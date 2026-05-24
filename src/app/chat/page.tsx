@@ -1258,9 +1258,12 @@ export default function ChatPage() {
 
   const totalQuota = sumQuotasAcrossMatiere(quotas)
   // Quota cumulé : somme de tous les abonnements actifs (multi-matières)
-  const [localChatUsed, setLocalChatUsed] = useState(0)
-  // Sync local avec Supabase quand quotas se recharge
+  // Utiliser totalQuota directement (pas de state local qui se reset au remontage)
+  const [localChatUsed, setLocalChatUsed] = useState(() => totalQuota.chat_used || 0)
+  // Sync local avec Supabase quand quotas se recharge (montage + changement)
   useEffect(() => { setLocalChatUsed(totalQuota.chat_used || 0) }, [totalQuota.chat_used])
+  // Forcer rechargement des quotas au montage du composant
+  useEffect(() => { refreshSubscription?.() }, [])
   const chatUsed  = localChatUsed
   const chatLimit = quotaLimits.chat_per_week
   const isQuotaFull = !isAdmin && !checkQuota('chat')
