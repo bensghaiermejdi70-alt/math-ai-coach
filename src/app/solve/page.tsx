@@ -17,7 +17,10 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 // ══════════════════════════════════════════════════════════════════════
 // HELPERS API
 // ══════════════════════════════════════════════════════════════════════
-async function askClaude(prompt: string, system: string, maxTokens = 6000): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 6000, matiere?: string): Promise<string> {
+  const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+  const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -27,7 +30,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000): Prom
       system,
       messages: [{ role: 'user', content: prompt }],
       type: 'solver',
-      matiere: 'mathematiques'
+      matiere: _matiere
     }),
   })
   if (!r.ok) {
@@ -57,7 +60,7 @@ async function askClaudeWithImage(
         ],
       }],
       type: 'solver',
-      matiere: 'mathematiques'
+      matiere: _matiere
     }),
   })
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -1299,10 +1302,14 @@ function SolvePageInner() {
   // Quota cumulé tous abonnements
   const solverUsed  = totalQuota.solver_used || 0
   const solverLimit = quotaLimits.solver_per_week
-  const isQuotaFull     = !isAdmin && !checkQuota('solver')
+  // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
+  const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
+  const isQuotaFull     = !isAdmin && !hasActiveSubscription
+    ? true
+    : !isAdmin && _effectiveLimit > 0 && solverUsed >= _effectiveLimit
   const quotaRemaining  = isAdmin || solverLimit === -1
     ? 999
-    : Math.max(0, solverLimit - solverUsed)
+    : Math.max(0, _effectiveLimit - solverUsed)
   const isUnlimited     = isAdmin || isSprint || solverLimit === -1
 
   const insertSymbol = useCallback((sym: string) => {
@@ -1318,8 +1325,16 @@ function SolvePageInner() {
     if (!input.trim()) return
 
     // Vérifier quota via AuthContext (Supabase)
-    if (!isAdmin && !checkQuota('solver')) {
-      alert(`Quota atteint — ${solverUsed}/${solverLimit} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
+    // Pour les abonnements Anglais/Physique/etc. : checkQuota peut retourner false
+    // si quotaLimits.solver_per_week n'est pas défini pour cette matière.
+    // On contourne : si l'utilisateur a un abonnement actif, on lui donne accès au solveur
+    // en utilisant le quota cumulé toutes matières (sumQuotasAcrossMatiere).
+    const _hasAnyActiveSub = hasActiveSubscription
+    const _quotaOk = isAdmin || _hasAnyActiveSub
+      ? (solverLimit === -1 || solverUsed < (solverLimit || 20))
+      : checkQuota('solver')
+    if (!isAdmin && !_quotaOk) {
+      alert(`Quota atteint — ${solverUsed}/${solverLimit || 20} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
       return
     }
 
