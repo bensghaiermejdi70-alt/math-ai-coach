@@ -2743,7 +2743,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const matiereMap: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
   }
-  globalMatiere = (matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques'
+  globalMatiere = ((matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
@@ -4695,7 +4695,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   const matiereMapC: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
   }
-  globalMatiere = (matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques'
+  globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
