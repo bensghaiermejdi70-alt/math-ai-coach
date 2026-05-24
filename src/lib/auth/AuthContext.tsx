@@ -636,10 +636,16 @@ export function useAuth() {
 
 function getWeekStart(): string {
   const now = new Date()
-  const day = now.getDay()
+  const day = now.getDay() // 0=dim, 1=lun...6=sam
   const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(now.setDate(diff))
-  return monday.toISOString().split('T')[0]
+  const monday = new Date(now)
+  monday.setDate(diff)
+  monday.setHours(0, 0, 0, 0)
+  // Utiliser la date LOCALE (pas UTC) pour éviter le décalage fuseau horaire
+  const yyyy = monday.getFullYear()
+  const mm   = String(monday.getMonth() + 1).padStart(2, '0')
+  const dd   = String(monday.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
 }
 
 function translateAuthError(msg: string): string {
