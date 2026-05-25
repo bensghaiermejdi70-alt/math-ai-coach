@@ -1946,7 +1946,9 @@ Structure OBLIGATOIRE :
       // Incrémenter quota dans Supabase — passer la matière depuis URL
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
+      console.log('[SOLVE] incrementQuota appelé — user:', user?.id, 'matiere:', _matiereForInc, 'type: solver')
       await incrementQuota('solver', _matiereForInc)
+      console.log('[SOLVE] incrementQuota terminé')
 
 
       setSolution(sol)
