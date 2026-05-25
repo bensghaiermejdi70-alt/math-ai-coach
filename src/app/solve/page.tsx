@@ -1245,7 +1245,8 @@ function SolvePageInner() {
   const _totalQuota    = sumQuotasAcrossMatiere(quotas as any)
   const solverUsed      = _totalQuota.solver_used || 0
   const solverLimit     = quotaLimits.solver_per_week // -1 = illimité (Sprint Bac)
-  const isQuotaFull     = !isAdmin && !checkQuota('solver')
+  const _effLimit       = solverLimit || (hasActiveSubscription ? 20 : 0)
+  const isQuotaFull     = !isAdmin && !hasActiveSubscription ? true : !isAdmin && _effLimit > 0 && solverUsed >= _effLimit
   const quotaRemaining  = isAdmin || solverLimit === -1
     ? 999
     : Math.max(0, solverLimit - solverUsed)
@@ -1272,7 +1273,39 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
 
-    const system = `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
+    // Détecter la matière depuis URL
+    const _urlS = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+    const _validS = ['physique','informatique','anglais','svt']
+    const activeSubj = _validS.includes(_urlS) ? _urlS : 'maths'
+
+    const COMMON_FORMAT = `Structure : ## pour les grandes parties, ### pour les sous-questions.
+**gras** pour les résultats clés, > pour les encadrés importants.`
+
+    const system = activeSubj === 'physique'
+      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Physique-Chimie.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+Utilise les unités SI. Formules exactes. Explique chaque loi physique utilisée.`
+      : activeSubj === 'informatique'
+      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Informatique et Algorithmique.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+Explique chaque étape algorithmique. Traces d'exécution si nécessaire. Complexité si demandée.`
+      : activeSubj === 'anglais'
+      ? `You are an expert English teacher for the Tunisian Bac exam.
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
+NEVER summarise. Develop EVERYTHING. Use all available tokens.
+${COMMON_FORMAT}
+For grammar: explain the rule. For writing: model answer + commentary. For reading: justify each answer.`
+      : activeSubj === 'svt'
+      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Sciences de la Vie et de la Terre.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+Schémas décrits textuellement si nécessaire. Vocabulaire scientifique précis.`
+      : `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
 Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
 Structure : ## pour les grandes parties, ### pour les sous-questions.
