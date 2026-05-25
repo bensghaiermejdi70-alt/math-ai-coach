@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion, refreshSubscription } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion, refreshSubscription, activeMatieres, checkMatiereAccess } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1258,6 +1258,30 @@ function SolvePageInner() {
     return valid.includes(s) ? s as any : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('input')
+
+  // ── Sélecteur de matière ────────────────────────────────────────
+  const MATIERE_LIST_SOLVE = [
+    { key: 'mathematiques', label: 'Maths',    icon: '🧮', color: '#f59e0b' },
+    { key: 'physique',      label: 'Physique',  icon: '⚗️', color: '#06d6a0' },
+    { key: 'svt',           label: 'SVT',       icon: '🧬', color: '#10b981' },
+    { key: 'anglais',       label: 'Anglais',   icon: '🇬🇧', color: '#f43f5e' },
+    { key: 'informatique',  label: 'Info',      icon: '💻', color: '#8b5cf6' },
+    { key: 'litterature',   label: 'Français',  icon: '🇫🇷', color: '#e879f9' },
+  ] as const
+
+  const [selectedMatiere, setSelectedMatiere] = useState<string>(() => {
+    // Priorité : URL ?subject= → matiereActive → 'mathematiques'
+    if (typeof window !== 'undefined') {
+      const s = new URLSearchParams(window.location.search).get('subject')
+      if (s && ['physique','informatique','svt','anglais','litterature'].includes(s)) return s
+    }
+    return matiereActive || 'mathematiques'
+  })
+
+  // Sync si matiereActive change (connexion)
+  useEffect(() => {
+    if (matiereActive) setSelectedMatiere(matiereActive)
+  }, [matiereActive])
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -1328,6 +1352,18 @@ function SolvePageInner() {
   const handleSolve = async () => {
     if (!input.trim()) return
 
+    // Vérifier accès matière selon abonnement
+    if (!isAdmin && hasActiveSubscription && selectedMatiere !== 'litterature') {
+      if (!checkMatiereAccess(selectedMatiere as any)) {
+        const allowed = (activeMatieres as string[]).map((m: string) => {
+          const found = MATIERE_LIST_SOLVE.find(x => x.key === m)
+          return found ? found.icon + ' ' + found.label : m
+        }).join(', ')
+        setError('🔒 Accès limité — Votre abonnement couvre : ' + allowed + '\nSélectionnez la bonne matière dans le menu ci-dessus.')
+        return
+      }
+    }
+
     // Vérifier quota via AuthContext (Supabase)
     // Pour les abonnements Anglais/Physique/etc. : checkQuota peut retourner false
     // si quotaLimits.solver_per_week n'est pas défini pour cette matière.
@@ -1345,12 +1381,10 @@ function SolvePageInner() {
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
-    const urlSubj = typeof window !== 'undefined'
-      ? (new URLSearchParams(window.location.search).get('subject') || subject)
-      : subject
-    const VALID_SUBJECTS = ['physique','informatique','svt','anglais','litterature']
+    // Utiliser selectedMatiere (UI) au lieu de l'URL
     const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature' =
-      VALID_SUBJECTS.includes(urlSubj) ? urlSubj as any : 'maths'
+      (['physique','informatique','svt','anglais','litterature'].includes(selectedMatiere)
+        ? selectedMatiere : 'maths') as any
 
     // ─── Infixe commun aux 3 system prompts ─────────────────────────────────
     const COMMON_FORMAT = `
@@ -1936,12 +1970,25 @@ MOUVEMENTS LITTÉRAIRES :
 - Existentialisme (XXe) : liberté, responsabilité, absurde, engagement
 - Nouveau Roman (XXe) : refus de l'intrigue traditionnelle, Robbe-Grillet, Sarraute`
 
-    const system = activeSubj === 'physique' ? SYSTEM_PHYSIQUE
-                 : activeSubj === 'informatique' ? SYSTEM_INFO
-                 : activeSubj === 'svt' ? SYSTEM_SVT
-                 : activeSubj === 'anglais' ? SYSTEM_ANGLAIS
-                 : activeSubj === 'litterature' ? SYSTEM_LITTERATURE
-                 : SYSTEM_MATHS
+    // System prompt strict — refus explicite des autres matières
+    const REFUS_MATHS = '\u{1F512} Ce module est réservé aux Mathématiques. Sélectionne la bonne matière dans le menu.'
+    const REFUS_PHYS  = '\u{1F512} Ce module est réservé à la Physique-Chimie. Sélectionne la bonne matière dans le menu.'
+    const REFUS_SVT   = '\u{1F512} Ce module est réservé aux SVT. Sélectionne la bonne matière dans le menu.'
+    const REFUS_ANG   = '\u{1F512} This module is reserved for English. Please select the correct subject in the menu.'
+    const REFUS_INFO  = '\u{1F512} Ce module est réservé à l\'Informatique. Sélectionne la bonne matière dans le menu.'
+    const REFUS_LIT   = '\u{1F512} Ce module est réservé à la Littérature Française. Sélectionne la bonne matière dans le menu.'
+    const STRICT_MATHS = SYSTEM_MATHS + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de mathématiques. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_MATHS
+    const STRICT_PHYS  = SYSTEM_PHYSIQUE + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de physique-chimie. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_PHYS
+    const STRICT_SVT   = SYSTEM_SVT + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de SVT. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_SVT
+    const STRICT_ANG   = SYSTEM_ANGLAIS + '\n\nABSOLUTE RULE: You solve ONLY English exercises (grammar, essay, text analysis, LLCER). If the exercise is about another subject, respond EXACTLY: ' + REFUS_ANG
+    const STRICT_INFO  = SYSTEM_INFO + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices d\'informatique. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_INFO
+    const STRICT_LIT   = SYSTEM_LITTERATURE + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de littérature/français. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_LIT
+    const system = activeSubj === 'physique' ? STRICT_PHYS
+                 : activeSubj === 'informatique' ? STRICT_INFO
+                 : activeSubj === 'svt' ? STRICT_SVT
+                 : activeSubj === 'anglais' ? STRICT_ANG
+                 : activeSubj === 'litterature' ? STRICT_LIT
+                 : STRICT_MATHS
 
     const prompt = mode === 'solve'
       ? `Résous cet exercice de ${activeSubj === 'physique' ? 'physique-chimie' : activeSubj === 'informatique' ? 'informatique' : activeSubj === 'svt' ? 'SVT' : activeSubj === 'anglais' ? 'English' : activeSubj === 'litterature' ? 'littérature française' : 'mathématiques'} (programme Bac Tunisie / France) de façon COMPLÈTE et PÉDAGOGIQUE.
@@ -2150,6 +2197,44 @@ Structure OBLIGATOIRE :
               Aucun exercice résolu pour le moment
             </div>
           )}
+
+          {/* ── SÉLECTEUR MATIÈRE ── */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+            {MATIERE_LIST_SOLVE.map(m => {
+              const hasAccess = isAdmin || !hasActiveSubscription || m.key === 'litterature' || checkMatiereAccess(m.key as any)
+              const isSelected = selectedMatiere === m.key
+              return (
+                <button key={m.key}
+                  onClick={() => {
+                    if (!hasAccess) {
+                      alert('🔒 ' + m.label + ' n\'est pas inclus dans votre abonnement.\n→ mathsbac.com/abonnement')
+                      return
+                    }
+                    setSelectedMatiere(m.key)
+                    setPhase('input')
+                    setInput('')
+                    setSolution('')
+                    setError('')
+                  }}
+                  title={hasAccess ? m.label : '🔒 Non inclus dans votre abonnement'}
+                  style={{
+                    padding: '5px 12px', borderRadius: 20,
+                    border: isSelected ? `1.5px solid ${m.color}` : '1px solid rgba(255,255,255,0.12)',
+                    background: isSelected ? `${m.color}22` : 'rgba(255,255,255,0.03)',
+                    color: isSelected ? m.color : hasAccess ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)',
+                    fontSize: 12, fontWeight: isSelected ? 700 : 500,
+                    cursor: hasAccess ? 'pointer' : 'not-allowed',
+                    opacity: hasAccess ? 1 : 0.4,
+                    transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 5,
+                    fontFamily: 'inherit',
+                  }}>
+                  <span>{m.icon}</span>
+                  <span>{m.label}</span>
+                  {!hasAccess && <span style={{ fontSize: 9 }}>🔒</span>}
+                </button>
+              )
+            })}
+          </div>
 
           {/* ── MODE TABS ── */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
