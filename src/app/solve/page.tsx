@@ -1300,23 +1300,9 @@ function SolvePageInner() {
   }, [])
   const solutionRef = useRef<HTMLDivElement>(null)
 
-  // Même système que chat — lastSyncedSolverUsed + localSolverExtra
-  const _totalQuotaSolve = sumQuotasAcrossMatiere(quotas as any)
-  const [localSolverExtra, setLocalSolverExtra] = useState(0)
-  const [lastSyncedSolverUsed, setLastSyncedSolverUsed] = useState(0)
-  // Sync quand quotas change depuis Supabase
-  useEffect(() => {
-    const fromDb = sumQuotasAcrossMatiere(quotas as any).solver_used || 0
-    setLastSyncedSolverUsed(prev => {
-      // Reset localSolverExtra seulement si Supabase confirme l'incrément
-      if (fromDb > prev) setLocalSolverExtra(0)
-      return fromDb
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(quotas)])
-  // Pas de visibilitychange ici — incrementQuota appelle loadQuotas directement
-  // visibilitychange causerait un rechargement qui reset localSolverExtra prématurément
-  const solverUsed = lastSyncedSolverUsed + localSolverExtra
+  // Lecture directe depuis Supabase — simple et fiable
+  const _totalQuota  = sumQuotasAcrossMatiere(quotas as any)
+  const solverUsed   = _totalQuota.solver_used || 0
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
   const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
@@ -1961,7 +1947,7 @@ Structure OBLIGATOIRE :
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
-      setLocalSolverExtra(prev => prev + 1) // Mise à jour immédiate affichage
+
 
       setSolution(sol)
       setPhase('done')
