@@ -1142,17 +1142,18 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════
 export default function ChatPage() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription } = useAuth()
+  // Recalculer à chaque render (quotas peut changer après refreshSubscription)
   const _totalQuota = sumQuotasAcrossMatiere(quotas as any)
-  // State local pour mise à jour immédiate après incrementQuota
+  // State local : incrément immédiat avant que Supabase réponde
   const [localChatExtra, setLocalChatExtra] = useState(0)
-  // Sync avec Supabase quand quotas change (après loadQuotas)
-  const [lastSyncedChatUsed, setLastSyncedChatUsed] = useState(_totalQuota.chat_used || 0)
+  const [lastSyncedChatUsed, setLastSyncedChatUsed] = useState(0)
+  // Sync quand quotas change — utiliser JSON.stringify pour détecter le vrai changement
   useEffect(() => {
-    const fromDb = _totalQuota.chat_used || 0
+    const fromDb = sumQuotasAcrossMatiere(quotas as any).chat_used || 0
     setLastSyncedChatUsed(fromDb)
-    setLocalChatExtra(0) // Reset le local car Supabase est à jour
-  }, [_totalQuota.chat_used])
+    setLocalChatExtra(0) // Supabase à jour → reset incrément local
+  }, [JSON.stringify(quotas)])
   useKaTeX()
 
   const [messages, setMessages] = useState<Msg[]>([])
@@ -1170,6 +1171,16 @@ export default function ChatPage() {
   const [pdfMsg, setPdfMsg] = useState('')
   // Charger l'historique au montage
   useEffect(() => { setSessions(loadSessions()) }, [])
+
+  // Recharger les quotas depuis Supabase à chaque montage (navigation Next.js)
+  useEffect(() => {
+    refreshSubscription?.()
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refreshSubscription?.()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
 
   const chatUsed = lastSyncedChatUsed + localChatExtra
   const chatLimit = quotaLimits.chat_per_week
