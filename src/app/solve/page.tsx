@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
