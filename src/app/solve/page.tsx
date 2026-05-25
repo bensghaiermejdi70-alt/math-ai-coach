@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useCallback, useEffect, Suspense } from 'react'
+import { useState, useRef, useCallback, useEffect, Suspense } from 'react' 
 import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -17,7 +17,10 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 // ══════════════════════════════════════════════════════════════════════
 // HELPERS API
 // ══════════════════════════════════════════════════════════════════════
-async function askClaude(prompt: string, system: string, maxTokens = 6000): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 6000, matiere?: string): Promise<string> {
+  const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+  const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -26,6 +29,8 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000): Prom
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: prompt }],
+      type: 'solver',
+      matiere: _matiere
     }),
   })
   if (!r.ok) {
@@ -40,6 +45,9 @@ async function askClaudeWithImage(
   prompt: string, system: string, base64: string,
   mediaType: string, maxTokens = 1500
 ): Promise<string> {
+  const _subj2 = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+  const _matiereMap2: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiere = _matiereMap2[_subj2] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,6 +62,8 @@ async function askClaudeWithImage(
           { type: 'text', text: prompt },
         ],
       }],
+      type: 'solver',
+      matiere: _matiere
     }),
   })
   if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -1183,22 +1193,43 @@ interface HistoryItem {
 }
 
 // ── Persistance localStorage ──────────────────────────
-const SOLVE_HISTORY_KEY = 'bacai_solve_history'
+const SOLVE_HISTORY_PREFIX = 'bacai_solve_history_' 
+const SOLVE_HISTORY_LEGACY_KEY = 'bacai_solve_history'
 const MAX_SOLVE_HISTORY = 30
 
-function saveSolveHistory(items: HistoryItem[]): void {
-  try { localStorage.setItem(SOLVE_HISTORY_KEY, JSON.stringify(items.slice(0, MAX_SOLVE_HISTORY))) }
+function getSolveHistoryKey(userId?: string): string {
+  return userId ? `${SOLVE_HISTORY_PREFIX}${userId}` : `${SOLVE_HISTORY_PREFIX}guest`
+}
+
+function migrateSolveHistory(userId?: string): void {
+  const newKey = getSolveHistoryKey(userId)
+  if (localStorage.getItem(newKey)) return
+  const legacyValue = localStorage.getItem(SOLVE_HISTORY_LEGACY_KEY)
+  if (!legacyValue) return
+  try {
+    const parsed = JSON.parse(legacyValue)
+    if (Array.isArray(parsed)) {
+      localStorage.setItem(newKey, JSON.stringify(parsed.slice(0, MAX_SOLVE_HISTORY)))
+    }
+  } catch {}
+}
+
+function saveSolveHistory(items: HistoryItem[], userId?: string): void {
+  try { localStorage.setItem(getSolveHistoryKey(userId), JSON.stringify(items.slice(0, MAX_SOLVE_HISTORY))) }
   catch {}
 }
 
-function loadSolveHistory(): HistoryItem[] {
-  try { return JSON.parse(localStorage.getItem(SOLVE_HISTORY_KEY) || '[]') }
+function loadSolveHistory(userId?: string): HistoryItem[] {
+  try {
+    migrateSolveHistory(userId)
+    return JSON.parse(localStorage.getItem(getSolveHistoryKey(userId)) || '[]')
+  }
   catch { return [] }
 }
 
-function deleteSolveItem(id: string, current: HistoryItem[]): HistoryItem[] {
+function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): HistoryItem[] {
   const updated = current.filter(h => h.id !== id)
-  saveSolveHistory(updated)
+  saveSolveHistory(updated, userId)
   return updated
 }
 
@@ -1209,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[]): HistoryItem[] {
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1219,37 +1250,82 @@ function SolvePageInner() {
     return q ? decodeURIComponent(q) : ''
   })
   const [myAnswer, setMyAnswer] = useState('')
+  // Matière détectée depuis ?subject= (physique | informatique | maths)
+  const [subject] = useState<'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature'>(() => {
+    if (typeof window === 'undefined') return 'maths'
+    const s = new URLSearchParams(window.location.search).get('subject') || ''
+    const valid = ['physique','informatique','svt','anglais','litterature']
+    return valid.includes(s) ? s as any : 'maths'
+  })
   const [phase, setPhase] = useState<Phase>('input')
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
-  const [history, setHistory] = useState<HistoryItem[]>(() => loadSolveHistory())
+  const [history, setHistory] = useState<HistoryItem[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [similarQ, setSimilarQ] = useState<string[]>([])
   const [pdfMsg, setPdfMsg] = useState('')
+
+  useEffect(() => {
+    setHistory(loadSolveHistory(user?.id ?? undefined))
+  }, [user?.id])
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Auto-scroll et focus si exercice pré-rempli depuis une page chapitre
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q')
-    if (q && textareaRef.current) {
+    const params = new URLSearchParams(window.location.search)
+    const q    = params.get('q')
+    const year = params.get('year')
+    const sess = params.get('session')
+    const subj = params.get('subject')
+    if ((q || year) && textareaRef.current) {
       setTimeout(() => {
         textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         textareaRef.current?.focus()
       }, 300)
     }
+    // Remplir automatiquement si year+session fournis (depuis page examens)
+    if (year && sess && subj && !q) {
+      const label = subj === 'physique' ? 'Physique-Chimie' : subj === 'informatique' ? 'Informatique' : 'Maths'
+      const section = params.get('section') || ''
+      const sectionLabel = section.includes('exp') ? 'Sciences Expérimentales' : section.includes('tech') ? 'Sciences Techniques' : section.includes('info') ? 'Informatique' : section.includes('math') ? 'Mathématiques' : section
+      const msg = 'Corrige l\'examen de ' + label
+        + ' — Bac Tunisie ' + year
+        + ' — ' + (sess === 'principale' ? 'Session Principale' : 'Session de Contrôle')
+        + (sectionLabel ? ' — Section ' + sectionLabel : '')
+        + '.\n\nVeuillez consulter le sujet officiel sur bacweb.tn :\nhttp://www.bacweb.tn/bac/' + year + '/' + sess + '/' + section.replace('-phys','').replace('-math','') + '/physique.pdf'
+        + '\n\nEnsuite, corrigez chaque exercice de façon complète et détaillée.'
+      setInput(msg)
+    }
   }, [])
   const solutionRef = useRef<HTMLDivElement>(null)
 
-  // Quota depuis AuthContext (Supabase)
-  const _totalQuota    = sumQuotasAcrossMatiere(quotas as any)
-  const solverUsed      = _totalQuota.solver_used || 0
-  const solverLimit     = quotaLimits.solver_per_week // -1 = illimité (Sprint Bac)
-  const _effLimit       = solverLimit || (hasActiveSubscription ? 20 : 0)
-  const isQuotaFull     = !isAdmin && !hasActiveSubscription ? true : !isAdmin && _effLimit > 0 && solverUsed >= _effLimit
+  // Même système que chat — lastSyncedSolverUsed + localSolverExtra
+  const _totalQuotaSolve = sumQuotasAcrossMatiere(quotas as any)
+  const [localSolverExtra, setLocalSolverExtra] = useState(0)
+  const [lastSyncedSolverUsed, setLastSyncedSolverUsed] = useState(0)
+  // Sync quand quotas change depuis Supabase
+  useEffect(() => {
+    const fromDb = sumQuotasAcrossMatiere(quotas as any).solver_used || 0
+    setLastSyncedSolverUsed(prev => {
+      // Reset localSolverExtra seulement si Supabase confirme l'incrément
+      if (fromDb > prev) setLocalSolverExtra(0)
+      return fromDb
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(quotas)])
+  // Pas de visibilitychange ici — incrementQuota appelle loadQuotas directement
+  // visibilitychange causerait un rechargement qui reset localSolverExtra prématurément
+  const solverUsed = lastSyncedSolverUsed + localSolverExtra
+  const solverLimit = quotaLimits.solver_per_week
+  // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
+  const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
+  const isQuotaFull     = !isAdmin && !hasActiveSubscription
+    ? true
+    : !isAdmin && _effectiveLimit > 0 && solverUsed >= _effectiveLimit
   const quotaRemaining  = isAdmin || solverLimit === -1
     ? 999
-    : Math.max(0, solverLimit - solverUsed)
+    : Math.max(0, _effectiveLimit - solverUsed)
   const isUnlimited     = isAdmin || isSprint || solverLimit === -1
 
   const insertSymbol = useCallback((sym: string) => {
@@ -1264,53 +1340,39 @@ function SolvePageInner() {
   const handleSolve = async () => {
     if (!input.trim()) return
 
-    // Vérifier quota via comptage direct (fonctionne pour toutes matières)
-    const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
-    if (!isAdmin && _effectiveLimit > 0 && solverUsed >= _effectiveLimit) {
-      alert(`Quota atteint — ${solverUsed}/${_effectiveLimit} résolutions/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
+    // Vérifier quota via AuthContext (Supabase)
+    // Pour les abonnements Anglais/Physique/etc. : checkQuota peut retourner false
+    // si quotaLimits.solver_per_week n'est pas défini pour cette matière.
+    // On contourne : si l'utilisateur a un abonnement actif, on lui donne accès au solveur
+    // en utilisant le quota cumulé toutes matières (sumQuotasAcrossMatiere).
+    const _hasAnyActiveSub = hasActiveSubscription
+    const _quotaOk = isAdmin || _hasAnyActiveSub
+      ? (solverLimit === -1 || solverUsed < (solverLimit || 20))
+      : checkQuota('solver')
+    if (!isAdmin && !_quotaOk) {
+      alert(`Quota atteint — ${solverUsed}/${solverLimit || 20} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
       return
     }
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
 
-    // Détecter la matière depuis URL
-    const _urlS = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
-    const _validS = ['physique','informatique','anglais','svt']
-    const activeSubj = _validS.includes(_urlS) ? _urlS : 'maths'
+    // ─── Détecter la matière depuis URL ?subject= ──────────────────────
+    const urlSubj = typeof window !== 'undefined'
+      ? (new URLSearchParams(window.location.search).get('subject') || subject)
+      : subject
+    const VALID_SUBJECTS = ['physique','informatique','svt','anglais','litterature']
+    const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature' =
+      VALID_SUBJECTS.includes(urlSubj) ? urlSubj as any : 'maths'
 
-    const COMMON_FORMAT = `Structure : ## pour les grandes parties, ### pour les sous-questions.
+    // ─── Infixe commun aux 3 system prompts ─────────────────────────────────
+    const COMMON_FORMAT = `
+Structure : ## pour les grandes parties, ### pour les sous-questions.
 **gras** pour les résultats clés, > pour les encadrés importants.`
 
-    const system = activeSubj === 'physique'
-      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Physique-Chimie.
+    const SYSTEM_MATHS = `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
 Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
 ${COMMON_FORMAT}
-Utilise les unités SI. Formules exactes. Explique chaque loi physique utilisée.`
-      : activeSubj === 'informatique'
-      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Informatique et Algorithmique.
-Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
-Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
-${COMMON_FORMAT}
-Explique chaque étape algorithmique. Traces d'exécution si nécessaire. Complexité si demandée.`
-      : activeSubj === 'anglais'
-      ? `You are an expert English teacher for the Tunisian Bac exam.
-You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
-NEVER summarise. Develop EVERYTHING. Use all available tokens.
-${COMMON_FORMAT}
-For grammar: explain the rule. For writing: model answer + commentary. For reading: justify each answer.`
-      : activeSubj === 'svt'
-      ? `Tu es un professeur expert du Bac Tunisie, spécialiste en Sciences de la Vie et de la Terre.
-Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
-Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
-${COMMON_FORMAT}
-Schémas décrits textuellement si nécessaire. Vocabulaire scientifique précis.`
-      : `Tu es un professeur expert du Bac Tunisie, spécialiste en mathématiques.
-Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
-Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
-Structure : ## pour les grandes parties, ### pour les sous-questions.
-**gras** pour les résultats clés, > pour les encadrés importants.
-
 NOTATION MATHÉMATIQUE OBLIGATOIRE — LaTeX strict :
 - Toutes les formules DOIVENT être en LaTeX : $formule$ pour inline, $$formule$$ pour centré
 - JAMAIS écrire "frac(2,5)" ou "2/5" brut — TOUJOURS $\\frac{2}{5}$
@@ -1374,8 +1436,471 @@ QUAND UTILISER — OBLIGATOIRE :
 - VECTEURS, repère → type "geometry" avec "axes" + "vector"
 - RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle ou des vecteurs → un graphique DOIT apparaître`
 
+    const SYSTEM_PHYSIQUE = `Tu es un professeur expert du Bac (Tunisie ET France), spécialiste en PHYSIQUE-CHIMIE.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT. Tu as suffisamment de tokens — utilise-les entièrement.
+${COMMON_FORMAT}
+
+NOTATION SCIENTIFIQUE — LaTeX strict :
+- Formules : $formule$ inline, $$formule$$ centré
+- Unités SI : $\\mathrm{mol \\cdot L^{-1}}$, $\\mathrm{m \\cdot s^{-2}}$, $\\mathrm{V}$, $\\mathrm{\\Omega}$, $\\mathrm{Hz}$, $\\mathrm{J}$
+- Constantes : $k_a$, $K_e = 10^{-14}$, $\\lambda$, $\\omega_0$, $T_{1/2}$, $\\tau$, $\\tau_f$
+- Vecteurs : $\\vec{F}$, $\\vec{a}$, $\\vec{v}$, $\\vec{p}$ — Dérivées : $\\frac{dq}{dt}$, $\\frac{d^2x}{dt^2}$
+- Résultats encadrés : > **Résultat :** $$valeur\ \\mathrm{unité}$$
+
+PROGRAMME COMPLET PHYSIQUE-CHIMIE (Bac Tunisie + Bac France) :
+**Chimie :** cinétique (vitesse, ordre, Ka, Arrhenius), acide-base (pH, pKa, tampons, titrage), oxydoréduction (pile, Nernst, électrolyse, Faraday), équilibres (Kéq, Qr, Le Chatelier), chimie organique (estérification, polymères, groupes fonctionnels).
+**Physique Électricité :** condensateur (q=Cu, Ec=½Cu²), dipôles RC/RL (τ=RC, τ=L/R), RLC libre/forcé (ω₀=1/√LC, résonance, Q), induction (Faraday, Lenz).
+**Physique Mécanique :** 2ème loi de Newton (ΣF=ma), plan incliné, pendule (T=2π√(l/g)), ressort (T=2π√(m/k)), énergie cinétique/potentielle, satellites.
+**Physique Ondes :** propagation (v=λf), ondes sonores, Doppler, diffraction (θ≈λ/a), interférences (Young i=λD/a), optique géométrique (lentilles, Snell-Descartes).
+**Physique Nucléaire :** désintégrations α,β,γ, loi N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc².
+**Thermodynamique :** transferts thermiques, Q=mcΔT, rendement, bilan énergétique.
+
+GRAPHIQUES PHYSIQUE — OBLIGATOIRE :
+Tu DOIS générer des graphiques pour :
+- Circuit RC : courbe u_C(t) charge/décharge avec τ marqué
+- Oscillations RLC : courbe sinusoïdale amortie
+- Dosage : courbe pH=f(V) avec point équivalent
+- Cinétique : courbe [A]=f(t) décroissante
+- Mécanique : trajectoire, vecteurs forces sur schéma
+- Ondes : courbe sinusoïdale y=A·sin(ωt)
+- Pendule/ressort : schéma avec vecteurs
+
+FORMAT GRAPHIQUE (utilise exactement ce format) :
+Courbe RC charge : [GRAPH: {"type":"function","expressions":["1-Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/E"],"title":"Charge condensateur RC","xLabel":"t/τ","yLabel":"u_C/E"}]
+Courbe RC décharge : [GRAPH: {"type":"function","expressions":["Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C(t)/U₀"],"title":"Décharge condensateur RC","xLabel":"t/τ","yLabel":"u_C/U₀"}]
+Oscillations LC : [GRAPH: {"type":"function","expressions":["Math.cos(x)","Math.exp(-0.3*x)*Math.cos(x)"],"xMin":0,"xMax":20,"labels":["LC non amorti","RLC amorti"],"title":"Oscillations électriques libres","xLabel":"t (s)","yLabel":"u_C (V)"}]
+Dosage pH : [GRAPH: {"type":"function","expressions":["14/(1+Math.exp(-0.6*(x-15)))"],"xMin":0,"xMax":30,"labels":["pH=f(V)"],"title":"Courbe de dosage pH-métrique","xLabel":"V titrant (mL)","yLabel":"pH"}]
+Cinétique [A](t) : [GRAPH: {"type":"function","expressions":["Math.exp(-0.3*x)"],"xMin":0,"xMax":15,"labels":["[A]=f(t)"],"title":"Évolution concentration ordre 1","xLabel":"t (min)","yLabel":"[A] (mol/L)"}]
+Ondes sinusoïdales : [GRAPH: {"type":"function","expressions":["Math.sin(x)","Math.sin(x-1.5)"],"xMin":0,"xMax":10,"labels":["source","récepteur (retard τ)"],"title":"Ondes progressives","xLabel":"t (s)","yLabel":"y (m)"}]
+
+MÉTHODE OBLIGATOIRE pour chaque question :
+1. Identifier la loi/formule et justifier son choix
+2. Poser l'équation avec toutes les grandeurs nommées et leurs unités
+3. Substituer les valeurs numériques avec unités
+4. Calculer et encadrer le résultat
+5. Tracer le graphique correspondant si pertinent`
+
+    const SYSTEM_INFO = `Tu es un professeur expert du Bac Tunisie ET un ingénieur informatique senior.
+Tu produis des corrections EXHAUSTIVES, ULTRA-COMPLÈTES et PÉDAGOGIQUES — les meilleures qui existent.
+Ne résume JAMAIS. Développe TOUT. Chaque exercice doit être une leçon complète.
+${COMMON_FORMAT}
+
+═══════════════════════════════════════════════════════════
+RÈGLES DE FORMAT ABSOLUES — TOUJOURS RESPECTÉES
+═══════════════════════════════════════════════════════════
+
+1. ALGORITHMIQUE → TOUJOURS donner :
+   a) Code PASCAL complet avec commentaires
+   b) Code PYTHON équivalent complet
+   c) TABLEAU D'ÉVOLUTION pas à pas (itération par itération)
+   d) TRACE D'EXÉCUTION si récursivité
+   e) COMPLEXITÉ temporelle et spatiale avec justification
+
+2. SQL → TOUJOURS donner :
+   a) Requête complète formatée et indentée
+   b) Explication de CHAQUE clause (SELECT, FROM, WHERE, JOIN, GROUP BY, HAVING, ORDER BY)
+   c) TABLEAU du résultat attendu avec données fictives
+   d) Alternative si elle existe (ex: NOT IN vs LEFT JOIN IS NULL vs NOT EXISTS)
+
+3. RÉSEAUX → TOUJOURS donner :
+   a) Calcul binaire détaillé du masque
+   b) Tableau complet des sous-réseaux (réseau, premier hôte, dernier hôte, broadcast)
+   c) Nombre d'hôtes utilisables avec formule 2^n - 2
+   d) Table de routage si demandée
+
+4. LOGIQUE BOOLÉENNE → TOUJOURS donner :
+   a) Table de vérité complète
+   b) Simplification algébrique étape par étape
+   c) Simplification par Karnaugh si applicable
+   d) Schéma de portes logiques décrit textuellement
+
+═══════════════════════════════════════════════════════════
+PROGRAMME COMPLET BAC INFORMATIQUE TUNISIE
+═══════════════════════════════════════════════════════════
+
+## ALGORITHMIQUE ET STRUCTURES DE DONNÉES
+
+### Tri et Recherche — avec TABLEAU D'ÉVOLUTION OBLIGATOIRE
+Tri à bulles : comparer paires adjacentes, permuter si nécessaire — O(n²)
+Tri par insertion : insérer chaque élément à sa place — O(n²)
+Tri par sélection : trouver le min et l'échanger — O(n²)
+Recherche séquentielle : parcours linéaire — O(n)
+Recherche dichotomique : diviser par 2 à chaque étape — O(log n)
+
+EXEMPLE TABLEAU D'ÉVOLUTION (tri par sélection sur T=[5,3,8,1]) :
+| Passe | Tableau avant | Min trouvé | Échange | Tableau après |
+|-------|--------------|------------|---------|---------------|
+| i=1   | [5,3,8,1]    | T[4]=1     | T[1]↔T[4] | [1,3,8,5]  |
+| i=2   | [1,3,8,5]    | T[2]=3     | pas d'éch | [1,3,8,5]  |
+| i=3   | [1,3,8,5]    | T[3]=5     | T[3]↔T[4] | [1,3,5,8]  |
+Résultat final : [1, 3, 5, 8]
+
+### Récursivité
+- Cas de base (condition d'arrêt) + Cas récursif
+- Trace d'exécution : arbre des appels récursifs
+- Exemples : factorielle, Fibonacci, PGCD, puissance, tours de Hanoï
+
+### Structures de données
+Enregistrements (RECORD en Pascal, dict en Python)
+Tableaux 1D et 2D
+Fichiers séquentiels : RESET, REWRITE, EOF, READ, WRITE
+
+═══════════════════════════════════════════════════════════
+## PASCAL — SYNTAXE COMPLÈTE
+
+PROGRAMME COMPLET :
+\`\`\`pascal
+PROGRAM NomProgramme;
+USES Crt;
+CONST MAX = 100;
+TYPE
+  TabInt = ARRAY[1..MAX] OF Integer;
+  Etudiant = RECORD
+    nom    : String;
+    note   : Real;
+    admis  : Boolean;
+  END;
+VAR
+  T : TabInt;
+  N : Integer;
+  E : Etudiant;
+
+{ ── Procédure ── }
+PROCEDURE Afficher(var T: TabInt; N: Integer);
+VAR i: Integer;
+BEGIN
+  FOR i := 1 TO N DO
+    Write(T[i], ' ');
+  WriteLn;
+END;
+
+{ ── Fonction ── }
+FUNCTION Somme(var T: TabInt; N: Integer): Integer;
+VAR i, s: Integer;
+BEGIN
+  s := 0;
+  FOR i := 1 TO N DO
+    s := s + T[i];
+  Somme := s;
+END;
+
+{ ── Tri par sélection ── }
+PROCEDURE TriSelection(var T: TabInt; N: Integer);
+VAR i, j, iMin, tmp: Integer;
+BEGIN
+  FOR i := 1 TO N-1 DO
+  BEGIN
+    iMin := i;
+    FOR j := i+1 TO N DO
+      IF T[j] < T[iMin] THEN iMin := j;
+    IF iMin <> i THEN
+    BEGIN
+      tmp    := T[i];
+      T[i]   := T[iMin];
+      T[iMin]:= tmp;
+    END;
+  END;
+END;
+
+{ ── Recherche dichotomique ── }
+FUNCTION RechercheDicho(T: TabInt; N, val: Integer): Integer;
+VAR g, d, m: Integer;
+BEGIN
+  g := 1; d := N;
+  RechercheDicho := -1;
+  WHILE g <= d DO
+  BEGIN
+    m := (g + d) DIV 2;
+    IF T[m] = val THEN
+    BEGIN
+      RechercheDicho := m;
+      EXIT;
+    END
+    ELSE IF T[m] < val THEN g := m + 1
+    ELSE d := m - 1;
+  END;
+END;
+
+BEGIN { PROGRAMME PRINCIPAL }
+  ClrScr;
+  { ... }
+END.
+\`\`\`
+
+═══════════════════════════════════════════════════════════
+## PYTHON — ÉQUIVALENT COMPLET
+
+\`\`\`python
+# Tri par sélection
+def tri_selection(T):
+    n = len(T)
+    for i in range(n-1):
+        i_min = i
+        for j in range(i+1, n):
+            if T[j] < T[i_min]:
+                i_min = j
+        if i_min != i:
+            T[i], T[i_min] = T[i_min], T[i]
+    return T
+
+# Recherche dichotomique
+def recherche_dicho(T, val):
+    g, d = 0, len(T) - 1
+    while g <= d:
+        m = (g + d) // 2
+        if T[m] == val:
+            return m
+        elif T[m] < val:
+            g = m + 1
+        else:
+            d = m - 1
+    return -1
+
+# Fonction récursive — factorielle
+def factorielle(n):
+    if n == 0:   # Cas de base
+        return 1
+    return n * factorielle(n - 1)  # Cas récursif
+
+# Lecture d'un enregistrement (dict Python)
+def creer_etudiant(nom, note):
+    return {"nom": nom, "note": note, "admis": note >= 10}
+\`\`\`
+
+═══════════════════════════════════════════════════════════
+## BASES DE DONNÉES — SQL COMPLET
+
+### Format de réponse SQL OBLIGATOIRE :
+
+**Requête :**
+\`\`\`sql
+SELECT E.nom, E.prenom, COUNT(*) AS nb_emprunts
+FROM ELEVE E
+INNER JOIN EMPRUNT EM ON E.id_eleve = EM.id_eleve
+WHERE EM.date_retour IS NULL      -- Emprunts en cours seulement
+GROUP BY E.id_eleve, E.nom, E.prenom
+HAVING COUNT(*) > 2               -- Filtre après agrégation
+ORDER BY nb_emprunts DESC;
+\`\`\`
+
+**Explication clause par clause :**
+- SELECT : colonnes affichées + COUNT(*) compte les lignes par groupe
+- FROM ELEVE E : table principale avec alias E
+- INNER JOIN : joint uniquement les élèves ayant des emprunts
+- WHERE date_retour IS NULL : filtre AVANT le groupement (emprunts non rendus)
+- GROUP BY : regroupe par élève pour appliquer COUNT
+- HAVING COUNT(*) > 2 : filtre APRÈS le groupement (différent de WHERE)
+- ORDER BY DESC : tri décroissant
+
+**Tableau résultat (exemple) :**
+| nom    | prenom | nb_emprunts |
+|--------|--------|-------------|
+| Martin | Emma   | 5           |
+| Dupont | Lucas  | 3           |
+
+**Alternatives SQL connues :**
+\`\`\`sql
+-- Livres jamais empruntés — 3 méthodes équivalentes :
+-- Méthode 1 : LEFT JOIN + IS NULL (recommandée, performante)
+SELECT L.titre FROM LIVRE L
+LEFT JOIN EMPRUNT E ON L.id_livre = E.id_livre
+WHERE E.id_livre IS NULL;
+
+-- Méthode 2 : NOT EXISTS (très lisible)
+SELECT titre FROM LIVRE L
+WHERE NOT EXISTS (SELECT 1 FROM EMPRUNT E WHERE E.id_livre = L.id_livre);
+
+-- Méthode 3 : NOT IN (attention aux NULL!)
+SELECT titre FROM LIVRE
+WHERE id_livre NOT IN (SELECT DISTINCT id_livre FROM EMPRUNT WHERE id_livre IS NOT NULL);
+\`\`\`
+
+═══════════════════════════════════════════════════════════
+## RÉSEAUX — CALCUL CIDR COMPLET
+
+### Format OBLIGATOIRE pour les sous-réseaux :
+
+**Calcul détaillé 192.168.10.0/26 :**
+
+Étape 1 — Masque en binaire :
+/26 = 11111111.11111111.11111111.11000000 = 255.255.255.192
+
+Étape 2 — Bits hôtes : 32 - 26 = 6 bits
+Hôtes utilisables = 2^6 - 2 = 62
+
+Étape 3 — Division en 3 sous-réseaux (/28) :
+⌈log₂(3)⌉ = 2 bits supplémentaires → /28
+Hôtes par sous-réseau = 2^4 - 2 = 14 | Taille bloc = 16
+
+**Tableau complet des sous-réseaux :**
+| N° | Réseau         | 1er hôte       | Dernier hôte   | Broadcast      | Hôtes |
+|----|----------------|----------------|----------------|----------------|-------|
+| 1  | 192.168.10.0   | 192.168.10.1   | 192.168.10.14  | 192.168.10.15  | 14    |
+| 2  | 192.168.10.16  | 192.168.10.17  | 192.168.10.30  | 192.168.10.31  | 14    |
+| 3  | 192.168.10.32  | 192.168.10.33  | 192.168.10.46  | 192.168.10.47  | 14    |
+| 4* | 192.168.10.48  | 192.168.10.49  | 192.168.10.62  | 192.168.10.63  | 14    |
+*Sous-réseau 4 = réserve disponible
+
+═══════════════════════════════════════════════════════════
+## COMPLEXITÉ — ANALYSE COMPLÈTE
+
+Pour CHAQUE algorithme, fournir :
+| Algo              | Meilleur | Moyen   | Pire    | Espace |
+|-------------------|----------|---------|---------|--------|
+| Tri bulles        | O(n)     | O(n²)   | O(n²)   | O(1)   |
+| Tri insertion     | O(n)     | O(n²)   | O(n²)   | O(1)   |
+| Tri sélection     | O(n²)    | O(n²)   | O(n²)   | O(1)   |
+| Recherche séq.    | O(1)     | O(n)    | O(n)    | O(1)   |
+| Recherche dicho.  | O(1)     | O(log n)| O(log n)| O(1)   |
+| Récursion fact.   | O(n)     | O(n)    | O(n)    | O(n)   |
+
+## LOGIQUE BOOLÉENNE
+Table de vérité complète → Expression booléenne → Simplification Karnaugh → Schéma portes`
+
+    const SYSTEM_SVT = `Tu es un professeur expert du Bac (Tunisie ET France), spécialiste en SVT — Sciences de la Vie et de la Terre.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+
+PROGRAMME SVT COMPLET :
+**Biologie cellulaire :** ADN (double hélice, bases azotées A-T-G-C), réplication semi-conservative, transcription (ARNm), traduction (ribosomes, code génétique, ARNt), mitose (4 phases : prophase, métaphase, anaphase, télophase), méiose (2 divisions, crossing-over, gamètes haploïdes).
+**Génétique :** lois de Mendel (ségrégation, assortiment indépendant), hérédité liée au sexe (chromosomes X et Y), groupes sanguins (ABO, Rh), arbres généalogiques (dominant/récessif, autosomique/gonosomique), mutations, génie génétique (PCR, électrophorèse).
+**Immunologie :** immunité innée (phagocytose, inflammation), immunité adaptative (lymphocytes B → anticorps, lymphocytes T cytotoxiques), mémoire immunitaire, vaccins (actifs/passifs), greffes (compatibilité HLA, rejet), SIDA (VIH, CD4, trithérapie).
+**Physiologie végétale :** photosynthèse (phase claire ATP+NADPH, phase sombre cycle Calvin), nutrition minérale, transpiration, géotropisme/phototropisme, hormones végétales.
+**Physiologie humaine :** digestion (enzymes, bile, absorption), respiration (hématose, échanges gazeux, capacités pulmonaires), circulation (cœur, pression artérielle, électrocardiogramme), système nerveux (neurone, synapse, réflexe, SNC/SNP), hormones (insuline, glucagon, hormones sexuelles), reproduction.
+**Géologie :** tectonique des plaques (subduction, collision, dorsales), séismes (épicentre, ondes P/S), roches (magmatiques, sédimentaires, métamorphiques), évolution (sélection naturelle, spéciation, phylogénèse), datation (relative, radiométrique).
+
+MÉTHODE SVT OBLIGATOIRE :
+- Définir les termes scientifiques dès leur apparition
+- Schémas légendés : bilan cellulaire, synapse, chaîne alimentaire, arbre généalogique
+- Exploiter les documents expérimentaux (courbes, expériences, témoin/test)
+- Conclure avec l'intégration dans le contexte biologique global`
+
+    const SYSTEM_ANGLAIS = `You are an expert English teacher for Bac students (Tunisia AND France).
+You write EXHAUSTIVE, ULTRA-DETAILED and PEDAGOGICAL corrections.
+NEVER summarize. Develop EVERYTHING. Use all your tokens entirely.
+${COMMON_FORMAT}
+
+ALWAYS RESPOND IN ENGLISH when the question is in English.
+RESPOND IN FRENCH only if the student explicitly asks in French.
+
+COMPLETE ENGLISH PROGRAMME — BAC TUNISIA & FRANCE :
+
+GRAMMAR (full programme) :
+- Tenses : Present Simple/Continuous/Perfect/Perfect Continuous, Past Simple/Continuous/Perfect, Future (will/going to/present continuous for future)
+- Modals : can/could (ability/possibility), may/might (probability), must/have to (obligation), should/ought to (advice), would (conditional/habit), need/dare
+- Conditionals : Zero (If+present,present), First (If+present,will+V), Second (If+past,would+V), Third (If+past perfect,would have+PP), Mixed
+- Passive Voice : all tenses, impersonal passive, get-passive
+- Reported Speech : statement/question/command, backshift, pronoun changes
+- Relative Clauses : defining (no commas, that/which/who), non-defining (commas, which/who/whose)
+- Participle Clauses : present (-ing), past (-ed), perfect (having+PP)
+- Subjunctive : wish+past/past perfect, if only, it's time, would rather
+- Articles : a/an/the/zero article rules and exceptions
+- Quantifiers : some/any/much/many/few/little/a few/a little + exceptions
+
+WRITING SKILLS :
+- Argumentative essay : Introduction (hook + context + clear thesis) → Body (3 paragraphs with topic sentence + argument + example + analysis) → Conclusion (restate thesis + broader implications)
+- Synthesis (Bac France) : read multiple documents → extract key ideas → reformulate neutrally → no personal opinion
+- Formal email/letter : salutation, purpose, body, closing
+- Article/Blog : engaging title, subheadings, direct address to reader
+- Report : executive summary, findings, recommendations
+- Connectors : addition (furthermore, moreover, in addition), contrast (however, nevertheless, on the other hand), cause (because of, due to, as a result of), concession (although, despite, even though)
+
+READING COMPREHENSION :
+- Skimming (global understanding), Scanning (specific information)
+- Inference : deduce meaning from context, identify tone/attitude
+- Text types : article, extract, speech, interview, advertising
+
+BAC FRANCE — 8 THEMATIC AXES (Première & Terminale) :
+- AXE 1 Identities & Exchanges : cultural identity, migration, globalization, American Dream, Brexit
+- AXE 2 Private & Public Sphere : social media, surveillance, freedom of expression, digital identity
+- AXE 3 Art & Power : engaged art, propaganda, censorship, soft power, protest art
+- AXE 4 Citizenship & Virtual Worlds : fake news, digital democracy, AI influence, cybersecurity
+- AXE 5 Fictions & Realities : dystopia (1984, Brave New World), storytelling, film adaptation
+- AXE 6 Scientific Innovation & Responsibility : AI ethics, climate change, biotechnology
+- AXE 7 Diversity & Inclusion : gender equality, minorities, Black Lives Matter, social justice
+- AXE 8 Territory & Memory : war memory, colonization, heritage, historical narratives
+
+LLCER WORKS : Fahrenheit 451 (Bradbury), Lord of the Flies (Golding), To Kill a Mockingbird (Lee), A.I. (film, Spielberg)
+AMC : Living together, Changing world, Global relations
+
+LITERARY ANALYSIS (English) :
+- Figures of speech : metaphor, simile, alliteration, assonance, onomatopoeia, personification, hyperbole, irony, oxymoron, paradox
+- Narrative : narrator (1st/3rd person), focalization, stream of consciousness, unreliable narrator
+- Prose structure : setting, plot, character (protagonist/antagonist/foil), conflict, climax, resolution
+- Poetry : rhythm, rhyme scheme (ABAB/ABBA/AABB), iambic pentameter, free verse, sonnet, ode
+- Drama : stage directions, soliloquy, dialogue, dramatic irony, catharsis`
+
+    const SYSTEM_LITTERATURE = `Tu es un professeur expert de Littérature Française et de Français, spécialiste du Bac France.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
+Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+
+PROGRAMME LITTÉRATURE FRANÇAISE COMPLET :
+
+FIGURES DE STYLE :
+- Comparaison : "comme" ou "tel" — comparé + outil + comparant
+- Métaphore : comparaison sans outil comparatif (ex: "Le vent est un cheval")
+- Personnification : attributs humains à non-humain
+- Hyperbole : exagération stylistique (ex: "pleurer un torrent de larmes")
+- Litote : dire moins pour exprimer plus (ex: "Ce n'est pas mal")
+- Euphémisme : atténuer une réalité dure (ex: "il nous a quittés")
+- Anaphore : répétition en début de vers/phrase ("J'ai rêvé..., J'ai rêvé...")
+- Chiasme : inversion croisée AB/BA ("L'homme mange pour vivre, non vivre pour manger")
+- Oxymore : termes contradictoires ("obscure clarté", "douce violence")
+- Antithèse : opposition de deux idées sans fusion
+- Allégorie : représentation abstraite par concret (ex: Marianne = France)
+- Périphrase : désignation par développement (ex: "l'astre du jour" = le soleil)
+- Synecdoque, métonymie, ironie, para­doxe, syllepse
+
+VERSIFICATION :
+- Mesure : alexandrin (12), décasyllabe (10), octosyllabe (8), heptasyllabe (7)
+- Rime : plate (AABB), croisée (ABAB), embrassée (ABBA)
+- Formes fixes : sonnet (2 quatrains + 2 tercets), ode, ballade, rondeau
+- Phénomènes : diérèse/synérèse, enjambement, rejet, contre-rejet, césure
+
+ANALYSE NARRATIVE :
+- Point de vue/focalisation : interne (je), externe (œil de caméra), omniscient (zéro)
+- Narrateur : autodiégétique, homodiégétique, hétérodiégétique
+- Temps du récit : ellipse, pause, scène, sommaire, analepse, prolepse
+- Schéma actanciel (Greimas) : sujet, objet, destinateur, destinataire, adjuvant, opposant
+- Registres : comique, tragique, lyrique, épique, fantastique, satirique, pathétique, polémique
+
+EXERCICES BAC :
+1. **Commentaire composé** : Accroche (citer le titre/auteur/genre) → Problématique ("En quoi ce texte...?") → Annonce du plan (2-3 axes) → Développement (chaque axe : sous-partie + exemple textuel cité + analyse de l'effet produit) → Conclusion (bilan + ouverture)
+2. **Dissertation** : Thèse → Antithèse → Synthèse, avec exemples d'œuvres précis (auteur + titre + passage)
+3. **Contraction de texte** : 1/4 de la longueur, même progression d'idées, neutralité de ton, PAS de citations directes
+4. **Écriture d'invention** : respecter genre (roman, théâtre, poème), registre, style de l'auteur, cohérence narrative
+5. **Essai** : prise de position argumentée, 3 arguments + 3 exemples littéraires, connecteurs logiques
+
+GRANDS AUTEURS ET ŒUVRES :
+XVIIe : Molière (Tartuffe, Dom Juan, Le Misanthrope, L'Avare), Racine (Phèdre, Andromaque, Britannicus), Corneille (Le Cid), La Fontaine (Fables), La Bruyère (Les Caractères), Pascal (Pensées)
+XVIIIe : Voltaire (Candide, Zadig, Micromégas, Lettres philosophiques), Rousseau (Confessions, Du Contrat Social, Émile), Diderot (Encyclopédie, Le Neveu de Rameau), Montesquieu (L'Esprit des lois, Lettres persanes), Beaumarchais (Le Mariage de Figaro)
+XIXe : Hugo (Les Misérables, Notre-Dame de Paris, Hernani, Les Contemplations), Balzac (Père Goriot, Illusions perdues, Eugénie Grandet), Stendhal (Le Rouge et le Noir, La Chartreuse de Parme), Flaubert (Madame Bovary, L'Éducation sentimentale), Baudelaire (Les Fleurs du Mal, Le Spleen de Paris), Verlaine, Rimbaud (Une Saison en enfer), Zola (Germinal, Nana, L'Assommoir), Maupassant
+XXe : Proust (À la Recherche du temps perdu), Camus (L'Étranger, La Peste, Le Mythe de Sisyphe), Sartre (La Nausée, Les Mouches, Huis Clos), Simone de Beauvoir (Le Deuxième Sexe), Ionesco (La Cantatrice Chauve, Rhinocéros), Beckett (En attendant Godot), Anouilh (Antigone), Prévert (Paroles), Apollinaire (Alcools)
+
+MOUVEMENTS LITTÉRAIRES :
+- Humanisme (XVIe) : Rabelais, Montaigne — valorisation de l'homme et du savoir
+- Baroque (fin XVIe-XVIIe) : instabilité, mouvement, illusion, trompe-l'œil
+- Classicisme (XVIIe) : règles (bienséance, vraisemblance, 3 unités au théâtre), raison, universalité
+- Lumières (XVIIIe) : raison, progrès, tolérance, critique de l'absolutisme
+- Romantisme (XIXe) : moi lyrique, nature, mélancolie, engagement (Hugo)
+- Réalisme/Naturalisme (XIXe) : observation sociale, milieu déterministe, Zola
+- Symbolisme (fin XIXe) : musique, suggestion, symboles, Mallarmé
+- Surréalisme (XXe) : inconscient, rêve, hasard objectif, Breton
+- Existentialisme (XXe) : liberté, responsabilité, absurde, engagement
+- Nouveau Roman (XXe) : refus de l'intrigue traditionnelle, Robbe-Grillet, Sarraute`
+
+    const system = activeSubj === 'physique' ? SYSTEM_PHYSIQUE
+                 : activeSubj === 'informatique' ? SYSTEM_INFO
+                 : activeSubj === 'svt' ? SYSTEM_SVT
+                 : activeSubj === 'anglais' ? SYSTEM_ANGLAIS
+                 : activeSubj === 'litterature' ? SYSTEM_LITTERATURE
+                 : SYSTEM_MATHS
+
     const prompt = mode === 'solve'
-      ? `Résous cet exercice de mathématiques (programme Bac Tunisie) de façon COMPLÈTE et PÉDAGOGIQUE.
+      ? `Résous cet exercice de ${activeSubj === 'physique' ? 'physique-chimie' : activeSubj === 'informatique' ? 'informatique' : activeSubj === 'svt' ? 'SVT' : activeSubj === 'anglais' ? 'English' : activeSubj === 'litterature' ? 'littérature française' : 'mathématiques'} (programme Bac Tunisie / France) de façon COMPLÈTE et PÉDAGOGIQUE.
 
 EXERCICE :
 ${input}
@@ -1432,12 +1957,11 @@ Structure OBLIGATOIRE :
         setError(sol); setPhase('input'); return
       }
 
-      // Incrémenter quota dans Supabase
-      // Incrémenter sur la bonne matière selon URL
-      const _subjMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt' }
-      const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
-      const _mat = (_subjMap[_subj] || 'mathematiques') as any
-      await incrementQuota('solver', _mat)
+      // Incrémenter quota dans Supabase — passer la matière depuis URL
+      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+      const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
+      await incrementQuota('solver', _matiereForInc)
+      setLocalSolverExtra(prev => prev + 1) // Mise à jour immédiate affichage
 
       setSolution(sol)
       setPhase('done')
@@ -1446,7 +1970,7 @@ Structure OBLIGATOIRE :
           id: Date.now().toString(), exercise: input,
           solution: sol, mode, timestamp: new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
         }, ...prev.slice(0, 29)]
-        saveSolveHistory(updated)
+        saveSolveHistory(updated, user?.id ?? undefined)
         return updated
       })
       setTimeout(() => solutionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150)
@@ -1495,6 +2019,14 @@ Structure OBLIGATOIRE :
   }
 
   // ── Rendu ──
+  // ── Vérification accès matière ─────────────────────────────────
+  const SUBJECT_TO_MATIERE: Record<string,string> = {
+    physique:'physique', informatique:'informatique',
+    svt:'svt', anglais:'anglais', litterature:'anglais', maths:'mathematiques'
+  }
+  const currentMatiere = SUBJECT_TO_MATIERE[subject] || 'mathematiques'
+
+
   return (
     <>
       <Navbar />
@@ -1512,12 +2044,14 @@ Structure OBLIGATOIRE :
           {/* ── HEADER ── */}
           <div style={{ marginBottom: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#4f6ef7', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 7 }}>🧮 Solveur IA</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: subject==='physique'?'#06d6a0':subject==='informatique'?'#6366f1':'#4f6ef7', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 7 }}>
+                {subject==='physique'?'⚗️ Solveur Physique-Chimie IA':subject==='informatique'?'💻 Solveur Informatique IA':subject==='svt'?'🧬 Solveur SVT IA':subject==='anglais'?'🇬🇧 Solveur Anglais IA':subject==='litterature'?'📚 Solveur Littérature IA':'🧮 Solveur Maths IA'}
+              </div>
               <h1 style={{ fontSize: 'clamp(22px,3vw,34px)', fontWeight: 800, color: '#e2e8f0', margin: '0 0 6px' }}>
                 Résolution étape par étape
               </h1>
               <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 14, margin: 0 }}>
-                Résous · Vérifie ta solution · Graphiques · PDF imprimable
+                {subject==='physique'?'Physique-Chimie · Bac Tunisie/France · Correction IA + graphiques':subject==='informatique'?'Algo · SQL · Réseaux · Pascal · Python · Correction IA':subject==='svt'?'Génétique · Immunologie · Physiologie · Géologie · Correction IA':subject==='anglais'?'Grammar · Writing · Essay · Literature · Full English correction':subject==='litterature'?'Commentaire · Dissertation · Contraction · Auteurs · Correction IA':'Résous · Vérifie ta solution · Graphiques · PDF imprimable'}
               </p>
             </div>
             <button
@@ -1537,7 +2071,7 @@ Structure OBLIGATOIRE :
             <div style={{ marginBottom: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
               <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span>🕘 Historique — {history.length} exercice{history.length > 1 ? 's' : ''}</span>
-                <button onClick={e => { e.stopPropagation(); const updated: HistoryItem[] = []; setHistory(updated); saveSolveHistory(updated) }}
+                <button onClick={e => { e.stopPropagation(); const updated: HistoryItem[] = []; setHistory(updated); saveSolveHistory(updated, user?.id ?? undefined) }}
                   style={{ fontSize:10, padding:'2px 8px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'rgba(239,68,68,0.6)', cursor:'pointer', fontFamily:'inherit' }}>
                   Vider
                 </button>
@@ -1558,9 +2092,11 @@ Structure OBLIGATOIRE :
                     </p>
                   </div>
                   <span style={{ fontSize: 11, color: '#4f6ef7', flexShrink: 0 }}>Revoir →</span>
-                  <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev)) }}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.45)', fontSize:15, padding:'0 2px', flexShrink:0, lineHeight:1 }}
-                    title="Supprimer">×</button>
+                  <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev, user?.id ?? undefined)) }}
+                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.6)', fontSize:18, padding:'0 2px', flexShrink:0, lineHeight:1, transition:'color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,1)'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.6)'}
+                    title="Supprimer cette résolution">×</button>
                 </div>
               ))}
             </div>
@@ -1612,7 +2148,7 @@ Structure OBLIGATOIRE :
                     </div>
                     <textarea
                       value={myAnswer} onChange={e => setMyAnswer(e.target.value)}
-                      placeholder="Écris ici tes calculs, ta démarche et ton résultat…"
+                      placeholder={subject==='physique'?'Colle ici l\'exercice de physique-chimie ou décris le problème…':subject==='informatique'?'Colle ici l\'énoncé de l\'exercice d\'informatique (algo, SQL, réseau, Pascal…)':subject==='svt'?'Colle ici l\'exercice de SVT ou décris le schéma/expérience…':subject==='anglais'?'Paste your English exercise or question here (grammar, essay, text analysis…)':subject==='litterature'?'Colle ici le texte à analyser ou la question de dissertation / contraction…':'Écris ici tes calculs, ta démarche et ton résultat…'}
                       rows={5}
                       style={{ width: '100%', borderRadius: 10, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(16,185,129,0.25)', color: '#e2e8f0', fontSize: 14, fontFamily: 'monospace', padding: '12px 14px', resize: 'vertical', outline: 'none', lineHeight: 1.7, boxSizing: 'border-box', transition: 'border-color 0.2s' }}
                       onFocus={e => e.target.style.borderColor = '#06d6a0'}
