@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1300,9 +1300,28 @@ function SolvePageInner() {
   }, [])
   const solutionRef = useRef<HTMLDivElement>(null)
 
-  // Quota depuis AuthContext (Supabase) — recalculé à chaque render
-  const totalQuota = sumQuotasAcrossMatiere(quotas)
-  const solverUsed = totalQuota.solver_used || 0
+  // Même système que chat — lastSyncedSolverUsed + localSolverExtra
+  const _totalQuotaSolve = sumQuotasAcrossMatiere(quotas as any)
+  const [localSolverExtra, setLocalSolverExtra] = useState(0)
+  const [lastSyncedSolverUsed, setLastSyncedSolverUsed] = useState(0)
+  // Sync quand quotas change depuis Supabase (JSON.stringify détecte le vrai changement)
+  useEffect(() => {
+    const fromDb = sumQuotasAcrossMatiere(quotas as any).solver_used || 0
+    setLastSyncedSolverUsed(fromDb)
+    setLocalSolverExtra(0) // Reset car Supabase est à jour
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(quotas)])
+  // Recharger au montage
+  useEffect(() => {
+    refreshSubscription?.()
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') refreshSubscription?.()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  const solverUsed = lastSyncedSolverUsed + localSolverExtra
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
   const _effectiveLimit = solverLimit || (hasActiveSubscription ? 20 : 0)
@@ -1947,6 +1966,7 @@ Structure OBLIGATOIRE :
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
+      setLocalSolverExtra(prev => prev + 1) // Mise à jour immédiate affichage
 
       setSolution(sol)
       setPhase('done')
