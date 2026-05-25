@@ -1287,8 +1287,25 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════
 export default function ChatPage() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription, matiereActive, activeMatieres, checkMatiereAccess } = useAuth()
   // Recalculer à chaque render (quotas peut changer après refreshSubscription)
+  // Matière sélectionnée — initialisée depuis l'abonnement actif
+  const MATIERE_LIST = [
+    { key: 'mathematiques', label: 'Maths',    icon: '🧮', color: '#f59e0b' },
+    { key: 'physique',      label: 'Physique',  icon: '⚗️', color: '#06d6a0' },
+    { key: 'svt',           label: 'SVT',       icon: '🧬', color: '#10b981' },
+    { key: 'anglais',       label: 'Anglais',   icon: '🇬🇧', color: '#f43f5e' },
+    { key: 'informatique',  label: 'Info',      icon: '💻', color: '#8b5cf6' },
+    { key: 'litterature',   label: 'Français',  icon: '🇫🇷', color: '#e879f9' },
+  ] as const
+
+  const [selectedMatiere, setSelectedMatiere] = useState<string>(() => matiereActive || 'mathematiques')
+
+  // Sync si matiereActive change (connexion)
+  useEffect(() => {
+    if (matiereActive) setSelectedMatiere(matiereActive)
+  }, [matiereActive])
+
   const _totalQuota = sumQuotasAcrossMatiere(quotas as any)
   // State local : incrément immédiat avant que Supabase réponde
   const [localChatExtra, setLocalChatExtra] = useState(0)
@@ -1367,7 +1384,14 @@ export default function ChatPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4000,
-          system: SYSTEM_PROMPT,
+          system: SYSTEM_PROMPT + '\n\n## MATIÈRE ACTIVE\nL\'élève utilise actuellement le module : '
+            + (selectedMatiere === 'mathematiques' ? '🧮 **Mathématiques**. Réponds en priorité avec des formules LaTeX, des graphiques de fonctions et des démonstrations rigoureuses.'
+            : selectedMatiere === 'physique' ? '⚗️ **Physique-Chimie**. Génère TOUJOURS un schéma ou courbe physique. Utilise les unités SI. Explique chaque loi physique.'
+            : selectedMatiere === 'svt' ? '🧬 **SVT**. Génère des graphiques biologiques (Michaelis-Menten, glycémie, populations). Schémas texte pour synapse, génétique.'
+            : selectedMatiere === 'anglais' ? '🇬🇧 **English**. Respond ENTIRELY in English. Focus on grammar, writing skills, literary analysis and LLCER thematic axes.'
+            : selectedMatiere === 'informatique' ? '💻 **Informatique**. Privilégie les traces d\'exécution, le pseudo-code Python, les graphiques de complexité Big O et les requêtes SQL.'
+            : selectedMatiere === 'litterature' ? '🇫🇷 **Littérature Française**. Analyse commentaire composé, dissertation, figures de style. Cite les grands auteurs et mouvements littéraires.'
+            : '🧮 **Mathématiques**.'),
           messages: history,
         }),
       })
@@ -1382,7 +1406,7 @@ export default function ChatPage() {
 
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
-      await incrementQuota('chat')
+      await incrementQuota('chat', selectedMatiere as any)
       setLocalChatExtra(prev => prev + 1) // Mise à jour immédiate affichage
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
@@ -1509,12 +1533,43 @@ export default function ChatPage() {
           {/* ── ZONE CHAT ── */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
 
-            {/* Header */}
-            <div style={{ padding: '14px 0 11px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#06d6a0', animation: 'pulse 2s ease infinite' }} />
-              <span style={{ fontWeight: 700, fontSize: 15 }}>Professeur IA</span>
-              <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace' }}>
-                {messages.length > 0 ? `${Math.ceil(messages.length / 2)} échanges` : '📈 Graphiques · 📐 Géométrie · 🧮 Tous chapitres'}
+            {/* Header avec sélecteur de matière */}
+            <div style={{ padding: '10px 0 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
+              <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#06d6a0', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: 15, flexShrink: 0 }}>Professeur IA</span>
+              {/* Sélecteur de matières */}
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', flex: 1 }}>
+                {MATIERE_LIST.map(m => {
+                  const hasAccess = isAdmin || !hasActiveSubscription || m.key === 'litterature' || checkMatiereAccess(m.key as any)
+                  const isSelected = selectedMatiere === m.key
+                  return (
+                    <button key={m.key}
+                      onClick={() => {
+                        if (!hasAccess) {
+                          alert(`🔒 Votre abonnement ne couvre pas ${m.label}.\nAbonnez-vous sur mathsbac.com/abonnement`)
+                          return
+                        }
+                        setSelectedMatiere(m.key)
+                        setMessages([])
+                        setShowWelcome(true)
+                      }}
+                      title={hasAccess ? m.label : `🔒 Non inclus dans votre abonnement`}
+                      style={{
+                        padding: '4px 10px', borderRadius: 20, border: isSelected ? `1.5px solid ${m.color}` : '1px solid var(--border)',
+                        background: isSelected ? `${m.color}22` : 'transparent',
+                        color: isSelected ? m.color : hasAccess ? 'var(--text2)' : 'var(--muted)',
+                        fontSize: 11, fontWeight: isSelected ? 700 : 500, cursor: hasAccess ? 'pointer' : 'not-allowed',
+                        opacity: hasAccess ? 1 : 0.45, transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 4
+                      }}>
+                      <span>{m.icon}</span>
+                      <span>{m.label}</span>
+                      {!hasAccess && <span style={{ fontSize: 9 }}>🔒</span>}
+                    </button>
+                  )
+                })}
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', flexShrink: 0 }}>
+                {messages.length > 0 ? `${Math.ceil(messages.length / 2)} échanges` : ''}
               </span>
             </div>
 
