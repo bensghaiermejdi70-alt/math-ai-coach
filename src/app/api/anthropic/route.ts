@@ -69,8 +69,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Connexion requise' }, { status: 401 })
     }
 
-    let shouldIncrementQuota = false
-    let incrementQuotaData: any = null
 
     if (user && user.email !== ADMIN_EMAIL) {
       const quotaType = getQuotaType(body)
@@ -124,14 +122,7 @@ export async function POST(req: NextRequest) {
             }, { status: 429 })
           }
 
-          // Préparer l'incrémentation après succès
-          shouldIncrementQuota = true
-          incrementQuotaData = {
-            user_id: user.id,
-            week_start: weekStart,
-            matiere,
-            [colMap[quotaType]]: used + 1,
-          }
+          // L'incrément est géré par la RPC increment_quota côté composant
         }
       }
     }
@@ -169,10 +160,7 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
       )
     }
 
-    // Incrémenter quota après succès
-    if (shouldIncrementQuota && incrementQuotaData) {
-      await supabase.from('user_quotas').upsert(incrementQuotaData, { onConflict: 'user_id,week_start,matiere' })
-    }
+    // Quota géré par la RPC increment_quota côté composant React
 
     return NextResponse.json(data)
 

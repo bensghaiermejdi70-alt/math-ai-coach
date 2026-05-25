@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion, refreshSubscription } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1945,7 +1945,7 @@ Structure OBLIGATOIRE :
         setError(sol); setPhase('input'); return
       }
 
-      // Incrémenter quota dans Supabase — passer la matière depuis URL
+      // Incrémenter quota via RPC Supabase (l'API route ne le fait plus)
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
