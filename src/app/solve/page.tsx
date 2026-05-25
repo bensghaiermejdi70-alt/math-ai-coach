@@ -1300,8 +1300,10 @@ function SolvePageInner() {
   }, [])
   const solutionRef = useRef<HTMLDivElement>(null)
 
-  // Lecture directe depuis Supabase — simple et fiable
+  // solverUsed recalculé à chaque render — quotaVersion force re-render après loadQuotas
   const _totalQuota  = sumQuotasAcrossMatiere(quotas as any)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _qv = quotaVersion // Lire quotaVersion pour déclencher re-render quand quotas change
   const solverUsed   = _totalQuota.solver_used || 0
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
@@ -1946,9 +1948,7 @@ Structure OBLIGATOIRE :
       // Incrémenter quota dans Supabase — passer la matière depuis URL
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
-      console.log('[SOLVE] incrementQuota appelé — user:', user?.id, 'matiere:', _matiereForInc, 'type: solver')
       await incrementQuota('solver', _matiereForInc)
-      console.log('[SOLVE] incrementQuota terminé')
 
 
       setSolution(sol)

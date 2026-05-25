@@ -495,8 +495,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
-    console.log('[AUTH] incrementQuota appelé — user:', user?.id, 'matiere:', matiere, 'type:', type)
-    if (!user) { console.error('[AUTH] incrementQuota BLOQUÉ — user est null'); return }
+    if (!user) return
 
     const { error: rpcError } = await supabase.rpc('increment_quota', {
       p_user_id: user.id,
@@ -504,12 +503,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       p_type: type
     })
 
-    if (rpcError) console.error('[AUTH] incrementQuota RPC error:', rpcError)
-    else console.log('[AUTH] incrementQuota RPC OK')
+    if (rpcError) console.error('incrementQuota RPC error:', rpcError)
 
-    // Recharger immédiatement depuis Supabase
     await loadQuotas(user.id)
-    console.log('[AUTH] loadQuotas terminé')
   }
 
   // Note: Le rechargement des quotas se fait via refreshSubscription()
