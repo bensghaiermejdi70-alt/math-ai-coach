@@ -785,7 +785,7 @@ const STARTERS = [
 // ══════════════════════════════════════════
 // TYPES
 // ══════════════════════════════════════════
-type Msg = { role: 'user' | 'assistant'; content: string; id: number }
+type Msg = { role: 'user' | 'assistant'; content: string; id: number; imagePreview?: string }
 
 // ══════════════════════════════════════════
 // MOTEUR GRAPHIQUE — FONCTIONS (Canvas SVG)
@@ -1331,6 +1331,9 @@ export default function ChatPage() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [copyMsg, setCopyMsg] = useState('')
   const [pdfMsg, setPdfMsg] = useState('')
+  const [pendingImage, setPendingImage] = useState<{base64:string; mediaType:string; name:string} | null>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   // Charger l'historique au montage
   useEffect(() => { setSessions(loadSessions()) }, [])
 
@@ -1376,6 +1379,19 @@ export default function ChatPage() {
     setLoading(true)
 
     const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
+
+    // Si image en attente, remplacer le dernier message par un message multi-modal
+    const messagesPayload = pendingImage
+      ? [...history.slice(0, -1), {
+          role: 'user' as const,
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: pendingImage.mediaType, data: pendingImage.base64 } },
+            { type: 'text', text: input || 'Analyse cette image et réponds à ma question.' }
+          ]
+        }]
+      : history
+
+    setPendingImage(null)
 
     try {
       const res = await fetch('/api/anthropic', {
@@ -1433,7 +1449,7 @@ export default function ChatPage() {
               }
               return instructions[selectedMatiere] || instructions['mathematiques']
             })(),
-          messages: history,
+          messages: messagesPayload,
         }),
       })
       const data = await res.json()
@@ -1702,15 +1718,66 @@ export default function ChatPage() {
               <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '10px 12px', transition: 'border-color 0.2s' }}
                 onFocusCapture={e => (e.currentTarget.style.borderColor = '#6366f1')}
                 onBlurCapture={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
+
+                {/* Preview image en attente */}
+                {pendingImage && (
+                  <div style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 10px', background:'rgba(99,102,241,0.1)', borderRadius:8, margin:'0 0 6px', fontSize:12 }}>
+                    <span>🖼️</span>
+                    <span style={{ color:'#818cf8', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{pendingImage.name}</span>
+                    <button onClick={() => setPendingImage(null)} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontSize:14, padding:'0 2px' }}>×</button>
+                  </div>
+                )}
+
+                {/* Inputs cachés */}
+                <input ref={imageInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif" style={{ display:'none' }}
+                  onChange={e => {
+                    const f = e.target.files?.[0]; if (!f) return
+                    const reader = new FileReader()
+                    reader.onload = ev => {
+                      const b64 = (ev.target?.result as string).split(',')[1]
+                      const mt = f.type || 'image/jpeg'
+                      setPendingImage({ base64: b64, mediaType: mt, name: f.name })
+                    }
+                    reader.readAsDataURL(f)
+                    e.target.value = ''
+                  }} />
+                <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display:'none' }}
+                  onChange={e => {
+                    const f = e.target.files?.[0]; if (!f) return
+                    const reader = new FileReader()
+                    reader.onload = ev => {
+                      const b64 = (ev.target?.result as string).split(',')[1]
+                      setPendingImage({ base64: b64, mediaType: f.type || 'image/jpeg', name: f.name || 'photo.jpg' })
+                    }
+                    reader.readAsDataURL(f)
+                    e.target.value = ''
+                  }} />
+
+                <div style={{ display:'flex', alignItems:'flex-end', gap:8 }}>
+                  {/* Bouton image */}
+                  <button onClick={() => imageInputRef.current?.click()} title="Joindre une image"
+                    style={{ width:36, height:36, borderRadius:9, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='#6366f1'; e.currentTarget.style.color='#818cf8' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
+                    📎
+                  </button>
+                  {/* Bouton caméra mobile */}
+                  <button onClick={() => cameraInputRef.current?.click()} title="Prendre une photo"
+                    style={{ width:36, height:36, borderRadius:9, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor='#06d6a0'; e.currentTarget.style.color='#06d6a0' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
+                    📸
+                  </button>
                 <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
+                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : pendingImage ? 'Ajoute une question sur l\'image (optionnel)…' : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
                   rows={1} style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5, maxHeight: 120, overflow: 'auto' }}
                   onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }} />
-                <button onClick={() => sendMessage()} disabled={loading || !input.trim() || isQuotaFull}
-                  style={{ width: 38, height: 38, borderRadius: 10, border: 'none', flexShrink: 0, background: loading || !input.trim() || isQuotaFull ? 'var(--surface2)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color: 'white', fontSize: 16, cursor: loading || !input.trim() || isQuotaFull ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                <button onClick={() => sendMessage()} disabled={loading || (!input.trim() && !pendingImage) || isQuotaFull}
+                  style={{ width: 38, height: 38, borderRadius: 10, border: 'none', flexShrink: 0, background: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'var(--surface2)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color: 'white', fontSize: 16, cursor: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                   {loading ? '⟳' : isQuotaFull ? '🔒' : '↑'}
                 </button>
+                </div>
               </div>
               <div style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--muted)', marginTop: 7 }}>
                 Entrée pour envoyer · Shift+Entrée pour saut de ligne · 🇹🇳 60 DT/mois · 🇫🇷 19€/mois · 📈 Graphiques interactifs
