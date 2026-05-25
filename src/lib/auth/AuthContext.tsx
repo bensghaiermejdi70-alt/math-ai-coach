@@ -510,21 +510,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadQuotas(user.id)
   }
 
-  // Recharger les quotas lors de la navigation Next.js (visibilitychange)
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && user) {
-        loadQuotas(user.id)
-      }
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-    // Aussi sur focus (onglet/fenêtre)
-    window.addEventListener('focus', handleVisibility)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility)
-      window.removeEventListener('focus', handleVisibility)
-    }
-  }, [user])
+  // Note: Le rechargement des quotas se fait via refreshSubscription()
+  // appelé explicitement par les composants qui en ont besoin
+  // On évite visibilitychange/focus car ils causent des rechargements intempestifs
 
   useEffect(() => {
     const {
