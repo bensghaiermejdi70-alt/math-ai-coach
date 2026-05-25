@@ -1240,7 +1240,7 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
 function SolvePageInner() {
-  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, refreshSubscription } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive } = useAuth()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1304,23 +1304,18 @@ function SolvePageInner() {
   const _totalQuotaSolve = sumQuotasAcrossMatiere(quotas as any)
   const [localSolverExtra, setLocalSolverExtra] = useState(0)
   const [lastSyncedSolverUsed, setLastSyncedSolverUsed] = useState(0)
-  // Sync quand quotas change depuis Supabase (JSON.stringify détecte le vrai changement)
+  // Sync quand quotas change depuis Supabase
   useEffect(() => {
     const fromDb = sumQuotasAcrossMatiere(quotas as any).solver_used || 0
-    setLastSyncedSolverUsed(fromDb)
-    setLocalSolverExtra(0) // Reset car Supabase est à jour
+    setLastSyncedSolverUsed(prev => {
+      // Reset localSolverExtra seulement si Supabase confirme l'incrément
+      if (fromDb > prev) setLocalSolverExtra(0)
+      return fromDb
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(quotas)])
-  // Recharger au montage
-  useEffect(() => {
-    refreshSubscription?.()
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') refreshSubscription?.()
-    }
-    document.addEventListener('visibilitychange', handleVisibility)
-    return () => document.removeEventListener('visibilitychange', handleVisibility)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // Pas de visibilitychange ici — incrementQuota appelle loadQuotas directement
+  // visibilitychange causerait un rechargement qui reset localSolverExtra prématurément
   const solverUsed = lastSyncedSolverUsed + localSolverExtra
   const solverLimit = quotaLimits.solver_per_week
   // Pour les abonnements non-Maths (Anglais, Physique...) : utiliser quota cumulé
