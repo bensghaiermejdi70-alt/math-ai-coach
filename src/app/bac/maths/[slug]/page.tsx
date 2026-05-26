@@ -16,26 +16,38 @@ const C = { thm:'#a78bfa', def:'#4f6ef7', formule:'#f5c842', prop:'#06d6a0', met
 const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', corollaire:'Corollaire' }
 
 const NAV_ORDER = [
-  'second-degre','complexes','matrices-systemes',
-  'suites','limites-continuite','derivation','etude-fonctions',
-  'geometrie-plane','geometrie-espace','graphes',
+  'complexes','arithmetique',
+  'suites','limites-continuite','derivation','fonctions-reciproques',
+  'logarithme','exponentielle','calcul-integral','equations-differentielles',
+  'geometrie-espace','isometries-similitudes','coniques',
+  'probabilites-discretes','probabilites-continues',
+  'graphes',
 ]
 const TITRES_NAV: Record<string,string> = {
-  'second-degre':       'CH 01 — Second degré',
-  'complexes':          'CH 02 — Complexes',
-  'matrices-systemes':  'CH 03 — Matrices & Systèmes',
-  'suites':             'CH 04 — Suites Numériques',
-  'limites-continuite': 'CH 05 — Limites & Continuité',
-  'derivation':         'CH 06 — Dérivation',
-  'etude-fonctions':    'CH 07 — Étude de Fonctions',
-  'geometrie-plane':    'CH 08 — Géométrie Plane',
-  'geometrie-espace':   'CH 09 — Géométrie Espace',
-  'graphes':            'CH 10 — Graphes & Algo',
+  'complexes':               'CH 01 — Complexes',
+  'arithmetique':            'CH 02 — Arithmétique ℤ',
+  'suites':                  'CH 03 — Suites',
+  'limites-continuite':      'CH 04 — Limites & Continuité',
+  'derivation':              'CH 05 — Dérivabilité',
+  'fonctions-reciproques':   'CH 06 — Fonctions réciproques',
+  'logarithme':              'CH 07 — Logarithme',
+  'exponentielle':           'CH 08 — Exponentielle',
+  'calcul-integral':         'CH 09 — Calcul intégral',
+  'equations-differentielles':'CH 10 — Éq. différentielles',
+  'geometrie-espace':        'CH 11 — Géométrie espace',
+  'isometries-similitudes':  'CH 12 — Isométries',
+  'coniques':                'CH 13 — Coniques',
+  'probabilites-discretes':  'CH 14 — Probas discrètes',
+  'probabilites-continues':  'CH 15 — Loi normale',
+  'graphes':                 'CH 16 — Graphes',
 }
 const SEC_COLORS: Record<string,string> = {
-  'second-degre':'#a78bfa','complexes':'#a78bfa','matrices-systemes':'#a78bfa',
-  'suites':'#4f6ef7','limites-continuite':'#4f6ef7','derivation':'#4f6ef7','etude-fonctions':'#4f6ef7',
-  'geometrie-plane':'#06d6a0','geometrie-espace':'#06d6a0',
+  'complexes':'#a78bfa','arithmetique':'#a78bfa',
+  'suites':'#4f6ef7','limites-continuite':'#4f6ef7','derivation':'#4f6ef7',
+  'fonctions-reciproques':'#4f6ef7','logarithme':'#4f6ef7','exponentielle':'#4f6ef7',
+  'calcul-integral':'#4f6ef7','equations-differentielles':'#4f6ef7',
+  'geometrie-espace':'#06d6a0','isometries-similitudes':'#06d6a0','coniques':'#06d6a0',
+  'probabilites-discretes':'#f43f5e','probabilites-continues':'#f43f5e',
   'graphes':'#f5c842',
 }
 
@@ -730,6 +742,481 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
     },
   ]
+},
+
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 06 — FONCTIONS RÉCIPROQUES
+// ─────────────────────────────────────────────────────────────────────
+'fonctions-reciproques': {
+  id:'fonctions-reciproques', emoji:'🔄', badge:'Analyse', color:'#4f6ef7',
+  titre:'Fonctions Réciproques',
+  desc:"Bijection, réciproque, arcsin, arccos, arctan — définitions, propriétés, dérivées.",
+  souschapitres:[
+    {
+      id:'sc-bijection', titre:'6.1 Bijection et fonction réciproque',
+      notions:['Fonction injective, surjective, bijective','Fonction réciproque f⁻¹','Symétrie par rapport à y=x','Dérivée de la réciproque'],
+      blocs:[
+        {
+          notion:'📐 Bijection et réciproque',
+          theoremes:[
+            { id:'D-FR1', type:'def', nom:'Bijection',
+              enonce:"f : I → J est bijective si et seulement si :\n• f est injective (x₁≠x₂ ⟹ f(x₁)≠f(x₂))\n• f est surjective (∀y∈J, ∃x∈I, f(x)=y)\n\nÉquivalent pour les fonctions continues et strictement monotones sur un intervalle." },
+            { id:'T-FR1', type:'thm', nom:'Dérivée de la fonction réciproque',
+              enonce:"Si f est dérivable et bijective sur I avec f'(x)≠0 :\n\n(f⁻¹)'(y) = 1 / f'(f⁻¹(y))\n\nOu encore : si y = f(x), alors (f⁻¹)'(y) = 1/f'(x)",
+              remarque:"La courbe de f⁻¹ est le symétrique de celle de f par rapport à la droite y=x." },
+          ],
+          exercices:[
+            { id:'EX-FR1', niveau:'Moyen', titre:'Réciproque et dérivée',
+              enonce:"Soit f(x) = x³ + x définie sur ℝ. Montrer que f est bijective. Calculer (f⁻¹)'(2).",
+              correction:"f'(x)=3x²+1≥1>0 → f strictement croissante → bijective.\nf(1)=2 donc f⁻¹(2)=1.\n(f⁻¹)'(2)=1/f'(1)=1/(3+1)=1/4." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-arctan', titre:'6.2 arcsin, arccos, arctan',
+      notions:['arcsin : [-1,1] → [-π/2, π/2]','arccos : [-1,1] → [0, π]','arctan : ℝ → (-π/2, π/2)','Dérivées des fonctions arc'],
+      blocs:[
+        {
+          notion:'📐 Les trois fonctions arc',
+          theoremes:[
+            { id:'F-FR2', type:'formule', nom:'Fonctions arcsin, arccos, arctan',
+              enonce:"arcsin : [-1,1] → [-π/2, π/2]\n(arcsin x)' = 1/√(1-x²)   pour x ∈ (-1,1)\narcsin(sin x) = x pour x ∈ [-π/2,π/2]\n\narccos : [-1,1] → [0, π]\n(arccos x)' = -1/√(1-x²)   pour x ∈ (-1,1)\narcsin x + arccos x = π/2\n\narctan : ℝ → (-π/2, π/2)\n(arctan x)' = 1/(1+x²)\narctan x + arctan(1/x) = π/2  (x>0)\narctan(+∞) = π/2, arctan(-∞) = -π/2" },
+          ],
+          exercices:[
+            { id:'EX-FR2', niveau:'Moyen', titre:'Dérivée avec arctan',
+              enonce:"Calculer la dérivée de f(x) = arctan(2x+1).",
+              correction:"f'(x) = 2/(1+(2x+1)²) = 2/(4x²+4x+2) = 1/(2x²+2x+1)." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 07 — LOGARITHME NÉPÉRIEN
+// ─────────────────────────────────────────────────────────────────────
+'logarithme': {
+  id:'logarithme', emoji:'📊', badge:'Analyse', color:'#4f6ef7',
+  titre:'Logarithme Népérien',
+  desc:"Définition par intégrale, propriétés algébriques, dérivée (ln u)'=u'/u, étude complète, limites.",
+  souschapitres:[
+    {
+      id:'sc-ln-def', titre:'7.1 Définition et propriétés',
+      notions:['Définition intégrale de ln','Propriétés algébriques','Dérivée de ln u','Limites en 0⁺ et +∞'],
+      blocs:[
+        {
+          notion:'📐 Logarithme népérien',
+          theoremes:[
+            { id:'D-LN1', type:'def', nom:'Définition par intégrale',
+              enonce:"Le logarithme népérien est défini pour x>0 par :\n\nln x = ∫₁ˣ (1/t) dt\n\nPropriétés immédiates :\n• ln 1 = 0 (intégrale nulle)\n• ln e = 1 (e = 2,71828...)\n• ln est strictement croissante sur ]0,+∞[\n• ln est dérivable : (ln x)' = 1/x" },
+            { id:'T-LN1', type:'thm', nom:'Propriétés algébriques',
+              enonce:"Pour tous a,b > 0 et n ∈ ℤ :\n\nln(a×b) = ln a + ln b\nln(a/b) = ln a − ln b\nln(aⁿ) = n·ln a\nln(√a) = (1/2)ln a\n\nDérivée composée : si u>0,\n(ln u)' = u'/u",
+              remarque:"La dérivée (ln u)'=u'/u est l'une des plus utilisées au Bac." },
+            { id:'F-LN2', type:'formule', nom:'Limites aux bornes',
+              enonce:"lim(x→0⁺) ln x = −∞\nlim(x→+∞) ln x = +∞\n\nCroissances comparées (fondamentales) :\nlim(x→+∞) (ln x)/xⁿ = 0  pour tout n>0\nlim(x→0⁺) x·ln x = 0\nlim(x→0⁺) xⁿ·ln x = 0  pour tout n>0" },
+          ],
+          exercices:[
+            { id:'EX-LN1', niveau:'Facile', titre:'Dérivée avec logarithme',
+              enonce:"Calculer f'(x) pour f(x)=ln(x²+1).",
+              correction:"f'(x) = (x²+1)'/(x²+1) = 2x/(x²+1)." },
+            { id:'EX-LN2', niveau:'Moyen', titre:'Limite avec ln',
+              enonce:"Calculer lim(x→0⁺) x²·ln x.",
+              correction:"Croissances comparées : lim(x→0⁺) x·ln x=0, donc lim x²·ln x = lim x·(x·ln x) = 0·0 = 0." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 08 — FONCTION EXPONENTIELLE
+// ─────────────────────────────────────────────────────────────────────
+'exponentielle': {
+  id:'exponentielle', emoji:'📈', badge:'Analyse', color:'#4f6ef7',
+  titre:'Fonction Exponentielle',
+  desc:"Réciproque de ln, (eᵘ)'=u'eᵘ, propriétés, croissances comparées, fonctions aˣ.",
+  souschapitres:[
+    {
+      id:'sc-exp-def', titre:'8.1 Définition et propriétés',
+      notions:['Définition comme réciproque de ln','Propriétés algébriques de exp','Dérivée (eᵘ)\'=u\'eᵘ','Croissances comparées'],
+      blocs:[
+        {
+          notion:'📐 Fonction exponentielle',
+          theoremes:[
+            { id:'D-EX1', type:'def', nom:'Exponentielle — définition',
+              enonce:"La fonction exponentielle exp = ln⁻¹ est l'unique solution de :\n  y' = y  avec  y(0) = 1\n\nOn note exp(x) = eˣ.\n\nPropriétés algébriques :\neᵃ⁺ᵇ = eᵃ·eᵇ\ne⁻ˣ = 1/eˣ\n(eᵃ)ᵇ = eᵃᵇ\neˣ > 0 pour tout x ∈ ℝ" },
+            { id:'F-EX1', type:'formule', nom:'Dérivée et limites',
+              enonce:"Dérivée : (eˣ)' = eˣ\n(eᵘ)' = u'·eᵘ  (règle de la chaîne)\n\nLimites :\nlim(x→−∞) eˣ = 0\nlim(x→+∞) eˣ = +∞\n\nCroissances comparées (fondamentales) :\nlim(x→+∞) eˣ/xⁿ = +∞  pour tout n>0\nlim(x→−∞) |x|ⁿ·eˣ = 0  pour tout n>0",
+              remarque:"eˣ croît plus vite que tout polynôme en +∞." },
+          ],
+          exercices:[
+            { id:'EX-EX1', niveau:'Facile', titre:'Dérivée avec exponentielle',
+              enonce:"Calculer f'(x) pour f(x) = e^(x²−3x).",
+              correction:"f'(x) = (2x−3)·e^(x²−3x)." },
+            { id:'EX-EX2', niveau:'Moyen', titre:'Limite avec croissances comparées',
+              enonce:"Calculer lim(x→+∞) x²·e^(−x).",
+              correction:"lim(x→+∞) x²·e^(−x) = lim e^(−x)·x² = 0 (croissances comparées : eˣ domine x²)." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 09 — CALCUL INTÉGRAL
+// ─────────────────────────────────────────────────────────────────────
+'calcul-integral': {
+  id:'calcul-integral', emoji:'∫', badge:'Analyse', color:'#4f6ef7',
+  titre:'Calcul Intégral',
+  desc:"Primitives, intégrale de Riemann, TFA, IPP, changement de variable, aires, volumes.",
+  souschapitres:[
+    {
+      id:'sc-primitives', titre:'9.1 Primitives et intégrale de Riemann',
+      notions:['Primitives des fonctions usuelles','Intégrale définie ∫ₐᵇf(x)dx',"Théorème fondamental de l'analyse",'Linéarité et positivité'],
+      blocs:[
+        {
+          notion:'📐 Intégrale de Riemann',
+          theoremes:[
+            { id:'F-CI1', type:'formule', nom:'Primitives usuelles',
+              enonce:"Primitives fondamentales (à connaître) :\nxⁿ → xⁿ⁺¹/(n+1)  (n≠-1)\n1/x → ln|x|\neˣ → eˣ\nsin x → −cos x\ncos x → sin x\n1/√(1-x²) → arcsin x\n1/(1+x²) → arctan x\n\nPrimitive de u'vⁿ : u'vⁿ → vⁿ⁺¹/(n+1)\nPrimitive de u'/u : → ln|u|\nPrimitive de u'eᵘ : → eᵘ" },
+            { id:'T-CI1', type:'thm', nom:"Théorème fondamental de l'analyse",
+              enonce:"Si f est continue sur [a,b] et F une primitive de f :\n\n∫ₐᵇ f(x)dx = F(b) − F(a) = [F(x)]ₐᵇ\n\nPropriétés :\n• ∫ₐᵃ f = 0\n• ∫ₐᵇ f = −∫ᵦᵃ f\n• ∫ₐᵇ f + ∫ᵦᶜ f = ∫ₐᶜ f  (relation de Chasles)\n• |∫ₐᵇ f| ≤ ∫ₐᵇ |f|" },
+            { id:'T-CI2', type:'thm', nom:'Intégration par parties (IPP)',
+              enonce:"∫ₐᵇ u'(x)·v(x)dx = [u(x)·v(x)]ₐᵇ − ∫ₐᵇ u(x)·v'(x)dx\n\nChoix classique :\n• Polynôme × eˣ : dériver le polynôme\n• Polynôme × ln x : dériver ln, intégrer le polynôme\n• Polynôme × sin/cos : dériver le polynôme" },
+          ],
+          exercices:[
+            { id:'EX-CI1', niveau:'Moyen', titre:'IPP — Intégration par parties',
+              enonce:"Calculer ∫₀¹ x·eˣ dx.",
+              correction:"IPP avec u'=eˣ, v=x → u=eˣ, v'=1.\n∫₀¹ xeˣdx = [xeˣ]₀¹ − ∫₀¹ eˣdx = e − [eˣ]₀¹ = e − (e−1) = 1." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-aires-volumes', titre:'9.2 Aires et volumes',
+      notions:['Aire entre deux courbes','Volume de révolution','Valeur moyenne'],
+      blocs:[
+        {
+          notion:'📐 Applications géométriques',
+          theoremes:[
+            { id:'F-CI3', type:'formule', nom:'Aires et volumes',
+              enonce:"Aire entre deux courbes f et g sur [a,b] :\nA = ∫ₐᵇ |f(x)−g(x)| dx\n\nVolume de révolution autour de Ox :\nV = π ∫ₐᵇ [f(x)]² dx\n\nValeur moyenne de f sur [a,b] :\nm = (1/(b−a)) ∫ₐᵇ f(x) dx" },
+          ],
+          exercices:[
+            { id:'EX-CI2', niveau:'Moyen', titre:'Volume de révolution',
+              enonce:"Calculer le volume du solide de révolution obtenu en faisant tourner y=√x (0≤x≤1) autour de Ox.",
+              correction:"V = π ∫₀¹ (√x)² dx = π ∫₀¹ x dx = π [x²/2]₀¹ = π/2." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 10 — ÉQUATIONS DIFFÉRENTIELLES
+// ─────────────────────────────────────────────────────────────────────
+'equations-differentielles': {
+  id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#4f6ef7',
+  titre:'Équations Différentielles',
+  desc:"y'=ay, y'=ay+b, y''+ay'+by=0 — équation caractéristique, solutions selon discriminant.",
+  souschapitres:[
+    {
+      id:'sc-eq1', titre:'10.1 Équations du premier ordre',
+      notions:["y'=ay — solution générale","y'=ay+b — méthode variation constante",'Conditions initiales'],
+      blocs:[
+        {
+          notion:'📐 Équations différentielles du 1er ordre',
+          theoremes:[
+            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay",
+              enonce:"L'équation différentielle y' = ay (a∈ℝ) a pour solution générale :\n\ny(x) = C·eᵃˣ   (C ∈ ℝ quelconque)\n\nCondition initiale : si y(0)=y₀, alors C=y₀.\nDonc y(x) = y₀·eᵃˣ" },
+            { id:'T-ED2', type:'thm', nom:"Solution de y'=ay+b",
+              enonce:"Méthode :\n1. Solution particulière constante yₚ = −b/a (si a≠0)\n2. Solution homogène de y'=ay : yₕ = Ceᵃˣ\n3. Solution générale : y = Ceᵃˣ − b/a\n\nCondition initiale y(0)=y₀ :\nC = y₀ + b/a" },
+          ],
+          exercices:[
+            { id:'EX-ED1', niveau:'Facile', titre:"Résolution de y\'=3y",
+              enonce:"Résoudre y'=3y avec y(0)=2.",
+              correction:"Solution générale : y=Ce^(3x).\ny(0)=C=2 donc y=2e^(3x)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-eq2', titre:"10.2 Équations du second ordre y''+ay'+by=0",
+      notions:['Équation caractéristique r²+ar+b=0','Discriminant Δ=a²-4b','Cas Δ>0, Δ=0, Δ<0'],
+      blocs:[
+        {
+          notion:'📐 Équations différentielles du 2ème ordre',
+          theoremes:[
+            { id:'T-ED3', type:'thm', nom:"Solution selon Δ",
+              enonce:"Équation : y'' + ay' + by = 0\nÉquation caractéristique : r² + ar + b = 0\nDiscriminant : Δ = a² − 4b\n\n• Δ > 0 : deux racines réelles r₁ ≠ r₂\n  y = C₁e^(r₁x) + C₂e^(r₂x)\n\n• Δ = 0 : racine double r₀ = −a/2\n  y = (C₁ + C₂x)e^(r₀x)\n\n• Δ < 0 : racines complexes r = α ± iβ\n  avec α = −a/2, β = √(−Δ)/2\n  y = e^(αx)(C₁cos(βx) + C₂sin(βx))",
+              remarque:"Les deux constantes C₁ et C₂ sont déterminées par deux conditions initiales : y(0) et y'(0)." },
+          ],
+          exercices:[
+            { id:'EX-ED2', niveau:'Moyen', titre:"Résolution y''+2y'+y=0",
+              enonce:"Résoudre y''+2y'+y=0.",
+              correction:"Éq. caract. : r²+2r+1=0 → (r+1)²=0 → r=-1 (racine double).\ny=(C₁+C₂x)e^(-x)." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 12 — ISOMÉTRIES & SIMILITUDES
+// ─────────────────────────────────────────────────────────────────────
+'isometries-similitudes': {
+  id:'isometries-similitudes', emoji:'🔄', badge:'Géométrie', color:'#06d6a0',
+  titre:'Isométries & Similitudes du Plan',
+  desc:"Isométries directes/indirectes, similitudes, expression complexe f(z)=az+b ou f(z)=az̄+b.",
+  souschapitres:[
+    {
+      id:'sc-isometries', titre:'12.1 Isométries du plan',
+      notions:['Isométries directes : translations, rotations','Isométries indirectes : réflexions, retournements','Expression complexe des isométries'],
+      blocs:[
+        {
+          notion:'📐 Isométries',
+          theoremes:[
+            { id:'T-IS1', type:'thm', nom:'Classification des isométries',
+              enonce:"Une isométrie est une transformation qui conserve les distances.\n\nIsométries directes (conservent l'orientation) :\n• Translation de vecteur a⃗ : f(z) = z + a\n• Rotation de centre Ω, angle θ : f(z) = e^(iθ)(z−ω) + ω\n\nIsométries indirectes (renversent l'orientation) :\n• Réflexion (axiale) d'axe D : f(z) = e^(2iθ)·z̄ + c\n• Retournement (symétrie glissée)\n\nToute isométrie directe sans point fixe est une translation.\nToute isométrie directe avec point fixe est une rotation." },
+          ],
+          exercices:[
+            { id:'EX-IS1', niveau:'Moyen', titre:'Isométrie directe',
+              enonce:"Soit f(z)=iz+2−i. Montrer que f est une rotation et trouver son centre et son angle.",
+              correction:"f(z)=e^(iπ/2)·z+2−i. Angle θ=π/2.\nCentre ω : ω=iω+2−i → ω−iω=2−i → ω(1−i)=2−i → ω=(2−i)/(1−i)=(2−i)(1+i)/2=(3+i)/2." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-similitudes', titre:'12.2 Similitudes',
+      notions:['Similitude directe : rotation + homothétie','Expression f(z)=az+b (a≠1)','Rapport |a| et angle arg(a)','Similitude indirecte f(z)=az̄+b'],
+      blocs:[
+        {
+          notion:'📐 Similitudes',
+          theoremes:[
+            { id:'T-SI1', type:'thm', nom:'Similitudes directes et indirectes',
+              enonce:"Similitude directe (k≠1) : f(z) = az + b  avec a∈ℂ, |a|≠0,1\n• Rapport de la similitude : k = |a|\n• Angle de la similitude : θ = arg(a)\n• Point fixe : ω = b/(1−a)\n\nSi |a|=1 et a≠1 : rotation d'angle θ\nSi arg(a)=0 et |a|≠1 : homothétie de rapport k\n\nSimilitude indirecte : f(z) = az̄ + b\n• Rapport k = |a|, compose réflexion + homothétie",
+              remarque:"f(z)=az+b est une similitude directe ⟺ a∈ℂ*, f(z)=az̄+b est indirecte." },
+          ],
+          exercices:[
+            { id:'EX-SI1', niveau:'Moyen', titre:"Point fixe d'une similitude",
+              enonce:"Trouver le point fixe de f(z)=(1+i)z+2.",
+              correction:"ω=(1+i)ω+2 → ω−(1+i)ω=2 → ω(−i)=2 → ω=2/(−i)=2i/(−i²)=2i." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 13 — CONIQUES
+// ─────────────────────────────────────────────────────────────────────
+'coniques': {
+  id:'coniques', emoji:'🔵', badge:'Géométrie', color:'#06d6a0',
+  titre:'Coniques',
+  desc:"Parabole (y²=2px), ellipse (x²/a²+y²/b²=1, e<1), hyperbole (x²/a²-y²/b²=1, asymptotes, e>1).",
+  souschapitres:[
+    {
+      id:'sc-parabole', titre:'13.1 Parabole',
+      notions:['Définition foyer/directrice','Équation réduite y²=2px','Propriétés de réflexion'],
+      blocs:[
+        {
+          notion:'📐 Parabole',
+          theoremes:[
+            { id:'D-CO1', type:'def', nom:'Parabole — définition et équation',
+              enonce:"La parabole est le lieu des points M équidistants du foyer F et de la directrice D.\n\nÉquation réduite (axe Ox, sommet à l'origine) :\ny² = 2px  (p > 0)\n\nÉléments :\n• Foyer : F(p/2 ; 0)\n• Directrice : x = −p/2\n• Sommet : O(0;0)\n• Axe de symétrie : axe Ox\n• Excentricité : e = 1\n\nTangente en M(x₀,y₀) : y·y₀ = p(x+x₀)" },
+          ],
+          exercices:[
+            { id:'EX-CO1', niveau:'Facile', titre:"Éléments d'une parabole",
+              enonce:"Donner le foyer et la directrice de la parabole y²=8x.",
+              correction:"2p=8 → p=4. Foyer F(2;0), directrice x=−2." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ellipse', titre:'13.2 Ellipse et hyperbole',
+      notions:['Ellipse x²/a²+y²/b²=1 (a>b>0)','Foyers F₁F₂, a²=b²+c²','Excentricité e=c/a<1','Hyperbole x²/a²-y²/b²=1, e>1, asymptotes'],
+      blocs:[
+        {
+          notion:'📐 Ellipse',
+          theoremes:[
+            { id:'D-CO2', type:'def', nom:'Ellipse',
+              enonce:"Ellipse : lieu des points M tels que MF₁+MF₂ = 2a\n\nÉquation réduite : x²/a² + y²/b² = 1  avec a > b > 0\n\nÉléments :\n• Foyers : F₁(−c;0), F₂(c;0) avec c²=a²−b²\n• Excentricité : e = c/a < 1\n• Demi-grand axe : a (horizontal), demi-petit axe : b (vertical)\n• Sommets : (±a;0) et (0;±b)\n\nPropriété : MF₁ + MF₂ = 2a pour tout M de l'ellipse" },
+            { id:'D-CO3', type:'def', nom:'Hyperbole',
+              enonce:"Hyperbole : lieu des points M tels que |MF₁−MF₂| = 2a\n\nÉquation réduite : x²/a² − y²/b² = 1\n\nÉléments :\n• Foyers : F₁(−c;0), F₂(c;0) avec c²=a²+b²\n• Excentricité : e = c/a > 1\n• Asymptotes : y = ±(b/a)x\n• Sommets : (±a;0)\n\nPropriété : |MF₁−MF₂| = 2a" },
+          ],
+          exercices:[
+            { id:'EX-CO2', niveau:'Moyen', titre:"Éléments d'une ellipse",
+              enonce:"Donner les foyers et l'excentricité de x²/25 + y²/16 = 1.",
+              correction:"a²=25, b²=16 → a=5, b=4, c²=25−16=9 → c=3.\nFoyers F₁(-3;0), F₂(3;0). Excentricité e=3/5=0,6." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 14 — PROBABILITÉS DISCRÈTES
+// ─────────────────────────────────────────────────────────────────────
+'probabilites-discretes': {
+  id:'probabilites-discretes', emoji:'🎲', badge:'Probabilités', color:'#f43f5e',
+  titre:'Probabilités Discrètes',
+  desc:"Probabilité conditionnelle, Bayes, variables aléatoires, loi binomiale B(n,p), loi de Poisson P(λ).",
+  souschapitres:[
+    {
+      id:'sc-cond', titre:'14.1 Probabilité conditionnelle et Bayes',
+      notions:['P(A|B)=P(A∩B)/P(B)','Indépendance de deux événements','Formule des probabilités totales','Théorème de Bayes'],
+      blocs:[
+        {
+          notion:'📐 Probabilités conditionnelles',
+          theoremes:[
+            { id:'D-PD1', type:'def', nom:'Probabilité conditionnelle',
+              enonce:"P(A|B) = P(A∩B) / P(B)   (P(B) > 0)\n\nLecture : 'probabilité de A sachant B'\n\nIndépendance : A et B sont indépendants si :\nP(A∩B) = P(A)·P(B)  ⟺  P(A|B) = P(A)" },
+            { id:'T-PD1', type:'thm', nom:'Probabilités totales et Bayes',
+              enonce:"Si (B₁,...,Bₙ) est un système complet d'événements :\n\nProbabilités totales :\nP(A) = Σᵢ P(A|Bᵢ)·P(Bᵢ)\n\nThéorème de Bayes :\nP(Bᵢ|A) = P(A|Bᵢ)·P(Bᵢ) / P(A)\n\nUtilisation : arbre de probabilité (feuilles = chemins)." },
+          ],
+          exercices:[
+            { id:'EX-PD1', niveau:'Moyen', titre:'Théorème de Bayes',
+              enonce:"Une urne A contient 3R et 2B, une urne B contient 1R et 4B. On choisit une urne au hasard, puis on tire une boule rouge. Quelle est la probabilité que ce soit l'urne A?",
+              correction:"P(R|A)=3/5, P(R|B)=1/5, P(A)=P(B)=1/2.\nP(R)=3/10+1/10=4/10=2/5.\nP(A|R)=(3/10)/(2/5)=3/4." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-lois', titre:'14.2 Loi binomiale et loi de Poisson',
+      notions:['Variable aléatoire discrète — espérance, variance','Loi binomiale B(n,p)','Loi de Poisson P(λ)','Approximation Poisson de B(n,p)'],
+      blocs:[
+        {
+          notion:'📐 Lois discrètes classiques',
+          theoremes:[
+            { id:'F-PD2', type:'formule', nom:'Loi binomiale B(n,p)',
+              enonce:"X ~ B(n,p) : nombre de succès en n épreuves indépendantes de Bernoulli\n\nP(X=k) = C(n,k)·pᵏ·(1-p)ⁿ⁻ᵏ   (k=0,1,...,n)\n\nEspérance : E(X) = np\nVariance : V(X) = np(1-p)\nÉcart-type : σ = √(np(1-p))" },
+            { id:'F-PD3', type:'formule', nom:'Loi de Poisson P(λ)',
+              enonce:"X ~ P(λ) : modélise des événements rares\n\nP(X=k) = e^(-λ)·λᵏ/k!   (k=0,1,2,...)\n\nEspérance : E(X) = λ\nVariance : V(X) = λ\n\nApproximation : si n≥30, p≤0.1 et λ=np≤5 :\nB(n,p) ≈ P(λ=np)",
+              remarque:"La loi de Poisson modélise les files d'attente, pannes, accidents." },
+          ],
+          exercices:[
+            { id:'EX-PD2', niveau:'Moyen', titre:'Loi binomiale',
+              enonce:"Un QCM a 10 questions, 4 choix chacune. P(X≥8) si on répond au hasard?",
+              correction:"X~B(10,1/4).\nP(X=8)=C(10,8)·(1/4)⁸·(3/4)²=45·(1/4)⁸·9/16≈0.000386.\nP(X=9)≈0.000029, P(X=10)≈0.0000009.\nP(X≥8)≈0.000415." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 15 — PROBABILITÉS CONTINUES & LOI NORMALE
+// ─────────────────────────────────────────────────────────────────────
+'probabilites-continues': {
+  id:'probabilites-continues', emoji:'📊', badge:'Probabilités', color:'#f43f5e',
+  titre:'Probabilités Continues & Loi Normale',
+  desc:"Variable aléatoire continue, densité, loi uniforme, loi exponentielle ε(λ), loi normale N(μ,σ²).",
+  souschapitres:[
+    {
+      id:'sc-cont', titre:'15.1 Variables aléatoires continues',
+      notions:['Fonction de densité f','Espérance et variance','Loi uniforme U([a,b])','Loi exponentielle ε(λ) — sans mémoire'],
+      blocs:[
+        {
+          notion:'📐 Variables continues et lois classiques',
+          theoremes:[
+            { id:'D-PC1', type:'def', nom:'Variable aléatoire continue',
+              enonce:"X est continue si ∃ f≥0 (densité) telle que :\nP(a≤X≤b) = ∫ₐᵇ f(x)dx\n∫_{-∞}^{+∞} f(x)dx = 1\n\nEspérance : E(X) = ∫_{-∞}^{+∞} x·f(x)dx\nVariance : V(X) = E(X²) − [E(X)]²" },
+            { id:'F-PC1', type:'formule', nom:'Lois continues classiques',
+              enonce:"Loi uniforme U([a,b]) :\nf(x) = 1/(b−a) sur [a,b], 0 ailleurs\nE(X) = (a+b)/2, V(X) = (b−a)²/12\n\nLoi exponentielle ε(λ) (λ>0) :\nf(x) = λe^(−λx) pour x≥0\nE(X) = 1/λ, V(X) = 1/λ²\nPropriété sans mémoire : P(X>s+t|X>s) = P(X>t)" },
+          ],
+          exercices:[
+            { id:'EX-PC1', niveau:'Moyen', titre:'Loi exponentielle',
+              enonce:"La durée de vie X d'un composant suit ε(0.1). P(X>20)?",
+              correction:"P(X>20) = e^(-0.1×20) = e^(-2) ≈ 0.135." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-normale', titre:'15.2 Loi normale N(μ,σ²)',
+      notions:['Densité de Gauss','Loi normale centrée réduite N(0,1)','Standardisation Z=(X-μ)/σ','Utilisation de la table'],
+      blocs:[
+        {
+          notion:'📐 Loi normale',
+          theoremes:[
+            { id:'T-PC2', type:'thm', nom:'Loi normale N(μ,σ²)',
+              enonce:"X ~ N(μ,σ²) : courbe de Gauss symétrique en μ\n\nDensité : f(x) = (1/(σ√(2π)))·e^(−(x−μ)²/(2σ²))\n\nStandardisation : Z = (X−μ)/σ ~ N(0,1)\n\nPropriétés :\n• P(μ−σ ≤ X ≤ μ+σ) ≈ 68%\n• P(μ−2σ ≤ X ≤ μ+2σ) ≈ 95%\n• P(μ−3σ ≤ X ≤ μ+3σ) ≈ 99.7%\n\nLecture de table : P(Z≤z) = Φ(z)\nP(Z≥z) = 1−Φ(z)\nP(−z≤Z≤z) = 2Φ(z)−1",
+              remarque:"La loi N(0,1) est tabulée. On se ramène toujours à elle par standardisation." },
+          ],
+          exercices:[
+            { id:'EX-PC2', niveau:'Moyen', titre:'Calcul avec loi normale',
+              enonce:"X~N(100,25). Calculer P(95≤X≤110).",
+              correction:"Z=(X-100)/5. P(95≤X≤110)=P(-1≤Z≤2)=Φ(2)-Φ(-1)=0.9772-0.1587=0.8185." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 02 — ARITHMÉTIQUE DANS ℤ
+// ─────────────────────────────────────────────────────────────────────
+'arithmetique': {
+  id:'arithmetique', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
+  titre:'Arithmétique dans ℤ',
+  desc:"Divisibilité, PGCD, Euclide, Bézout, Gauss, nombres premiers, congruences, équations diophantiennes.",
+  souschapitres:[
+    {
+      id:'sc-pgcd', titre:'2.1 Divisibilité et PGCD',
+      notions:['Divisibilité dans ℤ',"PGCD — algorithme d'Euclide",'Identité de Bézout','Nombres premiers entre eux'],
+      blocs:[
+        {
+          notion:'📐 Divisibilité et PGCD',
+          theoremes:[
+            { id:'D-AR1', type:'def', nom:'Divisibilité et division euclidienne',
+              enonce:"a divise b (noté a|b) si ∃k∈ℤ tel que b=ka.\n\nDivision euclidienne : ∀a∈ℤ, ∀b∈ℕ*, ∃!(q,r) :\na = b·q + r   avec 0 ≤ r < b\n\nPGCD(a,b) = plus grand diviseur commun positif de a et b.\nAlgorithme d'Euclide : PGCD(a,b) = PGCD(b, a mod b) jusqu'à r=0." },
+            { id:'T-AR1', type:'thm', nom:'Identité de Bézout',
+              enonce:"∀a,b∈ℤ, ∃u,v∈ℤ tels que :\nau + bv = PGCD(a,b)\n\nCorollaire : a et b premiers entre eux (PGCD=1) ⟺ ∃u,v : au+bv=1\n\nThéorème de Gauss : si a|bc et PGCD(a,b)=1 alors a|c\n\nLemme d'Euclide : si p premier et p|ab alors p|a ou p|b",
+              remarque:"On trouve u,v par l'algorithme d'Euclide remonté (substitutions successives)." },
+          ],
+          exercices:[
+            { id:'EX-AR1', niveau:'Moyen', titre:"Algorithme d'Euclide et Bézout",
+              enonce:"Calculer PGCD(252,180) et trouver u,v tels que 252u+180v=PGCD(252,180).",
+              correction:"252=1×180+72 → 180=2×72+36 → 72=2×36+0. PGCD=36.\n36=180-2×72=180-2(252-180)=3×180-2×252.\nu=-2, v=3 → 252×(-2)+180×3=−504+540=36. ✓" },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-cong', titre:'2.2 Congruences et équations diophantiennes',
+      notions:['Congruence modulo n','Propriétés des congruences','Équations ax+by=c','Critères de divisibilité'],
+      blocs:[
+        {
+          notion:'📐 Congruences',
+          theoremes:[
+            { id:'D-AR2', type:'def', nom:'Congruences modulo n',
+              enonce:"a ≡ b (mod n) si n | (a−b)\n\nPropriétés :\n• Réflexivité : a ≡ a (mod n)\n• Symétrie : a≡b ⟹ b≡a\n• Transitivité : a≡b et b≡c ⟹ a≡c\n• Si a≡b et c≡d : a+c≡b+d, ac≡bd (mod n)\n• aᵏ≡bᵏ (mod n)\n\nCritères classiques :\n• n|a ⟺ a≡0 (mod n)\n• 2|a ⟺ dernier chiffre pair\n• 9|a ⟺ somme des chiffres divisible par 9\n• 11|a ⟺ somme alternée des chiffres divisible par 11" },
+            { id:'T-AR2', type:'thm', nom:'Équations diophantiennes ax+by=c',
+              enonce:"L'équation ax+by=c (a,b,c∈ℤ) a des solutions entières si et seulement si :\nPGCD(a,b) | c\n\nMéthode :\n1. Vérifier PGCD(a,b)|c\n2. Trouver une solution particulière (x₀,y₀) par Bézout\n3. Solution générale :\n   x = x₀ + (b/d)k\n   y = y₀ − (a/d)k  (d=PGCD(a,b), k∈ℤ)" },
+          ],
+          exercices:[
+            { id:'EX-AR2', niveau:'Moyen', titre:'Équation diophantienne',
+              enonce:"Résoudre dans ℤ : 15x + 10y = 25.",
+              correction:"PGCD(15,10)=5, 5|25 ✓. Diviser par 5 : 3x+2y=5.\nSolution particulière : x₀=1, y₀=1 (3+2=5).\nSolution générale : x=1+2k, y=1-3k (k∈ℤ)." },
+          ],
+        },
+      ],
+    },
+  ],
 },
 
 } // fin ALL_CHAPTERS

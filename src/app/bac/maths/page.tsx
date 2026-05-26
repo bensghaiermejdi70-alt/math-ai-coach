@@ -13,63 +13,96 @@ const COLOR = '#4f6ef7'
 
 const PARTIE1_ALGEBRE = [
   {
-    ch: 'CH 01', slug: 'second-degre', titre: 'Problèmes du second degré',
-    badge: 'Algèbre', nbThm: 12, nbEx: 10,
-    desc: 'Trinôme ax²+bx+c, discriminant, signe d\'un trinôme, équations et inéquations du 2nd degré, systèmes linéaires (méthode du pivot de Gauss).'
+    ch: 'CH 01', slug: 'complexes', titre: 'Nombres Complexes',
+    badge: 'Algèbre', nbThm: 14, nbEx: 12,
+    desc: "Formes algébrique z=a+ib, trigonométrique r(cosθ+isinθ), exponentielle re^(iθ). Formule de Moivre. Formules d'Euler. Racines n-ièmes. Applications géométriques dans ℂ.",
   },
   {
-    ch: 'CH 02', slug: 'complexes', titre: 'Nombres Complexes',
-    badge: 'Algèbre', nbThm: 14, nbEx: 10,
-    desc: 'Opérations algébriques, module |z|, argument arg(z), forme trigonométrique, équations à coefficients complexes.'
-  },
-  {
-    ch: 'CH 03', slug: 'matrices-systemes', titre: 'Systèmes Linéaires & Matrices',
-    badge: 'Algèbre', nbThm: 11, nbEx: 9,
-    desc: 'Matrices (n×p) avec n,p≤3, opérations, déterminant d\'ordre 2 et 3, inverse A⁻¹, résolution de systèmes linéaires.'
+    ch: 'CH 02', slug: 'arithmetique', titre: 'Arithmétique dans ℤ',
+    badge: 'Algèbre', nbThm: 13, nbEx: 10,
+    desc: "Divisibilité, PGCD, algorithme d'Euclide. Identité de Bézout au+bv=PGCD(a,b). Théorème de Gauss. Nombres premiers. Congruences. Équations diophantiennes ax+by=c.",
   },
 ]
 
 const PARTIE2_ANALYSE = [
   {
-    ch: 'CH 04', slug: 'suites', titre: 'Suites Numériques',
+    ch: 'CH 03', slug: 'suites', titre: 'Suites Numériques',
     badge: 'Analyse', nbThm: 13, nbEx: 10,
-    desc: 'Suites arithmétiques (u_{n+1}=u_n+r), géométriques (u_{n+1}=q·u_n), récurrentes (u_{n+1}=au_n+b), homographiques, limite, principe de récurrence, majorant/minorant.'
+    desc: "Suites arithmétiques, géométriques, récurrentes uₙ₊₁=f(uₙ), suites adjacentes, monotonie, bornitude, convergence.",
   },
   {
-    ch: 'CH 05', slug: 'limites-continuite', titre: 'Limites et Continuité',
+    ch: 'CH 04', slug: 'limites-continuite', titre: 'Limites et Continuité',
     badge: 'Analyse', nbThm: 14, nbEx: 11,
-    desc: 'Limite d\'une fonction en un point et à l\'infini, continuité, TVI (f(x)=k), dichotomie, asymptotes verticales/horizontales/obliques.'
+    desc: "Limites en un point et à l'infini, formes indéterminées, TVI, prolongement par continuité, asymptotes H/V/O.",
   },
   {
-    ch: 'CH 06', slug: 'derivation', titre: 'Dérivation',
+    ch: 'CH 05', slug: 'derivation', titre: 'Dérivabilité & Étude de Fonctions',
     badge: 'Analyse', nbThm: 12, nbEx: 10,
-    desc: 'Nombre dérivé, taux d\'accroissement, dérivées usuelles (xⁿ, √x, 1/x, sin, cos, eˣ, ln x), tangente, approximation affine f(x)≈f(a)+f\'(a)(x-a), opérations.'
+    desc: "Dérivabilité en un point, Rolle, accroissements finis, L'Hôpital, dérivées usuelles, tangente, concavité, inflexion, étude complète.",
   },
   {
-    ch: 'CH 07', slug: 'etude-fonctions', titre: 'Étude de Fonctions',
-    badge: 'Analyse', nbThm: 11, nbEx: 10,
-    desc: 'Variations et signe de f\'(x), extrema locaux/globaux, polynômes (deg 1,2,3, bicarrées), rationnelles, irrationnelles √f(x), circulaires sin/cos, exponentielle eˣ et logarithme ln x, représentation graphique, asymptotes, position relative.'
+    ch: 'CH 06', slug: 'fonctions-reciproques', titre: 'Fonctions Réciproques',
+    badge: 'Analyse', nbThm: 10, nbEx: 8,
+    desc: "Bijection et réciproque. arcsin ([-1,1]→[-π/2,π/2]), arccos ([-1,1]→[0,π]), arctan (ℝ→(-π/2,π/2)). Dérivées, propriétés, compositions.",
+  },
+  {
+    ch: 'CH 07', slug: 'logarithme', titre: 'Logarithme Népérien',
+    badge: 'Analyse', nbThm: 11, nbEx: 9,
+    desc: "Définition intégrale ln x = ∫₁ˣ 1/t dt. Propriétés algébriques. Dérivée (ln u)'=u'/u. Limites en 0⁺ et +∞. Fonctions aˣ et logₐ(x).",
+  },
+  {
+    ch: 'CH 08', slug: 'exponentielle', titre: 'Fonction Exponentielle',
+    badge: 'Analyse', nbThm: 10, nbEx: 9,
+    desc: "Réciproque de ln. Dérivée (eᵘ)'=u'eᵘ. Propriétés : eᵃ⁺ᵇ=eᵃeᵇ. Croissances comparées eˣ/xⁿ. Fonctions aˣ=eˣˡⁿᵃ.",
+  },
+  {
+    ch: 'CH 09', slug: 'calcul-integral', titre: 'Calcul Intégral',
+    badge: 'Analyse', nbThm: 12, nbEx: 10,
+    desc: "Primitives des fonctions usuelles. Intégrale de Riemann ∫ₐᵇ f(x)dx. Théorème fondamental. IPP. Changement de variable. Aires planes et volumes de révolution.",
+  },
+  {
+    ch: 'CH 10', slug: 'equations-differentielles', titre: 'Équations Différentielles',
+    badge: 'Analyse', nbThm: 9, nbEx: 8,
+    desc: "y'=ay → y=Ceᵃˣ. y'=ay+b → solution particulière + homogène. y''+ay'+by=0 : équation caractéristique r²+ar+b=0 (Δ>0, Δ=0, Δ<0 racines complexes).",
   },
 ]
 
 const PARTIE3_GEOMETRIE = [
   {
-    ch: 'CH 08', slug: 'geometrie-plane', titre: 'Géométrie Plane',
-    badge: 'Géométrie', nbThm: 9, nbEx: 7,
-    desc: 'Vecteurs du plan (colinéarité, bases, repères), droites (équations cartésiennes et réduites), cercles (équation, tangente).'
+    ch: 'CH 11', slug: 'geometrie-espace', titre: "Géométrie dans l'Espace",
+    badge: 'Géométrie', nbThm: 10, nbEx: 8,
+    desc: "Produit scalaire et vectoriel u⃗∧v⃗. Équations de plan et droite dans l'espace. Sphère. Distances point-plan, point-droite, entre droites.",
   },
   {
-    ch: 'CH 09', slug: 'geometrie-espace', titre: 'Géométrie dans l\'Espace',
-    badge: 'Géométrie', nbThm: 10, nbEx: 8,
-    desc: 'Vecteurs de l\'espace, bases et repères orthonormés, droites et plans (équations paramétriques et cartésiennes), positions relatives droite-droite, droite-plan, plan-plan, produit scalaire dans l\'espace, distance point-plan et point-droite.'
+    ch: 'CH 12', slug: 'isometries-similitudes', titre: 'Isométries & Similitudes',
+    badge: 'Géométrie', nbThm: 12, nbEx: 9,
+    desc: "Isométries directes (translations, rotations) et indirectes (réflexions, retournements). Similitudes directes et indirectes. Expression complexe f(z)=az+b ou f(z)=az̄+b. Classification et point fixe.",
+  },
+  {
+    ch: 'CH 13', slug: 'coniques', titre: 'Coniques',
+    badge: 'Géométrie', nbThm: 11, nbEx: 9,
+    desc: "Parabole (foyer F, directrice D, y²=2px). Ellipse (x²/a²+y²/b²=1, e<1, a²=b²+c²). Hyperbole (x²/a²-y²/b²=1, asymptotes y=±(b/a)x, e>1). Réduction à la forme canonique.",
   },
 ]
 
-const PARTIE4_GRAPHES = [
+const PARTIE4_PROBA = [
   {
-    ch: 'CH 10', slug: 'graphes', titre: 'Graphes et Algorithmique',
+    ch: 'CH 14', slug: 'probabilites-discretes', titre: 'Probabilités Discrètes',
+    badge: 'Probabilités', nbThm: 12, nbEx: 10,
+    desc: "Probabilité conditionnelle P(A|B). Indépendance. Probabilités totales. Bayes. Variables aléatoires discrètes : espérance, variance. Loi binomiale B(n,p). Loi de Poisson P(λ).",
+  },
+  {
+    ch: 'CH 15', slug: 'probabilites-continues', titre: 'Probabilités Continues & Loi Normale',
+    badge: 'Probabilités', nbThm: 10, nbEx: 9,
+    desc: "Variable aléatoire continue, densité f. Loi uniforme U([a,b]). Loi exponentielle ε(λ) sans mémoire. Loi normale N(μ,σ²) : courbe de Gauss, standardisation Z=(X-μ)/σ, table.",
+  },
+]
+
+const PARTIE5_GRAPHES = [
+  {
+    ch: 'CH 16', slug: 'graphes', titre: 'Graphes et Algorithmique',
     badge: 'Info', nbThm: 8, nbEx: 6,
-    desc: 'Définitions (sommets, arêtes, ordre, degré), théorème d\'Euler, chaînes eulériennes, chemin et distance, algorithme de Dijkstra, matrice associée, graphe orienté (boucle, circuit), graphe probabiliste et matrice de transition.'
+    desc: "Définitions (sommets, arêtes, ordre, degré), théorème d'Euler, algorithme de Dijkstra, matrice d'adjacence, graphe orienté, graphe probabiliste et matrice de transition.",
   },
 ]
 
@@ -78,6 +111,7 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Algèbre':   { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa' },
   'Géométrie': { bg: 'rgba(6,214,160,0.15)',   color: '#06d6a0' },
   'Info':      { bg: 'rgba(245,200,66,0.15)',  color: '#f5c842' },
+  'Probabilités': { bg: 'rgba(244,63,94,0.15)',   color: '#f43f5e' },
 }
 
 function ChapterCard({ ch, href }: { ch: typeof PARTIE1_ALGEBRE[0]; href: string }) {
@@ -118,7 +152,7 @@ function TomeHeader({ titre, desc, color, count }: { titre: string; desc: string
 }
 
 export default function MathsSectionPage() {
-  const totalCh = PARTIE1_ALGEBRE.length + PARTIE2_ANALYSE.length + PARTIE3_GEOMETRIE.length + PARTIE4_GRAPHES.length
+  const totalCh = PARTIE1_ALGEBRE.length + PARTIE2_ANALYSE.length + PARTIE3_GEOMETRIE.length + PARTIE4_PROBA.length + PARTIE5_GRAPHES.length
   return (
     <>
       <Navbar />
@@ -134,18 +168,18 @@ export default function MathsSectionPage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 10 }}>Section Mathématiques</h1>
             <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 16 }}>
               Programme officiel CNP Tunisie — 4ème année secondaire. {totalCh} chapitres répartis en 4 parties :
-              Algèbre · Analyse · Géométrie · Graphes & Algorithmique.
+              Algèbre · Analyse · Géométrie · Probabilités · Graphes.
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
               <span>📐 {totalCh} chapitres</span><span>·</span>
-              <span>📊 110+ théorèmes</span><span>·</span>
-              <span>📝 90+ exercices</span>
+              <span>📊 185+ théorèmes</span><span>·</span>
+              <span>📝 150+ exercices</span>
             </div>
           </div>
 
           {/* Partie 1 — Algèbre */}
           <div style={{ marginBottom: 44 }}>
-            <TomeHeader titre="🔢 Partie 1 — Algèbre" desc="Second degré · Nombres complexes · Systèmes linéaires & Matrices" color="#a78bfa" count={PARTIE1_ALGEBRE.length} />
+            <TomeHeader titre="🔢 Partie 1 — Algèbre" desc="Nombres complexes (Moivre, Euler, racines n-ièmes) · Arithmétique dans ℤ (Bézout, congruences)" color="#a78bfa" count={PARTIE1_ALGEBRE.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE1_ALGEBRE.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
             </div>
@@ -153,7 +187,7 @@ export default function MathsSectionPage() {
 
           {/* Partie 2 — Analyse */}
           <div style={{ marginBottom: 44 }}>
-            <TomeHeader titre="📈 Partie 2 — Analyse" desc="Suites · Limites & Continuité · Dérivation · Étude de fonctions (ln, exp, trig)" color={COLOR} count={PARTIE2_ANALYSE.length} />
+            <TomeHeader titre="📈 Partie 2 — Analyse" desc="Suites · Limites · Dérivabilité · Fonctions réciproques · Ln · Exp · Intégrales · Éq. diff." color={COLOR} count={PARTIE2_ANALYSE.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE2_ANALYSE.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
             </div>
@@ -161,17 +195,25 @@ export default function MathsSectionPage() {
 
           {/* Partie 3 — Géométrie */}
           <div style={{ marginBottom: 44 }}>
-            <TomeHeader titre="📐 Partie 3 — Géométrie" desc="Géométrie plane (vecteurs, droites, cercles) · Géométrie dans l'espace (plans, produit scalaire, distances)" color="#06d6a0" count={PARTIE3_GEOMETRIE.length} />
+            <TomeHeader titre="📐 Partie 3 — Géométrie" desc="Géométrie dans l'espace (produit vectoriel) · Isométries & Similitudes · Coniques (ellipse, hyperbole, parabole)" color="#06d6a0" count={PARTIE3_GEOMETRIE.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE3_GEOMETRIE.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 4 — Graphes */}
-          <div style={{ marginBottom: 52 }}>
-            <TomeHeader titre="🕸️ Partie 4 — Graphes & Algorithmique" desc="Graphes (Euler, Dijkstra) · Graphes probabilistes · Matrice de transition" color="#f5c842" count={PARTIE4_GRAPHES.length} />
+          {/* Partie 4 — Probabilités */}
+          <div style={{ marginBottom: 44 }}>
+            <TomeHeader titre="🎲 Partie 4 — Probabilités & Statistiques" desc="Probabilités conditionnelles · Loi binomiale · Loi de Poisson · Loi normale N(μ,σ²)" color="#f43f5e" count={PARTIE4_PROBA.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
-              {PARTIE4_GRAPHES.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
+              {PARTIE4_PROBA.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 5 — Graphes */}
+          <div style={{ marginBottom: 52 }}>
+            <TomeHeader titre="🕸️ Partie 5 — Graphes & Algorithmique" desc="Graphes (Euler, Dijkstra) · Graphes probabilistes · Matrice de transition" color="#f5c842" count={PARTIE5_GRAPHES.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE5_GRAPHES.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/maths/${ch.slug}`} />)}
             </div>
           </div>
 
@@ -182,6 +224,7 @@ export default function MathsSectionPage() {
               { href:'/bac/sciences-tech', icon:'⚙️', titre:'Sc. Techniques',     desc:'12 chapitres · Coeff 3' },
               { href:'/bac/eco-gestion',   icon:'💹', titre:'Éco-Gestion',        desc:'11 chapitres · Coeff 2' },
               { href:'/bac/informatique',  icon:'💻', titre:'Informatique',       desc:'10 chapitres · Coeff 3' },
+              { href:'/bac/maths',          icon:'📐', titre:'Retour Maths',          desc:'16 chapitres · Coeff 4' },
             ].map(s => (
               <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
                 <div className="card" style={{ padding: 18, display: 'flex', gap: 12, alignItems: 'center', transition: 'transform 0.2s' }}
