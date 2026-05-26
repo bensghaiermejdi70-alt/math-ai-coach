@@ -251,6 +251,58 @@ const scExpLinks: Record<number, AnneeLinks> = {
 //  Dossier : technique/  sujet maths: math.pdf
 //  Corrections Drive = corrigés mathématiques officiels
 // ════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  LIENS PDF — MATHS section INFORMATIQUE
+//  bacweb.tn : informatique/math.pdf (sujet)
+//              informatique/math_c.pdf (correction — 2019, 2021 confirmés)
+// ════════════════════════════════════════════════════════════════
+const mathsInfoLinks: Record<number, AnneeLinks> = {
+  2025: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1Ewz9mKnu8NLbVy1iYRP-QAOKIaBZlyhO/preview', correction: 'https://drive.google.com/file/d/1IBjYbhboqWucTM1YlpY_yTRifWpoGdm2/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1Y8uH_NiEurb1ALUX5ZGuIlyeriWVFFf2/preview', correction: 'https://drive.google.com/file/d/1tVODKqGPcFCi1ufp1IfUpd-Z_olnO3or/preview' },
+  },
+  2024: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1wEjStzvEvGP_Y03AyGCxPkngN7_cH8IX/preview', correction: 'https://drive.google.com/file/d/19fNfBUNMOL1j0IVWQvexJEos8XmT1IBI/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1xo6wi1DGgEygzOr_87CuqZgkxfAmIQ-O/preview', correction: 'https://drive.google.com/file/d/1saDJWbI-okTQddwvSnz1L8aqqDixqrcX/preview' },
+  },
+  2023: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/11uiuhFHaevtNC68ihU-0r4PtLh87eFNp/preview', correction: 'https://drive.google.com/file/d/19XiR5gq-lLYq_-h4rFuLF1ZgRPmdblTO/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/12jXlCGHjOu-Ud9GPTTwvhU-9N8WXvlS4/preview', correction: 'https://drive.google.com/file/d/11DsIHkxUmezQLfTNs3OEg_oSJ0gLum2h/preview' },
+  },
+  2022: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1-N7w-YnPVnqZ9wU-OT6n4Qhss552Q68y/preview', correction: 'https://drive.google.com/file/d/1p5X6W8Rn4aICClqqWOOgq8KHQ_mdOFCq/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/10lPfim9oH60tujcMs_4k0cGYwxi5rf-0/preview', correction: 'https://drive.google.com/file/d/142j9Q7_aM4QnT1WfrtI4mfw-YYeJhBp3/preview' },
+  },
+  2021: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1WPaoPo9YIQs-QF9oL-hIaJKSDSupoPL2/preview', correction: 'https://drive.google.com/file/d/10AOLJdUOvVRZqrbkr9VdM-L5OHagFn-A/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1kF5ii-aD6AeoWEuNFiHxmswMpzCdRh6J/preview', correction: 'https://drive.google.com/file/d/106k8Qskna7Q_8XccLt-jLjo_5x0ZtRzF/preview' },
+  },
+  2020: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1_uZwdTky8p2NZ1hGwNt_CkkWK40qmOZB/preview', correction: 'https://drive.google.com/file/d/11KQMWgr48YWt--gtllRI9lnpazWhJtCj/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1P5swx0S2buUgx35lBfdqkEL3cKnWOc9u/preview', correction: 'https://drive.google.com/file/d/11O367Pf3zm1TJXRcvafUYynNTs5QKhBs/preview' },
+  },
+  2019: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1bq2h1c1M3dqqvjxz8LebrauvCiljYahb/preview', correction: 'https://drive.google.com/file/d/1Oo1OyffA6NCzR8O1t3w6WB3QC98B2Tcx/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1FdQPSxp1UfM-UChXaCyFQjsB-X3IWytR/preview', correction: 'https://drive.google.com/file/d/1-5baL-udA49bG3XEnH89x9scVyOoX519/preview' },
+  },
+  2018: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1LLEWq_jQIwblq65j9qRdZEQggI6AH4ws/preview', correction: 'https://drive.google.com/file/d/1XmiDInrNkssOpc_MtMWLwCNf9yIfX5cU/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/12Wv782kavasq0lxain64lMZlKKtfve-Q/preview', correction: 'https://drive.google.com/file/d/1fRuvW4dvbQj_Nddoy4ogIrFbvPmjXKfP/preview' },
+  },
+  2017: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvadEozMjc1ckRkdkU/preview', correction: 'https://drive.google.com/file/d/1NivH_LThBS2Ji2FWAQ2Or_EvAnTUOOXI/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvaallqMEZCbG5xX2c/preview', correction: 'https://drive.google.com/file/d/13Y151Ip-AZGssnWu2b-yFONNzGk1D8qB/preview' },
+  },
+  2016: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvaYi1BSk4yYU1IRkk/preview', correction: 'https://drive.google.com/file/d/0B1eOU1dDIRvaQV9qRjI1U3Fwdmc/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvaa0FsV0hvNzlMV3M/preview', correction: 'https://drive.google.com/file/d/0B1eOU1dDIRvaYkZ3dFhnSk1ycTg/preview' },
+  },
+  2015: {
+    principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvaSWduaXB2Ti1oeGs/preview', correction: 'https://drive.google.com/file/d/0B1eOU1dDIRvaWVFvdjlqVFRqZ1k/preview' },
+    controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/0B1eOU1dDIRvadk8yakFYbEh6ZEU/preview', correction: 'https://drive.google.com/file/d/0B1eOU1dDIRvaZ0I1S0R4alJDczQ/preview' },
+  },
+}
+
 const scTechLinks: Record<number, AnneeLinks> = {
   2025: {
     principale: { label:'Session Principale', session:'P',
@@ -723,6 +775,75 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
     {titre:'Exercice 3',theme:'Arithmétique — décomposition facteurs premiers, PGCD ★',pts:4},
     {titre:'Exercice 4',theme:'Probabilités — tirages sans remise, dénombrement',pts:4},
     {titre:'Exercice 5',theme:'Géométrie espace — orthogonalité de plans, distance',pts:3},
+  ]},
+]
+
+const BAC_INFO_MATH_DATA: AnneeData[] = [
+  { year:2025, exercices:[
+    {titre:'Exercice 1',theme:'Analyse — étude de fonction, dérivée, limites',pts:5},
+    {titre:'Exercice 2',theme:'Suites réelles — récurrence, monotonie, convergence',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi discrète, espérance, variance',pts:5},
+    {titre:'Exercice 4',theme:'Nombres complexes — module, argument, racines',pts:5},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Exercice 1',theme:'Fonctions — ln, exponentielle, dérivée, asymptotes',pts:5},
+    {titre:'Exercice 2',theme:'Suites — suite récurrente, limite, monotonie',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi binomiale B(n,p), espérance',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — forme trigonométrique, De Moivre',pts:5},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Exercice 1',theme:'Analyse — étude de fonction, ln, limites',pts:5},
+    {titre:'Exercice 2',theme:'Suites — adjacentes, convergence, récurrence',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — variable aléatoire discrète',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — équation, forme exponentielle',pts:5},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Exercice 1',theme:'Fonctions — dérivabilité, tableau de variations',pts:5},
+    {titre:'Exercice 2',theme:'Suites — u_{n+1}=f(u_n), point fixe, convergence',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi continue, espérance',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — racines carrées, résolution équation',pts:5},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Exercice 1',theme:'Intégrales — intégration par parties, calcul',pts:5},
+    {titre:'Exercice 2',theme:'Suites — suites adjacentes, inégalité, limite',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi normale N(μ,σ²)',pts:5},
+    {titre:'Exercice 4',theme:"Complexes — racines n-ièmes de l'unité",pts:5},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Exercice 1',theme:"Équations différentielles — y' + ay = b",pts:5},
+    {titre:'Exercice 2',theme:'Suites — monotonie, bornitude, convergence',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi binomiale, approximation Poisson',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — module, argument, forme exponentielle',pts:5},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Exercice 1',theme:'Fonctions réciproques — arctan, dérivée, étude',pts:5},
+    {titre:'Exercice 2',theme:'Suites — récurrence d\'ordre 2, limites',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi de Poisson P(λ)',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — équation du 2nd degré dans ℂ',pts:5},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Exercice 1',theme:'Logarithme — inégalités, limites, asymptotes',pts:5},
+    {titre:'Exercice 2',theme:'Suites — convergence, théorème des gendarmes',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — espérance, variance, écart-type',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — racines carrées, triangle dans cercle',pts:5},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Exercice 1',theme:'Analyse — étude de fonction, convexité',pts:5},
+    {titre:'Exercice 2',theme:'Suites — récurrence forte, théorème des gendarmes',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — tirages successifs, arbre',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — homothétie, angle géométrique',pts:5},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Exercice 1',theme:'Intégrales — changement de variable, valeur moyenne',pts:5},
+    {titre:'Exercice 2',theme:'Suites — suite arithmético-géométrique, limite',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — conditionnelle, Bayes',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — De Moivre, forme trigonométrique',pts:5},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Exercice 1',theme:'Fonctions — dérivée, extremums, ln et exp',pts:5},
+    {titre:'Exercice 2',theme:'Suites — définition par récurrence, monotonie',pts:5},
+    {titre:'Exercice 3',theme:'Probabilités — loi discrète, espérance',pts:5},
+    {titre:'Exercice 4',theme:'Complexes — écriture, module, argument',pts:5},
   ]},
 ]
 
@@ -1697,7 +1818,7 @@ const SECTIONS_MATHS = [
   { key:'sc-exp'   as SKey, icon:'🔬', label:'Sciences Exp.',   color:'#06d6a0', coeff:'Coeff. 3', data:BAC_SC_EXP_DATA,      links:scExpLinks,      desc:'Analyse · Complexes · Probabilités · Géométrie espace' },
   { key:'sc-tech'  as SKey, icon:'⚙️', label:'Sciences Tech.',  color:'#f59e0b', coeff:'Coeff. 3', data:BAC_SC_TECH_DATA,     links:scTechLinks,     desc:'Mathématiques · Analyse · Arithmétique · Probabilités' },
   { key:'eco'      as SKey, icon:'💹', label:'Éco-Gestion',      color:'#10b981', coeff:'Coeff. 2', data:BAC_ECO_GESTION_DATA, links:ecoGestionLinks, desc:'Analyse · Probabilités · Matrices · Mathématiques Financières ★' },
-  { key:'info'     as SKey, icon:'💻', label:'Sc. Informatiques', color:'#6366f1', coeff:'Coeff. 4', data:BAC_INFO_DATA, links:infoLinks, desc:'Algorithmique · Bases de données · TIC — Sujets + Corrections (bacweb.tn · kiteb.net)' },
+  { key:'info'     as SKey, icon:'💻', label:'Sc. Informatiques', color:'#6366f1', coeff:'Coeff. 2', data:BAC_INFO_MATH_DATA, links:mathsInfoLinks, desc:'Analyse · Suites · Complexes · Probabilités · Intégrales — Programme commun Sc.Exp · Coeff.2' },
 ]
 
 const SECTIONS_PHYS = [
@@ -1820,7 +1941,7 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14,marginBottom:20}}>
       {sessions.map(s => {
-        if (secKey === 'info' || secKey === 'info-algo') {
+        if (secKey === 'info-algo') {
           const il = infoL?.[s.key]
           return (
             <div key={s.key} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:14,padding:18}}>
@@ -2109,7 +2230,7 @@ export default function ExamensTunisiePage() {
                 secKey={activeSec}
                 color={sec.color}
                 links={(sec.links as Record<number,AnneeLinks>)[selectedYear!]}
-                infoL={(['info','info-algo'].includes(activeSec) && !activeSec.startsWith('anglais-')) ? infoLinks[selectedYear!] : undefined}
+                infoL={activeSec === 'info-algo' ? infoLinks[selectedYear!] : undefined}
                 onOpen={openPdf}
               />
 
