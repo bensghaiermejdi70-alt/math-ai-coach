@@ -288,11 +288,18 @@ const SECTIONS_PC = [
     gradient: 'linear-gradient(135deg,rgba(79,110,247,0.15),rgba(124,58,237,0.08))',
     border: 'rgba(79,110,247,0.25)',
     physique: {
-      label: '⚡ Physique — 3 thèmes · 8 chapitres',
+      label: '⚡ Physique — 10 chapitres',
       chapitres: [
         { titre: 'Mécanique', sous: 'Cinématique · Dynamique (Newton) · Satellites & Kepler' },
         { titre: 'Électricité & Électromagnétisme', sous: 'Champ électrique · Champ magnétique · Induction' },
         { titre: 'Optique', sous: 'Lentilles minces · Ondes lumineuses · Diffraction & Interférences' },
+        { titre: 'Dipôle RC', sous: 'Condensateur, charge/décharge, uC(t)=E(1-e^{-t/τ}), τ=RC' },
+        { titre: 'Dipôle RL', sous: 'Bobine, auto-induction, i(t)=(E/R)(1-e^{-t/τ}), τ=L/R' },
+        { titre: 'Oscillations électriques libres', sous: 'Circuit RLC, régime pseudo-périodique, T₀=2π√(LC)' },
+        { titre: 'Oscillations forcées — RLC', sous: 'Résonance, bande passante, facteur de qualité Q' },
+        { titre: 'Filtres électriques', sous: 'Passe-bas, passe-haut, passe-bande, fréquence de coupure fc' },
+        { titre: 'Ondes mécaniques progressives', sous: 'Célérité, retard temporel, v=λf, double périodicité' },
+        { titre: 'Ondes lumineuses (section Maths)', sous: 'Diffraction, interférences (Young), i=λD/a' },
       ],
     },
     chimie: {
@@ -315,7 +322,7 @@ const SECTIONS_PC = [
     gradient: 'linear-gradient(135deg,rgba(6,214,160,0.12),rgba(5,154,114,0.06))',
     border: 'rgba(6,214,160,0.25)',
     physique: {
-      label: '⚡ Physique — 7 chapitres',
+      label: '⚡ Physique — 9 chapitres',
       chapitres: [
         { titre: 'Dipôle RC', sous: 'Condensateur, charge/décharge, τ = RC' },
         { titre: 'Dipôle RL', sous: 'Bobine, induction, τ = L/R' },
@@ -323,7 +330,9 @@ const SECTIONS_PC = [
         { titre: 'Oscillations mécaniques libres', sous: 'Pendule, masse-ressort, énergie mécanique' },
         { titre: 'Ondes mécaniques progressives', sous: 'Célérité, λ = vT, propagation' },
         { titre: 'Ondes lumineuses', sous: 'Diffraction, interférences (Young), spectres' },
-        { titre: 'Réactions nucléaires', sous: 'Radioactivité α β γ, fission, fusion' },
+        { titre: 'Réactions nucléaires', sous: 'Radioactivité αβγ, fission, fusion' },
+        { titre: 'Oscillations mécaniques forcées', sous: 'Résonance mécanique, x(t)=Xm sin(ωt+φ), bande passante' },
+        { titre: 'Interaction onde-matière', sous: 'Effet photoélectrique E=hf, dualité onde-corpuscule, quantification' },
       ],
     },
     chimie: {
@@ -336,7 +345,7 @@ const SECTIONS_PC = [
         { titre: 'Chimie organique', sous: 'Composés carbonylés, estérification, polymères' },
       ],
     },
-    nbCh: 12,
+    nbCh: 14,
     coeff_phys: 4,
     coeff_chim: 3,
   },
@@ -349,7 +358,7 @@ const SECTIONS_PC = [
     gradient: 'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(217,119,6,0.06))',
     border: 'rgba(245,158,11,0.25)',
     physique: {
-      label: '⚡ Physique — 7 chapitres',
+      label: '⚡ Physique — 10 chapitres',
       chapitres: [
         { titre: 'Dipôle RC', sous: 'Condensateur E=½CU², τ=RC, filtrage, temporisation' },
         { titre: 'Dipôle RL', sous: 'Bobine E=½LI², τ=L/R, lissage, protection' },
@@ -357,7 +366,10 @@ const SECTIONS_PC = [
         { titre: 'Oscillations mécaniques libres', sous: 'Pendule T=2π√(l/g), amortisseur, suspension' },
         { titre: 'Ondes mécaniques progressives', sous: 'Célérité, λ=vT, réflexion, réfraction' },
         { titre: 'Ondes lumineuses', sous: 'Diffraction, Young, laser, fibre optique' },
-        { titre: 'Réactions nucléaires', sous: 'N=N₀e^(−λt), fission, fusion, centrale nucléaire' },
+        { titre: 'Réactions nucléaires', sous: 'N=N₀e^(-λt), fission, fusion, centrale nucléaire' },
+        { titre: 'Oscillations électriques forcées', sous: 'Résonance, i(t)=Im sin(ωt+φ), facteur de qualité Q' },
+        { titre: 'Électronique', sous: 'Diodes (redressement), transistors (amplification, commutation)' },
+        { titre: 'Interaction onde-matière', sous: 'Effet photoélectrique, quantification E=hf, spectres atomiques' },
       ],
     },
     chimie: {
@@ -370,7 +382,7 @@ const SECTIONS_PC = [
         { titre: 'Chimie organique', sous: 'Estérification, polymères, biocarburants' },
       ],
     },
-    nbCh: 12,
+    nbCh: 15,
     coeff_phys: 3,
     coeff_chim: 2,
   },
@@ -383,7 +395,7 @@ const SECTIONS_PC = [
     gradient: 'linear-gradient(135deg,rgba(139,92,246,0.12),rgba(109,40,217,0.06))',
     border: 'rgba(139,92,246,0.25)',
     physique: {
-      label: "⚡ Physique — 7 chapitres",
+      label: "⚡ Physique — 10 chapitres",
       chapitres: [
         { titre: "Condensateur", sous: "Charge, décharge, capacité, énergie électrostatique E=½CU²" },
         { titre: "Dipôle RC", sous: "Équation différentielle, constante de temps τ=RC, intensité du courant" },
@@ -391,7 +403,10 @@ const SECTIONS_PC = [
         { titre: "Oscillations électriques libres", sous: "RLC amorties, LC non amorties, T₀=2π√(LC), équation différentielle" },
         { titre: "Ondes mécaniques progressives", sous: "Célérité v, retard temporel, λ=vT, types d'ondes" },
         { titre: "Ondes et optique", sous: "Diffraction, dispersion, spectres atomiques" },
-        { titre: "Physique nucléaire", sous: "Noyau, radioactivité α β γ, fission, fusion, N(t)=N₀e^(-λt)" },
+        { titre: "Physique nucléaire", sous: "Noyau, radioactivité αβγ, fission, fusion, N(t)=N₀e^(-λt)" },
+        { titre: "Oscillations électriques forcées", sous: "Résonance, courbe de résonance, facteur de qualité Q" },
+        { titre: "Filtres électriques", sous: "Passe-bas, passe-haut, passe-bande, diagrammes de Bode, traitement du signal" },
+        { titre: "Multivibrateurs & Électronique", sous: "Multivibrateur astable, signal carré, transistors, horloge électronique" },
       ],
     },
     chimie: {
@@ -405,7 +420,7 @@ const SECTIONS_PC = [
         { titre: "Tableau d'avancement", sous: "Avancement x, taux de conversion τ, état final, rendement" },
       ],
     },
-    nbCh: 13,
+    nbCh: 16,
     coeff_phys: 3,
     coeff_chim: 2,
   },
