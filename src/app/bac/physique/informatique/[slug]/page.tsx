@@ -18,36 +18,39 @@ const C = { thm:'#8b5cf6', def:'#06d6a0', formule:'#f59e0b', prop:'#06b6d4', met
 const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', loi:'Loi' }
 
 const NAV_ORDER = [
-  // Physique
   'condensateur-info','dipole-rc-info','bobine-rl-info','oscillations-lc-info',
   'ondes-mec-info','ondes-optique-info','nucleaire-info',
-  // Chimie
+  'oscillations-forcees-info','filtres-info','multivibrateurs-info',
   'acide-base-info','cinetique-info','transformations-info',
   'equilibre-chimique-info','electrochimie-info','avancement-info',
 ]
 
 const TITRES_NAV: Record<string,string> = {
-  'condensateur-info':      'CH 01 — Condensateur',
-  'dipole-rc-info':         'CH 02 — Dipôle RC',
-  'bobine-rl-info':         'CH 03 — Bobine & Dipôle RL',
-  'oscillations-lc-info':   'CH 04 — Oscillations électriques libres',
-  'ondes-mec-info':         'CH 05 — Ondes mécaniques progressives',
-  'ondes-optique-info':     'CH 06 — Ondes et optique',
-  'nucleaire-info':         'CH 07 — Physique nucléaire',
-  'acide-base-info':        'CH 08 — Acides-bases',
-  'cinetique-info':         'CH 09 — Cinétique chimique',
-  'transformations-info':   'CH 10 — Transformations chimiques',
-  'equilibre-chimique-info':'CH 11 — Équilibre chimique',
-  'electrochimie-info':     'CH 12 — Électrochimie',
-  'avancement-info':        'CH 13 — Tableau d\'avancement',
+  'condensateur-info':         'CH 01 — Condensateur',
+  'dipole-rc-info':            'CH 02 — Dipôle RC',
+  'bobine-rl-info':            'CH 03 — Bobine & RL',
+  'oscillations-lc-info':      'CH 04 — Oscillations LC',
+  'ondes-mec-info':            'CH 05 — Ondes mécaniques',
+  'ondes-optique-info':        'CH 06 — Ondes & Optique',
+  'nucleaire-info':            'CH 07 — Physique nucléaire',
+  'oscillations-forcees-info': 'CH 08 — Oscillations forcées',
+  'filtres-info':              'CH 09 — Filtres électriques',
+  'multivibrateurs-info':      'CH 10 — Multivibrateurs',
+  'acide-base-info':           'CH 11 — Acides & bases',
+  'cinetique-info':            'CH 12 — Cinétique chimique',
+  'transformations-info':      'CH 13 — Transformations',
+  'equilibre-chimique-info':   'CH 14 — Équilibres chimiques',
+  'electrochimie-info':        'CH 15 — Électrochimie',
+  'avancement-info':           'CH 16 — Avancement',
 }
 
 const SEC_COLORS: Record<string,string> = {
-  'condensateur-info':'#8b5cf6','dipole-rc-info':'#6d28d9','bobine-rl-info':'#4f6ef7',
-  'oscillations-lc-info':'#06b6d4','ondes-mec-info':'#f59e0b',
-  'ondes-optique-info':'#14b8a6','nucleaire-info':'#ef4444',
-  'acide-base-info':'#10b981','cinetique-info':'#f59e0b','transformations-info':'#06b6d4',
-  'equilibre-chimique-info':'#8b5cf6','electrochimie-info':'#f97316','avancement-info':'#ec4899',
+  'condensateur-info':'#8b5cf6','dipole-rc-info':'#8b5cf6','bobine-rl-info':'#8b5cf6',
+  'oscillations-lc-info':'#8b5cf6','ondes-mec-info':'#8b5cf6',
+  'ondes-optique-info':'#14b8a6','nucleaire-info':'#14b8a6',
+  'oscillations-forcees-info':'#8b5cf6','filtres-info':'#8b5cf6','multivibrateurs-info':'#8b5cf6',
+  'acide-base-info':'#f59e0b','cinetique-info':'#f59e0b','transformations-info':'#f59e0b',
+  'equilibre-chimique-info':'#f59e0b','electrochimie-info':'#f59e0b','avancement-info':'#f59e0b',
 }
 
 const IS_CHIMIE: Record<string,boolean> = {
@@ -610,6 +613,87 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   ]
 },
 
+
+'oscillations-forcees-info': {
+  id:'oscillations-forcees-info', emoji:'📶', tag:'Physique', color:'#8b5cf6',
+  titre:"Oscillations électriques forcées",
+  desc:"RLC forcé, résonance, Im=E/R à ω₀, facteur de qualité Q, bande passante Δf=f₀/Q.",
+  souschapitres:[
+    {
+      id:'sc-ofi1', titre:"1. Résonance et facteur de qualité",
+      notions:["Résonance à ω=ω₀=1/√(LC)","Im_max=E/R","Q=Lω₀/R","Bande passante Δf=f₀/Q"],
+      blocs:[
+        {
+          notion:"📐 Oscillations forcées — RLC",
+          theoremes:[
+            { id:'F-OFI1', type:'formule', nom:"Résonance RLC série",
+              enonce:"Circuit RLC série alimenté par e(t)=Em cos(ωt) :\n\nImpédance : Z = √[R² + (Lω - 1/(Cω))²]\nCourant : Im = Em/Z  ;  i(t) = Im·cos(ωt + φ)\n\nRésonance en intensité : ω_r = 1/√(LC) = ω₀\nÀ la résonance : Z_min=R  ⇒  Im_max = Em/R\n\nFacteur de qualité : Q = Lω₀/R = 1/(RCω₀)\nBande passante : Δf = f₀/Q  (Δω = R/L)" },
+          ],
+          exercices:[
+            { id:'EX-OFI1', niveau:'Moyen', titre:"Résonance RLC",
+              enonce:"RLC : R=10Ω, L=50mH, C=20µF. Calculer f₀, Q et la bande passante Δf.",
+              correction:"ω₀=1/√(0,05×20×10⁻⁶)=1/√(10⁻⁶)=1000 rad/s. f₀≈159 Hz. Q=0,05×1000/10=5. Δf=159/5≈32 Hz." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'filtres-info': {
+  id:'filtres-info', emoji:'📻', tag:'Physique', color:'#8b5cf6',
+  titre:"Filtres électriques",
+  desc:"Filtres RC passifs : passe-bas, passe-haut, passe-bande. Gain, fréquence de coupure, diagrammes de Bode.",
+  souschapitres:[
+    {
+      id:'sc-fi1', titre:"1. Filtres RC et traitement du signal",
+      notions:["Filtre passe-bas fc=1/(2πRC)","Filtre passe-haut — même fc","Gain G=Us/Ue","G(dB)=20 log(Us/Ue)"],
+      blocs:[
+        {
+          notion:"📐 Filtres électriques",
+          theoremes:[
+            { id:'F-FI1', type:'formule', nom:"Filtres RC passe-bas et passe-haut",
+              enonce:"FILTRE PASSE-BAS (RC, sortie sur condensateur) :\nG(f) = 1/√[1+(f/fc)²]\nfc = 1/(2πRC)\nÀ f=fc : G=1/√2 ≋ 0,707 (−3 dB)\nPasse f<fc, atténue f>fc\n\nFILTRE PASSE-HAUT (RC, sortie sur résistance) :\nG(f) = (f/fc)/√[1+(f/fc)²]\nMême fc, passe f>fc\n\nG(dB) = 20·log(Us/Ue)\nDiagramme de Bode : G(dB) vs log(f)" },
+            { id:'F-FI2', type:'formule', nom:"Application informatique",
+              enonce:"TRAITEMENT DU SIGNAL :\nFiltre passe-bas : élimine le bruit haute fréquence\nFiltre passe-haut : détecte les variations rapides (bords)\nFiltre passe-bande : sélectionne une fréquence utile\n\nANTI-ALIASING :\nFiltrage avant numérisation (théorème de Shannon : fe > 2·fmax)\nfe : fréquence échantillonnage ; fmax : fréquence maximale du signal" },
+          ],
+          exercices:[
+            { id:'EX-FI1', niveau:'Facile', titre:"Fréquence de coupure",
+              enonce:"Filtre RC passe-bas : R=10kΩ, C=16nF. Calculer fc.",
+              correction:"fc=1/(2π×10×10³×16×10⁻⁹)=1/(2π×1,6×10⁻⁴)≈1000 Hz=1 kHz." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'multivibrateurs-info': {
+  id:'multivibrateurs-info', emoji:'💻', tag:'Physique', color:'#8b5cf6',
+  titre:"Multivibrateurs & Électronique",
+  desc:"Multivibrateur astable — signal carré, période T=f(R,C), transistors, horloge électronique.",
+  souschapitres:[
+    {
+      id:'sc-mv1', titre:"1. Multivibrateur astable",
+      notions:["Oscillation auto-entretenue","Signal carré périodique","Période T=0,7(R1C1+R2C2)","Applications horloge"],
+      blocs:[
+        {
+          notion:"📐 Multivibrateur astable",
+          theoremes:[
+            { id:'D-MV1', type:'def', nom:"Multivibrateur astable — principe",
+              enonce:"Le multivibrateur astable est un oscillateur à deux états instables.\n\nPRINCIPE :\n2 transistors T1 et T2 en commutation alternée\nQuand T1 sature (ON) : T2 bloque (OFF) et inversement\nLe basculement est commandé par les condensateurs de couplage\n\nPÉRIODE (multivibrateur symétrique) :\nT = 0,7·(R1C1 + R2C2) ≈ 1,4·RC (si R1=R2=R, C1=C2=C)\nf = 1/T\n\nAPPLICATIONS INFORMATIQUES :\nHorloge microprocesseur\nGénérateur de signal test\nCompteurs numériques" },
+          ],
+          exercices:[
+            { id:'EX-MV1', niveau:'Facile', titre:"Période du multivibrateur",
+              enonce:"Multivibrateur astable symétrique : R=10kΩ, C=10nF. Calculer T et f.",
+              correction:"T=1,4×RC=1,4×10×10³×10×10⁻⁹=1,4×10⁻⁴ s=0,14 ms. f=1/T≈7142 Hz≈7 kHz." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
 } // fin ALL_CHAPTERS
 
 // ══════════════════════════════════════════════════════════════════════
@@ -661,8 +745,8 @@ export default function PhysiqueInfoSlugPage() {
   const secColor = SEC_COLORS[slug] || '#8b5cf6'
   const isChimie = IS_CHIMIE[slug] || false
 
-  const PHYS_SLUGS = NAV_ORDER.slice(0,7)
-  const CHIM_SLUGS = NAV_ORDER.slice(7)
+  const PHYS_SLUGS = NAV_ORDER.slice(0,10)
+  const CHIM_SLUGS = NAV_ORDER.slice(10)
 
   return (
     <><Navbar/>

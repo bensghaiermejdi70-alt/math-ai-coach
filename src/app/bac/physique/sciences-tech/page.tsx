@@ -131,6 +131,46 @@ const CHAPITRES = [
       { f: 'E = Δm·c²', desc: 'Énergie de masse' },
     ],
   },
+  // ── AJOUTS PROGRAMME OFFICIEL ──────────────────────────────────────
+  {
+    id: 'oscillations-forcees-elec',
+    num: '8',
+    titre: "Oscillations électriques forcées",
+    couleur: '#10b981',
+    icone: '📶',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Résonance", notions: ["Résonance à ω=ω₀=1/√(LC)","Im_max=E/R","Facteur de qualité Q=Lω₀/R"] },
+      { titre: "Bande passante", notions: ["Bande passante Δf=f₀/Q","Courbe de résonance","Applications filtrage"] },
+      { f: "Z = √[R² + (Lω - 1/(Cω))²]", desc: "Impédance du circuit RLC série" },
+    ],
+  },
+  {
+    id: 'electronique-tech',
+    num: '9',
+    titre: "Électronique",
+    couleur: '#10b981',
+    icone: '🔌',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Diodes", notions: ["Jonction PN","Polarisation directe/inverse","Redressement simple/double alternance"] },
+      { titre: "Transistors", notions: ["Transistor NPN/PNP","Zone active IC=βIB","Amplification et commutation"] },
+      { titre: "Applications", notions: ["Filtrage signal redressé","Commande de charge","Circuits de puissance"] },
+    ],
+  },
+  {
+    id: 'interaction-onde-matiere-tech',
+    num: '10',
+    titre: "Interaction onde-matière",
+    couleur: '#10b981',
+    icone: '🔬',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Diffraction et interférences", notions: ["Diffraction (a≈λ)","Interférences Young i=λD/a","Sources cohérentes"] },
+      { titre: "Effet photoélectrique", notions: ["Énergie photon E=hf","Fréquence seuil f₀=W₀/h","Dualité onde-corpuscule"] },
+      { f: "E = h·f", desc: "Énergie d'un photon — h=6,626×10⁻³´ J·s" },
+    ],
+  },
   // CHIMIE
   {
     id: 'cinetique-tech',
@@ -266,7 +306,7 @@ export default function PhysiqueSciencesTechPage() {
                         <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 9, padding: '9px 12px' }}>
                           <div style={{ fontWeight: 700, fontSize: 10, color: ch.couleur, marginBottom: 4 }}>{sc.titre}</div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                            {sc.notions.map(n => <span key={n} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 6, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>)}
+                            {(sc.notions ?? []).map(n => <span key={n} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 6, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>)}
                           </div>
                         </div>
                       ))}

@@ -173,6 +173,62 @@ const CHAPITRES = [
       { f: 'n₁sinθ₁ = n₂sinθ₂', desc: 'Loi de Snell-Descartes' },
     ],
   },
+  // ── ÉLECTRICITÉ & ONDES (ajouts programme officiel) ─────────────
+  {
+    id: 'dipole-rc', num: '9', titre: 'Dipôle RC',
+    couleur: '#f59e0b', icone: '⚡', tag: 'Électricité',
+    souschap: [
+      { titre: 'Condensateur', notions: ['Capacité C en Farad','Charge Q=CU','Énergie E=½CU²'] },
+      { titre: 'Charge du condensateur', notions: ['uC(t)=E(1-e^{-t/τ})','Constante de temps τ=RC','Régime transitoire'] },
+      { titre: 'Décharge du condensateur', notions: ['uC(t)=U₀e^{-t/τ}','Étude graphique','Applications'] },
+    ],
+  },
+  {
+    id: 'dipole-rl', num: '10', titre: 'Dipôle RL',
+    couleur: '#f59e0b', icone: '🧲', tag: 'Électricité',
+    souschap: [
+      { titre: 'Bobine', notions: ['Inductance L en Henry','Auto-induction','Énergie E=½LI²'] },
+      { titre: 'Établissement du courant', notions: ['i(t)=(E/R)(1-e^{-t/τ})','Constante τ=L/R','Loi de Lenz'] },
+      { titre: 'Rupture du courant', notions: ['i(t)=I₀e^{-t/τ}','Surtension de rupture','Applications'] },
+    ],
+  },
+  {
+    id: 'rlc-libre', num: '11', titre: 'Oscillations électriques libres — RLC',
+    couleur: '#f59e0b', icone: '🌀', tag: 'Électricité',
+    souschap: [
+      { titre: 'Circuit RLC', notions: ['Pulsation propre ω₀=1/√(LC)','T₀=2π√(LC)','Équation différentielle'] },
+      { titre: 'Régimes', notions: ['Non amorti (R=0)','Pseudo-périodique','Apériodique'] },
+      { titre: 'Échanges énergétiques', notions: ['Énergie électrique','Énergie magnétique','Dissipation'] },
+    ],
+  },
+  {
+    id: 'oscillations-forcees', num: '12', titre: 'Oscillations forcées — RLC',
+    couleur: '#f59e0b', icone: '📶', tag: 'Électricité',
+    souschap: [
+      { titre: 'Résonance', notions: ['Résonance à ω=ω₀','Im_max=E/R','Déphasage φ'] },
+      { titre: 'Facteur de qualité', notions: ['Q=Lω₀/R','Bande passante Δf=f₀/Q','Courbe de résonance'] },
+      { f: 'Z = √[R² + (Lω-1/Cω)²]', desc: 'Impédance du circuit RLC série' },
+    ],
+  },
+  {
+    id: 'filtres-electriques', num: '13', titre: 'Filtres électriques',
+    couleur: '#f59e0b', icone: '📻', tag: 'Électricité',
+    souschap: [
+      { titre: 'Filtre passe-bas', notions: ['fc=1/(2πRC)','G=Us/Ue','Atténuation en -20dB/décade'] },
+      { titre: 'Filtre passe-haut', notions: ['Même fc','Passe les hautes fréquences','Déphasage +90°'] },
+      { titre: 'Filtre passe-bande', notions: ['Bande passante','Résonance','Applications télécoms'] },
+      { f: 'G(dB) = 20·log(Us/Ue)', desc: 'Gain en décibels' },
+    ],
+  },
+  {
+    id: 'ondes-mecaniques', num: '14', titre: 'Ondes mécaniques progressives',
+    couleur: '#f59e0b', icone: '🌊', tag: 'Ondes',
+    souschap: [
+      { titre: 'Propagation', notions: ['Onde transversale','Onde longitudinale','Célérité v (m/s)'] },
+      { titre: 'Double périodicité', notions: ['Période T (s)',"Longueur d'onde λ (m)",'Retard τ=d/v'] },
+      { f: 'v = λ·f = λ/T', desc: 'Relation fondamentale de propagation' },
+    ],
+  },
   // ── CHIMIE ────────────────────────────────────────────────────────
   {
     id: 'redox',
@@ -341,21 +397,21 @@ export default function PhysiqueMathsTunisiePage() {
                   </Link>
                 </div>
                 <div style={{ padding: '14px 22px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: ch.formules.length > 0 ? 12 : 0 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: (ch.formules?.length ?? 0) > 0 ? 12 : 0 }}>
                     {ch.souschap.map(sc => (
                       <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 10, padding: '10px 13px' }}>
                         <div style={{ fontWeight: 700, fontSize: 11, color: ch.couleur, marginBottom: 5 }}>{sc.titre}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                          {sc.notions.map(n => (
+                          {(sc.notions ?? []).map(n => (
                             <span key={n} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 8, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>
                           ))}
                         </div>
                       </div>
                     ))}
                   </div>
-                  {ch.formules.length > 0 && (
+                  {(ch.formules?.length ?? 0) > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {ch.formules.map(f => (
+                      {(ch.formules ?? []).map(f => (
                         <div key={f.f} style={{ background: `${ch.couleur}14`, border: `1px solid ${ch.couleur}28`, borderRadius: 9, padding: '7px 13px' }}>
                           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: ch.couleur, fontWeight: 700, marginBottom: 1 }}>{f.f}</div>
                           <div style={{ fontSize: 10, color: 'var(--muted)' }}>{f.desc}</div>
@@ -399,21 +455,21 @@ export default function PhysiqueMathsTunisiePage() {
                   </Link>
                 </div>
                 <div style={{ padding: '14px 22px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: ch.formules.length > 0 ? 12 : 0 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: (ch.formules?.length ?? 0) > 0 ? 12 : 0 }}>
                     {ch.souschap.map(sc => (
                       <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 10, padding: '10px 13px' }}>
                         <div style={{ fontWeight: 700, fontSize: 11, color: ch.couleur, marginBottom: 5 }}>{sc.titre}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                          {sc.notions.map(n => (
+                          {(sc.notions ?? []).map(n => (
                             <span key={n} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 8, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>
                           ))}
                         </div>
                       </div>
                     ))}
                   </div>
-                  {ch.formules.length > 0 && (
+                  {(ch.formules?.length ?? 0) > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {ch.formules.map(f => (
+                      {(ch.formules ?? []).map(f => (
                         <div key={f.f} style={{ background: `${ch.couleur}14`, border: `1px solid ${ch.couleur}28`, borderRadius: 9, padding: '7px 13px' }}>
                           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: ch.couleur, fontWeight: 700, marginBottom: 1 }}>{f.f}</div>
                           <div style={{ fontSize: 10, color: 'var(--muted)' }}>{f.desc}</div>

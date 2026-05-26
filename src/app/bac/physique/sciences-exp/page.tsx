@@ -139,6 +139,35 @@ const CHAPITRES = [
       { f: 'E = Δm·c²', desc: 'Énergie libérée (Einstein)' },
     ],
   },
+  // ── AJOUTS PROGRAMME OFFICIEL ─────────────────────────────────────
+  {
+    id: 'oscillations-forcees-mec',
+    num: '8',
+    titre: "Oscillations mécaniques forcées",
+    couleur: '#06b6d4',
+    icone: '📳',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Oscillateur forcé", notions: ["Excitateur sinusoïdal","Régime forcé","Résonance mécanique"] },
+      { titre: "Résonance", notions: ["Amplitude maximale à la résonance","Déphasage x et excitateur","Facteur de qualité Q"] },
+      { titre: "Équation", notions: ["x(t)=Xm sin(ωt+φ)","Bande passante Δω","Courbe de résonance"] },
+      { f: "x(t) = Xm·sin(ωt + φ)", desc: "Équation horaire en régime forcé" },
+    ],
+  },
+  {
+    id: 'interaction-onde-matiere',
+    num: '9',
+    titre: "Interaction onde-matière",
+    couleur: '#06b6d4',
+    icone: '🔬',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Diffraction et interférences", notions: ["Diffraction par une fente","Interférences (Young)","Interfrange i=λD/a"] },
+      { titre: "Effet photoélectrique", notions: ["Énergie du photon E=hf","Fréquence seuil","Électron extrait"] },
+      { titre: "Dualité onde-corpuscule", notions: ["Longueur de De Broglie λ=h/mv","Quantification","Spectres atomiques"] },
+      { f: "E = h·f", desc: "Énergie du photon (h = 6,626×10⁻³´ J·s)" },
+    ],
+  },
   // ── CHIMIE ────────────────────────────────────────────────────────
   {
     id: 'cinetique-exp',
@@ -299,21 +328,21 @@ export default function PhysiqueSciencesExpPage() {
                   </Link>
                 </div>
                 <div style={{ padding: '14px 22px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: ch.formules.length > 0 ? 12 : 0 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8, marginBottom: (ch.formules?.length ?? 0) > 0 ? 12 : 0 }}>
                     {ch.souschap.map(sc => (
                       <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 10, padding: '10px 13px' }}>
                         <div style={{ fontWeight: 700, fontSize: 11, color: ch.couleur, marginBottom: 5 }}>{sc.titre}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                          {sc.notions.map(n => (
+                          {(sc.notions ?? []).map(n => (
                             <span key={n} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 8, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>
                           ))}
                         </div>
                       </div>
                     ))}
                   </div>
-                  {ch.formules.length > 0 && (
+                  {(ch.formules?.length ?? 0) > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {ch.formules.map(f => (
+                      {(ch.formules ?? []).map(f => (
                         <div key={f.f} style={{ background: `${ch.couleur}14`, border: `1px solid ${ch.couleur}28`, borderRadius: 9, padding: '7px 13px' }}>
                           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: ch.couleur, fontWeight: 700, marginBottom: 1 }}>{f.f}</div>
                           <div style={{ fontSize: 10, color: 'var(--muted)' }}>{f.desc}</div>
@@ -358,7 +387,7 @@ export default function PhysiqueSciencesExpPage() {
                       <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 10, padding: '10px 13px' }}>
                         <div style={{ fontWeight: 700, fontSize: 11, color: ch.couleur, marginBottom: 5 }}>{sc.titre}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                          {sc.notions.map(n => (
+                          {(sc.notions ?? []).map(n => (
                             <span key={n} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 8, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>
                           ))}
                         </div>

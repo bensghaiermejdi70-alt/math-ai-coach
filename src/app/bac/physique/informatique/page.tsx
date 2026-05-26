@@ -132,6 +132,47 @@ const CHAPITRES = [
       { f: 'E = Δm·c²', desc: 'Énergie libérée (Einstein)' },
     ],
   },
+  // ── AJOUTS PROGRAMME OFFICIEL ──────────────────────────────────────
+  {
+    id: 'oscillations-forcees-info',
+    num: '5bis',
+    titre: "Oscillations électriques forcées",
+    couleur: '#8b5cf6',
+    icone: '📶',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Résonance RLC", notions: ["Résonance à ω=ω₀=1/√(LC)","Im_max=E/R","Facteur de qualité Q=Lω₀/R"] },
+      { titre: "Bande passante", notions: ["Bande passante Δf=f₀/Q","Courbe de résonance","Déphasage i/u"] },
+      { f: "Z = √[R² + (Lω - 1/(Cω))²]", desc: "Impédance du circuit RLC série" },
+    ],
+  },
+  {
+    id: 'filtres-info',
+    num: '5ter',
+    titre: "Filtres électriques",
+    couleur: '#8b5cf6',
+    icone: '📻',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Filtre passe-bas", notions: ["fc=1/(2πRC)","Atténuation hautes fréquences","Gain G=Us/Ue"] },
+      { titre: "Filtre passe-haut", notions: ["Même fc","Passe les hautes fréquences","Déphasage +90°"] },
+      { titre: "Filtre passe-bande", notions: ["Bande passante Δf=f₀/Q","Applications traitement signal","Diagrammes de Bode"] },
+      { f: "G(dB) = 20·log(Us/Ue)", desc: "Gain en décibels — fc : fréquence de coupure" },
+    ],
+  },
+  {
+    id: 'multivibrateurs-info',
+    num: '6bis',
+    titre: "Multivibrateurs & Électronique",
+    couleur: '#8b5cf6',
+    icone: '💻',
+    tag: 'Physique',
+    souschap: [
+      { titre: "Multivibrateur astable", notions: ["Oscillation périodique auto-entretenue","Signal carré","Période T=f(R,C)"] },
+      { titre: "Transistors", notions: ["Saturation/blocage","Commutation numérique","Portes logiques"] },
+      { titre: "Applications", notions: ["Horloge électronique","Génération de signaux","Interface numérique/analogique"] },
+    ],
+  },
   // ── CHIMIE ────────────────────────────────────────────────────────────
   {
     id: 'acide-base-info',
@@ -283,9 +324,9 @@ export default function PhysiqueInformatiquePage() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        {ch.formules.length > 0 && (
+                        {(ch.formules?.length ?? 0) > 0 && (
                           <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 6, background: `${ch.couleur}15`, color: ch.couleur, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                            {ch.formules[0].f}
+                            {ch.formules?.[0]?.f}
                           </span>
                         )}
                         <Link href={`/bac/physique/informatique/${ch.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8, background: `${ch.couleur}20`, border: `1px solid ${ch.couleur}40`, color: ch.couleur, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>📖 Cours →</Link>
@@ -296,7 +337,7 @@ export default function PhysiqueInformatiquePage() {
                         <div key={sc.titre} style={{ background: 'rgba(0,0,0,0.12)', borderRadius: 9, padding: '9px 12px' }}>
                           <div style={{ fontWeight: 700, fontSize: 10, color: ch.couleur, marginBottom: 4 }}>{sc.titre}</div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                            {sc.notions.map(n => <span key={n} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 6, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>)}
+                            {(sc.notions ?? []).map(n => <span key={n} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 6, background: `${ch.couleur}12`, color: 'var(--text2)', border: `1px solid ${ch.couleur}18` }}>{n}</span>)}
                           </div>
                         </div>
                       ))}

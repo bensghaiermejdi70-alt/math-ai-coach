@@ -16,10 +16,10 @@ const C = { thm:'#4f6ef7', def:'#06d6a0', formule:'#f59e0b', prop:'#8b5cf6', met
 const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', loi:'Loi' }
 
 const NAV_ORDER = [
-  // Physique
-  'cinematique','dynamique','satellites','champ-electrique',
-  'champ-magnetique','induction','lentilles','ondes-lumineuses',
-  // Chimie
+  'cinematique','dynamique','satellites',
+  'champ-electrique','champ-magnetique','induction',
+  'lentilles','ondes-lumineuses',
+  'dipole-rc','dipole-rl','rlc-libre','oscillations-forcees','filtres-electriques','ondes-mecaniques',
   'redox','acide-base','cinetique','equilibre','organique',
 ]
 
@@ -32,6 +32,12 @@ const TITRES_NAV: Record<string,string> = {
   'induction':            'CH 06 — Induction électromagnétique',
   'lentilles':            'CH 07 — Lentilles minces',
   'ondes-lumineuses':     'CH 08 — Ondes lumineuses',
+  'dipole-rc':            'CH 09 — Dipôle RC',
+  'dipole-rl':            'CH 10 — Dipôle RL',
+  'rlc-libre':            'CH 11 — Oscillations RLC libres',
+  'oscillations-forcees': 'CH 12 — Oscillations forcées',
+  'filtres-electriques':  'CH 13 — Filtres électriques',
+  'ondes-mecaniques':     'CH 14 — Ondes mécaniques',
   'redox':                'CH 09 — Réactions d\'oxydoréduction',
   'acide-base':           'CH 10 — Réactions acide-base',
   'cinetique':            'CH 11 — Cinétique chimique',
@@ -703,6 +709,167 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   ]
 },
 
+
+'dipole-rc': {
+  id:'dipole-rc', emoji:'⚡', tag:'Électricité', color:'#f59e0b',
+  titre:'Dipôle RC',
+  desc:"Condensateur, charge et décharge, constante de temps τ=RC, uC(t)=E(1-e^{-t/τ}), régime transitoire.",
+  souschapitres:[
+    {
+      id:'sc-rc1', titre:'1. Condensateur et charge',
+      notions:['Capacité C en Farad','Énergie emmagasinée E=½CU²','Charge uC(t)=E(1-e^{-t/RC})','Constante de temps τ=RC'],
+      blocs:[
+        {
+          notion:'📐 Dipôle RC — Condensateur',
+          theoremes:[
+            { id:'F-RC1', type:'formule', nom:'Charge du condensateur',
+              enonce:"Circuit RC branché sous tension E (t=0) :\n\nuC(t) = E(1 - e^{-t/τ})\ni(t) = (E/R)·e^{-t/τ}\nτ = RC  (constante de temps en secondes)\n\nÉnergie emmagasinée : E = ½CU²\nCapacité : C = Q/U  (en Farad = C/V)\n\nÀ t=τ : uC ≈ 0,63·E ; À t=5τ : régime permanent" },
+            { id:'F-RC2', type:'formule', nom:'Décharge du condensateur',
+              enonce:"Circuit RC en décharge (t=0, uC(0)=U₀) :\n\nuC(t) = U₀·e^{-t/τ}\ni(t) = -(U₀/R)·e^{-t/τ}\nτ = RC\n\nÀ t=τ : uC ≈ 0,37·U₀ ; À t=5τ : condensateur déchargé" },
+          ],
+          exercices:[
+            { id:'EX-RC1', niveau:'Moyen', titre:'Charge RC — détermination de τ',
+              enonce:"Un condensateur C=10µF est chargé par une résistance R=50kΩ sous E=12V. Calculer τ, uC(τ) et l'énergie finale.",
+              correction:"τ=RC=50×10³×10×10⁻⁶=0,5 s. uC(τ)=12(1-e⁻¹)≈12×0,632=7,58 V. E=½CU²=½×10⁻⁵×144=0,72 mJ." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'dipole-rl': {
+  id:'dipole-rl', emoji:'🧲', tag:'Électricité', color:'#f59e0b',
+  titre:'Dipôle RL',
+  desc:"Bobine, auto-induction, constante de temps τ=L/R, i(t)=(E/R)(1-e^{-t/τ}), énergie E=½LI².",
+  souschapitres:[
+    {
+      id:'sc-rl1', titre:'1. Bobine et circuit RL',
+      notions:['Inductance L en Henry','Auto-induction, loi de Lenz','Établissement i(t)=(E/R)(1-e^{-t/τ})','Constante de temps τ=L/R'],
+      blocs:[
+        {
+          notion:'📐 Dipôle RL',
+          theoremes:[
+            { id:'F-RL1', type:'formule', nom:'Établissement du courant',
+              enonce:"Circuit RL branché sous tension E (t=0) :\n\ni(t) = (E/R)·(1 - e^{-t/τ})\nuL(t) = E·e^{-t/τ}\nτ = L/R  (constante de temps)\n\nÉnergie magnétique : Em = ½L·I²\n\nÀ t=τ : i ≈ 0,63·(E/R) ; À t=5τ : régime permanent" },
+            { id:'F-RL2', type:'formule', nom:'Rupture du courant',
+              enonce:"À la rupture (t=0, i(0)=I₀) :\n\ni(t) = I₀·e^{-t/τ}\nτ = L/R\n\nLoi de Lenz : la bobine s'oppose aux variations du flux.\neL = -L·(di/dt)" },
+          ],
+          exercices:[
+            { id:'EX-RL1', niveau:'Moyen', titre:'Circuit RL — constante de temps',
+              enonce:"Bobine L=0,2H en série avec R=100Ω sous E=10V. Calculer τ, i(τ), énergie en régime permanent.",
+              correction:"τ=L/R=0,2/100=2 ms. i(τ)=(10/100)(1-e⁻¹)≈0,0632 A. I∞=E/R=0,1 A. Em=½×0,2×0,01=1 mJ." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'rlc-libre': {
+  id:'rlc-libre', emoji:'🌀', tag:'Électricité', color:'#f59e0b',
+  titre:'Oscillations électriques libres — RLC',
+  desc:"Circuit RLC, oscillations libres, régime pseudo-périodique, amortissement, T₀=2π√(LC).",
+  souschapitres:[
+    {
+      id:'sc-rlc1', titre:'1. Circuit RLC libre',
+      notions:['Pulsation propre ω₀=1/√(LC)','Régime pseudo-périodique','Équation différentielle','Échanges énergétiques'],
+      blocs:[
+        {
+          notion:'📐 Oscillations électriques libres',
+          theoremes:[
+            { id:'F-RLC1', type:'formule', nom:'Circuit RLC — équation et solutions',
+              enonce:"Équation différentielle (loi des mailles) :\nL·q'' + R·q' + q/C = 0\n⇔ u'' + (R/L)u' + (1/LC)u = 0\n\nPulsation propre : ω₀ = 1/√(LC)  →  T₀ = 2π√(LC)\n\nSi R=0 : oscillations non amorties u(t)=Um cos(ω₀t+φ)\nSi R petit : pseudo-périodique u(t)=Ume^{-αt}cos(ωt+φ)\nα=R/(2L) (coefficient d'amortissement)\nSi R grand : apériodique (pas d'oscillation)" },
+          ],
+          exercices:[
+            { id:'EX-RLC1', niveau:'Moyen', titre:'Période propre RLC',
+              enonce:"Circuit LC : L=0,1H, C=10µF. Calculer T₀ et f₀.",
+              correction:"T₀=2π√(LC)=2π√(0,1×10⁻⁵)=2π×10⁻³≈6,28 ms. f₀=1/T₀≈159 Hz." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'oscillations-forcees': {
+  id:'oscillations-forcees', emoji:'📶', tag:'Électricité', color:'#f59e0b',
+  titre:'Oscillations forcées — RLC',
+  desc:"Générateur sinusoïdal, résonance en intensité, bande passante, facteur de qualité Q.",
+  souschapitres:[
+    {
+      id:'sc-of1', titre:'1. Résonance et facteur de qualité',
+      notions:['Résonance : ω=ω₀','Intensité maximale Im=E/R','Bande passante Δω=R/L','Facteur de qualité Q=Lω₀/R'],
+      blocs:[
+        {
+          notion:'📐 Oscillations électriques forcées',
+          theoremes:[
+            { id:'F-OF1', type:'formule', nom:'Résonance RLC série',
+              enonce:"Courant sinusoïdal : i(t) = Im sin(ωt + φ)\n\nImpédance : Z = √[R² + (Lω - 1/(Cω))²]\nIm = E/Z\n\nRésonance en intensité : ω_r = ω₀ = 1/√(LC)  →  Im_max = E/R\n\nFacteur de qualité : Q = Lω₀/R = 1/(RCω₀)\n\nBande passante : Δω = ω₀/Q = R/L\nΔf = f₀/Q\n\nDéphasage : tanφ = (Lω - 1/Cω)/R" },
+          ],
+          exercices:[
+            { id:'EX-OF1', niveau:'Moyen', titre:'Fréquence de résonance',
+              enonce:"RLC : R=10Ω, L=0,1H, C=10µF. Calculer f₀, Q, bande passante.",
+              correction:"f₀=1/(2π√(LC))=159 Hz. Q=Lω₀/R=0,1×(2π×159)/10≈1. Δf=f₀/Q=159 Hz." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'filtres-electriques': {
+  id:'filtres-electriques', emoji:'📻', tag:'Électricité', color:'#f59e0b',
+  titre:'Filtres électriques',
+  desc:"Filtres passifs : passe-bas, passe-haut, passe-bande. Gain, fréquence de coupure fc.",
+  souschapitres:[
+    {
+      id:'sc-fi1', titre:'1. Types de filtres',
+      notions:['Filtre passe-bas fc=1/(2πRC)','Filtre passe-haut','Filtre passe-bande','Gain G=Us/Ue (en dB : G(dB)=20log(Us/Ue))'],
+      blocs:[
+        {
+          notion:'📐 Filtres électriques',
+          theoremes:[
+            { id:'F-FI1', type:'formule', nom:'Filtres RC — passe-bas et passe-haut',
+              enonce:"FILTRE PASSE-BAS (condensateur en sortie) :\nGain : G = 1/√[1+(f/fc)²]\nFréquence de coupure : fc = 1/(2πRC)\nÀ fc : G = 1/√2 ≈ 0,707  →  G(dB) = -3 dB\nPasse les basses fréquences, atténue les hautes\n\nFILTRE PASSE-HAUT (condensateur en entrée) :\nGain : G = (f/fc)/√[1+(f/fc)²]\nMêmes fc, passe les hautes fréquences\n\nGain en dB : G(dB) = 20·log(Us/Ue)" },
+          ],
+          exercices:[
+            { id:'EX-FI1', niveau:'Facile', titre:'Fréquence de coupure',
+              enonce:"Filtre RC passe-bas : R=1kΩ, C=1µF. Calculer fc et le gain à f=500Hz.",
+              correction:"fc=1/(2π×10³×10⁻⁶)=159 Hz. G(500)=1/√[1+(500/159)²]=1/√(10,86)≈0,304." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'ondes-mecaniques': {
+  id:'ondes-mecaniques', emoji:'🌊', tag:'Ondes', color:'#f59e0b',
+  titre:'Ondes mécaniques progressives',
+  desc:"Propagation, célérité, retard temporel, v=λf, double périodicité, ondes sinusoïdales.",
+  souschapitres:[
+    {
+      id:'sc-om1', titre:'1. Propagation et célérité',
+      notions:['Célérité v (m/s)','Retard temporel τ=d/v','Relation v=λf','Double périodicité spatiale et temporelle'],
+      blocs:[
+        {
+          notion:'📐 Ondes mécaniques progressives',
+          theoremes:[
+            { id:'F-OM1', type:'formule', nom:'Relations fondamentales des ondes',
+              enonce:"ONDE PROGRESSIVE (sinusoïdale) :\nCélérité : v = λ·f = λ/T\nλ : longueur d'onde (m)\nf : fréquence (Hz)\nT : période (s)\n\nRetard temporel : τ = d/v\n(d = distance entre deux points)\n\nÉquation horaire d'un point M (à distance d de la source) :\nyM(t) = Ym·sin(2πt/T - 2πd/λ + φ)\n\nDouble périodicité :\n- Temporelle : T (période)\n- Spatiale : λ (longueur d'onde)" },
+          ],
+          exercices:[
+            { id:'EX-OM1', niveau:'Facile', titre:"Célérité et longueur d'onde",
+              enonce:"Une onde sonore de fréquence f=440 Hz se propage à v=340 m/s. Calculer λ et T.",
+              correction:"λ=v/f=340/440≈0,77 m. T=1/f≈2,27 ms. Vérif: v=λ/T=0,77/(2,27×10⁻³)≈340 m/s." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
 } // fin ALL_CHAPTERS
 
 // ══════════════════════════════════════════════════════════════════════
@@ -757,8 +924,8 @@ export default function PhysiqueMathsSlugPage() {
   const secColor = SEC_COLORS[slug] || '#f59e0b'
   const isChimie = IS_CHIMIE[slug] || false
 
-  const PHYS_SLUGS = NAV_ORDER.slice(0,8)
-  const CHIM_SLUGS = NAV_ORDER.slice(8)
+  const PHYS_SLUGS = NAV_ORDER.slice(0,14)
+  const CHIM_SLUGS = NAV_ORDER.slice(14)
 
   return (
     <><Navbar/>
