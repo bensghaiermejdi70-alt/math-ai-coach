@@ -19,20 +19,29 @@ const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:
 const NAV_ORDER = [
   'fonctions-generalites','limites-continuite','derivation','etude-fonctions',
   'logarithme','exponentielle','suites',
+  'primitives-integrales','equations-differentielles','complexes',
+  'systemes-lineaires','arithmetique',
   'geometrie-espace',
-  'denombrement','probabilites',
+  'denombrement','probabilites','variables-aleatoires','statistiques',
 ]
 const TITRES_NAV: Record<string,string> = {
-  'fonctions-generalites': 'CH 01 — Fonctions & Généralités',
-  'limites-continuite':    'CH 02 — Limites & Continuité',
-  'derivation':            'CH 03 — Dérivation',
-  'etude-fonctions':       'CH 04 — Étude de Fonctions',
-  'logarithme':            'CH 05 — Logarithme Népérien',
-  'exponentielle':         'CH 06 — Fonction Exponentielle',
-  'suites':                'CH 07 — Suites Numériques',
-  'geometrie-espace':      "CH 08 — Géométrie dans l'Espace",
-  'denombrement':          'CH 09 — Dénombrement',
-  'probabilites':          'CH 10 — Probabilités',
+  'fonctions-generalites':    'CH 01 — Fonctions',
+  'limites-continuite':       'CH 02 — Limites & Continuité',
+  'derivation':               'CH 03 — Dérivation',
+  'etude-fonctions':          'CH 04 — Étude de fonctions',
+  'logarithme':               'CH 05 — Logarithme',
+  'exponentielle':            'CH 06 — Exponentielle',
+  'suites':                   'CH 07 — Suites',
+  'primitives-integrales':    'CH 08 — Primitives & ∫',
+  'equations-differentielles':'CH 09 — Éq. différentielles',
+  'complexes':                'CH 10 — Complexes',
+  'systemes-lineaires':       'CH 11 — Systèmes linéaires',
+  'arithmetique':             'CH 12 — Arithmétique ℤ',
+  'geometrie-espace':         "CH 13 — Géométrie",
+  'denombrement':             'CH 14 — Dénombrement',
+  'probabilites':             'CH 15 — Probabilités',
+  'variables-aleatoires':     'CH 16 — Variables aléatoires',
+  'statistiques':             'CH 17 — Statistiques',
 }
 const SEC_COLORS: Record<string,string> = {
   'fonctions-generalites':'#6366f1','limites-continuite':'#6366f1','derivation':'#6366f1',
@@ -732,7 +741,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   souschapitres:[
     {
       id:'sc-div', titre:'12.1 Divisibilité et PGCD',
-      notions:['Division euclidienne','PGCD — algorithme d\'Euclide','PPCM','Nombres premiers et décomposition'],
+      notions:['Division euclidienne',"PGCD — algorithme d'Euclide",'PPCM','Nombres premiers et décomposition'],
       blocs:[
         {
           notion:'📐 Arithmétique dans Z',
