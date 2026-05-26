@@ -618,6 +618,197 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   ]
 },
 
+
+'primitives-integrales': {
+  id:'primitives-integrales', emoji:'∫', badge:'Analyse', color:'#6366f1',
+  titre:'Primitives & Intégrales',
+  desc:"Primitives usuelles, intégrale définie, théorème fondamental, aire sous une courbe.",
+  souschapitres:[
+    {
+      id:'sc-prim', titre:'8.1 Primitives et intégrale définie',
+      notions:['Primitives des fonctions usuelles','Linéarité','Intégrale ∫ab f(x)dx',"Théorème fondamental de l'analyse"],
+      blocs:[
+        {
+          notion:'📐 Primitives et intégrale',
+          theoremes:[
+            { id:'F-PI1', type:'formule', nom:'Primitives usuelles',
+              enonce:"x^n → x^(n+1)/(n+1)  (n≠1)\n1/x → ln|x|\ne^x → e^x\nsin x → -cos x\ncos x → sin x\n\nPrimitive de u'e^u : → e^u\nPrimitive de u'/u : → ln|u|" },
+            { id:'T-PI2', type:'thm', nom:"Théorème fondamental",
+              enonce:"Si F est une primitive de f sur [a,b] :\n∫ab f(x)dx = [F(x)]ab = F(b)-F(a)\n\nInterprétation géométrique :\nAire entre la courbe et Ox = ∫ab |f(x)| dx" },
+          ],
+          exercices:[
+            { id:'EX-PI1', niveau:'Facile', titre:'Calcul intégral',
+              enonce:"Calculer ∫02 (x²+1)dx.",
+              correction:"[x³/3+x]02 = 8/3+2 = 14/3." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'equations-differentielles': {
+  id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#6366f1',
+  titre:'Équations Différentielles',
+  desc:"y'=ay+b, solution générale, condition initiale, modélisation informatique.",
+  souschapitres:[
+    {
+      id:'sc-ed', titre:"9.1 Équation y'=ay+b",
+      notions:["y'=ay → y=Ce^(ax)","y'=ay+b → y=Ce^(ax)-b/a","Condition initiale","Modélisation"],
+      blocs:[
+        {
+          notion:'📐 Résolution',
+          theoremes:[
+            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay+b",
+              enonce:"y' = ay + b  (a≠0) :\n\n1. Homogène y'=ay : yh=Ce^(ax)\n2. Particulière : yp=-b/a\n3. Générale : y = Ce^(ax) - b/a\n\nCondition initiale y(0)=y0 :\nC = y0 + b/a" },
+          ],
+          exercices:[
+            { id:'EX-ED1', niveau:'Facile', titre:"Résolution y'=3y-6",
+              enonce:"Résoudre y'=3y-6 avec y(0)=4.",
+              correction:"Sol. gén. y=Ce^(3x)+2. y(0)=C+2=4 → C=2. y=2e^(3x)+2." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'complexes': {
+  id:'complexes', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
+  titre:'Nombres Complexes',
+  desc:"z=a+ib, module, argument, forme trigonométrique, Moivre, équations dans C.",
+  souschapitres:[
+    {
+      id:'sc-cx', titre:'10.1 Formes algébrique et trigonométrique',
+      notions:['z=a+ib, Re(z), Im(z)','Module |z|, conjugué z*','Forme trigonométrique','Formule de Moivre'],
+      blocs:[
+        {
+          notion:'📐 Nombres complexes',
+          theoremes:[
+            { id:'D-CX1', type:'def', nom:'Nombre complexe',
+              enonce:"z = a+ib  (a,b∈R, i²=-1)\nRe(z)=a, Im(z)=b, z*=a-ib\n|z|=√(a²+b²)\n\nForme trigonométrique : z=r(cosθ+isinθ)=re^(iθ)\nr=|z|, θ=arg(z)\n\nMoivre : (cosθ+isinθ)^n = cos(nθ)+isin(nθ)" },
+          ],
+          exercices:[
+            { id:'EX-CX1', niveau:'Moyen', titre:'Équation dans C',
+              enonce:"Résoudre z²+2z+5=0 dans C.",
+              correction:"Δ=4-20=-16. z=(−2±4i)/2. z1=−1+2i, z2=−1−2i." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'systemes-lineaires': {
+  id:'systemes-lineaires', emoji:'🧮', badge:'Algèbre', color:'#a78bfa',
+  titre:'Systèmes Linéaires',
+  desc:"Systèmes de 2 et 3 équations, méthodes de résolution, pivot de Gauss, modélisation.",
+  souschapitres:[
+    {
+      id:'sc-sys', titre:'11.1 Résolution de systèmes',
+      notions:['Substitution et élimination','Méthode de Gauss (pivot)','Méthode matricielle','Modélisation informatique'],
+      blocs:[
+        {
+          notion:'📐 Systèmes linéaires',
+          theoremes:[
+            { id:'T-SY1', type:'thm', nom:'Pivot de Gauss',
+              enonce:"Algorithme du pivot de Gauss :\n1. Écrire la matrice augmentée [A|b]\n2. Opérations Ã©lémentaires sur les lignes :\n   L_i ← L_i + k·L_j (élimination)\n3. Forme échelonnée → substitution ascendante\n\nExemple :\n2x+y=5 et x-y=1 :\n[2,1|5] [1,-1|1] → x=2, y=1" },
+          ],
+          exercices:[
+            { id:'EX-SY1', niveau:'Moyen', titre:'Système 2 équations',
+              enonce:"Résoudre : 3x+2y=12 et x-y=1.",
+              correction:"De L2: x=1+y. Substitution: 3(1+y)+2y=12 → 5y=9 → y=9/5, x=14/5." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'arithmetique': {
+  id:'arithmetique', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
+  titre:'Arithmétique dans ℤ',
+  desc:"Divisibilité, PGCD, PPCM, nombres premiers, congruences, applications cryptographiques.",
+  souschapitres:[
+    {
+      id:'sc-div', titre:'12.1 Divisibilité et PGCD',
+      notions:['Division euclidienne','PGCD — algorithme d\'Euclide','PPCM','Nombres premiers et décomposition'],
+      blocs:[
+        {
+          notion:'📐 Arithmétique dans Z',
+          theoremes:[
+            { id:'D-AR1', type:'def', nom:'Divisibilité et PGCD',
+              enonce:"a divise b (a|b) si ∃k∈Z : b=ka\n\nDivision euclidienne : a=bq+r, 0≤r<b\n\nAlgorithme d'Euclide :\nPGCD(a,b) = PGCD(b, a mod b) jusqu'à r=0\n\nExemple : PGCD(252,180)\n252=1×180+72 → PGCD(180,72)\n180=2×72+36 → PGCD(72,36)\n72=2×36+0 → PGCD=36" },
+            { id:'D-AR2', type:'def', nom:'Congruences modulo n',
+              enonce:"a ≡ b (mod n) si n|(a-b)\n\nPropriétés :\na+c ≡ b+d (mod n)\na·c ≡ b·d (mod n)\na^k ≡ b^k (mod n)\n\nApplication RSA :\nChiffrement : c = m^e mod n\nDéchiffrement : m = c^d mod n",
+              remarque:"Les congruences sont fondamentales en cryptographie et sécurité informatique." },
+          ],
+          exercices:[
+            { id:'EX-AR1', niveau:'Moyen', titre:'PGCD et congruences',
+              enonce:"Calculer PGCD(48,18). Vérifier que 17 ≡ 3 (mod 7).",
+              correction:"PGCD : 48=2×18+12 ; 18=1×12+6 ; 12=2×6+0. PGCD=6.\n17-3=14=2×7 → 17≡3 (mod 7). ✓" },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'variables-aleatoires': {
+  id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
+  titre:'Variables Aléatoires & Loi Binomiale',
+  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p).",
+  souschapitres:[
+    {
+      id:'sc-va', titre:'16.1 Variables aléatoires discrètes',
+      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X)','Loi binomiale B(n,p)'],
+      blocs:[
+        {
+          notion:'📐 Variable aléatoire et loi binomiale',
+          theoremes:[
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
+              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ = √V(X)" },
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
+              enonce:"X ~ B(n,p) : n épreuves de Bernoulli\nP(X=k) = Cn^k·p^k·(1-p)^(n-k)\nE(X)=np, V(X)=np(1-p)\n\nApplications : algorithmes probabilistes, tests de performance.",
+              remarque:"Loi binomiale utilisée pour modéliser les résultats binaires répétés (succès/échec)." },
+          ],
+          exercices:[
+            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale — test réseau',
+              enonce:"Prob. erreur de transmission = 0,1. Paquet de 8 bits. X = nombre d'erreurs. Calculer P(X=0) et E(X).",
+              correction:"X~B(8;0,1). P(X=0)=(0,9)^8≈0,430. E(X)=8×0,1=0,8." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'statistiques': {
+  id:'statistiques', emoji:'📊', badge:'Probabilités', color:'#f5c842',
+  titre:'Statistiques',
+  desc:"Paramètres statistiques, histogrammes, diagrammes, courbes statistiques.",
+  souschapitres:[
+    {
+      id:'sc-stat', titre:'17.1 Paramètres statistiques',
+      notions:['Moyenne x-barre','Variance s² et écart-type s','Séries simples et groupées','Représentations graphiques'],
+      blocs:[
+        {
+          notion:'📐 Statistiques descriptives',
+          theoremes:[
+            { id:'F-ST1', type:'formule', nom:'Paramètres statistiques',
+              enonce:"Série x1,...,xn (poids n1,...,nk, N=Σni) :\n\nMoyenne : x̄ = (Σ ni·xi)/N\nVariance : s² = (Σ ni·xi²)/N - x̄²\nÉcart-type : s = √s²\n\nSéries regroupées en classes [ak,ak+1[ :\nCentre ck = (ak+ak+1)/2\nMêmes formules avec les centres." },
+          ],
+          exercices:[
+            { id:'EX-ST1', niveau:'Facile', titre:'Paramètres statistiques',
+              enonce:"Temps de réponse (ms) : 10, 12, 8, 15, 10. Calculer moyenne et écart-type.",
+              correction:"x̄=(10+12+8+15+10)/5=55/5=11. s²=(100+144+64+225+100)/5-121=126,6-121=5,6. s=√5,6≈2,37 ms." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
 } // fin ALL_CHAPTERS
 
 // ══════════════════════════════════════════════════════════════════════

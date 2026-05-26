@@ -763,6 +763,106 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   ]
 },
 
+
+'equations-differentielles': {
+  id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#f59e0b',
+  titre:'Équations Différentielles',
+  desc:"Équation y'=ay+b, solution générale, condition initiale, applications techniques.",
+  souschapitres:[
+    {
+      id:'sc-ed', titre:"10.1 Équation y'=ay+b",
+      notions:["y'=ay solution Ceax","y'=ay+b solution particulière+homogène","Condition initiale","Applications techniques"],
+      blocs:[
+        {
+          notion:'📐 Résolution',
+          theoremes:[
+            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay+b",
+              enonce:"Équation y' = ay + b  (a≠0)\n\n1. Homogène y'=ay : yh=Ceax\n2. Particulière constante : yp=-b/a\n3. Solution générale : y = Ceax - b/a\n\nCondition initiale y(x0)=y0 :\nC = (y0+b/a)e^(-ax0)" },
+          ],
+          exercices:[
+            { id:'EX-ED1', niveau:'Facile', titre:"Résolution y'=2y-4",
+              enonce:"Résoudre y'=2y-4 avec y(0)=3.",
+              correction:"Sol. gén. y=Ce^(2x)+2. y(0)=C+2=3 donc C=1. y=e^(2x)+2." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'complexes': {
+  id:'complexes', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
+  titre:'Nombres Complexes',
+  desc:"z=a+ib, module, argument, forme trigonométrique, exponentielle, Moivre, équations dans C.",
+  souschapitres:[
+    {
+      id:'sc-cx-alg', titre:'11.1 Forme algébrique et module',
+      notions:['z=a+ib, Re(z), Im(z)','Module |z|, conjugué z bar','Opérations dans C'],
+      blocs:[
+        {
+          notion:'📐 Nombres complexes',
+          theoremes:[
+            { id:'D-CX1', type:'def', nom:'Nombre complexe',
+              enonce:"z = a+ib  (a,b∈R, i²=-1)\nRe(z)=a, Im(z)=b, z̄=a-ib\n\nModule : |z|=√(a²+b²)\n|z|²=z·z̄\n|z1z2|=|z1||z2|\n\nDivision : z1/z2 = (z1z̄2)/(|z2|²)" },
+          ],
+          exercices:[
+            { id:'EX-CX1', niveau:'Facile', titre:'Calcul dans C',
+              enonce:"z=(2+i)/(1-i). Mettre sous forme algébrique.",
+              correction:"z=(2+i)(1+i)/2=(1+3i)/2=1/2+3i/2." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-cx-trig', titre:'11.2 Forme trigonométrique et Moivre',
+      notions:['Forme trigonométrique r(cosθ+isinθ)','Forme exponentielle re^(iθ)','Formule de Moivre','Équations dans C'],
+      blocs:[
+        {
+          notion:'📐 Forme trigonométrique',
+          theoremes:[
+            { id:'F-CX2', type:'formule', nom:'Formule de Moivre',
+              enonce:"z = r(cosθ+isinθ) = re^(iθ)  r=|z|, θ=arg(z)\n\nProduit : r1e^(iθ1)·r2e^(iθ2) = r1r2·e^(i(θ1+θ2))\n\nMoivre : (cosθ+isinθ)^n = cos(nθ)+isin(nθ)\n\nÉquations z²+2z+2=0 :\nΔ=4-8=-4 ; z₁=-1+i ; z₂=-1-i" },
+          ],
+          exercices:[
+            { id:'EX-CX2', niveau:'Moyen', titre:'Équation dans C',
+              enonce:"Résoudre z²-2z+2=0 dans C.",
+              correction:"Δ=4-8=-4<0. z=(2±2i)/2. z₁=1+i, z₂=1-i." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'variables-aleatoires': {
+  id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
+  titre:'Variables Aléatoires & Loi Binomiale',
+  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p).",
+  souschapitres:[
+    {
+      id:'sc-va', titre:'15.1 Variables aléatoires discrètes',
+      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X) et écart-type σ','Loi binomiale B(n,p)'],
+      blocs:[
+        {
+          notion:'📐 Variable aléatoire et loi binomiale',
+          theoremes:[
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
+              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ(X) = √V(X)" },
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
+              enonce:"X ~ B(n,p) : n épreuves de Bernoulli, p=P(succès)\n\nP(X=k) = Cn^k·p^k·(1-p)^(n-k)\n\nE(X) = np\nV(X) = np(1-p)\nσ = √(np(1-p))",
+              remarque:"Reconnaître B(n,p) : n répétitions indépendantes, même p à chaque épreuve." },
+          ],
+          exercices:[
+            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale',
+              enonce:"On tire 6 fois une pièce. X=nombre de Face. Calculer P(X=4) et E(X).",
+              correction:"X~B(6,1/2). P(X=4)=C6^4·(1/2)^6=15/64≈0,234. E(X)=3." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
 } // fin ALL_CHAPTERS
 
 // ══════════════════════════════════════════════════════════════════════

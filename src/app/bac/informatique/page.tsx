@@ -50,26 +50,65 @@ const PARTIE1 = [
   },
 ]
 
-// PARTIE 2 — GÉOMÉTRIE (1 chapitre)
+// PARTIE 2 — ALGÈBRE & INTÉGRALES (5 chapitres)
 const PARTIE2 = [
   {
-    ch: 'CH 08', slug: 'geometrie-espace', titre: 'Géométrie dans l\'Espace',
-    badge: 'Géométrie', nbThm: 9, nbEx: 7,
-    desc: 'Vecteurs de l\'espace (composantes, opérations), produit scalaire dans l\'espace (définition, propriétés, applications), droites dans l\'espace (représentations paramétrique et cartésienne), plans (équation cartésienne ax+by+cz+d=0), positions relatives (droite-droite, droite-plan, plan-plan), distance point-plan et point-droite.'
+    ch: 'CH 08', slug: 'primitives-integrales', titre: 'Primitives & Intégrales',
+    badge: 'Analyse', nbThm: 9, nbEx: 7,
+    desc: "Primitives des fonctions usuelles. Linéarité. Intégrale définie ∫ab f(x)dx. Interprétation géométrique — aire sous une courbe. Théorème fondamental de l'analyse.",
+  },
+  {
+    ch: 'CH 09', slug: 'equations-differentielles', titre: 'Équations Différentielles',
+    badge: 'Analyse', nbThm: 7, nbEx: 6,
+    desc: "Équation y'=ay+b : solution générale y=Ce^(ax)-b/a. Condition initiale y(x0)=y0. Applications : modélisation informatique (loi de croissance).",
+  },
+  {
+    ch: 'CH 10', slug: 'complexes', titre: 'Nombres Complexes',
+    badge: 'Algèbre', nbThm: 11, nbEx: 8,
+    desc: "Forme algébrique z=a+ib. Module |z|, argument arg(z). Forme trigonométrique r(cosθ+isinθ). Forme exponentielle re^(iθ). Formule de Moivre. Résolution d'équations dans ℂ. Applications géométriques simples.",
+  },
+  {
+    ch: 'CH 11', slug: 'systemes-lineaires', titre: 'Systèmes Linéaires',
+    badge: 'Algèbre', nbThm: 8, nbEx: 7,
+    desc: "Systèmes de 2 et 3 équations. Méthodes : substitution, élimination, méthode matricielle simple. Modélisation informatique. Résolution algorithmique (pivot de Gauss).",
+  },
+  {
+    ch: 'CH 12', slug: 'arithmetique', titre: 'Arithmétique dans ℤ',
+    badge: 'Algèbre', nbThm: 10, nbEx: 8,
+    desc: "Divisibilité, division euclidienne. PGCD (algorithme d'Euclide). PPCM. Nombres premiers, crible d'Ératosthène. Décomposition en facteurs premiers. Congruences modulo n. Applications cryptographiques (RSA simplifié).",
   },
 ]
 
-// PARTIE 3 — PROBABILITÉS (2 chapitres)
+// PARTIE 3 — GÉOMÉTRIE (1 chapitre)
 const PARTIE3 = [
   {
-    ch: 'CH 09', slug: 'denombrement', titre: 'Dénombrement',
+    ch: 'CH 13', slug: 'geometrie-espace', titre: "Géométrie dans l'Espace",
+    badge: 'Géométrie', nbThm: 9, nbEx: 7,
+    desc: "Vecteurs de l'espace, produit scalaire. Droites et plans (Ã©quations cartÃ©siennes). Positions relatives. Distances point-plan et point-droite.",
+  },
+]
+
+// PARTIE 4 — PROBABILITÉS & STATISTIQUES (4 chapitres)
+const PARTIE4 = [
+  {
+    ch: 'CH 14', slug: 'denombrement', titre: 'Dénombrement',
     badge: 'Probabilités', nbThm: 6, nbEx: 5,
-    desc: 'Arrangements Aₙᵖ = n!/(n−p)!, permutations n!, combinaisons Cₙᵖ = (n choose p), formule du binôme (a+b)ⁿ = Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.'
+    desc: "Arrangements An^p=n!/(n-p)!, permutations n!, combinaisons Cn^p. Formule du binôme (a+b)^n=Σ Cn^k a^k b^(n-k).",
   },
   {
-    ch: 'CH 10', slug: 'probabilites', titre: 'Probabilités',
+    ch: 'CH 15', slug: 'probabilites', titre: 'Probabilités',
     badge: 'Probabilités', nbThm: 9, nbEx: 7,
-    desc: 'Vocabulaire probabiliste (univers Ω, événements élémentaires), probabilité sur ensemble fini (définition), probabilité de la réunion P(A∪B), probabilité de l\'intersection P(A∩B), équiprobabilité P(A)=card(A)/card(Ω), probabilités conditionnelles P_A(B)=P(A∩B)/P(A), indépendance P(A∩B)=P(A)×P(B).'
+    desc: "Probabilité conditionnelle P(A|B)=P(A∩B)/P(B). Indépendance. Probabilités totales. Théorème de Bayes. Arbre pondéré.",
+  },
+  {
+    ch: 'CH 16', slug: 'variables-aleatoires', titre: 'Variables Aléatoires & Loi Binomiale',
+    badge: 'Probabilités', nbThm: 8, nbEx: 7,
+    desc: "Variable aléatoire discrète. Espérance E(X)=Σxi·pi. Variance V(X)=E(X²)-[E(X)]². Loi binomiale B(n,p) : P(X=k)=Cn^k·p^k·(1-p)^(n-k), E(X)=np, V(X)=np(1-p).",
+  },
+  {
+    ch: 'CH 17', slug: 'statistiques', titre: 'Statistiques',
+    badge: 'Probabilités', nbThm: 6, nbEx: 5,
+    desc: "Moyenne x̄, variance s², écart-type s. Séries statistiques simples et regroupées. Histogrammes, diagrammes, courbes statistiques.",
   },
 ]
 
@@ -77,6 +116,7 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Analyse':      { bg: 'rgba(99,102,241,0.15)',  color: '#6366f1' },
   'Géométrie':    { bg: 'rgba(79,110,247,0.15)',  color: '#4f6ef7' },
   'Probabilités': { bg: 'rgba(245,200,66,0.15)',  color: '#f5c842' },
+  'Algèbre':      { bg: 'rgba(124,58,237,0.15)',   color: '#a78bfa' },
 }
 
 function ChapterCard({ ch, href }: { ch: typeof PARTIE1[0]; href: string }) {
@@ -117,7 +157,7 @@ function PartieHeader({ titre, desc, color, count }: { titre: string; desc: stri
 }
 
 export default function InformatiquePage() {
-  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length
+  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length
   return (
     <>
       <Navbar />
@@ -136,13 +176,13 @@ export default function InformatiquePage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 10 }}>Sciences Informatiques — Mathématiques</h1>
             <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 16 }}>
               Programme officiel CNP Tunisie — 4ème année secondaire. {totalCh} chapitres répartis en 3 parties :
-              Analyse · Géométrie de l'espace · Probabilités.
+              Analyse · Algèbre · Géométrie · Probabilités & Statistiques.
               Source : <span style={{ color: COLOR, fontFamily: 'var(--font-mono)', fontSize: 13 }}>tadris.tn</span>
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
               <span>💻 {totalCh} chapitres</span><span>·</span>
-              <span>📊 85+ théorèmes</span><span>·</span>
-              <span>📝 67+ exercices</span>
+              <span>📊 155+ théorèmes</span><span>·</span>
+              <span>📝 120+ exercices</span>
             </div>
           </div>
 
@@ -154,19 +194,27 @@ export default function InformatiquePage() {
             </div>
           </div>
 
-          {/* Partie 2 */}
+                    {/* Partie 2 — Algèbre & Intégrales */}
           <div style={{ marginBottom: 44 }}>
-            <PartieHeader titre="📐 Partie 2 — Géométrie dans l'Espace" desc="Vecteurs · Produit scalaire · Droites et plans · Distances" color="#4f6ef7" count={PARTIE2.length} />
+            <PartieHeader titre="🧮 Partie 2 — Algèbre & Intégrales" desc="Primitives · Éq. différentielles · Complexes · Systèmes linéaires · Arithmétique ℤ" color="#a78bfa" count={PARTIE2.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE2.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 3 */}
-          <div style={{ marginBottom: 52 }}>
-            <PartieHeader titre="🎲 Partie 3 — Dénombrement & Probabilités" desc="Arrangements, Permutations, Combinaisons, Formule du binôme · Probabilités conditionnelles" color="#f5c842" count={PARTIE3.length} />
+          {/* Partie 3 — Géométrie */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📐 Partie 3 — Géométrie dans l'Espace" desc="Vecteurs · Produit scalaire · Droites et plans · Distances" color="#4f6ef7" count={PARTIE3.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE3.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 4 — Probabilités & Statistiques */}
+          <div style={{ marginBottom: 52 }}>
+            <PartieHeader titre="🎲 Partie 4 — Probabilités & Statistiques" desc="Dénombrement · Probabilités · Variables aléatoires · Loi binomiale · Statistiques" color="#f5c842" count={PARTIE4.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE4.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/informatique/${ch.slug}`} />)}
             </div>
           </div>
 

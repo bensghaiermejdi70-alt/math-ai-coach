@@ -64,26 +64,45 @@ const PARTIE2 = [
   },
 ]
 
-// PARTIE 3 — STATISTIQUES (1 chapitre)
+// PARTIE 3 — ALGÈBRE (2 chapitres)
 const PARTIE3 = [
   {
-    ch: 'CH 10', slug: 'statistiques', titre: 'Statistiques — Séries à deux variables',
-    badge: 'Statistiques', nbThm: 6, nbEx: 5,
-    desc: 'Nuage de points (xi, yi), point moyen G(x̄, ȳ), ajustement linéaire (droite de régression par moindres carrés), coefficient de corrélation r (−1≤r≤1, interprétation), prévisions par extrapolation et interpolation.'
+    ch: 'CH 10', slug: 'equations-differentielles', titre: 'Équations Différentielles',
+    badge: 'Analyse', nbThm: 7, nbEx: 6,
+    desc: "Équation y'=ay+b (a≠0) : solution générale y=Ceᵃˣ−b/a. Condition initiale y(x₀)=y₀. Applications techniques : refroidissement, décharge RC, croissance.",
+  },
+  {
+    ch: 'CH 11', slug: 'complexes', titre: 'Nombres Complexes',
+    badge: 'Algèbre', nbThm: 12, nbEx: 9,
+    desc: "Forme algébrique z=a+ib. Module |z|, argument arg(z), conjugué z̄. Forme trigonométrique r(cosθ+isinθ). Forme exponentielle reⁱᶿ. Formule de Moivre. Résolution d'équations dans ℂ. Applications géométriques.",
   },
 ]
 
-// PARTIE 4 — PROBABILITÉS (2 chapitres)
+// PARTIE 4 — STATISTIQUES (1 chapitre)
 const PARTIE4 = [
   {
-    ch: 'CH 11', slug: 'denombrement', titre: 'Dénombrement',
+    ch: 'CH 12', slug: 'statistiques', titre: 'Statistiques — Séries à deux variables',
+    badge: 'Statistiques', nbThm: 6, nbEx: 5,
+    desc: 'Nuage de points (xi, yi), point moyen G(x̄, ȳ), ajustement linéaire (droite de régression par moindres carrés), coefficient de corrélation r (−1≤r≤1), prévisions par extrapolation et interpolation.',
+  },
+]
+
+// PARTIE 5 — PROBABILITÉS (3 chapitres)
+const PARTIE5 = [
+  {
+    ch: 'CH 13', slug: 'denombrement', titre: 'Dénombrement',
     badge: 'Probabilités', nbThm: 6, nbEx: 5,
-    desc: 'Arrangements Aₙᵖ = n!/(n−p)!, permutations n!, combinaisons Cₙᵖ = (n choose p), formule du binôme (a+b)ⁿ = Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.'
+    desc: "Arrangements Aₙᵖ=n!/(n−p)!, permutations n!, combinaisons Cₙᵖ. Formule du binôme (a+b)ⁿ=Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.",
   },
   {
-    ch: 'CH 12', slug: 'probabilites', titre: 'Probabilités',
+    ch: 'CH 14', slug: 'probabilites', titre: 'Probabilités',
     badge: 'Probabilités', nbThm: 9, nbEx: 7,
-    desc: 'Vocabulaire probabiliste (univers Ω, événements élémentaires), probabilité sur ensemble fini (définition, axiomes), probabilité de la réunion P(A∪B)=P(A)+P(B)−P(A∩B), probabilité de l\'intersection, équiprobabilité P(A)=card(A)/card(Ω), probabilités conditionnelles P_A(B)=P(A∩B)/P(A), indépendance P(A∩B)=P(A)×P(B).'
+    desc: "Probabilité conditionnelle P(A|B)=P(A∩B)/P(B). Indépendance. Probabilités totales. Arbre pondéré. Équiprobabilité.",
+  },
+  {
+    ch: 'CH 15', slug: 'variables-aleatoires', titre: 'Variables Aléatoires & Loi Binomiale',
+    badge: 'Probabilités', nbThm: 8, nbEx: 7,
+    desc: "Variable aléatoire discrète. Espérance E(X)=Σxᵢpᵢ. Variance V(X)=E(X²)−[E(X)]². Loi binomiale B(n,p) : P(X=k)=Cₙᵏ pᵏ(1-p)ⁿ⁻ᵏ, E(X)=np, V(X)=np(1-p).",
   },
 ]
 
@@ -92,6 +111,7 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Géométrie':    { bg: 'rgba(79,110,247,0.15)', color: '#4f6ef7' },
   'Statistiques': { bg: 'rgba(249,115,22,0.15)', color: '#f97316' },
   'Probabilités': { bg: 'rgba(245,200,66,0.15)', color: '#f5c842' },
+  'Algèbre':      { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa' },
 }
 
 function ChapterCard({ ch, href }: { ch: typeof PARTIE1[0]; href: string }) {
@@ -132,7 +152,7 @@ function PartieHeader({ titre, desc, color, count }: { titre: string; desc: stri
 }
 
 export default function SciencesTechPage() {
-  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length
+  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length + PARTIE5.length
   return (
     <>
       <Navbar />
@@ -152,8 +172,8 @@ export default function SciencesTechPage() {
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
               <span>⚙️ {totalCh} chapitres</span><span>·</span>
-              <span>📊 103+ théorèmes</span><span>·</span>
-              <span>📝 85+ exercices</span>
+              <span>📊 140+ théorèmes</span><span>·</span>
+              <span>📝 110+ exercices</span>
             </div>
           </div>
 
@@ -181,19 +201,27 @@ export default function SciencesTechPage() {
             </div>
           </div>
 
-          {/* Partie 3 */}
+                    {/* Partie 3 — Algèbre */}
           <div style={{ marginBottom: 44 }}>
-            <PartieHeader titre="📊 Partie 3 — Statistiques" desc="Séries statistiques à deux variables · Droite de régression · Coefficient de corrélation r" color="#f97316" count={PARTIE3.length} />
+            <PartieHeader titre="🔢 Partie 3 — Algèbre" desc="Équations différentielles y'=ay+b · Nombres complexes (Moivre, équations dans ℂ)" color="#a78bfa" count={PARTIE3.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE3.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-tech/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 4 */}
-          <div style={{ marginBottom: 52 }}>
-            <PartieHeader titre="🎲 Partie 4 — Probabilités" desc="Dénombrement (arrangements, combinaisons, binôme) · Probabilités conditionnelles & indépendance" color="#f5c842" count={PARTIE4.length} />
+          {/* Partie 4 — Statistiques */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📊 Partie 4 — Statistiques" desc="Séries à deux variables · Droite de régression · Coefficient de corrélation r" color="#f97316" count={PARTIE4.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE4.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-tech/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 5 — Probabilités */}
+          <div style={{ marginBottom: 52 }}>
+            <PartieHeader titre="🎲 Partie 5 — Probabilités & Statistiques" desc="Dénombrement · Probabilités conditionnelles · Variables aléatoires · Loi binomiale B(n,p)" color="#f5c842" count={PARTIE5.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE5.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-tech/${ch.slug}`} />)}
             </div>
           </div>
 

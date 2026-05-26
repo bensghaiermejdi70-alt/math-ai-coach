@@ -40,31 +40,79 @@ const PARTIE1 = [
   },
 ]
 
-// PARTIE 2 — GÉOMÉTRIE (2 chapitres)
+// PARTIE 2 — FONCTIONS USUELLES & INTÉGRALES (5 chapitres)
 const PARTIE2 = [
   {
-    ch: 'CH 06', slug: 'vecteurs-espace', titre: 'Vecteurs de l\'Espace',
-    badge: 'Géométrie', nbThm: 9, nbEx: 7,
-    desc: 'Vecteurs de l\'espace (composantes, opérations), bases de l\'espace (trois vecteurs non coplanaires), produit scalaire dans l\'espace (définition, propriétés, applications), produit vectoriel (définition, propriétés, applications géométriques).'
+    ch: 'CH 06', slug: 'fonctions-reciproques', titre: 'Fonctions Réciproques',
+    badge: 'Analyse', nbThm: 8, nbEx: 6,
+    desc: "Bijection — fonction réciproque f⁻¹. Domaine de définition. Représentation graphique (symétrie par rapport à y=x). Dérivée : (f⁻¹)'(y)=1/f'(f⁻¹(y)). Étude de fonctions réciproques.",
   },
   {
-    ch: 'CH 07', slug: 'droites-plans-espace', titre: 'Droites & Plans dans l\'Espace',
-    badge: 'Géométrie', nbThm: 10, nbEx: 8,
-    desc: 'Droites dans l\'espace (représentation paramétrique, cartésienne), plans dans l\'espace (équation cartésienne, paramétrique), positions relatives (droite-droite, droite-plan, plan-plan), distance (point-plan, point-droite), sphères (équation, intersection avec plan/droite).'
+    ch: 'CH 07', slug: 'logarithme', titre: 'Logarithme Népérien',
+    badge: 'Analyse', nbThm: 11, nbEx: 9,
+    desc: "Fonction ln x sur ]0,+∞[. Propriétés : ln(ab)=ln a+ln b, ln(aⁿ)=n·ln a. Dérivée (ln u)'=u'/u. Variations, limites en 0⁺ et +∞. Équations et inéquations logarithmiques.",
+  },
+  {
+    ch: 'CH 08', slug: 'exponentielle', titre: 'Fonction Exponentielle',
+    badge: 'Analyse', nbThm: 10, nbEx: 9,
+    desc: "Réciproque de ln. Dérivée (eᵘ)'=u'eᵘ. Propriétés : eᵃ⁺ᵇ=eᵃeᵇ, e⁻ˣ=1/eˣ. Croissances comparées. Équations exponentielles. Étude complète.",
+  },
+  {
+    ch: 'CH 09', slug: 'primitives-integrales', titre: 'Primitives & Intégrales',
+    badge: 'Analyse', nbThm: 10, nbEx: 8,
+    desc: "Primitives des fonctions usuelles. Linéarité. Intégrale définie ∫ₐᵇ f(x)dx. Interprétation géométrique — aire sous une courbe. Théorème fondamental de l'analyse.",
+  },
+  {
+    ch: 'CH 10', slug: 'equations-differentielles', titre: 'Équations Différentielles',
+    badge: 'Analyse', nbThm: 7, nbEx: 6,
+    desc: "Équation y'=ay+b : solution générale y=Ceᵃˣ−b/a. Condition initiale y(x₀)=y₀. Applications : loi de refroidissement, croissance, circuit RC.",
   },
 ]
 
-// PARTIE 3 — DÉNOMBREMENT & PROBABILITÉS (2 chapitres)
+// PARTIE 3 — ALGÈBRE (1 chapitre)
 const PARTIE3 = [
   {
-    ch: 'CH 08', slug: 'denombrement', titre: 'Dénombrement',
-    badge: 'Probabilités', nbThm: 7, nbEx: 6,
-    desc: 'Applications d\'un ensemble fini (nombre d\'applications, injections, surjections), arrangements Aₙᵖ = n!/(n−p)!, permutations n!, combinaisons Cₙᵖ = (n choose p), formule du binôme (a+b)ⁿ = Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.'
+    ch: 'CH 11', slug: 'complexes', titre: 'Nombres Complexes',
+    badge: 'Algèbre', nbThm: 13, nbEx: 10,
+    desc: "Forme algébrique z=a+ib. Module |z|, argument arg(z), conjugué z̄. Forme trigonométrique r(cosθ+isinθ). Forme exponentielle reⁱᶿ. Formule de Moivre. Racines carrées dans ℂ. Résolution d'équations du 2nd degré dans ℂ.",
+  },
+]
+
+// PARTIE 4 — GÉOMÉTRIE (2 chapitres)
+const PARTIE4 = [
+  {
+    ch: 'CH 12', slug: 'vecteurs-espace', titre: "Vecteurs de l'Espace",
+    badge: 'Géométrie', nbThm: 9, nbEx: 7,
+    desc: "Vecteurs de l'espace, bases. Produit scalaire (orthogonalité, angles). Produit vectoriel u⃗∧v⃗ (aire, volume).",
   },
   {
-    ch: 'CH 09', slug: 'probabilites', titre: 'Probabilités',
+    ch: 'CH 13', slug: 'droites-plans-espace', titre: "Droites & Plans dans l'Espace",
+    badge: 'Géométrie', nbThm: 10, nbEx: 8,
+    desc: "Droites (paramétrique, cartésienne). Plans (équation cartésienne). Positions relatives. Distances (point-plan, point-droite). Sphères.",
+  },
+]
+
+// PARTIE 5 — PROBABILITÉS & STATISTIQUES (4 chapitres)
+const PARTIE5 = [
+  {
+    ch: 'CH 14', slug: 'denombrement', titre: 'Dénombrement',
+    badge: 'Probabilités', nbThm: 7, nbEx: 6,
+    desc: "Arrangements Aₙᵖ=n!/(n−p)!, permutations n!, combinaisons Cₙᵖ. Formule du binôme (a+b)ⁿ=Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.",
+  },
+  {
+    ch: 'CH 15', slug: 'probabilites', titre: 'Probabilités',
     badge: 'Probabilités', nbThm: 10, nbEx: 8,
-    desc: 'Probabilité sur un ensemble fini (définition, langage probabiliste), probabilité de la réunion P(A∪B)=P(A)+P(B)−P(A∩B), probabilité de l\'intersection P(A∩B), équiprobabilité P(A)=card(A)/card(Ω), expériences indépendantes, expériences dépendantes, probabilités conditionnelles P_A(B).'
+    desc: "Probabilité conditionnelle P(A|B)=P(A∩B)/P(B). Indépendance. Probabilités totales. Théorème de Bayes. Arbre pondéré.",
+  },
+  {
+    ch: 'CH 16', slug: 'variables-aleatoires', titre: 'Variables Aléatoires & Loi Binomiale',
+    badge: 'Probabilités', nbThm: 9, nbEx: 8,
+    desc: "Variable aléatoire discrète. Espérance E(X)=Σxᵢpᵢ. Variance V(X)=E(X²)−[E(X)]². Loi binomiale B(n,p) : P(X=k)=Cₙᵏ pᵏ(1-p)ⁿ⁻ᵏ, E(X)=np, V(X)=np(1-p).",
+  },
+  {
+    ch: 'CH 17', slug: 'statistiques', titre: 'Statistiques',
+    badge: 'Probabilités', nbThm: 6, nbEx: 6,
+    desc: "Moyenne x̄, variance s², écart-type s. Séries simples et regroupées en classes. Histogrammes, diagrammes cumulatifs, courbes statistiques.",
   },
 ]
 
@@ -72,6 +120,7 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Analyse':      { bg: 'rgba(6,214,160,0.15)',   color: '#06d6a0' },
   'Géométrie':    { bg: 'rgba(79,110,247,0.15)',  color: '#4f6ef7' },
   'Probabilités': { bg: 'rgba(245,200,66,0.15)',  color: '#f5c842' },
+  'Algèbre':      { bg: 'rgba(124,58,237,0.15)',   color: '#a78bfa' },
 }
 
 function ChapterCard({ ch, href }: { ch: typeof PARTIE1[0]; href: string }) {
@@ -112,7 +161,7 @@ function PartieHeader({ titre, desc, color, count }: { titre: string; desc: stri
 }
 
 export default function SciencesExpPage() {
-  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length
+  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length + PARTIE5.length
   return (
     <>
       <Navbar />
@@ -128,12 +177,12 @@ export default function SciencesExpPage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 10 }}>Sciences Expérimentales</h1>
             <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 16 }}>
               Programme officiel CNP Tunisie — 4ème année secondaire. {totalCh} chapitres répartis en 3 parties :
-              Analyse · Géométrie · Dénombrement & Probabilités.
+              Analyse · Fonctions usuelles · Algèbre · Géométrie · Probabilités & Statistiques.
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
               <span>🔬 {totalCh} chapitres</span><span>·</span>
-              <span>📊 81+ théorèmes</span><span>·</span>
-              <span>📝 65+ exercices</span>
+              <span>📊 150+ théorèmes</span><span>·</span>
+              <span>📝 120+ exercices</span>
             </div>
           </div>
 
@@ -145,19 +194,35 @@ export default function SciencesExpPage() {
             </div>
           </div>
 
-          {/* Partie 2 — Géométrie */}
+                    {/* Partie 2 — Fonctions usuelles */}
           <div style={{ marginBottom: 44 }}>
-            <PartieHeader titre="📐 Partie 2 — Géométrie" desc="Vecteurs de l'espace · Produit scalaire & vectoriel · Droites, plans, sphères" color="#4f6ef7" count={PARTIE2.length} />
+            <PartieHeader titre="📊 Partie 2 — Fonctions usuelles & Intégrales" desc="Fonctions réciproques · Logarithme · Exponentielle · Primitives · Éq. différentielles" color={COLOR} count={PARTIE2.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE2.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-exp/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 3 — Dénombrement & Probabilités */}
-          <div style={{ marginBottom: 52 }}>
-            <PartieHeader titre="🎲 Partie 3 — Dénombrement & Probabilités" desc="Arrangements, Permutations, Combinaisons, Formule du binôme · Probabilités conditionnelles" color="#f5c842" count={PARTIE3.length} />
+          {/* Partie 3 — Algèbre */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="🔢 Partie 3 — Algèbre" desc="Nombres complexes (formes algébrique, trigonométrique, exponentielle · Moivre · équations dans ℂ)" color="#a78bfa" count={PARTIE3.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE3.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-exp/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 4 — Géométrie */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📐 Partie 4 — Géométrie" desc="Vecteurs de l'espace · Produit scalaire & vectoriel · Droites, plans, sphères" color="#4f6ef7" count={PARTIE4.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE4.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-exp/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 5 — Probabilités & Statistiques */}
+          <div style={{ marginBottom: 52 }}>
+            <PartieHeader titre="🎲 Partie 5 — Probabilités & Statistiques" desc="Dénombrement · Probabilités conditionnelles · Variables aléatoires · Loi binomiale · Statistiques" color="#f5c842" count={PARTIE5.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE5.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/sciences-exp/${ch.slug}`} />)}
             </div>
           </div>
 

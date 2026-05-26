@@ -19,9 +19,10 @@ const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:
 const NAV_ORDER = [
   'fonctions-generalites','limites-continuite','derivation','etude-fonctions',
   'logarithme','exponentielle','suites',
+  'maths-financieres','matrices-systemes',
   'geometrie-espace',
   'statistiques',
-  'denombrement','probabilites',
+  'denombrement','probabilites','variables-aleatoires',
 ]
 const TITRES_NAV: Record<string,string> = {
   'fonctions-generalites': 'CH 01 — Fonctions & Généralités',
@@ -667,6 +668,126 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
     },
   ]
+},
+
+
+'maths-financieres': {
+  id:'maths-financieres', emoji:'💹', badge:'Analyse', color:'#10b981',
+  titre:'Mathématiques Financières',
+  desc:"Intérêts simples, intérêts composés, valeur acquise, valeur actuelle, annuités.",
+  souschapitres:[
+    {
+      id:'sc-mf1', titre:'8.1 Intérêts simples et composés',
+      notions:['Intérêt simple I=C0·i·n','Intérêt composé Cn=C0(1+i)^n','Valeur acquise et valeur actuelle','Taux équivalent'],
+      blocs:[
+        {
+          notion:'📐 Intérêts',
+          theoremes:[
+            { id:'F-MF1', type:'formule', nom:'Intérêts simples et composés',
+              enonce:"Intérêts simples :\nI = C₀ · i · n\nCn = C₀(1 + i·n)\n\nIntérêts composés (capitalisation) :\nCn = C₀(1+i)^n\nValeur acquise = Cn\nValeur actuelle = Cn/(1+i)^n = C₀\n\nTaux effectif = (1+iₘois)^12 - 1" },
+          ],
+          exercices:[
+            { id:'EX-MF1', niveau:'Facile', titre:'Placement à intérêts composés',
+              enonce:"C₀=5000 DT, i=4% annuel, n=3 ans. Calculer C3.",
+              correction:"C3=5000×(1,04)^3=5000×1,124864=5624,32 DT." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-mf2', titre:'8.2 Annuités',
+      notions:["Annuité constante a","Valeur acquise Va=a·[(1+i)^n-1]/i","Valeur actuelle Vp=a·[1-(1+i)^(-n)]/i","Tableau d'amortissement"],
+      blocs:[
+        {
+          notion:'📐 Annuités',
+          theoremes:[
+            { id:'F-MF2', type:'formule', nom:'Valeur acquise et actuelle des annuités',
+              enonce:"Annuités constantes a versées en fin de période :\n\nValeur acquise :\nVa = a · [(1+i)^n - 1] / i\n\nValeur actuelle :\nVp = a · [1 - (1+i)^(-n)] / i\n\nAmortissement d'emprunt :\nC₀ = Vp  (valeur actuelle = capital emprunté)\na = C₀ · i / [1-(1+i)^(-n)]" },
+          ],
+          exercices:[
+            { id:'EX-MF2', niveau:'Moyen', titre:'Calcul annuité',
+              enonce:"Emprunt de 20000 DT à 5% sur 4 ans. Calculer l'annuité a.",
+              correction:"a = 20000×0,05/[1-(1,05)^(-4)] = 1000/[1-0,8227] = 1000/0,1773 ≈ 5640,5 DT." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'matrices-systemes': {
+  id:'matrices-systemes', emoji:'🧮', badge:'Algèbre', color:'#a78bfa',
+  titre:'Matrices & Systèmes Linéaires',
+  desc:"Matrices, opérations, déterminants, inverse A^(-1), systèmes AX=b, applications économiques.",
+  souschapitres:[
+    {
+      id:'sc-mat', titre:'9.1 Matrices et opérations',
+      notions:["Définition matrice (m×n)","Addition et produit scalaire","Produit AB","Matrice identité et inverse"],
+      blocs:[
+        {
+          notion:'📐 Matrices',
+          theoremes:[
+            { id:'D-MA1', type:'def', nom:'Matrice et opérations',
+              enonce:"Matrice A de taille (m×n) : m lignes, n colonnes.\n\nAddition A+B : même taille, terme à terme.\nProduit λA : multiplier chaque terme par λ.\nProduit AB : (AB)ij = Σk aik·bkj (A:(m×p), B:(p×n))\n\nMatrice identité In : 1 sur diagonale, 0 ailleurs.\nA⁻¹ existe si det(A)≠0 : A·A⁻¹=In" },
+            { id:'F-MA2', type:'formule', nom:'Déterminant et inverse',
+              enonce:"Déterminant ordre 2 :\ndet(A)=ad-bc pour A=[[a,b],[c,d]]\n\nInverse ordre 2 :\nA⁻¹ = (1/det(A))·[[d,-b],[-c,a]]\n\nDéterminant ordre 3 (développement selon ligne 1) :\ndet(A)=a11·M11-a12·M12+a13·M13" },
+          ],
+          exercices:[
+            { id:'EX-MA1', niveau:'Moyen', titre:'Inverse de matrice',
+              enonce:"A=[[2,1],[3,2]]. Calculer A^(-1).",
+              correction:"det(A)=4-3=1. A^(-1)=[[2,-1],[-3,2]]. Vérif: A·A^(-1)=I2." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-sys', titre:'9.2 Systèmes linéaires',
+      notions:["Système AX=b","Méthode matricielle X=A^(-1)b","Méthode de Gauss","Applications économiques"],
+      blocs:[
+        {
+          notion:'📐 Systèmes linéaires',
+          theoremes:[
+            { id:'T-SY1', type:'thm', nom:'Résolution par méthode matricielle',
+              enonce:"Système AX=b (n équations, n inconnues) :\n\nSi det(A)≠0, unique solution : X = A^(-1)·b\n\nExemple économique :\n2x+y=100 (production A)\n3x+2y=180 (production B)\n\nA=[[2,1],[3,2]], b=[[100],[180]]\nA^(-1)=[[2,-1],[-3,2]]\nX=[[2×100-180],[(-3)×100+2×180]]=[[20],[60]]" },
+          ],
+          exercices:[
+            { id:'EX-SY1', niveau:'Moyen', titre:'Système économique',
+              enonce:"x+2y=14 et 3x+y=12. Résoudre par méthode matricielle.",
+              correction:"A=[[1,2],[3,1]], det=1-6=-5. A^(-1)=(1/-5)[[1,-2],[-3,1]].\nX=A^(-1)b=(-1/5)[[14-24],[(-3×14)+12]]=(-1/5)[[-10],[-30]]=[2,6]." },
+          ],
+        },
+      ],
+    },
+  ],
+},
+
+'variables-aleatoires': {
+  id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
+  titre:'Variables Aléatoires & Loi Binomiale',
+  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p), applications économiques.",
+  souschapitres:[
+    {
+      id:'sc-va', titre:'14.1 Variables aléatoires discrètes',
+      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X) et écart-type','Loi binomiale B(n,p)'],
+      blocs:[
+        {
+          notion:'📐 Variable aléatoire et loi binomiale',
+          theoremes:[
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
+              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ = √V(X)\n\nLinéarité : E(aX+b)=aE(X)+b\nV(aX+b)=a²V(X)" },
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
+              enonce:"X ~ B(n,p) : n épreuves de Bernoulli indépendantes\n\nP(X=k) = Cn^k · p^k · (1-p)^(n-k)\n\nE(X) = np\nV(X) = np(1-p)\n\nApplication économique :\nTaux de défaut, contrôle qualité, sondages.",
+              remarque:"Si n grand et p petit : B(n,p) ≈ Poisson(λ=np)." },
+          ],
+          exercices:[
+            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale — contrôle qualité',
+              enonce:"Lot de 10 pièces, 15% de défectueuses. X=nombre de défectueuses. Calculer P(X=0) et E(X).",
+              correction:"X~B(10;0,15). P(X=0)=(0,85)^10≈0,197. E(X)=10×0,15=1,5." },
+          ],
+        },
+      ],
+    },
+  ],
 },
 
 } // fin ALL_CHAPTERS

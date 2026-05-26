@@ -50,35 +50,54 @@ const PARTIE1 = [
   },
 ]
 
-// PARTIE 2 — GÉOMÉTRIE (1 chapitre)
+// PARTIE 2 — MATHÉMATIQUES FINANCIÈRES (2 chapitres)
 const PARTIE2 = [
   {
-    ch: 'CH 08', slug: 'geometrie-espace', titre: 'Géométrie dans l\'Espace',
-    badge: 'Géométrie', nbThm: 9, nbEx: 7,
-    desc: 'Vecteurs de l\'espace (composantes, somme, produit par scalaire), bases (trois vecteurs non coplanaires), produit scalaire dans l\'espace (définition, propriétés, applications), droites dans l\'espace (représentation paramétrique, cartésienne), plans dans l\'espace (ax+by+cz+d=0), positions relatives (droite-droite, droite-plan, plan-plan), distance point-plan et point-droite.'
+    ch: 'CH 08', slug: 'maths-financieres', titre: 'Mathématiques Financières',
+    badge: 'Analyse', nbThm: 8, nbEx: 7,
+    desc: "Intérêts simples I=C₀·i·n. Intérêts composés Cn=C₀(1+i)ⁿ. Valeur acquise et valeur actuelle. Annuités simples : valeur acquise Va=a·[(1+i)ⁿ-1]/i, valeur actuelle Vp=a·[1-(1+i)^(-n)]/i. Tableau d'amortissement.",
+  },
+  {
+    ch: 'CH 09', slug: 'matrices-systemes', titre: 'Matrices & Systèmes Linéaires',
+    badge: 'Algèbre', nbThm: 10, nbEx: 8,
+    desc: "Définition d'une matrice (m×n), types (nulle, identité, diagonale). Opérations : addition, multiplication par un scalaire, produit AB. Déterminants ordre 2 et 3. Inverse A⁻¹. Systèmes linéaires AX=b : méthode matricielle. Applications économiques.",
   },
 ]
 
-// PARTIE 3 — STATISTIQUES (1 chapitre)
+// PARTIE 3 — GÉOMÉTRIE (1 chapitre)
 const PARTIE3 = [
   {
-    ch: 'CH 09', slug: 'statistiques', titre: 'Statistiques — Séries à deux variables',
-    badge: 'Statistiques', nbThm: 6, nbEx: 5,
-    desc: 'Nuage de points (xi, yi), point moyen G(x̄, ȳ), ajustement linéaire (droite de régression par moindres carrés), coefficient de corrélation r (−1≤r≤1, interprétation qualité de l\'ajustement), prévisions par extrapolation et interpolation.'
+    ch: 'CH 10', slug: 'geometrie-espace', titre: "Géométrie dans l'Espace",
+    badge: 'Géométrie', nbThm: 9, nbEx: 7,
+    desc: "Vecteurs de l'espace, bases, produit scalaire. Droites et plans dans l'espace (Ã©quations cartésiennes). Positions relatives. Distances point-plan et point-droite.",
   },
 ]
 
-// PARTIE 4 — PROBABILITÉS (2 chapitres)
+// PARTIE 4 — STATISTIQUES (1 chapitre)
 const PARTIE4 = [
   {
-    ch: 'CH 10', slug: 'denombrement', titre: 'Dénombrement',
+    ch: 'CH 11', slug: 'statistiques', titre: 'Statistiques — Séries à deux variables',
+    badge: 'Statistiques', nbThm: 6, nbEx: 5,
+    desc: "Nuage de points (xi, yi), point moyen G(x̄, ȳ), droite de régression (moindres carrés), coefficient de corrélation r (-1≤r≤1), prévisions par extrapolation.",
+  },
+]
+
+// PARTIE 5 — PROBABILITÉS (3 chapitres)
+const PARTIE5 = [
+  {
+    ch: 'CH 12', slug: 'denombrement', titre: 'Dénombrement',
     badge: 'Probabilités', nbThm: 6, nbEx: 5,
-    desc: 'Arrangements Aₙᵖ = n!/(n−p)!, permutations n!, combinaisons Cₙᵖ = (n choose p), formule du binôme (a+b)ⁿ = Σ Cₙᵏ aᵏ bⁿ⁻ᵏ.'
+    desc: "Arrangements An^p=n!/(n-p)!, permutations n!, combinaisons Cn^p. Formule du binôme (a+b)^n=Σ Cn^k a^k b^(n-k).",
   },
   {
-    ch: 'CH 11', slug: 'probabilites', titre: 'Probabilités',
+    ch: 'CH 13', slug: 'probabilites', titre: 'Probabilités',
     badge: 'Probabilités', nbThm: 9, nbEx: 7,
-    desc: 'Vocabulaire probabiliste (univers Ω, événements élémentaires), probabilité sur ensemble fini (définition, axiomes), probabilité de la réunion P(A∪B)=P(A)+P(B)−P(A∩B), équiprobabilité P(A)=card(A)/card(Ω), probabilités conditionnelles P_A(B)=P(A∩B)/P(A), indépendance P(A∩B)=P(A)×P(B).'
+    desc: "Probabilité conditionnelle P(A|B)=P(A∩B)/P(B). Indépendance. Probabilités totales. Théorème de Bayes. Arbre pondéré.",
+  },
+  {
+    ch: 'CH 14', slug: 'variables-aleatoires', titre: 'Variables Aléatoires & Loi Binomiale',
+    badge: 'Probabilités', nbThm: 8, nbEx: 7,
+    desc: "Variable aléatoire discrète. Espérance E(X)=Σxi·pi. Variance V(X)=E(X²)-[E(X)]². Loi binomiale B(n,p) : P(X=k)=Cn^k·p^k·(1-p)^(n-k), E(X)=np, V(X)=np(1-p). Applications économiques.",
   },
 ]
 
@@ -87,6 +106,7 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Géométrie':    { bg: 'rgba(79,110,247,0.15)', color: '#4f6ef7' },
   'Statistiques': { bg: 'rgba(249,115,22,0.15)', color: '#f97316' },
   'Probabilités': { bg: 'rgba(245,200,66,0.15)', color: '#f5c842' },
+  'Algèbre':      { bg: 'rgba(124,58,237,0.15)',  color: '#a78bfa' },
 }
 
 function ChapterCard({ ch, href }: { ch: typeof PARTIE1[0]; href: string }) {
@@ -127,7 +147,7 @@ function PartieHeader({ titre, desc, color, count }: { titre: string; desc: stri
 }
 
 export default function EcoGestionPage() {
-  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length
+  const totalCh = PARTIE1.length + PARTIE2.length + PARTIE3.length + PARTIE4.length + PARTIE5.length
   return (
     <>
       <Navbar />
@@ -143,12 +163,12 @@ export default function EcoGestionPage() {
             <h1 style={{ fontSize: 'clamp(28px,4vw,44px)', marginBottom: 10 }}>Économie & Gestion</h1>
             <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 16 }}>
               Programme officiel CNP Tunisie — 4ème année secondaire. {totalCh} chapitres répartis en 4 parties :
-              Analyse · Géométrie de l'espace · Statistiques · Probabilités.
+              Analyse · Maths financières · Matrices · Géométrie · Statistiques · Probabilités.
             </p>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
               <span>💹 {totalCh} chapitres</span><span>·</span>
-              <span>📊 92+ théorèmes</span><span>·</span>
-              <span>📝 73+ exercices</span>
+              <span>📊 130+ théorèmes</span><span>·</span>
+              <span>📝 100+ exercices</span>
             </div>
           </div>
 
@@ -160,27 +180,35 @@ export default function EcoGestionPage() {
             </div>
           </div>
 
-          {/* Partie 2 */}
+                    {/* Partie 2 — Maths Financières */}
           <div style={{ marginBottom: 44 }}>
-            <PartieHeader titre="📐 Partie 2 — Géométrie dans l'Espace" desc="Vecteurs · Produit scalaire · Droites et plans · Distances" color="#4f6ef7" count={PARTIE2.length} />
+            <PartieHeader titre="💹 Partie 2 — Mathématiques Financières & Algèbre" desc="Intérêts composés · Annuités · Matrices · Systèmes linéaires AX=b" color="#a78bfa" count={PARTIE2.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE2.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/eco-gestion/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 3 */}
+          {/* Partie 3 — Géométrie */}
           <div style={{ marginBottom: 44 }}>
-            <PartieHeader titre="📊 Partie 3 — Statistiques" desc="Séries à deux variables · Droite de régression · Coefficient de corrélation r" color="#f97316" count={PARTIE3.length} />
+            <PartieHeader titre="📐 Partie 3 — Géométrie dans l'Espace" desc="Vecteurs · Produit scalaire · Droites et plans · Distances" color="#4f6ef7" count={PARTIE3.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE3.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/eco-gestion/${ch.slug}`} />)}
             </div>
           </div>
 
-          {/* Partie 4 */}
-          <div style={{ marginBottom: 52 }}>
-            <PartieHeader titre="🎲 Partie 4 — Probabilités" desc="Dénombrement (arrangements, combinaisons, binôme) · Probabilités conditionnelles & indépendance" color="#f5c842" count={PARTIE4.length} />
+          {/* Partie 4 — Statistiques */}
+          <div style={{ marginBottom: 44 }}>
+            <PartieHeader titre="📊 Partie 4 — Statistiques" desc="Séries à deux variables · Droite de régression · Coefficient de corrélation r" color="#f97316" count={PARTIE4.length} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
               {PARTIE4.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/eco-gestion/${ch.slug}`} />)}
+            </div>
+          </div>
+
+          {/* Partie 5 — Probabilités */}
+          <div style={{ marginBottom: 52 }}>
+            <PartieHeader titre="🎲 Partie 5 — Probabilités & Statistiques" desc="Dénombrement · Probabilités conditionnelles · Variables aléatoires · Loi binomiale" color="#f5c842" count={PARTIE5.length} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: 16 }}>
+              {PARTIE5.map(ch => <ChapterCard key={ch.slug} ch={ch} href={`/bac/eco-gestion/${ch.slug}`} />)}
             </div>
           </div>
 
