@@ -2981,21 +2981,48 @@ function CorrectionDirectePanel({ onStart }: {
   const examRef = useRef<HTMLInputElement>(null)
   const copyRef = useRef<HTMLInputElement>(null)
 
+  // Charger mammoth.js pour lire les fichiers Word
+  useEffect(() => {
+    if (!(window as any).mammoth) {
+      const s = document.createElement('script')
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js'
+      s.async = true
+      document.head.appendChild(s)
+    }
+  }, [])
+
   const handleExamFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files||[]) as File[]
     if (!files.length) return
     const imgs: {name:string;data:string}[] = []
     for (const f of files) {
       if (f.type === 'application/pdf') {
-        // PDF non supporté directement — demander une capture d'écran
-        setExamFileName(f.name + ' (PDF détecté — voir note ci-dessous)')
-        setExamFile(`[PDF importé : ${f.name}]\nNote : Pour les PDFs, faites une capture d'écran de chaque page et importez les images, ou copiez-collez le texte de l'examen dans la zone ci-dessous.`)
+        setExamFileName(f.name + ' ⚠️ PDF non supporté directement')
+        setTimeout(() => {
+          setExamFile("PDF detecte\n\n1 - Capture ecran : photo de chaque page en JPG/PNG\n2 - Word : convertir en .docx via smallpdf.com puis importer\n3 - Copier-coller : ouvrir le PDF, Ctrl+A puis Ctrl+C et coller ici")
+        }, 100)
       } else if (f.type.startsWith('image/')) {
         const r = new FileReader()
         const rawData = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
         // Compresser à max 1200px/75% pour éviter erreur 400 API
         const data = await compressImageBase64(rawData)
         imgs.push({ name:f.name, data })
+      } else if (f.name.endsWith('.docx') || f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const arrayBuffer = await f.arrayBuffer()
+        const mammoth = (window as any).mammoth
+        if (mammoth) {
+          try {
+            const result = await mammoth.extractRawText({ arrayBuffer })
+            setExamFile(result.value); setExamFileName(f.name + ' ✅ Word importé')
+          } catch { setExamFile("Erreur lecture Word — copiez-collez le texte ci-dessous.") }
+        } else {
+          await new Promise(r => setTimeout(r, 1500))
+          const m2 = (window as any).mammoth
+          if (m2) {
+            try { const result = await m2.extractRawText({ arrayBuffer }); setExamFile(result.value); setExamFileName(f.name + ' ✅') }
+            catch { setExamFile("Erreur lecture Word.") }
+          } else { setExamFile("Bibliothèque Word en cours de chargement — réessayez dans 2 secondes.") }
+        }
       } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
         const text = await f.text()
         setExamFile(text); setExamFileName(f.name)
@@ -3098,7 +3125,7 @@ ${copyContent || '(Aucune copie — fournir la correction complète)'}
               background:examFileName?'rgba(245,158,11,0.06)':'rgba(245,158,11,0.03)',
               transition:'all 0.2s',
             }}>
-            <input ref={examRef} type="file" accept=".txt,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
+            <input ref={examRef} type="file" accept=".txt,.docx,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
             {examFileName ? (
               <>
                 <div style={{fontSize:36,marginBottom:10}}>📄</div>
@@ -3111,7 +3138,7 @@ ${copyContent || '(Aucune copie — fournir la correction complète)'}
                 <p style={{fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.85)',margin:'0 0 6px'}}>Importer le sujet de l'examen</p>
                 <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 14px'}}>Photos (JPG/PNG/WebP) ou texte — glissez ou cliquez</p>
                 <div style={{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
-                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📸',l:'JPG/PNG/WebP'},{icon:'📝',l:'Texte .txt'}].map(f=>(
+                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📸',l:'JPG/PNG/WebP'},{icon:'📝',l:'Texte / Word'}].map(f=>(
                     <span key={f.l} style={{fontSize:11,padding:'4px 12px',background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'rgba(255,255,255,0.5)'}}>
                       {f.icon} {f.l}
                     </span>
