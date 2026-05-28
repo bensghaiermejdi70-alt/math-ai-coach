@@ -186,6 +186,51 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000, matie
   return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
 }
 
+// ── API Claude avec images (correction directe PDF/photo) ────────
+async function askClaudeWithImages(
+  textPrompt: string,
+  images: { data: string; mediaType: string }[],
+  system: string,
+  maxTokens = 8000
+): Promise<string> {
+  const content: any[] = []
+  for (const img of images) {
+    content.push({
+      type: 'image',
+      source: { type: 'base64', media_type: img.mediaType, data: img.data }
+    })
+  }
+  content.push({ type: 'text', text: textPrompt })
+  const r = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content }],
+      type: 'simulations',
+    }),
+  })
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(err.error || `HTTP ${r.status}`)
+  }
+  const d = await r.json()
+  return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
+}
+
+// ── Extraire images base64 depuis texte ───────────────────────────
+function extractImagesFromText(text: string): { images: { data: string; mediaType: string }[]; cleanText: string } {
+  const images: { data: string; mediaType: string }[] = []
+  const cleanText = text.replace(/\[IMAGE_BASE64:(data:[^;]+;base64,[^\]]+)\]/g, (_, dataUrl) => {
+    const match = dataUrl.match(/data:([^;]+);base64,(.+)/)
+    if (match) images.push({ mediaType: match[1], data: match[2] })
+    return "[Image de l'examen]"
+  })
+  return { images, cleanText }
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   try { return JSON.parse(cleaned) }
@@ -676,7 +721,34 @@ async function correctSingleExercise(
 ): Promise<string> {
   const ex = exam.exercises[exerciseIndex]
   if (!ex) return ''
-  return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
+
+  // Extraire images depuis statement et copie (correction directe)
+  const { images: examImgs, cleanText: cleanStmt } = extractImagesFromText(ex.statement || '')
+  const { images: copyImgs, cleanText: cleanWork } = extractImagesFromText(studentWork || '')
+  const allImages = [...examImgs, ...copyImgs]
+
+  if (allImages.length > 0) {
+    const isAnglais = exam.title.toLowerCase().includes('english') || exam.title.toLowerCase().includes('anglais')
+    const system = isAnglais
+      ? `You are an expert English teacher for the French Baccalaureate. Write an EXHAUSTIVE correction ENTIRELY IN ENGLISH based on the exam image(s). Use markdown.`
+      : `Tu es un professeur correcteur expert du Baccalauréat français.
+Tu analyses l'image de l'examen fournie et rédiges une CORRECTION COMPLÈTE, EXHAUSTIVE et PÉDAGOGIQUE.
+Identifie tous les exercices et questions visibles dans l'image.
+Pour chaque question : énoncé reconstitué, concept, résolution étape par étape, résultat.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
+    const prompt = cleanWork && cleanWork !== '(Aucune copie — fournir la correction complète)'
+      ? `Voici l'examen (image) et la copie de l'élève :
+
+Copie :
+${cleanWork}
+
+Rédige la correction complète avec analyse de la copie.`
+      : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
+    return askClaudeWithImages(prompt, allImages, system, 8000)
+  }
+
+  const cleanEx = { ...ex, statement: cleanStmt }
+  return correctOneExercise(cleanEx, exam.totalPoints, cleanWork || studentWork, exam.title)
 }
 
 // ── Analyse UN exercice immédiatement après correction ───────────
@@ -2906,9 +2978,10 @@ function CorrectionDirectePanel({ onStart }: {
       copyFiles.filter(f=>f.type==='image').map(f=>`[Copie élève : ${f.name}]`).join('\n'),
     ].filter(Boolean).join('\n\n')
 
+    const examImagesB64 = examImages.map(img => `[IMAGE_BASE64:${img.data}]`).join('\n')
     const fullText = `[CORRECTION_DIRECTE]
 ---EXAMEN---
-${examContent}
+${examImagesB64 ? examImagesB64 + '\n' : ''}${examContent}
 ---COPIE_ELEVE---
 ${copyContent || '(Aucune copie — fournir la correction complète)'}
 [/CORRECTION_DIRECTE]`
@@ -5264,10 +5337,10 @@ function SimulationFrancePageInner() {
         totalPoints: 20,
         exercises: [{
           num: 1,
-          title: 'Examen Importé',
-          theme: 'Mathématiques',
+          title: 'Examen importé — Bac France',
+          theme: 'Bac France',
           points: 20,
-          statement: examContent || 'Examen importé — voir le sujet fourni.',
+          statement: examContent,
         }],
       }
       setStudentAnswers(copyContent)
