@@ -459,43 +459,55 @@ async function askClaudeWithImages(
   matiere?: MatiereType
 ): Promise<string> {
   const m = matiere || globalMatiere
+  const CHUNK_SIZE = 2
 
-  // Construire le content multimodal
-  const content: any[] = []
-
-  // Ajouter les images en premier
-  for (const img of images) {
-    content.push({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: img.mediaType,
-        data: img.data,
-      }
+  const callChunk = async (imgs: { data: string; mediaType: string }[], prompt: string): Promise<string> => {
+    const content: any[] = []
+    for (const img of imgs) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: img.mediaType, data: img.data }
+      })
+    }
+    content.push({ type: 'text', text: prompt })
+    const r = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content }],
+        type: 'simulations',
+        matiere: m
+      }),
     })
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}))
+      throw new Error(err.error || `HTTP ${r.status}`)
+    }
+    const d = await r.json()
+    return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
   }
 
-  // Ajouter le texte
-  content.push({ type: 'text', text: textPrompt })
-
-  const r = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: 'user', content }],
-      type: 'simulations',
-      matiere: m
-    }),
-  })
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}))
-    throw new Error(err.error || `HTTP ${r.status}`)
+  // Découper en chunks de 2 images max
+  const chunks: { data: string; mediaType: string }[][] = []
+  for (let i = 0; i < images.length; i += CHUNK_SIZE) {
+    chunks.push(images.slice(i, i + CHUNK_SIZE))
   }
-  const d = await r.json()
-  return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
+
+  if (chunks.length === 1) return callChunk(chunks[0], textPrompt)
+
+  // Multi-chunks : traiter page par page et concatener
+  const partials: string[] = []
+  for (let i = 0; i < chunks.length; i++) {
+    const pageLabel = `Pages ${i * CHUNK_SIZE + 1}-${Math.min((i + 1) * CHUNK_SIZE, images.length)} sur ${images.length}`
+    const chunkPrompt = i === 0
+      ? `[${pageLabel}] ${textPrompt}`
+      : `[${pageLabel}] Continue la correction des pages suivantes. Garde la même structure.`
+    partials.push(await callChunk(chunks[i], chunkPrompt))
+  }
+  return partials.join('\n\n---\n\n')
 }
 
 // ── Extraire images base64 depuis un statement/answers ────────────

@@ -187,37 +187,65 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000, matie
 }
 
 // ── API Claude avec images (correction directe PDF/photo) ────────
+// Envoie max 2 images par appel pour éviter les erreurs 400 (payload trop lourd)
 async function askClaudeWithImages(
   textPrompt: string,
   images: { data: string; mediaType: string }[],
   system: string,
   maxTokens = 8000
 ): Promise<string> {
-  const content: any[] = []
-  for (const img of images) {
-    content.push({
-      type: 'image',
-      source: { type: 'base64', media_type: img.mediaType, data: img.data }
+
+  // Chunk les images par 2 max pour éviter les payloads trop lourds
+  const CHUNK_SIZE = 2
+  const chunks: { data: string; mediaType: string }[][] = []
+  for (let i = 0; i < images.length; i += CHUNK_SIZE) {
+    chunks.push(images.slice(i, i + CHUNK_SIZE))
+  }
+
+  const callChunk = async (imgs: { data: string; mediaType: string }[], prompt: string): Promise<string> => {
+    const content: any[] = []
+    for (const img of imgs) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: img.mediaType, data: img.data }
+      })
+    }
+    content.push({ type: 'text', text: prompt })
+    const r = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content }],
+        type: 'simulations',
+      }),
     })
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}))
+      throw new Error(err.error || `HTTP ${r.status}`)
+    }
+    const d = await r.json()
+    return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
   }
-  content.push({ type: 'text', text: textPrompt })
-  const r = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: 'user', content }],
-      type: 'simulations',
-    }),
-  })
-  if (!r.ok) {
-    const err = await r.json().catch(() => ({}))
-    throw new Error(err.error || `HTTP ${r.status}`)
+
+  if (chunks.length === 1) {
+    // Cas simple : 1 ou 2 images
+    return callChunk(chunks[0], textPrompt)
   }
-  const d = await r.json()
-  return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
+
+  // Plusieurs chunks : traiter page par page et synthétiser
+  const partials: string[] = []
+  for (let i = 0; i < chunks.length; i++) {
+    const pageLabel = chunks.length > 1 ? `Pages ${i * CHUNK_SIZE + 1}-${Math.min((i + 1) * CHUNK_SIZE, images.length)} sur ${images.length}` : ''
+    const chunkPrompt = i === 0
+      ? `${pageLabel ? `[${pageLabel}] ` : ''}${textPrompt}`
+      : `[${pageLabel}] Continue la correction des pages suivantes de l'examen. Même structure que précédemment.`
+    const result = await callChunk(chunks[i], chunkPrompt)
+    partials.push(result)
+  }
+  return partials.join('\n\n---\n\n')
 }
 
 // ── Extraire images base64 depuis texte ───────────────────────────
