@@ -5141,30 +5141,52 @@ function SimulationIAPageInner() {
   ) => {
     // ── Mode Correction Directe ──────────────────────────────
     if (txt.startsWith('[CORRECTION_DIRECTE]')) {
-      // Extraire section et contenu
-      const secMatch = txt.match(/Section: (\w+)/)
+
+      // 1. Vérification abonnement AVANT tout (même règle que simulation normale)
+      if (!isAdmin && hasActiveSubscription && matiereActive) {
+        const matiereAbonnement = matiereActive
+        const matiereUIKey = (() => {
+          const map: Record<string,string> = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais' }
+          return map[activeMatiere] || activeMatiere
+        })()
+        if (matiereAbonnement !== 'mathematiques' && matiereUIKey !== matiereAbonnement) {
+          alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nLa correction directe est réservée à cette matière.\n\nChangez de matière ou abonnez-vous à la matière souhaitée.`)
+          return
+        }
+      }
+
+      // 2. Extraire contenu examen et copie
       const examMatch = txt.match(/---EXAMEN---\n([\s\S]*?)---COPIE_ELEVE---/)
       const copyMatch = txt.match(/---COPIE_ELEVE---\n([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
-      const secKey = secMatch?.[1] || 'maths'
-      const secLabels: Record<string,string> = { maths:'Mathématiques', scexp:'Sciences Exp.', sctech:'Sciences Tech.', info:'Informatique', eco:'Éco-Gestion' }
-      const secLabel = secLabels[secKey] || 'Mathématiques'
-      const examContent = examMatch?.[1]?.trim() || txt
+      const examContent = examMatch?.[1]?.trim() || ''
       const copyContent = copyMatch?.[1]?.trim() || ''
 
-      // Créer un faux examen à partir du sujet importé
+      // 3. Déduire la matière depuis activeMatiere (et non depuis un champ Section supprimé)
+      const matiereLabels: Record<string,string> = {
+        maths:'Mathématiques', physique:'Physique-Chimie',
+        informatique:'Informatique', anglais:'Anglais'
+      }
+      const matiereLabel = matiereLabels[activeMatiere] || 'Mathématiques'
+
+      if (!examContent) {
+        alert('⚠️ Veuillez importer un sujet d\'examen avant de lancer la correction.')
+        return
+      }
+
+      // 4. Créer le fakeExam avec la bonne matière
       const fakeExam: GeneratedExam = {
         id: `direct-${Date.now()}`,
         index: 0,
-        title: `Correction Directe — ${secLabel}`,
-        section: secLabel,
+        title: `Correction Directe — ${matiereLabel}`,
+        section: matiereLabel,
         duration: 180,
         totalPoints: 20,
         exercises: [{
           num: 1,
-          title: 'Examen Importé',
-          theme: secLabel,
+          title: `Examen importé — ${matiereLabel}`,
+          theme: matiereLabel,
           points: 20,
-          statement: examContent || 'Examen importé — voir le sujet fourni.',
+          statement: examContent,
         }],
       }
 
