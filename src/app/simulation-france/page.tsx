@@ -2528,7 +2528,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
   const SEC_CONFIGS_ACTIVE = scProp       ?? SECTION_CONFIGS
-  const [tab, setTab] = useState<'archive'|'chapitre'|'import'>('archive')
+  const [tab, setTab] = useState<'archive'|'chapitre'|'import'|'correction-directe'>('archive')
   const searchParams = useSearchParams()
 
   // ── Onglet Archives ──
@@ -2610,13 +2610,16 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
           ['archive','🗂️ Archives officielles'],
           ['chapitre','📚 Par Chapitre'],
           ['import','📁 Importer'],
+          ['correction-directe','✅ Correction Directe'],
         ] as const).map(([k,lbl])=>(
           <button key={k} onClick={()=>setTab(k)}
             style={{padding:'10px 20px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all 0.2s',fontFamily:'inherit',
               background:tab===k
                 ? k==='chapitre'
                   ? 'linear-gradient(135deg,#06d6a0,#059669)'
-                  : 'linear-gradient(135deg,#6366f1,#8b5cf6)'
+                  : k==='correction-directe'
+                    ? 'linear-gradient(135deg,#f59e0b,#f97316)'
+                    : 'linear-gradient(135deg,#6366f1,#8b5cf6)'
                 : 'transparent',
               color:tab===k?'white':'rgba(255,255,255,0.45)',
               boxShadow:tab===k?'0 4px 14px rgba(99,102,241,0.45)':'none'}}>
@@ -2828,6 +2831,278 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             <PrimaryBtn onClick={()=>(customText.trim().length>20||fileName)&&onStart([],customText)} disabled={customText.trim().length<=20&&!fileName}>
               🧠 Générer mes examens →
             </PrimaryBtn>
+          </div>
+        </div>
+      )}
+      {/* ── ONGLET CORRECTION DIRECTE ── */}
+      {tab==='correction-directe' && (
+        <CorrectionDirectePanel onStart={onStart} />
+      )}
+    </div>
+  )
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// CORRECTION DIRECTE — Panel (France)
+// L'élève importe son examen + sa copie → correction + remédiation
+// ═══════════════════════════════════════════════════════════════════
+function CorrectionDirectePanel({ onStart }: {
+  onStart:(archives:Archive[], customText:string, chapitres?:any, sectionLabel?:string)=>void
+}) {
+  const [examFile, setExamFile] = useState('')
+  const [examFileName, setExamFileName] = useState('')
+  const [examImages, setExamImages] = useState<{name:string;data:string}[]>([])
+  const [copyText, setCopyText] = useState('')
+  const [copyFiles, setCopyFiles] = useState<{name:string;type:string;data:string}[]>([])
+  const [step, setStep] = useState<'examen'|'copie'>('examen')
+  const examRef = useRef<HTMLInputElement>(null)
+  const copyRef = useRef<HTMLInputElement>(null)
+
+  const handleExamFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files||[]) as File[]
+    if (!files.length) return
+    const imgs: {name:string;data:string}[] = []
+    for (const f of files) {
+      if (f.type.startsWith('image/') || f.type==='application/pdf') {
+        const r = new FileReader()
+        const data = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
+        imgs.push({ name:f.name, data })
+      } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
+        const text = await f.text()
+        setExamFile(text); setExamFileName(f.name)
+      }
+    }
+    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')) }
+    if (examRef.current) examRef.current.value = ''
+  }
+
+  const handleCopyFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files||[]) as File[]
+    if (!files.length) return
+    for (const f of files) {
+      if (f.type.startsWith('image/')) {
+        const r = new FileReader()
+        const data = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
+        setCopyFiles(prev=>[...prev,{name:f.name,type:'image',data}])
+      } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
+        const text = await f.text()
+        setCopyText(prev=>prev ? prev+'\n\n--- '+f.name+' ---\n'+text : text)
+      }
+    }
+    if (copyRef.current) copyRef.current.value = ''
+  }
+
+  const canGoToCopie = examFile.trim().length > 20 || examImages.length > 0
+
+  const handleCorrect = () => {
+    const examContent = [
+      examImages.length > 0 ? `[Examen importé : ${examImages.map(i=>i.name).join(', ')} — ${examImages.length} page(s)]` : '',
+      examFile || '',
+    ].filter(Boolean).join('\n\n')
+
+    const copyContent = [
+      copyText.trim(),
+      copyFiles.filter(f=>f.type==='image').map(f=>`[Copie élève : ${f.name}]`).join('\n'),
+    ].filter(Boolean).join('\n\n')
+
+    const fullText = `[CORRECTION_DIRECTE]
+---EXAMEN---
+${examContent}
+---COPIE_ELEVE---
+${copyContent || '(Aucune copie — fournir la correction complète)'}
+[/CORRECTION_DIRECTE]`
+
+    onStart([], fullText)
+  }
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:0}}>
+
+      {/* Info banner */}
+      <div style={{padding:'14px 18px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:14,marginBottom:24,display:'flex',gap:12,alignItems:'flex-start'}}>
+        <span style={{fontSize:20,flexShrink:0}}>⚡</span>
+        <div>
+          <p style={{margin:'0 0 3px',fontWeight:700,fontSize:14,color:'#e2e8f0'}}>Correction Directe — sans simulation</p>
+          <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.6}}>
+            Importe ton examen (sujet) + ta copie (réponses) → l'IA te génère la <strong style={{color:'#fbbf24'}}>correction complète</strong> + <strong style={{color:'#6ee7b7'}}>remédiation personnalisée</strong>.
+          </p>
+        </div>
+      </div>
+
+      {/* Stepper examen / copie */}
+      <div style={{display:'flex',gap:0,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,overflow:'hidden'}}>
+        {([
+          {key:'examen',label:'1 — Importer le sujet',icon:'📄'},
+          {key:'copie', label:'2 — Ajouter ta copie', icon:'✍️'},
+        ] as const).map((s,i)=>(
+          <button key={s.key}
+            onClick={()=>{if(s.key==='copie'&&!canGoToCopie)return;setStep(s.key)}}
+            style={{
+              flex:1,padding:'14px 20px',border:'none',cursor:s.key==='copie'&&!canGoToCopie?'not-allowed':'pointer',
+              fontFamily:'inherit',fontWeight:700,fontSize:13,
+              display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+              background:step===s.key?s.key==='examen'?'linear-gradient(135deg,#6366f1,#8b5cf6)':'linear-gradient(135deg,#06d6a0,#059669)':'transparent',
+              color:step===s.key?'white':s.key==='copie'&&!canGoToCopie?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.5)',
+              borderRight:i===0?'1px solid rgba(255,255,255,0.08)':'none',
+              transition:'all 0.2s',
+            }}>
+            <span>{s.icon}</span> {s.label}
+            {s.key==='examen'&&canGoToCopie&&<span style={{fontSize:14,color:'#6ee7b7'}}>✓</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* ═══ STEP 1 — Importer le sujet ═══ */}
+      {step==='examen' && (
+        <div style={{display:'flex',flexDirection:'column',gap:16}}>
+
+          {/* Zone upload examen */}
+          <div
+            onClick={()=>examRef.current?.click()}
+            onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor='rgba(245,158,11,0.6)'}}
+            onDragLeave={e=>{e.currentTarget.style.borderColor='rgba(245,158,11,0.3)'}}
+            onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor='rgba(245,158,11,0.3)';const dt=e.dataTransfer;if(dt.files.length)handleExamFile({target:{files:dt.files}} as any)}}
+            style={{
+              border:'2px dashed rgba(245,158,11,0.3)',borderRadius:16,
+              padding:'36px 28px',textAlign:'center',cursor:'pointer',
+              background:examFileName?'rgba(245,158,11,0.06)':'rgba(245,158,11,0.03)',
+              transition:'all 0.2s',
+            }}>
+            <input ref={examRef} type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
+            {examFileName ? (
+              <>
+                <div style={{fontSize:36,marginBottom:10}}>📄</div>
+                <p style={{fontWeight:700,color:'#fbbf24',fontSize:14,margin:'0 0 4px'}}>{examFileName}</p>
+                <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',margin:0}}>Cliquez pour ajouter d'autres pages</p>
+              </>
+            ) : (
+              <>
+                <div style={{fontSize:40,marginBottom:12}}>📥</div>
+                <p style={{fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.85)',margin:'0 0 6px'}}>Importer le sujet de l'examen</p>
+                <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 14px'}}>Photo, scan, PDF ou texte — glissez ou cliquez</p>
+                <div style={{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
+                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📄',l:'PDF'},{icon:'📝',l:'Texte .txt'}].map(f=>(
+                    <span key={f.l} style={{fontSize:11,padding:'4px 12px',background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'rgba(255,255,255,0.5)'}}>
+                      {f.icon} {f.l}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Ou coller texte */}
+          <div>
+            <p style={{fontSize:11,color:'rgba(255,255,255,0.3)',textAlign:'center',margin:'0 0 8px',textTransform:'uppercase',letterSpacing:'0.08em'}}>ou coller le texte du sujet</p>
+            <textarea value={examFile} onChange={e=>setExamFile(e.target.value)}
+              placeholder="Copiez-collez ici l'énoncé de l'examen complet (exercices, questions...)..."
+              style={{width:'100%',height:140,padding:'13px 15px',borderRadius:12,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box' as const,transition:'border 0.2s'}}
+              onFocus={e=>e.target.style.borderColor='rgba(245,158,11,0.4)'}
+              onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
+          </div>
+
+          {examImages.length > 0 && (
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {examImages.map((img,i)=>(
+                <div key={i} style={{position:'relative'}}>
+                  <img src={img.data} alt={img.name} style={{width:80,height:80,objectFit:'cover',borderRadius:10,border:'1px solid rgba(245,158,11,0.3)'}}/>
+                  <button onClick={()=>setExamImages(p=>p.filter((_,j)=>j!==i))}
+                    style={{position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:'50%',background:'#ef4444',border:'none',color:'white',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <button
+              onClick={()=>canGoToCopie&&setStep('copie')}
+              disabled={!canGoToCopie}
+              style={{
+                padding:'12px 28px',borderRadius:12,border:'none',
+                background:canGoToCopie?'linear-gradient(135deg,#f59e0b,#f97316)':'rgba(255,255,255,0.07)',
+                color:canGoToCopie?'white':'rgba(255,255,255,0.25)',
+                fontWeight:700,fontSize:14,cursor:canGoToCopie?'pointer':'not-allowed',
+                fontFamily:'inherit',transition:'all 0.2s',
+              }}>
+              Suivant — Ajouter ma copie →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STEP 2 — Ajouter la copie ═══ */}
+      {step==='copie' && (
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+
+          {/* Récap sujet */}
+          <div style={{padding:'10px 16px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:10,display:'flex',alignItems:'center',gap:10,fontSize:12,color:'#fbbf24'}}>
+            <span>📄</span>
+            <span style={{fontWeight:600}}>Sujet importé :</span>
+            <span style={{color:'rgba(255,255,255,0.5)'}}>{examFileName || `${examFile.length} caractères`}</span>
+            <button onClick={()=>setStep('examen')} style={{marginLeft:'auto',fontSize:11,padding:'2px 8px',borderRadius:6,border:'1px solid rgba(245,158,11,0.3)',background:'transparent',color:'rgba(245,158,11,0.7)',cursor:'pointer',fontFamily:'inherit'}}>Modifier</button>
+          </div>
+
+          <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'4px 0'}}>
+            Ta copie (tes réponses)
+          </p>
+
+          {/* Upload copie */}
+          <div
+            onClick={()=>copyRef.current?.click()}
+            style={{border:'2px dashed rgba(99,102,241,0.3)',borderRadius:14,padding:'24px 20px',textAlign:'center',cursor:'pointer',background:'rgba(99,102,241,0.03)',transition:'all 0.2s'}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.background='rgba(99,102,241,0.07)'}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.3)';e.currentTarget.style.background='rgba(99,102,241,0.03)'}}>
+            <input ref={copyRef} type="file" accept=".txt,.jpg,.jpeg,.png,.webp" multiple onChange={handleCopyFile} style={{display:'none'}}/>
+            <p style={{margin:0,fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.6)'}}>📎 Importer ma copie (photos, scan ou .txt)</p>
+            <p style={{margin:'4px 0 0',fontSize:11,color:'rgba(255,255,255,0.3)'}}>Photos de ta copie papier ou fichier texte</p>
+          </div>
+
+          {copyFiles.length > 0 && (
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              {copyFiles.map((f,i)=>(
+                <div key={i} style={{position:'relative'}}>
+                  {f.type==='image'
+                    ? <img src={f.data} alt={f.name} style={{width:72,height:72,objectFit:'cover',borderRadius:8,border:'1px solid rgba(99,102,241,0.3)'}}/>
+                    : <div style={{width:72,height:72,borderRadius:8,background:'rgba(99,102,241,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>📄</div>
+                  }
+                  <button onClick={()=>setCopyFiles(p=>p.filter((_,j)=>j!==i))}
+                    style={{position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#ef4444',border:'none',color:'white',cursor:'pointer',fontSize:10,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <textarea value={copyText} onChange={e=>setCopyText(e.target.value)}
+            placeholder={"Tape tes réponses ici ou laisse vide pour la correction complète...\n\nExercice 1 :\n1) ...\n2) ..."}
+            style={{width:'100%',height:180,padding:'13px 15px',borderRadius:12,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box' as const,transition:'border 0.2s'}}
+            onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
+            onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
+
+          <p style={{fontSize:11,color:'rgba(255,255,255,0.25)',margin:0,fontStyle:'italic'}}>
+            💡 Sans copie → correction complète du sujet. Avec ta copie → correction personnalisée + remédiation ciblée.
+          </p>
+
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:8,borderTop:'1px solid rgba(255,255,255,0.06)',flexWrap:'wrap',gap:12}}>
+            <button onClick={()=>setStep('examen')}
+              style={{padding:'10px 18px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.4)',cursor:'pointer',fontFamily:'inherit',fontSize:13,fontWeight:600}}>
+              ← Retour
+            </button>
+            <button onClick={handleCorrect}
+              style={{
+                padding:'14px 32px',borderRadius:13,border:'none',
+                background:'linear-gradient(135deg,#f59e0b,#059669)',
+                color:'white',fontWeight:800,fontSize:14,
+                cursor:'pointer',fontFamily:'inherit',
+                boxShadow:'0 6px 24px rgba(6,214,160,0.3)',
+                display:'flex',alignItems:'center',gap:10,
+              }}>
+              <span>⚡</span>
+              {copyText.trim().length > 0 || copyFiles.length > 0
+                ? 'Corriger ma copie + Remédiation →'
+                : 'Obtenir la correction complète →'
+              }
+            </button>
           </div>
         </div>
       )}
@@ -4974,6 +5249,34 @@ function SimulationFrancePageInner() {
     chapitres?: {titre:string;badge:string;desc:string}[],
     sectionLabel?: string
   ) => {
+    // ── Mode Correction Directe ──────────────────────────────
+    if (txt.startsWith('[CORRECTION_DIRECTE]')) {
+      const examMatch = txt.match(/---EXAMEN---\n([\s\S]*?)---COPIE_ELEVE---/)
+      const copyMatch = txt.match(/---COPIE_ELEVE---\n([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
+      const examContent = examMatch?.[1]?.trim() || txt
+      const copyContent = copyMatch?.[1]?.trim() || ''
+      const fakeExam: GeneratedExam = {
+        id: `direct-${Date.now()}`,
+        index: 0,
+        title: 'Correction Directe — Bac France',
+        section: 'Bac France',
+        duration: 180,
+        totalPoints: 20,
+        exercises: [{
+          num: 1,
+          title: 'Examen Importé',
+          theme: 'Mathématiques',
+          points: 20,
+          statement: examContent || 'Examen importé — voir le sujet fourni.',
+        }],
+      }
+      setStudentAnswers(copyContent)
+      setActiveExam(fakeExam)
+      setCorrectionText('')
+      setGradeResult(null)
+      setPhase('correction')
+      return
+    }
     // Vérification abonnement : la matière UI doit correspondre à l'abonnement actif
     if (!isAdmin && hasActiveSubscription && matiereActive) {
       const _mapCheck: Record<string,string> = {
