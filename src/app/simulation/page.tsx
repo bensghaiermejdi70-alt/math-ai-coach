@@ -2887,6 +2887,7 @@ function CorrectionDirectePanel({ onStart, matiere }: {
   const [examFile, setExamFile] = useState('')
   const [examFileName, setExamFileName] = useState('')
   const [examImages, setExamImages] = useState<{name:string;data:string}[]>([])
+  const [examReady, setExamReady] = useState(false)
   const [copyText, setCopyText] = useState('')
   const [copyFiles, setCopyFiles] = useState<{name:string;type:string;data:string}[]>([])
   const [step, setStep] = useState<'examen'|'copie'>('examen')
@@ -2929,6 +2930,7 @@ function CorrectionDirectePanel({ onStart, matiere }: {
             const result = await mammoth.extractRawText({ arrayBuffer })
             setExamFile(result.value)
             setExamFileName(f.name + ' ✅ Word importé')
+            setExamReady(true)
           } catch {
             setExamFile(`[Erreur lecture Word : ${f.name}]\nEssayez de copier-coller le texte directement.`)
             setExamFileName(f.name + ' ⚠️ Erreur')
@@ -2954,9 +2956,10 @@ function CorrectionDirectePanel({ onStart, matiere }: {
         const text = await f.text()
         setExamFile(text)
         setExamFileName(f.name)
+        setExamReady(true)
       }
     }
-    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')) }
+    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')); setExamReady(true) }
     if (examRef.current) examRef.current.value = ''
   }
 
@@ -2976,7 +2979,7 @@ function CorrectionDirectePanel({ onStart, matiere }: {
     if (copyRef.current) copyRef.current.value = ''
   }
 
-  const canGoToCopie = examFile.trim().length > 20 || examImages.length > 0
+  const canGoToCopie = examReady || examFile.trim().length > 20 || examImages.length > 0
   const canCorrect   = canGoToCopie && (copyText.trim().length > 0 || copyFiles.length > 0 || true) // correction même sans copie
 
   const handleCorrect = () => {
@@ -3098,7 +3101,7 @@ ${copyContent || '(Aucune copie — fournir la correction complète)'}
               {examImages.map((img,i)=>(
                 <div key={i} style={{position:'relative'}}>
                   <img src={img.data} alt={img.name} style={{width:80,height:80,objectFit:'cover',borderRadius:10,border:'1px solid rgba(245,158,11,0.3)'}}/>
-                  <button onClick={()=>setExamImages(p=>p.filter((_,j)=>j!==i))}
+                  <button onClick={()=>setExamImages(p=>{const n=p.filter((_,j)=>j!==i);if(n.length===0&&!examFile.trim())setExamReady(false);return n})}
                     style={{position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:'50%',background:'#ef4444',border:'none',color:'white',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
                 </div>
               ))}

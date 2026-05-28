@@ -2975,6 +2975,7 @@ function CorrectionDirectePanel({ onStart }: {
   const [examFile, setExamFile] = useState('')
   const [examFileName, setExamFileName] = useState('')
   const [examImages, setExamImages] = useState<{name:string;data:string}[]>([])
+  const [examReady, setExamReady] = useState(false)
   const [copyText, setCopyText] = useState('')
   const [copyFiles, setCopyFiles] = useState<{name:string;type:string;data:string}[]>([])
   const [step, setStep] = useState<'examen'|'copie'>('examen')
@@ -3019,16 +3020,16 @@ function CorrectionDirectePanel({ onStart }: {
           await new Promise(r => setTimeout(r, 1500))
           const m2 = (window as any).mammoth
           if (m2) {
-            try { const result = await m2.extractRawText({ arrayBuffer }); setExamFile(result.value); setExamFileName(f.name + ' ✅') }
+            try { const result = await m2.extractRawText({ arrayBuffer }); setExamFile(result.value); setExamFileName(f.name + ' ✅'); setExamReady(true) }
             catch { setExamFile("Erreur lecture Word.") }
           } else { setExamFile("Bibliothèque Word en cours de chargement — réessayez dans 2 secondes.") }
         }
       } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
         const text = await f.text()
-        setExamFile(text); setExamFileName(f.name)
+        setExamFile(text); setExamFileName(f.name); setExamReady(true)
       }
     }
-    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')) }
+    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')); setExamReady(true) }
     if (examRef.current) examRef.current.value = ''
   }
 
@@ -3048,7 +3049,7 @@ function CorrectionDirectePanel({ onStart }: {
     if (copyRef.current) copyRef.current.value = ''
   }
 
-  const canGoToCopie = examFile.trim().length > 20 || examImages.length > 0
+  const canGoToCopie = examReady || examFile.trim().length > 20 || examImages.length > 0
 
   const handleCorrect = () => {
     const examContent = [
