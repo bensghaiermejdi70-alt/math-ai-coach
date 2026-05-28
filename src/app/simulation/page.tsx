@@ -450,6 +450,68 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000, matie
   return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
 }
 
+// ── API Claude avec images (pour correction directe PDF/photo) ───
+async function askClaudeWithImages(
+  textPrompt: string,
+  images: { data: string; mediaType: string }[],
+  system: string,
+  maxTokens = 8000,
+  matiere?: MatiereType
+): Promise<string> {
+  const m = matiere || globalMatiere
+
+  // Construire le content multimodal
+  const content: any[] = []
+
+  // Ajouter les images en premier
+  for (const img of images) {
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: img.mediaType,
+        data: img.data,
+      }
+    })
+  }
+
+  // Ajouter le texte
+  content.push({ type: 'text', text: textPrompt })
+
+  const r = await fetch('/api/anthropic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content }],
+      type: 'simulations',
+      matiere: m
+    }),
+  })
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error(err.error || `HTTP ${r.status}`)
+  }
+  const d = await r.json()
+  return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
+}
+
+// ── Extraire images base64 depuis un statement/answers ────────────
+// Format: [IMAGE_BASE64:data:image/webp;base64,XXXX]
+function extractImagesFromText(text: string): { images: { data: string; mediaType: string }[]; cleanText: string } {
+  const images: { data: string; mediaType: string }[] = []
+  const cleanText = text.replace(/\[IMAGE_BASE64:(data:[^;]+;base64,[^\]]+)\]/g, (_, dataUrl) => {
+    const match = dataUrl.match(/data:([^;]+);base64,(.+)/)
+    if (match) {
+      images.push({ mediaType: match[1], data: match[2] })
+    }
+    return "[Image de l'examen — voir ci-dessus]"
+  })
+  return { images, cleanText }
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   try { return JSON.parse(cleaned) }
@@ -895,7 +957,40 @@ async function correctSingleExercise(
 ): Promise<string> {
   const ex = exam.exercises[exerciseIndex]
   if (!ex) return ''
-  return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
+
+  // Extraire images depuis le statement (correction directe avec PDF/photo)
+  const { images: examImages, cleanText: cleanStatement } = extractImagesFromText(ex.statement || '')
+  const { images: copyImages, cleanText: cleanWork } = extractImagesFromText(studentWork || '')
+  const allImages = [...examImages, ...copyImages]
+
+  // S'il y a des images → utiliser askClaudeWithImages
+  if (allImages.length > 0) {
+    const isPhysique = exam.title.toLowerCase().includes('physique')
+    const isAnglais  = exam.title.toLowerCase().includes('anglais') || exam.title.toLowerCase().includes('english')
+
+    const system = isAnglais
+      ? `You are an expert English teacher for the Baccalaureate. Write an EXHAUSTIVE correction ENTIRELY IN ENGLISH based on the exam image(s) provided. Use markdown.`
+      : `Tu es un professeur correcteur expert du Baccalauréat tunisien${isPhysique ? ' en Physique-Chimie' : ''}.
+Tu analyses l'image de l'examen fournie et rédiges une CORRECTION COMPLÈTE, EXHAUSTIVE et PÉDAGOGIQUE.
+Identifie tous les exercices et questions visibles dans l'image.
+Pour chaque question : énoncé reconstitué → concept → résolution étape par étape → résultat.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
+
+    const prompt = cleanWork && cleanWork !== '(Aucune copie — fournir la correction complète)'
+      ? `Voici l'examen (image) et la copie de l'élève :
+
+Copie élève :
+${cleanWork}
+
+Rédige la correction complète exercice par exercice avec analyse de la copie.`
+      : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
+
+    return askClaudeWithImages(prompt, allImages, system, 8000)
+  }
+
+  // Pas d'images → correction texte normale
+  const cleanEx = { ...ex, statement: cleanStatement }
+  return correctOneExercise(cleanEx, exam.totalPoints, cleanWork || studentWork, exam.title)
 }
 
 // ── Analyse UN exercice immédiatement après correction ───────────
@@ -2806,9 +2901,14 @@ function CorrectionDirectePanel({ onStart, matiere }: {
     ].filter(Boolean).join('\n\n')
 
     // Passer via onStart avec un texte spécial qui déclenche la correction directe
+    // Injecter les images en base64 dans le fullText
+    const examImagesB64 = examImages.map(img =>
+      `[IMAGE_BASE64:${img.data}]`
+    ).join('\n')
+
     const fullText = `[CORRECTION_DIRECTE]
 ---EXAMEN---
-${examContent}
+${examImagesB64 ? examImagesB64 + '\n' : ''}${examContent}
 ---COPIE_ELEVE---
 ${copyContent || '(Aucune copie — fournir la correction complète)'}
 [/CORRECTION_DIRECTE]`
