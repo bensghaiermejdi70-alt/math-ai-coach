@@ -63,6 +63,11 @@ let globalMatiere: string = 'mathematiques'
 declare const Plotly: any
 declare const jspdf: any
 
+// Stockage correction directe (évite parsing regex fragile)
+const correctionDirecteData: { examContent: string; copyContent: string; examImages: {data:string;mediaType:string}[] } = {
+  examContent: '', copyContent: '', examImages: []
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // SIMULATION IA — LE FER DE LANCE DE MATHAI COACH
 // 5 phases : Sélection → Génération → Examen → Correction → Analyse+Remédiation
@@ -3062,15 +3067,18 @@ function CorrectionDirectePanel({ onStart }: {
       copyFiles.filter(f=>f.type==='image').map(f=>`[Copie élève : ${f.name}]`).join('\n'),
     ].filter(Boolean).join('\n\n')
 
-    const examImagesB64 = examImages.map(img => `[IMAGE_BASE64:${img.data}]`).join('\n')
-    const fullText = `[CORRECTION_DIRECTE]
----EXAMEN---
-${examImagesB64 ? examImagesB64 + '\n' : ''}${examContent}
----COPIE_ELEVE---
-${copyContent || '(Aucune copie — fournir la correction complète)'}
-[/CORRECTION_DIRECTE]`
+    // Stocker directement dans le ref global
+    correctionDirecteData.examContent = examContent
+    correctionDirecteData.copyContent = copyContent
+    correctionDirecteData.examImages = examImages
+      .filter(img => img.data.startsWith('data:image/'))
+      .map(img => {
+        const match = img.data.match(/data:([^;]+);base64,(.+)/)
+        return match ? { mediaType: match[1], data: match[2] } : null
+      })
+      .filter(Boolean) as {data:string;mediaType:string}[]
 
-    onStart([], fullText)
+    onStart([], '[CORRECTION_DIRECTE]')
   }
 
   return (
@@ -5408,15 +5416,18 @@ function SimulationFrancePageInner() {
   ) => {
     // ── Mode Correction Directe ──────────────────────────────
     if (txt.startsWith('[CORRECTION_DIRECTE]')) {
-      const examMatch = txt.match(/---EXAMEN---([\s\S]*?)---COPIE_ELEVE---/)
-      const copyMatch = txt.match(/---COPIE_ELEVE---([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
-      const examContent = examMatch?.[1]?.trim() || ''
-      const copyContent = copyMatch?.[1]?.trim() || ''
-      const hasExamImages = examContent.includes('[IMAGE_BASE64:') || examContent.includes('[Examen import')
-      if (!examContent && !hasExamImages) {
-        alert("Veuillez importer un sujet d'examen avant de lancer la correction.")
+      // 3. Lire depuis correctionDirecteData (stockage direct)
+      const examContent = correctionDirecteData.examContent
+      const copyContent = correctionDirecteData.copyContent
+      const examImgsFromRef = correctionDirecteData.examImages
+
+      if (!examContent && examImgsFromRef.length === 0) {
+        alert("Veuillez importer un sujet avant de lancer la correction.")
         return
       }
+      const stmtWithImages = examImgsFromRef.length > 0
+        ? examImgsFromRef.map(img => `[IMAGE_BASE64:data:${img.mediaType};base64,${img.data}]`).join('\n') + (examContent ? '\n' + examContent : '')
+        : examContent
       const fakeExam: GeneratedExam = {
         id: `direct-${Date.now()}`,
         index: 0,
@@ -5429,7 +5440,7 @@ function SimulationFrancePageInner() {
           title: 'Examen importé — Bac France',
           theme: 'Bac France',
           points: 20,
-          statement: examContent,
+          statement: stmtWithImages || examContent,
         }],
       }
       setStudentAnswers(copyContent)
