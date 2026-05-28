@@ -418,7 +418,7 @@ export default function HomePage() {
               letterSpacing: '-0.03em', marginBottom: 24,
               animation: 'fadeInUp 0.8s ease 0.3s both',
             }}>
-              <span style={{ display: 'block', marginBottom: 10, color: 'rgba(255,255,255,0.95)' }}>
+              <span style={{ display: 'block', marginBottom: 16, color: 'rgba(255,255,255,0.95)' }}>
                 Ton professeur IA personnel
               </span>
               <span style={{
@@ -644,7 +644,7 @@ export default function HomePage() {
                 minHeight: 150,
               }}>
                 <img
-                  src="https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/e7870f0d24befed440beba7e6d9a0886bef6e150.jpg"
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80"
                   alt="Élève étudiant avec IA"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
@@ -701,7 +701,7 @@ export default function HomePage() {
                 minHeight: 150,
               }}>
                 <img
-                  src="https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/7365eb114657085b0dde3f2af0987e6df1a3d23e.jpg"
+                  src="https://images.unsplash.com/photo-1525921429624-479b6a26d84d?w=600&q=80"
                   alt="Diplômés heureux"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
@@ -935,7 +935,27 @@ export default function HomePage() {
                 background: 'radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%)',
                 filter: 'blur(40px)',
               }} />
-              <div style={{ fontSize: 56, filter: 'drop-shadow(0 4px 12px rgba(245,158,11,0.3))' }}>🏆</div>
+              <div style={{
+              position: 'relative',
+              width: 140, height: 140, flexShrink: 0,
+              borderRadius: 20, overflow: 'hidden',
+              boxShadow: '0 8px 32px rgba(245,158,11,0.25)',
+            }}>
+              <img
+                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&q=80"
+                alt="Élèves en examen Bac Blanc"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.3), transparent)',
+              }} />
+              <div style={{
+                position: 'absolute', top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: 48, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
+              }}>🏆</div>
+            </div>
               <div style={{ flex: 1, minWidth: 240 }}>
                 <div style={{
                   fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
