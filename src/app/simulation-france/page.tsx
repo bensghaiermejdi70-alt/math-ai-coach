@@ -5408,10 +5408,15 @@ function SimulationFrancePageInner() {
   ) => {
     // ── Mode Correction Directe ──────────────────────────────
     if (txt.startsWith('[CORRECTION_DIRECTE]')) {
-      const examMatch = txt.match(/---EXAMEN---\n([\s\S]*?)---COPIE_ELEVE---/)
-      const copyMatch = txt.match(/---COPIE_ELEVE---\n([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
-      const examContent = examMatch?.[1]?.trim() || txt
+      const examMatch = txt.match(/---EXAMEN---([\s\S]*?)---COPIE_ELEVE---/)
+      const copyMatch = txt.match(/---COPIE_ELEVE---([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
+      const examContent = examMatch?.[1]?.trim() || ''
       const copyContent = copyMatch?.[1]?.trim() || ''
+      const hasExamImages = examContent.includes('[IMAGE_BASE64:') || examContent.includes('[Examen import')
+      if (!examContent && !hasExamImages) {
+        alert("Veuillez importer un sujet d'examen avant de lancer la correction.")
+        return
+      }
       const fakeExam: GeneratedExam = {
         id: `direct-${Date.now()}`,
         index: 0,

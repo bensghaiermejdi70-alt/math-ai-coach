@@ -5360,12 +5360,14 @@ function SimulationIAPageInner() {
       }
 
       // 3. Extraire contenu examen et copie
-      const examMatch = txt.match(/---EXAMEN---\n([\s\S]*?)---COPIE_ELEVE---/)
-      const copyMatch = txt.match(/---COPIE_ELEVE---\n([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
+      const examMatch = txt.match(/---EXAMEN---([\s\S]*?)---COPIE_ELEVE---/)
+      const copyMatch = txt.match(/---COPIE_ELEVE---([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
       const examContent = examMatch?.[1]?.trim() || ''
       const copyContent = copyMatch?.[1]?.trim() || ''
 
-      if (!examContent) {
+      // Vérifier qu'il y a bien un contenu (texte OU images)
+      const hasExamImages = examContent.includes('[IMAGE_BASE64:') || examContent.includes('[Examen importé')
+      if (!examContent && !hasExamImages) {
         alert("⚠️ Veuillez importer un sujet d'examen avant de lancer la correction.")
         return
       }
