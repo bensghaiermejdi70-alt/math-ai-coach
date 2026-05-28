@@ -2947,6 +2947,28 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
 // CORRECTION DIRECTE — Panel (France)
 // L'élève importe son examen + sa copie → correction + remédiation
 // ═══════════════════════════════════════════════════════════════════
+// ── Compresser une image base64 avant envoi à l'API ─────────────
+async function compressImageBase64(dataUrl: string, maxSize = 1200, quality = 0.75): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      if (width > maxSize || height > maxSize) {
+        if (width > height) { height = Math.round(height * maxSize / width); width = maxSize }
+        else { width = Math.round(width * maxSize / height); height = maxSize }
+      }
+      canvas.width = width; canvas.height = height
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height)
+      ctx.drawImage(img, 0, 0, width, height)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => resolve(dataUrl)
+    img.src = dataUrl
+  })
+}
+
 function CorrectionDirectePanel({ onStart }: {
   onStart:(archives:Archive[], customText:string, chapitres?:any, sectionLabel?:string)=>void
 }) {
@@ -2964,9 +2986,15 @@ function CorrectionDirectePanel({ onStart }: {
     if (!files.length) return
     const imgs: {name:string;data:string}[] = []
     for (const f of files) {
-      if (f.type.startsWith('image/') || f.type==='application/pdf') {
+      if (f.type === 'application/pdf') {
+        // PDF non supporté directement — demander une capture d'écran
+        setExamFileName(f.name + ' (PDF détecté — voir note ci-dessous)')
+        setExamFile(`[PDF importé : ${f.name}]\nNote : Pour les PDFs, faites une capture d'écran de chaque page et importez les images, ou copiez-collez le texte de l'examen dans la zone ci-dessous.`)
+      } else if (f.type.startsWith('image/')) {
         const r = new FileReader()
-        const data = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
+        const rawData = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
+        // Compresser à max 1200px/75% pour éviter erreur 400 API
+        const data = await compressImageBase64(rawData)
         imgs.push({ name:f.name, data })
       } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
         const text = await f.text()
@@ -3070,7 +3098,7 @@ ${copyContent || '(Aucune copie — fournir la correction complète)'}
               background:examFileName?'rgba(245,158,11,0.06)':'rgba(245,158,11,0.03)',
               transition:'all 0.2s',
             }}>
-            <input ref={examRef} type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
+            <input ref={examRef} type="file" accept=".txt,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
             {examFileName ? (
               <>
                 <div style={{fontSize:36,marginBottom:10}}>📄</div>
@@ -3081,9 +3109,9 @@ ${copyContent || '(Aucune copie — fournir la correction complète)'}
               <>
                 <div style={{fontSize:40,marginBottom:12}}>📥</div>
                 <p style={{fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.85)',margin:'0 0 6px'}}>Importer le sujet de l'examen</p>
-                <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 14px'}}>Photo, scan, PDF ou texte — glissez ou cliquez</p>
+                <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 14px'}}>Photos (JPG/PNG/WebP) ou texte — glissez ou cliquez</p>
                 <div style={{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
-                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📄',l:'PDF'},{icon:'📝',l:'Texte .txt'}].map(f=>(
+                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📸',l:'JPG/PNG/WebP'},{icon:'📝',l:'Texte .txt'}].map(f=>(
                     <span key={f.l} style={{fontSize:11,padding:'4px 12px',background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'rgba(255,255,255,0.5)'}}>
                       {f.icon} {f.l}
                     </span>
