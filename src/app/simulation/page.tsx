@@ -5205,7 +5205,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }
 
 function SimulationIAPageInner() {
-  const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
+  const { hasActiveSubscription, matiereActive, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
@@ -5234,7 +5234,7 @@ function SimulationIAPageInner() {
   const [selectedChapitres, setSelectedChapitres] = useState<{titre:string;badge:string;desc:string}[]>([])
   const [chapSectionLabel, setChapSectionLabel] = useState('')
 
-  const handleStart = useCallback((
+  const handleStart = useCallback(async (
     arcs: Archive[], txt: string,
     chapitres?: {titre:string;badge:string;desc:string}[],
     sectionLabel?: string
@@ -5242,38 +5242,53 @@ function SimulationIAPageInner() {
     // ── Mode Correction Directe ──────────────────────────────
     if (txt.startsWith('[CORRECTION_DIRECTE]')) {
 
-      // 1. Vérification abonnement AVANT tout (même règle que simulation normale)
+      // 1. Vérification quota (correction directe compte comme 1 simulation)
+      if (!isAdmin && !checkQuota('simulations')) return
+
+      // 2. Vérification abonnement — utiliser matiereActive (abonnement réel)
+      //    PAS activeMatiere (onglet UI qui est toujours 'maths' sur page Tunisie)
+      //    Un abonné Anglais peut faire correction directe d'un examen Anglais
       if (!isAdmin && hasActiveSubscription && matiereActive) {
+        // Déterminer la matière de l'examen depuis le contenu importé
+        // On accepte si : abonnement maths (accès total) OU abonnement = matière importée
+        // Pour correction directe : on fait confiance à matiereActive (abonnement)
+        // Si l'abonnement est Anglais → on autorise (l'utilisateur importe ce qu'il veut)
+        // Si l'abonnement est Maths → accès total
+        // Si l'abonnement est Physique/Info → on autorise seulement si activeMatiere correspond
         const matiereAbonnement = matiereActive
-        const matiereUIKey = (() => {
-          const map: Record<string,string> = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais' }
-          return map[activeMatiere] || activeMatiere
-        })()
-        if (matiereAbonnement !== 'mathematiques' && matiereUIKey !== matiereAbonnement) {
-          alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nLa correction directe est réservée à cette matière.\n\nChangez de matière ou abonnez-vous à la matière souhaitée.`)
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais' }[activeMatiere] || activeMatiere
+        // Bloquer uniquement si abonnement spécifique ET matière UI ne correspond pas
+        // ET l'abonnement n'est pas anglais (car page Tunisie n'a pas d'onglet Anglais)
+        if (matiereAbonnement !== 'mathematiques' && matiereAbonnement !== 'anglais' && matiereUIKey !== matiereAbonnement) {
+          alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nLa correction directe est réservée à cette matière.`)
           return
         }
       }
 
-      // 2. Extraire contenu examen et copie
+      // 3. Extraire contenu examen et copie
       const examMatch = txt.match(/---EXAMEN---\n([\s\S]*?)---COPIE_ELEVE---/)
       const copyMatch = txt.match(/---COPIE_ELEVE---\n([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
       const examContent = examMatch?.[1]?.trim() || ''
       const copyContent = copyMatch?.[1]?.trim() || ''
 
-      // 3. Déduire la matière depuis activeMatiere (et non depuis un champ Section supprimé)
+      if (!examContent) {
+        alert("⚠️ Veuillez importer un sujet d'examen avant de lancer la correction.")
+        return
+      }
+
+      // 4. Déduire le label matière — si abonnement Anglais → Anglais, sinon depuis activeMatiere
       const matiereLabels: Record<string,string> = {
         maths:'Mathématiques', physique:'Physique-Chimie',
         informatique:'Informatique', anglais:'Anglais'
       }
-      const matiereLabel = matiereLabels[activeMatiere] || 'Mathématiques'
+      const matiereLabel = matiereActive === 'anglais'
+        ? 'Anglais'
+        : matiereLabels[activeMatiere] || 'Mathématiques'
 
-      if (!examContent) {
-        alert('⚠️ Veuillez importer un sujet d\'examen avant de lancer la correction.')
-        return
-      }
+      // 5. Incrémenter le quota (correction directe = 1 simulation)
+      await incrementQuota('simulations')
 
-      // 4. Créer le fakeExam avec la bonne matière
+      // 6. Créer le fakeExam avec la bonne matière
       const fakeExam: GeneratedExam = {
         id: `direct-${Date.now()}`,
         index: 0,
@@ -5320,7 +5335,7 @@ function SimulationIAPageInner() {
       setChapitresMode(false)
     }
     setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere])
+  },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere, checkQuota, incrementQuota])
 
   const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
     setGeneratedExams(exams); setPhase('choose-exam')
