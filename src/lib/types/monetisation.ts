@@ -4,17 +4,20 @@
 export type BasePlanType = 'mensuel' | 'annuel' | 'sprint_bac'
 
 // Matières disponibles pour l'abonnement
-export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique'
+export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique' | 'francais'
 
 // PlanType = plan seul (legacy) OU plan_matiere (nouveau format)
-// Format : "mensuel_mathematiques" | "annuel_physique" | "sprint_bac_mathematiques"
+// Format : "mensuel_mathematiques" | "annuel_physique" | "sprint_mathematiques"
 // Legacy : "mensuel" | "annuel" | "sprint_bac" (= mathematiques par défaut)
+// ⚠️  Les sprints par matière utilisent le format "sprint_<matiere>" (sans "_bac")
+//     Ex: sprint_physique, sprint_svt, sprint_anglais (cohérent avec DB et activation)
 export type PlanType = 'mensuel' | 'annuel' | 'sprint_bac'
-  | 'mensuel_mathematiques' | 'annuel_mathematiques' | 'sprint_bac_mathematiques'
-  | 'mensuel_physique'      | 'annuel_physique'      | 'sprint_bac_physique'
-  | 'mensuel_svt'           | 'annuel_svt'           | 'sprint_bac_svt'
-  | 'mensuel_anglais'       | 'annuel_anglais'       | 'sprint_bac_anglais'
-  | 'mensuel_informatique'  | 'annuel_informatique'  | 'sprint_bac_informatique'
+  | 'mensuel_mathematiques' | 'annuel_mathematiques' | 'sprint_bac_mathematiques' | 'sprint_mathematiques'
+  | 'mensuel_physique'      | 'annuel_physique'      | 'sprint_bac_physique'      | 'sprint_physique'
+  | 'mensuel_svt'           | 'annuel_svt'           | 'sprint_bac_svt'           | 'sprint_svt'
+  | 'mensuel_anglais'       | 'annuel_anglais'       | 'sprint_bac_anglais'       | 'sprint_anglais'
+  | 'mensuel_informatique'  | 'annuel_informatique'  | 'sprint_bac_informatique'  | 'sprint_informatique'
+  | 'mensuel_francais'      | 'annuel_francais'      | 'sprint_bac_francais'      | 'sprint_francais'
 
 // ── Helpers pour extraire plan et matière ──────────────────────────
 export function extractPlan(planType: string | null | undefined): 'mensuel' | 'annuel' | 'sprint_bac' {
@@ -26,18 +29,26 @@ export function extractPlan(planType: string | null | undefined): 'mensuel' | 'a
 
 export function extractMatiere(planType: string | null | undefined): MatiereType {
   if (!planType) return 'mathematiques'
+  // Pattern "sprint_<matiere>" (sans _bac) → extraire la matière après "sprint_"
+  // Ex: sprint_physique → physique, sprint_svt → svt
+  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique','francais']
   const parts = planType.split('_')
-  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique']
-  const last = parts[parts.length - 1] as MatiereType
-  return known.includes(last) ? last : 'mathematiques'
+  // Chercher la matière dans toutes les parties (gère sprint_bac_physique et sprint_physique)
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (known.includes(parts[i] as MatiereType)) {
+      return parts[i] as MatiereType
+    }
+  }
+  return 'mathematiques'
 }
 
 export const MATIERE_LABELS: Record<MatiereType, string> = {
   mathematiques: '🧮 Mathématiques',
   physique:      '⚗️ Physique-Chimie',
-  svt:           '🧬 SVT',
+  svt:           '🌱 SVT',
   anglais:       '🇬🇧 Anglais',
   informatique:  '💻 Informatique',
+  francais:      '📖 Français',
 }
 export type PaymentMethod = 'd17' | 'konnect' | 'flouci' | 'recharge_mobile' | 'manual'
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled'
