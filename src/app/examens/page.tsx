@@ -548,7 +548,47 @@ const infoLinks: Record<number, InfoLinks> = {
     principale: { algo_sujet: bw(2015,'principale','informatique','algorithme.pdf'), algo_corr: bw(2015,'principale','informatique','algorithme_c.pdf'), bd_sujet: bw(2015,'principale','informatique','bd.pdf'), bd_corr: bw(2015,'principale','informatique','bd_c.pdf') },
     controle:   { algo_sujet: bw(2015,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2015,'controle','informatique','bd.pdf') },
   },
-}// ════════════════════════════════════════════════════════════════
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS PDF — BAC SVT · SECTION SCIENCES EXPÉRIMENTALES
+//  Dossier bacweb.tn : sciences_ex/  Fichier : svt.pdf
+//  Corrigé : sciences_ex/svt_c.pdf (quand disponible)
+// ════════════════════════════════════════════════════════════════
+const svtScExpLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','sciences_ex','svt.pdf'), correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','sciences_ex','svt.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','sciences_ex','svt.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','sciences_ex','svt.pdf'), correction:bw(2022,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2022,'controle','sciences_ex','svt.pdf'), correction:bw(2022,'controle','sciences_ex','svt_c.pdf') }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','sciences_ex','svt.pdf'), correction:bw(2021,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2021,'controle','sciences_ex','svt.pdf'), correction:bw(2021,'controle','sciences_ex','svt_c.pdf') }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2020,'controle','sciences_ex','svt.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','sciences_ex','svt.pdf'), correction:bw(2019,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2019,'controle','sciences_ex','svt.pdf'), correction:bw(2019,'controle','sciences_ex','svt_c.pdf') }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','sciences_ex','svt.pdf'), correction:bw(2018,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2018,'controle','sciences_ex','svt.pdf'), correction:bw(2018,'controle','sciences_ex','svt_c.pdf') }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','sciences_ex','svt.pdf'), correction:bw(2017,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2017,'controle','sciences_ex','svt.pdf'), correction:bw(2017,'controle','sciences_ex','svt_c.pdf') }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','sciences_ex','svt.pdf'), correction:bw(2016,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2016,'controle','sciences_ex','svt.pdf'), correction:bw(2016,'controle','sciences_ex','svt_c.pdf') }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','sciences_ex','svt.pdf'), correction:bw(2015,'principale','sciences_ex','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2015,'controle','sciences_ex','svt.pdf'), correction:bw(2015,'controle','sciences_ex','svt_c.pdf') }},
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS PDF — BAC SVT · SECTION MATHÉMATIQUES
+//  Dossier bacweb.tn : math/  Fichier : svt.pdf
+//  Corrigé : math/svt_c.pdf (quand disponible)
+// ════════════════════════════════════════════════════════════════
+const svtMathsLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','math','svt.pdf'), correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','math','svt.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','math','svt.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','math','svt.pdf'), correction:bw(2022,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2022,'controle','math','svt.pdf'), correction:bw(2022,'controle','math','svt_c.pdf') }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','math','svt.pdf'), correction:bw(2021,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2021,'controle','math','svt.pdf'), correction:bw(2021,'controle','math','svt_c.pdf') }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2020,'controle','math','svt.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','math','svt.pdf'), correction:bw(2019,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2019,'controle','math','svt.pdf'), correction:bw(2019,'controle','math','svt_c.pdf') }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','math','svt.pdf'), correction:bw(2018,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2018,'controle','math','svt.pdf'), correction:bw(2018,'controle','math','svt_c.pdf') }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','math','svt.pdf'), correction:bw(2017,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2017,'controle','math','svt.pdf'), correction:bw(2017,'controle','math','svt_c.pdf') }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','math','svt.pdf'), correction:bw(2016,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2016,'controle','math','svt.pdf'), correction:bw(2016,'controle','math','svt_c.pdf') }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','math','svt.pdf'), correction:bw(2015,'principale','math','svt_c.pdf') }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2015,'controle','math','svt.pdf'), correction:bw(2015,'controle','math','svt_c.pdf') }},
+}
+
+// ════════════════════════════════════════════════════════════════
 //  DONNÉES EXERCICES — thèmes par année (résumé pédagogique)
 // ════════════════════════════════════════════════════════════════
 const BAC_MATHS_DATA: AnneeData[] = [
@@ -981,6 +1021,165 @@ const BAC_ECO_GESTION_DATA: AnneeData[] = [
     {titre:'Exercice 3',theme:'Statistiques — deux séries, corrélation, régression',pts:4},
     {titre:'Exercice 4',theme:'Mathématiques Financières — annuités début de période',pts:4},
     {titre:'Exercice 5',theme:'Logique & Raisonnement — récurrence, contradiction',pts:3},
+  ]},
+]
+
+// ════════════════════════════════════════════════════════════════
+//  DONNÉES — BAC SVT SECTION SCIENCES EXPÉRIMENTALES
+//  Structure : 4 parties (Génétique · Milieu intérieur · Reproduction · Nutrition)
+//  Coefficient 5 · Durée 3h
+// ════════════════════════════════════════════════════════════════
+const BAC_SVT_SC_EXP_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Brassage interchromosomique et intrachromosomique — crossing-over · génotypes · phénotypes · lois de Mendel appliquées',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Régulation de la glycémie (insuline/glucagon) — Potentiel d\'action et transmission synaptique — Immunité spécifique et vaccination',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — régulation hormonale (FSH, LH, œstrogènes, progestérone) — ovulation et corps jaune',pts:4},
+    {titre:'Partie IV — Nutrition & Environnement (3 pts)',theme:'Photosynthèse — photolyse de l\'eau — facteurs limitants — intensité photosynthétique',pts:3},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Transmission héréditaire — monohybridisme et dihybridisme — hérédité liée au sexe — caryotype et diagnostic prénatal',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Constance du milieu intérieur — rôle du foie — dipeptide RC et RL — réflexe myotatique — PPSE et PPSI',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse — structure du spermatozoïde — régulation hormonale masculine (GnRH, LH, FSH, testostérone)',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Respiration cellulaire — glycolyse et cycle de Krebs — bilan ATP — rôle des mitochondries',pts:3},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Méiose et brassages génétiques — gamètes parentaux et recombinants — fréquence de recombinaison — carte génétique',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Diabète type 1 et type 2 — immunité non spécifique (phagocytose) et spécifique (lymphocytes B, T, anticorps) — mémoire immunitaire',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Ovogenèse et folliculogenèse — cycle ovarien — ovulation — fécondation et développement embryonnaire',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Digestion enzymatique des glucides et protides — absorption intestinale — villosités — sève brute et transpiration',pts:3},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Génétique des populations — loi de Hardy-Weinberg — fréquences alléliques — mutations et leurs conséquences biologiques',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Potentiel de repos et potentiel d\'action — propagation de l\'influx nerveux — synapse chimique — neurotransmetteurs — drogues et dépendance',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel et régulation hypothalamo-hypophysaire — pic de LH — contraception — FIVETE',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition végétale — absorption eau et sels minéraux — rôle du magnésium et chlorophylle — carences et fertilisation',pts:3},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Brassage génétique interchromosomique et intrachromosomique — gènes liés — crossing-over — diversité génétique',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Rôle du foie dans la glycémie — pancréas endocrine — rétrocontrôle — système nerveux et réflexe myotatique',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse et ovogenèse — structure des gamètes — méiose — fécondation et zygote',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — phase photochimique (photolyse eau) et phase biochimique (Calvin) — facteurs environnementaux',pts:3},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Lois de Mendel — monohybridisme et dihybridisme — hérédité gonosomique — diagnostic prénatal et sonde moléculaire',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Milieu intérieur et homéostasie — défense immunitaire spécifique et non spécifique — vaccination et sérothérapie',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin et hormonal — corps jaune — progestérone — contraception orale mécanisme',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition animale — digestion enzymatique — absorption — respiration cellulaire — bilan ATP',pts:3},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Génétique des populations — Hardy-Weinberg — fréquences alléliques — mutations chromosomiques et trisomie 21',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Régulation glycémie — diabète — système nerveux — potentiel d\'action — synapse et neurotransmetteur — immunité',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Régulation hormonale masculine — GnRH · LH · FSH · testostérone — rétrocontrôle négatif',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse et respiration cellulaire — bilan comparatif — échanges gazeux — rôle des chloroplastes et mitochondries',pts:3},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Brassages génétiques — gamètes recombinants — fréquence de recombinaison — carte génétique simple',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Constantes biologiques — rôle du foie — insuline/glucagon — potentiel d\'action ionique — réflexe myotatique',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Ovogenèse — follicule de De Graaf — cycle utérin — ovulation — pic LH et rétrocontrôle positif',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition végétale — transpiration et conduction — xylème — sels minéraux (N, P, K, Mg, Fe) — carences',pts:3},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Transmission héréditaire — dihybridisme — gènes liés — hérédité liée au sexe — diagnostic prénatal',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Défense de l\'organisme — immunité cellulaire (LT cytotoxiques) et humorale (LB, plasmocytes, anticorps) — hygiène SN',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse complète — rôle des cellules de Leydig et Sertoli — régulation par GnRH, LH, FSH',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Digestion et absorption intestinale — villosités — sève élaborée et brute — photosynthèse équation bilan',pts:3},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Méiose — crossing-over et recombinaison — brassage interchromosomique — diversité des gamètes (2ⁿ)',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Régulation glycémie (rôle foie, pancréas, hormones) — diabète 1 et 2 — immunité non spécifique — phagocytose',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — FSH · LH · œstrogènes · progestérone — rétrocontrôles positif et négatif',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — chlorophylle — phase lumineuse et obscure — intensité photosynthétique et facteurs limitants',pts:3},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Partie I — Génétique (6 pts)',theme:'Génétique des populations — Hardy-Weinberg — fréquences alléliques — mutations géniques (substitution, délétion)',pts:6},
+    {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Potentiel de repos et d\'action — synapse chimique — PPSE et PPSI — drogues et effets sur le SN',pts:7},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Fécondation — capacitation — réaction corticale — développement embryonnaire — contraception',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Respiration cellulaire — glycolyse — cycle de Krebs — chaîne respiratoire — bilan ATP (38)',pts:3},
+  ]},
+]
+
+// ════════════════════════════════════════════════════════════════
+//  DONNÉES — BAC SVT SECTION MATHÉMATIQUES
+//  Structure : 5 parties (Génétique · Milieu intérieur · Reproduction · Nutrition · Géologie)
+//  Coefficient 2 · Durée 2h
+// ════════════════════════════════════════════════════════════════
+const BAC_SVT_MATHS_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Brassage génétique — lois de Mendel — hérédité liée au sexe — diagnostic prénatal',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Régulation de la glycémie — insuline et glucagon — potentiel d\'action — transmission synaptique',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — régulation hormonale — contraception mécanisme',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — photolyse de l\'eau — facteurs limitants — bilan énergétique',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Tectonique des plaques — dorsales · subduction · formation chaînes montagnes — preuves de l\'évolution',pts:2},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Transmission héréditaire — monohybridisme · dihybridisme — hérédité gonosomique — caryotype',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Constante du milieu intérieur — diabète type 1 et 2 — système nerveux et réflexe myotatique',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse — structure spermatozoïde — régulation masculine (GnRH, LH, FSH, testostérone)',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition végétale — absorption eau et sels minéraux — photosynthèse équation bilan',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Sélection naturelle — preuves fossiles et anatomie comparée — spéciation — séismes et volcanisme',pts:2},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Méiose — brassages génétiques — gamètes parentaux et recombinants — diversité génétique',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Rôle du foie et pancréas — rétrocontrôle négatif glycémie — immunité spécifique et vaccination',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle ovarien — folliculogenèse — ovulation — fécondation',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Digestion enzymatique — absorption intestinale — respiration cellulaire bilan',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Théories de l\'évolution (Darwin) — tectonique des plaques — expansion océanique',pts:2},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Lois de Mendel — dihybridisme — gènes liés — hérédité liée au chromosome X',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Constante glycémie — défense immunitaire — phagocytose — LB et LT — hygiène SN (drogues)',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — hormones — corps jaune — FIVETE et contraception',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition végétale — transpiration — chlorophylle — photosynthèse et facteurs limitants',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Structure du globe — lithosphère et asthénosphère — subduction — formation des Alpes et Himalaya',pts:2},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Brassage génétique — crossing-over — fréquence recombinaison — gènes liés — carte génétique',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Milieu intérieur — homéostasie — régulation glycémie — potentiel d\'action — synapse',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse — ovogenèse — cycles coordonnés — régulation hypothalamo-hypophysaire',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — respiration cellulaire — comparaison — échanges gazeux plante-atmosphère',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Preuves de l\'évolution — fossiles · ADN universel · anatomie comparée — sélection naturelle',pts:2},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Lois de Mendel — monohybridisme — hérédité liée au sexe — diagnostic prénatal et sonde moléculaire',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Régulation glycémie — rôle foie — insuline/glucagon — diabète — défense immunitaire',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — hormones — ovulation — contraception pilule (mécanisme)',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition animale — digestion enzymatique — absorption — respiration cellulaire',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Tectonique des plaques — dérive des continents — séismes et volcanisme — structure globe',pts:2},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Transmission héréditaire — dihybridisme — gènes liés — hérédité gonosomique',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Potentiel de repos et d\'action ionique — synapse chimique — PPSE/PPSI — immunité',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Fonction reproductrice masculine — spermatogenèse — rôle testostérone — régulation',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — chlorophylle — phase lumineuse (photolyse eau) — phase sombre (Calvin)',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Évolution biologique — sélection naturelle — dérive génétique — spéciation allopatrique',pts:2},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Méiose et brassages — gamètes recombinants — fréquence crossing-over',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Rôle du foie — pancréas endocrine — régulation glycémie — système nerveux — réflexe',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — folliculogenèse — ovulation — hormones',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Nutrition végétale — eau · sels minéraux — carence — photosynthèse équation bilan',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Tectonique des plaques — expansion océanique — subduction — séismes et volcans',pts:2},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Lois de Mendel — gènes liés — hérédité liée au sexe — diagnostic prénatal',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Milieu intérieur — constantes biologiques — défense immunitaire — vaccination vs sérothérapie',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Spermatogenèse — structure spermatozoïde — régulation hormonale masculine',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Respiration cellulaire — glycolyse — Krebs — chaîne respiratoire — 38 ATP',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Preuves de l\'évolution — fossiles et anatomie comparée — phylogénie moléculaire',pts:2},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Brassage génétique — crossing-over — gamètes parentaux et recombinants — diversité',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Régulation glycémie — rôle insuline et glucagon — rétrocontrôle — système nerveux',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Ovogenèse — folliculogenèse — cycle hormonal — ovulation et corps jaune',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Photosynthèse — phase photochimique — cycle de Calvin — facteurs limitants',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Tectonique des plaques — structure globe — lithosphère — dorsales et subduction',pts:2},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Partie I — Génétique (5 pts)',theme:'Transmission héréditaire — monohybridisme — dihybridisme — hérédité liée au sexe',pts:5},
+    {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Constante milieu intérieur — potentiel d\'action — synapse — drogues et hygiène SN',pts:6},
+    {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — hormones ovariennes — contraception et FIVETE',pts:4},
+    {titre:'Partie IV — Nutrition (3 pts)',theme:'Digestion enzymatique — absorption intestinale — sève brute et transpiration',pts:3},
+    {titre:'Partie V — Géologie & Évolution (2 pts)',theme:'Sélection naturelle — dérive génétique — spéciation — tectonique des plaques',pts:2},
   ]},
 ]
 
@@ -1810,8 +2009,8 @@ const BAC_INFO_PHYS_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — MATIÈRES ET SECTIONS
 // ════════════════════════════════════════════════════════════════
-type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais'
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences'
+type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais' | 'svt'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences' | 'svt-sc-exp' | 'svt-maths'
 
 const SECTIONS_MATHS = [
   { key:'maths'    as SKey, icon:'🧮', label:'Bac Maths',      color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,       links:mathsLinks,      desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
@@ -1848,6 +2047,11 @@ const BAC_INFO_ALGO_DATA: AnneeData[] = [
 const SECTIONS_INFO_EXAM = [
   { key:'info-algo' as SKey, icon:'💻', label:'Sc. Informatiques', color:'#6366f1', coeff:'Coeff. 4', data:BAC_INFO_ALGO_DATA, links:infoLinks, desc:'⚙️ Algorithmique · 🗄️ Bases de données · 🌐 TIC — Sujets officiels bacweb.tn' },
   { key:'info-bd'   as SKey, icon:'🎓', label:'Autres Sections (TIC)', color:'#f59e0b', coeff:'TIC Commun', data:BAC_INFO_ALGO_DATA, links:infoLinks, desc:'Maths · Sc.Exp · Sc.Tech · Éco-Gestion' },
+]
+
+const SECTIONS_SVT = [
+  { key:'svt-sc-exp' as SKey, icon:'🔬', label:'Sciences Expérimentales', color:'#22c55e', coeff:'Coeff. 5', data:BAC_SVT_SC_EXP_DATA, links:svtScExpLinks, desc:'🧬 Génétique · 🧠 Milieu intérieur & Neuro · 👶 Reproduction · 🌿 Nutrition — Coefficient 5 · Durée 3h' },
+  { key:'svt-maths'  as SKey, icon:'📐', label:'Section Mathématiques',    color:'#a78bfa', coeff:'Coeff. 2', data:BAC_SVT_MATHS_DATA,   links:svtMathsLinks,   desc:'🧬 Génétique · 🧠 Milieu intérieur · 👶 Reproduction · 🌿 Nutrition · 🌍 Géologie & Évolution — Coefficient 2 · Durée 2h' },
 ]
 
 // ════════════════════════════════════════════════════════════════
@@ -2053,7 +2257,8 @@ export default function ExamensTunisiePage() {
   const isMaths    = activeMatiere === 'maths'
   const isInfo_m   = activeMatiere === 'informatique'
   const isAnglais  = activeMatiere === 'anglais'
-  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : SECTIONS_PHYS
+  const isSvt      = activeMatiere === 'svt'
+  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : isSvt ? SECTIONS_SVT : SECTIONS_PHYS
   const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
   const detail   = sec.data.find(a => a.year === selectedYear)
   const isInfo   = activeSec === 'info' || activeSec === 'info-algo' || activeSec === 'info-bd'
@@ -2065,6 +2270,7 @@ export default function ExamensTunisiePage() {
       m === 'maths'        ? 'maths' :
       m === 'physique'     ? 'sc-exp-phys' :
       m === 'anglais'      ? 'anglais-lettres' :
+      m === 'svt'          ? 'svt-sc-exp' :
       'info-algo'
     )
     setSelectedYear(null)
@@ -2080,17 +2286,20 @@ export default function ExamensTunisiePage() {
       'info':         'info',
       'info-algo':    'info',
       'info-bd':      'info',
-      'sc-exp-phys':  'sc-exp',    // Physique Sc.Exp → section scexp dans simulation
-      'sc-tech-phys': 'sc-tech',   // Physique Sc.Tech → section sctech dans simulation
-      'math-phys':    'maths',     // Physique Maths → section maths dans simulation
-      'info-phys':    'info',      // Physique Info → section info dans simulation
+      'sc-exp-phys':  'sc-exp',
+      'sc-tech-phys': 'sc-tech',
+      'math-phys':    'maths',
+      'info-phys':    'info',
       'anglais-lettres':  'anglais-lettres',
       'anglais-sciences': 'anglais-sciences',
+      'svt-sc-exp':   'sc-exp',
+      'svt-maths':    'maths',
     }
     const simSection = simSectionMap[activeSec] ?? activeSec
     const isPhysSection = activeSec.endsWith('-phys')
     const isAnglaisSection = activeSec.startsWith('anglais-')
-    const subjectParam = isPhysSection ? '&subject=physique' : isAnglaisSection ? '&subject=anglais' : ''
+    const isSvtSection = activeSec.startsWith('svt-')
+    const subjectParam = isPhysSection ? '&subject=physique' : isAnglaisSection ? '&subject=anglais' : isSvtSection ? '&subject=svt' : ''
     router.push(`/simulation?section=${simSection}${subjectParam}`)
   }
   const openPdf = (url:string, title:string) => setModal({url,title})
@@ -2125,6 +2334,7 @@ export default function ExamensTunisiePage() {
             {([
               { key:'maths'        as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
               { key:'physique'     as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
+              { key:'svt'          as Matiere, icon:'🌱', label:'SVT',              color:'#22c55e' },
               { key:'informatique' as Matiere, icon:'💻', label:'Informatique',    color:'#6366f1' },
               { key:'anglais'      as Matiere, icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
             ]).map(m => (
@@ -2157,7 +2367,7 @@ export default function ExamensTunisiePage() {
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
                   <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
-                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : 'Physique-Chimie'}
+                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : isSvt ? 'SVT' : 'Physique-Chimie'}
                   </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>
@@ -2212,7 +2422,7 @@ export default function ExamensTunisiePage() {
               <div style={{marginBottom:24}}>
                 <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
                   <span style={{fontSize:22}}>{sec.icon}</span>
-                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : isAnglais ? '🇬🇧 Anglais' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
+                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : isAnglais ? '🇬🇧 Anglais' : isSvt ? '🌱 SVT' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
                     ✅ Sujets + Corrections disponibles
                   </span>

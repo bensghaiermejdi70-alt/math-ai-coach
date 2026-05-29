@@ -1386,6 +1386,227 @@ RESPOND WITH THIS EXACT JSON:
 }
 
 // ── Génération examen Bac Blanc (distinct de simulation) ──────────
+// ════════════════════════════════════════════════════════════════
+// PROGRAMME SVT PAR JOUR — 31 jours · 2 sections
+// scexp-svt : Sciences Expérimentales (coef. 5) — 4 parties
+// maths-svt : Section Mathématiques (coef. 2) — 5 parties (+ Géologie)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_SVT: Record<string, {
+  p1: { theme: string; sousTh: string }
+  p2: { theme: string; sousTh: string }
+  p3: { theme: string; sousTh: string }
+  p4: { theme: string; sousTh: string }
+  p5?: { theme: string; sousTh: string } // uniquement section Maths
+}[]> = {
+  'scexp-svt': [
+    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — Méiose Anaphase I · 2ⁿ gamètes · diversité"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète type 1 et 2 · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — structure spermatozoïde · cellules de Leydig et Sertoli · régulation hormonale"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — photolyse de l'eau · cycle de Calvin · facteurs limitants"} },
+    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme 3:1 · dihybridisme 9:3:3:1 · gènes indépendants"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel de repos (-70mV) · dépolarisation Na⁺ · repolarisation K⁺ · loi du tout ou rien"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — follicule primordial à De Graaf · ovulation · corps jaune"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption intestinale · villosités"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · immunité humorale (LB · anticorps) · immunité cellulaire (LT)"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — FSH · LH · œstrogènes · progestérone · pic LH → ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau · sels minéraux N·P·K·Mg·Fe · transpiration"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over Prophase I · gamètes recombinants · fréquence recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Synapse chimique — neurotransmetteur · fente synaptique · PPSE · PPSI · intégration"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration · réaction corticale · fusion pronuclei → zygote"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · cycle de Krebs · chaîne respiratoire → 38 ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations géniques — substitution · délétion · faux-sens · non-sens · agents mutagènes"}, p2:{theme:"Milieu intérieur",sousTh:"Rôle du foie — glycogénogenèse · glycogénolyse · néoglucogenèse · compartiments liquidiens"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — contraception (pilule · préservatif) · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — chlorophylle · phase lumineuse · phase obscure · équation bilan"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique des populations — Hardy-Weinberg p²+2pq+q²=1 · fréquences alléliques · applications médicales"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · gaine de myéline · réflexe myotatique · muscles antagonistes"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale masculine — GnRH · LH · FSH · testostérone · rétrocontrôle négatif"}, p4:{theme:"Nutrition",sousTh:"Digestion — amylase (glucides) · pepsine (protides) · lipase · conditions enzymatiques"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — trisomie 21 · non-disjonction méiose · délétion · translocation"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination — mémoire immunitaire · anticorps · plasmocytes vs sérothérapie (passif)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · blocage méiose II jusqu'à fécondation"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse anaérobie vs aérobie · mitochondrie · bilan ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · cocaïne (blocage recapture dopamine) · dépendance · stress · cortisol"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phase menstruelle · proliférative · sécrétoire · action œstrogènes et progestérone"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — photosynthèse · intensité photosynthétique · facteurs limitants · CO₂ · lumière"} },
+    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · choriocentèse · caryotype · sonde moléculaire"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — glycémie 0,8-1,2 g/L · pH 7,35-7,45 · température 37°C · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Régulation hypothalamo-hypophysaire féminine — GnRH · FSH · LH · rétrocontrôle positif (pic LH)"}, p4:{theme:"Nutrition",sousTh:"Absorption végétale — osmose · poils absorbants · xylème · sève brute · carences"} },
+    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — maladies récessives · généalogie · calcul probabilité"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité non spécifique — phagocytose (chimiotactisme · adhérence · ingestion · digestion) · inflammation"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde (tête·pièce intermédiaire·flagelle) · ovocyte II (noyau·zone pellucide)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase photochimique : photolyse eau → O₂ libre · production ATP et NADPH"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique classique — monohybridisme avec dominance incomplète · codominance"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 vs type 2 — mécanismes · traitement · insuline · rétrocontrôle"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — mécanisme (blocage GnRH · FSH · LH) · pas d'ovulation · pilule combinée"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs — pyruvate → acétyl-CoA · CO₂ · NADH · FADH₂ · ATP (2 par cycle)"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage génétique complet — croisement test · gamètes · fréquences alléliques"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action ionique — rôle Na⁺/K⁺ · pompe Na⁺/K⁺ · période réfractaire · propagation axone"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction ovocytes · fécondation in vitro · transfert embryon"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — absorption sanguine (glucose · AA) et lymphatique (AG · glycérol) · villosités"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique des populations — dérive génétique · sélection naturelle · évolution fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — clone lymphocytaire · mémoire immunologique · réponse primaire vs secondaire"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication (mitoses) · accroissement · maturation (méiose) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · eau · loi de Liebig"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité gonosomique — gènes liés à X · notation XᴬXᵃ · conductrice · test-cross"}, p2:{theme:"Neurophysiologie",sousTh:"Intégration postsynaptique — sommation temporelle et spatiale · seuil de déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Follicule de De Graaf — structure · antrum · granulosa · thèque · ovocyte II · ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — rôle sels minéraux : N (protéines) · Mg (chlorophylle) · Fe (chlorophylle)"} },
+    { p1:{theme:"Génétique",sousTh:"Dihybridisme — gènes liés vs indépendants · ratio 9:3:3:1 vs autres ratios · linkage"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · hormones pancréatiques"}, p3:{theme:"Reproduction",sousTh:"Hygiène procréation — IST · prévention · comportements protection · suivi de grossesse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — bilan global C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 38 ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Crossing-over et recombinaison — carte génétique · fréquence cM · distance génétique"}, p2:{theme:"Neurophysiologie",sousTh:"Structure neurone — corps cellulaire · dendrites · axone · gaine myéline · nœuds Ranvier"}, p3:{theme:"Reproduction",sousTh:"Corps jaune — progestérone · maintien endomètre · dégénérescence si pas fécondation"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — cycle de Calvin : fixation CO₂ · réduction C3 → glucose · régénération RuBP"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations et conséquences — cancer · maladies génétiques · bénéfiques (évolution)"}, p2:{theme:"Milieu intérieur",sousTh:"Compartiments liquidiens — plasma · liquide interstitiel · intracellulaire · échanges capillaires"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel coordonné — ovaire + utérus + hormones · schéma général sur 28 jours"}, p4:{theme:"Nutrition",sousTh:"Digestion enzymes — pH optimal · température · dénaturation · spécificité substrat-enzyme"} },
+    { p1:{theme:"Génétique",sousTh:"Test-cross et back-cross — révélation génotype · applications en génétique humaine"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues et SN — amphétamines · alcool · THC · effets sur synapses · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — blocage en prophase I (naissance) puis méiose I (puberté) puis méiose II (fécondation)"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — transpiration · force aspiration · cohésion colonne eau · stomates"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique formelle — arbre généalogique · mode de transmission · hérédité autosomique récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination et sérothérapie — comparaison · protection active (vaccin) vs passive (sérum)"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale féminine — rétrocontrôle négatif et positif · axe hypothalamo-hypophysaire"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂ · schéma chloroplaste"} },
+    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — application médicale · mucoviscidose · porteurs sains · fréquence allélique"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — récepteur → centre → effecteur · motoneurone · muscle antagoniste"}, p3:{theme:"Reproduction",sousTh:"Fécondation — zones de rencontre · capacitation · acrosome · polyspermie bloquée"}, p4:{theme:"Nutrition",sousTh:"Respiration anaérobie — fermentation lactique · fermentation alcoolique · 2 ATP seulement"} },
+    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique — all notions · brassages · transmission · mutations · populations"}, p2:{theme:"Milieu intérieur",sousTh:"Récapitulatif milieu intérieur — glycémie · immunité · neurophysiologie · hygiène SN"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · procréation"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — animale · végétale · photosynthèse · respiration"} },
+    { p1:{theme:"Génétique",sousTh:"Sujet type bac — génétique complexe · crossing-over + transmission liée sexe"}, p2:{theme:"Neurophysiologie",sousTh:"Sujet type bac — neurophysiologie complète · potentiel d'action · synapse · intégration"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac — reproduction complète · spermatogenèse · ovogenèse · fécondation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac — nutrition complète · photosynthèse + respiration cellulaire"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique quantitative — polygénie · expressivité · pénétrance · phénotype continu"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · CRH · ACTH · cortisol · adrénaline · effets physiologiques"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine complète — axe hypothalamo-hypophyso-testiculaire · feedback négatif"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — échanges gazeux · point de compensation · compensation lumineuse"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations et cancer — oncogènes · gènes suppresseurs · mécanismes · réparation ADN"}, p2:{theme:"Neurophysiologie",sousTh:"CMH — complexe majeur histocompatibilité · reconnaissance Ag · greffes · autoimmunité"}, p3:{theme:"Reproduction",sousTh:"Infertilité et PMA — causes · solutions · IAD vs FIVETE · aspects éthiques"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — amélioration production · engrais · risques pollution nitrates"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique moléculaire — ADN · gène · allèle · expression · transcription · traduction"}, p2:{theme:"Milieu intérieur",sousTh:"Immunodéficiences — SIDA · VIH · LT CD4 · traitement antirétroviral · prévention"}, p3:{theme:"Reproduction",sousTh:"Gamétogenèse comparée — spermatogenèse continue vs ovogenèse cyclique · méiose"}, p4:{theme:"Nutrition",sousTh:"Nutrition cellulaire — ATP utilisé pour travail mécanique · chimique · électrique · osmotique"} },
+    { p1:{theme:"Génétique",sousTh:"Révision type sujet officiel bac SC.EXP — 6 points génétique · gènes liés + lié sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Révision type sujet officiel bac — 7 points milieu intérieur · complet"}, p3:{theme:"Reproduction",sousTh:"Révision type sujet officiel bac — 4 points reproduction · régulation"}, p4:{theme:"Nutrition",sousTh:"Révision type sujet officiel bac — 3 points nutrition · photosynthèse"} },
+    { p1:{theme:"Génétique",sousTh:"Concours final — génétique avancée · croisements complexes · génétique populations"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie et immunité · interrelations"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction et régulation hormonale complète"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale et végétale · bilan métabolique"} },
+    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — révision croisée · méiose · diversité · notions clés"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — révision croisée · homéostasie · rétrocontrôles · constantes"}, p3:{theme:"Reproduction",sousTh:"Reproduction — révision croisée · cycles · hormones · fécondation"}, p4:{theme:"Nutrition",sousTh:"Nutrition — révision croisée · photosynthèse · respiration · échanges"} },
+    { p1:{theme:"Génétique",sousTh:"Session principale simulée — sujet complet 6 pts · génétique + brassages + populations"}, p2:{theme:"Milieu intérieur",sousTh:"Session principale simulée — sujet complet 7 pts · milieu intérieur + neurophysiologie"}, p3:{theme:"Reproduction",sousTh:"Session principale simulée — sujet complet 4 pts · reproduction humaine"}, p4:{theme:"Nutrition",sousTh:"Session principale simulée — sujet complet 3 pts · nutrition et environnement"} },
+    { p1:{theme:"Génétique",sousTh:"Session contrôle simulée — génétique difficultés · gènes liés + sexe + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Session contrôle simulée — neurophysiologie · potentiel d'action · synapse complexe"}, p3:{theme:"Reproduction",sousTh:"Session contrôle simulée — reproduction · cycles · régulation complète"}, p4:{theme:"Nutrition",sousTh:"Session contrôle simulée — nutrition · photosynthèse difficultés · facteurs"} },
+    { p1:{theme:"Génétique",sousTh:"Bilan général génétique — tout le programme · vrai niveau bac"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan général milieu intérieur — tout le programme · vrai niveau bac"}, p3:{theme:"Reproduction",sousTh:"Bilan général reproduction — tout le programme · vrai niveau bac"}, p4:{theme:"Nutrition",sousTh:"Bilan général nutrition — tout le programme · vrai niveau bac"} },
+  ],
+  'maths-svt': [
+    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — méiose · 2ⁿ gamètes · diversité génétique section Maths"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — étapes · méiose signalée · structure spermatozoïde · GnRH · LH · FSH"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan · chlorophylle · photolyse eau · facteurs limitants"}, p5:{theme:"Géologie",sousTh:"Tectonique des plaques — dorsales · expansion océanique · subduction · séismes"} },
+    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme · dihybridisme · loi ségrégation · loi assortiment"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action — dépolarisation Na⁺ · repolarisation K⁺ · synapse · PPSE · PPSI"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — ovarien · utérin · hormonal · FSH · LH · œstrogènes · progestérone"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · Krebs · chaîne respiratoire · 38 ATP"}, p5:{theme:"Évolution",sousTh:"Théories évolution — Darwin · sélection naturelle · preuves fossiles · anatomie comparée"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · LB anticorps · LT cytotoxiques · mémoire · vaccination"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration acrosomiale · réaction corticale · zygote 2n"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau et sels minéraux · osmose · transpiration · xylème"}, p5:{theme:"Géologie",sousTh:"Structure globe — croûte · manteau · noyau · lithosphère · asthénosphère"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over · gamètes recombinants · fréquence de recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · réflexe myotatique · drogues · cocaïne · dopamine · stress"}, p3:{theme:"Reproduction",sousTh:"Régulation féminine — GnRH pulsatile · pic LH → ovulation · rétrocontrôle positif"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption · villosités intestinales"}, p5:{theme:"Évolution",sousTh:"Spéciation — isolement reproducteur · spéciation allopatrique · dérive génétique"} },
+    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · caryotype · sonde moléculaire · risque consanguinité"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — rôle foie · pancréas endocrine · insuline vs glucagon · diabète"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — pilule (bloque GnRH/FSH/LH) · préservatif · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase lumineuse (photolyse eau → O₂) · phase obscure (Calvin → glucose)"}, p5:{theme:"Géologie",sousTh:"Séismes — foyer · épicentre · ondes P et S · magnitude · risque sismique"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations — géniques (substitution · délétion) · chromosomiques (trisomie 21) · conséquences"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité — non spécifique (phagocytose) · spécifique (LB · LT) · vaccination vs sérothérapie"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication · accroissement · maturation méiose (signalée) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire vs fermentation — aérobie (38 ATP) vs anaérobie (2 ATP)"}, p5:{theme:"Évolution",sousTh:"Preuves évolution — fossiles · anatomie comparée · organes vestigiaux · ADN universel"} },
+    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — compartiments liquidiens · constantes biologiques · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · structure · méiose signalée"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · loi du minimum"}, p5:{theme:"Géologie",sousTh:"Volcanisme — types volcans · magma basaltique vs siliceux · dorsales vs subduction"} },
+    { p1:{theme:"Génétique",sousTh:"Test-cross — révéler génotype · hétérozygote · calcul probabilité · arbre généalogique"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · mécanismes synaptiques · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine — axe hypothalamo-hypophyso-testiculaire · testostérone · rétrocontrôle"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — sels minéraux · carence azote (chlorose) · engrais chimiques · pollution"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — adaptation · variation · survie sélective · exemple peppered moth"} },
+    { p1:{theme:"Génétique",sousTh:"Généalogie — arbre · mode transmission · probabilité enfant malade · hérédité récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · cortisol · adrénaline · effets chroniques · mesures protection"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phases menstruelle · proliférative · sécrétoire · synchronisation avec ovarien"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse bilan · chloroplaste — thylakoïdes (phase lumineuse) · stroma (Calvin)"}, p5:{theme:"Géologie",sousTh:"Tectonique plaques — dérive continents · Wegener · preuves magnétiques · expansion"} },
+    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique section Maths — brassages + transmission + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Récapitulatif neurophysiologie — potentiel action · synapse · réflexe · drogues"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — photosynthèse · respiration · comparaison autotrophe/hétérotrophe"}, p5:{theme:"Géologie & Évolution",sousTh:"Récapitulatif géologie + évolution — tectonique · théories · preuves · spéciation"} },
+    { p1:{theme:"Génétique",sousTh:"Sujet type bac Section Maths — 5 points génétique · croisements + lié au sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Sujet type bac Section Maths — 6 points milieu intérieur · glycémie + SN + immunité"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac Section Maths — 4 points reproduction · spermatogenèse + régulation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac Section Maths — 3 points nutrition · photosynthèse"}, p5:{theme:"Géologie",sousTh:"Sujet type bac Section Maths — 2 points géologie · tectonique des plaques"} },
+    { p1:{theme:"Génétique",sousTh:"Concours final — génétique section Maths · dihybridisme + lié sexe + diagnostic"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie + immunité complète"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction homme + femme + régulation"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale + végétale + photosynthèse"}, p5:{theme:"Géologie & Évolution",sousTh:"Concours final — géologie + évolution complète"} },
+    // Jours 13-31 : rotation sur les thèmes avec variantes
+    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — Prophase I vs Anaphase I · comparaison brassages"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 — destruction autoimmune cellules β · absence insuline · traitement"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — de primordial à De Graaf · antrum · granulosa · thèque"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — rôle mitochondrie · glycolyse cytoplasme · bilan énergétique"}, p5:{theme:"Géologie",sousTh:"Subduction — plaque océanique sous continentale · fosse · volcans · arcs insulaires"} },
+    { p1:{theme:"Génétique",sousTh:"Monohybridisme — dominance · récessivité · F1 · F2 · back-cross · génotypes"}, p2:{theme:"Neurophysiologie",sousTh:"PPSE et PPSI — sommation spatiale et temporelle · seuil déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — pilule inhibe GnRH/FSH/LH → pas d'ovulation · mécanisme"}, p4:{theme:"Nutrition",sousTh:"Absorption eau plante — osmose · poils absorbants · pression de turgescence"}, p5:{theme:"Évolution",sousTh:"Code génétique universel — preuve évolution · ADN universel · phylogénie moléculaire"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée chromosome X — notation · conductrice · transmission croisée"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie après repas vs jeûne — rôle foie · insuline glycogénogenèse · glucagon glycogénolyse"}, p3:{theme:"Reproduction",sousTh:"Pic LH — cause (rétrocontrôle positif œstrogènes) · conséquences (ovulation · corps jaune)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase obscure de Calvin · fixation CO₂ · réduction · régénération RuBP"}, p5:{theme:"Géologie",sousTh:"Formation chaînes montagnes — collision continentale · Himalaya · Alpes · orogénèse"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — non-disjonction méiose → trisomie · âge maternel · caryotype"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — arc réflexe · fuseau neuromusculaire · synapse monosynaptique"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction · FIV · culture · transfert · grossesse"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — enzymes digestives · pH optimal · dénaturation à 50°C · spécificité"}, p5:{theme:"Évolution",sousTh:"Isolement reproducteur — mécanismes · barrières géographiques · spéciation allopatrique"} },
+    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — conditions équilibre · panmixie · applications calcul fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — LB (plasmocytes · anticorps) · LT (cytotoxiques · auxiliaires)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse comparée à spermatogenèse — différences · similitudes · méiose"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs simplifié — pyruvate → CO₂ + NADH + FADH₂ · matrice mitochondriale"}, p5:{theme:"Géologie",sousTh:"Dorsales océaniques — rift · remontée magma · expansion · anomalies magnétiques"} },
+    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — calcul probabilité · maladies récessives rares · généalogie"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues système nerveux — types agoniste/antagoniste · cocaïne · dépendance · sevrage"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde haploïde · acrosome · mitochondries · ovocyte II"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — autotrophe producteur vs hétérotrophe consommateur"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — directionnelle · stabilisatrice · diversifiante · exemples réels"} },
+    { p1:{theme:"Génétique",sousTh:"Bilan génétique section Maths — révision complète tous les thèmes"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan milieu intérieur — glycémie · neurophysiologie · immunité · stress · drogues"}, p3:{theme:"Reproduction",sousTh:"Bilan reproduction — homme · femme · cycle complet · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Bilan nutrition — photosynthèse + respiration · échanges · bilan ATP"}, p5:{theme:"Géologie & Évolution",sousTh:"Bilan géologie + évolution — tectonique · preuves · spéciation"} },
+  ],
+}
+
+async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const isMaths = candidat.sectionKey === 'maths-svt'
+  const sectionLabel = isMaths ? 'SVT — Section Mathématiques' : 'SVT — Sciences Expérimentales'
+  const seed = `BAC_BLANC_SVT_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const progKey = isMaths ? 'maths-svt' : 'scexp-svt'
+  const progList = PROGRAMME_JOUR_SVT[progKey]
+  const prog = progList[(dayNum - 1) % progList.length]
+
+  const p1Theme = prog.p1.sousTh
+  const p2Theme = prog.p2.sousTh
+  const p3Theme = prog.p3.sousTh
+  const p4Theme = prog.p4.sousTh
+  const p5Theme = isMaths && prog.p5 ? prog.p5.sousTh : null
+
+  const nExercices = isMaths ? 5 : 4
+  const pts = isMaths ? [5, 6, 4, 3, 2] : [6, 7, 4, 3]
+  const duration = isMaths ? 120 : 180
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en SVT (programme CNP officiel).
+Tu crées des sujets BAC BLANC SVT originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+RÈGLES SVT OBLIGATOIRES :
+- Vocabulaire biologique précis : noms latins si nécessaire (ex: Homo sapiens)
+- Questions progressives avec sous-parties numérotées : 1) a) b) 2) a) b) c)
+- Données numériques réalistes (pH, températures, concentrations, périodes)
+- Schémas décrits textuellement : "D'après le document ci-dessous..."
+- Documents fournis : tableaux de données, graphiques décrits, résultats d'expériences
+- Structure officielle CNP Tunisie : "DOCUMENT 1 : ...", "DOCUMENT 2 : ..."
+- Relier les notions biologiques à des applications médicales, environnementales ou sociales
+
+NOTATION SVT :
+- Termes techniques précis : ADN, ARN, méiose, crossing-over, osmose, etc.
+- Formules biologiques : 2ⁿ gamètes, pH = -log[H₃O⁺], n = 23 chromosomes
+- Schémas fonctionnels décrits avec précision`
+
+  const exercicesPrompt = [
+    `EXERCICE 1 — ${prog.p1.theme} (${pts[0]} points) : ${p1Theme}`,
+    `EXERCICE 2 — ${prog.p2.theme} (${pts[1]} points) : ${p2Theme}`,
+    `EXERCICE 3 — ${prog.p3.theme} (${pts[2]} points) : ${p3Theme}`,
+    `EXERCICE 4 — ${prog.p4.theme} (${pts[3]} points) : ${p4Theme}`,
+    isMaths && p5Theme ? `EXERCICE 5 — ${prog.p5!.theme} (${pts[4]} points) : ${p5Theme}` : null,
+  ].filter(Boolean).join('\n')
+
+  const prompt = `Graine déterministe : ${seed}
+Date : ${dateStr}
+Section : ${sectionLabel}
+
+Crée un sujet BAC BLANC SVT ORIGINAL · Jour ${dayNum}.
+
+STRUCTURE OFFICIELLE :
+Durée : ${duration} min · Total : 20 points
+
+${exercicesPrompt}
+
+RÈGLES ABSOLUES :
+- Chaque exercice commence par 1 ou 2 documents (données expérimentales, tableaux, graphiques décrits)
+- Minimum 150 mots par exercice
+- Questions progressives du plus simple au plus complexe
+- Toujours un lien entre les documents et les questions
+- Données numériques précises et réalistes
+${isMaths ? '- Exercice 5 (Géologie/Évolution) : courte question théorique ou schéma à analyser (2 pts)' : ''}
+
+Réponds EXACTEMENT avec ce JSON :
+{
+  "title": "Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}",
+  "section": "${sectionLabel}",
+  "duration": ${duration},
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — ${prog.p1.theme}",
+      "theme": "${prog.p1.theme}",
+      "points": ${pts[0]},
+      "graph": null,
+      "statement": "DOCUMENT 1 : [description données/tableau/schéma]\\n\\nDOCUMENT 2 : [données complémentaires]\\n\\n1) a) Question complète avec référence aux documents...\\n1) b) Question...\\n2) a) Question...\\n2) b) Question...\\n3) Question de synthèse..."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — ${prog.p2.theme}",
+      "theme": "${prog.p2.theme}",
+      "points": ${pts[1]},
+      "graph": null,
+      "statement": "DOCUMENT 1 : [description]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ...\\n2) c) ...\\n3) ..."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — ${prog.p3.theme}",
+      "theme": "${prog.p3.theme}",
+      "points": ${pts[2]},
+      "graph": null,
+      "statement": "DOCUMENT : [données]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ..."
+    },
+    {
+      "num": 4,
+      "title": "Exercice 4 — ${prog.p4.theme}",
+      "theme": "${prog.p4.theme}",
+      "points": ${pts[3]},
+      "graph": null,
+      "statement": "DONNÉES : [données]\\n\\n1) ...\\n2) ...\\n3) ..."
+    }${isMaths && p5Theme ? `,
+    {
+      "num": 5,
+      "title": "Exercice 5 — ${prog.p5?.theme || 'Géologie & Évolution'}",
+      "theme": "${prog.p5?.theme || 'Géologie & Évolution'}",
+      "points": 2,
+      "graph": null,
+      "statement": "DOCUMENT : [schéma ou données géologiques/évolution]\\n\\n1) Question théorique...\\n2) Question application..."
+    }` : ''}
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 6000, 'svt' as any)
+
+  const fallback: Omit<BacExam,'id'|'index'> = {
+    title: `Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    day: dayNum,
+    date: dateStr,
+    duration,
+    totalPoints: 20,
+    exercises: [
+      {num:1,title:`Exercice 1 — ${prog.p1.theme}`,theme:prog.p1.theme,points:pts[0],statement:'Exercice en cours de génération…'},
+      {num:2,title:`Exercice 2 — ${prog.p2.theme}`,theme:prog.p2.theme,points:pts[1],statement:'Exercice en cours de génération…'},
+      {num:3,title:`Exercice 3 — ${prog.p3.theme}`,theme:prog.p3.theme,points:pts[2],statement:'Exercice en cours de génération…'},
+      {num:4,title:`Exercice 4 — ${prog.p4.theme}`,theme:prog.p4.theme,points:pts[3],statement:'Exercice en cours de génération…'},
+      ...(isMaths && p5Theme ? [{num:5,title:`Exercice 5 — Géologie & Évolution`,theme:'Géologie & Évolution',points:2,statement:'Exercice en cours de génération…'}] : []),
+    ]
+  }
+
+  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
+
+  return {
+    ...parsed,
+    id: `bb-svt-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || duration,
+    index: 0,
+  }
+}
+
+// ── Génération examen Bac Blanc (distinct de simulation) ──────────
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
   const today = new Date()
@@ -1830,10 +2051,14 @@ const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: s
     { key:'lettres', label:'Section Lettres',                icon:'📚', color:'#ec4899' },
     { key:'toutes',  label:'Toutes sections (sauf Lettres)', icon:'🔬', color:'#6366f1' },
   ],
+  svt: [
+    { key:'scexp-svt', label:'Sciences Expérimentales',  icon:'🔬', color:'#22c55e' },
+    { key:'maths-svt', label:'Section Mathématiques',    icon:'📐', color:'#a78bfa' },
+  ],
 }
 
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onRetour,
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onRetour,
   hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
 }: {
   candidat: Candidat
@@ -1842,6 +2067,7 @@ function PhaseChoixMatiere({
   onPhysique: () => void
   onInfo: () => void
   onAnglais: () => void
+  onSvt: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
   checkMatiereAccess?: (m: any) => boolean
@@ -1908,15 +2134,15 @@ function PhaseChoixMatiere({
     },
     {
       key: 'svt',
-      icon: '🧬',
+      icon: '🌱',
       label: 'SVT',
-      desc: 'Génétique · Immunologie · Physiologie · Géologie',
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(5,150,105,0.04))',
-      border: 'rgba(16,185,129,0.18)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
+      desc: 'Génétique · Milieu intérieur · Neurophysiologie · Reproduction · Nutrition · Géologie & Évolution',
+      color: '#22c55e',
+      gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(34,197,94,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
     },
   ]
 
@@ -1940,6 +2166,7 @@ function PhaseChoixMatiere({
     if (selectedMatiere === 'physique') { onPhysique(); return }
     if (selectedMatiere === 'informatique') { onInfo(); return }
     if (selectedMatiere === 'anglais') { onAnglais(); return }
+    if (selectedMatiere === 'svt') { onSvt(); return }
   }
 
   const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
@@ -3675,6 +3902,32 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  // ── Lancer le bac blanc SVT ─────────────────────────────────────────
+  const handleStartSVT = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à SVT pour accéder au Bac Blanc SVT.\n→ mathsbac.com/abonnement?matiere=svt')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('svt')) {
+      alert("✅ Vous avez déjà passé votre examen SVT aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancSVT(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('svt')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération SVT. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3726,6 +3979,7 @@ function BacBlancInner() {
       onPhysique={handleStartPhysique}
       onInfo={handleStartInfo}
       onAnglais={handleStartAnglais}
+      onSvt={handleStartSVT}
       onRetour={()=>setPhase('inscription')}
       hasActiveSubscription={hasActiveSubscription}
       checkMatiereAccess={checkMatiereAccess}

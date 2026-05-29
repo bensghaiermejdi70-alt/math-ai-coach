@@ -9,7 +9,7 @@ import Link from 'next/link'
 //  Programme officiel CNP Tunisie — 4ème année secondaire
 // ═══════════════════════════════════════════════════════════════
 
-type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | null
 
 // ──────────────────────────────────────────────────────────────
 //  DONNÉES MATHÉMATIQUES — Programme officiel CNP mis à jour
@@ -427,6 +427,192 @@ const SECTIONS_PC = [
 ]
 
 // ──────────────────────────────────────────────────────────────
+//  DONNÉES SVT — Programme officiel CNP Tunisie
+//  2 sections uniquement : Sciences Expérimentales & Mathématiques
+// ──────────────────────────────────────────────────────────────
+
+const SECTIONS_SVT = [
+  {
+    slug: 'sciences-exp',
+    icon: '🔬',
+    titre: 'Section Sciences Expérimentales',
+    coeff: 'Coefficient 5',
+    couleur: '#22c55e',
+    gradient: 'linear-gradient(135deg,rgba(34,197,94,0.13),rgba(16,185,129,0.07))',
+    border: 'rgba(34,197,94,0.28)',
+    tomes: [
+      {
+        label: 'THÈME I — Génétique & Reproduction (4 chapitres)',
+        chapitres: [
+          'Le brassage de l\'information génétique (méiose · brassage interchromosomique · crossing-over · diversité)',
+          'La transmission de l\'information génétique (lois de Mendel · monohybridisme · dihybridisme · hérédité liée au sexe · risque consanguinité · diagnostic prénatal)',
+          'Les mutations (mutations géniques · chromosomiques · conséquences biologiques)',
+          'Génétique des populations (fréquences alléliques · équilibre Hardy-Weinberg · dérive génétique)',
+        ],
+      },
+      {
+        label: 'THÈME II — Milieu intérieur & Neurophysiologie (5 chapitres)',
+        chapitres: [
+          'La constance du milieu intérieur (compartiments liquidiens · plasma · liquide interstitiel · constantes biologiques)',
+          'La régulation de la glycémie (rôle du foie · insuline & glucagon · rétrocontrôle négatif · diabète type 1 & 2)',
+          'Le système nerveux et la régulation (neurone · potentiel de repos · potentiel d\'action · transmission synaptique · réflexe myotatique · PPSE & PPSI)',
+          'Défense de l\'organisme (immunité non spécifique · phagocytose · immunité spécifique humorale & cellulaire · mémoire · vaccination · sérothérapie)',
+          'Hygiène du système nerveux (drogues · effets sur le SN · stress · mesures de protection)',
+        ],
+      },
+      {
+        label: 'THÈME III — Reproduction humaine & Santé (3 chapitres)',
+        chapitres: [
+          'La fonction reproductrice chez l\'homme (spermatogenèse · structure spermatozoïde · testostérone · complexe hypothalamo-hypophysaire)',
+          'La fonction reproductrice chez la femme (folliculogenèse · ovogenèse · cycle ovarien & utérin · régulation hormonale · GnRH)',
+          'La fécondation et la procréation (capacitation · étapes fécondation · contraception · FIVETE · hygiène procréation)',
+        ],
+      },
+      {
+        label: 'THÈME IV — Nutrition & Environnement (2 chapitres)',
+        chapitres: [
+          'Nutrition animale (digestion glucides/protides/lipides · enzymes digestives · absorption · respiration cellulaire · cycle de Krebs · ATP)',
+          'Nutrition végétale (absorption eau & sels minéraux · transpiration · photosynthèse · chlorophylle · photolyse de l\'eau · facteurs environnementaux · amélioration production)',
+        ],
+      },
+    ],
+    nbCh: 14,
+    nbThm: 120,
+    nbEx: 95,
+    note: '★ Coefficient 5 — matière principale en Sciences Expérimentales',
+  },
+  {
+    slug: 'mathematique',
+    icon: '📐',
+    titre: 'Section Mathématiques',
+    coeff: 'Coefficient 2',
+    couleur: '#a78bfa',
+    gradient: 'linear-gradient(135deg,rgba(167,139,250,0.13),rgba(139,92,246,0.07))',
+    border: 'rgba(167,139,250,0.28)',
+    tomes: [
+      {
+        label: 'THÈME I — Génétique (2 chapitres)',
+        chapitres: [
+          'Le brassage de l\'information génétique (méiose · brassage interchromosomique & intrachromosomique · crossing-over · diversité génétique)',
+          'Transmission & hérédité (lois de Mendel · dihybridisme · hérédité liée au sexe · risque consanguinité · diagnostic prénatal · sonde moléculaire)',
+        ],
+      },
+      {
+        label: 'THÈME II — Milieu intérieur & Neurophysiologie (5 chapitres)',
+        chapitres: [
+          'La constance du milieu intérieur (compartiments liquidiens · constantes biologiques · troubles liés aux variations)',
+          'La régulation de la glycémie (rôle du foie · insuline & glucagon · rétrocontrôle négatif · diabète type 1 & 2)',
+          'Le système nerveux et la régulation (neurone · potentiel de repos · potentiel d\'action ionique · synapse · réflexe myotatique · muscles antagonistes)',
+          'Défense de l\'organisme (immunité non spécifique · phagocytose · immunité spécifique · vaccination · sérothérapie)',
+          'Hygiène du système nerveux (drogues — cocaïne · effets nocifs sur le SN · stress · mesures de protection)',
+        ],
+      },
+      {
+        label: 'THÈME III — Reproduction humaine & Santé (3 chapitres)',
+        chapitres: [
+          'La fonction reproductrice chez l\'homme (structure spermatozoïde · spermatogenèse · méiose · testostérone · régulation)',
+          'La fonction reproductrice chez la femme (folliculogenèse · ovogenèse · structure ovocyte · cycle sexuel · régulation hypothalamo-hypophysaire)',
+          'La fécondation et la procréation (conditions fécondation · étapes · contraception · FIVETE · hygiène procréation)',
+        ],
+      },
+      {
+        label: 'THÈME IV — Nutrition & Environnement (2 chapitres)',
+        chapitres: [
+          'Nutrition animale (digestion enzymatique · absorption des nutriments · respiration cellulaire · cycle de Krebs simplifié · bilan ATP)',
+          'Nutrition végétale (absorption eau · sels minéraux N/P/K/Mg/Fe · photosynthèse · photolyse eau · intensité photosynthétique · amélioration production)',
+        ],
+      },
+      {
+        label: 'THÈME V — Géologie & Évolution (1 chapitre)',
+        chapitres: [
+          'Évolution biologique & Géologie (théories évolution · sélection naturelle · preuves fossiles & ADN · spéciation · tectonique des plaques · séismes · volcanisme)',
+        ],
+      },
+    ],
+    nbCh: 13,
+    nbThm: 88,
+    nbEx: 70,
+    note: '★ Coefficient 2 — programme allégé par rapport à Sciences Expérimentales',
+  },
+]
+
+// ──────────────────────────────────────────────────────────────
+//  COMPOSANT CARTE SVT
+// ──────────────────────────────────────────────────────────────
+function CarteSVT({ sec }: { sec: typeof SECTIONS_SVT[0] }) {
+  return (
+    <div style={{
+      background: sec.gradient,
+      border: `1.5px solid ${sec.border}`,
+      borderRadius: 20,
+      padding: '28px 32px',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* En-tête */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div style={{ fontSize: 38 }}>{sec.icon}</div>
+          <div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 4, flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: 'clamp(17px,2.5vw,22px)', margin: 0 }}>{sec.titre}</h2>
+              <span style={{ background: `${sec.couleur}25`, color: sec.couleur, fontSize: 11, fontFamily: 'var(--font-mono)', padding: '3px 10px', borderRadius: 20 }}>{sec.coeff}</span>
+            </div>
+            {(sec as any).note && (
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic', marginTop: 2 }}>{(sec as any).note}</div>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--muted)', flexWrap: 'wrap' }}>
+          <span>📚 {sec.nbCh} chapitres</span>
+          <span>·</span>
+          <span>🔬 {sec.nbThm}+ concepts</span>
+          <span>·</span>
+          <span>📝 {sec.nbEx}+ exercices</span>
+        </div>
+      </div>
+
+      {/* Thèmes */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 14, marginBottom: 20 }}>
+        {sec.tomes.map((tome, ti) => (
+          <div key={ti} style={{ background: 'rgba(0,0,0,0.15)', borderRadius: 14, padding: '14px 16px' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, color: sec.couleur, marginBottom: 8 }}>
+              {tome.label}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {tome.chapitres.map((ch, ci) => (
+                <div key={ci} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>
+                  <span style={{ color: sec.couleur, fontSize: 9, marginTop: 3, flexShrink: 0 }}>▸</span>
+                  <span>{ch}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bouton */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Link
+          href={`/bac/svt/${sec.slug}`}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: `linear-gradient(135deg,${sec.couleur},${sec.couleur}cc)`, color: 'white',
+            padding: '9px 20px', borderRadius: 11,
+            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12,
+            textDecoration: 'none', transition: 'opacity 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        >
+          📚 Cours complets →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────────────────────
 //  COMPOSANT CARTE SECTION MATHS
 // ──────────────────────────────────────────────────────────────
 function CarteMaths({ sec }: { sec: typeof SECTIONS_MATHS[0] }) {
@@ -723,17 +909,24 @@ export default function BacTunisiePage() {
 
               {/* SVT */}
               <button
-                disabled
-                style={{ padding: '36px 28px', background: 'rgba(255,255,255,0.02)', border: '1.5px solid rgba(255,255,255,0.07)', borderRadius: 20, cursor: 'not-allowed', textAlign: 'left', fontFamily: 'var(--font-body)', opacity: 0.42 }}
+                onClick={() => setMatiere('svt')}
+                style={{ padding: '36px 28px', background: 'rgba(34,197,94,0.06)', border: '1.5px solid rgba(34,197,94,0.22)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(34,197,94,0.55)'; e.currentTarget.style.background = 'rgba(34,197,94,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(34,197,94,0.22)'; e.currentTarget.style.background = 'rgba(34,197,94,0.06)' }}
               >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
                 <div style={{ fontSize: 52, marginBottom: 14 }}>🌱</div>
-                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: 'var(--muted)' }}>SVT</h2>
-                <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#4ade80' }}>SVT</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
                   Sciences de la Vie et de la Terre<br />
-                  Bientôt disponible
+                  2 sections : Sc.Exp · Mathématiques
                 </p>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: 'var(--muted)', fontSize: 12, fontWeight: 600 }}>
-                  🚧 En construction
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(34,197,94,0.12)', color: '#22c55e', fontWeight: 600 }}>Sc. Expérimentales</span>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(167,139,250,0.12)', color: '#a78bfa', fontWeight: 600 }}>Mathématiques</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#4ade80', fontWeight: 700, fontSize: 13 }}>
+                  Voir les programmes →
                 </span>
               </button>
             </div>
@@ -741,10 +934,10 @@ export default function BacTunisiePage() {
             {/* Stats globales */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 40 }}>
               {[
-                { num: '5', label: 'Matières', icon: '📚' },
+                { num: '6', label: 'Matières', icon: '📚' },
                 { num: '57+', label: 'Chapitres Maths', icon: '📐' },
                 { num: '45+', label: 'Chapitres PC', icon: '⚗️' },
-                { num: '17', label: 'Chapitres Anglais', icon: '🇬🇧' },
+                { num: '27+', label: 'Chapitres SVT', icon: '🌱' },
               ].map(s => (
                 <div key={s.label} className="card" style={{ textAlign: 'center', padding: '16px 10px' }}>
                   <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
@@ -1131,6 +1324,104 @@ export default function BacTunisiePage() {
           </div>
         </main>
         <Footer />
+      </>
+    )
+  }
+
+  // ── PAGE SVT ──────────────────────────────────────────────────
+  if (matiere === 'svt') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+
+            {/* Retour */}
+            <div style={{ marginBottom: 40 }}>
+              <button
+                onClick={() => setMatiere(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16, transition: 'all 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(34,197,94,0.45)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                ← Toutes les matières
+              </button>
+              <span className="label" style={{ marginBottom: 12, display: 'block' }}>
+                🇹🇳 Programme officiel CNP Tunisie — 🌱 Sciences de la Vie et de la Terre
+              </span>
+              <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+                SVT — Sciences Expérimentales & Maths<br />
+                <span style={{ color: '#4ade80' }}>Bac 4ème Année Secondaire</span>
+              </h1>
+              <p style={{ maxWidth: 620, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
+                Programme officiel CNP — Génétique · Neurophysiologie · Milieu intérieur · Reproduction humaine · Nutrition · Écologie.
+                Disponible pour la <strong style={{ color: '#22c55e' }}>section Sciences Expérimentales</strong> (coeff. 5) et la <strong style={{ color: '#a78bfa' }}>section Mathématiques</strong> (coeff. 2).
+              </p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac</Link>
+                <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
+              </div>
+            </div>
+
+            {/* Stats SVT */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 48 }}>
+              {[
+                { num: '2', label: 'Sections', icon: '🎓' },
+                { num: '27+', label: 'Chapitres', icon: '📚' },
+                { num: '208+', label: 'Concepts', icon: '🔬' },
+                { num: '165+', label: 'Exercices', icon: '📝' },
+              ].map(s => (
+                <div key={s.label} className="card" style={{ textAlign: 'center', padding: 20 }}>
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22, color: '#22c55e' }}>{s.num}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Note programme */}
+            <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '14px 20px', marginBottom: 36, display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 12, color: 'var(--text2)' }}>
+              <div><span style={{ color: '#22c55e', fontWeight: 700 }}>🔬 Sc. Expérimentales</span> — Programme complet 4 thèmes · Coeff. 5</div>
+              <div><span style={{ color: '#a78bfa', fontWeight: 700 }}>📐 Section Maths</span> — Programme allégé 5 thèmes · Coeff. 2</div>
+              <div style={{ color: 'var(--muted)', fontSize: 11 }}>Thèmes II, III, IV identiques dans les deux sections</div>
+            </div>
+
+            {/* Cartes SVT */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+              {SECTIONS_SVT.map(sec => (
+                <CarteSVT key={sec.slug} sec={sec} />
+              ))}
+            </div>
+
+            {/* Switcher */}
+            <div style={{ marginTop: 32, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setMatiere('maths')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, color: 'var(--muted)', transition: 'all 0.18s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(79,110,247,0.4)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                📐 Voir Mathématiques →
+              </button>
+              <button
+                onClick={() => setMatiere('physique-chimie')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, color: 'var(--muted)', transition: 'all 0.18s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(6,214,160,0.4)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
+                ⚗️ Voir Physique-Chimie →
+              </button>
+            </div>
+
+          </div>
+        </main>
+        <Footer />
+        <style>{`
+          @media(max-width:700px){
+            div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+            div[style*="repeat(4,1fr)"] { grid-template-columns: repeat(2,1fr) !important; }
+          }
+        `}</style>
       </>
     )
   }

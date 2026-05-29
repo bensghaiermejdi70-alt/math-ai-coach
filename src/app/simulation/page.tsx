@@ -50,6 +50,11 @@ import { MatiereType, sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 // Track current subject for askClaude calls
 let globalMatiere: MatiereType = 'mathematiques'
 
+// Stockage correction directe (évite parsing regex fragile)
+const correctionDirecteData: { examContent: string; copyContent: string; examImages: {data:string;mediaType:string}[] } = {
+  examContent: '', copyContent: '', examImages: []
+}
+
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Simulation IA (géré par Supabase via AuthContext)
 // Standard   : 5 simulations/semaine
@@ -91,7 +96,7 @@ const SECTION_CONFIGS = [
     themes:['Analyse','Arithmétique','Probabilités','Complexes','Géométrie'] },
   { key:'eco', label:'Éco-Gestion', color:'#10b981', icon:'💹', folder:'economie_gestion', file:'math.pdf',
     themes:['Analyse & Suites','Probabilités & Statistiques','Matrices & Systèmes','Maths Financières','Logarithme & Exponentielle'] },
-  { key:'info',             label:'Sc. Informatiques',       color:'#6366f1', icon:'💻', folder:'informatique', file:'algorithme.pdf',
+  { key:'info',             label:'Sc-Informatiques',       color:'#6366f1', icon:'💻', folder:'informatique', file:'algorithme.pdf',
     themes:['Algorithmique & Récursivité','Tri & Recherche','Structures de données','Bases de données SQL','TIC & Réseaux'] },
   { key:'autres-sections',  label:'Autres Sections (TIC)',    color:'#f59e0b', icon:'🎓', folder:'math', file:'info.pdf',
     themes:['Internet & Réseaux','HTML & CSS','JavaScript','Systèmes informatiques','Sécurité & RGPD'] },
@@ -406,7 +411,103 @@ const CHAPITRES_PHYS: Record<string, {
   },
 }
 
-// ── Types ──────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  SVT — Configs sections, archives et chapitres
+//  2 sections : Sciences Expérimentales (coef.5) · Mathématiques (coef.2)
+//  Fichiers bacweb.tn : sciences_ex/svt.pdf · math/svt.pdf
+// ═══════════════════════════════════════════════════════════════════
+const SECTION_CONFIGS_SVT = [
+  {
+    key: 'svt-scexp',
+    label: 'SVT-Sciences-Expérimentales',
+    color: '#22c55e',
+    icon: '🔬',
+    folder: 'sciences_ex',
+    file: 'svt.pdf',
+    themes: ['Génétique & Brassage','Transmission héréditaire','Milieu intérieur','Neurophysiologie','Immunité','Reproduction humaine','Nutrition & Photosynthèse']
+  },
+  {
+    key: 'svt-maths',
+    label: 'SVT-Section-Mathématiques',
+    color: '#a78bfa',
+    icon: '📐',
+    folder: 'math',
+    file: 'svt.pdf',
+    themes: ['Génétique & Hérédité','Milieu intérieur','Neurophysiologie','Immunité','Reproduction humaine','Nutrition','Géologie & Évolution']
+  },
+]
+
+const bwSVT = (y: number, session: 'principale'|'controle', folder: string) =>
+  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/svt.pdf`
+
+const ARCHIVES_SVT: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_SVT.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwSVT(y,'principale',sc.folder), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwSVT(y,'controle',sc.folder), themes:sc.themes },
+  ])
+)
+
+// ── Chapitres SVT par section ──────────────────────────────────────
+const CHAPITRES_SVT: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+
+  // ══ SVT SCIENCES EXPÉRIMENTALES — 14 chapitres ═══════════════════
+  'svt-scexp': {
+    key: 'svt-scexp', label: 'SVT-Sciences-Exp.', color: '#22c55e', icon: '🔬',
+    chapitres: [
+      // Thème I — Génétique (4 chapitres)
+      { slug:'brassage-genetique',       titre:'Brassage de l\'information génétique', badge:'Génétique', desc:'Méiose · brassage interchromosomique (Anaphase I) · crossing-over (Prophase I) · gamètes recombinants · 2ⁿ types de gamètes.' },
+      { slug:'transmission-hereditaire', titre:'Transmission de l\'information génétique', badge:'Génétique', desc:'Lois de Mendel · monohybridisme (3:1) · dihybridisme (9:3:3:1) · gènes liés · hérédité liée au sexe · diagnostic prénatal · sonde moléculaire.' },
+      { slug:'mutations-svt',            titre:'Les mutations',                          badge:'Génétique', desc:'Mutations géniques (substitution · délétion · insertion · faux-sens · non-sens) · mutations chromosomiques · trisomie 21 · non-disjonction · agents mutagènes.' },
+      { slug:'genetique-populations',    titre:'Génétique des populations',              badge:'Génétique', desc:'Fréquences alléliques p et q · p+q=1 · loi de Hardy-Weinberg p²+2pq+q²=1 · conditions d\'équilibre · applications médicales.' },
+      // Thème II — Milieu intérieur (5 chapitres)
+      { slug:'milieu-interieur-svt',     titre:'Constance du milieu intérieur',          badge:'Milieu intérieur', desc:'Plasma · liquide interstitiel · liquide intracellulaire · glycémie 0,8-1,2 g/L · pH 7,35-7,45 · température 37°C · homéostasie.' },
+      { slug:'regulation-glycemie-svt',  titre:'Régulation de la glycémie',              badge:'Milieu intérieur', desc:'Rôle du foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · insuline (cellules β) · glucagon (cellules α) · rétrocontrôle négatif · diabète type 1 et 2.' },
+      { slug:'systeme-nerveux-svt',      titre:'Système nerveux et régulation',          badge:'Neurophysiologie', desc:'Structure du neurone · potentiel de repos (-70mV) · dépolarisation Na⁺ · repolarisation K⁺ · loi du tout ou rien · synapse chimique · PPSE · PPSI · réflexe myotatique.' },
+      { slug:'defense-organisme-svt',    titre:'Défense de l\'organisme',                badge:'Immunité', desc:'Immunité non spécifique (phagocytose · inflammation) · immunité humorale (LB · anticorps · plasmocytes) · immunité cellulaire (LT cytotoxiques) · mémoire · vaccination · sérothérapie.' },
+      { slug:'hygiene-sn-svt',           titre:'Hygiène du système nerveux',             badge:'Neurophysiologie', desc:'Drogues et SN · cocaïne (blocage recapture dopamine) · dépendance · stress · cortisol · adrénaline · mesures de protection.' },
+      // Thème III — Reproduction (3 chapitres)
+      { slug:'reproduction-homme-svt',   titre:'Fonction reproductrice chez l\'homme',   badge:'Reproduction', desc:'Structure du spermatozoïde (tête · pièce intermédiaire · flagelle) · spermatogenèse (multiplication · accroissement · maturation · différenciation) · testostérone · GnRH · LH · FSH · rétrocontrôle.' },
+      { slug:'reproduction-femme-svt',   titre:'Fonction reproductrice chez la femme',   badge:'Reproduction', desc:'Folliculogenèse (follicule primordial → De Graaf) · ovogenèse · cycle ovarien · cycle utérin · FSH · LH · œstrogènes · progestérone · pic de LH → ovulation · corps jaune.' },
+      { slug:'fecondation-svt',          titre:'Fécondation et procréation',             badge:'Reproduction', desc:'Capacitation · pénétration (enzymes acrosomiales) · réaction corticale · fusion des pronuclei → zygote 2n · contraception (pilule · préservatif) · FIVETE · IAD.' },
+      // Thème IV — Nutrition (2 chapitres)
+      { slug:'nutrition-animale-svt',    titre:'Nutrition animale',                      badge:'Nutrition', desc:'Digestion enzymatique (amylase · pepsine · lipase · pH et température optimaux) · absorption (villosités intestinales) · respiration cellulaire : glycolyse → Krebs → chaîne respiratoire → 38 ATP · C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP.' },
+      { slug:'nutrition-vegetale-svt',   titre:'Nutrition végétale',                     badge:'Nutrition', desc:'Osmose · absorption eau · sels minéraux N·P·K·Mg·Fe · xylème · transpiration (stomates) · photosynthèse : phase photochimique (photolyse eau → O₂) · cycle de Calvin (CO₂ → glucose) · 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂ · facteurs limitants.' },
+    ],
+  },
+
+  // ══ SVT SECTION MATHÉMATIQUES — 13 chapitres ═════════════════════
+  'svt-maths': {
+    key: 'svt-maths', label: 'SVT-Section-Maths', color: '#a78bfa', icon: '📐',
+    chapitres: [
+      // Thème I — Génétique (2 chapitres — programme allégé)
+      { slug:'brassage-genetique-maths', titre:'Brassage de l\'information génétique',   badge:'Génétique', desc:'Méiose · brassage interchromosomique · brassage intrachromosomique (crossing-over) · gamètes parentaux et recombinants · fréquence de recombinaison · diversité génétique.' },
+      { slug:'transmission-hereditaire-maths', titre:'Transmission et hérédité',         badge:'Génétique', desc:'Lois de Mendel · monohybridisme · dihybridisme · hérédité liée au sexe (transmission croisée) · conductrice · diagnostic prénatal · caryotype · sonde moléculaire.' },
+      // Thème II — Milieu intérieur (5 chapitres — identiques à Sc.Exp.)
+      { slug:'milieu-interieur-maths',   titre:'Constance du milieu intérieur',          badge:'Milieu intérieur', desc:'Compartiments liquidiens · plasma · liquide interstitiel · constantes biologiques (glycémie · pH · température) · homéostasie · troubles liés aux variations.' },
+      { slug:'regulation-glycemie-maths',titre:'Régulation de la glycémie',              badge:'Milieu intérieur', desc:'Foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · insuline (cellules β) · glucagon (cellules α) · rétrocontrôle négatif · diabète type 1 (autoimmun) · diabète type 2 (résistance).' },
+      { slug:'systeme-nerveux-maths',    titre:'Système nerveux et régulation',          badge:'Neurophysiologie', desc:'Neurone · potentiel de repos (-70mV) · potentiel d\'action ionique (Na⁺/K⁺) · propagation · synapse chimique · PPSE · PPSI · intégration postsynaptique · réflexe myotatique · muscles antagonistes.' },
+      { slug:'defense-organisme-maths',  titre:'Défense de l\'organisme',                badge:'Immunité', desc:'Immunité non spécifique (phagocytose · barrières) · spécificité et mémoire immunologique · LB (anticorps) · LT (cytotoxicité) · vaccination (protection active durable) · sérothérapie (protection passive immédiate).' },
+      { slug:'hygiene-sn-maths',         titre:'Hygiène du système nerveux',             badge:'Neurophysiologie', desc:'Mécanismes d\'action des drogues · cocaïne et recapture de la dopamine · dépendance physique et psychologique · stress · cortisol · adrénaline · mesures de protection et hygiène de vie.' },
+      // Thème III — Reproduction (3 chapitres — programme allégé méiose)
+      { slug:'reproduction-homme-maths', titre:'Fonction reproductrice chez l\'homme',   badge:'Reproduction', desc:'Structure du spermatozoïde · spermatogenèse (méiose signalée sans détails) · testostérone (cellules de Leydig) · GnRH → LH + FSH · rétrocontrôle négatif · rôle des cellules de Sertoli.' },
+      { slug:'reproduction-femme-maths', titre:'Fonction reproductrice chez la femme',   badge:'Reproduction', desc:'Folliculogenèse · ovogenèse (méiose signalée) · structure ovocyte II · cycle ovarien 28 jours · cycle utérin · GnRH pulsatile · pic LH → ovulation · rétrocontrôle positif et négatif.' },
+      { slug:'fecondation-maths',        titre:'Fécondation et procréation',             badge:'Reproduction', desc:'Conditions et étapes de la fécondation · capacitation · réaction corticale · fusion pronuclei → zygote · contraception (pilule bloque GnRH/FSH/LH) · FIVETE · IAD · hygiène procréation.' },
+      // Thème IV — Nutrition (2 chapitres)
+      { slug:'nutrition-animale-maths',  titre:'Nutrition animale',                      badge:'Nutrition', desc:'Digestion enzymatique (glucides · protides · lipides) · conditions d\'activité enzymatique (pH · température) · absorption intestinale · respiration cellulaire · glycolyse · cycle de Krebs · chaîne respiratoire · 38 ATP.' },
+      { slug:'nutrition-vegetale-maths', titre:'Nutrition végétale',                     badge:'Nutrition', desc:'Absorption eau (osmose) · sels minéraux (N·P·K·Mg·Fe) · xylème · transpiration · photosynthèse bilan · phase lumineuse (photolyse eau → O₂) · cycle de Calvin · facteurs limitants (lumière · CO₂ · température).' },
+      // Thème V — Géologie & Évolution (exclusif section Maths)
+      { slug:'evolution-geologie-maths', titre:'Évolution biologique & Géologie',        badge:'Géologie & Évolution', desc:'Théories de l\'évolution (Darwin · sélection naturelle) · preuves fossiles · anatomie comparée · données génétiques · spéciation · tectonique des plaques · dorsales · subduction · séismes · volcanisme.' },
+    ],
+  },
+}
+
 interface GeneratedExam {
   id: string; index: number; title: string; section: string
   duration: number; totalPoints: number
@@ -2588,6 +2689,9 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
     'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
     'Intégration':'#10b981','Probabilités':'#f59e0b','Statistiques':'#f97316',
     'Finance':'#ec4899','Fondements':'#a78bfa','Maths':'#6366f1',
+    'Génétique':'#4f6ef7','Milieu intérieur':'#10b981','Neurophysiologie':'#06b6d4',
+    'Immunité':'#8b5cf6','Reproduction':'#ec4899','Nutrition':'#22c55e',
+    'Géologie & Évolution':'#f97316',
   }
 
   return (
@@ -2996,18 +3100,18 @@ function CorrectionDirectePanel({ onStart, matiere }: {
 
     // Passer via onStart avec un texte spécial qui déclenche la correction directe
     // Injecter les images en base64 dans le fullText
-    const examImagesB64 = examImages.map(img =>
-      `[IMAGE_BASE64:${img.data}]`
-    ).join('\n')
+    // Stocker directement dans le ref global (évite parsing regex)
+    correctionDirecteData.examContent = examContent
+    correctionDirecteData.copyContent = copyContent
+    correctionDirecteData.examImages = examImages
+      .filter(img => img.data.startsWith('data:image/'))
+      .map(img => {
+        const match = img.data.match(/data:([^;]+);base64,(.+)/)
+        return match ? { mediaType: match[1], data: match[2] } : null
+      })
+      .filter(Boolean) as {data:string;mediaType:string}[]
 
-    const fullText = `[CORRECTION_DIRECTE]
----EXAMEN---
-${examImagesB64 ? examImagesB64 + '\n' : ''}${examContent}
----COPIE_ELEVE---
-${copyContent || '(Aucune copie — fournir la correction complète)'}
-[/CORRECTION_DIRECTE]`
-
-    onStart([], fullText)
+    onStart([], '[CORRECTION_DIRECTE]')
   }
 
   return (
@@ -3221,7 +3325,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   // Utiliser matiere (UI) en priorité sur matiereActive (abonnement AuthContext)
   const matiereMap: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
   }
   globalMatiere = ((matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
 
@@ -5173,7 +5277,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }) {
   const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
   const matiereMapC: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
   }
   globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
   const [exams, setExams] = useState<GeneratedExam[]>([])
@@ -5213,6 +5317,9 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
     'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
     'Intégration':'#10b981','Probabilités':'#f59e0b','Statistiques':'#f97316',
     'Finance':'#ec4899','Fondements':'#a78bfa','Maths':'#6366f1',
+    'Génétique':'#4f6ef7','Milieu intérieur':'#10b981','Neurophysiologie':'#06b6d4',
+    'Immunité':'#8b5cf6','Reproduction':'#ec4899','Nutrition':'#22c55e',
+    'Géologie & Évolution':'#f97316',
   }
 
   return (
@@ -5302,10 +5409,10 @@ function SimulationIAPageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : 'maths'
+    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
@@ -5350,7 +5457,7 @@ function SimulationIAPageInner() {
         // Si l'abonnement est Maths → accès total
         // Si l'abonnement est Physique/Info → on autorise seulement si activeMatiere correspond
         const matiereAbonnement = matiereActive
-        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais' }[activeMatiere] || activeMatiere
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt' }[activeMatiere] || activeMatiere
         // Bloquer uniquement si abonnement spécifique ET matière UI ne correspond pas
         // ET l'abonnement n'est pas anglais (car page Tunisie n'a pas d'onglet Anglais)
         if (matiereAbonnement !== 'mathematiques' && matiereAbonnement !== 'anglais' && matiereUIKey !== matiereAbonnement) {
@@ -5359,15 +5466,12 @@ function SimulationIAPageInner() {
         }
       }
 
-      // 3. Extraire contenu examen et copie
-      const examMatch = txt.match(/---EXAMEN---([\s\S]*?)---COPIE_ELEVE---/)
-      const copyMatch = txt.match(/---COPIE_ELEVE---([\s\S]*?)\[\/CORRECTION_DIRECTE\]/)
-      const examContent = examMatch?.[1]?.trim() || ''
-      const copyContent = copyMatch?.[1]?.trim() || ''
+      // 3. Lire depuis correctionDirecteData (stockage direct, pas de regex)
+      const examContent = correctionDirecteData.examContent
+      const copyContent = correctionDirecteData.copyContent
+      const examImgsFromRef = correctionDirecteData.examImages
 
-      // Vérifier qu'il y a bien un contenu (texte OU images)
-      const hasExamImages = examContent.includes('[IMAGE_BASE64:') || examContent.includes('[Examen importé')
-      if (!examContent && !hasExamImages) {
+      if (!examContent && examImgsFromRef.length === 0) {
         alert("⚠️ Veuillez importer un sujet d'examen avant de lancer la correction.")
         return
       }
@@ -5375,7 +5479,7 @@ function SimulationIAPageInner() {
       // 4. Déduire le label matière — si abonnement Anglais → Anglais, sinon depuis activeMatiere
       const matiereLabels: Record<string,string> = {
         maths:'Mathématiques', physique:'Physique-Chimie',
-        informatique:'Informatique', anglais:'Anglais'
+        informatique:'Informatique', anglais:'Anglais', svt:'SVT'
       }
       const matiereLabel = matiereActive === 'anglais'
         ? 'Anglais'
@@ -5385,6 +5489,11 @@ function SimulationIAPageInner() {
       await incrementQuota('simulations')
 
       // 6. Créer le fakeExam avec la bonne matière
+      // Injecter les images dans le statement si présentes
+      const stmtWithImages = examImgsFromRef.length > 0
+        ? examImgsFromRef.map(img => `[IMAGE_BASE64:data:${img.mediaType};base64,${img.data}]`).join('\n') + (examContent ? '\n' + examContent : '')
+        : examContent
+
       const fakeExam: GeneratedExam = {
         id: `direct-${Date.now()}`,
         index: 0,
@@ -5397,7 +5506,7 @@ function SimulationIAPageInner() {
           title: `Examen importé — ${matiereLabel}`,
           theme: matiereLabel,
           points: 20,
-          statement: examContent,
+          statement: stmtWithImages || examContent,
         }],
       }
 
@@ -5414,7 +5523,7 @@ function SimulationIAPageInner() {
       const matiereToCheck = activeMatiere
       const matiereAbonnement = matiereActive // ex: 'mathematiques', 'physique', 'anglais'
       const matiereMapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
       }
       const matiereUIKey = matiereMapCheck[matiereToCheck] || matiereToCheck
       // Si l'abonnement est pour une matière spécifique et que l'UI est différente → bloquer
@@ -5492,19 +5601,21 @@ function SimulationIAPageInner() {
 
           {/* HEADER */}
           <div style={{marginBottom:28}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':'#6366f1',animation:'pulse 2s ease infinite'}}/>
-              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='anglais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : '🧮 Simulation Mathématiques'}
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':activeMatiere==='svt'?'rgba(34,197,94,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':activeMatiere==='svt'?'rgba(34,197,94,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':activeMatiere==='svt'?'#22c55e':'#6366f1',animation:'pulse 2s ease infinite'}}/>
+              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='svt'?'#86efac':activeMatiere==='anglais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
+                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : '🧮 Simulation Mathématiques'}
               </span>
             </div>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
               Simulation Intelligente<br/>
               <span style={{background: activeMatiere==='physique'
                 ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)'
-                : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
+                : activeMatiere==='svt'
+                  ? 'linear-gradient(135deg,#22c55e,#16a34a,#4ade80)'
+                  : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : 'Personnalisée par l\'IA'}
+                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : 'Personnalisée par l\'IA'}
               </span>
             </h1>
             <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
@@ -5521,6 +5632,7 @@ function SimulationIAPageInner() {
               {([
                 { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
+                { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
                 { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais',          color:'#ec4899', matiere:'anglais' },
               ]).map(m => {
@@ -5552,9 +5664,9 @@ function SimulationIAPageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

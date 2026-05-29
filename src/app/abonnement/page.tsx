@@ -62,15 +62,25 @@ const MATIERES = [
   },
   {
     key: 'svt',
-    icon: '🧬',
+    icon: '🌱',
     label: 'SVT',
-    desc: 'Génétique · Immunologie · Physiologie · Géologie — Bientôt',
-    color: '#10b981',
-    gradient: 'linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.05))',
-    border: 'rgba(16,185,129,0.25)',
-    available: false,
-    accesPayant: [],
-    accesFree: [],
+    desc: 'Simulation SVT · Génétique · Physiologie · Reproduction · Géologie · Bac Blanc SVT',
+    color: '#22c55e',
+    gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.07))',
+    border: 'rgba(34,197,94,0.38)',
+    available: true,
+    accesPayant: [
+      'Simulation Bac SVT IA',
+      'Chat Professeur SVT',
+      'Solveur SVT étape/étape',
+      'Bac Blanc SVT (mai-juin)',
+    ],
+    accesFree: [
+      'Cours SVT officiels (Génétique · Physiologie · Reproduction · Nutrition)',
+      'Examens officiels SVT + corrections (2015→2025)',
+      'Annales Bac SVT Tunisie — Sc. Expérimentales & Section Maths',
+      'Programme complet — Sc. Expérimentales (coef.5) · Maths (coef.2 + Géologie)',
+    ],
   },
   {
     key: 'anglais',
@@ -156,7 +166,7 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 
 export default function AbonnementPage() {
   const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut } = useAuth()
-  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel', mensuel_anglais:'Anglais Mensuel', sprint_anglais:'Anglais Sprint', annuel_anglais:'Anglais Annuel' }
+  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel', mensuel_anglais:'Anglais Mensuel', sprint_anglais:'Anglais Sprint', annuel_anglais:'Anglais Annuel', mensuel_svt:'SVT Mensuel', sprint_svt:'SVT Sprint', annuel_svt:'SVT Annuel' }
   const [payment, setPayment] = useState('d17')
   const [matiereKey, setMatiereKey] = useState<string>('')
   const matiere = MATIERES.find(m => m.key === matiereKey)
