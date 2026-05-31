@@ -1944,7 +1944,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
-  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'>('maths')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>('maths')
   const [err,setErr]=useState('')
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
@@ -2041,6 +2041,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0'},
                 {key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6'},
                 {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
+                {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
               ]).map(m=>(
                 <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
                   style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px 8px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,transition:'all 0.2s',
@@ -2070,6 +2071,10 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', icon:'🎓', color:'#f43f5e', duration:210, coeff:16},
                 {key:'premiere-anglais',  label:'Première — Anglais (E.A.)',      icon:'📗', color:'#8b5cf6', duration:120, coeff:3},
                 {key:'seconde-anglais',   label:'Seconde — Anglais',              icon:'📘', color:'#06b6d4', duration:60,  coeff:2},
+              ] : activeMatiereFiche==='svt' ? [
+                {key:'terminale-svt', label:'Terminale Spé SVT',          icon:'🎓', color:'#22c55e', duration:210, coeff:16},
+                {key:'premiere-svt',  label:'Première Spé SVT',           icon:'📗', color:'#4ade80', duration:120, coeff:2},
+                {key:'seconde-svt',   label:'Seconde SVT',                icon:'📘', color:'#16a34a', duration:60,  coeff:1},
               ] : [
                 {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
                 {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
