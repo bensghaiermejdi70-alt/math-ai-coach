@@ -11,6 +11,23 @@ import Link from 'next/link'
 
 const MATIERES = [
   {
+    slug: 'svt',
+    icon: '🌱',
+    titre: 'SVT',
+    sous: 'Seconde · Première Spécialité · Terminale Spécialité',
+    couleur: '#22c55e',
+    gradient: 'linear-gradient(135deg,rgba(34,197,94,0.16),rgba(16,185,129,0.08))',
+    border: 'rgba(34,197,94,0.3)',
+    badgeColor: '#86efac',
+    badge: 'Bac 2027 · Coef. 16',
+    stats: { voies: 3, chapitres: 28, thm: 210, ex: 180 },
+    apercu: [
+      { label: '📘 Seconde',           items: ['Cellules','Métabolisme','Biodiversité','Évolution','Santé & Hormones'] },
+      { label: '📗 Première Spé',      items: ['ADN & Gènes','Tectonique','Immunité','Système nerveux','Écosystèmes'] },
+      { label: '🎓 Terminale Spé',     items: ['Méiose','Génétique des pop.','Plantes','Paléoclimats','Cerveau & Mouvement'] },
+    ],
+  },
+  {
     slug: 'maths',
     icon: '📐',
     titre: 'Mathématiques',
@@ -94,8 +111,8 @@ export default function BacFrancePage() {
             <span className="label" style={{ marginBottom: 12, display: 'inline-block' }}>🇫🇷 Éducation Nationale France · Lycée</span>
             <h1 style={{ fontSize: 'clamp(28px,4vw,48px)', marginBottom: 14 }}>
               Programme France<br />
-              <span style={{ background: 'linear-gradient(90deg,#f59e0b,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                Maths · Physique-Chimie · Informatique · Anglais
+              <span style={{ background: 'linear-gradient(90deg,#f59e0b,#22c55e,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Maths · SVT · Physique-Chimie · Informatique · Anglais
               </span>
             </h1>
             <p style={{ maxWidth: 600, color: 'var(--text2)', fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>
@@ -103,10 +120,10 @@ export default function BacFrancePage() {
               Cours, théorèmes, formules et exercices corrigés avec IA professeur.
             </p>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
-              <span>🏫 4 matières</span><span>·</span>
-              <span>📚 152 chapitres</span><span>·</span>
-              <span>📊 1179+ notions</span><span>·</span>
-              <span>📝 989+ exercices</span>
+              <span>🏫 5 matières</span><span>·</span>
+              <span>📚 180 chapitres</span><span>·</span>
+              <span>📊 1389+ notions</span><span>·</span>
+              <span>📝 1169+ exercices</span>
             </div>
           </div>
 
@@ -184,7 +201,7 @@ export default function BacFrancePage() {
           {/* CTA IA */}
           <div style={{ marginTop: 52, background: 'linear-gradient(135deg,rgba(79,110,247,0.1),rgba(124,58,237,0.06))', border: '1px solid rgba(79,110,247,0.2)', borderRadius: 18, padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · Physique · Informatique · Anglais France</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · SVT · Physique · Informatique · Anglais France</div>
               <h3 style={{ fontSize: 17, marginBottom: 4 }}>Prof IA — Résous n'importe quel exercice</h3>
               <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Solveur étape par étape · Chat professeur · Simulation Bac</p>
             </div>

@@ -1090,6 +1090,134 @@ function getProgrammeJourPhysiqueFR(sectionKey: string, dayNum: number) {
   return prog[(dayNum - 1) % prog.length]
 }
 
+// ── Programme SVT Bac France — rotation 12 jours ─────────────────────
+// Sections : terminale, premiere, seconde
+// ex1=Génétique/Évolution · ex2=Corps humain/Santé · ex3=Plantes/Géologie
+const PROGRAMME_JOUR_SVT_FR: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+}[]> = {
+  terminale: [
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Meiose et brassages genetiques — crossing-over, recombinaison, frequences alleliques, Hardy-Weinberg, derive genetique"},ex2:{theme:"Corps humain et Sante",sousTh:"Immunite adaptative — LB anticorps, LT CD4 chef d orchestre, LT CD8 cytotoxiques, memoire immunologique, vaccination"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Photosynthese complete — phase lumineuse thylakoïdes (ATP+NADPH+O2), cycle de Calvin stroma (fixation CO2), facteurs limitants"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Transmission hereditaire — heredite autosomique dominante/recessive, heredite liee au sexe, arbres genealogiques, calculs probabilites"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme nerveux — potentiel action, synapse chimique, neurotransmetteurs (dopamine, serotonine), plasticite synaptique LTP, addictions"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Paleoclimats — delta18O foraminiferes, carottes de glace, cycles Milankovitch, variations temperature, changement climatique actuel"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Selection naturelle et derive genetique — mutations, pression selective, speciation, phylogenie moleculaire, endosymbiose mitochondries/chloroplastes"},ex2:{theme:"Corps humain et Sante",sousTh:"Regulation glycemie — insuline (cellules beta), glucagon (cellules alpha), diabete type 1 et 2, retrogulation hormonale, glycogenolyse"},ex3:{theme:"Plantes et Environnement",sousTh:"Nutrition plante — absorption eau et mineraux (racines, xylème), transpiration (stomates), domestication plantes, agriculture durable"}},
+    {ex1:{theme:"Expression genetique",sousTh:"ADN et proteines — transcription (ARNm, introns/exons, epissage), traduction (code genetique, ribosomes, ARNt), mutations et consequences"},ex2:{theme:"Corps humain et Sante",sousTh:"Contraction musculaire — sarcomere (actine/myosine), couplage excitation-contraction, ATP et voies energetiques, fatigue musculaire"},ex3:{theme:"Geologie et Tectonique",sousTh:"Tectonique des plaques — preuves (anomalies magnetiques, fossiles, GPS), subduction, collision, volcanism, seismes — risques geologiques"}},
+    {ex1:{theme:"Genetique des populations",sousTh:"Frequences alleliques — Hardy-Weinberg p2+2pq+q2=1, derive genetique (effet fondateur, goulot detranglement), selection selon environnement"},ex2:{theme:"Corps humain et Sante",sousTh:"Immunite innee et inflammation — phagocytose (macrophages, neutrophiles), interleukines, CRP, fievre, complement, reactions non specifiques"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Ecosystemes et biodiversite — reseaux trophiques, flux energie (regle 10%), services ecosystemiques, menaces, conservation, aires protegees"}},
+    {ex1:{theme:"Reproduction et Transmission",sousTh:"Cycle cellulaire et meiose — phases, synapsis, chiasmas, brassages intra/interchromosomique, diversite gametes, polyploidie, fecondation"},ex2:{theme:"Corps humain et Sante",sousTh:"Maladies genetiques — mucoviscidose (CFTR), drepanocytose (HbS), diagnostic prenatal, therapie genique, CRISPR-Cas9, medecine predictive"},ex3:{theme:"Geologie et Paleoclimats",sousTh:"Formation des roches — cycle petrogenetique, roches sedimentaires (stratigraphie, fossiles), metamorphisme, magmatisme, datation radiometrique"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Variation genetique — recombinaison, amplification par PCR, electrophorese, sequençage, base de donnees genomiques, comparaison especes"},ex2:{theme:"Corps humain et Sante",sousTh:"Axe hypothalamo-hypophysaire — GnRH, LH, FSH, estrogenes/testosterone, puberté, cycle menstruel, retrocontrole positif/negatif"},ex3:{theme:"Plantes et Environnement",sousTh:"Photosynthese et respiration — bilan carbone plante (jour/nuit), point de compensation, facteurs limitants, deforestation et CO2 atmospherique"}},
+    {ex1:{theme:"Expression genetique",sousTh:"Regulation expression genique — epigenetique (methylation ADN, histones), genes constitutifs, differenciation cellulaire, cellules souches, cancer"},ex2:{theme:"Corps humain et Sante",sousTh:"Reproduction humaine — gametes (spermatogenese, ovogenese), fecondation (trompe), nidation, placenta, hormones grossesse (HCG, progesterone)"},ex3:{theme:"Geologie et Risques",sousTh:"Volcanism et seismes — mecanismes, types volcanisme (effusif vs explosif), ondes sismiques (P et S), prevention risques, plans ORSEC"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Diversification du vivant — radiation adaptative (Darwin finches), convergence evolutive, coevolution, symbiose, endosymbiose, phylogenie"},ex2:{theme:"Corps humain et Sante",sousTh:"Maladies infectieuses — virus (VIH), bacteries, parasites, prevention (vaccins, antibiotiques, PrEP), antibioresistance, epidemiologie"},ex3:{theme:"Plantes et Ecosystemes",sousTh:"Ecosystemes terrestres — biomes, biomes/latitude/altitude, succession ecologique, niche ecologique, competition interspécifique, predation, mutualisme"}},
+    {ex1:{theme:"Genetique moleculaire",sousTh:"Replication ADN — semi-conservative (Meselson-Stahl), ADN polymerase, primase, ligase, correction erreurs, mutations induites par mutagenes"},ex2:{theme:"Corps humain et Sante",sousTh:"Nutrition et sante — metabolisme basal, nutrition equilibree, obésité, diabete type 2, cholesterol, maladies cardiovasculaires, prevention"},ex3:{theme:"Geologie et Formation paysages",sousTh:"Erosion et sedimentation — weathering mecanique et chimique, transport par eau/vent/glace, diagenese, fossiles, stratigraphy et datation relative"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Genome et evolution — transposons, duplications, pseudogenes, HGT (transfert horizontal genes chez bacteries), co-evolution hote-parasite"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme endocrinien — hormones (insuline, cortisol, adrenaline, thyroïde, parathormone), recepteurs, retrocontrôles, perturbateurs endocriniens"},ex3:{theme:"Plantes et Agriculture",sousTh:"Agrosystemes — bilan energie, intrants, rotation cultures, fixation biologique azote (Rhizobium), OGM, agroecologie, securite alimentaire mondiale"}},
+    {ex1:{theme:"Genetique et Sante",sousTh:"Mutations et cancer — oncogenes, genes suppresseurs tumeur (TP53, BRCA1), modele 2 coups Knudson, therapies ciblees, immunotherapie anti-cancer"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme nerveux avance — plasticite cerebrale, LTP/LTD, sommeil et memoire, maladies neurodegeneratives (Alzheimer, Parkinson), addictions dopamine"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Reconstitution paleoclimats — pollens fossiles, delta18O carottes glaciaires, coraux, speleothemes, modeles climatiques, predictionsIPCC"}},
+  ],
+  premiere: [
+    {ex1:{theme:"ADN et Expression genetique",sousTh:"Structure ADN double helice, replication semi-conservative, transcription ARNm, epissage introns/exons, traduction code genetique, mutations ponctuelles"},ex2:{theme:"Immunite",sousTh:"Immunite innee — phagocytose etapes, inflammation (rougeur, chaleur, oedeme, douleur), interleukines, interferon, cellules NK, barrières epitheliales"},ex3:{theme:"Ecosystemes et Services",sousTh:"Ecosystemes — reseaux trophiques (producteurs, consommateurs, decomposeurs), flux energie regle 10%, services ecosystemiques (provision, regulation, culture)"}},
+    {ex1:{theme:"ADN et Expression genetique",sousTh:"Mutations et agents mutagenes — UV (dimeres thymine), radiations ionisantes, agents chimiques (benzène), virus oncogènes, reparation ADN, consequences cellulaires"},ex2:{theme:"Immunite",sousTh:"Immunite adaptative — lymphocytes B (anticorps), lymphocytes T CD4 (auxiliaires), CD8 (cytotoxiques), selection clonale, memoire immunologique, hypersensibilites"},ex3:{theme:"Ecosystemes et Activite humaine",sousTh:"Pressions anthropiques (IPBES) — deforestation, surpeche, pollution, especes invasives, changement climatique, 6eme extinction de masse, conservation"}},
+    {ex1:{theme:"Tectonique des plaques",sousTh:"Structure interne Terre — enveloppes (croûte, manteau, noyau), ondes sismiques P et S, lithosphere et asthenosphere, convection mantellique"},ex2:{theme:"Ressources naturelles",sousTh:"Cycle de eau — evaporation, precipitation, infiltration, nappes phreatiques, irrigation 70% eau mondiale, salinisation, stress hydrique, gestion durable"},ex3:{theme:"Genetique et Sante",sousTh:"Heredite moleculaire — lois Mendel, tableau Punnett, maladies genetiques (PKU, drepanocytose, mucoviscidose), diagnostic prenatal, conseil genetique"}},
+    {ex1:{theme:"Tectonique des plaques",sousTh:"Frontieres de plaques — divergence (dorsales, volcanisme effusif), subduction (fosses, volcanisme explosif, seismes profonds), collision (chaines montagnes — Himalaya)"},ex2:{theme:"Immunite",sousTh:"Vaccination — principe immunologique (memoire, reponse primaire/secondaire), types vaccins (vivants attenues, inactives, ARNm), immunite collective, antivaccinaux"},ex3:{theme:"Ecosystemes et Biodiversite",sousTh:"Biodiversite — 3 niveaux (genetique, specifique, ecosystemique), indices Shannon, services ecosystemiques economiques, aires protegees, TVB (Trame Verte Bleue)"}},
+    {ex1:{theme:"ADN et Cancer",sousTh:"Cancer et mutations — cycle cellulaire (G1/S/G2/M), checkpoints, proto-oncogenes, genes suppresseurs tumeur, carcinogenese multi-etapes, therapies"},ex2:{theme:"Corps humain",sousTh:"Systeme nerveux Premiere — structure neurone (dendrites, axone, myeline), potentiel repos (-70mV), potentiel action, synapse chimique, neurotransmetteurs"},ex3:{theme:"Ressources naturelles",sousTh:"Ressources energetiques — energies fossiles (reserves, impacts CO2), renouvelables (solaire, eolien, hydraulique), empreinte ecologique, transition energetique"}},
+    {ex1:{theme:"Tectonique et Paleoclimats",sousTh:"Paleoclimats et Terre profonde — methodes dating (U/Pb, K/Ar), ophiolites, dorsales et anomalies magnetiques, reconstitution paleogeographique (Pangee)"},ex2:{theme:"Immunite et Sante",sousTh:"Maladies auto-immunes (SEP, polyarthrite, diabete type1), allergies (IgE, mastocytes, histamine), immunosuppresseurs, greffes et rejet, HLA"},ex3:{theme:"Ecosystemes et Agriculture",sousTh:"Agrosystemes — flux matiere/energie, intrants (engrais, pesticides), rotation cultures, fixation azote (Rhizobium), agroforesterie, securite alimentaire"}},
+  ],
+  seconde: [
+    {ex1:{theme:"La cellule unite du vivant",sousTh:"Cellule animale vs vegetale — organites (noyau, mitochondrie, chloroplaste, vacuole), membrane plasmique semi-permeable, osmose, differenciation cellulaire, microscopie"},ex2:{theme:"Corps humain",sousTh:"De la fecondation a la puberte — gametes, fecondation (trompe), developpement embryonnaire, nidation, puberte (caracteres secondaires), hormones sexuelles, contraception"},ex3:{theme:"Geosciences",sousTh:"Formation des paysages — alteration mecanique/chimique roches, transport, sedimentation, stratigraphie (principe superposition), types roches, sols et erosion humaine"}},
+    {ex1:{theme:"Metabolisme cellulaire",sousTh:"Photosynthese et respiration cellulaire — equations bilan, ATP role energetique, autotrophes vs heterotrophes, facteurs limitants photosynthese (lumiere, CO2, T), cycle Calvin"},ex2:{theme:"Biodiversite",sousTh:"Biodiversite et evolution — 3 niveaux biodiversite, selection naturelle Darwin (4 etapes), fossiles, phylogenie, derive genetique, fréquences alleliques, 6eme extinction"},ex3:{theme:"Corps humain",sousTh:"Sante et agents pathogenes — virus (VIH), bacteries, immunite innee (phagocytose, inflammation), microbiote intestinal, vaccination, perturbateurs endocriniens, antibiotiques"}},
+    {ex1:{theme:"La cellule",sousTh:"Cellules et differenciation — tissues (musculaire, nerveux, epithelial, conjonctif), organes, organisms pluricellulaires, cellules souches, totipotence, specialisation cellulaire"},ex2:{theme:"Geosciences",sousTh:"Erosion et activite humaine — deforestation (ruissellement), urbanisation (impermeabilisation), agriculture intensive (nitrates), desertification, Grande Muraille Verte, risques naturels"},ex3:{theme:"Communication animale",sousTh:"Communication et selection sexuelle — pheromones (bombycol), signaux sonores/visuels, selection sexuelle (intrasexuelle vs intersexuelle), dimorphisme, danse abeilles, empreinte"}},
+  ],
+}
+
+function getProgrammeJourSVTFR(sectionKey: string, dayNum: number) {
+  const svtKey = (sectionKey === 'expertes' || sectionKey === 'techno') ? 'terminale' : sectionKey
+  const prog = PROGRAMME_JOUR_SVT_FR[svtKey] || PROGRAMME_JOUR_SVT_FR['terminale']
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
+async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
+  const secDuration = sec?.duration || 210
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy = today.getFullYear()
+  const seed = 'BBFR_SVT_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  const prog = getProgrammeJourSVTFR(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Genetique — meiose et brassages genetiques'
+  const ex2Theme = prog?.ex2.sousTh || 'Corps humain — immunite et sante'
+  const ex3Theme = prog?.ex3.sousTh || 'Plantes — photosynthese et paleoclimats'
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France SVT (programme Education Nationale officiel).
+Tu crées des sujets BAC BLANC SVT originaux, rigoureux, de niveau Bac France.
+REPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION SVT OBLIGATOIRE :
+- Symboles : ADN, ARNm, ATP, CO2, O2, H2O, Na+, K+, Ca2+
+- Formules simples : pas de LaTeX — utiliser ecriture standard
+- Abreviations acceptees : LB, LT, NK, CMH, HLA, GnRH, LH, FSH
+- Chiffres realistes (pH 7.4, [glucose] 1 g/L, T 37 degres C)`
+
+  const prompt = 'Cree un sujet BAC BLANC SVT France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE SVT :\n'
+    + 'Duree : ' + (secDuration/60) + 'h · Total : 20 points\n'
+    + 'Exercice 1 — GENETIQUE & EVOLUTION (8 points) : ' + ex1Theme + '\n'
+    + 'Exercice 2 — CORPS HUMAIN & SANTE (6 points) : ' + ex2Theme + '\n'
+    + 'Exercice 3 — PLANTES, ECOLOGIE & GEOLOGIE (6 points) : ' + ex3Theme + '\n\n'
+    + 'REGLES ABSOLUES :\n'
+    + '- Sujet ORIGINAL, jamais une copie des annales\n'
+    + '- Niveau exactement equivalent au vrai Bac France SVT\n'
+    + '- Donnees numeriques realistes (dates geologiques, concentrations, pressions)\n'
+    + '- Chaque exercice avec sous-parties 1) 2) 3) ou a) b) c)\n'
+    + '- Minimum 120 mots par exercice\n'
+    + '- Documents SVT : tableaux de donnees, schemas a legender, courbes a interpreter\n\n'
+    + 'REPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc SVT — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + (prog?.ex1.theme || 'Genetique et Evolution') + '", "title": "Titre exercice 1", "points": 8, "statement": "DOCUMENTS :\n[tableau de donnees ou schema]\n\n1) a) Question...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question..." },\n'
+    + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Corps humain et Sante') + '", "title": "Titre exercice 2", "points": 6, "statement": "DOCUMENTS :\n[donnees]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ..." },\n'
+    + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Plantes et Geologie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNEES :\n[donnees]\n\n1) ...\n2) ...\n3) ..." }\n'
+    + '  ]\n'
+    + '}'
+
+  const raw = await askClaude(prompt, system, 5500, 'svt')
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc SVT — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Reponse IA invalide — reessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
+
 async function generateBacBlancInformatique(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const secNSI = SECTIONS_NSI_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_NSI_FR[0]
   const secLabel = secNSI.label
@@ -1628,7 +1756,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onRetour
 }: {
   candidat: Candidat
   dayNum: number
@@ -1636,6 +1764,7 @@ function PhaseChoixMatiereFR({
   onPhysique: () => void
   onInfo: () => void
   onAnglais: () => void
+  onSvt: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -1678,15 +1807,15 @@ function PhaseChoixMatiereFR({
     },
     {
       key: 'svt',
-      icon: '🧬',
+      icon: '🌱',
       label: 'SVT',
-      desc: 'Génétique · Immunologie · Physiologie · Géologie — Bientôt disponible',
-      color: '#10b981',
-      gradient: 'linear-gradient(135deg,rgba(16,185,129,0.12),rgba(5,150,105,0.05))',
-      border: 'rgba(16,185,129,0.25)',
-      available: false,
-      badge: '🔜 Prochainement',
-      badgeColor: '#fbbf24',
+      desc: 'Examen complet · 3 exercices · Génétique & Évolution · Corps humain & Santé · Plantes & Géologie · Correction IA · Analyse faiblesses',
+      color: '#22c55e',
+      gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(34,197,94,0.35)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
     },
     {
       key: 'anglais',
@@ -1759,6 +1888,7 @@ function PhaseChoixMatiereFR({
                 if (m.key === 'physique') { onPhysique(); return }
                 if (m.key === 'informatique') { onInfo(); return }
                 if (m.key === 'anglais') { onAnglais(); return }
+                if (m.key === 'svt') { onSvt(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -3431,6 +3561,33 @@ function BacBlancFranceInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  const handleStartSvt = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à SVT pour accéder au Bac Blanc SVT.\n→ mathsbac.com/abonnement?matiere=svt')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('svt')) {
+      alert('✅ Vous avez déjà passé votre examen SVT aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n→ mathsbac.com/abonnement`)
+      return
+    }
+    globalMatiere = 'svt'
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancSVT(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('svt')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3482,6 +3639,7 @@ function BacBlancFranceInner() {
       onPhysique={handleStartPhysique}
       onInfo={handleStartInfo}
       onAnglais={handleStartAnglais}
+      onSvt={handleStartSvt}
       onRetour={()=>setPhase('inscription')}
     />
   )

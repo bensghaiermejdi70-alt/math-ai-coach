@@ -2446,6 +2446,78 @@ const ARCHIVES_PHYS_FR: Archive[] = [
   { id:'st2s-2021-m', year:2021, session:'ST2S · CBPH · Métropole · juin 2021', section:'Terminale ST2S — CBPH', sectionKey:'st2s-phys', color:'#8b5cf6', icon:'🏥', url:`${SD}/2021/st2s-spe-chimie-bio-physiopat-humaines-2021-metropole-sujet-officiel.pdf`, themes:['Chimie biologie','Santé','Physique médicale'] },
 ]
 
+// ================================================================
+//  SVT FRANCE — Simulation IA
+//  3 sections : Terminale + Premiere + Seconde
+// ================================================================
+
+const SECTION_CONFIGS_SVT_FR = [
+  { key:'terminale-svt', label:'Terminale Specialite SVT', color:'#22c55e', icon:'🌱',
+    themes:['Genetique et Evolution','Plantes et Paleoclimats','Corps humain et Sante','Immunite','Systeme nerveux','Tectonique'] },
+  { key:'premiere-svt', label:'Premiere Specialite SVT', color:'#0891b2', icon:'📗',
+    themes:['ADN et Expression genetique','Dynamique interne de la Terre','Ecosystemes et Services','Immunite','Genetique moleculaire','Ressources naturelles'] },
+  { key:'seconde-svt', label:'Seconde SVT', color:'#16a34a', icon:'📘',
+    themes:['La cellule unite du vivant','Metabolisme Respiration Photosynthese','Biodiversite et Evolution','Communication et Selection sexuelle','Geosciences Formation des paysages','Agrosystemes et Developpement durable'] },
+]
+
+const ARCHIVES_SVT_FR: Archive[] = [
+  { id:'svt-2025-m1', year:2025, session:'Terminale SVT Metropole J1 juin 2025',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2025/spe-sciences-vie-terre-2025-metropole-1-sujet-officiel.pdf`, themes:['Meiose et brassage genetique','Photosynthese et paleoclimats','Sarcomere ATP glycemie'] },
+  { id:'svt-2025-m2', year:2025, session:'Terminale SVT Metropole J2 juin 2025',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2025/spe-sciences-vie-terre-2025-metropole-2-sujet-officiel.pdf`, themes:['Genetique moleculaire','Evolution','Corps humain'] },
+  { id:'svt-2024-m1', year:2024, session:'Terminale SVT Metropole J1 19 juin 2024', section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2024/spe-sciences-vie-terre-2024-metropole-1-sujet-officiel.pdf`, themes:['Tumeur cerebrale cortex moteur','Hardy-Weinberg selection naturelle','Photosynthese paleoclimats'] },
+  { id:'svt-2024-m2', year:2024, session:'Terminale SVT Metropole J2 20 juin 2024', section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2024/spe-sciences-vie-terre-2024-metropole-2-sujet-officiel.pdf`, themes:['Genetique derive','Plantes domestication','Immunite vaccination'] },
+  { id:'svt-2023-m1', year:2023, session:'Terminale SVT Metropole J1 juin 2023',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2023/spe-sciences-vie-terre-2023-metropole-1-sujet-officiel.pdf`, themes:['Meiose crossing-over','Immunite vaccination','Photosynthese geologie'] },
+  { id:'svt-2023-m2', year:2023, session:'Terminale SVT Metropole J2 juin 2023',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2023/spe-sciences-vie-terre-2023-metropole-2-sujet-officiel.pdf`, themes:['Genetique','Evolution','Corps humain'] },
+  { id:'svt-2022-m1', year:2022, session:'Terminale SVT Metropole J1 juin 2022',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2022/spe-sciences-vie-terre-2022-metropole-1-sujet-officiel.pdf`, themes:['Hardy-Weinberg effet fondateur','Reflexe myotatique cortex','Plantes paleoclimats'] },
+  { id:'svt-2022-m2', year:2022, session:'Terminale SVT Metropole J2 juin 2022',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2022/spe-sciences-vie-terre-2022-metropole-2-sujet-officiel.pdf`, themes:['Genetique','Corps humain','Plantes'] },
+  { id:'svt-2021-m1', year:2021, session:'Terminale SVT Metropole J1 juin 2021',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2021/spe-sciences-vie-terre-2021-metropole-1-sujet-officiel.pdf`, themes:['Meiose brassages endosymbiose','Photosynthese transpiration','Sarcomere ATP cortisol'] },
+  { id:'svt-2021-m2', year:2021, session:'Terminale SVT Metropole J2 juin 2021',    section:'Terminale Specialite SVT', sectionKey:'terminale-svt', color:'#22c55e', icon:'🌱', url:`${SD}/2021/spe-sciences-vie-terre-2021-metropole-2-sujet-officiel.pdf`, themes:['Genetique','Plantes','Corps humain'] },
+]
+
+const CHAPITRES_SVT_FR: Record<string, {
+  key: string; label: string; color: string; icon: string;
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'terminale-svt': {
+    key:'terminale-svt', label:'Terminale Specialite SVT', color:'#22c55e', icon:'🌱',
+    chapitres: [
+      { slug:'genetique-evolution-svt',  titre:'Genetique et Evolution',           badge:'Terminale SVT', desc:'Meiose et brassages genetiques. Frequences alleliques. Hardy-Weinberg. Derive genetique. Selection naturelle. Speciation. Phylogenie moleculaire. Endosymbiose.' },
+      { slug:'plantes-paleoclimats-svt', titre:'Plantes et Paleoclimats',          badge:'Terminale SVT', desc:'Photosynthese phase lumineuse et cycle de Calvin. Nutrition minerale. Domestication des plantes. Cycles biogeochimiques. Paleoclimats delta18O et Milankovitch. Changement climatique et biodiversite.' },
+      { slug:'corps-humain-sante-svt',   titre:'Corps humain et Sante',            badge:'Terminale SVT', desc:'Contraction musculaire sarcomere actine-myosine ATP. Regulation glycemie insuline glucagon. Immunite innee et adaptative LT CD4 CD8 LB anticorps. Vaccination. Prevention et traitements.' },
+      { slug:'systeme-nerveux-svt',      titre:'Systeme nerveux et Comportements', badge:'Terminale SVT', desc:'Potentiel action. Synapse chimique. Neurotransmetteurs dopamine serotonine. Plasticite synaptique LTP. Maladies neurodegeneratives Alzheimer Parkinson. Addictions et circuit de recompense.' },
+      { slug:'reproduction-svt',         titre:'Reproduction et Transmission',     badge:'Terminale SVT', desc:'Gametes et fecondation. Cycles sexuels. Heredite autosomique et liee au sexe. Dihybridisme. Mutations et maladies genetiques. Medecine predictive et therapie genique.' },
+      { slug:'tectonique-term-svt',      titre:'Dynamique interne de la Terre',    badge:'Terminale SVT', desc:'Structure interne du globe ondes sismiques. Tectonique des plaques preuves subduction collision. Volcanisme et seismes. Risques geologiques. Paleomagnetisme et derive des continents.' },
+    ]
+  },
+  'premiere-svt': {
+    key:'premiere-svt', label:'Premiere Specialite SVT', color:'#0891b2', icon:'📗',
+    chapitres: [
+      { slug:'adn-expression-svt',       titre:'ADN et Expression genetique',      badge:'Premiere SVT', desc:'Structure de ADN. Replication semi-conservative. Transcription ARNm introns exons epissage. Traduction code genetique ribosomes. Mutations types agents mutagenes consequences. Regulation de expression genique.' },
+      { slug:'tectonique-prem-svt',      titre:'Dynamique interne de la Terre',    badge:'Premiere SVT', desc:'Structure interne du globe enveloppes ondes P et S. Convection mantellique. Types de frontieres de plaques. Subduction et volcanisme explosif. Collision et formation des chaines de montagnes. Ophiolites et paleo-oceans.' },
+      { slug:'ecosystemes-svt',          titre:'Ecosystemes et Services',          badge:'Premiere SVT', desc:'Reseaux trophiques et flux energie regle des 10 pourcent. Services ecosystemiques 4 categories. Indice de Shannon. Fragmentation des habitats. Corridors ecologiques. 6eme extinction de masse. Aires protegees.' },
+      { slug:'ecosystemes-humains-svt',  titre:'Ecosystemes et Activite humaine',  badge:'Premiere SVT', desc:'5 pressions IPBES sur la biodiversite. Deforestation et surpeche. Trame Verte et Bleue. Conservation ex situ. Solutions fondees sur la Nature. Convention sur la Diversite Biologique CDB.' },
+      { slug:'ressources-svt',           titre:'Ressources naturelles et DD',      badge:'Premiere SVT', desc:'Cycle de eau et ressources hydriques. Empreinte ecologique. Energies renouvelables vs fossiles. Matiere organique des sols. Economie circulaire. Limites planetaires Rockstrom. Objectifs de Developpement Durable.' },
+      { slug:'immunite-premiere-svt',    titre:'Systeme immunitaire humain',       badge:'Premiere SVT', desc:'Immunite innee phagocytose inflammation interferons. Immunite adaptative LB anticorps LT CD8 cytotoxicite. Memoire immunologique. Vaccination types immunite collective. Allergies et maladies auto-immunes.' },
+      { slug:'genetique-sante-svt',    titre:'Variation genetique et Sante',       badge:'Premiere SVT', desc:'Lois de Mendel segregation et assortiment independant. Genotype et phenotype. Maladies autosomiques dominantes et recessives. Heredite liee au sexe. Caryotype et anomalies chromosomiques trisomie 21. Cancer mutations oncogenes et suppresseurs de tumeur. Therapie genique et CRISPR.' },
+      { slug:'systeme-nerveux-prem-svt',titre:'Fonctionnement du systeme nerveux', badge:'Premiere SVT', desc:'Structure du neurone dendrites axone gaine de myeliine. Potentiel de repos et potentiel action. Loi du tout ou rien. Synapse chimique et neurotransmetteurs. Plasticite synaptique LTP et memoire. Maladies Alzheimer Parkinson SEP. Addictions et circuit de recompense dopamine.' },
+      { slug:'methodes-ece-svt',        titre:'Methodes scientifiques et ECE',      badge:'Premiere SVT', desc:'Demarche experimentale 8 etapes. Variables independante dependante et controlees. Groupe controle. Construction et analyse de graphiques scientifiques. Calcul de Rf en chromatographie. Statistiques descriptives. Protocole ECE lame microscopique et spectrophotometrie.' },
+    ]
+  },
+  'seconde-svt': {
+    key:'seconde-svt', label:'Seconde SVT', color:'#16a34a', icon:'📘',
+    chapitres: [
+      { slug:'cellules-seconde-svt',       titre:'La cellule unite du vivant',              badge:'Seconde SVT', desc:'Cellule animale vs vegetale. Organites noyau mitochondrie chloroplaste ribosome vacuole. Membrane plasmique et echanges. Differenciation cellulaire. Tissus et organes. Microscopie et schema biologique. Osmose et turgescence.' },
+      { slug:'metabolisme-seconde-svt',    titre:'Metabolisme Respiration Photosynthese',   badge:'Seconde SVT', desc:'Equations bilan de la respiration et de la photosynthese. ATP role et bilan energetique. Autotrophes vs heterotrophes. Fermentation. Facteurs limitants de la photosynthese. Phase lumineuse et cycle de Calvin. Point de compensation.' },
+      { slug:'biodiversite-seconde-svt',   titre:'Biodiversite et Evolution du vivant',     badge:'Seconde SVT', desc:'Les 3 niveaux de biodiversite. Notion d\'espece critere reproductif. Selection naturelle de Darwin 4 etapes. Arbre phylogenetique. Fossiles et stratigraphie. Derive genetique et frequences alleliques. Menaces sur la biodiversite.' },
+      { slug:'communication-seconde-svt',  titre:'Communication et Selection sexuelle',     badge:'Seconde SVT', desc:'Types de signaux chimiques sonores visuels. Pheromones bombycol alarme. Selection sexuelle competition intrasexuelle choix intersexuel. Dimorphisme sexuel. Danse des abeilles. Comportements ritualises. Empreinte imprinting.' },
+      { slug:'geosciences-seconde-svt',    titre:'Geosciences Formation des paysages',      badge:'Seconde SVT', desc:'Alteration mecanique et chimique des roches. Transport et sedimentation. Principe de superposition. Types de roches sedimentaires magmatiques metamorphiques. Sols et horizons. Cycle sedimentaire. Foraminiferes et paleoclimats delta18O.' },
+      { slug:'erosion-humaine-seconde-svt',titre:'Erosion et Activite humaine',              badge:'Seconde SVT', desc:'Impact de la deforestation sur erosion. Agriculture intensive et sols. Urbanisation et impermeabilisation. Risques naturels aggraves. Haies bocageres et agriculture durable. Nitrates et eutrophisation. Desertification. Grande Muraille Verte.' },
+      { slug:'agrosystemes-seconde-svt',   titre:'Agrosystemes et Developpement durable',   badge:'Seconde SVT', desc:'Agrosysteme vs ecosysteme naturel. Biomasse et production primaire nette. Elements nutritifs N P K Mg. Engrais organiques et mineraux. Rotation des cultures et fixation biologique de azote Rhizobium. Agriculture de precision. OGM.' },
+      { slug:'fecondation-puberte-svt',    titre:'De la fecondation a la puberte',           badge:'Seconde SVT', desc:'Gametes spermatozoide et ovule. Fecondation et zygote. Developpement embryonnaire 8 etapes. Determination du sexe chromosomes X et Y. Puberte age et caracteres secondaires. Hormones sexuelles testosterone oestrogenes. Contraception.' },
+      { slug:'cerveau-sante-seconde-svt',  titre:'Hormones Cerveau et Sante',               badge:'Seconde SVT', desc:'Microbiote intestinal definition et roles. Agents pathogenes virus bacteries parasites. VIH et SIDA. Immunite innee phagocytose inflammation. Vaccination. Perturbateurs endocriniens. Antibioresistance. Alimentation et sante.' },
+    ]
+  },
+}
+
 const CHAPITRES_PHYS_FR: Record<string, {
   key: string; label: string; color: string; icon: string
   chapitres: { slug: string; titre: string; badge: string; desc: string }[]
@@ -2628,7 +2700,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
   sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -5371,21 +5443,21 @@ function SimulationFrancePageInner() {
   // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : 'maths'
+    return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : s==='svt' ? 'svt' : 'maths'
   })
   // Synchroniser globalMatiere — activeMatiere (UI) prime sur matiereActive (AuthContext)
   useEffect(() => {
     const matiereMap: Record<string,string> = {
-      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
     }
     globalMatiere = matiereMap[activeMatiere] || 'mathematiques'
   }, [activeMatiere])
   // Sync initial immédiat (avant le premier render du useEffect)
   const matiereMapImmediat: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
   }
   globalMatiere = matiereMapImmediat[activeMatiere] || 'mathematiques'
   const [phase, setPhase] = useState<Phase>('select')
@@ -5562,6 +5634,7 @@ function SimulationFrancePageInner() {
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
                 { key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6', matiere:'informatique' },
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e', matiere:'anglais' },
+                { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
               ]).map(m => {
                 const locked = false
                 return (
@@ -5585,9 +5658,9 @@ function SimulationFrancePageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : activeMatiere==='svt' ? ARCHIVES_SVT_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : activeMatiere==='svt' ? CHAPITRES_SVT_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : activeMatiere==='svt' ? SECTION_CONFIGS_SVT_FR : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

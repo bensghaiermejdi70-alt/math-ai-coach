@@ -13,12 +13,28 @@ import { extractMatiere } from "@/lib/types/monetisation"
 
 // ── Map priceId → plan_type ───────────────────────────────────────
 const PRICE_TO_PLAN: Record<string, string> = {
-  // Production France
-  "price_1TJSBJCwS8UwOtxy1Byt0mZx": "mensuel",
-  "price_1TJSCMCwS8UwOtxyvocQR82P": "sprint",
-  "price_1TJSD9CwS8UwOtxyqSxqxmna": "annuel",
-  // Sandbox test
-  "price_1TLNKLERX5ozBo4IelzRW5rG": "mensuel",
+  // ── Mathématiques France (production) ─────────────────────────────
+  "price_1TJSBJCwS8UwOtxy1Byt0mZx": "mensuel_mathematiques",
+  "price_1TJSCMCwS8UwOtxyvocQR82P": "sprint_bac_mathematiques",
+  "price_1TJSD9CwS8UwOtxyqSxqxmna": "annuel_mathematiques",
+  // ── Physique-Chimie France (production) ───────────────────────────
+  "price_1TSIX6CwS8UwOtxyutjyxEK3": "mensuel_physique",
+  "price_1TSIldCwS8UwOtxyDKYX2AbD": "sprint_bac_physique",
+  "price_1TSIosCwS8UwOtxyxXOQZr6l": "annuel_physique",
+  // ── SVT France (production) ───────────────────────────────────────
+  "price_1TcsROCwS8UwOtxyf8QZUnHm": "mensuel_svt",
+  "price_1TcsV2CwS8UwOtxybMN7xgAL": "sprint_bac_svt",
+  "price_1TcsXbCwS8UwOtxyYnju6CRi": "annuel_svt",
+  // ── Anglais France (production) ───────────────────────────────────
+  "price_1TXlslCwS8UwOtxyBCXK1ntw": "mensuel_anglais",
+  "price_1TXly1CwS8UwOtxy2GPUFyQP": "sprint_bac_anglais",
+  "price_1TXm0rCwS8UwOtxyvSBkE7Vd": "annuel_anglais",
+  // ── Informatique France (production) ─────────────────────────────
+  "price_1TaUuVCwS8UwOtxyTxKreHFc": "mensuel_informatique",
+  "price_1TaUx5CwS8UwOtxyEQPrsBXR": "sprint_bac_informatique",
+  "price_1TaV0GCwS8UwOtxy2XO459vo": "annuel_informatique",
+  // ── Sandbox / Test ────────────────────────────────────────────────
+  "price_1TLNKLERX5ozBo4IelzRW5rG": "mensuel_mathematiques",
 }
 
 // ── Notification email client + admin via Resend ─────────────────
@@ -26,10 +42,35 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
   const RESEND_KEY = process.env.RESEND_API_KEY
   if (!RESEND_KEY) return
 
+  const MATIERE_ICONS: Record<string, string> = {
+    mathematiques: "📐", physique: "⚗️", svt: "🌱", anglais: "🇬🇧", informatique: "💻",
+  }
   const planLabels: Record<string, string> = {
-    mensuel: "MathBac Mensuel — 15h/semaine",
-    sprint:  "Sprint Bac — 30h/semaine · Bac Blanc inclus",
-    annuel:  "MathBac Annuel — tout inclus",
+    // Mathématiques
+    "mensuel_mathematiques":       "📐 Maths Mensuel — 19€/mois",
+    "sprint_bac_mathematiques":    "📐 Sprint Bac Maths — 29€/mois",
+    "annuel_mathematiques":        "📐 Maths Annuel — 199€/an",
+    // Physique-Chimie
+    "mensuel_physique":            "⚗️ Physique Mensuel — 19€/mois",
+    "sprint_bac_physique":         "⚗️ Sprint Bac Physique — 29€/mois",
+    "annuel_physique":             "⚗️ Physique Annuel — 199€/an",
+    // SVT
+    "mensuel_svt":                 "🌱 SVT Mensuel — 19€/mois",
+    "sprint_bac_svt":              "🌱 Sprint Bac SVT — 29€/mois",
+    "annuel_svt":                  "🌱 SVT Annuel — 199€/an",
+    // Anglais
+    "mensuel_anglais":             "🇬🇧 Anglais Mensuel — 19€/mois",
+    "sprint_bac_anglais":          "🇬🇧 Sprint Bac Anglais — 29€/mois",
+    "annuel_anglais":              "🇬🇧 Anglais Annuel — 199€/an",
+    // Informatique
+    "mensuel_informatique":        "💻 Informatique Mensuel — 19€/mois",
+    "sprint_bac_informatique":     "💻 Sprint Bac Informatique — 29€/mois",
+    "annuel_informatique":         "💻 Informatique Annuel — 199€/an",
+    // Legacy (sans matière) — compatibilité anciens abonnements
+    mensuel:    "📐 MathBac Mensuel — 19€/mois",
+    sprint:     "📐 Sprint Bac — 29€/mois",
+    sprint_bac: "📐 Sprint Bac — 29€/mois",
+    annuel:     "📐 MathBac Annuel — 199€/an",
   }
 
   await fetch("https://api.resend.com/emails", {
