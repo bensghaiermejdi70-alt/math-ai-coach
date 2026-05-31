@@ -72,6 +72,33 @@ const SECTIONS_FR = [
      {theme:'Fonctions ST2S',         sousTh:'Fonctions affines et polynomiales, exponentielles, logarithme, applications médicales'},
      {theme:'Suites et finances',     sousTh:'Suites arithmétiques et géométriques, intérêts composés, annuités, emprunts'},
    ]},
+  // ── Sections SVT France ────────────────────────────────────────────
+  {key:'terminale-svt',label:'Terminale Spé SVT',icon:'🌱',color:'#22c55e',duration:210,coeff:16,
+   themes:['Genetique et Evolution','Corps humain et Sante','Plantes et Paleoclimats','Systeme nerveux','Tectonique'],
+   programme:[
+     {theme:'Genetique et Evolution', sousTh:'Meiose, brassages genetiques, frequences alleliques, Hardy-Weinberg, selection naturelle, speciation, phylogenie moleculaire'},
+     {theme:'Corps humain et Sante',  sousTh:'Immunite innee et adaptative, LB anticorps, LT CD4 CD8, glycemie insuline glucagon, contraction musculaire ATP'},
+     {theme:'Plantes et Paleoclimats',sousTh:'Photosynthese phase lumineuse et cycle de Calvin, paleoclimats delta18O, cycles biogeochimiques, domestication plantes'},
+     {theme:'Systeme nerveux',        sousTh:'Potentiel action, synapse chimique, neurotransmetteurs dopamine, plasticite synaptique, maladies neurodegeneratives'},
+     {theme:'Tectonique des plaques', sousTh:'Structure interne du globe, subduction, collision, formation chaines de montagnes, volcanism et seismes'},
+   ]},
+  {key:'premiere-svt',label:'Première Spé SVT',icon:'📗',color:'#4ade80',duration:120,coeff:2,
+   themes:['ADN et Expression genetique','Dynamique interne Terre','Ecosystemes et Services','Immunite','Ressources naturelles'],
+   programme:[
+     {theme:'ADN et Expression',      sousTh:'Structure ADN, replication, transcription ARNm, epissage introns, traduction code genetique, mutations'},
+     {theme:'Tectonique Premiere',    sousTh:'Structure interne du globe, ondes sismiques P et S, lithosphere, convection mantellique, frontieres de plaques'},
+     {theme:'Ecosystemes',            sousTh:'Reseaux trophiques, flux energie regle 10 pourcent, services ecosystemiques, biodiversite, corridors ecologiques'},
+     {theme:'Immunite Premiere',      sousTh:'Immunite innee phagocytose inflammation, immunite adaptative LB LT, memoire immunologique, vaccination'},
+     {theme:'Ressources naturelles',  sousTh:'Cycle de eau, empreinte ecologique, energies renouvelables, limites planetaires Rockstrom'},
+   ]},
+  {key:'seconde-svt',label:'Seconde SVT',icon:'📘',color:'#16a34a',duration:60,coeff:1,
+   themes:['La cellule unite du vivant','Metabolisme Respiration Photosynthese','Biodiversite et Evolution','Geosciences'],
+   programme:[
+     {theme:'La cellule',             sousTh:'Cellule animale vs vegetale, organites noyau mitochondrie chloroplaste, membrane plasmique, osmose, differenciation cellulaire'},
+     {theme:'Metabolisme',            sousTh:'Equations bilan respiration et photosynthese, ATP role energetique, autotrophes vs heterotrophes, fermentation, facteurs limitants'},
+     {theme:'Biodiversite',           sousTh:'3 niveaux de biodiversite, notion espece critere reproductif, selection naturelle Darwin, arbre phylogenetique, fossiles'},
+     {theme:'Geosciences',            sousTh:'Alteration mecanique et chimique des roches, transport et sedimentation, principe de superposition, types de roches'},
+   ]},
 ]
 
 
