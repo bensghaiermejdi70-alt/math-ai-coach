@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'   
+import { useState, useRef, useEffect, useCallback } from 'react'   
 import Navbar from '@/components/layout/Navbar'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
@@ -23,246 +23,6 @@ function useKaTeX() {
 }
 
 // ── Rendu LaTeX inline + block avec KaTeX ────────────────────────
-
-// ════════════════════════════════════════════════════════════════════
-// SYSTÈME VOIX — Reconnaissance vocale + Synthèse vocale (fr-FR)
-// ════════════════════════════════════════════════════════════════════
-
-interface VoiceState {
-  isListening: boolean
-  isSpeaking: boolean
-  transcript: string
-  interimTranscript: string
-  autoSpeak: boolean
-  voiceEnabled: boolean
-  micError: string | null
-}
-
-function useVoiceSystem() {
-  const [state, setState] = useState<VoiceState>({
-    isListening: false,
-    isSpeaking: false,
-    transcript: '',
-    interimTranscript: '',
-    autoSpeak: false,
-    voiceEnabled: false,
-    micError: null,
-  })
-
-  const recognitionRef = useRef<any>(null)
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
-  const synthRef = useRef<typeof window.speechSynthesis | null>(null)
-
-  // Détection support navigateur
-  const browserSupportsSpeech = typeof window !== 'undefined' && (
-    'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-  )
-  const browserSupportsTTS = typeof window !== 'undefined' && 'speechSynthesis' in window
-
-  // Initialisation
-  useEffect(() => {
-    if (!browserSupportsSpeech) return
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'fr-FR'
-    recognition.continuous = true  // évite la déconnexion Google STT après 5s
-    recognition.interimResults = true
-    recognition.maxAlternatives = 1
-
-    recognition.onstart = () => {
-      setState(s => ({ ...s, isListening: true, micError: null, transcript: '', interimTranscript: '' }))
-    }
-
-    let silenceTimer: ReturnType<typeof setTimeout> | null = null
-    recognition.onresult = (event: any) => {
-      let interim = ''
-      let final = ''
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript
-        if (event.results[i].isFinal) {
-          final += transcript
-        } else {
-          interim += transcript
-        }
-      }
-      setState(s => ({ ...s, transcript: final || s.transcript, interimTranscript: interim }))
-      if (silenceTimer) clearTimeout(silenceTimer)
-      if (final.trim()) {
-        silenceTimer = setTimeout(() => { try { recognitionRef.current?.stop() } catch {} }, 1500)
-      }
-    }
-
-    recognition.onerror = (event: any) => {
-      // 'network' sur Edge/Chrome = service Google bloqué par Tracking Prevention
-      // Ce n'est PAS une erreur de connexion Internet — c'est une restriction du navigateur
-      if (event.error === 'network') {
-        // Retry silencieux — souvent transitoire (service Google STT momentanément indisponible)
-        setState(s => ({ ...s, isListening: false, micError: null }))
-        // Retry automatique après 800ms
-        setTimeout(() => {
-          try { recognitionRef.current?.start() } catch {}
-        }, 800)
-        return
-      }
-      if (event.error === 'aborted') {
-        // aborted = arrêt normal, pas une erreur
-        setState(s => ({ ...s, isListening: false, micError: null }))
-        return
-      }
-      const errors: Record<string, string> = {
-        'no-speech': 'Aucune parole détectée — parle plus près du micro',
-        'audio-capture': '🎙️ Microphone non trouvé — vérifie les branchements',
-        'not-allowed': '🔒 Permission micro refusée — autorise le micro dans le navigateur',
-        'service-not-allowed': '🔒 Service vocal non autorisé — essaie Chrome ou désactive Edge Tracking Prevention',
-        'bad-grammar': 'Erreur de configuration vocale',
-      }
-      setState(s => ({ ...s, isListening: false, micError: errors[event.error] || null }))
-    }
-
-    recognition.onend = () => {
-      if (silenceTimer) clearTimeout(silenceTimer)
-      setState(s => {
-        if (s.transcript.trim().length > 2) {
-          window.dispatchEvent(new CustomEvent('voiceTranscriptReady', { detail: s.transcript.trim() }))
-        }
-        return { ...s, isListening: false, interimTranscript: '', transcript: '' }
-      })
-    }
-
-    recognitionRef.current = recognition
-    synthRef.current = window.speechSynthesis
-
-    // Charger préférences
-    try {
-      const saved = localStorage.getItem('bacai_voice_prefs')
-      if (saved) {
-        const prefs = JSON.parse(saved)
-        setState(s => ({ ...s, autoSpeak: prefs.autoSpeak ?? false, voiceEnabled: prefs.voiceEnabled ?? true }))
-      } else {
-        setState(s => ({ ...s, voiceEnabled: true }))
-      }
-    } catch {}
-
-    return () => {
-      try { recognition.stop() } catch {}
-      if (synthRef.current) synthRef.current.cancel()
-    }
-  }, [browserSupportsSpeech])
-
-  // ── Hydration-safe mount flag ──
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
-
-
-  const startListening = useCallback(() => {
-    if (!recognitionRef.current || state.isListening) return
-    try {
-      recognitionRef.current.start()
-    } catch (e) {
-      // Peut déjà être en cours, on réessaie après un délai
-      setTimeout(() => {
-        try { recognitionRef.current?.start() } catch {}
-      }, 300)
-    }
-  }, [state.isListening])
-
-  const stopListening = useCallback(() => {
-    if (!recognitionRef.current) return
-    try { recognitionRef.current.stop() } catch {}
-    setState(s => ({ ...s, isListening: false }))
-  }, [])
-
-  const toggleListening = useCallback(() => {
-    if (state.isListening) stopListening()
-    else startListening()
-  }, [state.isListening, startListening, stopListening])
-
-  const speak = useCallback((text: string, onEnd?: () => void) => {
-    if (!browserSupportsTTS || !synthRef.current || !state.voiceEnabled) return
-
-    // Annuler toute lecture en cours
-    synthRef.current.cancel()
-
-    // Nettoyer le texte (enlever markdown, LaTeX, blocs graphiques)
-    const cleanText = text
-      .replace(/```graph[\s\S]*?```/g, '[graphique]')
-      .replace(/\$\$[\s\S]*?\$\$/g, '[formule]')
-      .replace(/\$[^$\n]+?\$/g, '[formule]')
-      .replace(/\*\*(.+?)\*\*/g, '$1')
-      .replace(/\*(.+?)\*/g, '$1')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/^##?\s+/gm, '')
-      .replace(/^[-*]\s+/gm, '')
-      .replace(/^\d+\.\s+/gm, '')
-      .replace(/^>\s+/gm, '')
-      .replace(/\n{2,}/g, '. ')
-      .replace(/\n/g, ' ')
-      .trim()
-
-    if (!cleanText || cleanText.length < 3) return
-
-    const utterance = new SpeechSynthesisUtterance(cleanText)
-    utterance.lang = 'fr-FR'
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-
-    // Sélectionner la meilleure voix française
-    const voices = synthRef.current.getVoices()
-    const frVoice = voices.find(v => v.lang.startsWith('fr') && v.name.includes('Google'))
-      || voices.find(v => v.lang.startsWith('fr'))
-      || voices.find(v => v.lang.startsWith('en'))
-    if (frVoice) utterance.voice = frVoice
-
-    utterance.onstart = () => setState(s => ({ ...s, isSpeaking: true }))
-    utterance.onend = () => { setState(s => ({ ...s, isSpeaking: false })); onEnd?.() }
-    utterance.onerror = () => setState(s => ({ ...s, isSpeaking: false }))
-
-    utteranceRef.current = utterance
-    synthRef.current.speak(utterance)
-  }, [browserSupportsTTS, state.voiceEnabled])
-
-  const stopSpeaking = useCallback(() => {
-    if (synthRef.current) {
-      synthRef.current.cancel()
-      setState(s => ({ ...s, isSpeaking: false }))
-    }
-  }, [])
-
-  const toggleAutoSpeak = useCallback(() => {
-    setState(s => {
-      const next = { ...s, autoSpeak: !s.autoSpeak }
-      localStorage.setItem('bacai_voice_prefs', JSON.stringify({ autoSpeak: next.autoSpeak, voiceEnabled: next.voiceEnabled }))
-      return next
-    })
-  }, [])
-
-  const toggleVoiceEnabled = useCallback(() => {
-    setState(s => {
-      const next = { ...s, voiceEnabled: !s.voiceEnabled }
-      if (!next.voiceEnabled && synthRef.current) synthRef.current.cancel()
-      localStorage.setItem('bacai_voice_prefs', JSON.stringify({ autoSpeak: next.autoSpeak, voiceEnabled: next.voiceEnabled }))
-      return next
-    })
-  }, [])
-
-  return {
-    ...state,
-    mounted,
-    browserSupportsSpeech,
-    browserSupportsTTS,
-    startListening,
-    stopListening,
-    toggleListening,
-    speak,
-    stopSpeaking,
-    toggleAutoSpeak,
-    toggleVoiceEnabled,
-  }
-}
-
-
 function renderKaTeX(text: string): string {
   let result = text
 
@@ -1465,7 +1225,7 @@ function formatContent(text: string) {
 // ══════════════════════════════════════════
 // BULLE MESSAGE
 // ══════════════════════════════════════════
-function MessageBubble({ msg, onDelete, onEdit, voice }: { msg: Msg; onDelete: (id: number) => void; onEdit: (id: number, c: string) => void; voice?: ReturnType<typeof useVoiceSystem> }) {
+function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: number) => void; onEdit: (id: number, c: string) => void }) {
   const isUser = msg.role === 'user'
   const [hovered, setHovered] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -1513,15 +1273,6 @@ function MessageBubble({ msg, onDelete, onEdit, voice }: { msg: Msg; onDelete: (
             }} style={btn(copied ? '#06d6a0' : undefined)}>
             {copied ? '✓ Copié !' : '📋 Copier'}
           </button>
-          {!isUser && voice?.mounted && voice?.browserSupportsTTS && (
-            <button onClick={() => {
-              if (voice.isSpeaking) voice.stopSpeaking()
-              else voice.speak(msg.content)
-            }} style={btn(voice.isSpeaking ? '#06d6a0' : undefined)}>
-              {voice.isSpeaking ? '🔊 Arrêter' : '🔈 Lire'}
-            </button>
-          )}
-
           {isUser && <button onClick={() => { setEditing(true); setEditVal(msg.content) }} style={btn('#4f6ef7')}>✏️ Éditer</button>}
           {!confirmDel
             ? <button onClick={() => setConfirmDel(true)} style={btn('#ef4444')}>🗑 Supprimer</button>
@@ -1537,23 +1288,6 @@ function MessageBubble({ msg, onDelete, onEdit, voice }: { msg: Msg; onDelete: (
 // ══════════════════════════════════════════
 export default function ChatPage() {
   const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription, matiereActive, activeMatieres, checkMatiereAccess } = useAuth()
-  // ── Système Voix (reconnaissance + synthèse) ──
-  const voice = useVoiceSystem()
-
-  // Auto-envoi quand le micro capte une phrase complète
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const transcript = (e as CustomEvent).detail as string
-      if (transcript) {
-        setInput(transcript)
-        setTimeout(() => sendMessage(transcript), 80)
-      }
-    }
-    window.addEventListener('voiceTranscriptReady', handler)
-    return () => window.removeEventListener('voiceTranscriptReady', handler)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Recalculer à chaque render (quotas peut changer après refreshSubscription)
   // Matière sélectionnée — initialisée depuis l'abonnement actif
   const MATIERE_LIST = [
@@ -1598,32 +1332,6 @@ export default function ChatPage() {
   const [copyMsg, setCopyMsg] = useState('')
   const [pdfMsg, setPdfMsg] = useState('')
   const [pendingImage, setPendingImage] = useState<{base64:string; mediaType:string; name:string} | null>(null)
-
-  // ── Auto-envoi quand la reconnaissance vocale termine ──
-  useEffect(() => {
-    if (voice.transcript && !voice.isListening && voice.transcript.trim().length > 2) {
-      const text = voice.transcript.trim()
-      // Petit délai pour éviter les envois multiples
-      const timer = setTimeout(() => {
-        sendMessage(text)
-        voice.stopListening()
-      }, 400)
-      return () => clearTimeout(timer)
-    }
-  }, [voice.transcript, voice.isListening])
-
-  // ── Auto-lecture des réponses de l'IA ──
-  const lastAssistantMsg = useMemo(() => {
-    const msgs = messages.filter(m => m.role === 'assistant')
-    return msgs[msgs.length - 1]
-  }, [messages])
-
-  useEffect(() => {
-    if (voice.autoSpeak && lastAssistantMsg && !loading) {
-      voice.speak(lastAssistantMsg.content)
-    }
-  }, [lastAssistantMsg?.id, loading, voice.autoSpeak])
-
   const imageInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   // Charger l'historique au montage
@@ -1840,96 +1548,6 @@ export default function ChatPage() {
               </div>
             </div>
 
-
-            {/* ── Contrôles Voix ── */}
-            {voice.mounted && (voice.browserSupportsSpeech || voice.browserSupportsTTS) && (
-              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 14px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>🎙️</span> Contrôles Voix
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {voice.mounted && voice.browserSupportsSpeech && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 11, color: 'var(--text2)' }}>🎤 Reconnaissance vocale</span>
-                      <div style={{
-                        width: 32, height: 18, borderRadius: 9, background: voice.voiceEnabled ? '#4f6ef7' : 'var(--surface2)',
-                        border: `1px solid ${voice.voiceEnabled ? '#4f6ef7' : 'var(--border)'}`, cursor: 'pointer',
-                        position: 'relative', transition: 'all 0.2s',
-                      }} onClick={voice.toggleVoiceEnabled}>
-                        <div style={{
-                          width: 14, height: 14, borderRadius: '50%', background: '#fff',
-                          position: 'absolute', top: 1,
-                          left: voice.voiceEnabled ? 16 : 1,
-                          transition: 'left 0.2s',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                        }} />
-                      </div>
-                    </div>
-                  )}
-                  {voice.browserSupportsTTS && (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 11, color: 'var(--text2)' }}>🔊 Lecture auto des réponses</span>
-                      <div style={{
-                        width: 32, height: 18, borderRadius: 9, background: voice.autoSpeak ? '#06d6a0' : 'var(--surface2)',
-                        border: `1px solid ${voice.autoSpeak ? '#06d6a0' : 'var(--border)'}`, cursor: 'pointer',
-                        position: 'relative', transition: 'all 0.2s',
-                      }} onClick={voice.toggleAutoSpeak}>
-                        <div style={{
-                          width: 14, height: 14, borderRadius: '50%', background: '#fff',
-                          position: 'absolute', top: 1,
-                          left: voice.autoSpeak ? 16 : 1,
-                          transition: 'left 0.2s',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                        }} />
-                      </div>
-                    </div>
-                  )}
-                  {/* Slider vitesse lecture */}
-                  {voice.browserSupportsTTS && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 11, color: 'var(--text2)' }}>⚡ Vitesse lecture</span>
-                        <span id="voice-rate-label" style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>0.88x</span>
-                      </div>
-                      <input type="range" min={0.6} max={1.4} step={0.05}
-                        defaultValue={(() => { try { return JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}').rate ?? 0.88 } catch { return 0.88 } })()}
-                        onChange={e => {
-                          const rate = parseFloat(e.target.value)
-                          const lbl = document.getElementById('voice-rate-label')
-                          if (lbl) lbl.textContent = rate.toFixed(2) + 'x'
-                          try {
-                            const prefs = JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}')
-                            localStorage.setItem('bacai_voice_prefs', JSON.stringify({ ...prefs, rate }))
-                          } catch {}
-                        }}
-                        style={{ width: '100%', accentColor: '#4f6ef7', cursor: 'pointer' }}
-                      />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--muted)' }}>
-                        <span>🐢 Lent</span><span>🎓 Prof</span><span>⚡ Rapide</span>
-                      </div>
-                    </div>
-                  )}
-                  {voice.micError && (
-                    <div style={{ fontSize: 10, borderRadius: 6, padding: '6px 10px', lineHeight: 1.5,
-                      color: voice.micError.includes('refus') ? '#ef4444' : '#f59e0b',
-                      background: voice.micError.includes('refus') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
-                      border: `1px solid ${voice.micError.includes('refus') ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
-                    }}>
-                      {voice.micError.includes('refus') ? '🔒' : '⚠️'} {voice.micError}
-                      {voice.micError.includes('Tracking') || voice.micError.includes('autoris') ? (
-                        <div style={{ marginTop: 3, fontSize: 9, color: 'var(--muted)' }}>💡 Essaie Chrome pour la meilleure compatibilité</div>
-                      ) : null}
-                    </div>
-                  )}
-                  {voice.isListening && (
-                    <div style={{ fontSize: 10, color: '#ef4444', background: 'rgba(239,68,68,0.08)', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, animation: 'pulse 1.5s ease infinite' }}>
-                      <span>🔴</span> J'écoute... parle maintenant
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Questions par catégorie */}
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
               <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', fontSize: 10, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Questions fréquentes</div>
@@ -2056,8 +1674,7 @@ export default function ChatPage() {
               {messages.map(msg => (
                 <MessageBubble key={msg.id} msg={msg}
                   onDelete={id => setMessages(p => p.filter(m => m.id !== id))}
-                  onEdit={(id, c) => setMessages(p => p.map(m => m.id === id ? { ...m, content: c } : m))}
-                  voice={voice} />
+                  onEdit={(id, c) => setMessages(p => p.map(m => m.id === id ? { ...m, content: c } : m))} />
               ))}
 
               {/* Typing indicator */}
@@ -2152,46 +1769,6 @@ export default function ChatPage() {
                   }} />
 
                 <div style={{ display:'flex', alignItems:'flex-end', gap:8 }}>
-                  {/* Bouton micro — Reconnaissance vocale */}
-                  {voice.mounted && voice.browserSupportsSpeech && (
-                    <button
-                      onClick={voice.toggleListening}
-                      title={voice.isListening ? "Arrêter l'écoute" : "Poser une question par voix"}
-                      style={{
-                        width: 36, height: 36, borderRadius: 9,
-                        border: voice.isListening ? '1.5px solid #ef4444' : '1px solid var(--border)',
-                        background: voice.isListening ? 'rgba(239,68,68,0.15)' : 'var(--surface2)',
-                        color: voice.isListening ? '#ef4444' : voice.micError ? '#f59e0b' : 'var(--muted)',
-                        fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, transition: 'all 0.2s', animation: voice.isListening ? 'pulse 1.5s ease infinite' : 'none',
-                      }}
-                    >
-                      {voice.isListening ? '🔴' : voice.micError ? '⚠️' : '🎤'}
-                    </button>
-                  )}
-                  {/* Bouton haut-parleur — Lire la dernière réponse */}
-                  {voice.mounted && voice.browserSupportsTTS && messages.length > 0 && (
-                    <button
-                      onClick={() => {
-                        if (voice.isSpeaking) voice.stopSpeaking()
-                        else {
-                          const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
-                          if (lastAssistant) voice.speak(lastAssistant.content)
-                        }
-                      }}
-                      title={voice.isSpeaking ? "Arrêter la lecture" : "Lire la dernière réponse à voix haute"}
-                      style={{
-                        width: 36, height: 36, borderRadius: 9,
-                        border: voice.isSpeaking ? '1.5px solid #06d6a0' : '1px solid var(--border)',
-                        background: voice.isSpeaking ? 'rgba(6,214,160,0.15)' : 'var(--surface2)',
-                        color: voice.isSpeaking ? '#06d6a0' : 'var(--muted)',
-                        fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0, transition: 'all 0.2s',
-                      }}
-                    >
-                      {voice.isSpeaking ? '🔊' : '🔈'}
-                    </button>
-                  )}
                   {/* Bouton image */}
                   <button onClick={() => imageInputRef.current?.click()} title="Joindre une image"
                     style={{ width:36, height:36, borderRadius:9, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
@@ -2206,18 +1783,9 @@ export default function ChatPage() {
                     onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
                     📸
                   </button>
-                <textarea ref={textareaRef}
-                  value={voice.isListening ? (voice.interimTranscript || voice.transcript || input) : input}
-                  onChange={e => { setInput(e.target.value); if (voice.isListening) voice.stopListening() }}
-                  onFocus={() => { if (voice.isListening) voice.stopListening() }}
+                <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                  placeholder={isQuotaFull
-                    ? 'Quota atteint — renouvellement lundi prochain'
-                    : voice.isListening
-                      ? "🎤 J'écoute... parle maintenant"
-                      : pendingImage
-                        ? "Ajoute une question sur l'image (optionnel)…"
-                        : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif · 🎤 pour la voix'}
+                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : pendingImage ? 'Ajoute une question sur l\'image (optionnel)…' : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
                   rows={1} style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5, maxHeight: 120, overflow: 'auto' }}
                   onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }} />
                 <button onClick={() => sendMessage()} disabled={loading || (!input.trim() && !pendingImage) || isQuotaFull}
@@ -2227,7 +1795,7 @@ export default function ChatPage() {
                 </div>
               </div>
               <div style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--muted)', marginTop: 7 }}>
-                Entrée pour envoyer · Shift+Entrée pour saut de ligne · 🎤 Voix activée · 🇹🇳 60 DT/mois · 🇫🇷 19€/mois · 📈 Graphiques interactifs
+                Entrée pour envoyer · Shift+Entrée pour saut de ligne · 🇹🇳 60 DT/mois · 🇫🇷 19€/mois · 📈 Graphiques interactifs
               </div>
             </div>
           </div>
