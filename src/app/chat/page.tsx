@@ -74,6 +74,7 @@ function useVoiceSystem() {
       setState(s => ({ ...s, isListening: true, micError: null, transcript: '', interimTranscript: '' }))
     }
 
+    let silenceTimer: ReturnType<typeof setTimeout> | null = null
     recognition.onresult = (event: any) => {
       let interim = ''
       let final = ''
@@ -86,6 +87,10 @@ function useVoiceSystem() {
         }
       }
       setState(s => ({ ...s, transcript: final || s.transcript, interimTranscript: interim }))
+      if (silenceTimer) clearTimeout(silenceTimer)
+      if (final.trim()) {
+        silenceTimer = setTimeout(() => { try { recognitionRef.current?.stop() } catch {} }, 1500)
+      }
     }
 
     recognition.onerror = (event: any) => {
@@ -116,7 +121,13 @@ function useVoiceSystem() {
     }
 
     recognition.onend = () => {
-      setState(s => ({ ...s, isListening: false }))
+      if (silenceTimer) clearTimeout(silenceTimer)
+      setState(s => {
+        if (s.transcript.trim().length > 2) {
+          window.dispatchEvent(new CustomEvent('voiceTranscriptReady', { detail: s.transcript.trim() }))
+        }
+        return { ...s, isListening: false, interimTranscript: '', transcript: '' }
+      })
     }
 
     recognitionRef.current = recognition
@@ -1529,6 +1540,20 @@ export default function ChatPage() {
   // ── Système Voix (reconnaissance + synthèse) ──
   const voice = useVoiceSystem()
 
+  // Auto-envoi quand le micro capte une phrase complète
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const transcript = (e as CustomEvent).detail as string
+      if (transcript) {
+        setInput(transcript)
+        setTimeout(() => sendMessage(transcript), 80)
+      }
+    }
+    window.addEventListener('voiceTranscriptReady', handler)
+    return () => window.removeEventListener('voiceTranscriptReady', handler)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Recalculer à chaque render (quotas peut changer après refreshSubscription)
   // Matière sélectionnée — initialisée depuis l'abonnement actif
   const MATIERE_LIST = [
@@ -1856,6 +1881,31 @@ export default function ChatPage() {
                           transition: 'left 0.2s',
                           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         }} />
+                      </div>
+                    </div>
+                  )}
+                  {/* Slider vitesse lecture */}
+                  {voice.browserSupportsTTS && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--text2)' }}>⚡ Vitesse lecture</span>
+                        <span id="voice-rate-label" style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>0.88x</span>
+                      </div>
+                      <input type="range" min={0.6} max={1.4} step={0.05}
+                        defaultValue={(() => { try { return JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}').rate ?? 0.88 } catch { return 0.88 } })()}
+                        onChange={e => {
+                          const rate = parseFloat(e.target.value)
+                          const lbl = document.getElementById('voice-rate-label')
+                          if (lbl) lbl.textContent = rate.toFixed(2) + 'x'
+                          try {
+                            const prefs = JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}')
+                            localStorage.setItem('bacai_voice_prefs', JSON.stringify({ ...prefs, rate }))
+                          } catch {}
+                        }}
+                        style={{ width: '100%', accentColor: '#4f6ef7', cursor: 'pointer' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--muted)' }}>
+                        <span>🐢 Lent</span><span>🎓 Prof</span><span>⚡ Rapide</span>
                       </div>
                     </div>
                   )}

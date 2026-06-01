@@ -1239,145 +1239,8 @@ function deleteSolveItem(id: string, current: HistoryItem[], userId?: string): H
 // ══════════════════════════════════════════════════════════════════════
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════════════════════════════════
-
-// ════════════════════════════════════════════════════════════════════
-// SYSTÈME VOIX — Reconnaissance vocale + Synthèse vocale (fr-FR)
-// Identique à chat/page.tsx — zéro coût (APIs natives navigateur)
-// ════════════════════════════════════════════════════════════════════
-interface VoiceState {
-  isListening: boolean; transcript: string; interimTranscript: string
-  isSpeaking: boolean; autoSpeak: boolean; voiceEnabled: boolean
-  micError: string | null; mounted: boolean
-}
-function useVoice() {
-  const [state, setState] = useState<VoiceState>({
-    isListening:false, transcript:'', interimTranscript:'',
-    isSpeaking:false, autoSpeak:false, voiceEnabled:false,
-    micError:null, mounted:false,
-  })
-  const recognitionRef = useRef<any>(null)
-  const utteranceRef = useRef<SpeechSynthesisUtterance|null>(null)
-  const synthRef = useRef<typeof window.speechSynthesis|null>(null)
-
-  const browserSupportsSpeech = typeof window !== 'undefined' &&
-    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
-  const browserSupportsTTS = typeof window !== 'undefined' && 'speechSynthesis' in window
-
-  useEffect(() => {
-    setState(s => ({ ...s, mounted: true }))
-    if (!browserSupportsSpeech) return
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'fr-FR'
-    recognition.continuous = true   // évite déconnexion Google STT après 5s
-    recognition.interimResults = true
-    recognition.maxAlternatives = 1
-    recognition.onstart  = () => setState(s => ({ ...s, isListening:true, micError:null, transcript:'', interimTranscript:'' }))
-    recognition.onresult = (event: any) => {
-      let final = ''; let interim = ''
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript
-        if (event.results[i].isFinal) final += t
-        else interim += t
-      }
-      setState(s => ({ ...s, transcript: final || s.transcript, interimTranscript: interim }))
-    }
-    recognition.onerror = (event: any) => {
-      if (event.error === 'network' || event.error === 'aborted') {
-        setState(s => ({ ...s, isListening:false, micError:null }))
-        if (event.error === 'network') setTimeout(() => { try { recognitionRef.current?.start() } catch {} }, 800)
-        return
-      }
-      const errors: Record<string,string> = {
-        'no-speech':          'Aucune parole détectée — parle plus près du micro',
-        'audio-capture':      '🎙️ Microphone non trouvé',
-        'not-allowed':        '🔒 Permission micro refusée',
-        'service-not-allowed':'🔒 Service vocal bloqué — essaie Chrome',
-      }
-      setState(s => ({ ...s, isListening:false, micError: errors[event.error] || null }))
-    }
-    recognition.onend = () => setState(s => ({ ...s, isListening:false }))
-    recognitionRef.current = recognition
-    synthRef.current = window.speechSynthesis
-    try {
-      const saved = localStorage.getItem('bacai_voice_prefs')
-      if (saved) {
-        const prefs = JSON.parse(saved)
-        setState(s => ({ ...s, autoSpeak: prefs.autoSpeak ?? false, voiceEnabled: prefs.voiceEnabled ?? true }))
-      } else setState(s => ({ ...s, voiceEnabled: true }))
-    } catch {}
-    return () => { try { recognition.stop() } catch {} }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const startListening  = useCallback(() => { if (!recognitionRef.current || state.isListening) return; try { recognitionRef.current.start() } catch { setTimeout(() => { try { recognitionRef.current?.start() } catch {} }, 300) } }, [state.isListening])
-  const stopListening   = useCallback(() => { if (!recognitionRef.current) return; try { recognitionRef.current.stop() } catch {}; setState(s => ({ ...s, isListening:false })) }, [])
-  const toggleListening = useCallback(() => { if (state.isListening) stopListening(); else startListening() }, [state.isListening, startListening, stopListening])
-
-  const speak = useCallback((text: string, onEnd?: () => void) => {
-    if (!browserSupportsTTS || !synthRef.current || !state.voiceEnabled) return
-    synthRef.current.cancel()
-    // Nettoyage complet pour une lecture naturelle
-    const cleanText = text
-      .replace(/```graph[\s\S]*?```/g, 'graphique')
-      .replace(/```[\s\S]*?```/g, 'bloc de code')
-      .replace(/\$\$[\s\S]*?\$\$/g, 'formule mathématique')
-      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 sur $2')
-      .replace(/\\sqrt\{([^}]+)\}/g, 'racine carrée de $1')
-      .replace(/\\[a-zA-Z]+/g, '')
-      .replace(/\$[^$\n]+?\$/g, 'formule')
-      .replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
-      .replace(/`([^`]+)`/g, '$1')
-      .replace(/^#{1,3}\s+/gm, '').replace(/^[-*+]\s+/gm, '').replace(/^\d+\.\s+/gm, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/https?:\/\/\S+/g, 'lien')
-      .replace(/\n{2,}/g, '. ').replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim()
-    if (!cleanText || cleanText.length < 3) return
-    // Chunking : évite la coupure Chrome après ~250 mots
-    const MAX_CHUNK = 800
-    const paragraphs = cleanText.split(/(?<=[.!?])\s+(?=[A-ZÀÂÉÈÊËÎÏÔÙÛÜŒ])/)
-    const chunks: string[] = []; let current = ''
-    for (const p of paragraphs) {
-      if ((current + ' ' + p).length > MAX_CHUNK && current) { chunks.push(current.trim()); current = p }
-      else current = current ? current + ' ' + p : p
-    }
-    if (current.trim()) chunks.push(current.trim())
-    if (!chunks.length) return
-    let savedRate = 0.88
-    try { const p = JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}'); savedRate = p.rate ?? 0.88 } catch {}
-    const speakRate = Math.max(0.6, Math.min(1.4, savedRate))
-    let chunkIdx = 0
-    const speakChunk = () => {
-      if (chunkIdx >= chunks.length) { setState(s => ({ ...s, isSpeaking:false })); onEnd?.(); return }
-      const utt = new SpeechSynthesisUtterance(chunks[chunkIdx])
-      utt.lang = 'fr-FR'; utt.rate = speakRate; utt.pitch = 1.05; utt.volume = 1.0
-      const pickVoice = () => {
-        const voices = synthRef.current!.getVoices()
-        return voices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('google'))
-          || voices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('microsoft'))
-          || voices.find(v => v.lang.startsWith('fr')) || voices.find(v => v.lang.startsWith('en'))
-      }
-      const frVoice = pickVoice(); if (frVoice) utt.voice = frVoice
-      if (chunkIdx === 0) utt.onstart = () => setState(s => ({ ...s, isSpeaking:true }))
-      utt.onend = () => { chunkIdx++; setTimeout(speakChunk, 120) }
-      utt.onerror = () => { setState(s => ({ ...s, isSpeaking:false })); onEnd?.() }
-      utteranceRef.current = utt; synthRef.current?.speak(utt)
-    }
-    speakChunk()
-  }, [browserSupportsTTS, state.voiceEnabled])
-
-  const stopSpeaking = useCallback(() => { if (synthRef.current) { synthRef.current.cancel(); setState(s => ({ ...s, isSpeaking:false })) } }, [])
-  const toggleAutoSpeak = useCallback(() => {
-    setState(s => { const next = { ...s, autoSpeak:!s.autoSpeak }; try { localStorage.setItem('bacai_voice_prefs', JSON.stringify({ autoSpeak:next.autoSpeak, voiceEnabled:next.voiceEnabled })) } catch {}; return next })
-  }, [])
-  const toggleVoiceEnabled = useCallback(() => {
-    setState(s => { const next = { ...s, voiceEnabled:!s.voiceEnabled }; if (!next.voiceEnabled && synthRef.current) synthRef.current.cancel(); try { localStorage.setItem('bacai_voice_prefs', JSON.stringify({ autoSpeak:next.autoSpeak, voiceEnabled:next.voiceEnabled })) } catch {}; return next })
-  }, [])
-  return { ...state, mounted: state.mounted, browserSupportsSpeech, browserSupportsTTS, startListening, stopListening, toggleListening, speak, stopSpeaking, toggleAutoSpeak, toggleVoiceEnabled }
-}
-
 function SolvePageInner() {
   const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, isSprint, matiereActive, quotaVersion, refreshSubscription, activeMatieres, checkMatiereAccess } = useAuth()
-  const voice = useVoice()
 
   const [mode, setMode] = useState<Mode>('solve')
   const searchParams = useSearchParams()
@@ -1431,21 +1294,6 @@ function SolvePageInner() {
   }, [user?.id])
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  // ── Auto-remplissage depuis la reconnaissance vocale ──
-  useEffect(() => {
-    if (voice.transcript && !voice.isListening && voice.transcript.trim().length > 2) {
-      setInput(voice.transcript.trim())
-    }
-  }, [voice.transcript, voice.isListening])
-
-  // ── Auto-lecture de la solution quand elle arrive ──
-  useEffect(() => {
-    if (voice.autoSpeak && solution && phase === 'done') {
-      voice.speak(solution)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [solution, phase, voice.autoSpeak])
 
   // Auto-scroll et focus si exercice pré-rempli depuis une page chapitre
   useEffect(() => {
@@ -2413,25 +2261,8 @@ Structure OBLIGATOIRE :
 
                 <SymbolPad onInsert={insertSymbol} />
 
-                {/* Barre micro au-dessus de la textarea */}
-                {voice.mounted && voice.browserSupportsSpeech && (
-                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
-                    <button onClick={voice.toggleListening}
-                      style={{ padding:'6px 12px', borderRadius:8, border:`1.5px solid ${voice.isListening ? '#ef4444' : 'rgba(255,255,255,0.15)'}`, background: voice.isListening ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)', color: voice.isListening ? '#ef4444' : 'rgba(255,255,255,0.6)', fontSize:12, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:5, animation: voice.isListening ? 'pulse 1.5s ease infinite' : 'none', transition:'all 0.2s' }}>
-                      {voice.isListening ? "🔴 J'écoute…" : '🎤 Dicter'}
-                    </button>
-                    {voice.isListening && (
-                      <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', fontStyle:'italic' }}>
-                        {voice.interimTranscript || 'Parle maintenant…'}
-                      </span>
-                    )}
-                    {voice.micError && (
-                      <span style={{ fontSize:10, color:'#f59e0b' }}>⚠️ {voice.micError}</span>
-                    )}
-                  </div>
-                )}
                 <textarea
-                  ref={textareaRef} value={voice.isListening ? (voice.interimTranscript || input) : input} onChange={e => { setInput(e.target.value); if (voice.isListening) voice.stopListening() }}
+                  ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                   placeholder={mode === 'solve'
                     ? 'Ex : Résoudre 2x² − 5x + 3 = 0\nOu : lim(x→0) sin(x)/x\nOu : ∫₀¹ x·eˣ dx'
                     : 'Colle ici l\'énoncé de l\'exercice…'}
@@ -2506,50 +2337,6 @@ Structure OBLIGATOIRE :
                 </button>
               </div>
 
-              {/* Contrôles voix — sidebar */}
-              {voice.mounted && (voice.browserSupportsSpeech || voice.browserSupportsTTS) && (
-                <div style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:14, padding:'14px 16px', marginBottom:16 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.5)', marginBottom:10, display:'flex', alignItems:'center', gap:5 }}>🎙️ Contrôles Voix</div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                    {voice.browserSupportsSpeech && (
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>🎤 Reconnaissance vocale</span>
-                        <div style={{ width:30, height:16, borderRadius:8, background: voice.voiceEnabled ? '#4f6ef7' : 'rgba(255,255,255,0.1)', border:`1px solid ${voice.voiceEnabled ? '#4f6ef7' : 'rgba(255,255,255,0.15)'}`, cursor:'pointer', position:'relative', transition:'all 0.2s' }} onClick={voice.toggleVoiceEnabled}>
-                          <div style={{ width:12, height:12, borderRadius:'50%', background:'#fff', position:'absolute', top:1, left: voice.voiceEnabled ? 16 : 1, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.3)' }} />
-                        </div>
-                      </div>
-                    )}
-                    {voice.browserSupportsTTS && (
-                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                        <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>🔊 Lecture auto solution</span>
-                        <div style={{ width:30, height:16, borderRadius:8, background: voice.autoSpeak ? '#06d6a0' : 'rgba(255,255,255,0.1)', border:`1px solid ${voice.autoSpeak ? '#06d6a0' : 'rgba(255,255,255,0.15)'}`, cursor:'pointer', position:'relative', transition:'all 0.2s' }} onClick={voice.toggleAutoSpeak}>
-                          <div style={{ width:12, height:12, borderRadius:'50%', background:'#fff', position:'absolute', top:1, left: voice.autoSpeak ? 16 : 1, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.3)' }} />
-                        </div>
-                      </div>
-                    )}
-                    {voice.browserSupportsTTS && (
-                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                        <div style={{ display:'flex', justifyContent:'space-between' }}>
-                          <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>⚡ Vitesse</span>
-                          <span style={{ fontSize:10, color:'rgba(255,255,255,0.3)', fontFamily:'monospace' }}>0.88x</span>
-                        </div>
-                        <input type="range" min={0.6} max={1.4} step={0.05} defaultValue={0.88}
-                          onChange={e => { try { const p = JSON.parse(localStorage.getItem('bacai_voice_prefs')||'{}'); localStorage.setItem('bacai_voice_prefs', JSON.stringify({ ...p, rate: parseFloat(e.target.value) })) } catch {} }}
-                          style={{ width:'100%', accentColor:'#4f6ef7', cursor:'pointer' }} />
-                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, color:'rgba(255,255,255,0.25)' }}>
-                          <span>🐢 Lent</span><span>🎓 Prof</span><span>⚡ Rapide</span>
-                        </div>
-                      </div>
-                    )}
-                    {voice.isListening && (
-                      <div style={{ fontSize:10, color:'#ef4444', background:'rgba(239,68,68,0.08)', borderRadius:6, padding:'4px 8px', display:'flex', alignItems:'center', gap:4 }}>🔴 J'écoute… parle maintenant</div>
-                    )}
-                    {voice.micError && (
-                      <div style={{ fontSize:10, color:'#f59e0b', background:'rgba(245,158,11,0.08)', borderRadius:6, padding:'4px 8px' }}>⚠️ {voice.micError}</div>
-                    )}
-                  </div>
-                </div>
-              )}
               {/* DROITE — upload */}
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 18, padding: 20 }}>
                 <FileUpload onExtracted={text => setInput(text)} />
@@ -2674,21 +2461,6 @@ Structure OBLIGATOIRE :
               )}
 
               {/* Solution */}
-              {/* Bouton Lire la solution */}
-              {voice.mounted && voice.browserSupportsTTS && (
-                <div style={{ display:'flex', gap:8, marginBottom:14, alignItems:'center', flexWrap:'wrap' }}>
-                  <button onClick={() => { if (voice.isSpeaking) voice.stopSpeaking(); else voice.speak(solution) }}
-                    style={{ padding:'7px 16px', borderRadius:9, border:`1px solid ${voice.isSpeaking ? '#06d6a0' : 'rgba(255,255,255,0.15)'}`, background: voice.isSpeaking ? 'rgba(6,214,160,0.12)' : 'rgba(255,255,255,0.05)', color: voice.isSpeaking ? '#06d6a0' : 'rgba(255,255,255,0.7)', fontSize:12, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:6, transition:'all 0.2s' }}>
-                    {voice.isSpeaking ? '🔊 Arrêter la lecture' : '🔈 Lire la solution à voix haute'}
-                  </button>
-                  <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>Lecture auto</span>
-                    <div style={{ width:28, height:16, borderRadius:8, background: voice.autoSpeak ? '#06d6a0' : 'rgba(255,255,255,0.1)', border:`1px solid ${voice.autoSpeak ? '#06d6a0' : 'rgba(255,255,255,0.15)'}`, cursor:'pointer', position:'relative', transition:'all 0.2s' }} onClick={voice.toggleAutoSpeak}>
-                      <div style={{ width:12, height:12, borderRadius:'50%', background:'#fff', position:'absolute', top:1, left: voice.autoSpeak ? 14 : 1, transition:'left 0.2s', boxShadow:'0 1px 3px rgba(0,0,0,0.3)' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
               <div id="solution-render-box" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 18, padding: '24px 28px', marginBottom: 20 }}>
                 <RichText text={solution} />
               </div>
