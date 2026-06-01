@@ -199,6 +199,7 @@ export default function AdminPage() {
                                 .replace('svt','SVT')
                                 .replace('anglais','Anglais')
                                 .replace('informatique','Info')
+                                .replace('francais','Français')
                                 .replace(/_/g,' ') || sub.plan_type}
                             </span>
                             <span className="badge badge-blue" style={{ textTransform:'uppercase' }}>{sub.payment_method}</span>
@@ -246,6 +247,7 @@ export default function AdminPage() {
                                 <option value="svt">🧬 SVT</option>
                                 <option value="anglais">🇬🇧 Anglais</option>
                                 <option value="informatique">💻 Informatique</option>
+                                <option value="francais">📚 Français</option>
                               </select>
                             </div>
                             <textarea value={notes[sub.id]||''} onChange={e => setNotes(n => ({...n,[sub.id]:e.target.value}))}
@@ -274,9 +276,9 @@ export default function AdminPage() {
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             {[
               { title:'Par plan × matière', items: [
-                  ...['mathematiques','physique','svt','anglais','informatique'].flatMap(mat =>
+                  ...['mathematiques','physique','svt','anglais','informatique','francais'].flatMap(mat =>
                     ['mensuel','annuel','sprint_bac'].map(plan => ({
-                      label: `${plan==='sprint_bac'?'Sprint':plan==='annuel'?'Annuel':'Mensuel'} ${mat==='mathematiques'?'Maths':mat==='physique'?'PC':mat.toUpperCase()}`,
+                      label: `${plan==='sprint_bac'?'Sprint':plan==='annuel'?'Annuel':'Mensuel'} ${mat==='mathematiques'?'Maths':mat==='physique'?'PC':mat==='informatique'?'Info':mat==='francais'?'Français':mat.toUpperCase()}`,
                       count: allSubs.filter(s=>(s.plan_type===`${plan}_${mat}`||s.plan_type===plan)&&s.status==='active').length
                     }))
                   ).filter(x => x.count > 0)
