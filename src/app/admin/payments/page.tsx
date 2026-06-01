@@ -36,6 +36,22 @@ const PLAN_LABELS: Record<string,string> = {
   annuel_physique:'Annuel · ⚗️ PC',
   sprint_bac_mathematiques:'Sprint · 🧮 Maths',
   sprint_bac_physique:'Sprint · ⚗️ PC',
+  mensuel_svt:'Mensuel · 🧬 SVT',
+  annuel_svt:'Annuel · 🧬 SVT',
+  sprint_bac_svt:'Sprint · 🧬 SVT',
+  sprint_svt:'Sprint · 🧬 SVT',
+  mensuel_anglais:'Mensuel · 🇬🇧 Anglais',
+  annuel_anglais:'Annuel · 🇬🇧 Anglais',
+  sprint_bac_anglais:'Sprint · 🇬🇧 Anglais',
+  sprint_anglais:'Sprint · 🇬🇧 Anglais',
+  mensuel_informatique:'Mensuel · 💻 Info',
+  annuel_informatique:'Annuel · 💻 Info',
+  sprint_bac_informatique:'Sprint · 💻 Info',
+  sprint_informatique:'Sprint · 💻 Info',
+  mensuel_francais:'Mensuel · 📚 Français',
+  annuel_francais:'Annuel · 📚 Français',
+  sprint_bac_francais:'Sprint · 📚 Français',
+  sprint_francais:'Sprint · 📚 Français',
 }
 const METHOD_ICONS: Record<string,string> = {
   d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵', stripe:'💳'
@@ -357,6 +373,7 @@ export default function AdminPaymentsPage() {
                           <option value="svt">🧬 SVT</option>
                           <option value="anglais">🇬🇧 Anglais</option>
                           <option value="informatique">💻 Informatique</option>
+                          <option value="francais">📚 Français</option>
                         </select>
                         <button onClick={() => activate(s)} disabled={isAct}
                           style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
@@ -375,6 +392,7 @@ export default function AdminPaymentsPage() {
                             : pt.includes('svt') ? '🧬 SVT'
                             : pt.includes('anglais') ? '🇬🇧 Anglais'
                             : pt.includes('informatique') ? '💻 Info'
+                            : pt.includes('francais') ? '📚 Français'
                             : '🧮 Maths'
                           return (
                             <div style={{ padding:'4px 10px', borderRadius:6,
@@ -396,6 +414,7 @@ export default function AdminPaymentsPage() {
                           <option value="svt">🧬 SVT</option>
                           <option value="anglais">🇬🇧 Anglais</option>
                           <option value="informatique">💻 Informatique</option>
+                          <option value="francais">📚 Français</option>
                         </select>
                         {matieres[s.id] && (
                           <button onClick={async () => {
