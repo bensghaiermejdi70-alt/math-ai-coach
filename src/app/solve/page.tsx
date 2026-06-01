@@ -19,7 +19,7 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 // ══════════════════════════════════════════════════════════════════════
 async function askClaude(prompt: string, system: string, maxTokens = 6000, matiere?: string): Promise<string> {
   const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
-  const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
   const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
@@ -46,7 +46,7 @@ async function askClaudeWithImage(
   mediaType: string, maxTokens = 1500
 ): Promise<string> {
   const _subj2 = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
-  const _matiereMap2: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+  const _matiereMap2: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
   const _matiere = _matiereMap2[_subj2] || 'mathematiques'
   const r = await fetch('/api/anthropic', {
     method: 'POST',
@@ -1353,8 +1353,9 @@ function SolvePageInner() {
     if (!input.trim()) return
 
     // Vérifier accès matière selon abonnement
-    if (!isAdmin && hasActiveSubscription && selectedMatiere !== 'litterature') {
-      if (!checkMatiereAccess(selectedMatiere as any)) {
+    if (!isAdmin && hasActiveSubscription) {
+      const _matCheck = selectedMatiere === 'litterature' ? 'francais' : selectedMatiere
+      if (!checkMatiereAccess(_matCheck as any)) {
         const allowed = (activeMatieres as string[]).map((m: string) => {
           const found = MATIERE_LIST_SOLVE.find(x => x.key === m)
           return found ? found.icon + ' ' + found.label : m
@@ -2049,7 +2050,7 @@ Structure OBLIGATOIRE :
       }
 
       // Incrémenter quota via RPC Supabase (l'API route ne le fait plus)
-      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'litterature' }
+      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
 
@@ -2113,7 +2114,7 @@ Structure OBLIGATOIRE :
   // ── Vérification accès matière ─────────────────────────────────
   const SUBJECT_TO_MATIERE: Record<string,string> = {
     physique:'physique', informatique:'informatique',
-    svt:'svt', anglais:'anglais', litterature:'anglais', maths:'mathematiques'
+    svt:'svt', anglais:'anglais', litterature:'francais', maths:'mathematiques'
   }
   const currentMatiere = SUBJECT_TO_MATIERE[subject] || 'mathematiques'
 
@@ -2201,7 +2202,8 @@ Structure OBLIGATOIRE :
           {/* ── SÉLECTEUR MATIÈRE ── */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
             {MATIERE_LIST_SOLVE.map(m => {
-              const hasAccess = isAdmin || !hasActiveSubscription || m.key === 'litterature' || checkMatiereAccess(m.key as any)
+              const _keyCheck = m.key === 'litterature' ? 'francais' : m.key
+              const hasAccess = isAdmin || !hasActiveSubscription || checkMatiereAccess(_keyCheck as any)
               const isSelected = selectedMatiere === m.key
               return (
                 <button key={m.key}
