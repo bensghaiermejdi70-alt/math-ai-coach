@@ -2009,8 +2009,161 @@ const BAC_INFO_PHYS_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — MATIÈRES ET SECTIONS
 // ════════════════════════════════════════════════════════════════
-type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais' | 'svt'
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences' | 'svt-sc-exp' | 'svt-maths'
+type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais' | 'svt' | 'francais'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences' | 'svt-sc-exp' | 'svt-maths' | 'fr-lettres' | 'fr-scientifique'
+
+// FRANCAIS TUNISIE — liens 100% verifies par tests directs bacweb.tn
+// Lettres      : lettre/francais.pdf + francais_c.pdf quand disponible
+// Scientifiques: sciences_ex/ (sauf 2021+2018+2016P = math/)
+// undefined    = 404 confirme sur bacweb.tn
+const francaisLettresLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:undefined, correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2024,'controle','lettre','francais.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2023,'controle','lettre','francais.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','lettre','francais.pdf'), correction:bw(2022,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2022,'controle','lettre','francais.pdf'), correction:undefined }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','lettre','francais.pdf'), correction:bw(2021,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2021,'controle','lettre','francais.pdf'), correction:bw(2021,'controle','lettre','francais_c.pdf') }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2020,'controle','lettre','francais.pdf'), correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','lettre','francais.pdf'), correction:bw(2019,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2019,'controle','lettre','francais.pdf'), correction:bw(2019,'controle','lettre','francais_c.pdf') }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','lettre','francais.pdf'), correction:bw(2018,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2018,'controle','lettre','francais.pdf'), correction:bw(2018,'controle','lettre','francais_c.pdf') }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','lettre','francais.pdf'), correction:bw(2017,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2017,'controle','lettre','francais.pdf'), correction:undefined }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','lettre','francais.pdf'), correction:bw(2016,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2016,'controle','lettre','francais.pdf'), correction:bw(2016,'controle','lettre','francais_c.pdf') }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','lettre','francais.pdf'), correction:bw(2015,'principale','lettre','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2015,'controle','lettre','francais.pdf'), correction:bw(2015,'controle','lettre','francais_c.pdf') }},
+}
+
+const francaisScientifiqueLinks: Record<number, AnneeLinks> = {
+  2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:undefined, correction:undefined }},
+  2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2024,'controle','sciences_ex','francais.pdf'), correction:undefined }},
+  2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2023,'controle','sciences_ex','francais.pdf'), correction:undefined }},
+  2022: { principale:{ label:'Session Principale', session:'P', sujet:bw(2022,'principale','sciences_ex','francais.pdf'), correction:bw(2022,'principale','sciences_ex','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2022,'controle','sciences_ex','francais.pdf'), correction:bw(2022,'controle','sciences_ex','francais_c.pdf') }},
+  2021: { principale:{ label:'Session Principale', session:'P', sujet:bw(2021,'principale','math','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2021,'controle','math','francais.pdf'), correction:undefined }},
+  2020: { principale:{ label:'Session Principale', session:'P', sujet:bw(2020,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:undefined, correction:undefined }},
+  2019: { principale:{ label:'Session Principale', session:'P', sujet:bw(2019,'principale','sciences_ex','francais.pdf'), correction:bw(2019,'principale','sciences_ex','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2019,'controle','sciences_ex','francais.pdf'), correction:bw(2019,'controle','sciences_ex','francais_c.pdf') }},
+  2018: { principale:{ label:'Session Principale', session:'P', sujet:bw(2018,'principale','math','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2018,'controle','math','francais.pdf'), correction:undefined }},
+  2017: { principale:{ label:'Session Principale', session:'P', sujet:bw(2017,'principale','sciences_ex','francais.pdf'), correction:bw(2017,'principale','sciences_ex','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2017,'controle','sciences_ex','francais.pdf'), correction:bw(2017,'controle','sciences_ex','francais_c.pdf') }},
+  2016: { principale:{ label:'Session Principale', session:'P', sujet:bw(2016,'principale','math','francais.pdf'), correction:bw(2016,'principale','math','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2016,'controle','sciences_ex','francais.pdf'), correction:bw(2016,'controle','sciences_ex','francais_c.pdf') }},
+  2015: { principale:{ label:'Session Principale', session:'P', sujet:bw(2015,'principale','sciences_ex','francais.pdf'), correction:bw(2015,'principale','sciences_ex','francais_c.pdf') }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2015,'controle','sciences_ex','francais.pdf'), correction:bw(2015,'controle','sciences_ex','francais_c.pdf') }},
+}
+
+const BAC_FRANCAIS_LETTRES_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — solidarite et partage interculturel",pts:7},
+    {titre:'Langue',theme:"Connecteurs logiques, modalisation, champ lexical",pts:5},
+    {titre:'Production',theme:"Essai — engagement de l'ecrivain dans la societe",pts:8},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Comprehension',theme:"Article de presse — tolerance et dialogue des cultures",pts:7},
+    {titre:'Langue',theme:"Figures de style, types de phrases, subordination",pts:5},
+    {titre:'Production',theme:"Dissertation — la litterature peut-elle changer la societe",pts:8},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Comprehension',theme:"Texte essayistique — Lumieres, raison et liberte",pts:7},
+    {titre:'Langue',theme:"Discours rapporte, modalisation, connecteurs logiques",pts:5},
+    {titre:'Production',theme:"Sujet de reflexion — la raison contre l'obscurantisme",pts:8},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — modernite et tradition en tension",pts:7},
+    {titre:'Langue',theme:"Subordination, types de propositions, lexique",pts:5},
+    {titre:'Production',theme:"Essai — faut-il choisir entre tradition et modernite",pts:8},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Comprehension',theme:"Discours — engagement de l'ecrivain, Sartre et Zola",pts:7},
+    {titre:'Langue',theme:"Champ lexical, registres de langue, types de raisonnements",pts:5},
+    {titre:'Production',theme:"Commentaire — extrait Les Miserables, Victor Hugo",pts:8},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Comprehension',theme:"Texte de presse — dialogue interculturel et paix",pts:7},
+    {titre:'Langue',theme:"Modalisation, reformulation, subordination causale",pts:5},
+    {titre:'Production',theme:"Dissertation — l'art peut-il lutter contre l'injustice",pts:8},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Comprehension',theme:"Texte philosophique — raison et Lumieres, Montesquieu",pts:7},
+    {titre:'Langue',theme:"Connecteurs causaux et consecutifs, figures rhetoriques",pts:5},
+    {titre:'Production',theme:"Essai — la science a-t-elle des limites ethiques",pts:8},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Comprehension',theme:"Texte litteraire — poesie et engagement, Paul Eluard",pts:7},
+    {titre:'Langue',theme:"Versification, figures de style, modalisation",pts:5},
+    {titre:'Production',theme:"Sujet de reflexion — liberte d'expression et responsabilite",pts:8},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Comprehension',theme:"Essai argumentatif — homme et modernite, Albert Jacquard",pts:7},
+    {titre:'Langue',theme:"Champ lexical, types de textes, connecteurs logiques",pts:5},
+    {titre:'Production',theme:"Dissertation — progres scientifique et humanisme",pts:8},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Comprehension',theme:"Texte narratif — solidarite et partage interculturel",pts:7},
+    {titre:'Langue',theme:"Registres de langue, figures de style, subordination",pts:5},
+    {titre:'Production',theme:"Essai — les ecrivains temoins de leur epoque",pts:8},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Comprehension',theme:"Article de presse — tolerance et dialogue des peuples",pts:7},
+    {titre:'Langue',theme:"Connecteurs logiques, types de phrases, vocabulaire",pts:5},
+    {titre:'Production',theme:"Dissertation — la parole comme arme de justice",pts:8},
+  ]},
+]
+
+const BAC_FRANCAIS_SCIENT_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — science et progres, Albert Jacquard",pts:7},
+    {titre:'Langue',theme:"Connecteurs logiques, modalisation, reformulation",pts:5},
+    {titre:'Production',theme:"Sujet de reflexion — l'homme face a la technologie",pts:8},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Comprehension',theme:"Article scientifique — environnement et developpement durable",pts:7},
+    {titre:'Langue',theme:"Champ lexical scientifique, figures de style, connecteurs",pts:5},
+    {titre:'Production',theme:"Essai — les dangers de l'intelligence artificielle",pts:8},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Comprehension',theme:"Texte de presse — medias, internet et fake news, Umberto Eco",pts:7},
+    {titre:'Langue',theme:"Discours rapporte, connecteurs, modalisation",pts:5},
+    {titre:'Production',theme:"Dissertation — internet progres ou danger pour la democratie",pts:8},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — tolerance et humanisme, Voltaire",pts:7},
+    {titre:'Langue',theme:"Subordination, modalisation, champ lexical",pts:5},
+    {titre:'Production',theme:"Sujet de reflexion — la science peut-elle tout resoudre",pts:8},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Comprehension',theme:"Essai — litterature engagee contre l'injustice, Emile Zola",pts:7},
+    {titre:'Langue',theme:"Figures de style, registres, connecteurs consecutifs",pts:5},
+    {titre:'Production',theme:"Dissertation — l'ecrivain doit-il s'engager dans son siecle",pts:8},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Comprehension',theme:"Texte ecologique — pollution et relation homme-nature, Giono",pts:7},
+    {titre:'Langue',theme:"Types de phrases, connecteurs causaux, reformulation",pts:5},
+    {titre:'Production',theme:"Essai — l'homme est-il responsable de la destruction de la planete",pts:8},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Comprehension',theme:"Article de presse — reseaux sociaux et manipulation, McLuhan",pts:7},
+    {titre:'Langue',theme:"Champ lexical, modalisation, types de textes",pts:5},
+    {titre:'Production',theme:"Reflexion — les reseaux sociaux menacent-ils la verite",pts:8},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — science et ethique, Hubert Reeves",pts:7},
+    {titre:'Langue',theme:"Connecteurs logiques, figures de style, subordination",pts:5},
+    {titre:'Production',theme:"Dissertation — le progres scientifique garantit-il le bonheur",pts:8},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Comprehension',theme:"Discours humaniste — tolerance entre les cultures, Amin Maalouf",pts:7},
+    {titre:'Langue',theme:"Modalisation, types de raisonnements, connecteurs",pts:5},
+    {titre:'Production',theme:"Essai — la diversite culturelle est-elle une richesse",pts:8},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Comprehension',theme:"Article scientifique — ecologie et developpement durable",pts:7},
+    {titre:'Langue',theme:"Figures de style, champ lexical, subordination",pts:5},
+    {titre:'Production',theme:"Dissertation — developpement durable enjeu de notre epoque",pts:8},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Comprehension',theme:"Texte argumentatif — communication et medias modernes",pts:7},
+    {titre:'Langue',theme:"Connecteurs logiques, registres de langue, types de textes",pts:5},
+    {titre:'Production',theme:"Sujet de reflexion — la technologie isole-t-elle l'homme",pts:8},
+  ]},
+]
+
+const SECTIONS_FRANCAIS = [
+  { key:'fr-lettres'      as SKey, icon:'📚', label:'Section Lettres',        color:'#ec4899', coeff:'Coeff. principal',   data:BAC_FRANCAIS_LETTRES_DATA, links:francaisLettresLinks,      desc:'Comprehension · Langue · Production ecrite · 2015-2025' },
+  { key:'fr-scientifique' as SKey, icon:'🔬', label:'Sections Scientifiques', color:'#8b5cf6', coeff:'Toutes sections sci.', data:BAC_FRANCAIS_SCIENT_DATA,  links:francaisScientifiqueLinks, desc:'Comprehension · Langue · Production ecrite · 2015-2025' },
+]
 
 const SECTIONS_MATHS = [
   { key:'maths'    as SKey, icon:'🧮', label:'Bac Maths',      color:'#4f6ef7', coeff:'Coeff. 4', data:BAC_MATHS_DATA,       links:mathsLinks,      desc:'Analyse · Algèbre · Isométries · Similitudes · Probabilités' },
@@ -2254,11 +2407,12 @@ export default function ExamensTunisiePage() {
   const [selectedYear,  setSelectedYear]  = useState<number|null>(null)
   const [modal,         setModal]         = useState<{url:string;title:string}|null>(null)
 
-  const isMaths    = activeMatiere === 'maths'
-  const isInfo_m   = activeMatiere === 'informatique'
-  const isAnglais  = activeMatiere === 'anglais'
-  const isSvt      = activeMatiere === 'svt'
-  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : isSvt ? SECTIONS_SVT : SECTIONS_PHYS
+  const isMaths      = activeMatiere === 'maths'
+  const isInfo_m     = activeMatiere === 'informatique'
+  const isAnglais    = activeMatiere === 'anglais'
+  const isSvt        = activeMatiere === 'svt'
+  const isFrancais   = activeMatiere === 'francais'
+  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : isSvt ? SECTIONS_SVT : isFrancais ? SECTIONS_FRANCAIS : SECTIONS_PHYS
   const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
   const detail   = sec.data.find(a => a.year === selectedYear)
   const isInfo   = activeSec === 'info' || activeSec === 'info-algo' || activeSec === 'info-bd'
@@ -2271,6 +2425,7 @@ export default function ExamensTunisiePage() {
       m === 'physique'     ? 'sc-exp-phys' :
       m === 'anglais'      ? 'anglais-lettres' :
       m === 'svt'          ? 'svt-sc-exp' :
+      m === 'francais'     ? 'fr-lettres' :
       'info-algo'
     )
     setSelectedYear(null)
@@ -2337,6 +2492,7 @@ export default function ExamensTunisiePage() {
               { key:'svt'          as Matiere, icon:'🌱', label:'SVT',              color:'#22c55e' },
               { key:'informatique' as Matiere, icon:'💻', label:'Informatique',    color:'#6366f1' },
               { key:'anglais'      as Matiere, icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
+              { key:'francais'     as Matiere, icon:'📚', label:'Francais',        color:'#ec4899' },
             ]).map(m => (
               <button key={m.key} onClick={() => switchMatiere(m.key)}
                 style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
@@ -2367,7 +2523,7 @@ export default function ExamensTunisiePage() {
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
                   <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
-                    {isMaths ? 'Mathématiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : isSvt ? 'SVT' : 'Physique-Chimie'}
+                    {isMaths ? 'Mathematiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : isSvt ? 'SVT' : isFrancais ? 'Francais' : 'Physique-Chimie'}
                   </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>

@@ -2029,6 +2029,176 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // ════════════════════════════════════════════════════════════════════
 
 // Sous-sections autorisées par matière
+
+const PROGRAMME_JOUR_FRANCAIS = [
+  { theme:'Le Partage',                  texte:'Texte argumentatif sur la solidarite et le dialogue interculturel (Camus, Maalouf, Ben Jelloun)',  production:'Dissertation — le partage est-il fondement de toute societe harmonieuse',       langue:'Connecteurs logiques · Subordination causale' },
+  { theme:"Engagement en Litterature",   texte:'Discours engage — role de l\'ecrivain face a l\'injustice sociale (Zola J\'accuse, Hugo)',       production:'Essai — l\'ecrivain doit-il s\'engager dans les affaires de son temps',          langue:'Modalisation · Discours rapporte' },
+  { theme:"Appel de la Modernite",       texte:'Texte explicatif — technologie et valeurs humaines (Jacquard, Diderot, Rousseau)',                  production:'Dissertation — faut-il choisir entre tradition et progres',                       langue:'Connecteurs logiques · Types de phrases' },
+  { theme:'Raison et Lumieres',          texte:'Texte philosophique — Voltaire et la liberte de pensee contre l\'obscurantisme religieux',         production:'Essai — la raison peut-elle combattre l\'obscurantisme',                          langue:'Subordination · Champ lexical de la raison' },
+  { theme:'Science et Progres',          texte:'Article scientifique — impact du developpement technologique sur la societe (Albert Jacquard)',     production:'Sujet de reflexion — le progres scientifique garantit-il le bonheur humain',      langue:'Connecteurs consecutifs · Modalisation' },
+  { theme:"Homme et Nature",             texte:'Texte ecologique — pollution et relation homme-nature (Jean Giono, Nicolas Hulot, Camus)',          production:'Dissertation — l\'homme est-il responsable de la destruction de la planete',     langue:'Champ lexical · Figures de style' },
+  { theme:'Communication et Medias',     texte:'Article de presse — medias, internet et manipulation de l\'information (Umberto Eco, McLuhan)',   production:'Essai — les reseaux sociaux menacent-ils la verite et la democratie',            langue:'Discours rapporte · Reformulation' },
+  { theme:'Tolerance et Humanisme',      texte:'Essai humaniste — tolerance et dialogue des cultures (Voltaire Traite, Amin Maalouf)',             production:'Dissertation — la tolerance est-elle suffisante contre le racisme',               langue:'Connecteurs adversatifs · Modalisation' },
+  { theme:'Litterature Engagee',         texte:'Extrait — Victor Hugo, Les Miserables, defense des opprimes et des pauvres',                      production:'Essai — la litterature peut-elle vraiment changer les mentalites',                langue:'Subordination relative · Lexique litteraire' },
+  { theme:'La Poesie',                   texte:'Poeme engage — Paul Eluard, Liberte, analyse des figures et du message resistant',               production:'Commentaire — analyser les figures de style et le message du poeme',              langue:'Figures de style · Versification et musicalite' },
+  { theme:'Vivre Ensemble',              texte:'Texte argumentatif — coexistence pacifique et respect des differences culturelles (Ben Jelloun)', production:'Dissertation — comment favoriser le vivre ensemble dans nos societes plurielles', langue:'Connecteurs logiques · Types de raisonnement' },
+  { theme:'Culture Litteraire',          texte:'Texte critique — mouvements litteraires du Romantisme au Symbolisme (Baudelaire, Rimbaud)',        production:'Essai — qu\'est-ce qui definit un grand ecrivain pour la posterite',            langue:'Champ lexical de la litterature · Epithetes' },
+  { theme:'Liberte de Pensee',           texte:'Texte philosophique — Denis Diderot, l\'Encyclopedie et le savoir contre l\'ignorance',         production:'Dissertation — la liberte d\'expression a-t-elle des limites legitimes',        langue:'Subordination concessive · Modalisation' },
+  { theme:'Progres et Ethique',          texte:'Article — biotechnologies et questions ethiques en science (Hubert Reeves, biologie)',             production:'Sujet de reflexion — la science peut-elle et doit-elle tout resoudre',            langue:'Connecteurs causaux · Argumentation rationnelle' },
+  { theme:'Art et Societe',              texte:'Texte argumentatif — role de l\'art dans la societe moderne et son engagement',                  production:'Essai — l\'art doit-il necessairement servir une cause politique ou sociale',   langue:'Champ lexical de l\'art · Figures rhetoriques' },
+  { theme:'Education et Egalite',        texte:'Article de presse — education comme outil d\'emancipation et ascension sociale',                production:'Dissertation — l\'education garantit-elle l\'egalite des chances dans la societe', langue:'Connecteurs logiques · Subordination causale' },
+  { theme:'Mondialisation et Identite',  texte:'Texte argumentatif — mondialisation et preservation des cultures locales (Maalouf, Eco)',         production:'Essai — la mondialisation est-elle une chance ou une menace pour nos cultures',  langue:'Discours rapporte · Reformulation' },
+  { theme:'Environnement et Avenir',     texte:'Texte de presse — developpement durable et responsabilite collective envers la planete',          production:'Dissertation — quel monde allons-nous laisser aux generations futures',           langue:'Futur · Modalisation de l\'obligation et du devoir' },
+  { theme:'Memoire et Histoire',         texte:'Texte narratif — importance du devoir de memoire dans les societes contemporaines',               production:'Essai — peut-on construire l\'avenir en oubliant le passe et ses traumatismes', langue:'Temps du passe · Connecteurs temporels' },
+  { theme:'Inegalites et Justice',       texte:'Texte engage — Emile Zola, Germinal, denonciation des inegalites sociales et de l\'injustice', production:'Dissertation — la litterature peut-elle vraiment combattre les inegalites',      langue:'Champ lexical de la justice · Connecteurs' },
+  { theme:'Technologie et Humanite',     texte:'Article — intelligence artificielle et transformation du travail humain et de la societe',        production:'Sujet de reflexion — l\'IA est-elle une opportunite ou un danger pour l\'humain', langue:'Vocabulaire scientifique · Argumentation logique' },
+  { theme:'Paix et Dialogue',            texte:'Discours humaniste — dialogue et reconciliation plutot que violence (Nelson Mandela, ONU)',       production:'Essai — le dialogue pacifique peut-il vraiment remplacer la guerre',             langue:'Subordination · Connecteurs adversatifs et concessifs' },
+  { theme:'Langue et Identite',          texte:'Texte reflexif — la langue maternelle comme patrimoine culturel et identitaire de l\'humanite', production:'Dissertation — peut-on perdre son identite en perdant sa langue maternelle',     langue:'Champ lexical de la langue · Figures identitaires' },
+  { theme:'Presse et Democratie',        texte:'Article de presse — liberte de la presse et fonctionnement democratique des societes',           production:'Essai — la presse libre est-elle un pilier indispensable de la democratie',     langue:'Modalisation · Discours rapporte journalistique' },
+  { theme:'Jeunesse et Engagement',      texte:'Texte argumentatif — jeunesse et responsabilite citoyenne dans un monde en crise',               production:'Dissertation — la jeunesse peut-elle vraiment changer le monde contemporain',    langue:'Connecteurs logiques · Argumentation et exemples' },
+  { theme:'Creativite et Innovation',    texte:'Texte explicatif — la creativite humaine comme moteur de progres et d\'innovation',             production:'Essai — la creativite s\'apprend-elle ou est-elle un don inne chez l\'homme',  langue:'Champ lexical · Comparaison et analogie' },
+  { theme:'Sport et Valeurs',            texte:'Texte argumentatif — le sport comme vecteur de valeurs universelles et de fraternite',           production:'Dissertation — le sport peut-il vraiment unir les peuples et transcender les differences', langue:'Champ lexical du sport · Figures de style' },
+  { theme:'Voyage et Decouverte',        texte:'Texte litteraire — le voyage comme source d\'enrichissement personnel, culturel et humain',    production:'Essai — voyager forme-t-il vraiment la jeunesse et developpe-t-il la tolerance', langue:'Subjonctif · Connecteurs concessifs' },
+  { theme:'Famille et Societe',          texte:'Texte sociologique — evolution de la structure familiale dans la societe contemporaine',          production:'Dissertation — la famille est-elle toujours le fondement irrempkacable de la societe', langue:'Connecteurs temporels · Argumentation sociologique' },
+  { theme:'Resistance et Courage',       texte:'Texte historique — resistance face a l\'oppression et courage individuel (Camus, Sartre)',      production:'Essai — qu\'est-ce que le courage dans la vie quotidienne et la societe',       langue:'Champ lexical du courage · Modalisation' },
+  { theme:'Diversite Culturelle',        texte:'Texte humaniste — richesse de la diversite culturelle et dialogue des civilisations (Maalouf)', production:'Dissertation — la diversite culturelle est-elle une richesse pour l\'humanite',  langue:'Connecteurs logiques · Champ lexical de la culture' },
+]
+
+function getProgrammeJourFrancais(dayNum: number) {
+  return PROGRAMME_JOUR_FRANCAIS[(dayNum - 1) % PROGRAMME_JOUR_FRANCAIS.length]
+}
+
+async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_FRANCAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const isLettres = candidat.sectionKey === 'fr-lettres'
+  const sectionLabel = isLettres ? 'Section Lettres' : 'Sections Scientifiques'
+  const prog = getProgrammeJourFrancais(dayNum)
+
+  const sectionFocus = isLettres
+    ? 'textes litteraires engages · analyse poetique · dissertation et commentaire · auteurs (Hugo, Zola, Voltaire, Baudelaire, Eluard, Camus, Sartre)'
+    : 'textes scientifiques et argumentatifs · sujet de reflexion · essai structure · auteurs (Jacquard, Reeves, Giono, Maalouf, McLuhan, Eco)'
+
+  const system = `Tu es un expert en creation de sujets du Baccalaureat Francais Tunisie (programme officiel CNP/MEN).
+Tu crees des sujets BAC BLANC FRANCAIS de niveau officiel, entierement en francais.
+REPONDS UNIQUEMENT EN JSON VALIDE sans backticks ni commentaires.
+
+STRUCTURE OFFICIELLE BAC FRANCAIS TUNISIE :
+Partie I  — Comprehension de texte (7 pts) : texte 200-250 mots + 5 questions progressives
+Partie II — Langue et Expression (5 pts) : connecteurs, grammaire, vocabulaire, figures de style
+Partie III — Production Ecrite (8 pts) : dissertation ou essai argumente 25-30 lignes
+
+EXIGENCES :
+- Texte authentique niveau Bac Tunisie, 200-250 mots, en rapport avec le theme du jour
+- Questions progressives : comprehension globale → inference → vocabulaire → coherence textuelle
+- Production ecrite avec consigne claire et bareme detaille
+- Langue : exercices varies (connecteurs, modalisation, figures de style, reformulation)
+- Difficulte conforme aux vrais sujets officiels du Bac Tunisie`
+
+  const prompt = `Cree un sujet BAC BLANC FRANCAIS officiel — Concours National — JOUR ${dayNum} — ${sectionLabel}.
+
+GRAINE UNIQUE (tous les eleves du meme jour ont le meme sujet) : ${seed}
+DATE : ${dateStr}
+THEME : ${prog.theme}
+BASE DU TEXTE : ${prog.texte}
+SUJET DE PRODUCTION : ${prog.production}
+FOCUS LANGUE : ${prog.langue}
+FOCUS SECTION : ${sectionFocus}
+
+PARTIE I — COMPREHENSION DE TEXTE (7 pts) :
+Redige un texte ${isLettres ? 'litteraire ou argumentatif engage' : 'scientifique ou argumentatif'} de 200-250 mots sur le theme "${prog.theme}".
+Style : ${isLettres ? 'engage et litteraire, avec des references a des auteurs ou oeuvres, dimension humaine et culturelle forte' : 'informatif, logique et structure, avec des donnees et exemples concrets, dimension scientifique'}
+Puis redige ces 5 questions :
+  Q1 (1 pt) : Comprehension globale — quel est le message principal du texte ?
+  Q2 (2 pts) : Vrai (V) / Faux (F) / Non Mentionne (NM) — 2 affirmations avec justification par citation
+  Q3 (2 pts) : Question d\'inference ouverte — quel est le point de vue de l\'auteur ? justifiez
+  Q4 (1 pt) : Vocabulaire en contexte — expliquez l\'expression [choisie dans le texte]
+  Q5 (1 pt) : Referent ou coherence — a quoi renvoie le mot souligne dans le texte ?
+
+PARTIE II — LANGUE ET EXPRESSION (5 pts) :
+Focus : ${prog.langue}
+  Exercice A (2 pts) : 4 phrases a completer ou transformer selon le focus langue
+  Exercice B (1 pt) : 2 reformulations de phrases sans en changer le sens (avec mot impose)
+  Exercice C (2 pts) : 4 questions sur vocabulaire ou figures de style en contexte textuel
+
+PARTIE III — PRODUCTION ECRITE (8 pts) :
+Sujet : ${prog.production}
+Consigne complete : Redigez un texte argumente de 25 a 30 lignes comportant :
+  • Une introduction : presentez le sujet, posez la problematique, annoncez votre plan
+  • Un developpement : au moins 2 arguments solides illustres par des exemples precis ou des references
+  • Une conclusion : repondez a la problematique et ouvrez sur une reflexion plus large
+Bareme : Contenu et argumentation (4 pts) · Langue et richesse lexicale (2 pts) · Structure et coherence (2 pts)
+
+REPONDS AVEC CE JSON EXACT :
+{
+  "id": "bb-francais-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}",
+  "section": "${sectionLabel}",
+  "sectionKey": "${candidat.sectionKey}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 120,
+  "exercises": [
+    {
+      "num": 1,
+      "theme": "${prog.theme}",
+      "title": "Partie I — Comprehension de texte",
+      "points": 7,
+      "graph": null,
+      "statement": "TEXTE :\n[Texte complet 200-250 mots sur ${prog.theme} — style ${isLettres ? 'litteraire engage' : 'scientifique argumentatif'}]\n\nQUESTIONS :\nQ1 (1 pt) — [question comprehension globale du message principal]\nQ2 (2 pts) — Dites si les affirmations suivantes sont Vraies (V), Fausses (F) ou Non Mentionnees (NM). Justifiez par une citation du texte :\n  a) [affirmation 1]\n  b) [affirmation 2]\nQ3 (2 pts) — [question d\'inference ouverte sur le point de vue de l\'auteur avec justification]\nQ4 (1 pt) — Expliquez l\'expression \'[expression du texte]\' telle qu\'elle est utilisee dans le contexte.\nQ5 (1 pt) — A quoi renvoie le mot \'[mot souligne]\' dans le paragraphe [X] ?"
+    },
+    {
+      "num": 2,
+      "theme": "Langue — ${prog.langue}",
+      "title": "Partie II — Langue et Expression",
+      "points": 5,
+      "graph": null,
+      "statement": "EXERCICE A (2 pts) — Completez les phrases avec le connecteur logique qui convient :\n1. [phrase 1 incomplète]\n2. [phrase 2 incomplète]\n3. [phrase 3 incomplète]\n4. [phrase 4 incomplète]\n\nEXERCICE B (1 pt) — Reformulez les phrases sans en changer le sens en utilisant le mot entre parentheses :\n1. [phrase 1] (mot impose 1)\n2. [phrase 2] (mot impose 2)\n\nEXERCICE C (2 pts) — Vocabulaire et style :\n1. [question figure de style ou vocabulaire 1]\n2. [question 2]\n3. [question 3]\n4. [question 4]"
+    },
+    {
+      "num": 3,
+      "theme": "${prog.production}",
+      "title": "Partie III — Production Ecrite",
+      "points": 8,
+      "graph": null,
+      "statement": "SUJET : ${prog.production}\n\nRedigez un texte argumente de 25 a 30 lignes.\nVotre devoir doit obligatoirement comporter :\n• Une introduction : presentez le sujet, formulez la problematique et annoncez votre plan\n• Un developpement argumente : au moins 2 arguments solides, chacun illustre par un exemple precis ou une reference litteraire/scientifique\n• Une conclusion : repondez clairement a la problematique et ouvrez sur une reflexion plus large\n\nBAREME DE NOTATION :\n• Contenu et qualite de l\'argumentation : 4 pts\n• Langue, style et richesse lexicale : 2 pts\n• Structure, coherence et organisation : 2 pts"
+    }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-francais-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: `Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 120,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Reponse IA invalide — reessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || `bb-francais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 120,
+  }
+}
+
 const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: string; color: string }[]> = {
   maths: [
     { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
@@ -2055,10 +2225,14 @@ const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: s
     { key:'scexp-svt', label:'Sciences Expérimentales',  icon:'🔬', color:'#22c55e' },
     { key:'maths-svt', label:'Section Mathématiques',    icon:'📐', color:'#a78bfa' },
   ],
+  francais: [
+    { key:'fr-lettres',      label:'Section Lettres',        icon:'📚', color:'#ec4899' },
+    { key:'fr-scientifique', label:'Sections Scientifiques', icon:'🔬', color:'#8b5cf6' },
+  ],
 }
 
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onRetour,
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour,
   hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
 }: {
   candidat: Candidat
@@ -2068,6 +2242,7 @@ function PhaseChoixMatiere({
   onInfo: () => void
   onAnglais: () => void
   onSvt: () => void
+  onFrancais: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
   checkMatiereAccess?: (m: any) => boolean
@@ -2144,6 +2319,18 @@ function PhaseChoixMatiere({
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
+    {
+      key: 'francais',
+      icon: '📚',
+      label: 'Français',
+      desc: 'Compréhension de texte · Langue et expression · Production écrite · 2 sections · Programme officiel CNP',
+      color: '#ec4899',
+      gradient: 'linear-gradient(135deg,rgba(236,72,153,0.15),rgba(219,39,119,0.06))',
+      border: 'rgba(236,72,153,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
   ]
 
   // Quand une matière disponible est cliquée → afficher ses sous-sections
@@ -2167,6 +2354,7 @@ function PhaseChoixMatiere({
     if (selectedMatiere === 'informatique') { onInfo(); return }
     if (selectedMatiere === 'anglais') { onAnglais(); return }
     if (selectedMatiere === 'svt') { onSvt(); return }
+    if (selectedMatiere === 'francais') { onFrancais(); return }
   }
 
   const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
@@ -3928,6 +4116,32 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
+  // Lancer le bac blanc Français
+  const handleStartFrancais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('francais' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français pour accéder au Bac Blanc Français.\n→ mathsbac.com/abonnement?matiere=francais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('francais')) {
+      alert("✅ Vous avez déjà passé votre examen Français aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancFrancais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('francais')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3980,6 +4194,7 @@ function BacBlancInner() {
       onInfo={handleStartInfo}
       onAnglais={handleStartAnglais}
       onSvt={handleStartSVT}
+      onFrancais={handleStartFrancais}
       onRetour={()=>setPhase('inscription')}
       hasActiveSubscription={hasActiveSubscription}
       checkMatiereAccess={checkMatiereAccess}

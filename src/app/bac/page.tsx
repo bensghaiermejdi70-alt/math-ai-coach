@@ -9,7 +9,7 @@ import Link from 'next/link'
 //  Programme officiel CNP Tunisie — 4ème année secondaire
 // ═══════════════════════════════════════════════════════════════
 
-type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | 'francais' | null
 
 // ──────────────────────────────────────────────────────────────
 //  DONNÉES MATHÉMATIQUES — Programme officiel CNP mis à jour
@@ -929,12 +929,35 @@ export default function BacTunisiePage() {
                   Voir les programmes →
                 </span>
               </button>
+
+              {/* FRANÇAIS */}
+              <button
+                onClick={() => setMatiere('francais')}
+                style={{ padding: '36px 28px', background: 'rgba(236,72,153,0.06)', border: '1.5px solid rgba(236,72,153,0.22)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(236,72,153,0.55)'; e.currentTarget.style.background = 'rgba(236,72,153,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(236,72,153,0.22)'; e.currentTarget.style.background = 'rgba(236,72,153,0.06)' }}
+              >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#ec4899,#db2777)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>📚</div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#f472b6' }}>Français</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                  Argumentation · Littérature · Poésie<br />
+                  2 sections : Lettres · Scientifiques
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(236,72,153,0.12)', color: '#ec4899', fontWeight: 600 }}>📚 Lettres</span>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(139,92,246,0.12)', color: '#a78bfa', fontWeight: 600 }}>🔬 Scientifiques</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f472b6', fontWeight: 700, fontSize: 13 }}>
+                  Voir les programmes →
+                </span>
+              </button>
             </div>
 
             {/* Stats globales */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 40 }}>
               {[
-                { num: '6', label: 'Matières', icon: '📚' },
+                { num: '7', label: 'Matières', icon: '📚' },
                 { num: '57+', label: 'Chapitres Maths', icon: '📐' },
                 { num: '45+', label: 'Chapitres PC', icon: '⚗️' },
                 { num: '27+', label: 'Chapitres SVT', icon: '🌱' },
@@ -1422,6 +1445,95 @@ export default function BacTunisiePage() {
             div[style*="repeat(4,1fr)"] { grid-template-columns: repeat(2,1fr) !important; }
           }
         `}</style>
+      </>
+    )
+  }
+
+
+  // PAGE FRANCAIS
+  if (matiere === 'francais') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+            <div style={{ marginBottom: 40 }}>
+              <button
+                onClick={() => setMatiere(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16 }}
+              >
+                Toutes les matieres
+              </button>
+              <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+                Francais - Toutes Sections<br />
+                <span style={{ color: '#f472b6' }}>Bac 4eme Annee Secondaire</span>
+              </h1>
+              <p style={{ maxWidth: 620, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
+                Programme officiel MEN Tunisie. Argumentation, Litterature engagee, Poesie, Production ecrite.
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 48 }}>
+              {[
+                { num: '2', label: 'Sections', icon: '📚' },
+                { num: '16', label: 'Modules', icon: '📗' },
+                { num: '235+', label: 'Axes', icon: '✍' },
+                { num: '185+', label: 'Exercices', icon: '📝' },
+              ].map(s => (
+                <div key={s.label} className="card" style={{ textAlign: 'center', padding: 20 }}>
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: 22, color: '#ec4899' }}>{s.num}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
+              <Link href="/bac/francais/lettres" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(236,72,153,0.08)', border: '1.5px solid rgba(236,72,153,0.3)', borderRadius: 20, padding: '28px 24px', cursor: 'pointer' }}>
+                  <span style={{ fontSize: 38 }}>📚</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#f472b6', margin: '12px 0 8px' }}>Section Lettres</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 16 }}>
+                    8 modules - Litterature engagee, Poesie, Lumieres<br />
+                    Auteurs: Camus, Hugo, Zola, Baudelaire, Sartre
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#ec4899,#db2777)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    Voir les 8 modules
+                  </span>
+                </div>
+              </Link>
+              <Link href="/bac/francais/scientifique" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(139,92,246,0.08)', border: '1.5px solid rgba(139,92,246,0.3)', borderRadius: 20, padding: '28px 24px', cursor: 'pointer' }}>
+                  <span style={{ fontSize: 38 }}>🔬</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#a78bfa', margin: '12px 0 8px' }}>Sections Scientifiques</div>
+                  <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 16 }}>
+                    Maths, Sc.Exp, Sc.Tech, Info, Eco-Gestion<br />
+                    8 modules - Science, Nature, Medias, Tolerance
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    Voir les 8 modules
+                  </span>
+                </div>
+              </Link>
+            </div>
+
+            <div style={{ marginTop: 32, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setMatiere('maths')}
+                style={{ padding: '10px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, color: 'var(--muted)' }}
+              >
+                Voir Mathematiques
+              </button>
+              <button
+                onClick={() => setMatiere('svt')}
+                style={{ padding: '10px 20px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: 13, color: 'var(--muted)' }}
+              >
+                Voir SVT
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
       </>
     )
   }

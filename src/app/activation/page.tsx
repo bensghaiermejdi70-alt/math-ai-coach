@@ -20,6 +20,7 @@ const PLAN_LABELS: Record<string, string> = {
   mensuel_informatique: 'Info Mensuel', sprint_informatique: 'Info Sprint', annuel_informatique: 'Info Annuel',
   mensuel_anglais: 'Anglais Mensuel', sprint_anglais: 'Anglais Sprint', annuel_anglais: 'Anglais Annuel',
   mensuel_svt: 'SVT Mensuel', sprint_svt: 'SVT Sprint', annuel_svt: 'SVT Annuel',
+  mensuel_francais: 'Français Mensuel', sprint_francais: 'Français Sprint', annuel_francais: 'Français Annuel',
 }
 
 // ── 2 méthodes uniquement ─────────────────────────────────────────
@@ -137,6 +138,11 @@ function AdminPanel() {
               <option value="sprint_svt">SVT Sprint — 90 DT</option>
               <option value="annuel_svt">SVT Annuel — 600 DT</option>
             </optgroup>
+            <optgroup label="📚 Français">
+              <option value="mensuel_francais">Français Mensuel — 60 DT</option>
+              <option value="sprint_francais">Français Sprint — 90 DT</option>
+              <option value="annuel_francais">Français Annuel — 600 DT</option>
+            </optgroup>
           </select>
         </div>
         <button type="submit" disabled={loading}
@@ -163,7 +169,7 @@ function ActivationInner() {
   const matiereParam = searchParams.get('matiere') || 'mathematiques'
   const MATIERE_LABELS: Record<string,string> = {
     mathematiques:'🧮 Mathématiques', physique:'⚗️ Physique-Chimie',
-    svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Informatique',
+    svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Informatique', francais:'📚 Français',
   }
   const matiereLabel = MATIERE_LABELS[matiereParam] ?? '🧮 Mathématiques'
 

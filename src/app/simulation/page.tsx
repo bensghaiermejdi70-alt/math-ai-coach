@@ -306,6 +306,74 @@ const CHAPITRES_ANGLAIS: Record<string, {
   },
 }
 
+
+const SECTION_CONFIGS_FRANCAIS = [
+  {
+    key:'fr-lettres',
+    label:'Section-Lettres',
+    color:'#ec4899',
+    icon:'📚',
+    folder:'lettre',
+    file:'francais.pdf',
+    themes:['Comprehension de texte','Essay argumentatif','Production ecrite','Analyse litteraire','Connecteurs logiques']
+  },
+  {
+    key:'fr-scientifique',
+    label:'Sections-Scientifiques',
+    color:'#8b5cf6',
+    icon:'🔬',
+    folder:'sciences_ex',
+    file:'francais.pdf',
+    themes:['Comprehension de texte','Essay argumentatif','Production ecrite','Texte scientifique','Science et progres']
+  },
+]
+
+const bwFrancais = (y: number, session: 'principale'|'controle', folder: string) =>
+  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/francais.pdf`
+
+const ARCHIVES_FRANCAIS: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_FRANCAIS.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwFrancais(y,'principale',sc.folder), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Controle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bwFrancais(y,'controle',sc.folder), themes:sc.themes },
+  ])
+)
+
+const CHAPITRES_FRANCAIS: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'fr-lettres': {
+    key:'fr-lettres', label:'Section Lettres', color:'#ec4899', icon:'📚',
+    chapitres: [
+      { slug:'partage',           titre:'Le Partage',                  badge:'Theme',   desc:'Solidarite, tolerance, vivre ensemble, dialogue des cultures. Camus, Maalouf, Ben Jelloun.' },
+      { slug:'engagement',        titre:"Engagement en Litterature",   badge:'Theme',   desc:'Liberte, justice, droits humains, role de l\'ecrivain. Hugo, Zola, Sartre.' },
+      { slug:'modernite',         titre:"L'Appel de la Modernite",     badge:'Theme',   desc:'Technologie, modernisation, tradition vs modernite. Jacquard, Diderot, Rousseau.' },
+      { slug:'lumieres',          titre:'La Raison et les Lumieres',   badge:'Theme',   desc:'Esprit critique, philosophie, liberte de pensee. Voltaire, Montesquieu, Diderot.' },
+      { slug:'poesie',            titre:'La Poesie',                   badge:'Theme',   desc:'Poesie lyrique et engagee. Metaphore, symbolisme. Baudelaire, Eluard, Rimbaud.' },
+      { slug:'production-ecrite', titre:'Production Ecrite',           badge:'Methode', desc:'Dissertation, essai argumentatif, resume. Structure et argumentation Bac Lettres.' },
+      { slug:'langue',            titre:'Langue et Expression',        badge:'Langue',  desc:'Connecteurs, modalisation, subordination, registres, figures de style.' },
+      { slug:'culture-litteraire', titre:'Culture Litteraire',           badge:'Culture', desc:'Mouvements litteraires : Humanisme, Lumieres, Romantisme, Realisme, Symbolisme. Genres : Roman, Theatre, Poesie, Essai.' },
+    ],
+  },
+  'fr-scientifique': {
+    key:'fr-scientifique', label:'Sections Scientifiques', color:'#8b5cf6', icon:'🔬',
+    chapitres: [
+      { slug:'science-progres',   titre:'Science et Progres',          badge:'Theme',   desc:'Developpement scientifique, technologie, impact. Jacquard, Reeves, Rabelais.' },
+      { slug:'homme-nature',      titre:"Homme et Nature",             badge:'Theme',   desc:'Environnement, pollution, ecologie, developpement durable. Giono, Hulot, Camus.' },
+      { slug:'communication',     titre:'Communication et Medias',     badge:'Theme',   desc:'Medias modernes, reseaux sociaux, internet, fake news. McLuhan, Eco.' },
+      { slug:'tolerance',         titre:'Tolerance et Humanisme',      badge:'Theme',   desc:'Respect, liberte, dialogue des cultures. Voltaire, Maalouf, Ben Jelloun.' },
+      { slug:'litt-engagee',      titre:'La Litterature Engagee',      badge:'Theme',   desc:'Justice, liberte, engagement de l\'ecrivain. Hugo, Zola, Sartre.' },
+      { slug:'poesie-sc',         titre:'La Poesie',                   badge:'Theme',   desc:'Poesie lyrique et engagee. Metaphore, symbolisme, musicalite. Baudelaire, Eluard, Rimbaud.' },
+      { slug:'production-sc',     titre:'Production Ecrite',           badge:'Methode', desc:'Essai argumentatif, sujet de reflexion, resume. Bac sections scientifiques.' },
+      { slug:'langue-sc',         titre:'Langue et Expression',        badge:'Langue',  desc:'Connecteurs, modalisation, discours rapporte, champ lexical scientifique.' },
+    ],
+  },
+}
+
 const CHAPITRES_PHYS: Record<string, {
   key: string; label: string; color: string; icon: string
   chapitres: { slug: string; titre: string; badge: string; desc: string }[]
@@ -2623,7 +2691,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
@@ -3325,7 +3393,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   // Utiliser matiere (UI) en priorité sur matiereActive (abonnement AuthContext)
   const matiereMap: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
   }
   globalMatiere = ((matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
 
@@ -5277,7 +5345,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }) {
   const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
   const matiereMapC: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
   }
   globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
   const [exams, setExams] = useState<GeneratedExam[]>([])
@@ -5409,10 +5477,10 @@ function SimulationIAPageInner() {
   const { hasActiveSubscription, matiereActive, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : 'maths'
+    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : s === 'francais' ? 'francais' : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
@@ -5457,7 +5525,7 @@ function SimulationIAPageInner() {
         // Si l'abonnement est Maths → accès total
         // Si l'abonnement est Physique/Info → on autorise seulement si activeMatiere correspond
         const matiereAbonnement = matiereActive
-        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt' }[activeMatiere] || activeMatiere
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais' }[activeMatiere] || activeMatiere
         // Bloquer uniquement si abonnement spécifique ET matière UI ne correspond pas
         // ET l'abonnement n'est pas anglais (car page Tunisie n'a pas d'onglet Anglais)
         if (matiereAbonnement !== 'mathematiques' && matiereAbonnement !== 'anglais' && matiereUIKey !== matiereAbonnement) {
@@ -5523,7 +5591,7 @@ function SimulationIAPageInner() {
       const matiereToCheck = activeMatiere
       const matiereAbonnement = matiereActive // ex: 'mathematiques', 'physique', 'anglais'
       const matiereMapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
+        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
       }
       const matiereUIKey = matiereMapCheck[matiereToCheck] || matiereToCheck
       // Si l'abonnement est pour une matière spécifique et que l'UI est différente → bloquer
@@ -5601,10 +5669,10 @@ function SimulationIAPageInner() {
 
           {/* HEADER */}
           <div style={{marginBottom:28}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':activeMatiere==='svt'?'rgba(34,197,94,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':activeMatiere==='svt'?'rgba(34,197,94,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':activeMatiere==='svt'?'#22c55e':'#6366f1',animation:'pulse 2s ease infinite'}}/>
-              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='svt'?'#86efac':activeMatiere==='anglais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : '🧮 Simulation Mathématiques'}
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':activeMatiere==='svt'?'rgba(34,197,94,0.15)':activeMatiere==='francais'?'rgba(244,114,182,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':activeMatiere==='svt'?'rgba(34,197,94,0.3)':activeMatiere==='francais'?'rgba(244,114,182,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
+              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':activeMatiere==='svt'?'#22c55e':activeMatiere==='francais'?'#f472b6':'#6366f1',animation:'pulse 2s ease infinite'}}/>
+              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='svt'?'#86efac':activeMatiere==='anglais'?'#f9a8d4':activeMatiere==='francais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
+                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : activeMatiere==='francais' ? '📚 Simulation Français' : '🧮 Simulation Mathématiques'}
               </span>
             </div>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
@@ -5613,9 +5681,11 @@ function SimulationIAPageInner() {
                 ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)'
                 : activeMatiere==='svt'
                   ? 'linear-gradient(135deg,#22c55e,#16a34a,#4ade80)'
+                  : activeMatiere==='francais'
+                  ? 'linear-gradient(135deg,#ec4899,#db2777,#f472b6)'
                   : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : 'Personnalisée par l\'IA'}
+                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : activeMatiere==='francais' ? 'Français — Bac Tunisie' : 'Personnalisée par l\'IA'}
               </span>
             </h1>
             <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
@@ -5635,6 +5705,7 @@ function SimulationIAPageInner() {
                 { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
                 { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais',          color:'#ec4899', matiere:'anglais' },
+                { key:'francais'     as const, icon:'📚', label:'Français',         color:'#f472b6', matiere:'francais' },
               ]).map(m => {
                 return (
                 <div key={m.key} style={{position:'relative'}}>
@@ -5664,9 +5735,9 @@ function SimulationIAPageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : activeMatiere==='francais' ? ARCHIVES_FRANCAIS : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : activeMatiere==='francais' ? CHAPITRES_FRANCAIS : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}
