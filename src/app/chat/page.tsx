@@ -1371,6 +1371,19 @@ export default function ChatPage() {
       return
     }
 
+    // Vérifier accès matière selon abonnement
+    if (!isAdmin && hasActiveSubscription) {
+      const _matCheck = selectedMatiere === 'litterature' ? 'francais' : selectedMatiere
+      if (!checkMatiereAccess(_matCheck as any)) {
+        const allowed = (activeMatieres as string[]).map((m: string) => {
+          const found = MATIERE_LIST.find((x: any) => x.key === m)
+          return found ? (found as any).icon + ' ' + (found as any).label : m
+        }).join(', ')
+        alert('🔒 Accès limité — Votre abonnement couvre : ' + allowed + '\nSélectionnez la bonne matière dans le menu ci-dessus.')
+        return
+      }
+    }
+
     const userMsg: Msg = { role: 'user', content, id: nextMsgId }
     setNextMsgId(p => p + 1)
     setMessages(prev => [...prev, userMsg])
@@ -1463,7 +1476,8 @@ export default function ChatPage() {
 
       const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
 
-      await incrementQuota('chat', selectedMatiere as any)
+      const _matiereChat = selectedMatiere === 'litterature' ? 'francais' : selectedMatiere
+      await incrementQuota('chat', _matiereChat as any)
       setLocalChatExtra(prev => prev + 1) // Mise à jour immédiate affichage
 
       const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
@@ -1597,7 +1611,8 @@ export default function ChatPage() {
               {/* Sélecteur de matières */}
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', flex: 1 }}>
                 {MATIERE_LIST.map(m => {
-                  const hasAccess = isAdmin || !hasActiveSubscription || m.key === 'litterature' || checkMatiereAccess(m.key as any)
+                  const _keyCheck = m.key === 'litterature' ? 'francais' : m.key
+                  const hasAccess = isAdmin || !hasActiveSubscription || checkMatiereAccess(_keyCheck as any)
                   const isSelected = selectedMatiere === m.key
                   return (
                     <button key={m.key}
