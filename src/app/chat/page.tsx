@@ -1391,7 +1391,8 @@ export default function ChatPage() {
     setShowWelcome(false)
     setLoading(true)
 
-    const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
+    const allMsgs = [...messages, userMsg]
+    const history = allMsgs.slice(-12).map(m => ({ role: m.role, content: m.content }))
 
     // Si image en attente, remplacer le dernier message par un message multi-modal
     const messagesPayload = pendingImage
@@ -1412,7 +1413,7 @@ export default function ChatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
+          max_tokens: 2500, // compromis qualité/vitesse
           system: ((): string => {
               const REFUS_MATHS = '\u{1F512} Ce module est réservé aux **Mathématiques**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_PHYS  = '\u{1F512} Ce module est réservé à la **Physique-Chimie**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
@@ -1420,26 +1421,39 @@ export default function ChatPage() {
               const REFUS_ANG   = '\u{1F512} This module is reserved for **English**. For this question, please select the corresponding subject in the menu above.'
               const REFUS_INFO  = '\u{1F512} Ce module est réservé à l\'**Informatique**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_LIT   = '\u{1F512} Ce module est réservé à la **Littérature Française**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
-              const FORMAT = '\n\n## FORMAT\n- LaTeX : $inline$ ou $$bloc$$\n- Structure : ## parties, **gras** résultats\n- Graphiques si pertinent\n- Bienveillance toujours'
+              const FORMAT = '\n\n## FORMAT DE RÉPONSE\n- LaTeX OBLIGATOIRE : $formule$ inline, $$formule$$ bloc\n- Graphiques : génère TOUJOURS un bloc ```graph JSON pour toute fonction/courbe/circuit/figure géométrique\n- Structure : ## parties, **gras** pour les résultats clés\n- Bienveillance et encouragement systématique'
 
               const instructions: Record<string,string> = {
                 mathematiques:
-                  'Tu es EXCLUSIVEMENT un professeur de Mathématiques.\n'
+                  'Tu es EXCLUSIVEMENT un professeur de Mathématiques Bac (Tunisie + France).\n'
                   + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de mathématiques.\n'
-                  + 'Si question hors-maths, réponds EXACTEMENT : ' + REFUS_MATHS
-                  + '\nNe réponds JAMAIS à des questions hors mathématiques, même partiellement.'
+                  + 'Si question hors-maths, réponds EXACTEMENT : ' + REFUS_MATHS + '\n'
+                  + 'Ne réponds JAMAIS à des questions hors mathématiques, même partiellement.\n\n'
+                  + '## GRAPHIQUES — RÈGLE ABSOLUE\n'
+                  + 'Pour TOUTE demande de courbe/graphique/trace/représente/figure, génère OBLIGATOIREMENT un bloc ```graph avec ce format JSON EXACT :\n'
+                  + '```graph\n{ "type": "function", "title": "Titre", "xrange": [-5,5], "yrange": [-2,10], "functions": [{ "expr": "x*x", "label": "f(x)=x²", "color": "#6366f1" }], "points": [{ "x": 1, "y": 1, "label": "A(1,1)", "color": "#f59e0b" }] }\n```\n\n'
+                  + 'Expressions JS : x² = x*x, x³ = x*x*x, √x = Math.sqrt(x), |x| = Math.abs(x), sin(x) = Math.sin(x), eˣ = Math.exp(x), ln(x) = Math.log(x)\n'
+                  + 'Pour géométrie : "type": "geometry" avec "shapes": [axes, grid, point, segment, vector, circle, triangle, polygon, rect, angle, arc, label]\n'
+                  + 'NE JAMAIS faire de graphique ASCII — TOUJOURS utiliser le JSON ```graph'
                   + FORMAT,
                 physique:
-                  'Tu es EXCLUSIVEMENT un professeur de Physique-Chimie.\n'
-                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de physique-chimie (circuits, mécanique, ondes, optique, nucléaire, chimie).\n'
-                  + 'Si question hors physique-chimie, réponds EXACTEMENT : ' + REFUS_PHYS
-                  + '\nGénère TOUJOURS un schéma ou courbe physique quand pertinent.'
+                  'Tu es EXCLUSIVEMENT un professeur de Physique-Chimie Bac.\n'
+                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de physique-chimie.\n'
+                  + 'Si question hors physique-chimie, réponds EXACTEMENT : ' + REFUS_PHYS + '\n\n'
+                  + '## GRAPHIQUES PHYSIQUE — OBLIGATOIRES\n'
+                  + 'Pour circuits RC/RL/RLC, courbes u(t)/i(t), dosage pH, oscillations → génère ```graph JSON.\n'
+                  + 'Charge RC : { "type":"function", "functions":[{"expr":"1-Math.exp(-x)","label":"u_C(t)","color":"#4f6ef7"}] }\n'
+                  + 'Circuit géométrie : { "type":"geometry", "shapes":[{"type":"rect","x":3,"y":1,"w":1.5,"h":0.8,"color":"#ef4444","label":"R"},{"type":"rect","x":5,"y":1.5,"w":0.5,"h":2,"color":"#8b5cf6","label":"C"}] }\n'
+                  + 'NE JAMAIS faire de schéma ASCII — TOUJOURS utiliser le JSON ```graph'
                   + FORMAT,
                 svt:
-                  'Tu es EXCLUSIVEMENT un professeur de SVT.\n'
-                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de SVT (génétique, immunologie, physiologie, géologie, écologie).\n'
-                  + 'Si question hors SVT, réponds EXACTEMENT : ' + REFUS_SVT
-                  + '\nGénère des graphiques biologiques (Michaelis-Menten, glycémie, populations) quand pertinent.'
+                  'Tu es EXCLUSIVEMENT un professeur de SVT Bac.\n'
+                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de SVT.\n'
+                  + 'Si question hors SVT, réponds EXACTEMENT : ' + REFUS_SVT + '\n\n'
+                  + '## GRAPHIQUES SVT — OBLIGATOIRES\n'
+                  + 'Michaelis-Menten : { "type":"function", "functions":[{"expr":"100*x/(x+5)","label":"Vmax=100, Km=5","color":"#4f6ef7"}] }\n'
+                  + 'Glycémie : { "type":"function", "yrange":[0.6,2.2], "functions":[{"expr":"1+0.9*Math.exp(-x)*Math.sin(2*x)","label":"Glycémie g/L","color":"#f59e0b"}] }\n'
+                  + 'NE JAMAIS faire de graphique ASCII — TOUJOURS utiliser le JSON ```graph'
                   + FORMAT,
                 anglais:
                   'You are EXCLUSIVELY an English teacher.\n'
