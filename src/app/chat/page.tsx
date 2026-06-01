@@ -66,7 +66,7 @@ function useVoiceSystem() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     const recognition = new SpeechRecognition()
     recognition.lang = 'fr-FR'
-    recognition.continuous = false
+    recognition.continuous = true  // évite la déconnexion Google STT après 5s
     recognition.interimResults = true
     recognition.maxAlternatives = 1
 
@@ -89,14 +89,30 @@ function useVoiceSystem() {
     }
 
     recognition.onerror = (event: any) => {
-      const errors: Record<string, string> = {
-        'no-speech': 'Aucune parole détectée',
-        'audio-capture': 'Microphone non trouvé',
-        'not-allowed': 'Permission micro refusée',
-        'network': 'Erreur réseau — vérifie ta connexion',
-        'aborted': 'Écoute annulée',
+      // 'network' sur Edge/Chrome = service Google bloqué par Tracking Prevention
+      // Ce n'est PAS une erreur de connexion Internet — c'est une restriction du navigateur
+      if (event.error === 'network') {
+        // Retry silencieux — souvent transitoire (service Google STT momentanément indisponible)
+        setState(s => ({ ...s, isListening: false, micError: null }))
+        // Retry automatique après 800ms
+        setTimeout(() => {
+          try { recognitionRef.current?.start() } catch {}
+        }, 800)
+        return
       }
-      setState(s => ({ ...s, isListening: false, micError: errors[event.error] || `Erreur: ${event.error}` }))
+      if (event.error === 'aborted') {
+        // aborted = arrêt normal, pas une erreur
+        setState(s => ({ ...s, isListening: false, micError: null }))
+        return
+      }
+      const errors: Record<string, string> = {
+        'no-speech': 'Aucune parole détectée — parle plus près du micro',
+        'audio-capture': '🎙️ Microphone non trouvé — vérifie les branchements',
+        'not-allowed': '🔒 Permission micro refusée — autorise le micro dans le navigateur',
+        'service-not-allowed': '🔒 Service vocal non autorisé — essaie Chrome ou désactive Edge Tracking Prevention',
+        'bad-grammar': 'Erreur de configuration vocale',
+      }
+      setState(s => ({ ...s, isListening: false, micError: errors[event.error] || null }))
     }
 
     recognition.onend = () => {
@@ -159,93 +175,41 @@ function useVoiceSystem() {
 
     // Nettoyer le texte (enlever markdown, LaTeX, blocs graphiques)
     const cleanText = text
-      // Blocs de code et graphiques
-      .replace(/```graph[\s\S]*?```/g, 'graphique')
-      .replace(/```[\s\S]*?```/g, 'bloc de code')
-      // LaTeX
-      .replace(/\$\$[\s\S]*?\$\$/g, 'formule mathématique')
-      .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '$1 sur $2')
-      .replace(/\\sqrt\{([^}]+)\}/g, 'racine carrée de $1')
-      .replace(/\\[a-zA-Z]+/g, '')
-      .replace(/\$[^$\n]+?\$/g, 'formule')
-      // Markdown
+      .replace(/```graph[\s\S]*?```/g, '[graphique]')
+      .replace(/\$\$[\s\S]*?\$\$/g, '[formule]')
+      .replace(/\$[^$\n]+?\$/g, '[formule]')
       .replace(/\*\*(.+?)\*\*/g, '$1')
       .replace(/\*(.+?)\*/g, '$1')
-      .replace(/__(.+?)__/g, '$1')
       .replace(/`([^`]+)`/g, '$1')
-      .replace(/^#{1,3}\s+/gm, '')
-      .replace(/^[-*+]\s+/gm, '')
+      .replace(/^##?\s+/gm, '')
+      .replace(/^[-*]\s+/gm, '')
       .replace(/^\d+\.\s+/gm, '')
       .replace(/^>\s+/gm, '')
-      // URLs et liens
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/https?:\/\/\S+/g, 'lien')
-      // Espaces et ponctuation
       .replace(/\n{2,}/g, '. ')
       .replace(/\n/g, ' ')
-      .replace(/\.{2,}/g, '.')
-      .replace(/\s{2,}/g, ' ')
       .trim()
 
     if (!cleanText || cleanText.length < 3) return
 
-    // ── Chunking : découper en paragraphes pour éviter coupure Chrome ──
-    // Chrome TTS coupe les textes > ~250 mots — on découpe par paragraphes
-    const MAX_CHUNK = 800 // caractères
-    const paragraphs = cleanText.split(/(?<=[.!?])\s+(?=[A-ZÀÂÉÈÊËÎÏÔÙÛÜŒ])/)
-    const chunks: string[] = []
-    let current = ''
-    for (const p of paragraphs) {
-      if ((current + ' ' + p).length > MAX_CHUNK && current) {
-        chunks.push(current.trim())
-        current = p
-      } else {
-        current = current ? current + ' ' + p : p
-      }
-    }
-    if (current.trim()) chunks.push(current.trim())
-    if (!chunks.length) return
-
-    // Préférences rate sauvegardées
-    const savedPrefs = localStorage.getItem('bacai_voice_prefs')
-    const savedRate = savedPrefs ? (JSON.parse(savedPrefs).rate ?? 0.88) : 0.88
-    const speakRate = Math.max(0.6, Math.min(1.4, savedRate))
-
-    // Lire tous les chunks en séquence avec pause naturelle entre eux
-    let chunkIdx = 0
-    const speakChunk = () => {
-      if (chunkIdx >= chunks.length) { setState(s => ({ ...s, isSpeaking: false })); onEnd?.(); return }
-      const utterance = new SpeechSynthesisUtterance(chunks[chunkIdx])
+    const utterance = new SpeechSynthesisUtterance(cleanText)
     utterance.lang = 'fr-FR'
-    // Voix prof : débit naturel, ton légèrement chaleureux
-    utterance.rate = speakRate
-    utterance.pitch = 1.05
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
     utterance.volume = 1.0
 
-    // Sélectionner la meilleure voix française (avec fallback dynamique)
-    const pickVoice = () => {
-      const voices = synthRef.current!.getVoices()
-      return voices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('google'))
-        || voices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('microsoft'))
-        || voices.find(v => v.lang.startsWith('fr-'))
-        || voices.find(v => v.lang.startsWith('fr'))
-        || voices.find(v => v.lang.startsWith('en'))
-    }
-    const frVoice = pickVoice()
+    // Sélectionner la meilleure voix française
+    const voices = synthRef.current.getVoices()
+    const frVoice = voices.find(v => v.lang.startsWith('fr') && v.name.includes('Google'))
+      || voices.find(v => v.lang.startsWith('fr'))
+      || voices.find(v => v.lang.startsWith('en'))
     if (frVoice) utterance.voice = frVoice
 
+    utterance.onstart = () => setState(s => ({ ...s, isSpeaking: true }))
+    utterance.onend = () => { setState(s => ({ ...s, isSpeaking: false })); onEnd?.() }
+    utterance.onerror = () => setState(s => ({ ...s, isSpeaking: false }))
 
-    if (chunkIdx === 0) utterance.onstart = () => setState(s => ({ ...s, isSpeaking: true }))
-    utterance.onend = () => {
-      chunkIdx++
-      // Pause naturelle entre chunks (comme un prof qui reprend son souffle)
-      setTimeout(speakChunk, 120)
-    }
-    utterance.onerror = () => { setState(s => ({ ...s, isSpeaking: false })); onEnd?.() }
     utteranceRef.current = utterance
-    synthRef.current?.speak(utterance)
-    }
-    speakChunk()
+    synthRef.current.speak(utterance)
   }, [browserSupportsTTS, state.voiceEnabled])
 
   const stopSpeaking = useCallback(() => {
@@ -1895,34 +1859,16 @@ export default function ChatPage() {
                       </div>
                     </div>
                   )}
-                  {/* Slider vitesse lecture */}
-                  {voice.browserSupportsTTS && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 11, color: 'var(--text2)' }}>⚡ Vitesse lecture</span>
-                        <span style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
-                          {(() => { try { const p = JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}'); return (p.rate ?? 0.88).toFixed(2) + 'x' } catch { return '0.88x' } })()}
-                        </span>
-                      </div>
-                      <input type="range" min={0.6} max={1.4} step={0.05}
-                        defaultValue={(() => { try { return JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}').rate ?? 0.88 } catch { return 0.88 } })()}
-                        onChange={e => {
-                          const rate = parseFloat(e.target.value)
-                          try {
-                            const prefs = JSON.parse(localStorage.getItem('bacai_voice_prefs') || '{}')
-                            localStorage.setItem('bacai_voice_prefs', JSON.stringify({ ...prefs, rate }))
-                          } catch {}
-                        }}
-                        style={{ width: '100%', accentColor: '#4f6ef7', cursor: 'pointer' }}
-                      />
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--muted)' }}>
-                        <span>🐢 Lent</span><span>🎓 Prof</span><span>⚡ Rapide</span>
-                      </div>
-                    </div>
-                  )}
                   {voice.micError && (
-                    <div style={{ fontSize: 10, color: '#f59e0b', background: 'rgba(245,158,11,0.08)', borderRadius: 6, padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span>⚠️</span> {voice.micError}
+                    <div style={{ fontSize: 10, borderRadius: 6, padding: '6px 10px', lineHeight: 1.5,
+                      color: voice.micError.includes('refus') ? '#ef4444' : '#f59e0b',
+                      background: voice.micError.includes('refus') ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)',
+                      border: `1px solid ${voice.micError.includes('refus') ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}`,
+                    }}>
+                      {voice.micError.includes('refus') ? '🔒' : '⚠️'} {voice.micError}
+                      {voice.micError.includes('Tracking') || voice.micError.includes('autoris') ? (
+                        <div style={{ marginTop: 3, fontSize: 9, color: 'var(--muted)' }}>💡 Essaie Chrome pour la meilleure compatibilité</div>
+                      ) : null}
                     </div>
                   )}
                   {voice.isListening && (
