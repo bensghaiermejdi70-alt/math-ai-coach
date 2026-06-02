@@ -39,6 +39,7 @@ const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
   svt:           { label:'SVT',            color:'#10b981', icon:'🧬' },
   anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
   informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
+  francais:       { label:'Français',       color:'#ec4899', icon:'📚' },
 }
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
 import { useSearchParams } from 'next/navigation'
@@ -310,6 +311,7 @@ async function generateOneExam(
 
   // Détecter si matière Anglais → tout le contenu en anglais
   const isAnglais = matiere === 'anglais'
+  const isFrancais = matiere === 'francais'
 
   const system = isAnglais
     ? `You are an expert author of French Baccalauréat LLCER English exams (official curriculum).
@@ -2258,6 +2260,149 @@ const CHAPITRES_PAR_SECTION: Record<string, {
 //  INFORMATIQUE NSI FRANCE
 // ══════════════════════════════════════════════════════════════════════
 
+
+// ════════════════════════════════════════════════════════════════════
+//  FRANÇAIS FRANCE — Simulation IA
+//  3 sections : Terminale (Philosophie EAF) · Première (EAF) · Seconde
+//  Sources : sujetdebac.fr — URLs vérifiées
+// ════════════════════════════════════════════════════════════════════
+
+const SECTION_CONFIGS_FRANCAIS_FR = [
+  { key:'terminale-francais', label:'Terminale — Philosophie (EAF)', color:'#8b5cf6', icon:'🧠',
+    themes:['Dissertation philosophique','Explication de texte','La conscience','La liberté','La justice','L\'art','La technique','Le bonheur'] },
+  { key:'premiere-francais',  label:'Première — EAF (Écrit + Oral)',  color:'#10b981', icon:'📗',
+    themes:['Commentaire composé','Dissertation littéraire','Analyse linéaire','Grand Oral','Littérature d\'idées','Poésie XIXe-XXIe','Roman','Théâtre'] },
+  { key:'seconde-francais',   label:'Seconde — Français',              color:'#ec4899', icon:'📘',
+    themes:['Poésie du Moyen Âge au XVIIIe','Littérature d\'idées et Presse','Roman et Récit','Théâtre','Figures de style','Argumentation'] },
+]
+
+const ARCHIVES_FRANCAIS_FR: Archive[] = [
+  // ── Terminale Philosophie — Métropole (sujetdebac.fr, URLs vérifiées 200 OK) ─
+  { id:'tphilo-2025-m1', year:2025, session:'Terminale · Philosophie · Métropole · 16 juin 2025 (Série Générale)',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2025/philosophie-2025-metropole-sujet-officiel.pdf`,
+    themes:['Dissertation philosophique','Explication de texte','Liberté et technique','Coef. 8'] },
+  { id:'tphilo-2025-m2', year:2025, session:'Terminale · Philosophie · Métropole Secours · juin 2025',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2025/philosophie-2025-metropole-secours-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte','Philosophie morale'] },
+  { id:'tphilo-2025-s1', year:2025, session:'Terminale · Philosophie · Métropole Remplacement · sept. 2025',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2025/philosophie-2025-metropole-remplacement-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte','Philosophie politique'] },
+  { id:'tphilo-2024-m1', year:2024, session:'Terminale · Philosophie · Métropole · juin 2024 (Série Générale)',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2024/philosophie-2024-metropole-sujet-officiel.pdf`,
+    themes:['Le travail aliène-t-il ?','Marx · Hegel · Arendt','Explication de texte'] },
+  { id:'tphilo-2024-s1', year:2024, session:'Terminale · Philosophie · Métropole Remplacement · sept. 2024',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2024/philosophie-2024-metropole-remplacement-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte'] },
+  { id:'tphilo-2023-m1', year:2023, session:'Terminale · Philosophie · Métropole · juin 2023 (Série Générale)',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2023/philosophie-2023-metropole-sujet-officiel.pdf`,
+    themes:['L\'art et la réalité','Platon · Hegel · Heidegger','Explication de texte'] },
+  { id:'tphilo-2023-s1', year:2023, session:'Terminale · Philosophie · Métropole Remplacement · sept. 2023',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2023/philosophie-2023-metropole-remplacement-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte'] },
+  { id:'tphilo-2022-m1', year:2022, session:'Terminale · Philosophie · Métropole · juin 2022 (Série Générale)',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2022/philosophie-2022-metropole-sujet-officiel.pdf`,
+    themes:['Liberté et déterminisme','Sartre · Spinoza · Marx','Explication de texte'] },
+  { id:'tphilo-2022-s1', year:2022, session:'Terminale · Philosophie · Métropole Remplacement · sept. 2022',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2022/philosophie-2022-metropole-remplacement-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte'] },
+  { id:'tphilo-2021-m1', year:2021, session:'Terminale · Philosophie · Métropole · juin 2021 (Série Générale)',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2021/philosophie-2021-metropole-sujet-officiel.pdf`,
+    themes:['Le bonheur est-il affaire privée ?','Épicure · Stoïciens · Kant','Explication de texte'] },
+  { id:'tphilo-2021-s1', year:2021, session:'Terminale · Philosophie · Métropole Remplacement · sept. 2021',
+    section:'Terminale — Philosophie', sectionKey:'terminale-francais',
+    color:'#8b5cf6', icon:'🧠',
+    url:`${SD}/2021/philosophie-2021-metropole-remplacement-sujet-officiel.pdf`,
+    themes:['Dissertation','Explication de texte'] },
+  // ── Première — EAF (pas d'examen officiel publié avant 2027 pour le programme 2021) ─
+  // ── Seconde — pas d'examen officiel ──────────────────────────────────────────────
+]
+
+const CHAPITRES_FRANCAIS_FR: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+
+  'terminale-francais': {
+    key:'terminale-francais', label:'Terminale — Philosophie (EAF)', color:'#8b5cf6', icon:'🧠',
+    chapitres: [
+      { slug:'conscience-sujet',    titre:'Le Sujet — Conscience & Inconscient', badge:'Philo Terminale',
+        desc:'Conscience de soi, mauvaise foi (Sartre), inconscient freudien, psychanalyse, identité personnelle. Descartes, Freud, Nietzsche, Hegel.' },
+      { slug:'liberte-determinisme',titre:'La Liberté & le Déterminisme',        badge:'Philo Terminale',
+        desc:'Liberté comme valeur morale, libre arbitre, déterminisme naturel et social, responsabilité. Spinoza, Kant, Sartre, Marx, Schopenhauer.' },
+      { slug:'art-technique',        titre:'L\'Art & la Technique',               badge:'Philo Terminale',
+        desc:'Statut de l\'œuvre d\'art, mimèsis et création, technique comme extension humaine, aliénation par le travail. Platon, Hegel, Heidegger, Walter Benjamin.' },
+      { slug:'justice-politique',   titre:'La Justice & le Politique',           badge:'Philo Terminale',
+        desc:'Fondements de la justice, contrat social, légitimité du pouvoir, désobéissance civile. Platon, Rousseau, Rawls, Hobbes, Locke.' },
+      { slug:'verite-raison',       titre:'La Vérité & la Raison',               badge:'Philo Terminale',
+        desc:'Vérité, opinion et certitude. Méthode scientifique. Relativisme. Foi et raison. Descartes, Kant, Popper, Bachelard, Pascal.' },
+      { slug:'bonheur-morale',      titre:'Le Bonheur & la Morale',              badge:'Philo Terminale',
+        desc:'Bonheur et plaisir, eudémonisme, devoir moral, impératif catégorique. Épicure, Stoïciens, Kant, Nietzsche, Aristote.' },
+      { slug:'methode-dissert',     titre:'Méthode Dissertation Philosophique',  badge:'Méthode EAF',
+        desc:'Structure dissertation philo (problématique, thèse, antithèse, synthèse). Introduction, transitions, conclusion. Traitement du sujet. Coef. 8 · 4h.' },
+      { slug:'methode-explication', titre:'Méthode Explication de Texte',        badge:'Méthode EAF',
+        desc:'Analyser un texte philosophique : thèse, structure, procédés argumentatifs. Introduction, mouvements, conclusion. Coef. 8 · 4h.' },
+    ]
+  },
+
+  'premiere-francais': {
+    key:'premiere-francais', label:'Première — EAF (Écrit + Oral)', color:'#10b981', icon:'📗',
+    chapitres: [
+      { slug:'litterature-idees',   titre:'Littérature d\'idées XVIe-XVIIIe',   badge:'EAF Première',
+        desc:'La Boétie (servitude volontaire), Fontenelle (vulgarisation), Graffigny (regard étranger). Humanisme, Lumières, argumentation directe et indirecte.' },
+      { slug:'poesie-xixe-xxie',   titre:'Poésie XIXe-XXIe siècle',             badge:'EAF Première',
+        desc:'Rimbaud (Cahiers de Douai · Émancipations créatrices), Ponge (atelier du poète), Hélène Dorion (nature et intime). Versification, analyse linéaire.' },
+      { slug:'roman-moyen-xxie',   titre:'Roman du Moyen Âge au XXIe siècle',   badge:'EAF Première',
+        desc:'Manon Lescaut (Prévost · personnages en marge), La Peau de chagrin (Balzac · énergie et destruction), Sido (Colette · célébration du monde).' },
+      { slug:'theatre-premier',    titre:'Théâtre XVIIe-XXIe siècle',           badge:'EAF Première',
+        desc:'Le Menteur (Corneille · mensonge et comédie), On ne badine pas (Musset · jeux du cœur), Pour un oui ou pour un non (Sarraute · théâtre et dispute).' },
+      { slug:'commentaire-methode',titre:'Commentaire Composé — Méthode',       badge:'Méthode EAF',
+        desc:'Structure du commentaire : introduction (problématique, plan), 2-3 axes thématiques, citation+procédé+effet, conclusion+ouverture. Coef. 5 · 4h.' },
+      { slug:'dissertation-methode',titre:'Dissertation Littéraire — Méthode',  badge:'Méthode EAF',
+        desc:'Plan dialectique ou thématique. Argument+exemple+analyse. Introduction avec problématique. Transition. Conclusion. Coef. 5 · 4h.' },
+      { slug:'analyse-lineaire',   titre:'Analyse Linéaire — Méthode',          badge:'Méthode EAF',
+        desc:'Mouvements du texte. Procédés stylistiques. Problématique littéraire. Introduction et conclusion. Grand Oral : présentation 10 min + entretien 10 min.' },
+    ]
+  },
+
+  'seconde-francais': {
+    key:'seconde-francais', label:'Seconde — Français', color:'#ec4899', icon:'📘',
+    chapitres: [
+      { slug:'poesie-moyen-age',   titre:'Poésie du Moyen Âge au XVIIIe',       badge:'Seconde',
+        desc:'Sonnet pétrarquiste (Du Bellay, Ronsard), ballade médiévale (Villon), fable morale (La Fontaine). Carpe diem, figures de style, versification.' },
+      { slug:'litterature-idees-presse', titre:'Littérature d\'idées et Presse', badge:'Seconde',
+        desc:'Argumentation directe et indirecte. Genres journalistiques. Voltaire (ironie), Zola (engagement), Hugo (défense des opprimés), Camus (absurde).' },
+      { slug:'roman-recit-seconde',titre:'Roman et Récit XVIIIe-XXIe',          badge:'Seconde',
+        desc:'Focalisation (interne, externe, omnisciente), discours rapportés (DID, DIL), personnages (plat/rond), réalisme, naturalisme. Balzac, Flaubert, Maupassant.' },
+      { slug:'theatre-seconde',    titre:'Théâtre XVIIe-XXIe siècle',           badge:'Seconde',
+        desc:'Tragédie (Racine), comédie (Molière), drame romantique (Hugo, Musset), théâtre de l\'absurde (Beckett). 4 types de comique. Catharsis. Stichomythie.' },
+      { slug:'figures-style',      titre:'Figures de style — Révision',         badge:'Seconde',
+        desc:'Métaphore, comparaison, personnification, hyperbole, antithèse, oxymore, anaphore, chiasme, gradation, allitération, assonance. Méthode d\'analyse.' },
+      { slug:'argumentation-seconde', titre:'Argumentation & Essai',            badge:'Seconde',
+        desc:'Identifier thèse, arguments, exemples. Convaincre vs. persuader. Concession et réfutation. Plan 2-3 parties. Introduction et conclusion d\'essai.' },
+    ]
+  },
+}
+
 const SECTION_CONFIGS_INFO_FR = [
   { key:'terminale-nsi', label:'Terminale NSI — Spécialité', color:'#8b5cf6', icon:'🎓',
     themes:['Structures de données','Algorithmes & Complexité','Bases de données SQL','POO Python','Réseaux & OS','Récursivité'] },
@@ -2700,7 +2845,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
   sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -5443,21 +5588,21 @@ function SimulationFrancePageInner() {
   // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : s==='svt' ? 'svt' : 'maths'
+    return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : s==='svt' ? 'svt' : s==='francais' ? 'francais' : 'maths'
   })
   // Synchroniser globalMatiere — activeMatiere (UI) prime sur matiereActive (AuthContext)
   useEffect(() => {
     const matiereMap: Record<string,string> = {
-      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
+      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
     }
     globalMatiere = matiereMap[activeMatiere] || 'mathematiques'
   }, [activeMatiere])
   // Sync initial immédiat (avant le premier render du useEffect)
   const matiereMapImmediat: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
   }
   globalMatiere = matiereMapImmediat[activeMatiere] || 'mathematiques'
   const [phase, setPhase] = useState<Phase>('select')
@@ -5525,7 +5670,7 @@ function SimulationFrancePageInner() {
     // Vérification abonnement : la matière UI doit correspondre à l'abonnement actif
     if (!isAdmin && hasActiveSubscription && matiereActive) {
       const _mapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
+        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', francais:'francais'
       }
       const matiereUIKey = _mapCheck[activeMatiere] || activeMatiere
       if (matiereActive !== 'mathematiques' && matiereUIKey !== matiereActive) {
@@ -5635,6 +5780,7 @@ function SimulationFrancePageInner() {
                 { key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6', matiere:'informatique' },
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e', matiere:'anglais' },
                 { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
+                { key:'francais'    as const, icon:'📚', label:'Français',         color:'#ec4899', matiere:'francais' },
               ]).map(m => {
                 const locked = false
                 return (
@@ -5658,9 +5804,9 @@ function SimulationFrancePageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : activeMatiere==='svt' ? ARCHIVES_SVT_FR : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : activeMatiere==='svt' ? CHAPITRES_SVT_FR : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : activeMatiere==='svt' ? SECTION_CONFIGS_SVT_FR : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : activeMatiere==='svt' ? ARCHIVES_SVT_FR : activeMatiere==='francais' ? ARCHIVES_FRANCAIS_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : activeMatiere==='svt' ? CHAPITRES_SVT_FR : activeMatiere==='francais' ? CHAPITRES_FRANCAIS_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : activeMatiere==='svt' ? SECTION_CONFIGS_SVT_FR : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS_FR : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

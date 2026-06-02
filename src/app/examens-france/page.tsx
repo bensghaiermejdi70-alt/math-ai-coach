@@ -7665,7 +7665,929 @@ const CHAPITRES_PREMIERE_PC: ChapitreData[] = [
 ]
 
 
-type SKey = 'terminale-nsi' | 'premiere-nsi' | 'seconde-snt' | 'terminale-generale' | 'terminale-physique-chimie' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde-maths' | 'seconde-physique-chimie' | 'premiere-physique-chimie' | 'sti2d-physique-chimie' | 'stes-physique-chimie' | 'terminale-anglais' | 'premiere-anglais' | 'seconde-anglais' | 'terminale-svt' | 'premiere-svt' | 'seconde-svt'
+
+// ════════════════════════════════════════════════════════════════
+//  FRANÇAIS / PHILOSOPHIE — Terminale Générale & Technologique
+//  Annales officielles Bac France 2021–2025
+//  Sources : sujetdebac.fr
+//  Philosophie Terminale (coef. 8) — Série Générale & Technologique
+// ════════════════════════════════════════════════════════════════
+
+const linksFrancaisTerminale: Record<number, AnneeLinks> = {
+  // ─── 2025 ─── URLs vérifiées 200 OK ──────────────────────────────────────────
+  2025: { sessions: [
+    { label:'Philosophie · Métropole France · 16 juin 2025', flag:'🇫🇷',
+      sujet:`${SDB}/2025/philosophie-2025-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Secours · juin 2025', flag:'📋',
+      sujet:`${SDB}/2025/philosophie-2025-metropole-secours-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Remplacement · sept. 2025', flag:'🍂',
+      sujet:`${SDB}/2025/philosophie-2025-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  // ─── 2024 ────────────────────────────────────────────────────────────────────
+  2024: { sessions: [
+    { label:'Philosophie · Métropole France · juin 2024', flag:'🇫🇷',
+      sujet:`${SDB}/2024/philosophie-2024-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Remplacement · sept. 2024', flag:'🍂',
+      sujet:`${SDB}/2024/philosophie-2024-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  // ─── 2023 ────────────────────────────────────────────────────────────────────
+  2023: { sessions: [
+    { label:'Philosophie · Métropole France · juin 2023', flag:'🇫🇷',
+      sujet:`${SDB}/2023/philosophie-2023-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Remplacement · sept. 2023', flag:'🍂',
+      sujet:`${SDB}/2023/philosophie-2023-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  // ─── 2022 ────────────────────────────────────────────────────────────────────
+  2022: { sessions: [
+    { label:'Philosophie · Métropole France · juin 2022', flag:'🇫🇷',
+      sujet:`${SDB}/2022/philosophie-2022-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Remplacement · sept. 2022', flag:'🍂',
+      sujet:`${SDB}/2022/philosophie-2022-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+  // ─── 2021 ────────────────────────────────────────────────────────────────────
+  2021: { sessions: [
+    { label:'Philosophie · Métropole France · juin 2021', flag:'🇫🇷',
+      sujet:`${SDB}/2021/philosophie-2021-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+    { label:'Philosophie · Métropole Remplacement · sept. 2021', flag:'🍂',
+      sujet:`${SDB}/2021/philosophie-2021-metropole-remplacement-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+}
+const dataFrancaisTerminale: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Dissertation — Série Générale', theme:'Sujet type : "La conscience est-elle un obstacle à la liberté ?" · Sartre, Freud, Kant · 4h · Coef. 8', pts:20},
+    {titre:'Explication de texte — Série Générale', theme:'Extrait philosophique au programme (Descartes, Hegel, Marx, Spinoza) · Analyse linéaire et portée philosophique', pts:20},
+    {titre:'Dissertation — Série Technologique', theme:'Dissertation adaptée série techno · Notions accessibles · Exemples concrets · Rousseau, Kant, Nietzsche', pts:20},
+  ]},
+  { year:2024, exercices:[
+    {titre:'Dissertation — Série Générale', theme:'"Le travail aliène-t-il l\'homme ?" · Marx, Hegel, Hannah Arendt · Travail, technique, aliénation', pts:20},
+    {titre:'Explication de texte — Série Générale', theme:'Extrait de Spinoza (Éthique) ou Kant · Analyse du texte, portée philosophique et actualité', pts:20},
+    {titre:'Dissertation — Série Technologique', theme:'"Peut-on vivre sans croire en quelque chose ?" · Foi, raison, religion, certitude', pts:20},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Dissertation — Série Générale', theme:'"L\'art nous éloigne-t-il de la réalité ?" · Platon, Hegel, Heidegger · Art, vérité, imitation', pts:20},
+    {titre:'Explication de texte — Série Générale', theme:'Texte de Rousseau (Du Contrat Social) ou Freud · Analyse et contextualisation historique', pts:20},
+    {titre:'Dissertation — Série Technologique', theme:'"Avons-nous le devoir de chercher la vérité ?" · Obligation morale, liberté d\'opinion, Kant', pts:20},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Dissertation — Série Générale', theme:'"Sommes-nous maîtres de notre destin ?" · Liberté, déterminisme, responsabilité · Sartre, Spinoza, Marx', pts:20},
+    {titre:'Explication de texte — Série Générale', theme:'Extrait de Bergson ou Nietzsche · Durée, conscience, volonté de puissance · Analyse linéaire', pts:20},
+    {titre:'Dissertation — Série Technologique', theme:'"Peut-on ne pas savoir ce que l\'on fait ?" · Conscience, responsabilité, mauvaise foi', pts:20},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Dissertation — Série Générale', theme:'"Le bonheur est-il affaire privée ?" · Épicure, Stoïciens, Kant · Bonheur, plaisir, devoir moral', pts:20},
+    {titre:'Explication de texte — Série Générale', theme:'Texte de Locke ou Hume · Empirisme, connaissance sensible, identité personnelle', pts:20},
+    {titre:'Dissertation — Série Technologique', theme:'"Faut-il toujours respecter la loi ?" · Légitimité, justice, désobéissance civile', pts:20},
+  ]},
+]
+
+
+// ════════════════════════════════════════════════════════════════
+//  FRANÇAIS SECONDE — 4 objets d'étude · 20 exercices par chapitre
+//  Format ChapitreData identique à CHAPITRES_SECONDE_PC
+// ════════════════════════════════════════════════════════════════
+const CHAPITRES_SECONDE_FRANCAIS: ChapitreData[] = [
+  {
+    id:'poesie-moyen-age-xviiie', numero:1,
+    titre:'La Poésie du Moyen Âge au XVIIIe siècle',
+    sousTitre:'Sonnet · Fable · Ballade · Figures de style · Du Bellay · Ronsard · Villon · La Fontaine',
+    icon:'📜', color:'#ec4899',
+    notions:['Sonnet · Ballade · Ode','Alexandrin · Césure · Rimes','Métaphore · Comparaison · Allégorie','Carpe diem · Pléiade','La Fontaine · Fable · Morale'],
+    exercices:[
+      {id:'SF1-01',difficulte:1,titre:'Identifier un sonnet',
+       enonce:'Comptez les vers de "Heureux qui comme Ulysse" (Du Bellay). Est-ce un sonnet ? Identifiez le schéma de rimes.',
+       correction:'14 vers : 2 quatrains + 2 tercets → sonnet pétrarquiste.\nSchéma ABBA ABBA CCD EDE.',
+       notions:['Sonnet']},
+      {id:'SF1-02',difficulte:1,titre:'Types de strophes',
+       enonce:'Nommez les strophes : a) 4 vers b) 3 vers c) 2 vers d) 6 vers.',
+       correction:'a) Quatrain · b) Tercet · c) Distique · d) Sizain',
+       notions:['Strophes']},
+      {id:'SF1-03',difficulte:1,titre:'Schéma de rimes',
+       enonce:'Donnez le schéma de rimes : "Je vis, je meurs ; je me brûle et me noie / J\'ai chaud extrême en endurant froidure / La vie m\'est trop molle et trop dure / J\'ai grands ennuis entremêlés de joie" (Louise Labé).',
+       correction:'noie(A) froidure(B) dure(B) joie(A) → ABBA = rimes embrassées.',
+       notions:['Rimes']},
+      {id:'SF1-04',difficulte:1,titre:'Compter les syllabes',
+       enonce:'Comptez les syllabes : "La fille de Minos et de Pasiphaé" (Racine). Quel type de vers ?',
+       correction:'La/fil/le/de/Mi/nos/et/de/Pa/si/pha/é = 12 syllabes → alexandrin.',
+       notions:['Alexandrin']},
+      {id:'SF1-05',difficulte:1,titre:'Identifier la figure de style',
+       enonce:'Identifiez : a) "Ses cheveux d\'or" b) "Je vis, je meurs" c) "Cette obscure clarté".',
+       correction:'a) Métaphore (sans outil) · b) Antithèse (vivre≠mourir) · c) Oxymore (obscure≠clarté)',
+       notions:['Figures de style']},
+      {id:'SF1-06',difficulte:1,titre:'Allitération',
+       enonce:'Identifiez la figure et son effet : "Pour qui sont ces serpents qui sifflent sur vos têtes" (Racine).',
+       correction:'Allitération en [s]. Effet : imite le sifflement → tension, menace dramatique.',
+       notions:['Allitération']},
+      {id:'SF1-07',difficulte:1,titre:'Morale d\'une fable',
+       enonce:'Dans "La Cigale et la Fourmi" (La Fontaine), quelle est la morale implicite ?',
+       correction:'Il faut travailler et prévoir l\'avenir. Cigale = insouciance. Fourmi = prévoyance.',
+       notions:['Fable','Morale']},
+      {id:'SF1-08',difficulte:1,titre:'Comparaison vs. métaphore',
+       enonce:'Classez : a) "Il est fort comme un lion" b) "C\'est un lion" c) "Ses yeux sont deux étoiles".',
+       correction:'a) Comparaison (outil "comme") · b) Métaphore (identification directe) · c) Métaphore ("sont")',
+       notions:['Comparaison','Métaphore']},
+      {id:'SF1-09',difficulte:2,titre:'La volta dans un sonnet',
+       enonce:'Dans "Heureux qui comme Ulysse", identifiez la volta et le changement qu\'elle introduit.',
+       correction:'Volta au vers 9. Avant : éloge du retour héroïque. Après : plainte personnelle d\'exilé → dimension autobiographique.',
+       notions:['Sonnet','Volta']},
+      {id:'SF1-10',difficulte:2,titre:'Carpe diem chez Ronsard',
+       enonce:'Dans "Mignonne, allons voir si la rose", identifiez le thème et la figure principale.',
+       correction:'Carpe diem : profitez de la jeunesse éphémère.\nMétaphore filée : rose = femme aimée et jeunesse qui se fanent.',
+       notions:['Carpe diem','Métaphore filée']},
+      {id:'SF1-11',difficulte:2,titre:'L\'exil dans Les Regrets',
+       enonce:'Dans "Heureux qui comme Ulysse", analysez la comparaison avec Ulysse.',
+       correction:'Comparaison mythologique : valorisation de soi → mais contraste amer : eux rentrés triomphants, Du Bellay exilé.\nDernier vers : "ardoise fine" (Anjou) > "marbre dur" (Rome) = amour de la patrie simple.',
+       notions:['Comparaison','Exil','Pléiade']},
+      {id:'SF1-12',difficulte:2,titre:'Satire dans "Le Loup et l\'Agneau"',
+       enonce:'Quelle est la morale ? Comment La Fontaine critique-t-il le pouvoir ?',
+       correction:'"La raison du plus fort est toujours la meilleure."\nLe loup invente des prétextes absurdes : critique des puissants qui justifient leur domination.',
+       notions:['Fable','Satire']},
+      {id:'SF1-13',difficulte:2,titre:'Villon et la fugacité',
+       enonce:'Que signifie "Mais où sont les neiges d\'antan ?" (Villon) ?',
+       correction:'"Neiges d\'antan" = métaphore des choses passées.\nSentiment : mélancolie, ubi sunt, méditation sur la mort et la fugacité.',
+       notions:['Ballade','Métaphore','Fugacité']},
+      {id:'SF1-14',difficulte:2,titre:'La Pléiade',
+       enonce:'Qu\'est-ce que la Pléiade ? Quels sont ses idéaux ?',
+       correction:'Groupe humaniste (XVIe) : Du Bellay, Ronsard.\nIdéaux : imiter les Anciens, enrichir la langue française.\nThèmes : amour, nature, carpe diem, patrie.',
+       notions:['Pléiade','Humanisme']},
+      {id:'SF1-15',difficulte:2,titre:'L\'anaphore',
+       enonce:'Identifiez et analysez : "Rome, l\'unique objet de mon ressentiment / Rome, à qui vient ton bras d\'immoler mon amant".',
+       correction:'Anaphore : répétition de "Rome" en début de vers.\nEffet : martèle l\'obsession, rythme incantatoire, traduit la colère montante.',
+       notions:['Anaphore']},
+      {id:'SF1-16',difficulte:2,titre:'La gradation',
+       enonce:'Analysez : "Va, cours, vole et nous venge" (Corneille, Le Cid).',
+       correction:'Gradation ascendante : marcher → courir → voler.\nEffet : urgence dramatique croissante, rythme ternaire accélérateur.',
+       notions:['Gradation']},
+      {id:'SF1-17',difficulte:2,titre:'Assonance de Verlaine',
+       enonce:'Analysez : "Les sanglots longs des violons de l\'automne" (Verlaine).',
+       correction:'Assonance en [ɔ̃] : sanglots, longs, violons, automne.\nEffet : son grave et mélancolique qui imite les sons du violon → atmosphère de tristesse.',
+       notions:['Assonance']},
+      {id:'SF1-18',difficulte:3,titre:'Comparer Ronsard et Villon',
+       enonce:'Comparez le rapport au temps chez Ronsard ("Mignonne") et Villon (Ballade des Dames).',
+       correction:'Ronsard : temps → invitation à agir (carpe diem). Ton lyrique, séducteur.\nVillon : temps → désespoir et résignation. Ton lugubre, nostalgique.\nRonsard use de la mort pour convaincre d\'aimer ; Villon en fait un sujet en soi.',
+       notions:['Comparaison littéraire']},
+      {id:'SF1-19',difficulte:3,titre:'La métaphore filée (analyse)',
+       enonce:'Dans "Mignonne, allons voir si la rose" (Ronsard), analysez la métaphore filée et son effet.',
+       correction:'Rose = métaphore filée de la femme aimée et de la jeunesse, développée tout au long du poème.\nEffet : leçon visuelle du carpe diem. Fragilité de la rose = fragilité de la beauté humaine → invitation plus pressante.',
+       notions:['Métaphore filée']},
+      {id:'SF1-20',difficulte:3,titre:'La fable est-elle seulement pour les enfants ?',
+       enonce:'Proposez un plan en 2 parties sur la fable de La Fontaine.',
+       correction:'I. Semble destinée aux enfants : récit court, animaux, morale claire, tradition pédagogique.\nII. Mais œuvre pour adultes : satire sociale (critique de Louis XIV), ironie subtile, philosophie morale complexe, style classique raffiné.',
+       notions:['Fable','La Fontaine','Dissertation']},
+    ],
+  },
+  {
+    id:'litterature-idees-presse', numero:2,
+    titre:'La Littérature d\'idées et la Presse',
+    sousTitre:'Argumentation · Ironie · Genres journalistiques · Voltaire · Zola · Hugo · Camus',
+    icon:'📰', color:'#f59e0b',
+    notions:['Thèse · Arguments · Exemples','Convaincre vs. persuader','Ironie · Concession · Réfutation','Genres journalistiques','Voltaire · Zola · Hugo · Camus'],
+    exercices:[
+      {id:'SF2-01',difficulte:1,titre:'Identifier la thèse',
+       enonce:'Trouvez la thèse : "L\'école doit rester préservée des téléphones. Les écrans nuisent à la concentration. Ils créent des inégalités."',
+       correction:'Thèse : interdire les téléphones à l\'école.\nArguments : 1) écrans nuisent à la concentration 2) créent des inégalités.',
+       notions:['Thèse','Arguments']},
+      {id:'SF2-02',difficulte:1,titre:'Types d\'arguments',
+       enonce:'Classez : a) "Hugo a dit que la misère engendre le crime" b) "Comme dans une fourmilière, la société fonctionne mieux en coopérant" c) "J\'ai vu des familles sans logement".',
+       correction:'a) Autorité · b) Analogie · c) Exemple/témoignage (pathos)',
+       notions:['Types d\'arguments']},
+      {id:'SF2-03',difficulte:1,titre:'Fait vs. opinion',
+       enonce:'Distinguez : a) "La réunion s\'est tenue le 15 mars" b) "Cette décision est irresponsable" c) "50 personnes ont manifesté".',
+       correction:'a) Fait · b) Jugement (subjectif) · c) Fait (chiffre vérifiable)',
+       notions:['Fait','Opinion']},
+      {id:'SF2-04',difficulte:1,titre:'Genres journalistiques',
+       enonce:'Classez : a) "Résultats du bac 2025" b) "La réforme du lycée, une chance manquée" c) "Lettre à un lycéen de 2030".',
+       correction:'a) Article d\'information · b) Éditorial/chronique · c) Tribune/opinion',
+       notions:['Genres journalistiques']},
+      {id:'SF2-05',difficulte:1,titre:'Reconnaître la concession',
+       enonce:'Identifiez concession et réfutation : "Il est vrai que la technologie améliore notre quotidien. Cependant, elle détruit aussi des emplois."',
+       correction:'Concession : "Il est vrai que..." · Réfutation : "Cependant..."\nConnecteur concession : "Il est vrai que" / réfutation : "Cependant".',
+       notions:['Concession','Réfutation']},
+      {id:'SF2-06',difficulte:1,titre:'Convaincre ou persuader ?',
+       enonce:'Classez : a) "Les statistiques prouvent que..." b) "Imaginez un enfant qui souffre..." c) Raisonnement logique si A alors B.',
+       correction:'a) Convaincre (raison, données) · b) Persuader (émotion, pathos) · c) Convaincre (déduction logique)',
+       notions:['Convaincre','Persuader']},
+      {id:'SF2-07',difficulte:1,titre:'Voltaire et le conte philosophique',
+       enonce:'Qu\'est-ce que le conte philosophique ? Illustrez avec Candide.',
+       correction:'Récit fictif critiquant la société via la naïveté du héros et l\'ironie.\nCandide : cible guerre, esclavage, fanatisme. Pangloss = caricature de l\'optimisme leibnizien.',
+       notions:['Voltaire','Conte philosophique']},
+      {id:'SF2-08',difficulte:2,titre:'L\'ironie dans Candide',
+       enonce:'Analysez l\'ironie : "Il est démontré que les choses sont nécessairement pour la meilleure fin." (Pangloss)',
+       correction:'Contraste : sérénité philosophique vs. horreurs réelles → l\'optimisme devient absurde.\nVoltaire laisse Pangloss se condamner lui-même → critique du dogmatisme.',
+       notions:['Ironie','Voltaire']},
+      {id:'SF2-09',difficulte:2,titre:'"J\'accuse" de Zola',
+       enonce:'Pourquoi "J\'accuse" (1898) est-il fondateur du rôle de l\'intellectuel engagé ?',
+       correction:'Zola utilise sa notoriété pour intervenir dans l\'Affaire Dreyfus, au risque de sa liberté.\nConséquence : acquittement de Dreyfus (1906). Héritage : modèle de l\'intellectuel engagé.',
+       notions:['Zola','Engagement']},
+      {id:'SF2-10',difficulte:2,titre:'Hugo et les Misérables',
+       enonce:'En quoi Les Misérables est-il à la fois roman et pamphlet social ?',
+       correction:'Roman : intrigue, personnages complexes.\nPamphlet : dénonce misère, prisons, exclusion. Hugo montre que la société fabrique ses criminels.',
+       notions:['Hugo','Roman social']},
+      {id:'SF2-11',difficulte:2,titre:'Camus et l\'absurde',
+       enonce:'Qu\'est-ce que l\'absurde chez Camus ? (L\'Étranger)',
+       correction:'Absurde : décalage entre désir humain de sens et silence du monde.\nMeursault : tue sans raison claire, ne pleure pas à l\'enterrement → jugé pour son manque d\'émotion.',
+       notions:['Camus','Absurde']},
+      {id:'SF2-12',difficulte:2,titre:'Procédés rhétoriques',
+       enonce:'Identifiez les procédés : a) "Il faut agir. Il faut résister. Il faut construire." b) "Peut-on rester indifférent devant tant d\'injustice ?"',
+       correction:'a) Anaphore ("Il faut") → martèle l\'idée, rythme incantatoire.\nb) Question rhétorique → force l\'adhésion sans laisser le choix de répondre non.',
+       notions:['Anaphore','Question rhétorique']},
+      {id:'SF2-13',difficulte:2,titre:'La presse et la démocratie',
+       enonce:'Pourquoi la presse libre est-elle le "quatrième pouvoir" ?',
+       correction:'Informe les citoyens, contrôle les 3 pouvoirs (exécutif, législatif, judiciaire), garantit la transparence.\nRisque : concentration des médias menace cette indépendance.',
+       notions:['Presse','Démocratie']},
+      {id:'SF2-14',difficulte:2,titre:'Esprit critique face aux médias',
+       enonce:'Analysez : "Une étude prouve que les réseaux sociaux rendent les jeunes dépressifs."',
+       correction:'"Prouve" : excessif, une étude "indique" ou "suggère".\n"Rendent dépressifs" : corrélation ≠ causalité.\nQuestions : quelle étude ? Par qui ? Méthodologie ? Revue par les pairs ?',
+       notions:['Esprit critique']},
+      {id:'SF2-15',difficulte:2,titre:'Réfutation',
+       enonce:'Réfutez : "Le bac est inutile car il ne garantit pas l\'emploi."',
+       correction:'1. Contre-exemple : ouvre l\'accès aux études supérieures qui favorisent l\'emploi.\n2. Fondement : le bac n\'a pas vocation à garantir l\'emploi — c\'est une sanction de formation générale.',
+       notions:['Réfutation']},
+      {id:'SF2-16',difficulte:2,titre:'Intellectuel engagé',
+       enonce:'Définissez l\'intellectuel engagé. Donnez deux exemples.',
+       correction:'Écrivain qui utilise sa notoriété pour intervenir dans le débat public.\n→ Voltaire : défend Calas (1763) · Zola : défend Dreyfus (1898) · Hugo : contre Napoléon III.',
+       notions:['Intellectuel engagé']},
+      {id:'SF2-17',difficulte:3,titre:'Argumentation directe vs. indirecte',
+       enonce:'Quelle est la différence ? Illustrez avec Voltaire.',
+       correction:'Directe : thèse exprimée explicitement (essai, discours).\nIndirecte : message via récit fictif (fable, conte).\nVoltaire préfère l\'indirecte (Candide) : évite la censure, atteint plus de lecteurs via le rire.',
+       notions:['Argumentation directe','Argumentation indirecte']},
+      {id:'SF2-18',difficulte:3,titre:'Zola naturaliste et engagé',
+       enonce:'Comment Zola concilie naturalisme et engagement dans Germinal ?',
+       correction:'Naturalisme : enquête dans les mines, méthode scientifique.\nEngagement : dénonce exploitation capitaliste, conditions inhumaines.\nArticulation : rigueur documentaire rend la dénonciation irréfutable.',
+       notions:['Zola','Naturalisme','Engagement']},
+      {id:'SF2-19',difficulte:3,titre:'Plan de dissertation',
+       enonce:'Proposez un plan en 3 parties : "La littérature d\'idées peut-elle changer le monde ?"',
+       correction:'I. Oui : Voltaire+Lumières→Révolution ; Zola→réhabilitation Dreyfus ; Hugo→prise de conscience sociale.\nII. Limites : ne touche qu\'une partie du public ; peut servir la propagande.\nIII. Change d\'abord l\'individu → esprit critique → influence lente mais profonde.',
+       notions:['Dissertation']},
+      {id:'SF2-20',difficulte:3,titre:'Introduction d\'essai',
+       enonce:'Rédigez une introduction : "La littérature d\'idées peut-elle convaincre sans recourir à l\'émotion ?"',
+       correction:'Depuis Voltaire jusqu\'aux pamphlets modernes, la littérature d\'idées cherche à faire triompher la vérité. Doit-elle s\'adresser uniquement à la raison, ou peut-elle émouvoir ?\nNous verrons si elle peut se priver de l\'émotion, puis si l\'alliance raison/sentiment n\'est pas sa forme la plus aboutie.',
+       notions:['Introduction','Essai']},
+    ],
+  },
+  {
+    id:'roman-recit-xviiie-xxie', numero:3,
+    titre:'Le Roman et le Récit du XVIIIe au XXIe siècle',
+    sousTitre:'Focalisation · Personnage · Réalisme · Balzac · Flaubert · Maupassant · Proust',
+    icon:'📖', color:'#8b5cf6',
+    notions:['Focalisation : zéro · interne · externe','Discours direct · indirect · indirect libre','Incipit · Analepse · Prolepse','Personnage plat vs. rond','Réalisme · Naturalisme · Autobiographie'],
+    exercices:[
+      {id:'SF3-01',difficulte:1,titre:'Identifier la focalisation',
+       enonce:'"Emma se demandait pourquoi elle avait épousé Charles. Elle le regardait dormir, et se disait qu\'elle méritait mieux." Quelle focalisation ?',
+       correction:'Focalisation interne sur Emma. On accède à ses pensées ("se demandait", "se disait"). On ignore ce que pense Charles.',
+       notions:['Focalisation interne']},
+      {id:'SF3-02',difficulte:1,titre:'Types de discours rapportés',
+       enonce:'Classez : a) "Je viendrai demain", dit-il. b) Il dit qu\'il viendrait le lendemain. c) Il viendrait demain. Oui, il en était sûr.',
+       correction:'a) Direct (guillemets) · b) Indirect (intégré syntaxiquement) · c) Indirect libre (sans guillemets ni verbe introducteur)',
+       notions:['Discours rapportés']},
+      {id:'SF3-03',difficulte:1,titre:'Personnage plat ou rond ?',
+       enonce:'Classez : a) Harpagon b) Emma Bovary c) Candide.',
+       correction:'a) Plat (avarice seule, sans évolution) · b) Rond (multiple, évolue tragiquement) · c) Entre les deux (naïf → sage)',
+       notions:['Personnage']},
+      {id:'SF3-04',difficulte:1,titre:'L\'incipit',
+       enonce:'Qu\'est-ce qu\'un incipit ? Quelles informations doit-il fournir ?',
+       correction:'Début du roman. Fournit : cadre spatio-temporel, personnages, ton, situation initiale.\nFonction : établir le contrat de lecture.',
+       notions:['Incipit']},
+      {id:'SF3-05',difficulte:1,titre:'Analepse et prolepse',
+       enonce:'Définissez et donnez un exemple de chaque.',
+       correction:'Analepse (flash-back) : retour en arrière. Ex : passé de Valjean raconté.\nProlepse : anticipation. Ex : "Il ne savait pas encore que..."',
+       notions:['Analepse','Prolepse']},
+      {id:'SF3-06',difficulte:1,titre:'Nouvelle vs. roman',
+       enonce:'Quelles sont les caractéristiques de la nouvelle ?',
+       correction:'Court, peu de personnages, une intrigue, chute surprenante.\nMaupassant : maître (Boule de Suif, La Parure, Le Horla).',
+       notions:['Nouvelle']},
+      {id:'SF3-07',difficulte:1,titre:'Le réalisme',
+       enonce:'Quels sont les principes du réalisme (1830-1880) ?',
+       correction:'Observation du monde contemporain, description minutieuse, personnages ordinaires, critique implicite de la société.\nAuteurs : Balzac, Flaubert, Maupassant.',
+       notions:['Réalisme']},
+      {id:'SF3-08',difficulte:2,titre:'Discours indirect libre',
+       enonce:'Identifiez le procédé : "Elle était naïve de croire à sa promesse. Les hommes ne changeaient jamais. Il reviendrait, mais pour mieux mentir."',
+       correction:'Discours indirect libre : pensées sans guillemets ni verbe introducteur.\nEffet : immersion dans la conscience, ambiguïté narrateur/personnage. Peut créer de l\'ironie.',
+       notions:['Discours indirect libre']},
+      {id:'SF3-09',difficulte:2,titre:'Portrait réaliste (Balzac)',
+       enonce:'Dans l\'incipit du Père Goriot, la pension est décrite minutieusement. Quel est le rôle de cette description ?',
+       correction:'1. Ancrage réaliste. 2. Révélateur social (pension misérable → pensionnaires déchus). 3. Milieu déterminant. 4. Symbolique : décadence annonce celle des personnages.',
+       notions:['Réalisme','Description']},
+      {id:'SF3-10',difficulte:2,titre:'Flaubert et la critique sociale',
+       enonce:'Comment Flaubert critique-t-il la bourgeoisie dans Madame Bovary ?',
+       correction:'Via le discours indirect libre : illusions romantiques d\'Emma vs. réalité terne.\nIronie flaubertienne : les personnages se condamnent eux-mêmes.\nBovarysme : écart entre rêves et réalité.',
+       notions:['Flaubert','Ironie','Bovarysme']},
+      {id:'SF3-11',difficulte:2,titre:'Réalisme vs. naturalisme',
+       enonce:'Quelle est la différence entre Balzac (réalisme) et Zola (naturalisme) ?',
+       correction:'Réalisme : observer fidèlement. Déterminisme léger.\nNaturalisme : méthode scientifique. Déterminisme fort (hérédité + milieu).',
+       notions:['Réalisme','Naturalisme']},
+      {id:'SF3-12',difficulte:2,titre:'La Comédie humaine',
+       enonce:'Qu\'est-ce que le projet de La Comédie humaine ? En quoi est-il révolutionnaire ?',
+       correction:'90 romans : inventaire total de la société.\nPersonnages récurrents (Rastignac dans 20 romans), toutes les classes, déterminisme.\nInfluence : modèle pour Zola et tout le roman réaliste mondial.',
+       notions:['Balzac','Comédie humaine']},
+      {id:'SF3-13',difficulte:2,titre:'Roman épistolaire',
+       enonce:'Qu\'est-ce qu\'un roman épistolaire ? Avantages narratifs ?',
+       correction:'Composé de lettres. Ex : Les Liaisons dangereuses.\nAvantages : voix multiples, intimité, suspense, révélations involontaires.',
+       notions:['Roman épistolaire']},
+      {id:'SF3-14',difficulte:2,titre:'Autobiographie vs. roman autobiographique',
+       enonce:'Quelle est la différence ? (Lejeune)',
+       correction:'Autobiographie : identité auteur = narrateur = personnage. Contrat de vérité.\nRoman autobiographique : similitudes mais contrat de fiction. Ex : Proust.',
+       notions:['Autobiographie']},
+      {id:'SF3-15',difficulte:2,titre:'Narrateur intra/extradiégétique',
+       enonce:'Distinguez les deux. Donnez un exemple de chaque.',
+       correction:'Intradiégétique : dans l\'histoire, dit "je". Ex : Meursault (L\'Étranger).\nExtradiégétique : extérieur, dit "il". Ex : narrateur de Madame Bovary.',
+       notions:['Narrateur']},
+      {id:'SF3-16',difficulte:2,titre:'L\'espace romanesque',
+       enonce:'Quel rôle joue l\'espace dans le roman réaliste ? (Paris chez Balzac et Zola)',
+       correction:'L\'espace détermine les personnages.\nBalzac : Paris = ambition et corruption ("Paris, à nous deux !").\nZola : Paris industriel écrase les personnages populaires.',
+       notions:['Espace romanesque']},
+      {id:'SF3-17',difficulte:3,titre:'Fonctions de l\'incipit',
+       enonce:'Analysez les fonctions de l\'incipit dans un roman réaliste.',
+       correction:'Accroche, cadre spatio-temporel, présentation des personnages, ton, contrat de lecture.\nEx : incipit du Père Goriot = description pension → révèle milieu et symbolise toute l\'œuvre.',
+       notions:['Incipit']},
+      {id:'SF3-18',difficulte:3,titre:'Construction du personnage',
+       enonce:'Par quels moyens un romancier construit-il un personnage ? (Emma Bovary)',
+       correction:'Portrait physique, moral, actions, paroles, regard des autres, nom symbolique.\nEmma : construite via discours indirect libre, lectures sentimentales, actions imprudentes.',
+       notions:['Personnage']},
+      {id:'SF3-19',difficulte:3,titre:'Le temps dans le récit',
+       enonce:'Expliquez ordre, durée et fréquence. Donnez un exemple de chaque.',
+       correction:'Ordre : analepse/prolepse.\nDurée : ellipse (saut) / scène (temps réel) / sommaire (résumé).\nFréquence : singulative / itérative ("chaque matin") / répétitive.\nEx Proust : madeleine = analepse + fréquence répétitive.',
+       notions:['Temps narratif']},
+      {id:'SF3-20',difficulte:3,titre:'La chute dans "La Parure" (Maupassant)',
+       enonce:'Analysez la technique de la chute dans "La Parure".',
+       correction:'Chute : Mathilde apprend que le collier était faux (dernière ligne).\nEffet : ironie tragique — toute une vie de sacrifices était inutile.\nTechnique : information retenue jusqu\'au bout → suspense constant, chute maximale.',
+       notions:['Nouvelle','Chute','Maupassant']},
+    ],
+  },
+  {
+    id:'theatre-xviie-xxie', numero:4,
+    titre:'Le Théâtre du XVIIe au XXIe siècle',
+    sousTitre:'Tragédie · Comédie · Drame romantique · Molière · Racine · Corneille · Musset',
+    icon:'🎭', color:'#06b6d4',
+    notions:['Tragédie · hamartia · catharsis','4 types de comique','Drame romantique · mélange genres','3 unités · Bienséance','Stichomythie · Aparté · Monologue'],
+    exercices:[
+      {id:'SF4-01',difficulte:1,titre:'Tragédie ou comédie ?',
+       enonce:'Classez : a) Phèdre b) L\'Avare c) On ne badine pas avec l\'amour.',
+       correction:'a) Tragédie · b) Comédie · c) Drame romantique',
+       notions:['Genres théâtraux']},
+      {id:'SF4-02',difficulte:1,titre:'4 types de comique',
+       enonce:'Identifiez : a) Harpagon attrape son propre bras b) "Au voleur !" répété c) Argante trébuche.',
+       correction:'a) Situation · b) Mots · c) Geste',
+       notions:['Comique']},
+      {id:'SF4-03',difficulte:1,titre:'Règle des 3 unités',
+       enonce:'Quelles sont les 3 unités ? Pourquoi ces règles ?',
+       correction:'Temps (24h) · Lieu (un seul) · Action (une intrigue).\nBut : vraisemblance + concentration dramatique.',
+       notions:['3 unités']},
+      {id:'SF4-04',difficulte:1,titre:'Monologue et aparté',
+       enonce:'Distinguez monologue et aparté.',
+       correction:'Monologue : personnage seul, parle à voix haute. Introspection, délibération.\nAparté : entendu du public mais pas des autres personnages. Complicité, ironie dramatique.',
+       notions:['Monologue','Aparté']},
+      {id:'SF4-05',difficulte:1,titre:'La catharsis',
+       enonce:'Expliquez la catharsis selon Aristote.',
+       correction:'Purgation des passions : terreur + pitié → libération émotionnelle en fin de pièce.\nLe spectateur sort "purifié".',
+       notions:['Catharsis']},
+      {id:'SF4-06',difficulte:1,titre:'Stichomythie',
+       enonce:'Qu\'est-ce que la stichomythie ? Quel effet crée-t-elle ?',
+       correction:'Échange de courtes répliques très rapides.\nEffet : tension dramatique intense, combat verbal, rythme saccadé.',
+       notions:['Stichomythie']},
+      {id:'SF4-07',difficulte:1,titre:'Scène d\'exposition',
+       enonce:'Qu\'est-ce que la scène d\'exposition ? Quel est son défi ?',
+       correction:'Informe le spectateur : personnages, contexte, enjeu.\nDéfi : les personnages savent déjà tout — trouver un prétexte naturel (lettre, valet, inconnu).',
+       notions:['Exposition']},
+      {id:'SF4-08',difficulte:2,titre:'Conflit dramatique',
+       enonce:'Qu\'est-ce qu\'un conflit dramatique ? Donnez 3 types.',
+       correction:'1. Extérieur : Rodrigue entre amour et honneur (Le Cid).\n2. Intérieur : Phèdre entre passion et morale.\n3. Social : Hernani contre les conventions.',
+       notions:['Conflit dramatique']},
+      {id:'SF4-09',difficulte:2,titre:'Ironie dramatique',
+       enonce:'Qu\'est-ce que l\'ironie dramatique ? Illustrez avec Tartuffe.',
+       correction:'Le spectateur sait plus que certains personnages.\nDans Tartuffe : le spectateur sait qu\'il est hypocrite, Orgon non → satire plus puissante.',
+       notions:['Ironie dramatique']},
+      {id:'SF4-10',difficulte:2,titre:'Bataille d\'Hernani',
+       enonce:'Pourquoi la "Bataille d\'Hernani" (1830) est-elle un événement majeur ?',
+       correction:'Hugo brise les règles classiques. Affrontement classiques/romantiques dans le public → victoire du romantisme.\nLiberté artistique = liberté politique.',
+       notions:['Drame romantique','Hugo']},
+      {id:'SF4-11',difficulte:2,titre:'Didascalies',
+       enonce:'Que révèlent les didascalies ? Donnez 3 exemples.',
+       correction:'Décor (contexte social/symbolique), gestes (tensions physiques), ton ("ironiquement"), entrées/sorties.\nEx : "Il s\'attrape lui-même le bras" (L\'Avare) → comique de geste.',
+       notions:['Didascalies']},
+      {id:'SF4-12',difficulte:2,titre:'Structure en 5 actes',
+       enonce:'Quelle est la structure d\'une pièce classique en 5 actes ?',
+       correction:'I. Exposition · II. Péripéties · III. Nœud dramatique · IV. Rebondissements · V. Dénouement.\nScène = délimitée par entrée/sortie d\'un personnage.',
+       notions:['Structure théâtrale']},
+      {id:'SF4-13',difficulte:2,titre:'Molière vs. Racine',
+       enonce:'Comparez les fonctions du théâtre chez Molière et Racine.',
+       correction:'Molière : corriger les vices par le rire. L\'homme est perfectible.\nRacine : passions fatales, pessimisme anthropologique.\nMolière = optimisme social. Racine = tragédie humaine.',
+       notions:['Molière','Racine']},
+      {id:'SF4-14',difficulte:2,titre:'Texte et spectacle',
+       enonce:'Pourquoi le texte de théâtre est-il "incomplet" sans représentation ?',
+       correction:'C\'est un blueprint : corps, voix, gestes sont essentiels.\nMise en scène ajoute : décors, lumières, son, espace.\nMême pièce → spectacles très différents selon le metteur en scène.',
+       notions:['Mise en scène']},
+      {id:'SF4-15',difficulte:2,titre:'Drame romantique',
+       enonce:'Caractéristiques du drame romantique ?',
+       correction:'Mélange tragique/comique, refuse les 3 unités, héros en rupture, plusieurs jours et lieux, dénouement souvent fatal.\nEx : Hernani (Hugo, 1830).',
+       notions:['Drame romantique']},
+      {id:'SF4-16',difficulte:2,titre:'Théâtre de l\'absurde',
+       enonce:'Qu\'est-ce que le théâtre de l\'absurde ? Différence avec le classique ?',
+       correction:'Ionesco, Beckett : abandon de l\'intrigue logique, langage disloqué, situations sans issue.\nEx : En attendant Godot — personne ne vient.\nDifférence : pas de conflit progressif, pas de résolution.',
+       notions:['Théâtre absurde']},
+      {id:'SF4-17',difficulte:3,titre:'Analyse des comiques (L\'Avare)',
+       enonce:'Dans le monologue d\'Harpagon "Au voleur !", identifiez tous les types de comique.',
+       correction:'Situation (attrape son propre bras) · Geste (gesticulation) · Mots (répétitions, tirade excessive) · Caractère (avarice à l\'absurde) · Ironie dramatique (spectateur sait ce qu\'il ignore).',
+       notions:['Comique','Molière']},
+      {id:'SF4-18',difficulte:3,titre:'Phèdre et la tragédie',
+       enonce:'Analysez le conflit tragique de Phèdre. En quoi est-elle un héros tragique ?',
+       correction:'Hamartia : passion incestueuse pour Hippolyte.\nConflits : intérieur (passion vs. morale), divin (victime d\'Aphrodite), social (reine qui faut à son devoir).\nHamartia + destin inéluctable + catharsis → héros tragique parfait.',
+       notions:['Tragédie','Racine','Phèdre']},
+      {id:'SF4-19',difficulte:3,titre:'Théâtre dans le théâtre',
+       enonce:'Qu\'est-ce que le théâtre dans le théâtre ? Effets ?',
+       correction:'Personnages jouent une pièce dans la pièce → mise en abyme.\nEx : L\'Impromptu de Versailles (Molière), Hamlet (Shakespeare).\nEffets : brouille réalité/fiction, interroge la représentation, permet la critique du théâtre.',
+       notions:['Mise en abyme']},
+      {id:'SF4-20',difficulte:3,titre:'Pourquoi va-t-on au théâtre ?',
+       enonce:'Proposez un plan en 3 parties.',
+       correction:'I. Se divertir : plaisir du spectacle, rire (Molière), émotions fortes (Racine).\nII. Apprendre : corriger les mœurs, critique sociale (Molière), questions philosophiques (Beckett).\nIII. Vivre une expérience collective unique : art vivant, éphémère, espace de liberté et de débat.',
+       notions:['Fonctions du théâtre']},
+    ],
+  },
+]
+
+
+// ════════════════════════════════════════════════════════════════
+//  FRANÇAIS PREMIÈRE — 5 objets d'étude · 20 exercices par chapitre
+//  EAF Écrit coef.5 + Oral coef.2 · Œuvres au programme
+//  Format ChapitreData identique à CHAPITRES_SECONDE_FRANCAIS
+// ════════════════════════════════════════════════════════════════
+const CHAPITRES_PREMIERE_FRANCAIS: ChapitreData[] = [
+  {
+    id:'litterature-idees-xvie-xviiie', numero:1,
+    titre:'Littérature d\'idées — XVIe au XVIIIe siècle',
+    sousTitre:'La Boétie · Fontenelle · Mme de Graffigny · Humanisme · Lumières · EAF',
+    icon:'\u{1f4a1}', color:'#f59e0b',
+    notions:['Argumentation directe & indirecte','Humanisme · Lumières · Réforme','Liberté · Pouvoir · Savoir','Discours · Essai · Pamphlet · Roman épistolaire'],
+    exercices:[
+      {id:'PF1-01',difficulte:1,titre:'La thèse de La Boétie',
+       enonce:'Dans le Discours de la servitude volontaire, quelle est la thèse centrale de La Boétie ? Pourquoi parle-t-on de "servitude volontaire" ?',
+       correction:'Thèse : le peuple accepte et entretient lui-même sa propre domination.\nServitude volontaire : les hommes ne sont pas contraints par la force seule — ils obéissent par habitude, peur, flatterie et intérêt.\nParadoxe : la liberté est un droit naturel, mais les hommes y renoncent spontanément.',
+       notions:['La Boétie','Servitude volontaire']},
+      {id:'PF1-02',difficulte:1,titre:'Contexte historique de l\'humanisme',
+       enonce:'Qu\'est-ce que l\'humanisme de la Renaissance ? Quelles sont ses valeurs fondamentales ?',
+       correction:'Mouvement intellectuel (XVe-XVIe) : retour aux textes antiques, foi dans la raison et la dignité humaine.\nValeurs : liberté de pensée, éducation, tolérance, critique du fanatisme.\nFigures : Érasme, Thomas More, Rabelais, Montaigne.',
+       notions:['Humanisme','Renaissance']},
+      {id:'PF1-03',difficulte:1,titre:'Les Lumières : définition et idéaux',
+       enonce:'Quelles sont les grandes idées du siècle des Lumières (XVIIIe) ?',
+       correction:'Raison contre superstition. Liberté individuelle. Égalité. Tolérance religieuse. Critique de l\'absolutisme.\nPhilosophes : Voltaire, Rousseau, Diderot, Montesquieu.\nProjet : Encyclopédie — diffuser le savoir pour émanciper les hommes.',
+       notions:['Lumières','XVIIIe siècle']},
+      {id:'PF1-04',difficulte:1,titre:'Argumentation directe vs. indirecte',
+       enonce:'Quelle est la différence entre argumentation directe et indirecte ? Donnez un exemple de chaque.',
+       correction:'Directe : thèse énoncée explicitement (essai, discours). Ex : La Boétie argumente directement contre la tyrannie.\nIndirecte : thèse via récit fictif (conte, fable, roman). Ex : Voltaire dans Candide critique le fanatisme via l\'histoire naïve de Candide.',
+       notions:['Argumentation directe','Argumentation indirecte']},
+      {id:'PF1-05',difficulte:1,titre:'Le regard étranger (Mme de Graffigny)',
+       enonce:'Qu\'est-ce que le procédé du "regard étranger" dans la littérature des Lumières ? Illustrez avec Mme de Graffigny.',
+       correction:'Regard étranger : un personnage extérieur à la société française la découvre et la critique naïvement.\nGraffigny : Zilia, Péruvienne transplantée en France, s\'étonne des inégalités, du statut des femmes, de la superficialité sociale.\nEffet : critique indirecte — ce que les Français trouvent normal paraît absurde à un observateur extérieur.',
+       notions:['Regard étranger','Mme de Graffigny']},
+      {id:'PF1-06',difficulte:2,titre:'Mécanismes de la servitude volontaire',
+       enonce:'Selon La Boétie, comment le tyran maintient-il sa domination ? Identifiez les 3 mécanismes principaux.',
+       correction:'1. Habitude : les peuples nés sous la tyrannie ne connaissent pas la liberté.\n2. Complicité des élites : le tyran entretient une hiérarchie de complices qui profitent du système.\n3. Corruption par les divertissements : jeux, spectacles, fêtes anesthésient la volonté de révolte.\nConclusion : la tyrannie ne tient que parce que le peuple la soutient — il suffirait de ne plus obéir.',
+       notions:['La Boétie','Tyrannie','Mécanismes']},
+      {id:'PF1-07',difficulte:2,titre:'Fontenelle et la vulgarisation scientifique',
+       enonce:'Comment Fontenelle vulgarise-t-il la science dans les Entretiens sur la pluralité des mondes ? Quel est l\'enjeu ?',
+       correction:'Procédé : dialogue entre le philosophe et une marquise — forme légère, galante, accessible.\nContenu : théorie héliocentrique de Copernic, existence d\'autres mondes habités.\nEnjeu : démocratiser la science, montrer que la raison est accessible à tous (même les femmes).\nStyle : mêle rigueur scientifique et agrément littéraire → modèle du XVIIIe siècle.',
+       notions:['Fontenelle','Vulgarisation scientifique']},
+      {id:'PF1-08',difficulte:2,titre:'Le roman épistolaire des Lumières',
+       enonce:'Pourquoi le roman épistolaire est-il particulièrement adapté à la critique sociale au XVIIIe siècle ?',
+       correction:'Avantages : voix multiples (plusieurs points de vue), intimité des confessions, regard naïf possible (étranger qui découvre).\nEx : Lettres d\'une Péruvienne (Graffigny) : Zilia écrit à son bien-aimé → révèle par contraste les absurdités de la société française.\nLibertés : la forme fictive protège l\'auteur de la censure tout en permettant une critique virulente.',
+       notions:['Roman épistolaire','Critique sociale']},
+      {id:'PF1-09',difficulte:2,titre:'Analyse d\'un texte argumentatif — méthode',
+       enonce:'Quelles sont les étapes pour analyser un texte argumentatif de la littérature d\'idées (commentaire ou explication linéaire) ?',
+       correction:'1. Identifier la thèse : quelle idée l\'auteur défend-il ?\n2. Repérer la structure : introduction, développement, conclusion.\n3. Analyser les arguments : logiques, d\'autorité, par l\'exemple, affectifs.\n4. Étudier les procédés : figures de style, ironie, ton, rythme.\n5. Évaluer l\'efficacité : l\'auteur convainc-il ? Persuade-t-il ?\n6. Contextualiser : dans quel mouvement littéraire s\'inscrit ce texte ?',
+       notions:['Méthode commentaire','Argumentation']},
+      {id:'PF1-10',difficulte:2,titre:'Comparaison La Boétie / Voltaire',
+       enonce:'Comparez les stratégies argumentatives de La Boétie (Discours) et Voltaire (Candide) pour défendre la liberté.',
+       correction:'La Boétie : argumentation directe, discours rhétorique, s\'adresse à la raison. Interpelle le lecteur directement.\nVoltaire : argumentation indirecte, conte philosophique, utilise l\'ironie et l\'humour. Atteint plus de lecteurs via le divertissement.\nCommun : les deux dénoncent la domination et défendent la liberté humaine.\nDifférence : La Boétie = traité politique sérieux ; Voltaire = fiction légère mais mordante.',
+       notions:['Comparaison','Argumentation directe vs. indirecte']},
+      {id:'PF1-11',difficulte:2,titre:'La condition féminine au XVIIIe siècle',
+       enonce:'Comment Mme de Graffigny aborde-t-elle la condition féminine dans les Lettres d\'une Péruvienne ?',
+       correction:'Zilia (héroïne péruvienne) découvre que les femmes françaises sont éduquées pour plaire, pas pour penser.\nCritique : manque d\'éducation intellectuelle des femmes, mariage comme transaction sociale.\nPortée : Graffigny plaide implicitement pour une éducation égale et l\'autonomie féminine.\nRupture finale : Zilia refuse le mariage et choisit l\'indépendance → message féministe avant l\'heure.',
+       notions:['Condition féminine','Mme de Graffigny']},
+      {id:'PF1-12',difficulte:2,titre:'L\'ironie comme arme critique',
+       enonce:'Comment l\'ironie fonctionne-t-elle comme outil de critique dans la littérature d\'idées ? (Voltaire, Montesquieu)',
+       correction:'Ironie : dire le contraire de ce qu\'on pense pour dénoncer.\nVoltaire (Candide) : Pangloss affirme que tout va pour le mieux dans un monde de catastrophes → l\'absurdité de l\'optimisme est exposée.\nMontesquieu (Lettres persanes) : Rica décrit Paris naïvement → les Parisiens paraissent ridicules vus de l\'extérieur.\nEffet : le lecteur comprend la critique sans que l\'auteur l\'énonce → protection contre la censure + efficacité rhétorique.',
+       notions:['Ironie','Critique sociale']},
+      {id:'PF1-13',difficulte:2,titre:'L\'Encyclopédie — enjeux',
+       enonce:'Quels sont les enjeux politiques et philosophiques de l\'Encyclopédie (Diderot, d\'Alembert) ?',
+       correction:'Projet : 28 volumes (1751-1772), rassembler tout le savoir humain.\nEnjeux : diffuser le savoir contre l\'ignorance et le fanatisme. Remettre en cause l\'autorité de l\'Église et de l\'État.\nMétaphore des Lumières : la connaissance éclaire et libère l\'humanité.\nOpposition : condamnée par l\'Église et le roi, plusieurs fois suspendue → preuve de son impact subversif.',
+       notions:['Encyclopédie','Lumières']},
+      {id:'PF1-14',difficulte:2,titre:'Explication linéaire — introduction',
+       enonce:'Comment construire une introduction pour une explication linéaire d\'un texte de littérature d\'idées ?',
+       correction:'1. Présenter l\'auteur et l\'œuvre (contexte, mouvement littéraire).\n2. Situer l\'extrait dans l\'œuvre (avant/après, enjeu narratif ou argumentatif).\n3. Formuler une problématique : "Comment cet extrait...?" ou "En quoi...?"\n4. Annoncer le mouvement du texte (2 ou 3 parties suivant la progression).\nEx : "Ce passage du Discours de la servitude volontaire, où La Boétie analyse les mécanismes de la tyrannie, nous amène à nous demander comment l\'auteur démontre que la liberté est un droit naturel inaliénable."',
+       notions:['Explication linéaire','Introduction']},
+      {id:'PF1-15',difficulte:2,titre:'Montesquieu et la séparation des pouvoirs',
+       enonce:'Quelle est la contribution politique de Montesquieu dans De l\'Esprit des lois ?',
+       correction:'Montesquieu (1748) : théorie de la séparation des pouvoirs en 3 branches (exécutif, législatif, judiciaire).\nObjectif : éviter la tyrannie en empêchant la concentration du pouvoir dans une seule main.\nInfluence : Constitution américaine (1787), Révolution française (1789), bases du droit constitutionnel moderne.\nMéthode : comparaison des régimes politiques de différents pays pour en dégager des lois générales.',
+       notions:['Montesquieu','Séparation des pouvoirs']},
+      {id:'PF1-16',difficulte:3,titre:'Dissertation — "Peut-on défendre la liberté par l\'ironie ?"',
+       enonce:'Proposez un plan en 3 parties.',
+       correction:'I. Oui : l\'ironie est une arme efficace pour défendre la liberté\n→ Protège de la censure (forme indirecte)\n→ Touche plus de lecteurs (divertissement + réflexion)\n→ Ex : Voltaire, Montesquieu, Swift\n\nII. Limites de l\'ironie comme argument\n→ Risque de malentendu (certains ne perçoivent pas le second degré)\n→ Moins directe que le discours argumentatif\n→ Peut être perçue comme légèreté face à des sujets graves\n\nIII. L\'alliance des deux stratégies\n→ La Boétie (direct) + Voltaire (indirect) = complémentarité\n→ L\'efficacité dépend du public visé et du contexte historique',
+       notions:['Dissertation','Ironie','Liberté']},
+      {id:'PF1-17',difficulte:3,titre:'Commentaire composé — La Boétie (méthode)',
+       enonce:'Proposez un plan de commentaire pour un extrait du Discours de la servitude volontaire.',
+       correction:'I. Une argumentation rigoureuse au service d\'une thèse humaniste\n→ Structure logique du raisonnement (prémisses → conclusion)\n→ Figures rhétoriques : questions oratoires, anaphores, gradations\n→ Ancrage dans la tradition humaniste (références antiques)\n\nII. Un appel à la conscience du lecteur\n→ Interpellation directe ("vous")\n→ Usage du paradoxe pour choquer et éveiller\n→ Portrait du tyran comme révélateur de la lâcheté humaine',
+       notions:['Commentaire composé','La Boétie']},
+      {id:'PF1-18',difficulte:3,titre:'Analyse du parcours "Défendre la liberté"',
+       enonce:'En quoi le Discours de La Boétie s\'inscrit-il dans le parcours "Défendre et entretenir la liberté" ?',
+       correction:'La Boétie démontre que la liberté est l\'état naturel de l\'homme (droit naturel).\nLa servitude est contre-nature et maintenue par l\'ignorance et la complicité.\nDéfendre la liberté implique d\'abord de comprendre les mécanismes de sa négation.\nEntretenir la liberté : éducation, vigilance politique, refus de la complicité passive.\nActualité : le texte résonne dans les débats contemporains sur la démocratie et la manipulation.',
+       notions:['La Boétie','Parcours EAF']},
+      {id:'PF1-19',difficulte:3,titre:'Texte de Graffigny — explication linéaire',
+       enonce:'Proposez un mouvement d\'explication linéaire pour un extrait des Lettres d\'une Péruvienne.',
+       correction:'Mouvement 1 (ouverture) : la découverte naïve d\'un aspect de la société française.\n→ Procédé : regard étranger, naïveté apparente, lexique de l\'étonnement.\nMouvement 2 (développement) : la critique implicite par le contraste.\n→ Ce qui paraît normal aux Français est absurde vu de l\'extérieur.\nMouvement 3 (conclusion de l\'extrait) : portée philosophique du constat.\n→ La relativité des normes sociales remet en question leur légitimité.',
+       notions:['Mme de Graffigny','Explication linéaire']},
+      {id:'PF1-20',difficulte:3,titre:'Synthèse : littérature d\'idées et engagement',
+       enonce:'En quoi la littérature d\'idées du XVIe au XVIIIe siècle est-elle fondamentalement engagée ? Illustrez avec 3 auteurs.',
+       correction:'La littérature d\'idées est engagée car elle vise à transformer les mentalités et la société.\nLa Boétie : dénonce la tyrannie et la complicité du peuple → plaidoyer pour la résistance politique.\nFontenelle : vulgarise la science pour libérer les esprits du dogmatisme religieux.\nGraffigny : critique la condition féminine et les inégalités sociales via le regard étranger.\nCommun : tous trois utilisent la plume comme outil d\'émancipation → tradition de l\'intellectuel engagé.',
+       notions:['Synthèse','Engagement littéraire']},
+    ],
+  },
+  {
+    id:'poesie-xixe-xxie', numero:2,
+    titre:'La Poésie du XIXe au XXIe siècle',
+    sousTitre:'Rimbaud · Ponge · Dorion · Émancipations créatrices · Atelier du poète · EAF',
+    icon:'\u{1f4dc}', color:'#ec4899',
+    notions:['Romantisme · Parnasse · Symbolisme · Surréalisme','Versification classique vs. vers libre','Analyse linéaire d\'un poème','Rimbaud · Ponge · Hélène Dorion'],
+    exercices:[
+      {id:'PF2-01',difficulte:1,titre:'Rimbaud — contexte et rupture',
+       enonce:'Qui est Rimbaud ? En quoi les Cahiers de Douai représentent-ils une rupture poétique ?',
+       correction:'Arthur Rimbaud (1854-1891) : poète prodige, écrit les Cahiers de Douai à 16-17 ans.\nRupture : mélange romantisme (sensibilité, nature) et contestation (dénonciation de la guerre, critique sociale).\nInnovations : vers libres, images chocs, voyelles colorées → préfigure le symbolisme et la modernité poétique.\nParcours : "Émancipations créatrices" — la poésie comme espace de liberté et de révolte.',
+       notions:['Rimbaud','Cahiers de Douai']},
+      {id:'PF2-02',difficulte:1,titre:'Les mouvements poétiques du XIXe',
+       enonce:'Distinguez romantisme, Parnasse et symbolisme au XIXe siècle.',
+       correction:'Romantisme (1820-1850) : expression des sentiments, nature comme miroir de l\'âme, mélancolie, héros solitaire. Hugo, Lamartine, Musset.\nParnasse (1850-1880) : "art pour l\'art", beauté formelle, objectivité, refus des épanchements. Leconte de Lisle, Heredia.\nSymbolisme (1880-1900) : suggestion plutôt que description, musicalité, correspondances sensorielles. Verlaine, Mallarmé, Rimbaud.',
+       notions:['Romantisme','Parnasse','Symbolisme']},
+      {id:'PF2-03',difficulte:1,titre:'La versification — rappel',
+       enonce:'Rappelez les notions de : mètre, césure, enjambement, rejet, contre-rejet.',
+       correction:'Mètre : nombre de syllabes (alexandrin=12, décasyllabe=10).\nCésure : pause à l\'hémistiche (alexandrin : après la 6e syllabe).\nEnjambement : le sens déborde d\'un vers sur le suivant.\nRejet : mot rejeté en début du vers suivant pour le mettre en valeur.\nContre-rejet : fin de phrase au début d\'un vers, la suite sur le vers suivant.',
+       notions:['Versification']},
+      {id:'PF2-04',difficulte:1,titre:'Ponge — "La Rage de l\'expression"',
+       enonce:'Qu\'est-ce que la poésie de Ponge ? En quoi est-elle originale ?',
+       correction:'Francis Ponge (1899-1988) : poésie des objets ordinaires (huître, cageot, savon).\nOriginalité : traiter un objet banal avec une attention totale, trouver le mot juste.\nLa Rage de l\'expression : le titre dit la lutte du poète contre le langage pour atteindre la vérité des choses.\nParcours : "Dans l\'atelier du poète" — le poème se donne à voir comme processus de travail, pas comme inspiration mystérieuse.',
+       notions:['Ponge','Poésie des objets']},
+      {id:'PF2-05',difficulte:1,titre:'Hélène Dorion — "Mes forêts"',
+       enonce:'Qui est Hélène Dorion ? Quels sont les thèmes de Mes forêts ?',
+       correction:'Hélène Dorion (1958) : poète québécoise contemporaine.\nThèmes de Mes forêts : la nature comme espace intérieur, le temps qui passe, la fragilité de l\'être, l\'intime et l\'universel.\nParcours : "La poésie, la nature, l\'intime" — la forêt = métaphore de la vie intérieure.\nStyle : vers libres, images sensorielles, ton méditatif et lyrique.',
+       notions:['Hélène Dorion','Poésie contemporaine']},
+      {id:'PF2-06',difficulte:2,titre:'Analyse — "Le Dormeur du val" (Rimbaud)',
+       enonce:'Analysez la chute du Dormeur du val. Quel procédé Rimbaud utilise-t-il ?',
+       correction:'Chute : "Il a deux trous rouges au côté droit" — le soldat est mort.\nProcédé : ironie tragique — tout le poème décrit un dormeur paisible dans la nature, la chute révèle qu\'il est mort.\nEffet de la chute : choc brutal, le lecteur est pris en traître → dénonciation de la guerre plus efficace que le discours direct.\nRenversement : la nature indifférente qui "berce" un cadavre = critique de l\'impuissance face à la violence.',
+       notions:['Rimbaud','Ironie tragique','Analyse poétique']},
+      {id:'PF2-07',difficulte:2,titre:'Méthode — Analyse linéaire d\'un poème',
+       enonce:'Quelles sont les étapes d\'une analyse linéaire d\'un poème au bac de Première ?',
+       correction:'1. Introduction : présenter auteur, recueil, contexte, situer le poème, formuler la problématique, annoncer les mouvements.\n2. Mouvements du texte : identifier 2 ou 3 parties selon la progression (thématique, tonale ou syntaxique).\n3. Pour chaque vers ou groupe de vers : observer les procédés (figures de style, sonorités, rythme, images) + interpréter leur effet.\n4. Conclusion : répondre à la problématique, ouvrir sur le recueil ou le parcours associé.',
+       notions:['Analyse linéaire','Méthode EAF']},
+      {id:'PF2-08',difficulte:2,titre:'La révolte dans les Cahiers de Douai',
+       enonce:'Comment la révolte s\'exprime-t-elle dans les Cahiers de Douai de Rimbaud ?',
+       correction:'Révolte sociale : dénonciation de la guerre franco-prussienne ("Le Mal", "Dormeur du val"), critique de l\'Église ("Le Châtiment de Tartufe").\nRévolte poétique : refus du Parnasse formel, mélange des niveaux de langue, images choquantes.\nRévolte existentielle : rejet de la bourgeoisie, quête d\'un ailleurs.\nParcours "Émancipations créatrices" : la poésie elle-même est un acte de libération.',
+       notions:['Rimbaud','Révolte']},
+      {id:'PF2-09',difficulte:2,titre:'Les correspondances sensorielles',
+       enonce:'Qu\'est-ce que les correspondances chez Baudelaire et Rimbaud ? Comment s\'appliquent-elles ?',
+       correction:'Baudelaire (Correspondances) : les sens se répondent et les perceptions s\'échangent (synesthésies).\nRimbaud (Voyelles) : attribut des couleurs aux voyelles — "A noir, E blanc, I rouge...".\nPrincipe : transposer une sensation dans un autre registre sensoriel → enrichir l\'expression poétique.\nPortée : le poète n\'imite pas le monde, il le recrée par les sens.',
+       notions:['Correspondances','Synesthésie','Symbolisme']},
+      {id:'PF2-10',difficulte:2,titre:'Ponge — le poème comme atelier',
+       enonce:'Comment Ponge met-il en scène le travail poétique dans La Rage de l\'expression ?',
+       correction:'Procédé : Ponge inclut ses brouillons, ses hésitations, ses reformulations dans le poème final.\nEffet : le lecteur assiste à la fabrication du poème → démythification de l\'inspiration.\nLe "Proème" : texte hybride entre prose et poème.\nEnjeu du parcours : montrer que la poésie est un artisanat rigoureux, pas un don spontané.',
+       notions:['Ponge','Atelier du poète']},
+      {id:'PF2-11',difficulte:2,titre:'La nature chez Dorion et Rimbaud',
+       enonce:'Comparez le rapport à la nature chez Rimbaud (Cahiers de Douai) et Hélène Dorion (Mes forêts).',
+       correction:'Rimbaud : la nature est vivante, sensuelle, refuge de l\'innocence — mais aussi indifférente à la mort (Dormeur du val).\nDorion : la nature (forêt) est une métaphore de la vie intérieure, du temps, de la fragilité humaine.\nCommun : les deux utilisent la nature pour parler de l\'intime.\nDifférence : Rimbaud = énergie, révolte, jeunesse. Dorion = méditation, maturité, douceur mélancolique.',
+       notions:['Nature poétique','Comparaison']},
+      {id:'PF2-12',difficulte:2,titre:'Versification dans les Cahiers de Douai',
+       enonce:'Comment Rimbaud utilise-t-il la versification classique et s\'en affranchit-il ?',
+       correction:'Respecte en apparence : alexandrins, sonnets, rimes régulières (héritage Parnasse et romantisme).\nMais subvertit : enjambements violents, rejets, images choquantes, mélange des registres.\nEx : "Le Dormeur du val" = sonnet classique → mais le contenu (mort à la guerre) dynamite la forme apaisante.\nSignification : utiliser la forme classique pour mieux la dynamiter = double révolte formelle et thématique.',
+       notions:['Versification','Rimbaud','Forme et fond']},
+      {id:'PF2-13',difficulte:2,titre:'Le vers libre — définition et effets',
+       enonce:'Qu\'est-ce que le vers libre ? Quels effets permet-il ?',
+       correction:'Vers libre : vers sans contrainte fixe de mètre, ni rime obligatoire.\nDéveloppé par Verlaine, Rimbaud (Illuminations), puis tous les poètes modernes.\nEffets : liberté de rythme adapté au sens, ruptures expressives, prose poétique.\nPonge et Dorion : utilisent le vers libre et la prose poétique → reflète la recherche d\'une forme adéquate à chaque objet/sentiment.',
+       notions:['Vers libre']},
+      {id:'PF2-14',difficulte:2,titre:'La problématique en analyse linéaire',
+       enonce:'Comment formuler une problématique efficace pour l\'analyse linéaire d\'un poème de Rimbaud ?',
+       correction:'La problématique doit être littéraire (pas biographique) et révéler un enjeu du texte.\nModèles : "Comment Rimbaud fait-il de ce poème à la fois une description de la nature et une dénonciation de la guerre ?"\n"En quoi ce poème incarne-t-il les émancipations créatrices du recueil ?"\n"Comment la forme du sonnet est-elle mise au service d\'une révolte ?"\nÀ éviter : "Dans ce poème, Rimbaud parle de..." (trop descriptif, pas de problème littéraire).',
+       notions:['Problématique','Méthode EAF']},
+      {id:'PF2-15',difficulte:2,titre:'L\'image poétique — définition et analyse',
+       enonce:'Qu\'est-ce qu\'une image poétique ? Comment l\'analyser efficacement ?',
+       correction:'Image poétique : métaphore, comparaison, symbole qui crée une vision nouvelle.\nAnalyse en 3 temps :\n1. Identifier : nommer la figure (métaphore, personnification...).\n2. Interpréter : quel est le comparé, le comparant, le point commun ?\n3. Évaluer l\'effet : que révèle cette image sur le sens du poème ?\nEx Rimbaud : "Il dort dans le soleil" → personnification qui prépare l\'ironie tragique de la chute.',
+       notions:['Image poétique','Analyse']},
+      {id:'PF2-16',difficulte:3,titre:'Dissertation — "La poésie doit-elle être engagée ?"',
+       enonce:'Proposez un plan en 3 parties en vous appuyant sur les œuvres au programme.',
+       correction:'I. Oui : la poésie est naturellement engagée\n→ Rimbaud : dénonciation de la guerre dans les Cahiers de Douai\n→ Hugo : poète politique (Les Châtiments contre Napoléon III)\n→ La poésie atteint ce que le discours ne peut pas\n\nII. La poésie peut aussi être désengagée\n→ Parnasse : "l\'art pour l\'art", beauté pure, refus du militantisme\n→ Ponge : engagement dans le langage, pas dans le politique\n→ Dorion : engagement intime et écologique plutôt que politique\n\nIII. L\'engagement poétique prend des formes multiples\n→ S\'engager dans la langue = acte politique\n→ Le poème peut transformer l\'individu plutôt que la société\n→ L\'efficacité de l\'engagement poétique est indirecte mais durable',
+       notions:['Dissertation','Poésie engagée']},
+      {id:'PF2-17',difficulte:3,titre:'Commentaire composé — un poème de Rimbaud',
+       enonce:'Proposez un plan de commentaire pour "Ma Bohème" (Rimbaud).',
+       correction:'I. La célébration de la liberté errante\n→ Lexique du voyage, de l\'errance, de la nature\n→ Le "je" libéré des conventions sociales\n→ Musicalité légère (octosyllabes, assonances)\n\nII. Une poétique de la pauvreté assumée\n→ Les "trous" aux habits, la misère revendiquée\n→ La nature remplace les biens matériels\n→ L\'image des "étoiles" dans le ciel = richesse imaginaire vs. pauvreté réelle\n\nIII. La naissance du poète\n→ L\'adolescent qui se construit dans la liberté\n→ La marche = écriture (rimes sous les pieds = vers)\n→ Parcours "Émancipations créatrices" : la liberté de mouvement = liberté créatrice',
+       notions:['Commentaire composé','Rimbaud']},
+      {id:'PF2-18',difficulte:3,titre:'Analyse d\'un poème de Ponge',
+       enonce:'Analysez la démarche de Ponge dans "Le Cageot". En quoi illustre-t-il le parcours "Dans l\'atelier du poète" ?',
+       correction:'Ponge part de l\'objet le plus banal (cageot = emballage de fruits) et en fait un sujet poétique.\nDémarche : observer minutieusement, chercher le mot juste, montrer le travail.\n"À mi-chemin de la cage au cachot" : jeu étymologique (cageot, cage, cachot) → le langage révèle des profondeurs insoupçonnées.\nAtelier du poète : le poème montre comment le langage peut transfigurer le réel le plus humble.',
+       notions:['Ponge','Atelier du poète']},
+      {id:'PF2-19',difficulte:3,titre:'La poésie de Dorion — méditation sur le temps',
+       enonce:'Comment Hélène Dorion fait-elle de la forêt une métaphore du temps et de la vie intérieure ?',
+       correction:'La forêt chez Dorion : espace de croissance lente, de cycles, de mort et de renaissance.\nMétaphore filée : les arbres = les années vécues, les couches de l\'être.\nTemps : la forêt dure plus que l\'homme → méditation sur la fragilité humaine.\nIntime : "Mes forêts" (titre possessif) = la forêt est intérieure, cartographie de la vie psychique.\nStyle : vers libres courts, blancs typographiques → silences comme les espaces entre les arbres.',
+       notions:['Dorion','Nature et intime']},
+      {id:'PF2-20',difficulte:3,titre:'Synthèse — 3 poètes et 3 conceptions',
+       enonce:'En quoi Rimbaud, Ponge et Dorion proposent-ils trois conceptions différentes de la poésie ?',
+       correction:'Rimbaud : la poésie comme révolte et émancipation. Le poète est un "voyant" qui accède à l\'inconnu. Poésie = arme.\nPonge : la poésie comme artisanat du langage. Le poète lutte contre les mots pour atteindre la vérité des choses. Poésie = travail.\nDorion : la poésie comme méditation intime. Le poète explore la frontière entre le moi et le monde. Poésie = intériorisation.\nCommun : tous trois font de la poésie un acte de connaissance et de résistance — au conformisme, à l\'approximation, à l\'oubli.',
+       notions:['Synthèse','Conception de la poésie']},
+    ],
+  },
+  {
+    id:'roman-recit-moyen-age-xxie', numero:3,
+    titre:'Le Roman et le Récit du Moyen Âge au XXIe siècle',
+    sousTitre:'Manon Lescaut · La Peau de chagrin · Sido/Colette · Personnages en marge · EAF',
+    icon:'\u{1f4d6}', color:'#8b5cf6',
+    notions:['Narration rétrospective · Personnage en marge','Romanesque · Passion amoureuse','Roman réaliste · Fantastique · Autobiographie','Abbé Prévost · Balzac · Colette'],
+    exercices:[
+      {id:'PF3-01',difficulte:1,titre:'Manon Lescaut — personnages et intrigue',
+       enonce:'Qui sont les personnages principaux de Manon Lescaut ? Quel est l\'enjeu de leur relation ?',
+       correction:'Des Grieux : jeune aristocrate qui abandonne tout (famille, carrière) pour Manon.\nManon Lescaut : belle, insaisissable, attirée par le luxe → personnage ambigu, victime et manipulatrice.\nEnjeu : la passion amoureuse destructrice. Des Grieux est esclave de son amour.\nParcours : "Personnages en marge, plaisirs du romanesque" — les deux héros vivent hors des normes sociales.',
+       notions:['Manon Lescaut','Abbé Prévost']},
+      {id:'PF3-02',difficulte:1,titre:'La narration rétrospective',
+       enonce:'Qu\'est-ce que la narration rétrospective ? Quel est son effet dans Manon Lescaut ?',
+       correction:'Narration rétrospective : le narrateur raconte des événements passés avec un recul temporel.\nDans Manon Lescaut : Des Grieux adulte raconte sa jeunesse à M. de Renoncour.\nEffet : regard critique du narrateur sur lui-même ("j\'étais fou") mais passion revécue.\nAmbiguïté : il sait qu\'il a eu tort, mais reste fasciné → tension entre raison et passion.',
+       notions:['Narration rétrospective','Manon Lescaut']},
+      {id:'PF3-03',difficulte:1,titre:'La Peau de chagrin — pacte faustien',
+       enonce:'Quel est le "pacte faustien" dans La Peau de chagrin de Balzac ? Quelle est sa portée symbolique ?',
+       correction:'Raphaël reçoit une peau de chagrin qui exauce tous ses désirs mais rétrécit à chaque vœu.\nSymbolisme : la peau = la vie humaine. Chaque désir consomme la vie.\nPortée : critique de la société de consommation avant l\'heure. Le désir illimité tue.\nParcours : "Les romans de l\'énergie" — l\'énergie vitale se dépense dans la recherche du plaisir.',
+       notions:['Balzac','La Peau de chagrin','Fantastique réaliste']},
+      {id:'PF3-04',difficulte:1,titre:'Colette — Sido et Les Vrilles de la vigne',
+       enonce:'Qui est Sido chez Colette ? Quels sont les thèmes principaux de ces textes ?',
+       correction:'Sido : la mère de Colette, figure de la vitalité, de la nature, de l\'amour.\nThèmes : célébration de la nature et de l\'enfance, rapport à la mère, sensations, passage du temps.\nParcours : "La célébration du monde" — l\'écriture comme acte de reconnaissance et de gratitude.\nStyle : prose poétique, sensations précises, lyrisme discret.',
+       notions:['Colette','Sido']},
+      {id:'PF3-05',difficulte:1,titre:'Le personnage en marge',
+       enonce:'Qu\'est-ce qu\'un "personnage en marge" dans la littérature romanesque ? Donnez 3 exemples.',
+       correction:'Personnage en marge : vit en dehors des normes sociales (morales, juridiques, familiales).\nEx : Manon Lescaut (entretenue, hors mariage) + Des Grieux (tromperie, ruine).\nEx : Raphaël (La Peau de chagrin) : débauche, excès, mort sociale.\nEx : Jean Valjean (Les Misérables) : ancien bagnard, toujours suspect.\nIntérêt littéraire : révèle les normes sociales en les transgressant, questionne la morale.',
+       notions:['Personnage en marge']},
+      {id:'PF3-06',difficulte:2,titre:'Manon, personnage ambigu',
+       enonce:'Pourquoi Manon Lescaut est-elle un personnage ambigu ? Comment des Grieux la perçoit-il ?',
+       correction:'Ambiguïté : Manon est à la fois aimante et vénale, fidèle dans les moments difficiles et infidèle dans le luxe.\nDes Grieux la voit : par amour, il excuse tout (idéalisation). Il la présente comme victime de sa nature, non comme coupable.\nLecteur : peut la voir autrement — manipulatrice qui profite de l\'amour de Des Grieux.\nPortée : Manon est "romanesque" au sens plein — insaisissable, contradictoire, fascinante.',
+       notions:['Manon Lescaut','Personnage ambigu']},
+      {id:'PF3-07',difficulte:2,titre:'L\'énergie et la destruction (Balzac)',
+       enonce:'Comment Balzac met-il en scène l\'opposition entre énergie créatrice et énergie destructrice dans La Peau de chagrin ?',
+       correction:'Énergie créatrice : Raphaël veut écrire, créer, connaître.\nÉnergie destructrice : il cède aux plaisirs faciles, brûle sa vie dans la débauche.\nSymbole de la peau : plus il désire, plus il se détruit.\nCritique sociale : la société parisienne pousse à la consommation et à l\'excès.\nLeçon balzacienne : le génie créateur exige de l\'ascèse, pas la dispersion.',
+       notions:['Balzac','Énergie']},
+      {id:'PF3-08',difficulte:2,titre:'La célébration du monde chez Colette',
+       enonce:'Comment Colette célèbre-t-elle le monde dans Sido et Les Vrilles de la vigne ?',
+       correction:'Célébration par les sens : odeurs, couleurs, textures de la nature bourguignonne.\nCélébration de la mère : Sido = archétype de la femme en accord avec la nature.\nCélébration de l\'enfance : le regard enfantin qui voit le monde comme un miracle.\nStyle : prose lyrique, phrases longues et sensuelles, lexique botanique précis.\nEnjeu : écrire = rendre grâce au monde qui a façonné la femme et l\'écrivaine.',
+       notions:['Colette','Célébration']},
+      {id:'PF3-09',difficulte:2,titre:'Le romanesque — définition',
+       enonce:'Qu\'est-ce que le "romanesque" ? En quoi Manon Lescaut en est-il l\'illustration parfaite ?',
+       correction:'Romanesque : ce qui appartient au registre du roman — aventures improbables, passions excessives, coups de théâtre, personnages hors norme.\nManon Lescaut : enlèvements, évasions de prison, déportation en Louisiane, mort tragique → accumulation de péripéties romanesques.\nDimension : la passion amoureuse transcende toutes les règles sociales.\nLe lecteur est emporté malgré lui par la fascination du récit.',
+       notions:['Romanesque']},
+      {id:'PF3-10',difficulte:2,titre:'La mise en abyme dans Manon Lescaut',
+       enonce:'Expliquez la structure du récit-cadre dans Manon Lescaut. Quelle est son effet sur le lecteur ?',
+       correction:'Récit-cadre : M. de Renoncour rencontre Des Grieux qui lui raconte son histoire.\nMise en abyme : un récit dans un récit — double narrateur.\nEffet : crédibilité (témoin externe), distance temporelle (Des Grieux adulte = recul), mais aussi passion revécue.\nAmbiguïté : le récit-cadre prétend garantir la vérité, mais Des Grieux reste un narrateur partial (amoureux).',
+       notions:['Récit-cadre','Mise en abyme']},
+      {id:'PF3-11',difficulte:2,titre:'Balzac et le réalisme fantastique',
+       enonce:'En quoi La Peau de chagrin est-elle à la fois réaliste et fantastique ?',
+       correction:'Réaliste : description précise de Paris, de la société de la Restauration, des milieux sociaux.\nFantastique : la peau de chagrin est un objet surnaturel qui rétrécit → irruption de l\'impossible.\nTension : le fantastique révèle une vérité symbolique sur le réel (la vie se dépense dans le désir).\nBranche fantastique réaliste : Balzac utilise le surnaturel pour critiquer la société concrètement.',
+       notions:['Réalisme','Fantastique','Balzac']},
+      {id:'PF3-12',difficulte:2,titre:'La prose poétique de Colette',
+       enonce:'Qu\'est-ce que la prose poétique ? En quoi l\'écriture de Colette en est-elle un exemple ?',
+       correction:'Prose poétique : prose qui utilise les ressources du poème (rythme, images, musicalité) sans contrainte versifiée.\nColette : phrases rythmées, images sensorielles précises ("odeur de la terre mouillée"), lyrisme de l\'intime.\nPas de "poèmes en prose" formels, mais une prose qui chante.\nEx : "Sido ouvrait une fenêtre et regardait le jardin..." → les gestes simples deviennent rituels sacrés.',
+       notions:['Prose poétique','Colette']},
+      {id:'PF3-13',difficulte:2,titre:'Le narrateur de Manon Lescaut — fiabilité',
+       enonce:'Des Grieux est-il un narrateur fiable ? Comment le lecteur doit-il lire son témoignage ?',
+       correction:'Narrateur non fiable : Des Grieux est amoureux → vision idéalisée de Manon. Il minimise ses propres fautes.\nIndices de non-fiabilité : il excuse tout chez Manon, se présente comme victime passive.\nRôle du lecteur : exercer un regard critique, percevoir ce que Des Grieux ne dit pas ou déforme.\nIntérêt narratif : l\'amour comme prisme déformant → le roman interroge la vérité du témoignage.',
+       notions:['Narrateur','Fiabilité','Manon Lescaut']},
+      {id:'PF3-14',difficulte:2,titre:'La figure maternelle chez Colette',
+       enonce:'Comment Sido est-elle présentée dans l\'œuvre de Colette ? Quelle valeur symbolique a-t-elle ?',
+       correction:'Sido : présence lumineuse, curieuse, vivante. Elle nomme les plantes, parle aux animaux, observe l\'aube.\nValeur symbolique : Sido = harmonie avec le monde naturel, modèle d\'une vie pleinement vécue.\nEnjeu autobiographique : Colette écrit Sido après sa mort → acte de deuil et de fidélité.\nCélébration : en décrivant Sido, Colette célèbre la vie elle-même.',
+       notions:['Colette','Sido','Figure maternelle']},
+      {id:'PF3-15',difficulte:2,titre:'Déterminisme social dans le roman du XIXe',
+       enonce:'Comment le déterminisme social s\'exprime-t-il dans Manon Lescaut et La Peau de chagrin ?',
+       correction:'Manon Lescaut : le statut social (pauvreté de Manon) explique sa vénalité. La société lui offre peu d\'alternatives.\nLa Peau de chagrin : la société parisienne crée les conditions de la débauche. L\'ambition + l\'argent détruisent.\nCommun : les deux héros sont partiellement victimes d\'un système social qui valorise l\'argent et le statut.\nMais : ils restent responsables de leurs choix → le roman n\'excuse pas, il explique.',
+       notions:['Déterminisme social']},
+      {id:'PF3-16',difficulte:3,titre:'Dissertation — "Le romanesque est-il compatible avec la vraisemblance ?"',
+       enonce:'Proposez un plan en 3 parties.',
+       correction:'I. Le romanesque semble s\'opposer à la vraisemblance\n→ Aventures improbables, coïncidences, passions excessives (Manon Lescaut)\n→ Éléments fantastiques (La Peau de chagrin)\n→ Le lecteur accepte l\'invraisemblable par le pacte de lecture\n\nII. Mais le romanesque exige une vérité intérieure\n→ Vérité des sentiments et des passions (Des Grieux)\n→ Vérité sociale et psychologique (Balzac)\n→ La vraisemblance émotionnelle supplée la vraisemblance factuelle\n\nIII. La tension romanesque/vraisemblance est productive\n→ Elle crée le plaisir de la lecture (dépaysement + identification)\n→ Le roman réaliste intègre le romanesque pour le dépasser\n→ Le romanesque révèle une vérité profonde sur les désirs humains',
+       notions:['Dissertation','Romanesque','Vraisemblance']},
+      {id:'PF3-17',difficulte:3,titre:'Commentaire composé — Manon Lescaut',
+       enonce:'Proposez un plan pour commenter la scène de la mort de Manon.',
+       correction:'I. Une mort romanesque : l\'apothéose du sentiment\n→ Cadre exotique (Louisiane, désert) → mort loin de la société corrompue\n→ Mort comme purification (Manon meurt "pure", loin du vice)\n→ Lyrique de la désolation\n\nII. Le regard amoureux de Des Grieux — transfiguration\n→ Manon mourante = plus belle que jamais (idéalisation)\n→ Le narrateur dépossédé de tout vocabulaire rationnel\n→ Confusion amour/deuil/sacré\n\nIII. Portée critique et morale\n→ La société a tué Manon (déportation injuste)\n→ Critique implicite de la justice d\'Ancien Régime\n→ Le lecteur entre pitié (Manon victime) et jugement (choix de vie)',
+       notions:['Commentaire','Manon Lescaut']},
+      {id:'PF3-18',difficulte:3,titre:'Analyse — La peau de chagrin et le désir',
+       enonce:'Analysez le symbole de la peau de chagrin comme métaphore du désir et de la mort.',
+       correction:'La peau = la vie humaine mesurée en désirs.\nPremier désir : Raphaël veut tout (fête, gloire, amour) → la peau rétrécit à chaque vœu.\nParadoxe : plus il vit intensément, plus il approche de la mort.\nInterprétation freudienne avant l\'heure : Éros (désir de vie) contre Thanatos (pulsion de mort).\nMorale balzacienne : la sagesse est dans la modération des désirs → ascèse vs. débauche.',
+       notions:['Balzac','Symbole','Désir']},
+      {id:'PF3-19',difficulte:3,titre:'Colette — écriture et mémoire',
+       enonce:'Comment Colette transforme-t-elle la mémoire en littérature dans Sido ?',
+       correction:'Mémoire sensorielle : Colette reconstitue le passé par les sens (odeurs, couleurs, sons).\nTransformation littéraire : le souvenir brut devient scène, portrait, célébration.\nSido réécrit post-mortem : l\'écriture compense la perte → Sido vit dans les pages.\nAutobiographie transfigurée : pas de récit chronologique mais des tableaux évocatoires.\nPortée : la littérature comme espace de résurrection des proches.',
+       notions:['Colette','Mémoire','Autobiographie']},
+      {id:'PF3-20',difficulte:3,titre:'Synthèse — personnages en marge',
+       enonce:'En quoi les personnages de Manon, Raphaël et Sido incarnent-ils trois formes différentes de marginalité ?',
+       correction:'Manon : marginalité sociale et morale. Transgresse les normes de la femme vertueuse. Hors mariage, hors loi.\nRaphaël (Balzac) : marginalité existentielle. Refuse les compromis bourgeois, veut tout — gloire, plaisir, savoir.\nSido (Colette) : marginalité heureuse. Vit hors des conventions bourgeoises par excès de vitalité et de curiosité.\nCommun : les trois refusent la médiocrité sociale. Différence : Manon et Raphaël en paient le prix (mort). Sido est un modèle positif.',
+       notions:['Synthèse','Personnages en marge']},
+    ],
+  },
+  {
+    id:'theatre-xviie-xxie', numero:4,
+    titre:'Le Théâtre du XVIIe au XXIe siècle',
+    sousTitre:'Corneille · Musset · Sarraute · Mensonge · Passion · Dispute · EAF',
+    icon:'\u{1f3ad}', color:'#06b6d4',
+    notions:['Comédie du mensonge (Corneille)','Drame romantique · Passion · Orgueil (Musset)','Théâtre du non-dit · Langage (Sarraute)','Comédie classique vs. drame romantique vs. contemporain'],
+    exercices:[
+      {id:'PF4-01',difficulte:1,titre:'Corneille — Le Menteur : intrigue et thème',
+       enonce:'Quelle est l\'intrigue du Menteur de Corneille ? Quel est le thème central ?',
+       correction:'Dorante, jeune provincial arrivé à Paris, ment compulsivement pour se rendre intéressant.\nThème : le mensonge comme jeu social et identitaire. La comédie du paraître.\nParcours : "Mensonge et comédie" — le mensonge révèle les codes de la société.\nFin : Dorante est pris à ses propres mensonges mais s\'en tire — la comédie ne punit pas.',
+       notions:['Corneille','Le Menteur']},
+      {id:'PF4-02',difficulte:1,titre:'Musset — On ne badine pas avec l\'amour',
+       enonce:'Résumez l\'intrigue et identifiez le conflit central chez Musset.',
+       correction:'Perdican et Camille, cousins, se retrouvent après des années et jouent avec leurs sentiments.\nConflit : orgueil contre amour. Chacun refuse d\'avouer ses vrais sentiments.\nTragédie : Rosette, paysanne amoureuse de Perdican, meurt — victime du jeu cruel des deux protagonistes.\nParcours : "Les jeux du cœur et de la parole" — le langage comme arme et écran.',
+       notions:['Musset','On ne badine pas avec l\'amour']},
+      {id:'PF4-03',difficulte:1,titre:'Sarraute — Pour un oui ou pour un non',
+       enonce:'Quel est le sujet de Pour un oui ou pour un non de Nathalie Sarraute ? En quoi est-ce du théâtre contemporain ?',
+       correction:'Deux amis se disputent à cause d\'une phrase banale dite par l\'un ("C\'est... bien, ça").\nEnjeu : les sous-conversations, ce qui se dit sous les mots, les blessures invisibles du langage ordinaire.\nThéâtre contemporain : pas d\'intrigue romanesque, pas de décor réaliste. Seul le langage et ses vibrations.\nParcours : "Théâtre et dispute" — la dispute comme révélateur du langage.',
+       notions:['Sarraute','Théâtre contemporain']},
+      {id:'PF4-04',difficulte:1,titre:'Le mensonge comme jeu social',
+       enonce:'Dans Le Menteur de Corneille, pourquoi Dorante ment-il ? Que révèle son mensonge sur la société parisienne ?',
+       correction:'Dorante ment pour paraître plus intéressant, pour séduire, pour exister socialement.\nRévélation : la société parisienne valorise l\'apparence et les belles histoires plutôt que la vérité.\nIronie de Corneille : la société est elle-même fondée sur des convenances et des apparences.\nPortée morale : le menteur réussit (fin heureuse) → la comédie ne moralise pas brutalement.',
+       notions:['Mensonge','Corneille','Société']},
+      {id:'PF4-05',difficulte:1,titre:'La tragédie dans le drame romantique',
+       enonce:'Comment Musset introduit-il la tragédie dans On ne badine pas avec l\'amour alors que c\'est un "proverbe" ?',
+       correction:'Genre hybride : le "proverbe" (forme légère, comédie de mœurs) bascule dans la tragédie avec la mort de Rosette.\nMélange romantique : comédie (légèreté du dialogue, ironie des pédants) + tragédie (mort, deuil).\nSignification du titre : "on ne badine pas" → l\'amour est une chose sérieuse, les jeux du cœur ont des conséquences mortelles.\nDécalage : la légèreté du ton rend la mort de Rosette encore plus choquante.',
+       notions:['Musset','Tragédie','Drame romantique']},
+      {id:'PF4-06',difficulte:2,titre:'Le langage chez Sarraute — analyse',
+       enonce:'Qu\'est-ce que la "sous-conversation" chez Sarraute ? Comment se manifeste-t-elle dans Pour un oui ou pour un non ?',
+       correction:'Sous-conversation : ce qui se dit sous les mots, les sensations, les intentions cachées.\nDans la pièce : la phrase "C\'est... bien, ça" contient une légère condescendance que H2 ressent mais ne peut nommer.\nLe conflit porte sur quelque chose d\'indicible → c\'est la particularité du théâtre sarraution.\nStyle : répétitions, hésitations, silences, mots brisés → transcrit les mouvements intérieurs.',
+       notions:['Sarraute','Sous-conversation']},
+      {id:'PF4-07',difficulte:2,titre:'La parole comme arme — Perdican et Camille',
+       enonce:'Comment Perdican et Camille utilisent-ils la parole comme arme dans On ne badine pas ?',
+       correction:'Chacun utilise la parole pour blesser l\'autre, pas pour communiquer vraiment.\nPerdican : séduit Rosette devant Camille pour la rendre jalouse → utilise une autre femme comme arme.\nCamille : cite des femmes trompées pour justifier son refus → intellectualise son orgueil.\nEnjeu du parcours : "Les jeux du cœur et de la parole" — le langage sert à cacher autant qu\'à révéler.',
+       notions:['Musset','Parole','Conflit']},
+      {id:'PF4-08',difficulte:2,titre:'Comédie classique vs. drame romantique',
+       enonce:'Comparez la structure du Menteur (Corneille, 1644) et de On ne badine pas (Musset, 1834).',
+       correction:'Le Menteur : règles classiques (5 actes, unités), dénouement heureux, comédie de caractère.\nOn ne badine pas : drame romantique (mélange genres, temps libre, lieux multiples), dénouement tragique.\nMensonge/orgueil : deux vices différents mais tous deux révélateurs du paraître social.\nÉvolution : du mensonge puni par la comédie (Corneille) à l\'orgueil puni par la mort (Musset) — pessimisme croissant.',
+       notions:['Comédie classique','Drame romantique','Comparaison']},
+      {id:'PF4-09',difficulte:2,titre:'Le langage ordinaire comme sujet de théâtre',
+       enonce:'En quoi Sarraute fait-elle du langage ordinaire le sujet de sa pièce ? Quelle est la nouveauté ?',
+       correction:'Sujet : une phrase banale ("C\'est... bien, ça") suffit à déclencher une rupture d\'amitié.\nNouveauté : les grandes pièces ont de grands sujets (amour, pouvoir, mort). Sarraute prouve que les microblessures du quotidien sont aussi dramatiques.\nProcédé : répétition, hésitation, intonation → le théâtre peut rendre la texture du langage intérieur.\nHéritage : théâtre de l\'absurde (Ionesco, Beckett) + introspection sarraution.',
+       notions:['Sarraute','Langage ordinaire']},
+      {id:'PF4-10',difficulte:2,titre:'La dispute dans le théâtre — fonctions',
+       enonce:'Quelles sont les fonctions dramatiques de la dispute dans les œuvres au programme ?',
+       correction:'Corneille : la dispute révèle les mensonges → dénouement comique.\nMusset : la dispute dissimule l\'amour. Perdican et Camille se disputent parce qu\'ils s\'aiment.\nSarraute : la dispute révèle ce qui ne peut pas se dire — les tensions souterraines.\nFonction commune : la dispute fait avancer l\'action ET révèle le caractère des personnages.',
+       notions:['Dispute','Fonctions dramatiques']},
+      {id:'PF4-11',difficulte:2,titre:'Méthode — Analyse linéaire d\'une scène de théâtre',
+       enonce:'Quelles sont les étapes d\'une analyse linéaire d\'une scène de théâtre au bac de Première ?',
+       correction:'1. Introduction : auteur, pièce, situer la scène, problématique, mouvements.\n2. Mouvements : selon les répliques, les entrées/sorties, les changements de ton.\n3. Pour chaque réplique ou groupe : analyser le registre (comique, pathétique, lyrique), les procédés (ironie, stichomythie, métaphore), les rapports de force.\n4. Conclusion : répondre à la problématique, lien avec le parcours associé.',
+       notions:['Analyse linéaire','Théâtre','Méthode EAF']},
+      {id:'PF4-12',difficulte:2,titre:'La mort de Rosette — portée tragique',
+       enonce:'Analysez la mort de Rosette dans On ne badine pas. Quelle est sa signification ?',
+       correction:'Rosette : paysanne simple, aime sincèrement Perdican. Victime collatérale du jeu des deux protagonistes.\nMort : Perdican la séduit pour rendre Camille jalouse → Rosette meurt d\'une révélation (elle entend Perdican avouer son amour à Camille).\nSignification : l\'orgueil des nobles détruit l\'innocente. La pureté ne survit pas au monde du calcul.\nParcours : on ne peut pas jouer avec les sentiments sans conséquences mortelles.',
+       notions:['Musset','Mort de Rosette']},
+      {id:'PF4-13',difficulte:2,titre:'Silence et non-dit dans le théâtre',
+       enonce:'Quel est le rôle du silence et du non-dit au théâtre ? Illustrez avec Sarraute et Musset.',
+       correction:'Sarraute : le silence et les points de suspension ("C\'est... bien, ça") contiennent plus que les mots dits.\nMusset : Perdican et Camille n\'avouent jamais directement leur amour → le non-dit crée la tragédie.\nFonction : ce qui n\'est pas dit est souvent plus important → le spectateur perçoit le sous-texte.\nLecture : analyser le silence = analyser ce que le personnage refuse de dire ou ne peut pas dire.',
+       notions:['Silence','Non-dit','Théâtre']},
+      {id:'PF4-14',difficulte:2,titre:'L\'ironie de Corneille dans Le Menteur',
+       enonce:'Comment Corneille utilise-t-il l\'ironie dramatique dans Le Menteur ?',
+       correction:'Ironie dramatique : le spectateur sait que Dorante ment, pas ses interlocuteurs.\nEffet comique : on rit des victimes crédules et de l\'habileté de Dorante.\nPortée satirique : si tout le monde croit les mensonges, la société est elle-même naïve.\nCritique : Corneille ne condamne pas le menteur directement → c\'est la société du paraître qui est visée.',
+       notions:['Ironie dramatique','Corneille']},
+      {id:'PF4-15',difficulte:2,titre:'Le théâtre du XXe siècle — ruptures',
+       enonce:'En quoi Sarraute (Pour un oui ou pour un non) marque-t-elle une rupture dans l\'histoire du théâtre ?',
+       correction:'Ruptures :\n→ Pas d\'intrigue romanesque (pas d\'amour, de crime, de politique)\n→ Pas de personnages nommés (H1 et H2)\n→ Pas de décor réaliste\n→ Langage comme seul sujet et seul matériau\nHéritage : Nouveau Roman appliqué au théâtre — Sarraute explore les mouvements intérieurs plutôt que les actions extérieures.',
+       notions:['Sarraute','Théâtre contemporain','Ruptures']},
+      {id:'PF4-16',difficulte:3,titre:'Dissertation — "Le théâtre doit-il montrer la vérité des sentiments ?"',
+       enonce:'Proposez un plan en 3 parties.',
+       correction:'I. Oui : le théâtre révèle la vérité des sentiments\n→ Musset : l\'amour se dit malgré l\'orgueil (déclaration finale)\n→ Sarraute : le langage trahit les sentiments souterrains\n→ Le spectateur voit ce que les personnages cachent (ironie dramatique)\n\nII. Mais le théâtre peut aussi montrer le mensonge et le paraître\n→ Corneille : personnage bâti sur le mensonge\n→ La comédie révèle la superficialité sociale\n→ Le masque est aussi une vérité (vérité du désir de paraître)\n\nIII. Le théâtre révèle une vérité plus profonde : la complexité humaine\n→ Pas de sentiments simples au théâtre (Perdican aime ET blesse)\n→ La contradiction des personnages = leur humanité\n→ Le théâtre montre la vérité paradoxale de l\'être',
+       notions:['Dissertation','Vérité','Sentiments']},
+      {id:'PF4-17',difficulte:3,titre:'Commentaire — scène finale de On ne badine pas',
+       enonce:'Proposez un plan de commentaire pour la scène finale (mort de Rosette, aveu de Perdican).',
+       correction:'I. L\'irruption du tragique dans le proverbe\n→ La mort de Rosette = chute brutale d\'un registre léger vers le drame\n→ Le titre prend tout son sens : on ne badine pas avec l\'amour\n→ La comédie romanesque se mue en tragédie réelle\n\nII. L\'aveu tardif — parole enfin libérée\n→ Perdican avoue enfin son amour → trop tard\n→ La parole vraie arrive quand le mal est irréparable\n→ Critique du jeu de séduction comme outil de destruction\n\nIII. Portée morale et romantique\n→ L\'orgueil tue. Camille et Perdican sont responsables.\n→ Rosette, l\'innocente, paye pour les codes bourgeois\n→ Le romantisme dénonce la cruauté des conventions sociales',
+       notions:['Commentaire','Musset','Scène finale']},
+      {id:'PF4-18',difficulte:3,titre:'Analyse — "Pour un oui ou pour un non" et la dispute',
+       enonce:'Analysez comment Sarraute fait de la dispute un révélateur du langage dans sa pièce.',
+       correction:'H1 ressent une blessure dans la phrase de H2 mais ne peut pas la nommer précisément.\nDu coup, la dispute ne porte pas sur ce qui a blessé vraiment → frustration, malentendu.\nSarraute : le langage ordinaire est truffé de sous-entendus, de hiérarchies implicites, de jugements déguisés.\nLa dispute révèle que nos relations sont gouvernées par des impressions infimes → théâtre de la perception.',
+       notions:['Sarraute','Dispute','Langage']},
+      {id:'PF4-19',difficulte:3,titre:'Comparaison des 3 pièces — évolution du théâtre',
+       enonce:'Montrez comment les trois pièces au programme illustrent l\'évolution du théâtre du XVIIe au XXe siècle.',
+       correction:'Le Menteur (1644) : comédie classique. Règles strictes. Sujet = le mensonge social. Fin heureuse. Satire légère.\nOn ne badine pas (1834) : drame romantique. Rupture des règles. Mélange comique/tragique. L\'amour = passion destructrice.\nPour un oui ou pour un non (1982) : théâtre contemporain. Pas d\'intrigue. Le langage = unique sujet. Psychologie souterraine.\nÉvolution : du sujet social (Corneille) au sujet sentimental (Musset) au sujet langagier (Sarraute).',
+       notions:['Évolution du théâtre','Comparaison']},
+      {id:'PF4-20',difficulte:3,titre:'Synthèse — le théâtre et la dispute',
+       enonce:'En quoi la dispute est-elle au cœur du théâtre ? Synthétisez à partir des 3 œuvres.',
+       correction:'La dispute est le moteur dramatique par excellence : elle crée tension, révèle les personnages, fait avancer l\'action.\nCorneille : dispute comique où le menteur se contredit → révèle la superficialité sociale.\nMusset : dispute amoureuse où l\'orgueil masque le désir → révèle la complexité des sentiments.\nSarraute : dispute infime sur une intonation → révèle les mécanismes souterrains du langage.\nConclusion : de la grande dispute épique à la micro-dispute linguistique, le théâtre explore toujours ce qui oppose et divise les hommes.',
+       notions:['Synthèse','Dispute','Théâtre']},
+    ],
+  },
+  {
+    id:'methodologie-eaf', numero:5,
+    titre:'Méthodologie EAF — Écrit & Oral',
+    sousTitre:'Commentaire composé · Dissertation · Analyse linéaire · Grand Oral · Méthodes bac',
+    icon:'\u270d\ufe0f', color:'#10b981',
+    notions:['Commentaire composé · Plan · Rédaction','Dissertation littéraire · 3 parties','Analyse linéaire : mouvements + procédés','Grand Oral : présenter · défendre · répondre'],
+    exercices:[
+      {id:'PF5-01',difficulte:1,titre:'Les 3 épreuves écrites de l\'EAF',
+       enonce:'Quelles sont les 3 épreuves de l\'EAF (Épreuve Anticipée de Français) en Première ? Durée et coefficient ?',
+       correction:'1. Commentaire composé : analyser un texte littéraire. 4h. Coeff. 5 (avec dissertation).\n2. Dissertation : réfléchir sur une question littéraire. 4h. Coeff. 5.\n3. Grand Oral (Oral EAF) : présentation de 2 textes, questions. 20 min. Coeff. 2.\nNote : le candidat choisit entre commentaire ou dissertation le jour J.',
+       notions:['EAF','Structure']},
+      {id:'PF5-02',difficulte:1,titre:'Structure du commentaire composé',
+       enonce:'Quelle est la structure d\'un commentaire composé au bac de Première ?',
+       correction:'Introduction : accroche → présentation auteur/œuvre → situer l\'extrait → problématique → annonce du plan.\n2 ou 3 grandes parties thématiques (pas de plan linéaire).\nChaque partie : 2-3 sous-parties avec citations + analyse de procédés.\nConclusion : répondre à la problématique → ouverture.',
+       notions:['Commentaire composé','Structure']},
+      {id:'PF5-03',difficulte:1,titre:'Structure de la dissertation',
+       enonce:'Quelle est la structure d\'une dissertation littéraire au bac de Première ?',
+       correction:'Introduction : accroche → définir les termes → problématique → plan annoncé.\nPlan dialectique (thèse / antithèse / synthèse) ou thématique selon le sujet.\n3 parties × 2-3 sous-parties. Chaque sous-partie : argument + exemple littéraire + analyse.\nConclusion : répondre à la problématique → ouverture.',
+       notions:['Dissertation','Structure']},
+      {id:'PF5-04',difficulte:1,titre:'Trouver la problématique',
+       enonce:'Comment formuler une problématique pour le commentaire ou la dissertation au bac ?',
+       correction:'Problématique = question littéraire qui ouvre un débat interprétatif. Pas une question factuelle.\nModèles : "Comment...?", "En quoi...?", "Dans quelle mesure...?"\nEx commentaire : "Comment Rimbaud fait-il de ce sonnet à la fois une description et une dénonciation ?"\nEx dissertation : "Dans quelle mesure la littérature d\'idées peut-elle changer la société ?"\nÀ éviter : "De quoi parle ce texte ?" (trop simple, pas de débat).',
+       notions:['Problématique','Méthode']},
+      {id:'PF5-05',difficulte:1,titre:'Le plan du commentaire composé',
+       enonce:'Comment construire le plan d\'un commentaire composé ? Quels axes choisir ?',
+       correction:'Axes thématiques (pas linéaires) : chaque partie doit répondre partiellement à la problématique.\nChoix des axes : chercher dans le texte les 2-3 dominantes (tonales, thématiques, stylistiques).\nEx pour un texte de Rimbaud : I. Une description de la nature (registre lyrique) II. Une dénonciation de la guerre (registre pathétique et critique).\nÀ éviter : plan en fond/forme (artificiel). Préférer : 2 axes thématiques articulés à la problématique.',
+       notions:['Plan','Commentaire']},
+      {id:'PF5-06',difficulte:1,titre:'Citer et analyser un texte',
+       enonce:'Comment bien citer un texte dans un commentaire ou une analyse linéaire ?',
+       correction:'Règle des 3 temps : citation → identification du procédé → interprétation de l\'effet.\nCitation : entre guillemets, intégrée à la phrase ("En écrivant \"X\", l\'auteur...").\nNe pas citer trop long : 1-2 lignes maximum.\nAnalyse : toujours dire POURQUOI ce procédé, pas seulement QUOI.\nEx : "La répétition de \"Rome\" (anaphore) martèle l\'obsession de Camille et crée un rythme incantatoire qui traduit sa fureur."',
+       notions:['Citation','Analyse','Procédés']},
+      {id:'PF5-07',difficulte:2,titre:'L\'introduction du commentaire — rédaction',
+       enonce:'Rédigez le début d\'une introduction pour commenter le Dormeur du val de Rimbaud.',
+       correction:'Accroche : "La poésie du XIXe siècle ne se limite pas à la célébration de la nature : elle peut aussi en faire un lieu de dénonciation."\nPrésentation : "Dans le Dormeur du val, extrait des Cahiers de Douai (1870), Arthur Rimbaud décrit un soldat endormi dans un cadre bucolique."\nSituation : "Ce sonnet, écrit à 16 ans pendant la guerre franco-prussienne, appartient au parcours \"Émancipations créatrices\"."\nProblématique : "Nous nous demanderons comment Rimbaud use de la beauté de la nature pour révéler l\'horreur de la mort à la guerre."\nAnnonce : "Nous étudierons d\'abord la dimension pittoresque et apaisante du tableau, puis la chute tragique qui renverse toutes les apparences."',
+       notions:['Introduction','Commentaire composé']},
+      {id:'PF5-08',difficulte:2,titre:'Analyser les mouvements d\'un texte',
+       enonce:'Comment identifier les mouvements d\'un texte pour l\'analyse linéaire ?',
+       correction:'Les mouvements = grandes étapes du texte selon sa progression.\nCritères de découpage : changement de ton, de sujet, de temps verbal, d\'interlocuteur, de registre.\nNombre : 2 ou 3 mouvements en général.\nEx pour Le Dormeur du val :\nMouvement 1 (v.1-8) : description pittoresque et apaisante de la nature.\nMouvement 2 (v.9-14) : zoom sur le soldat + chute tragique finale.\nDans chaque mouvement : analyser les procédés vers par vers ou par unité de sens.',
+       notions:['Analyse linéaire','Mouvements']},
+      {id:'PF5-09',difficulte:2,titre:'La dissertation — construire les arguments',
+       enonce:'Comment construire un argument développé dans une dissertation littéraire ?',
+       correction:'Structure de l\'argument : idée directrice → développement → exemple littéraire précis → analyse → lien à la problématique.\nEx : "La littérature d\'idées peut changer les mentalités (idée). En effet, Voltaire dans Candide ridiculise l\'optimisme aveugle de Pangloss (exemple). Cette ironie amène le lecteur à remettre en question ses propres certitudes (analyse). Ainsi la fiction produit un effet critique que l\'argument direct n\'aurait pas (lien)."\nÀ éviter : l\'exemple sans analyse, ou l\'argument sans exemple.',
+       notions:['Dissertation','Argument']},
+      {id:'PF5-10',difficulte:2,titre:'Le Grand Oral — préparation',
+       enonce:'Comment se préparer au Grand Oral de l\'EAF (épreuve orale de Français en Première) ?',
+       correction:'Texte à présenter : choisir 2 textes dans les 4 objets d\'étude (1 texte par objet choisi).\nStructure de la présentation : 10 min — présenter l\'auteur/œuvre (1 min) → analyse du texte (8 min) → conclusion/ouverture (1 min).\nEntretien : 10 min — questions sur le texte, le parcours, la lecture personnelle.\nConseils : mémoriser les textes, travailler la diction, préparer des questions possibles, lier chaque texte au parcours.',
+       notions:['Grand Oral','EAF']},
+      {id:'PF5-11',difficulte:2,titre:'Les procédés stylistiques — tableau de révision',
+       enonce:'Citez et définissez 8 procédés stylistiques essentiels à maîtriser pour l\'EAF.',
+       correction:'1. Métaphore : comparaison sans outil (identification).\n2. Anaphore : répétition en début de phrase/vers.\n3. Hyperbole : exagération pour amplifier.\n4. Ironie : dire le contraire de ce qu\'on pense.\n5. Oxymore : alliance de termes contraires.\n6. Gradation : progression ascendante ou descendante.\n7. Allitération : répétition de consonnes.\n8. Chiasme : structure croisée ABBA.\nPour chaque procédé : nommer + citer + analyser l\'effet.',
+       notions:['Procédés stylistiques']},
+      {id:'PF5-12',difficulte:2,titre:'La conclusion du commentaire',
+       enonce:'Comment rédiger une bonne conclusion de commentaire composé ?',
+       correction:'Structure : bilan (répondre à la problématique en résumant les axes) + ouverture (vers une autre œuvre, un autre thème, une question plus large).\nBilan : "Ainsi, ce texte de Rimbaud est à la fois une célébration de la nature et une dénonciation de la guerre, montrant que la forme poétique peut être au service de l\'engagement."\nOuverture : "Cette dualité rappelle Hugo qui, dans Les Châtiments, utilisait aussi la beauté lyrique au service de la critique politique."\nÀ éviter : "En conclusion, j\'ai montré que..." (trop scolaire). Préférer une phrase de synthèse élégante.',
+       notions:['Conclusion','Commentaire']},
+      {id:'PF5-13',difficulte:2,titre:'La transition entre les parties',
+       enonce:'Comment rédiger une transition efficace entre deux parties d\'un commentaire ou d\'une dissertation ?',
+       correction:'Structure d\'une transition : conclusion de la partie précédente → pivot → annonce de la partie suivante.\nEx : "Si Rimbaud célèbre la nature dans sa dimension visuelle et sensorielle (bilan), cette beauté apparente ne dure pas : la chute du poème révèle que la nature est aussi le décor d\'une mort silencieuse (pivot et annonce)."\nLongueur : 2-3 lignes. Ne pas reformuler toute la partie, juste l\'essentiel.',
+       notions:['Transition','Structure']},
+      {id:'PF5-14',difficulte:2,titre:'Les types de plans de dissertation',
+       enonce:'Quand utiliser un plan dialectique ou un plan thématique en dissertation littéraire ?',
+       correction:'Plan dialectique (thèse/antithèse/synthèse) : quand le sujet oppose deux thèses ("La poésie doit-elle être engagée ?").\nPlan thématique : quand le sujet demande d\'explorer les aspects d\'une question ("Quelles sont les fonctions de la littérature ?").\nPlan analytique : quand le sujet implique causes, manifestations, conséquences.\nConseil : lire le sujet attentivement, repérer si c\'est une question "Peut-on...?" (dialectique) ou "Comment...?" (thématique).',
+       notions:['Plan','Dissertation']},
+      {id:'PF5-15',difficulte:2,titre:'L\'analyse linéaire — la conclusion',
+       enonce:'Comment conclure une analyse linéaire ? Que doit-elle contenir ?',
+       correction:'Bilan : répondre à la problématique (comment le texte fonctionne globalement).\nSynthèse des procédés clés (2-3 procédés dominants et leur effet).\nLien avec l\'œuvre ou le parcours : pourquoi ce texte est-il représentatif de l\'auteur ? Du parcours ?\nOuverture : vers un autre texte, une question plus large.\nEx : "Ce sonnet de Rimbaud illustre parfaitement le parcours \"Émancipations créatrices\" : la révolte poétique et thématique y sont indissociables."',
+       notions:['Analyse linéaire','Conclusion']},
+      {id:'PF5-16',difficulte:3,titre:'Commentaire rédigé — Manon Lescaut',
+       enonce:'Proposez un plan détaillé et rédigez l\'introduction d\'un commentaire sur la scène de la rencontre entre Des Grieux et Manon.',
+       correction:'Introduction rédigée :\n"Le roman de l\'Abbé Prévost, Manon Lescaut (1731), est l\'une des premières grandes histoires d\'amour de la littérature française. La scène de la rencontre entre Des Grieux et Manon, au début de l\'œuvre, est fondatrice : c\'est le moment où le héros bascule. Nous nous demanderons comment Prévost représente le coup de foudre comme une irruption du destin dans une vie ordonnée."\nPlan :\nI. Le coup de foudre comme révélation soudaine (lexique de la violence, de la lumière, du saisissement).\nII. Le portrait de Manon : entre idéalisation et ambiguïté (regard de Des Grieux déjà partial).\nIII. L\'annonce du destin tragique (ironie narrative rétrospective).',
+       notions:['Commentaire composé','Manon Lescaut']},
+      {id:'PF5-17',difficulte:3,titre:'Dissertation rédigée — introduction',
+       enonce:'Rédigez l\'introduction d\'une dissertation sur : "La littérature d\'idées peut-elle se passer de la fiction ?"',
+       correction:'"Lorsque Voltaire veut dénoncer le fanatisme, il ne rédige pas un traité austère — il invente Candide, naïf trimbalé d\'un désastre à l\'autre. Lorsque La Boétie veut défendre la liberté, il choisit au contraire le discours argumentatif direct. La littérature d\'idées semble donc disposer de deux voies : la fiction et l\'argumentation pure. Peut-elle se passer de la première ?\nNous verrons d\'abord que la fiction est un outil puissant d\'efficacité argumentative, avant d\'examiner les limites de la fiction comme vecteur d\'idées, pour montrer enfin que la littérature d\'idées la plus efficace articule les deux stratégies."',
+       notions:['Dissertation','Introduction']},
+      {id:'PF5-18',difficulte:3,titre:'Analyse linéaire — La Boétie (extrait)',
+       enonce:'Proposez une problématique et les mouvements pour analyser un extrait du Discours de la servitude volontaire.',
+       correction:'Problématique : "Comment La Boétie, en dénonçant les mécanismes de la tyrannie, incite-t-il le lecteur à résister ?"\nMouvement 1 : le constat paradoxal (le peuple obéit librement au tyran) — ton rhétorique, questions oratoires.\nMouvement 2 : l\'analyse des mécanismes (habitude, complicité, corruption) — ton démonstratif, vocabulaire juridique et philosophique.\nMouvement 3 : l\'appel à la conscience du lecteur — ton impératif, apostrophe directe.\nProcessus analytique : pour chaque mouvement, citer + procédé + effet + lien au parcours "Défendre la liberté".',
+       notions:['Analyse linéaire','La Boétie']},
+      {id:'PF5-19',difficulte:3,titre:'Grand Oral — préparer la présentation',
+       enonce:'Préparez un plan de présentation orale pour le texte : scène finale de "On ne badine pas avec l\'amour" (Musset).',
+       correction:'Présentation (10 min) :\n1. Présentation de l\'auteur et de l\'œuvre (1 min) : Musset, drame romantique, 1834, parcours "Les jeux du cœur et de la parole".\n2. Lecture expressive de l\'extrait (si demandé).\n3. Analyse du texte (7 min) :\n→ Mouvement 1 : l\'aveu tardif de Perdican (parole libérée, registre lyrique).\n→ Mouvement 2 : la mort de Rosette (irruption du tragique, silence).\n→ Mouvement 3 : la portée morale (critique de l\'orgueil romantique).\n4. Conclusion + lien au parcours (1 min) : "Cette scène illustre que les jeux du cœur ont des conséquences irréparables."\nEntretien : préparer "Pourquoi ce texte ?", "Lien au parcours ?", "Texte préféré du recueil ?".',
+       notions:['Grand Oral','Musset']},
+      {id:'PF5-20',difficulte:3,titre:'Bilan méthode — les erreurs à éviter',
+       enonce:'Quelles sont les 5 erreurs les plus fréquentes au bac de Première (EAF) et comment les éviter ?',
+       correction:'1. Plan linéaire au commentaire : suivre le texte ligne par ligne = FAUX. Il faut des axes thématiques.\n2. Citer sans analyser : nommer un procédé ne suffit pas. Il faut toujours dire l\'EFFET.\n3. Problématique trop large ou trop simple : éviter "De quoi parle ce texte ?" et "Pourquoi Rimbaud aime-t-il la nature ?".\n4. Introduction sans accroche ni annonce du plan : toujours les 4 étapes (accroche, présentation, problématique, plan).\n5. Conclusion sans ouverture : ne pas finir sur le bilan seul — toujours ouvrir vers une question plus large ou une autre œuvre.',
+       notions:['Méthode EAF','Erreurs à éviter']},
+    ],
+  },
+]
+
+const SECTIONS_FRANCAIS: {
+  key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
+  data:AnneeData[]; links:Record<number,AnneeLinks>;
+}[] = [
+  { key:'terminale-francais',
+    label:'Terminale · Philosophie', icon:'🧠', color:'#8b5cf6', coeff:'Coef. 8 · 4h',
+    desc:'Philosophie Terminale · Série Générale & Technologique · Dissertation + Explication de texte · Bac France 2021→2025',
+    data:dataFrancaisTerminale, links:linksFrancaisTerminale },
+  { key:'premiere-francais',
+    label:'Première · EAF', icon:'📗', color:'#10b981', coeff:'EAF coef.5+2',
+    desc:'Français Première · EAF · 5 objets d\'étude · Commentaire · Dissertation · Analyse linéaire · Grand Oral · 100 exercices corrigés',
+    data:[], links:{} as Record<number,AnneeLinks> },
+  { key:'seconde-francais',
+    label:'Seconde · Français', icon:'📘', color:'#ec4899', coeff:'4h/semaine',
+    desc:'Français Seconde · 4 objets d\'étude · Poésie · Littérature d\'idées · Roman · Théâtre · 76 exercices corrigés',
+    data:[], links:{} as Record<number,AnneeLinks> },
+]
+
+type SKey = 'terminale-nsi' | 'premiere-nsi' | 'seconde-snt' | 'terminale-generale' | 'terminale-physique-chimie' | 'terminale-technologique' | 'terminale-maths-expertes' | 'premiere-specialite' | 'seconde-maths' | 'seconde-physique-chimie' | 'premiere-physique-chimie' | 'sti2d-physique-chimie' | 'stes-physique-chimie' | 'terminale-anglais' | 'premiere-anglais' | 'seconde-anglais' | 'terminale-svt' | 'premiere-svt' | 'seconde-svt' | 'terminale-francais' | 'premiere-francais' | 'seconde-francais'
 
 
 // ════════════════════════════════════════════════════════════════
@@ -9764,7 +10686,7 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
   )
 }
 
-type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | 'francais' | null
 
 export default function ExamensFrancePage() {
   const router = useRouter()
@@ -9773,10 +10695,11 @@ export default function ExamensFrancePage() {
   const [selectedYear,setSelectedYear] = useState<number|null>(null)
   const [modal,setModal]               = useState<{url:string;title:string}|null>(null)
 
-  const secNSI     = SECTIONS_NSI.find(s=>s.key===activeSec)
-  const secAnglais = SECTIONS_ANGLAIS.find(s=>s.key===activeSec)
-  const secSVT     = SECTIONS_SVT_EXAM.find(s=>s.key===activeSec)
-  const sec        = secNSI || secAnglais || secSVT || SECTIONS.find(s=>s.key===activeSec)!
+  const secNSI      = SECTIONS_NSI.find(s=>s.key===activeSec)
+  const secAnglais  = SECTIONS_ANGLAIS.find(s=>s.key===activeSec)
+  const secSVT      = SECTIONS_SVT_EXAM.find(s=>s.key===activeSec)
+  const secFrancais = SECTIONS_FRANCAIS.find(s=>s.key===activeSec)
+  const sec         = secNSI || secAnglais || secSVT || secFrancais || SECTIONS.find(s=>s.key===activeSec)!
   const detail     = sec.data.find((a:any)=>a.year===selectedYear)
   const anneeLinks = selectedYear ? (sec.links as any)[selectedYear] : null
   const ptTotal    = detail?.exercices.reduce((t,e)=>t+e.pts,0)??0
@@ -9792,7 +10715,8 @@ export default function ExamensFrancePage() {
     const pcKeys:SKey[] = ['terminale-physique-chimie','seconde-physique-chimie','sti2d-physique-chimie','stes-physique-chimie']
     const anglaisKeys:SKey[] = ['terminale-anglais','premiere-anglais','seconde-anglais']
     const svtKeys:SKey[] = ['terminale-svt','premiere-svt','seconde-svt']
-    setMatiere(mathKeys.includes(key) ? 'maths' : nsiKeys.includes(key) ? 'informatique' : anglaisKeys.includes(key) ? 'anglais' : svtKeys.includes(key) ? 'svt' : 'physique-chimie')
+    const francaisKeys:SKey[] = ['terminale-francais','premiere-francais','seconde-francais']
+    setMatiere(mathKeys.includes(key) ? 'maths' : nsiKeys.includes(key) ? 'informatique' : anglaisKeys.includes(key) ? 'anglais' : svtKeys.includes(key) ? 'svt' : francaisKeys.includes(key) ? 'francais' : 'physique-chimie')
   }
 
   // ── PAGE INTERMÉDIAIRE ──────────────────────────────────────
@@ -9920,6 +10844,25 @@ export default function ExamensFrancePage() {
                 </div>
                 <span style={{display:'inline-flex',alignItems:'center',gap:6,color:'#86efac',fontWeight:700,fontSize:13}}>Voir les annales →</span>
               </button>
+
+              {/* FRANÇAIS / PHILOSOPHIE */}
+              <button
+                onClick={()=>{ setMatiere('francais'); setActiveSec('terminale-francais') }}
+                style={{padding:'36px 28px',background:'rgba(139,92,246,0.06)',border:'1.5px solid rgba(139,92,246,0.22)',borderRadius:20,cursor:'pointer',textAlign:'left',transition:'all 0.22s',fontFamily:'var(--font-body)',color:'var(--text)'}}
+                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-5px)';e.currentTarget.style.borderColor='rgba(139,92,246,0.55)';e.currentTarget.style.boxShadow='0 20px 60px rgba(139,92,246,0.18)'}}
+                onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.borderColor='rgba(139,92,246,0.22)';e.currentTarget.style.boxShadow='none'}}>
+                <div style={{fontSize:52,marginBottom:14}}>🧠</div>
+                <h2 style={{fontSize:22,fontWeight:800,marginBottom:8,color:'#a78bfa'}}>Français · Philosophie</h2>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.65,margin:'0 0 18px'}}>
+                  Terminale Générale & Technologique · Dissertation · Explication de texte · HLP · Grand Oral
+                </p>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:20}}>
+                  {['Philo coef. 8','Terminale Générale','Série Techno','HLP coef. 16','Grand Oral coef. 8'].map(t=>(
+                    <span key={t} style={{fontSize:10,padding:'3px 9px',borderRadius:20,background:'rgba(139,92,246,0.12)',color:'#a78bfa',fontWeight:600}}>{t}</span>
+                  ))}
+                </div>
+                <span style={{display:'inline-flex',alignItems:'center',gap:6,color:'#a78bfa',fontWeight:700,fontSize:13}}>Voir les annales →</span>
+              </button>
             </div>
 
             {/* Lien Examens Tunisie */}
@@ -9956,7 +10899,7 @@ export default function ExamensFrancePage() {
               ← Toutes les matières
             </button>
             <span className="label" style={{marginLeft:8,fontSize:11}}>
-              {matiere==='maths'?'📐 Mathématiques':matiere==='informatique'?'💻 Informatique NSI':matiere==='anglais'?'🇬🇧 Anglais':matiere==='svt'?'🌱 SVT':'⚗️ Physique-Chimie'}
+              {matiere==='maths'?'📐 Mathématiques':matiere==='informatique'?'💻 Informatique NSI':matiere==='anglais'?'🇬🇧 Anglais':matiere==='svt'?'🌱 SVT':matiere==='francais'?'🧠 Français · Philosophie':'⚗️ Physique-Chimie'}
             </span>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',marginBottom:14}}>
               5 Ans d'Examens Officiels<br/>
@@ -9999,6 +10942,22 @@ export default function ExamensFrancePage() {
                       color:activeSec===s.key?s.color:'var(--muted)'}}>
                     <span>{s.icon}</span><span>{s.label}</span>
                     <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}22`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)',marginLeft:2}}>{s.coeff}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Ligne Français / Philosophie */}
+            {matiere==='francais' && (
+              <div style={{display:'flex',gap:3,alignItems:'center',flexWrap:'wrap'}}>
+                <span style={{fontSize:11,paddingLeft:6,paddingRight:6,color:'var(--muted)',fontWeight:700}}>🧠</span>
+                {SECTIONS_FRANCAIS.map(s=>(
+                  <button key={s.key} onClick={()=>goSec(s.key)}
+                    style={{display:'flex',alignItems:'center',gap:5,padding:'7px 12px',borderRadius:9,border:`1px solid ${activeSec===s.key?s.color:'transparent'}`,cursor:'pointer',fontFamily:'var(--font-body)',fontSize:12,fontWeight:600,transition:'all 0.16s',whiteSpace:'nowrap',
+                      background:activeSec===s.key?`${s.color}16`:'transparent',
+                      color:activeSec===s.key?s.color:'var(--muted)'}}>
+                    <span>{s.icon}</span>
+                    <span>{s.label}</span>
+                    <span style={{fontSize:9,padding:'1px 6px',borderRadius:6,background:activeSec===s.key?`${s.color}20`:'var(--surface2)',color:activeSec===s.key?s.color:'var(--muted)'}}>{s.coeff}</span>
                   </button>
                 ))}
               </div>
@@ -10083,6 +11042,10 @@ export default function ExamensFrancePage() {
                 <div>📗 {CHAPITRES_SECONDE_ANGLAIS.length} chapitres · {CHAPITRES_SECONDE_ANGLAIS.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
               </>) : activeSec === 'premiere-anglais' ? (<>
                 <div>📗 {CHAPITRES_PREMIERE_ANGLAIS.length} axes · {CHAPITRES_PREMIERE_ANGLAIS.reduce((t,c)=>t+c.exercices.length,0)} exercices corrigés</div>
+              </>) : activeSec === 'premiere-francais' ? (<>
+                <div>📗 5 objets d’étude · 100 exercices corrigés · EAF coef.5+2</div>
+              </>) : activeSec === 'seconde-francais' ? (<>
+                <div>📘 4 objets d’étude · 76 exercices corrigés</div>
               </>) : (<>
                 <div>📅 2021 → 2025 · 5 années</div>
                 <div style={{marginTop:4}}>📄 Sujet + ✅ Correction par centre d'examen</div>
@@ -10179,16 +11142,20 @@ export default function ExamensFrancePage() {
             <PremiereView chapitres={CHAPITRES_SECONDE}/>
           ) : activeSec === 'premiere-specialite' ? (
             <PremiereView chapitres={CHAPITRES_PREMIERE}/>
+          ) : activeSec === 'premiere-francais' ? (
+            <PremiereView chapitres={CHAPITRES_PREMIERE_FRANCAIS}/>
+          ) : activeSec === 'seconde-francais' ? (
+            <PremiereView chapitres={CHAPITRES_SECONDE_FRANCAIS}/>
           ) : activeSec === 'seconde-physique-chimie' ? (
             <PremiereView chapitres={CHAPITRES_SECONDE_PC}/>
           ) : activeSec === 'premiere-physique-chimie' ? (
             <PremiereView chapitres={CHAPITRES_PREMIERE_PC}/>
           ) : (
             <div>
-          {(matiere !== 'informatique' && activeSec !== 'seconde-anglais' && activeSec !== 'premiere-anglais') && <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14,fontWeight:600}}>
+          {(matiere !== 'informatique' && activeSec !== 'seconde-anglais' && activeSec !== 'premiere-anglais' && matiere !== 'francais') && <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:14,fontWeight:600}}>
             Sélectionnez une année pour accéder aux sujets et corrections
           </p>}
-{(!secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT) && (
+{(!secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT && !secFrancais) && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(145px,1fr))',gap:12,marginBottom:32}}>
             {sec.data.map(a=>{
               const sel = selectedYear===a.year
@@ -10215,7 +11182,7 @@ export default function ExamensFrancePage() {
           )}
 
           {/* DÉTAIL ANNÉE */}
-          {selectedYear && detail && anneeLinks && !secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT && (
+          {selectedYear && detail && anneeLinks && !secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT && !secFrancais && (
             <div style={{background:'var(--surface)',border:`2px solid ${sec.color}40`,borderRadius:20,padding:28,animation:'fadeInUp 0.25s ease both'}}>
 
               <div style={{marginBottom:24}}>
@@ -10232,7 +11199,7 @@ export default function ExamensFrancePage() {
               </div>
 
               {/* Sessions */}
-              {!secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT && <SessionsBlock lnk={anneeLinks} color={sec.color} year={selectedYear} onOpen={openPdf} />}
+              {!secNSI && (!secAnglais || activeSec==='terminale-anglais') && !secSVT && !secFrancais && <SessionsBlock lnk={anneeLinks} color={sec.color} year={selectedYear} onOpen={openPdf} />}
 
               {/* BARÈME */}
               <div style={{background:`${sec.color}08`,border:`1px solid ${sec.color}20`,borderRadius:12,padding:'14px 18px',marginBottom:20}}>
@@ -10321,6 +11288,90 @@ export default function ExamensFrancePage() {
             </>
           )}
 
+
+          {matiere==='francais' && activeSec!=='seconde-francais' && activeSec!=='premiere-francais' && (() => {
+            const s = SECTIONS_FRANCAIS.find(x=>x.key===activeSec)!
+            return (
+              <div>
+                <p style={{fontSize:12,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:16}}>Sélectionnez une année</p>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(145px,1fr))',gap:12,marginBottom:32}}>
+                  {Object.keys(s.links).map(Number).sort((a,b)=>b-a).map(yr=>{
+                    const sel = selectedYear===yr
+                    const nb = s.links[yr]?.sessions?.length ?? 0
+                    const hasCorr = s.links[yr]?.sessions?.some((ss:any)=>ss.correction)
+                    return (
+                      <div key={yr} onClick={()=>setSelectedYear(sel?null:yr)}
+                        style={{cursor:'pointer',textAlign:'center',padding:'18px 10px',
+                          background:sel?'rgba(139,92,246,0.18)':'var(--surface)',
+                          border:sel?'2px solid #8b5cf6':'1px solid var(--border)',
+                          borderRadius:14,transition:'all 0.2s',
+                          boxShadow:sel?'0 6px 24px rgba(139,92,246,0.30)':'none',
+                          transform:sel?'translateY(-3px)':'none'}}
+                        onMouseEnter={e=>{if(!sel){e.currentTarget.style.borderColor='rgba(139,92,246,0.5)';e.currentTarget.style.transform='translateY(-2px)'}}}
+                        onMouseLeave={e=>{if(!sel){e.currentTarget.style.borderColor='var(--border)';e.currentTarget.style.transform='none'}}}>
+                        <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:30,color:sel?'#8b5cf6':'var(--text)',marginBottom:6}}>{yr}</div>
+                        <div style={{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap',marginBottom:6}}>
+                          <span style={{fontSize:9,background:'rgba(139,92,246,0.12)',color:'#a78bfa',border:'1px solid rgba(139,92,246,0.25)',padding:'2px 6px',borderRadius:5,fontWeight:600}}>🧠 Philo</span>
+                          {hasCorr && <span style={{fontSize:9,background:'rgba(6,214,160,0.1)',color:'#06d6a0',padding:'2px 6px',borderRadius:5,fontWeight:600}}>✅ corrigé</span>}
+                        </div>
+                        {yr===2025 && <div style={{fontSize:10,color:'#f5c842',fontWeight:700}}>🆕 Nouveau</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+                {selectedYear && (() => {
+                  const annLinks = s.links[selectedYear]
+                  const detail = s.data.find((a:any)=>a.year===selectedYear)
+                  if (!annLinks) return null
+                  return (
+                    <div style={{background:'var(--surface)',border:'2px solid rgba(139,92,246,0.4)',borderRadius:20,padding:28,marginBottom:24}}>
+                      <div style={{marginBottom:20}}>
+                        <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
+                          <span style={{fontSize:22}}>🧠</span>
+                          <h3 style={{margin:0}}>Philosophie — Bac {selectedYear}</h3>
+                          <span style={{fontSize:11,background:'rgba(139,92,246,0.12)',color:'#a78bfa',border:'1px solid rgba(139,92,246,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
+                            📄 {annLinks.sessions?.length ?? 0} sessions · Série Générale & Techno
+                          </span>
+                        </div>
+                        <p style={{fontSize:13,color:'var(--muted)',margin:0}}>Dissertation ou Explication de texte · <strong style={{color:'var(--text)'}}>4h · Coef. 8</strong></p>
+                      </div>
+                      <SessionsBlock lnk={annLinks} color='#8b5cf6' year={selectedYear} onOpen={openPdf} />
+                      {detail && (
+                        <div style={{background:'rgba(139,92,246,0.08)',border:'1px solid rgba(139,92,246,0.2)',borderRadius:12,padding:'14px 18px',marginTop:16}}>
+                          <p style={{margin:'0 0 10px',fontSize:11,color:'var(--muted)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>📊 Thèmes — Métropole J1</p>
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:10}}>
+                            {(detail?.exercices||[]).map((ex:any,i:number)=>(
+                              <div key={i} style={{background:'var(--surface)',border:'1px solid var(--border)',borderLeft:'3px solid #8b5cf6',borderRadius:10,padding:'12px 14px'}}>
+                                <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,alignItems:'flex-start',gap:8}}>
+                                  <span style={{fontWeight:700,fontSize:12,color:'#a78bfa'}}>{ex.titre}</span>
+                                  <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'#f5c842',background:'rgba(245,200,66,0.12)',padding:'1px 7px',borderRadius:6,fontWeight:700,flexShrink:0}}>{ex.pts} pts</span>
+                                </div>
+                                <p style={{fontSize:11,color:'var(--text2)',lineHeight:1.55,margin:0}}>{ex.theme}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{marginTop:20,display:'flex',gap:10,flexWrap:'wrap'}}>
+                        <a href='/bac-france/francais/terminale'
+                          style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 18px',background:'rgba(139,92,246,0.12)',border:'1px solid rgba(139,92,246,0.3)',borderRadius:11,textDecoration:'none',color:'#a78bfa',fontWeight:700,fontSize:12,transition:'all 0.18s'}}
+                          onMouseEnter={e=>e.currentTarget.style.background='rgba(139,92,246,0.2)'}
+                          onMouseLeave={e=>e.currentTarget.style.background='rgba(139,92,246,0.12)'}>
+                          🧠 Cours Philosophie Terminale →
+                        </a>
+                        <a href='/bac-france/francais/lettres'
+                          style={{display:'inline-flex',alignItems:'center',gap:6,padding:'9px 18px',background:'rgba(236,72,153,0.08)',border:'1px solid rgba(236,72,153,0.25)',borderRadius:11,textDecoration:'none',color:'#f472b6',fontWeight:700,fontSize:12,transition:'all 0.18s'}}
+                          onMouseEnter={e=>e.currentTarget.style.background='rgba(236,72,153,0.15)'}
+                          onMouseLeave={e=>e.currentTarget.style.background='rgba(236,72,153,0.08)'}>
+                          📚 Cours Français Lettres →
+                        </a>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            )
+          })()}
 
           {/* seconde-physique-chimie rendu via PremiereView ci-dessus */}
 

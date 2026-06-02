@@ -973,6 +973,146 @@ NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
   }
 }
 
+
+// ════════════════════════════════════════════════════════════════════
+//  BAC BLANC FRANÇAIS — Philosophie (Terminale) + EAF (Première)
+//  Structure officielle Bac France · Coef. 8 (Philo) · Coef. 5 (EAF)
+// ════════════════════════════════════════════════════════════════════
+async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
+  const secLabel  = sec?.label || candidat.section
+  const today     = new Date()
+  const dateStr   = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy      = today.getFullYear()
+  const seed      = 'BBFR_FRANCAIS_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  // ── Sections Français
+  const isTerminale = candidat.sectionKey === 'terminale' || candidat.sectionKey === 'terminale-francais'
+  const isPremiere  = candidat.sectionKey === 'premiere'  || candidat.sectionKey === 'premiere-francais'
+  const isSeconde   = candidat.sectionKey === 'seconde'   || candidat.sectionKey === 'seconde-francais'
+
+  // ── Durée et structure selon section
+  const secDuration = isTerminale ? 240 : isPremiere ? 240 : 120 // minutes
+  const coeff       = isTerminale ? 8   : isPremiere ? 5   : 1
+
+  // ── Rotation des thèmes sur 61 jours
+  const THEMES_PHILO = [
+    { ex1:'La conscience et l\'inconscient', ex2:'Explication de texte (Descartes ou Freud)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La liberté et le déterminisme',   ex2:'Explication de texte (Spinoza ou Sartre)',   note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La justice et le droit',          ex2:'Explication de texte (Platon ou Rawls)',     note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'L\'art et la technique',          ex2:'Explication de texte (Hegel ou Heidegger)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La vérité et la raison',          ex2:'Explication de texte (Kant ou Bachelard)',  note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'Le bonheur et la morale',         ex2:'Explication de texte (Épicure ou Kant)',     note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'Le politique et la société',      ex2:'Explication de texte (Rousseau ou Hobbes)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+  ]
+  const THEMES_EAF = [
+    { ex1:'Commentaire composé',           ex2:'Dissertation littéraire',  ex3:'Question sur corpus', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Analyse linéaire — Poésie',     ex2:'Dissertation EAF',         ex3:'Présentation Grand Oral', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Commentaire — Roman',           ex2:'Essai argumentatif',       ex3:'Texte du corpus', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Analyse linéaire — Théâtre',    ex2:'Dissertation EAF',         ex3:'Objet d\'étude — Théâtre', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Commentaire — Littérature d\'idées', ex2:'Dissertation EAF',   ex3:'Texte argumentatif', note:'EAF Écrit · 4h · Coef. 5' },
+  ]
+  const THEMES_SECONDE = [
+    { ex1:'Commentaire de texte',          ex2:'Écriture d\'invention',    ex3:'Question de grammaire', note:'Évaluation Seconde · 2h' },
+    { ex1:'Essai argumentatif',            ex2:'Analyse de poème',         ex3:'Figures de style', note:'Évaluation Seconde · 2h' },
+    { ex1:'Analyse d\'extrait romanesque', ex2:'Écriture d\'invention',    ex3:'Question de langue', note:'Évaluation Seconde · 2h' },
+  ]
+
+  const progIdx   = (dayNum - 1) % (isTerminale ? THEMES_PHILO.length : isPremiere ? THEMES_EAF.length : THEMES_SECONDE.length)
+  const prog      = isTerminale ? THEMES_PHILO[progIdx] : isPremiere ? THEMES_EAF[progIdx] : THEMES_SECONDE[progIdx]
+  const ex1Theme  = prog.ex1
+  const ex2Theme  = prog.ex2
+  const ex3Theme  = (prog as any).ex3 || ''
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
+Tu crées des sujets BAC BLANC FRANÇAIS originaux, rigoureux, de niveau Bac France.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION FRANÇAIS OBLIGATOIRE :
+- Extraits : citation entre guillemets avec nom auteur et œuvre entre parenthèses
+- Figures de style : nommées avec leur effet
+- JAMAIS de LaTeX — texte courant uniquement
+- Exercices avec parties clairement numérotées I. II. III. ou 1. 2. 3.`
+
+  const isPhiloStr  = isTerminale ? 'PHILOSOPHIE — Terminale Générale' : isPremiere ? 'FRANÇAIS EAF — Première' : 'FRANÇAIS — Seconde'
+  const structure   = isTerminale
+    ? `Exercice 1 — DISSERTATION PHILOSOPHIQUE (10 points) : Sujet : "${ex1Theme}"\nExercice 2 — EXPLICATION DE TEXTE (10 points) : ${ex2Theme}`
+    : isPremiere
+    ? `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)${ex3Theme ? '\nExercice 3 — ' + ex3Theme + ' (bonus/aide)' : ''}`
+    : `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)`
+
+  const prompt = 'Crée un sujet BAC BLANC ' + isPhiloStr + ' ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE :\n'
+    + 'Durée : ' + (secDuration/60) + 'h · Total : 20 points · Coeff : ' + coeff + '\n'
+    + structure + '\n\n'
+    + (isTerminale
+      ? 'RÈGLES DISSERTATION :\n'
+        + '- Problématique clairement posée à partir du sujet\n'
+        + '- 3 parties : thèse / antithèse / synthèse\n'
+        + '- Références philosophiques : au moins 3 auteurs avec leurs concepts\n'
+        + '- Exemples concrets et contemporains bienvenus\n'
+        + '- Niveau exactement équivalent au vrai Bac France · Minimum 200 mots par exercice\n\n'
+        + 'RÈGLES EXPLICATION DE TEXTE :\n'
+        + '- Extrait de philosophe de 150-200 mots\n'
+        + '- Questions d\'analyse : thèse du texte, structure argumentative, portée\n'
+        + '- Minimum 150 mots de consignes\n\n'
+      : isPremiere
+      ? 'RÈGLES EAF :\n'
+        + '- Texte(s) du corpus de 200-300 mots (extrait littéraire adapté au niveau)\n'
+        + '- Questions progressives : identification, analyse, interprétation\n'
+        + '- Dissertation avec plan dialectique attendu\n'
+        + '- Minimum 200 mots par exercice\n\n'
+      : 'RÈGLES SECONDE :\n'
+        + '- Texte de 150-200 mots (extrait romanesque ou poétique)\n'
+        + '- Questions progressives de compréhension et d\'analyse\n'
+        + '- Écriture d\'invention avec contraintes précises\n'
+        + '- Minimum 150 mots par exercice\n\n'
+    )
+    + 'RÉPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc ' + (isTerminale ? 'Philosophie' : 'Français EAF') + ' — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + ex1Theme + '", "title": "' + (isTerminale ? 'Dissertation — ' + ex1Theme : ex1Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'SUJET : \\\"' + ex1Theme + '\\\"\\n\\nDéfinissez les termes du sujet, posez la problématique, proposez un plan en 3 parties avec arguments et exemples philosophiques.' : 'TEXTE DU CORPUS :\\n[Extrait littéraire 200 mots]\\n\\n1. Questions d\'analyse\\n2. Exercice principal') + '" },\n'
+    + '    { "num": 2, "theme": "' + ex2Theme + '", "title": "' + (isTerminale ? 'Explication de texte — ' + ex2Theme : ex2Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'TEXTE :\\n[Extrait philosophique 180 mots]\\n\\n1. Dégagez la thèse et la structure argumentative\\n2. Expliquez et discutez les arguments\\n3. Portée et actualité du texte' : 'SUJET DE DISSERTATION :\\n[Sujet EAF]\\n\\nProposez un plan détaillé puis rédigez l\'introduction et au moins une partie.') + '" }\n'
+    + '  ]\n'
+    + '}'
+
+  const raw = await askClaude(prompt, system, 5500, 'francais')
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc ' + (isTerminale ? 'Philosophie' : 'Français') + ' — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
 // ── analyzeStudentWork (identique simulation) ─────────────────────
 // Analyse UN exercice immédiatement après correction
 async function analyzeOneExercise(
@@ -1783,7 +1923,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour
 }: {
   candidat: Candidat
   dayNum: number
@@ -1792,6 +1932,7 @@ function PhaseChoixMatiereFR({
   onInfo: () => void
   onAnglais: () => void
   onSvt: () => void
+  onFrancais: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -1868,6 +2009,18 @@ function PhaseChoixMatiereFR({
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
+    {
+      key: 'francais',
+      icon: '📚',
+      label: 'Français · Philosophie',
+      desc: 'Philosophie Terminale (coef. 8) · EAF Première (coef. 5) · Dissertation · Explication de texte · Commentaire composé · Correction IA',
+      color: '#ec4899',
+      gradient: 'linear-gradient(135deg,rgba(236,72,153,0.18),rgba(219,39,119,0.08))',
+      border: 'rgba(236,72,153,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
   ]
 
   return (
@@ -1916,6 +2069,7 @@ function PhaseChoixMatiereFR({
                 if (m.key === 'informatique') { onInfo(); return }
                 if (m.key === 'anglais') { onAnglais(); return }
                 if (m.key === 'svt') { onSvt(); return }
+                if (m.key === 'francais') { onFrancais(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -1971,7 +2125,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
-  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'>('maths')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>('maths')
   const [err,setErr]=useState('')
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
@@ -1984,7 +2138,9 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const sec = SECTIONS_FR.find(s=>s.key===sectionKey)
     || SECTIONS_NSI_FR?.find((s:any)=>s.key===sectionKey)
     || SECTIONS_ANGLAIS_FR?.find((s:any)=>s.key===sectionKey)
-    || (sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
+    || (sectionKey.includes('francais')
+        ? {key:sectionKey,label:sectionKey==='terminale-francais'?'Terminale — Philosophie':sectionKey==='premiere-francais'?'Première — EAF (Écrit + Oral)':'Seconde — Français',icon:'📚',color:'#ec4899',duration:sectionKey==='terminale-francais'||sectionKey==='premiere-francais'?240:120,coeff:sectionKey==='terminale-francais'?8:sectionKey==='premiere-francais'?5:1,themes:[],programme:[]}
+        : sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
         ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
         : undefined)
 
@@ -2061,22 +2217,23 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
               Matière & Section
             </label>
 
-            {/* Niveau 1 — Matière */}
-            <div style={{display:'flex',gap:8,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:5}}>
+            {/* Niveau 1 — Matière (grille 3×2) */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:6}}>
               {([
-                {key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b'},
-                {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0'},
-                {key:'informatique' as const, icon:'💻', label:'Informatique NSI', color:'#8b5cf6'},
+                {key:'maths'        as const, icon:'🧮', label:'Maths',            color:'#f59e0b'},
+                {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie',  color:'#06d6a0'},
+                {key:'informatique' as const, icon:'💻', label:'NSI',              color:'#8b5cf6'},
                 {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
                 {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
+                {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
               ]).map(m=>(
                 <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
-                  style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',gap:6,padding:'10px 8px',borderRadius:10,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:12,fontWeight:700,transition:'all 0.2s',
+                  style={{display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'9px 6px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:700,transition:'all 0.2s',
                     background:activeMatiereFiche===m.key?m.color:'transparent',
                     color:activeMatiereFiche===m.key?'white':'rgba(255,255,255,0.4)',
-                    boxShadow:activeMatiereFiche===m.key?`0 4px 16px ${m.color}40`:'none'}}>
-                  <span style={{fontSize:16}}>{m.icon}</span>
-                  <span style={{fontSize:11}}>{m.label}</span>
+                    boxShadow:activeMatiereFiche===m.key?`0 4px 14px ${m.color}40`:'none'}}>
+                  <span style={{fontSize:15}}>{m.icon}</span>
+                  <span style={{fontSize:10,whiteSpace:'nowrap'}}>{m.label}</span>
                 </button>
               ))}
             </div>
@@ -2102,6 +2259,10 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'terminale-svt', label:'Terminale Spé SVT',          icon:'🎓', color:'#22c55e', duration:210, coeff:16},
                 {key:'premiere-svt',  label:'Première Spé SVT',           icon:'📗', color:'#4ade80', duration:120, coeff:2},
                 {key:'seconde-svt',   label:'Seconde SVT',                icon:'📘', color:'#16a34a', duration:60,  coeff:1},
+              ] : activeMatiereFiche==='francais' ? [
+                {key:'terminale-francais', label:'Terminale — Philosophie', icon:'🧠', color:'#ec4899', duration:240, coeff:8},
+                {key:'premiere-francais',  label:'Première — EAF',          icon:'📗', color:'#f472b6', duration:240, coeff:5},
+                {key:'seconde-francais',   label:'Seconde — Français',       icon:'📘', color:'#a78bfa', duration:120, coeff:1},
               ] : [
                 {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
                 {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
@@ -3620,6 +3781,33 @@ function BacBlancFranceInner() {
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
 
+
+  const handleStartFrancais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('francais')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français · Philosophie pour accéder au Bac Blanc.\n→ mathsbac.com/abonnement?matiere=francais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('francais')) {
+      alert('✅ Vous avez déjà passé votre examen Français · Philosophie aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    globalMatiere = 'francais'
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancFrancais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      markPassedTodayForMatiere('francais')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -3672,6 +3860,7 @@ function BacBlancFranceInner() {
       onInfo={handleStartInfo}
       onAnglais={handleStartAnglais}
       onSvt={handleStartSvt}
+      onFrancais={handleStartFrancais}
       onRetour={()=>setPhase('inscription')}
     />
   )

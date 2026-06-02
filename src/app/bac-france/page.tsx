@@ -97,6 +97,23 @@ const MATIERES = [
       { label: '⚙️ STI2D · ST2S',       items: ['Énergie','Matériaux','Santé & PC'] },
     ],
   },
+  {
+    slug: 'francais',
+    icon: '📚',
+    titre: 'Français & Littérature',
+    sous: 'Seconde · Première · Terminale — Voie Générale & Technologique',
+    couleur: '#ec4899',
+    gradient: 'linear-gradient(135deg,rgba(236,72,153,0.14),rgba(219,39,119,0.07))',
+    border: 'rgba(236,72,153,0.3)',
+    badgeColor: '#f472b6',
+    badge: 'Bac 2027 · Coef. 5 (EAF)',
+    stats: { voies: 3, chapitres: 24, thm: 160, ex: 130 },
+    apercu: [
+      { label: '📘 Seconde',        items: ['Roman & récit','Poésie','Théâtre','Argumentation','Littérature & société'] },
+      { label: '📗 Première (EAF)', items: ['La Fontaine','Molière','Balzac','Rimbaud','Essais & pamphlets'] },
+      { label: '🎓 Grand Oral',     items: ['Préparation oral','Thèse & contre-thèse','Figures de style','Contraction de texte'] },
+    ],
+  },
 ]
 
 export default function BacFrancePage() {
@@ -120,10 +137,10 @@ export default function BacFrancePage() {
               Cours, théorèmes, formules et exercices corrigés avec IA professeur.
             </p>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
-              <span>🏫 5 matières</span><span>·</span>
-              <span>📚 180 chapitres</span><span>·</span>
-              <span>📊 1389+ notions</span><span>·</span>
-              <span>📝 1169+ exercices</span>
+              <span>🏫 6 matières</span><span>·</span>
+              <span>📚 204 chapitres</span><span>·</span>
+              <span>📊 1549+ notions</span><span>·</span>
+              <span>📝 1299+ exercices</span>
             </div>
           </div>
 
@@ -201,7 +218,7 @@ export default function BacFrancePage() {
           {/* CTA IA */}
           <div style={{ marginTop: 52, background: 'linear-gradient(135deg,rgba(79,110,247,0.1),rgba(124,58,237,0.06))', border: '1px solid rgba(79,110,247,0.2)', borderRadius: 18, padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
             <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · SVT · Physique · Informatique · Anglais France</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 6 }}>🤖 IA · Maths · SVT · Physique · Informatique · Anglais · Français France</div>
               <h3 style={{ fontSize: 17, marginBottom: 4 }}>Prof IA — Résous n'importe quel exercice</h3>
               <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Solveur étape par étape · Chat professeur · Simulation Bac</p>
             </div>
