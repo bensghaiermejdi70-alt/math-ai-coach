@@ -1510,15 +1510,15 @@ export default function ChatPage() {
     <>
       <Navbar />
       <main style={{ position: 'fixed', top: 64, left: 0, right: 0, bottom: 0, zIndex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', maxWidth: 1200, width: '100%', margin: '0 auto', padding: '0 16px', gap: 16, minHeight: 0, scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.4) transparent' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '0 8px', gap: 16, minHeight: 0, scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.4) transparent' }}>
 
           {/* ── SIDEBAR ── */}
-          <aside style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 0', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
+          <aside style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16, padding: '36px 0 14px', overflowY: 'auto', overflowX: 'hidden', height: '100%' }}>
 
             {/* ── HISTORIQUE ── */}
-            <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:16, overflow:'hidden' }}>
+            <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:18, overflow:'hidden' }}>
               <button onClick={() => setShowHistory(!showHistory)}
-                style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', background:'transparent', border:'none', cursor:'pointer', fontFamily:'inherit' }}>
+                style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 16px', background:'transparent', border:'none', cursor:'pointer', fontFamily:'inherit' }}>
                 <span style={{ fontSize:12, fontWeight:700, color:'var(--text2)' }}>🕐 Historique ({sessions.length})</span>
                 <span style={{ fontSize:11, color:'var(--muted)', transform: showHistory ? 'rotate(180deg)' : 'none', transition:'0.2s' }}>▼</span>
               </button>
@@ -1549,11 +1549,11 @@ export default function ChatPage() {
             </div>
 
             {/* Prof IA card — compacte */}
-            <div style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.08),rgba(79,110,247,0.08))', border: '1px solid rgba(6,214,160,0.22)', borderRadius: 14, padding: '12px 14px' }}>
+            <div style={{ background: 'linear-gradient(135deg,rgba(6,214,160,0.08),rgba(79,110,247,0.08))', border: '1px solid rgba(6,214,160,0.22)', borderRadius: 14, padding: '20px 18px' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#06d6a0,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🤖</div>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#06d6a0,#059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🤖</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>Prof IA</div>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Prof IA</div>
                   <div style={{ fontSize: 10, color: '#06d6a0' }}>● En ligne · Maths Tunisie & France</div>
                 </div>
               </div>
@@ -1562,27 +1562,6 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {/* Questions par catégorie */}
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', fontSize: 10, color: 'var(--muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Questions fréquentes</div>
-              <div style={{ display: 'flex', overflowX: 'auto', borderBottom: '1px solid var(--border)' }}>
-                {SUGGESTIONS.map((s, i) => (
-                  <button key={i} onClick={() => setActiveCat(i)} style={{ padding: '7px 10px', border: 'none', cursor: 'pointer', flexShrink: 0, background: activeCat === i ? `${s.color}15` : 'transparent', borderBottom: activeCat === i ? `2px solid ${s.color}` : '2px solid transparent', fontSize: 10, color: activeCat === i ? s.color : 'var(--muted)', fontWeight: activeCat === i ? 700 : 400, transition: 'all 0.15s' }}>
-                    {s.cat.split(' ')[0]}
-                  </button>
-                ))}
-              </div>
-              <div style={{ padding: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {SUGGESTIONS[activeCat].questions.map((q, i) => (
-                  <button key={i} onClick={() => sendMessage(q)} disabled={loading}
-                    style={{ textAlign: 'left', padding: '7px 9px', borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--text2)', fontSize: 11.5, cursor: 'pointer', lineHeight: 1.4, transition: 'all 0.15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${SUGGESTIONS[activeCat].color}12`; e.currentTarget.style.color = SUGGESTIONS[activeCat].color }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text2)' }}>
-                    ↗ {q}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {messages.length > 0 && (
               <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -1619,7 +1598,7 @@ export default function ChatPage() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
 
             {/* Header avec sélecteur de matière */}
-            <div style={{ padding: '10px 0 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
+            <div style={{ padding: '24px 0 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, flexWrap: 'wrap' }}>
               <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#06d6a0', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
               <span style={{ fontWeight: 700, fontSize: 15, flexShrink: 0 }}>Professeur IA</span>
               {/* Sélecteur de matières */}
@@ -1784,7 +1763,6 @@ export default function ChatPage() {
 
                 {/* Colonne gauche : boutons + textarea pleine largeur */}
                 <div style={{ flex:1, display:'flex', flexDirection:'column', gap:5, minWidth:0 }}>
-                  {/* Boutons 📎 📸 au-dessus */}
                   <div style={{ display:'flex', gap:6 }}>
                     <button onClick={() => imageInputRef.current?.click()} title="Joindre une image"
                       style={{ width:30, height:30, borderRadius:7, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
@@ -1799,14 +1777,12 @@ export default function ChatPage() {
                       📸
                     </button>
                   </div>
-                  {/* Textarea pleine largeur */}
                   <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
                     placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : pendingImage ? "Ajoute une question sur l'image (optionnel)…" : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
                     rows={1} style={{ width:'100%', border:'none', background:'transparent', color:'var(--text)', fontSize:14, fontFamily:'inherit', resize:'none', outline:'none', lineHeight:1.5, maxHeight:120, overflow:'auto', boxSizing:'border-box' }}
                     onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px' }} />
                 </div>
-                {/* Bouton envoi */}
                 <button onClick={() => sendMessage()} disabled={loading || (!input.trim() && !pendingImage) || isQuotaFull}
                   style={{ width:38, height:38, borderRadius:10, border:'none', flexShrink:0, alignSelf:'flex-end', background: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'var(--surface2)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:16, cursor: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }}>
                   {loading ? '⏳' : isQuotaFull ? '🔒' : '↑'}
