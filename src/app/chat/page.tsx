@@ -1768,31 +1768,35 @@ export default function ChatPage() {
                     e.target.value = ''
                   }} />
 
-                <div style={{ display:'flex', alignItems:'flex-end', gap:8 }}>
-                  {/* Bouton image */}
-                  <button onClick={() => imageInputRef.current?.click()} title="Joindre une image"
-                    style={{ width:36, height:36, borderRadius:9, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor='#6366f1'; e.currentTarget.style.color='#818cf8' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
-                    📎
-                  </button>
-                  {/* Bouton caméra mobile */}
-                  <button onClick={() => cameraInputRef.current?.click()} title="Prendre une photo"
-                    style={{ width:36, height:36, borderRadius:9, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor='#06d6a0'; e.currentTarget.style.color='#06d6a0' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
-                    📸
-                  </button>
-                <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                  placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : pendingImage ? 'Ajoute une question sur l\'image (optionnel)…' : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
-                  rows={1} style={{ flex: 1, border: 'none', background: 'transparent', color: 'var(--text)', fontSize: 14, fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5, maxHeight: 120, overflow: 'auto' }}
-                  onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 120) + 'px' }} />
-                <button onClick={() => sendMessage()} disabled={loading || (!input.trim() && !pendingImage) || isQuotaFull}
-                  style={{ width: 38, height: 38, borderRadius: 10, border: 'none', flexShrink: 0, background: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'var(--surface2)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color: 'white', fontSize: 16, cursor: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                  {loading ? '⟳' : isQuotaFull ? '🔒' : '↑'}
-                </button>
+                {/* Colonne gauche : boutons + textarea pleine largeur */}
+                <div style={{ flex:1, display:'flex', flexDirection:'column', gap:5, minWidth:0 }}>
+                  {/* Boutons 📎 📸 au-dessus de la textarea */}
+                  <div style={{ display:'flex', gap:6 }}>
+                    <button onClick={() => imageInputRef.current?.click()} title="Joindre une image"
+                      style={{ width:30, height:30, borderRadius:7, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#6366f1'; e.currentTarget.style.color='#818cf8' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
+                      📎
+                    </button>
+                    <button onClick={() => cameraInputRef.current?.click()} title="Prendre une photo"
+                      style={{ width:30, height:30, borderRadius:7, border:'1px solid var(--border)', background:'var(--surface2)', color:'var(--muted)', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.2s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='#06d6a0'; e.currentTarget.style.color='#06d6a0' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
+                      📸
+                    </button>
+                  </div>
+                  {/* Textarea — prend toute la largeur de la colonne */}
+                  <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                    placeholder={isQuotaFull ? 'Quota atteint — renouvellement lundi prochain' : pendingImage ? "Ajoute une question sur l'image (optionnel)…" : 'Pose ta question… ou dis "trace f(x) = x²−2x" pour un graphique interactif'}
+                    rows={1} style={{ width:'100%', border:'none', background:'transparent', color:'var(--text)', fontSize:14, fontFamily:'inherit', resize:'none', outline:'none', lineHeight:1.5, maxHeight:120, overflow:'auto', boxSizing:'border-box' }}
+                    onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,120)+'px' }} />
                 </div>
+                {/* Bouton envoi — aligné en bas */}
+                <button onClick={() => sendMessage()} disabled={loading || (!input.trim() && !pendingImage) || isQuotaFull}
+                  style={{ width:38, height:38, borderRadius:10, border:'none', flexShrink:0, alignSelf:'flex-end', background: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'var(--surface2)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color:'white', fontSize:16, cursor: loading || (!input.trim() && !pendingImage) || isQuotaFull ? 'not-allowed' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.2s' }}>
+                  {loading ? '⏳' : isQuotaFull ? '🔒' : '↑'}
+                </button>
               </div>
               <div style={{ textAlign: 'center', fontSize: 10.5, color: 'var(--muted)', marginTop: 7 }}>
                 Entrée pour envoyer · Shift+Entrée pour saut de ligne · 🇹🇳 60 DT/mois · 🇫🇷 19€/mois · 📈 Graphiques interactifs
