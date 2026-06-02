@@ -1270,23 +1270,18 @@ function SolvePageInner() {
   ] as const
 
   const [selectedMatiere, setSelectedMatiere] = useState<string>(() => {
-    // Priorité : URL ?subject= → mathematiques par défaut
-    // NE PAS utiliser matiereActive ici (1 seule matière) — laisser l'utilisateur choisir
+    // Priorité : URL ?subject= → matiereActive → 'mathematiques'
     if (typeof window !== 'undefined') {
       const s = new URLSearchParams(window.location.search).get('subject')
       if (s && ['physique','informatique','svt','anglais','litterature'].includes(s)) return s
     }
-    return 'mathematiques'
+    return matiereActive || 'mathematiques'
   })
 
-  // Sync à la connexion : sélectionner la matière de l'abonnement SEULEMENT si
-  // l'utilisateur n'a qu'un seul abonnement actif (pas de multi-abonnements)
+  // Sync si matiereActive change (connexion)
   useEffect(() => {
-    if (matiereActive && activeMatieres.length === 1) {
-      setSelectedMatiere(matiereActive)
-    }
-    // Si multi-abonnements → ne pas forcer, laisser 'mathematiques' ou le choix de l'URL
-  }, [matiereActive, activeMatieres])
+    if (matiereActive) setSelectedMatiere(matiereActive)
+  }, [matiereActive])
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
   const [history, setHistory] = useState<HistoryItem[]>([])
@@ -1455,14 +1450,22 @@ COMBINAISON (plusieurs formes dans un seul graphique) :
   {"type":"dimension","x1":0,"y1":0,"x2":0,"y2":3,"label":"3","color":"#10b981"}
 ]}]
 
-QUAND UTILISER — OBLIGATOIRE :
-- Exercice sur une FONCTION (f(x), étude, dérivée, extremum, convexité) → TOUJOURS un graphique "function" avec la courbe de f ET f' si dérivée étudiée
-- LIMITE (x→+∞, x→0) → graphique "function" montrant le comportement asymptotique
-- INTÉGRALE → graphique "function" avec l'aire entre les bornes
-- SUITE → graphique "function" des premiers termes
-- TRIANGLE, cercle, géométrie → TOUJOURS type "geometry" avec axes + grille + toutes les formes
-- VECTEURS, repère → type "geometry" avec "axes" + "vector"
-- RÈGLE ABSOLUE : si l'exercice contient f(x), un triangle, un cercle ou des vecteurs → un graphique DOIT apparaître`
+QUAND UTILISER — RÈGLES ABSOLUES (AUCUNE EXCEPTION) :
+- FONCTION f(x) (étude, dérivée, extremum, convexité, tableau de variations) → graphique "function" OBLIGATOIRE avec f ET f' tracées
+- INTERPRÉTATION GRAPHIQUE demandée → graphique AVEC les courbes tracées, jamais un repère vide
+- LIMITE (x→+∞, x→0±) → graphique "function" montrant les asymptotes et le comportement
+- INTÉGRALE → graphique "function" avec la courbe ET l'aire colorée entre les bornes (utilise "fill":true si possible)
+- SUITE (uₙ) → graphique "function" des premiers termes + droite y=L si convergente
+- PROBABILITÉS avec loi continue (normale, exponentielle) → graphique "function" de la densité
+- TRIANGLE, cercle, polygone, géométrie → type "geometry" avec {"type":"axes"} + {"type":"grid"} + TOUTES les formes nommées
+- VECTEURS, repère → type "geometry" avec "axes" + chaque vecteur en "vector"
+- TABLEAU DE SIGNE → représenter graphiquement la fonction pour illustrer les signes
+
+EXEMPLES CORRECTS — interprétation graphique :
+f(x) = 2x³ - 3x² - 12x + 5 → TRACER les deux courbes :
+[GRAPH: {"type":"function","expressions":["2*x*x*x - 3*x*x - 12*x + 5","6*x*x - 6*x - 12"],"xMin":-3,"xMax":4,"labels":["f(x) = 2x³-3x²-12x+5","f\'(x) = 6x²-6x-12"],"title":"Courbe de f et sa dérivée","xLabel":"x","yLabel":"y","colors":["#6366f1","#f59e0b"]}]
+
+RÈGLE CRITIQUE : quand on te demande "interpréter graphiquement" ou "représenter" → JAMAIS un repère vide — TOUJOURS les courbes/points tracés avec les bonnes expressions JS`
 
     const SYSTEM_PHYSIQUE = `Tu es un professeur expert du Bac (Tunisie ET France), spécialiste en PHYSIQUE-CHIMIE.
 Tu rédiges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
@@ -1529,7 +1532,18 @@ MÉTHODE OBLIGATOIRE pour chaque question :
 2. Poser l'équation avec toutes les grandeurs nommées et leurs unités
 3. Substituer les valeurs numériques avec unités
 4. Calculer et encadrer le résultat
-5. Tracer le graphique correspondant si pertinent`
+5. GRAPHIQUE OBLIGATOIRE si applicable — avec les VRAIES valeurs numériques calculées :
+   - τ=RC calculé → utiliser Math.exp(-x/τ) avec la vraie valeur de τ dans l'expression
+   - ω₀ calculé → utiliser Math.cos(ω₀*x) dans l'expression
+   - [A]₀ calculée → utiliser la vraie valeur initiale dans Math.exp(-k*x)
+   - JAMAIS un graphique avec des paramètres génériques quand les valeurs numériques sont connues
+
+EXEMPLES AVEC VALEURS NUMÉRIQUES :
+Circuit RC (R=1kΩ, C=1mF → τ=1s, E=10V) :
+[GRAPH: {"type":"function","expressions":["10*(1-Math.exp(-x))","10*Math.exp(-x)"],"xMin":0,"xMax":5,"labels":["u_C charge (V)","u_R décharge (V)"],"title":"Circuit RC — τ=1s, E=10V","xLabel":"t (s)","yLabel":"Tension (V)"}]
+
+Dosage acide-base (V_éq = 20 mL) :
+[GRAPH: {"type":"function","expressions":["14/(1+Math.exp(-0.6*(x-20)))"],"xMin":0,"xMax":40,"labels":["pH = f(V versé)"],"title":"Dosage pH — V_éq = 20 mL","xLabel":"V NaOH versé (mL)","yLabel":"pH"}]`
 
     const SYSTEM_INFO = `Tu es un professeur expert du Bac Tunisie ET un ingénieur informatique senior.
 Tu produis des corrections EXHAUSTIVES, ULTRA-COMPLÈTES et PÉDAGOGIQUES — les meilleures qui existent.
@@ -1856,10 +1870,14 @@ Génération II : □  ■  ◯  ●
 MÉTHODE SVT OBLIGATOIRE :
 1. Définir TOUS les termes scientifiques dès leur première apparition
 2. Pour chaque expérience : Hypothèse → Protocole → Résultats attendus → Conclusion
-3. Exploiter les documents : décrire, analyser, interpréter, conclure
+3. Exploiter les documents : décrire, analyser, interpréter, conclure (D.A.I.C.)
 4. Schéma bilan OBLIGATOIRE pour : mitose/méiose, synapse, immunité, photosynthèse, régulation hormonale
-5. Graphique OBLIGATOIRE si des données chiffrées sont disponibles (courbe, histogramme)
-6. Conclure en intégrant dans le contexte biologique global\``
+5. Graphique OBLIGATOIRE si données chiffrées — avec les VRAIES valeurs des données fournies
+6. Pour les courbes : utiliser les paramètres numériques fournis dans l'exercice (Km, Vmax, N₀, etc.)
+7. Conclure en intégrant dans le contexte biologique global
+
+RÈGLE GRAPHIQUE SVT : si l'exercice contient des valeurs numériques (tableau de données, mesures)
+→ tracer le graphique avec ces vraies valeurs, pas des courbes génériques`
 
     const SYSTEM_ANGLAIS = `You are an expert English teacher for Bac students (Tunisia AND France).
 You write EXHAUSTIVE, ULTRA-DETAILED and PEDAGOGICAL corrections.
@@ -1974,7 +1992,12 @@ MOUVEMENTS LITTÉRAIRES :
 - Symbolisme (fin XIXe) : musique, suggestion, symboles, Mallarmé
 - Surréalisme (XXe) : inconscient, rêve, hasard objectif, Breton
 - Existentialisme (XXe) : liberté, responsabilité, absurde, engagement
-- Nouveau Roman (XXe) : refus de l'intrigue traditionnelle, Robbe-Grillet, Sarraute`
+- Nouveau Roman (XXe) : refus de l'intrigue traditionnelle, Robbe-Grillet, Sarraute
+
+SCHÉMAS LITTÉRATURE (utiliser quand applicable) :
+- Schéma actanciel de Greimas → représenter avec les 6 cases : Destinateur | Sujet → Objet | Destinataire + Adjuvant / Opposant
+- Structure du commentaire composé → toujours annoncer clairement : I. [Axe 1] / II. [Axe 2] / III. [Axe 3 si applicable]
+- Chronologie littéraire → tableau récapitulatif des mouvements par siècle si demandé`
 
     // System prompt strict — refus explicite des autres matières
     const REFUS_MATHS = '\u{1F512} Ce module est réservé aux Mathématiques. Sélectionne la bonne matière dans le menu.'
@@ -2002,6 +2025,11 @@ MOUVEMENTS LITTÉRAIRES :
 EXERCICE :
 ${input}
 
+RAPPEL GRAPHIQUE OBLIGATOIRE :
+- Si l'exercice mentionne f(x), une fonction, une courbe, une droite, un repère, une figure géométrique, un vecteur → insère IMMÉDIATEMENT le graphique correspondant avec les expressions calculées
+- "Représenter graphiquement" = tracer les courbes avec les vraies expressions — JAMAIS un repère vide
+- Place le graphique APRÈS les calculs de la partie concernée, avec les valeurs numériques trouvées
+
 Structure OBLIGATOIRE :
 
 ## Analyse du problème
@@ -2015,6 +2043,8 @@ Structure OBLIGATOIRE :
 - Étape 1 : [calcul complet] → [résultat intermédiaire]
 - Étape 2 : ...
 > **Résultat :** [réponse finale encadrée]
+
+[GRAPHIQUE si applicable : insérer ici le [GRAPH: ...] avec les expressions JS calculées]
 ]
 
 ## Synthèse
