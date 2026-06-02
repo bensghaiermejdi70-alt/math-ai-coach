@@ -1270,18 +1270,23 @@ function SolvePageInner() {
   ] as const
 
   const [selectedMatiere, setSelectedMatiere] = useState<string>(() => {
-    // Priorité : URL ?subject= → matiereActive → 'mathematiques'
+    // Priorité : URL ?subject= → mathematiques par défaut
+    // NE PAS utiliser matiereActive ici (1 seule matière) — laisser l'utilisateur choisir
     if (typeof window !== 'undefined') {
       const s = new URLSearchParams(window.location.search).get('subject')
       if (s && ['physique','informatique','svt','anglais','litterature'].includes(s)) return s
     }
-    return matiereActive || 'mathematiques'
+    return 'mathematiques'
   })
 
-  // Sync si matiereActive change (connexion)
+  // Sync à la connexion : sélectionner la matière de l'abonnement SEULEMENT si
+  // l'utilisateur n'a qu'un seul abonnement actif (pas de multi-abonnements)
   useEffect(() => {
-    if (matiereActive) setSelectedMatiere(matiereActive)
-  }, [matiereActive])
+    if (matiereActive && activeMatieres.length === 1) {
+      setSelectedMatiere(matiereActive)
+    }
+    // Si multi-abonnements → ne pas forcer, laisser 'mathematiques' ou le choix de l'URL
+  }, [matiereActive, activeMatieres])
   const [solution, setSolution] = useState('')
   const [error, setError] = useState('')
   const [history, setHistory] = useState<HistoryItem[]>([])
