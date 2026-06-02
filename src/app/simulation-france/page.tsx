@@ -5642,6 +5642,19 @@ function SimulationFrancePageInner() {
         alert("Veuillez importer un sujet avant de lancer la correction.")
         return
       }
+      // Vérification abonnement — correction directe compte comme 1 simulation
+      if (!isAdmin && hasActiveSubscription) {
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais' }[activeMatiere] || activeMatiere
+        if (!checkMatiereAccess(matiereUIKey as any)) {
+          const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
+          alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".
+
+Vos abonnements actifs : ${matieresList}
+
+→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
+          return
+        }
+      }
       const stmtWithImages = examImgsFromRef.length > 0
         ? examImgsFromRef.map(img => `[IMAGE_BASE64:data:${img.mediaType};base64,${img.data}]`).join('\n') + (examContent ? '\n' + examContent : '')
         : examContent
