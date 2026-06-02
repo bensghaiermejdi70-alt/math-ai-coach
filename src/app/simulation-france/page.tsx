@@ -5584,7 +5584,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }
 
 function SimulationFrancePageInner() {
-  const { hasActiveSubscription, matiereActive, isAdmin } = useAuth()
+  const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin } = useAuth()
   // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
@@ -5667,14 +5667,20 @@ function SimulationFrancePageInner() {
       setPhase('correction')
       return
     }
-    // Vérification abonnement : la matière UI doit correspondre à l'abonnement actif
-    if (!isAdmin && hasActiveSubscription && matiereActive) {
+    // Vérification abonnement : checkMatiereAccess gère les abonnements multiples
+    if (!isAdmin && hasActiveSubscription) {
       const _mapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', francais:'francais'
+        maths:'mathematiques', physique:'physique', informatique:'informatique',
+        anglais:'anglais', svt:'svt', francais:'francais'
       }
       const matiereUIKey = _mapCheck[activeMatiere] || activeMatiere
-      if (matiereActive !== 'mathematiques' && matiereUIKey !== matiereActive) {
-        alert(`⚠️ Votre abonnement actif couvre "${matiereActive}".\n\nVous essayez de lancer une simulation "${matiereUIKey}".\n\nChangez de matière ou abonnez-vous à la matière souhaitée.`)
+      // checkMatiereAccess vérifie si l'utilisateur a UN abonnement actif pour cette matière
+      // (supporte les abonnements multiples — svt + francais + anglais en même temps)
+      if (!checkMatiereAccess(matiereUIKey as any)) {
+        const matieresList = activeMatieres.length > 0
+          ? activeMatieres.join(', ')
+          : matiereActive || 'votre matière'
+        alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
         return
       }
     }
