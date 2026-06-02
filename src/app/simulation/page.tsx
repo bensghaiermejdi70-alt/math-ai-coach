@@ -5474,7 +5474,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }
 
 function SimulationIAPageInner() {
-  const { hasActiveSubscription, matiereActive, isAdmin, checkQuota, incrementQuota } = useAuth()
+  const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>(() => {
@@ -5514,22 +5514,12 @@ function SimulationIAPageInner() {
       // 1. Vérification quota (correction directe compte comme 1 simulation)
       if (!isAdmin && !checkQuota('simulations')) return
 
-      // 2. Vérification abonnement — utiliser matiereActive (abonnement réel)
-      //    PAS activeMatiere (onglet UI qui est toujours 'maths' sur page Tunisie)
-      //    Un abonné Anglais peut faire correction directe d'un examen Anglais
-      if (!isAdmin && hasActiveSubscription && matiereActive) {
-        // Déterminer la matière de l'examen depuis le contenu importé
-        // On accepte si : abonnement maths (accès total) OU abonnement = matière importée
-        // Pour correction directe : on fait confiance à matiereActive (abonnement)
-        // Si l'abonnement est Anglais → on autorise (l'utilisateur importe ce qu'il veut)
-        // Si l'abonnement est Maths → accès total
-        // Si l'abonnement est Physique/Info → on autorise seulement si activeMatiere correspond
-        const matiereAbonnement = matiereActive
+      // 2. Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
+      if (!isAdmin && hasActiveSubscription) {
         const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais' }[activeMatiere] || activeMatiere
-        // Bloquer uniquement si abonnement spécifique ET matière UI ne correspond pas
-        // ET l'abonnement n'est pas anglais (car page Tunisie n'a pas d'onglet Anglais)
-        if (matiereAbonnement !== 'mathematiques' && matiereAbonnement !== 'anglais' && matiereUIKey !== matiereAbonnement) {
-          alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nLa correction directe est réservée à cette matière.`)
+        if (!checkMatiereAccess(matiereUIKey as any)) {
+          const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
+          alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
           return
         }
       }
@@ -5585,18 +5575,16 @@ function SimulationIAPageInner() {
       setPhase('correction')
       return
     }
-    // Vérification abonnement : la matière sélectionnée doit correspondre à l'abonnement actif
-    // Exception : admin bypass + matières gratuites bypass
-    if (!isAdmin && hasActiveSubscription && matiereActive) {
-      const matiereToCheck = activeMatiere
-      const matiereAbonnement = matiereActive // ex: 'mathematiques', 'physique', 'anglais'
+    // Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
+    if (!isAdmin && hasActiveSubscription) {
       const matiereMapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
+        maths:'mathematiques', physique:'physique', informatique:'informatique',
+        anglais:'anglais', svt:'svt', francais:'francais'
       }
-      const matiereUIKey = matiereMapCheck[matiereToCheck] || matiereToCheck
-      // Si l'abonnement est pour une matière spécifique et que l'UI est différente → bloquer
-      if (matiereAbonnement !== 'mathematiques' && matiereUIKey !== matiereAbonnement) {
-        alert(`⚠️ Votre abonnement actif couvre "${matiereAbonnement}".\n\nVous essayez de lancer une simulation "${matiereUIKey}".\n\nChangez de matière ou abonnez-vous à la matière souhaitée.`)
+      const matiereUIKey = matiereMapCheck[activeMatiere] || activeMatiere
+      if (!checkMatiereAccess(matiereUIKey as any)) {
+        const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
+        alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
         return
       }
     }
@@ -5608,7 +5596,7 @@ function SimulationIAPageInner() {
       setChapitresMode(false)
     }
     setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere, checkQuota, incrementQuota])
+  },[isAdmin, hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, activeMatiere, checkQuota, incrementQuota])
 
   const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
     setGeneratedExams(exams); setPhase('choose-exam')
