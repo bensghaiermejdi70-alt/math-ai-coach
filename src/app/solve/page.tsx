@@ -17,6 +17,19 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 // ══════════════════════════════════════════════════════════════════════
 // HELPERS API
 // ══════════════════════════════════════════════════════════════════════
+// ══ PROMPT GRAPHIQUE UNIVERSEL — 5 types, toutes matières ══
+const UNIVERSAL_GRAPH_PROMPT = `
+GRAPHIQUES — 5 TYPES UNIVERSELS :
+TYPE 1 — COURBE : [GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
+RÈGLES JS : JAMAIS x^2→x*x | 2x→2*x | exp(-x)→Math.exp(-x) | décimaux OK: 2.1+11.8/(1+Math.exp(-0.8*(x-12.5)))
+TYPE 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes"},FORMES]}]
+TYPE 3 — ASCII (pile/circuit/synapse) : [GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN","legend":["item"]}]
+TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]]}]
+TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8]}]
+RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
+JAMAIS expressions:[] vide · JAMAIS x^2 · JAMAIS [FIGURE:...] texte`
+
+
 async function askClaude(prompt: string, system: string, maxTokens = 6000, matiere?: string): Promise<string> {
   const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
   const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
@@ -76,45 +89,81 @@ async function askClaudeWithImage(
 // ── Sanitize expression : corrige les erreurs courantes de l'IA ──
 function sanitizeExpr(expr: string): string {
   if (!expr || typeof expr !== 'string') return '0'
-  return expr
-    // Caractères Unicode math → ASCII
-    .replace(/²/g, '*x')
-    .replace(/³/g, '*x*x')
-    .replace(/·/g, '*')
-    .replace(/×/g, '*')
-    .replace(/−/g, '-')
-    .replace(/\u00b2/g, '*x')
-    .replace(/\u00b3/g, '*x*x')
-    // Puissances
-    .replace(/x\^4/g, 'x*x*x*x')
-    .replace(/x\^3/g, 'x*x*x')
-    .replace(/x\^2/g, 'x*x')
-    .replace(/x\^(-?\d+)/g, (_, n) => `Math.pow(x,${n})`)
-    .replace(/\(([^)]+)\)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
-    .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
-    // Multiplication implicite
-    .replace(/(\d)(x)/g, '$1*$2')
-    .replace(/(\d)\s*\(/g, '$1*(')
-    // Fonctions math
-    .replace(/\bln\(/g, 'Math.log(')
-    .replace(/\blog\(/g, 'Math.log10(')
-    .replace(/\bsin\(/g, 'Math.sin(')
-    .replace(/\bcos\(/g, 'Math.cos(')
-    .replace(/\btan\(/g, 'Math.tan(')
-    .replace(/\bsqrt\(/g, 'Math.sqrt(')
-    .replace(/\babs\(/g, 'Math.abs(')
-    .replace(/\bexp\(/g, 'Math.exp(')
-    .replace(/\basin\(/g, 'Math.asin(')
-    .replace(/\bacos\(/g, 'Math.acos(')
-    .replace(/\batan\(/g, 'Math.atan(')
-    .replace(/\bceil\(/g, 'Math.ceil(')
-    .replace(/\bfloor\(/g, 'Math.floor(')
-    // Constantes
-    .replace(/\bpi\b/gi, 'Math.PI')
-    .replace(/π/g, 'Math.PI')
-    .replace(/(?<![a-zA-Z_])e(?![a-zA-Z_(])/g, 'Math.E')
-    // Nettoyage espaces
-    .replace(/\s+/g, '')
+  let e = expr.trim()
+  if (e.startsWith('\\') && !e.includes('(')) return '0'
+  if (e.length > 300) e = e.slice(0, 300)
+  // ── Unicode math → ASCII ─────────────────────────────────────────
+  e = e.replace(/−/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/·/g,'*')
+       .replace(/²/g,'*x').replace(/³/g,'*x*x')
+       .replace(/\u00b2/g,'*x').replace(/\u00b3/g,'*x*x')
+       .replace(/\u221e/g,'1e15').replace(/\u03c0/g,'Math.PI')
+       .replace(/\u03c4/g,'6.2832').replace(/\u03bb/g,'0.693')
+  // ── LaTeX → JS ────────────────────────────────────────────────────
+  e = e.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1)/($2)')
+       .replace(/\\sqrt\{([^{}]+)\}/g,'Math.sqrt($1)')
+       .replace(/\\sqrt/g,'Math.sqrt')
+       .replace(/\\left\(/g,'(').replace(/\\right\)/g,')')
+       .replace(/\\cdot/g,'*').replace(/\\times/g,'*')
+       .replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10')
+       .replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos')
+       .replace(/\\tan\b/g,'Math.tan').replace(/\\exp\b/g,'Math.exp')
+       .replace(/\\pi\b/gi,'Math.PI').replace(/\{/g,'(').replace(/\}/g,')')
+  // ── Notation physique e^(...) ────────────────────────────────────
+  e = e.replace(/e\^\(([^)]+)\)/g,(_,a)=>'Math.exp('+a+')')
+       .replace(/e\^(-?[a-zA-Z0-9.*/]+)/g,(_,a)=>'Math.exp('+a+')')
+  // ── Valeur absolue ───────────────────────────────────────────────
+  e = e.replace(/\|([^|]+)\|/g,(_,a)=>'Math.abs('+a+')')
+  // ── Puissances ───────────────────────────────────────────────────
+  e = e.replace(/x\*\*(\d+)/g,(_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(\d+)/g,  (_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(-\d+)/g, (_,n)=>`Math.pow(x,${n})`)
+       .replace(/\(([^()]+)\)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+       .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+  // ── Multiplication implicite ──────────────────────────────────────
+  e = e.replace(/(\d)([a-zA-Z(])/g,'$1*$2')
+       .replace(/\)([a-zA-Z0-9(])/g,')*$1')
+  // ── Fonctions math (23+) ──────────────────────────────────────────
+  const fns:[RegExp,string][]=[
+    [/(?<![a-zA-Z0-9_.])ln\s*\(/g,'Math.log('],
+    [/(?<![a-zA-Z0-9_.])log10\s*\(/g,'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])log\s*\(/g,'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])sin\s*\(/g,'Math.sin('],
+    [/(?<![a-zA-Z0-9_.])cos\s*\(/g,'Math.cos('],
+    [/(?<![a-zA-Z0-9_.])tan\s*\(/g,'Math.tan('],
+    [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g,'Math.sqrt('],
+    [/(?<![a-zA-Z0-9_.])abs\s*\(/g,'Math.abs('],
+    [/(?<![a-zA-Z0-9_.])exp\s*\(/g,'Math.exp('],
+    [/(?<![a-zA-Z0-9_.])sinh\s*\(/g,'Math.sinh('],
+    [/(?<![a-zA-Z0-9_.])cosh\s*\(/g,'Math.cosh('],
+    [/(?<![a-zA-Z0-9_.])tanh\s*\(/g,'Math.tanh('],
+    [/(?<![a-zA-Z0-9_.])asin\s*\(/g,'Math.asin('],
+    [/(?<![a-zA-Z0-9_.])acos\s*\(/g,'Math.acos('],
+    [/(?<![a-zA-Z0-9_.])atan\s*\(/g,'Math.atan('],
+    [/(?<![a-zA-Z0-9_.])atan2\s*\(/g,'Math.atan2('],
+    [/(?<![a-zA-Z0-9_.])floor\s*\(/g,'Math.floor('],
+    [/(?<![a-zA-Z0-9_.])ceil\s*\(/g,'Math.ceil('],
+    [/(?<![a-zA-Z0-9_.])round\s*\(/g,'Math.round('],
+    [/(?<![a-zA-Z0-9_.])max\s*\(/g,'Math.max('],
+    [/(?<![a-zA-Z0-9_.])min\s*\(/g,'Math.min('],
+    [/(?<![a-zA-Z0-9_.])pow\s*\(/g,'Math.pow('],
+    [/(?<![a-zA-Z0-9_.])log2\s*\(/g,'Math.log2('],
+  ]
+  for(const [re,repl] of fns) e=e.replace(re,repl)
+  // ── Constantes ───────────────────────────────────────────────────
+  e = e.replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+       .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
+       .replace(/\s+/g,'')
+  return e || '0'
+}
+function autoDetectGraphType(spec: any): string {
+  if (!spec) return 'function'
+  if (spec.type && ['function','geometry','ascii','table','bar','points','parametric'].includes(spec.type)) return spec.type
+  if (spec.content && typeof spec.content === 'string') return 'ascii'
+  if (spec.shapes && Array.isArray(spec.shapes)) return 'geometry'
+  if (spec.rows && Array.isArray(spec.rows)) return 'table'
+  if (spec.bars || spec.categories) return 'bar'
+  if (spec.expressions && Array.isArray(spec.expressions)) return 'function'
+  return 'function'
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -140,53 +189,59 @@ interface GraphSpec {
   points?: { x: number; y: number; label?: string }[]
 }
 
-function MathGraph({ spec }: { spec: GraphSpec }) {
+function MathGraph({ spec }: { spec: any }) {
   const divRef = useRef<HTMLDivElement>(null)
   const plotlyLoaded = useScript('https://cdn.plot.ly/plotly-2.27.0.min.js')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!plotlyLoaded || !divRef.current) return
+    let traces: any[] = []
+    let layout: any = {}
+    let config: any = { responsive: true, displayModeBar: false }
     try {
       const xMin = spec.xMin ?? -6; const xMax = spec.xMax ?? 6
-      const N = 500; const dx = (xMax - xMin) / N
       const colors = ['#4f6ef7', '#06d6a0', '#f59e0b', '#ec4899', '#8b5cf6']
-      const traces: any[] = []
 
       // Vérifier que expressions est valide et non-vide
-      const exprs = Array.isArray(spec.expressions) ? spec.expressions.filter(e => e && e.trim() !== '') : []
+      const exprs = Array.isArray(spec.expressions) ? spec.expressions.filter((e: string) => e && e.trim() !== '') : []
       if (exprs.length === 0) {
         setError('Aucune expression à tracer — vérifiez le format [GRAPH: ...]')
         return
       }
 
-      exprs.forEach((expr, i) => {
-        const xs: number[] = [], ys: number[] = []
-        // Pré-compiler l'expression une seule fois (pas à chaque x)
+      exprs.forEach((expr: string, i: number) => {
         const safeExpr = sanitizeExpr(expr)
         let fn: Function
         try {
           fn = new Function('x', 'Math',
-            `"use strict"; try { const r=(${safeExpr}); return (r===undefined||r===null)?null:r; } catch(e) { return null; }`)
+            `"use strict"; try { const _r=(${safeExpr}); return (_r===undefined||_r===null)?null:_r; } catch(e) { return null; }`)
         } catch(compileErr) {
           console.warn('Expression invalide:', expr, '→', safeExpr, compileErr)
-          // Ajouter une trace vide pour ne pas bloquer les autres courbes
           traces.push({ x:[], y:[], mode:'lines', type:'scatter', name: `⚠️ ${expr.slice(0,30)}`, line:{ color: colors[i % colors.length], width:1, dash:'dot' } })
           return
         }
-        let hasValidPoint = false
+        // Haute fréquence → plus de points
+        const hasHighFreq = safeExpr.includes('440')||safeExpr.includes('880')||safeExpr.includes('1000')||safeExpr.includes('2000')
+        const N = hasHighFreq ? 2000 : 600
+        const dx = (xMax - xMin) / N
+        let yMax = 0, hasValid = false
+        // Passe 1 : trouver la plage réelle
         for (let j = 0; j <= N; j++) {
           const x = xMin + j * dx
-          try {
-            const y = fn(x, Math)
-            xs.push(x)
-            const yVal = (y !== null && y !== undefined && isFinite(y) && Math.abs(y) < 1e8) ? y : NaN
-            if (!isNaN(yVal)) hasValidPoint = true
-            ys.push(yVal)
-          } catch { xs.push(x); ys.push(NaN) }
+          const y = fn(x, Math)
+          if (y !== null && isFinite(y)) { yMax = Math.max(yMax, Math.abs(y)); hasValid = true }
         }
-        if (!hasValidPoint) {
-          console.warn('Courbe vide pour expression:', expr, '→ sanitized:', safeExpr)
+        if (!hasValid) { console.warn('Courbe vide:', expr); return }
+        // Seuil dynamique — résout sigmoid/exp croissante
+        const threshold = Math.max(yMax * 100, 1e10)
+        const xs: number[] = [], ys: number[] = []
+        // Passe 2 : tracer
+        for (let j = 0; j <= N; j++) {
+          const x = xMin + j * dx
+          const y = fn(x, Math)
+          xs.push(x)
+          ys.push((y !== null && isFinite(y) && Math.abs(y) <= threshold) ? y : NaN)
         }
         traces.push({
           x: xs, y: ys, mode: 'lines', type: 'scatter',
@@ -207,7 +262,8 @@ function MathGraph({ spec }: { spec: GraphSpec }) {
         })
       }
 
-      const layout = {
+      if (traces.length === 0) { setError('Aucune courbe calculable'); return }
+      layout = {
         title: { text: spec.title || '', font: { color: '#e2e8f0', size: 12 } },
         paper_bgcolor: 'rgba(10,10,25,0.95)',
         plot_bgcolor: 'rgba(16,16,35,0.9)',
@@ -224,17 +280,29 @@ function MathGraph({ spec }: { spec: GraphSpec }) {
           zerolinecolor: 'rgba(255,255,255,0.2)',
           zerolinewidth: 1.5
         },
-        legend: {
-          bgcolor: 'rgba(0,0,0,0.5)',
-          bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1
-        },
+        legend: { bgcolor: 'rgba(0,0,0,0.5)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 },
         margin: { t: 36, b: 44, l: 52, r: 16 }, height: 280,
       }
-      ;(window as any).Plotly.newPlot(
-        divRef.current, traces, layout,
-        { responsive: true, displayModeBar: false }
-      )
-    } catch(e: any) { console.error('MathGraph:', e, spec); setError('Expression invalide : ' + (spec.expressions?.[0]?.slice(0,40) || '?')) }
+      ;(window as any).Plotly.newPlot(divRef.current, traces, layout, config)
+    } catch(e: any) {
+      console.error('MathGraph:', e, spec)
+      const errMsg = e?.message || String(e) || ''
+      if (errMsg.includes('SyntaxError') || errMsg.includes('ReferenceError')) {
+        setError('Expression invalide : ' + (spec.expressions?.[0]?.slice(0,40) || '?'))
+      } else {
+        // Retry Plotly avec connectgaps:true (résout certaines discontinuités)
+        try {
+          const safeTraces = traces.map(tr => ({
+            ...tr,
+            y: (tr.y||[]).map((v: any) => (v !== null && isFinite(v) ? v : null)),
+            connectgaps: true
+          }))
+          if (divRef.current && safeTraces.length > 0) {
+            ;(window as any).Plotly.newPlot(divRef.current, safeTraces, layout, config)
+          }
+        } catch { setError('Tracé impossible — ' + errMsg.slice(0, 60)) }
+      }
+    }
   }, [plotlyLoaded, spec])
 
   if (!plotlyLoaded) return (
@@ -639,29 +707,63 @@ function GeoGraph({ spec }: { spec: GeoSpec }) {
 }
 
 
-// ── Dispatch : function/points → Plotly, geometry → SVG ──────────
+// ── AsciiGraph — pile, circuit, synapse ──────────────────────────
+function AsciiGraph({spec}:{spec:any}){
+  const legend=Array.isArray(spec.legend)?spec.legend:[]
+  return(<div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(6,182,212,0.3)',margin:'14px 0',background:'rgba(6,182,212,0.04)'}}>
+    {spec.title&&<div style={{padding:'8px 18px',borderBottom:'1px solid rgba(6,182,212,0.15)',fontSize:12,fontWeight:700,color:'#06b6d4',letterSpacing:'0.08em'}}>📐 {spec.title}</div>}
+    <div style={{padding:'14px 18px'}}>
+      <pre style={{fontFamily:"'Courier New',Consolas,monospace",fontSize:13,lineHeight:1.7,color:'rgba(255,255,255,0.85)',background:'rgba(0,0,0,0.35)',borderRadius:10,padding:'14px 18px',margin:'0 0 12px',overflowX:'auto',whiteSpace:'pre',border:'1px solid rgba(6,182,212,0.15)'}}>{spec.content}</pre>
+      {legend.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:6}}>{legend.map((item:string,i:number)=><span key={i} style={{fontSize:11,padding:'3px 10px',background:'rgba(6,182,212,0.1)',color:'#67e8f9',border:'1px solid rgba(6,182,212,0.2)',borderRadius:20,fontWeight:600}}>{item}</span>)}</div>}
+    </div>
+  </div>)
+}
+// ── TableGraph — loi proba, tableau de signe, algo ────────────────
+function TableGraph({spec}:{spec:any}){
+  const h=spec.headers||[],r=spec.rows||[],hl=spec.highlight||[]
+  return(<div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0'}}>
+    {spec.title&&<div style={{padding:'8px 16px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>📋 {spec.title}</div>}
+    <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
+      {h.length>0&&<thead><tr>{h.map((c:string,i:number)=><th key={i} style={{padding:'8px 12px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>{c}</th>)}</tr></thead>}
+      <tbody>{r.map((row:string[],i:number)=><tr key={i} style={{background:hl.includes(i)?'rgba(99,102,241,0.1)':i%2===0?'rgba(255,255,255,0.02)':'transparent'}}>{row.map((cell:string,j:number)=><td key={j} style={{padding:'6px 12px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>{cell}</td>)}</tr>)}</tbody>
+    </table></div>
+  </div>)
+}
+// ── BarGraph — histogramme, comparaison SVT ───────────────────────
+function BarGraph({spec}:{spec:any}){
+  const cats=spec.categories||[],vals=spec.values||[],colors=spec.colors||['#4f6ef7','#06d6a0','#f59e0b','#ec4899','#8b5cf6'],mx=Math.max(...vals,1)
+  return(<div style={{borderRadius:12,border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0',background:'rgba(10,10,25,0.95)',padding:'16px'}}>
+    {spec.title&&<div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:14,textAlign:'center'}}>{spec.title}</div>}
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,height:160,paddingBottom:24,position:'relative'}}>
+      {[0,25,50,75,100].map(p=><div key={p} style={{position:'absolute',left:0,right:0,bottom:`${p/100*130+24}px`,borderTop:'1px solid rgba(255,255,255,0.06)',fontSize:9,color:'rgba(255,255,255,0.25)'}}>{Math.round(mx*p/100)}</div>)}
+      {cats.map((cat:string,i:number)=>{const h=Math.max(4,(vals[i]/mx)*130);const c=colors[i%colors.length];return(<div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}><div style={{fontSize:10,color:c,fontWeight:700}}>{vals[i]}</div><div style={{width:'100%',height:`${h}px`,background:c,borderRadius:'4px 4px 0 0',opacity:0.85}}/><div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2,marginTop:2}}>{cat}</div></div>)})}
+    </div>
+    {spec.xLabel&&<div style={{textAlign:'center',fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:4}}>{spec.xLabel}</div>}
+  </div>)
+}
+// ── Dispatch universel : 5 types ──────────────────────────────────
 function SmartGraph({ spec }: { spec: any }) {
-  // Vérifications de base avant rendu
   if (!spec || typeof spec !== 'object') return (
     <div style={{padding:'10px 14px',fontSize:12,color:'#fcd34d',background:'rgba(245,158,11,0.08)',borderRadius:8,margin:'6px 0'}}>
       📊 Format graphique invalide
     </div>
   )
-  if (spec?.type === 'geometry') return <GeoGraph spec={spec as GeoSpec}/>
-  // Type function ou points : vérifier que expressions est bien un tableau
-  if (!Array.isArray(spec.expressions) || spec.expressions.length === 0) {
-    // Tenter de récupérer si expressions est une string
-    if (typeof spec.expressions === 'string') {
-      spec = { ...spec, expressions: [spec.expressions] }
-    } else {
-      return (
-        <div style={{padding:'10px 14px',fontSize:12,color:'#fcd34d',background:'rgba(245,158,11,0.08)',borderRadius:8,margin:'6px 0'}}>
-          📊 Graphique : aucune expression fournie par l\'IA — relancez la résolution
-        </div>
-      )
-    }
+  const t = autoDetectGraphType(spec)
+  const s = t !== spec.type ? {...spec, type: t} : spec
+  if (s.type === 'ascii')    return <AsciiGraph spec={s}/>
+  if (s.type === 'table')    return <TableGraph spec={s}/>
+  if (s.type === 'bar')      return <BarGraph   spec={s}/>
+  if (s.type === 'geometry') return <GeoGraph   spec={s as GeoSpec}/>
+  // function/points/parametric → MathGraph
+  if (!Array.isArray(s.expressions) || s.expressions.length === 0) {
+    if (typeof s.expressions === 'string') s.expressions = [s.expressions]
+    else return (
+      <div style={{padding:'10px 14px',fontSize:12,color:'#fcd34d',background:'rgba(245,158,11,0.08)',borderRadius:8,margin:'6px 0'}}>
+        📊 Aucune expression fournie — relancez la résolution
+      </div>
+    )
   }
-  return <MathGraph spec={spec as GraphSpec}/>
+  return <MathGraph spec={s}/>
 }
 
 
