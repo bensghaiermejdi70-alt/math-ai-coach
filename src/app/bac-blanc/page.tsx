@@ -441,31 +441,37 @@ RÉPONSE JSON OBLIGATOIRE :
       "theme": "${prog?.ex1.theme || 'Physique'}",
       "title": "Titre exercice 1 (ex: Dipôle RC — condensateur)",
       "points": 8,
-      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous...\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale..."
+      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous.\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale...",
+      "graph": "[GRAPH: {\"type\":\"ascii\",\"title\":\"Montage expérimental\",\"content\":\"  ┌──┤R├──┤L├──┬──┐\\n  │             ═╪═C\\n  E(t)           │\\n  └─────────────┘\",\"legend\":[\"R: résistance\",\"L: bobine\",\"C: condensateur\"]}]"
     },
     {
       "num": 2,
       "theme": "${prog?.ex2.theme || 'Physique'}",
       "title": "Titre exercice 2 (ex: Pendule simple — oscillations)",
       "points": 6,
-      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ..."
+      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ...",
+      "graph": null
     },
     {
       "num": 3,
       "theme": "${prog?.ex3.theme || 'Chimie'}",
       "title": "Titre exercice 3 (ex: Cinétique chimique)",
       "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ..."
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
+      "graph": null
     },
     {
       "num": 4,
       "theme": "${prog?.ex4.theme || 'Chimie'}",
       "title": "Titre exercice 4 (ex: Dosage acide-base)",
       "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ..."
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
+      "graph": null
     }
   ]
-}`
+}
+
+RÈGLE GRAPHIQUE ABSOLUE : JAMAIS écrire [FIGURE : ...] dans statement — TOUJOURS générer le champ \"graph\" avec [GRAPH: {"type":"ascii",...}] pour les circuits et montages.`
 
 // Utiliser askClaude() — même fonction que generateBacBlanc (maths)
   const raw = await askClaude(prompt, system, 5000)
@@ -1062,9 +1068,28 @@ function SmartGraph({spec}:{spec:any}){
   return <MathGraph spec={s}/>
 }
 
+function figureToAscii(figureText: string): string {
+  const title = figureText.replace(/^\[FIGURE\s*:\s*/i,'').replace(/\]$/,'').trim()
+  const isRLC  = /RLC/i.test(title)
+  const isRC   = /RC\b/i.test(title) && !isRLC
+  const isRL   = /RL\b/i.test(title) && !isRLC
+  const isPile = /pile|galvani|électrochim/i.test(title)
+  const isOpt  = /optique|lentille|prisme/i.test(title)
+  const isPend = /pendule/i.test(title)
+  let schemaContent = '  [Schéma : ' + title + ']'
+  let legend: string[] = ['Voir énoncé pour les valeurs numériques']
+  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)','C: condensateur (F)','E: générateur'] }
+  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  │        ═╪═C│\n  E(t)     │   │\n  └────────┴───┘'; legend = ['R: résistance (Ω)','C: condensateur (F)','E: générateur'] }
+  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)'] }
+  else if (isPile) { schemaContent = '  (-) Zn │ ZnSO₄  ║  CuSO₄ │ Cu (+)\n       │              pont salin          │\n       └──────────── e⁻ ───────────────┘'; legend = ['Anode (-): Zn→Zn²⁺+2e⁻','Cathode (+): Cu²⁺+2e⁻→Cu','Pont salin: transfert ions'] }
+  else if (isOpt)  { schemaContent = '  →→→  ║  →→→  ║  →→→\n  lumière [L1]  image [L2]  image finale'; legend = ['L1, L2: lentilles convergentes'] }
+  else if (isPend) { schemaContent = '       ●  (pivot)\n       │\n       │  L\n       │\n       ○  (masse m)'; legend = ['L: longueur fil','m: masse','T=2π√(L/g)'] }
+  return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
+}
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
-  const segs=parseGraphSegments(text)
+  const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
+  const segs=parseGraphSegments(processedText)
   return(
     <div>
       {segs.map((s,i)=>{
