@@ -776,6 +776,23 @@ function SmartGraph({spec}:{spec:any}){
   return <MathGraph spec={s}/>
 }
 
+function figureToAscii(figureText: string): string {
+  const title = figureText.replace(/^\[FIGURE\s*:\s*/i,'').replace(/\]$/,'').trim()
+  const isRLC  = /RLC/i.test(title)
+  const isRC   = /RC\b/i.test(title) && !isRLC
+  const isRL   = /RL\b/i.test(title) && !isRLC
+  const isPile = /pile|galvani/i.test(title)
+  const isOpt  = /optique|lentille|prisme/i.test(title)
+  let schemaContent = '  [Schéma : ' + title + ']'
+  let legend: string[] = ['Voir énoncé pour les valeurs']
+  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance','L: bobine','C: condensateur'] }
+  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  E       ═╪═C\n  └────────┘'; legend = ['R: résistance','C: condensateur'] }
+  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance','L: bobine'] }
+  else if (isPile) { schemaContent = '  (-) │électrolyte║électrolyte│ (+)\n  └──────── e⁻ ────────┘'; legend = ['Anode (-)','Cathode (+)','Pont salin'] }
+  else if (isOpt)  { schemaContent = '  →→→ [L1] →→→ [L2] →→→\n  lumière      lentilles'; legend = ['L1, L2: lentilles'] }
+  return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
+}
+
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
   const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
@@ -4030,20 +4047,4 @@ export default function BacBlancFrancePage() {
   )
 
 // Intercepteur [FIGURE : ...] → convertit en AsciiGraph
-function figureToAscii(figureText: string): string {
-  const title = figureText.replace(/^\[FIGURE\s*:\s*/i,'').replace(/\]$/,'').trim()
-  const isRLC  = /RLC/i.test(title)
-  const isRC   = /RC\b/i.test(title) && !isRLC
-  const isRL   = /RL\b/i.test(title) && !isRLC
-  const isPile = /pile|galvani/i.test(title)
-  const isOpt  = /optique|lentille|prisme/i.test(title)
-  let schemaContent = '  [Schéma : ' + title + ']'
-  let legend: string[] = ['Voir énoncé pour les valeurs']
-  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance','L: bobine','C: condensateur'] }
-  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  E       ═╪═C\n  └────────┘'; legend = ['R: résistance','C: condensateur'] }
-  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance','L: bobine'] }
-  else if (isPile) { schemaContent = '  (-) │électrolyte║électrolyte│ (+)\n  └──────── e⁻ ────────┘'; legend = ['Anode (-)','Cathode (+)','Pont salin'] }
-  else if (isOpt)  { schemaContent = '  →→→ [L1] →→→ [L2] →→→\n  lumière      lentilles'; legend = ['L1, L2: lentilles'] }
-  return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
-}
 }
