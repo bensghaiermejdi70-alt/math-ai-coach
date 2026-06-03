@@ -170,6 +170,82 @@ interface AnalysisResult {
 type Phase = 'select' | 'generating' | 'choose-exam' | 'exam' | 'grading' | 'graded' | 'correcting' | 'correction' | 'analysing' | 'analysis'
 
 // ── API Claude ────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// PROMPT GRAPHIQUE UNIVERSEL — Injecté dans TOUS les prompts IA
+// Couvre : Maths · Physique-Chimie · SVT · Informatique · Français
+// L'IA n'a qu'à copier le bon template selon l'exercice
+// ══════════════════════════════════════════════════════════════════════
+const UNIVERSAL_GRAPH_PROMPT = `
+GRAPHIQUES — SYSTÈME UNIVERSEL (5 TYPES, copier le bon template) :
+
+━━━ TYPE 1 : COURBE MATHÉMATIQUE ━━━
+Utiliser pour : fonctions, dérivées, suites, intégrales, probabilités, RC/RL, pH, cinétique
+[GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
+
+RÈGLES EXPRESSIONS JS (OBLIGATOIRES) :
+✅ x*x | x*x*x | 2*x | Math.exp(-x) | Math.sin(2*x) | (x+1)/(x-1)
+❌ JAMAIS : x^2 | x^3 | 2x | exp(-x) | sin(2x) | \\frac{x}{2}
+
+EXEMPLES PAR MATIÈRE :
+• Maths f(x)=2x³-3x²+1 et f' → ["2*x*x*x - 3*x*x + 1", "6*x*x - 6*x"]
+• Physique RC (τ=2s,E=5V) charge → ["5*(1-Math.exp(-x/2))"] xMin:0 xMax:10
+• Physique pH dosage (Véq=20mL) → ["14/(1+Math.exp(-0.5*(x-20)))"] xMin:0 xMax:40
+• SVT Michaelis-Menten (Km=5,Vmax=100) → ["100*x/(x+5)"] xMin:0 xMax:30
+• SVT population logistique (K=1000,r=0.3) → ["1000/(1+999*Math.exp(-0.3*x))"] xMin:0 xMax:30
+• SVT cinétique enzymatique inhibée → ["100*x/(x+5)","60*x/(x+15)"] labels:["sans inhibiteur","avec inhibiteur"]
+• SVT désintégration radioactive (t½=5730) → ["Math.exp(-0.000121*x)"] xMin:0 xMax:20000
+• Physique oscillations amorties → ["Math.exp(-0.3*x)*Math.cos(2*x)"] xMin:0 xMax:20
+• Info tri bulles nb comparaisons → ["x*x/2"] xMin:0 xMax:20 labels:["O(n²)"]
+
+━━━ TYPE 2 : FIGURE GÉOMÉTRIQUE ━━━
+Utiliser pour : triangles, cercles, vecteurs, repères, plan complexe, géo espace
+[GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},FORMES]}]
+
+FORMES DISPONIBLES (copier) :
+• Triangle: {"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":2,"y":3,"label":"C"}],"fill":"#6366f120"}
+• Cercle: {"type":"circle","cx":0,"cy":0,"r":3,"label":"C","color":"#6366f1","fill":"#6366f120"}
+• Segment: {"type":"segment","x1":0,"y1":0,"x2":4,"y2":2,"label":"AB"}
+• Vecteur: {"type":"vector","from":{"x":0,"y":0,"label":"O"},"to":{"x":3,"y":2,"label":"A"},"label":"u⃗"}
+• Point: {"type":"point","cx":2,"cy":3,"label":"M","color":"#f59e0b"}
+• Angle droit: {"type":"angle","vertex":{"x":0,"y":0},"p1":{"x":1,"y":0},"p2":{"x":0,"y":1},"showRight":true}
+• Angle: {"type":"angle","vertex":{"x":1,"y":0,"label":"B"},"p1":{"x":0,"y":0},"p2":{"x":2,"y":2},"value":"45°"}
+• Rectangle: {"type":"rect","x":0,"y":0,"w":4,"h":2,"label":"ABCD","fill":"#10b98120"}
+
+━━━ TYPE 3 : SCHÉMA ASCII ━━━
+Utiliser pour : pile électrochimique, circuit RC/RL/RLC, montage optique, synapse, ADN
+[GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN_ASCII","legend":["légende1","légende2"]}]
+
+EXEMPLES ASCII PAR MATIÈRE :
+• Pile Zn-Cu: content:"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\\n  └────── e⁻ ──────┘\\n  Zn→Zn²⁺+2e⁻  Cu²⁺+2e⁻→Cu"
+• Circuit RC: content:"  ┌──┤R├──┬──┐\\n  E      ═╪═C  \\n  └────────┘"
+• Circuit RLC: content:"  ┌──┤R├──┤L├──┬──┐\\n  E            ═╪═C\\n  └────────────┘"
+• Synapse: content:"  NEURONE PRÉ\\n  [vésicules NT]\\n  ↓ exocytose\\n  ══fente synaptique══\\n  [récepteurs]\\n  NEURONE POST"
+• Chromatide: content:"  5'─A─T─G─C─A─T─3'\\n     │ │ │ │ │ │\\n  3'─T─A─C─G─T─A─5'"
+
+━━━ TYPE 4 : TABLEAU DE DONNÉES ━━━
+Utiliser pour : table de loi proba, tableau de valeurs SVT, résultats Info, tableau de signe
+[GRAPH: {"type":"table","title":"Titre","headers":["col1","col2","col3"],"rows":[["val1","val2","val3"],["val4","val5","val6"]],"highlight":[0]}]
+
+EXEMPLES :
+• Loi binomiale B(5,0.4): headers:["k","P(X=k)","P(X≤k)"] rows:[["0","0.078","0.078"],["1","0.259","0.337"],["2","0.346","0.683"],["3","0.230","0.913"],["4","0.077","0.990"],["5","0.010","1.000"]]
+• Tableau de signe f'(x): headers:["x","-∞","...","2","...","5","...","∞"] rows:[["f'(x)","−","0","+","0","−"],["f(x)","↘","min","↗","max","↘"]]
+• SVT expérience: headers:["Condition","Témoin","Expér.1","Expér.2"] rows:[["Résultat","normal","absent","réduit"]]
+• Info tableau algo: headers:["i","T[i]","min","swap"] rows:[["1","[5,3,8,1]","T[4]=1","T[1]↔T[4]"],["2","[1,3,8,5]","T[2]=3","—"]]
+
+━━━ TYPE 5 : DIAGRAMME EN BARRES ━━━
+Utiliser pour : histogramme proba, résultats SVT comparatifs, statistiques Info
+[GRAPH: {"type":"bar","title":"Titre","categories":["A","B","C"],"values":[12,8,15],"colors":["#6366f1","#10b981","#f59e0b"],"yLabel":"Valeur","xLabel":"Catégorie"}]
+
+RÈGLE UNIVERSELLE DE SÉLECTION :
+• Fonction mathématique → TYPE 1
+• Figure géométrique / repère / vecteur → TYPE 2
+• Pile / circuit / synapse / structure bio → TYPE 3 (ASCII)
+• Tableau de valeurs / loi proba / algo → TYPE 4
+• Histogramme / comparaison / statistiques → TYPE 5
+• JAMAIS laisser "expressions":[] vide → mettre au moins ["0"]
+• JAMAIS utiliser TYPE 2 pour une pile ou un circuit`
+
+
 async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string): Promise<string> {
   // Appel via route Next.js pour eviter les erreurs CORS
   const r = await fetch('/api/anthropic', {
@@ -376,6 +452,9 @@ Règles STRICTES :
 - Totale : ${totalPts} points répartis sur 4 exercices
 - Niveau Bac : au moins 1 exercice avec une courbe ou figure géométrique à étudier
 
+GRAPHIQUES — UTILISER LE SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+
 GRAPHIQUES DANS LES ÉNONCÉS — RÈGLES ABSOLUES :
 
 FORMAT 1 — COURBE DE FONCTION :
@@ -390,6 +469,12 @@ FORMAT 3 — GÉOMÉTRIE DANS L'ESPACE (projection 2D, JAMAIS de formes 3D) :
 FORMAT 4 — PLAN COMPLEXE :
 [GRAPH: {"type":"geometry","title":"Plan complexe","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"point","cx":2,"cy":3,"label":"M(z1)","color":"#6366f1"},{"type":"point","cx":-1,"cy":2,"label":"N(z2)","color":"#10b981"},{"type":"segment","x1":0,"y1":0,"x2":2,"y2":3,"color":"#6366f1","dashed":true}]}]
 
+FORMAT 5 — SCHÉMA PILE ÉLECTROCHIMIQUE (ASCII) :
+[GRAPH: {"type":"ascii","title":"Pile Zinc-Cuivre (Daniell)","content":"\n  (-)  Zn │ ZnSO₄  ║  CuSO₄ │ Cu  (+)\n       │              pont salin              │\n       │                                       │\n       └──────────── e⁻ ────────────────────┘\n  Anode: Zn → Zn²⁺ + 2e⁻    Cathode: Cu²⁺ + 2e⁻ → Cu","legend":["Anode (-): Zn se dissout","Cathode (+): Cu se dépose","Pont salin: transfert anions/cations","e⁻: courant électronique"]}]
+
+FORMAT 6 — SCHÉMA CIRCUIT ÉLECTRIQUE (ASCII) :
+[GRAPH: {"type":"ascii","title":"Circuit RC série","content":"\n  ┌───┤R├────┬───┐\n  │          │   │\n  E(t)      ═╪═ C  u_C\n  │          │   │\n  └──────────┴───┘","legend":["R: résistance (Ω)","C: condensateur (F)","E(t): générateur","u_C: tension condensateur"]}]
+
 RÈGLES ABSOLUES :
 - Le graphique va dans le champ "graph" SÉPARÉ — PAS dans "statement" — pour éviter les guillemets imbriqués
 - Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" OU null si pas de graphique
@@ -400,6 +485,8 @@ RÈGLES ABSOLUES :
 - Exercice géométrie : champ "graph" OBLIGATOIRE avec la figure complète
 - Exercice complexes : champ "graph" avec le plan complexe et les affixes
 - Dans "statement", écrire : "Soit f la fonction représentée ci-dessous. [voir graphique] 1) ..."
+- Pile électrochimique / circuit RC/RL/RLC / montage optique → FORMAT 5 ou 6 (ascii)
+- JAMAIS essayer de dessiner une pile ou un circuit avec type "geometry" — utiliser "ascii"
 
 Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après).
 
@@ -1063,33 +1150,137 @@ function useScript(src: string) {
 }
 
 // ── Sanitize expression : corrige les erreurs courantes de l'IA ──────
+
+// ══════════════════════════════════════════════════════════════════════
+// SANITIZER UNIVERSEL — Gère TOUTES les matières sans cas particuliers
+// Maths · Physique · SVT · Informatique · Français
+// Entrée : expression IA brute (peut contenir LaTeX, Unicode, erreurs)
+// Sortie : expression JS valide pour new Function('x', 'Math', ...)
+// ══════════════════════════════════════════════════════════════════════
 function sanitizeExpr(expr: string): string {
-  let e = expr
-    .replace(/x\^4/g, 'x*x*x*x')
-    .replace(/x\^3/g, 'x*x*x')
-    .replace(/x\^2/g, 'x*x')
-    .replace(/x\^(-?\d+)/g, (_, n) => `Math.pow(x,${n})`)
-    .replace(/\(([^)]+)\)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
-    .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
-    .replace(/(\d)(x)/g, '$1*$2')
-    .replace(/\bpi\b/gi, 'Math.PI')
-    .replace(/\u03c0/g, 'Math.PI')
-  // Préfixer les fonctions maths SEULEMENT si pas déjà préfixées par Math.
-  // lookbehind négatif sur alphanumérique/point → évite Math.exp → Math.Math.exp
+  if (!expr || typeof expr !== 'string') return '0'
+  let e = expr.trim()
+
+  // ── 0. Détecter et rejeter les non-expressions ─────────────────────
+  // Si l'expression ressemble à du texte ou LaTeX complexe → retourner '0'
+  if (e.startsWith('\\') && !e.includes('(')) return '0'
+  if (e.length > 300) e = e.slice(0, 300)
+
+  // ── 1. Unicode math → ASCII ─────────────────────────────────────────
+  e = e
+    .replace(/−/g, '-')           // tiret moins unicode U+2212
+    .replace(/×/g, '*')           // × multiplication
+    .replace(/÷/g, '/')           // ÷ division
+    .replace(/·/g, '*')           // · point centré
+    .replace(/²/g, '*x')          // ² exposant (contexte x²)
+    .replace(/³/g, '*x*x')        // ³ exposant
+    .replace(/\u00b2/g, '*x')
+    .replace(/\u00b3/g, '*x*x')
+    .replace(/\u221e/g, '1e15')   // ∞ → grande valeur
+    .replace(/\u03c0/g, 'Math.PI')// π
+    .replace(/\u03c4/g, '6.2832') // τ (tau = 2π, souvent constante RC)
+    .replace(/\u03bb/g, '0.693')  // λ (lambda, constante désintégration)
+    .replace(/\u03c9/g, 'x')      // ω souvent = variable fréquence
+
+  // ── 2. LaTeX → JS ──────────────────────────────────────────────────
+  e = e
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
+    .replace(/\\sqrt\{([^{}]+)\}/g, 'Math.sqrt($1)')
+    .replace(/\\sqrt/g, 'Math.sqrt')
+    .replace(/\\left\(/g, '(').replace(/\\right\)/g, ')')
+    .replace(/\\left\[/g, '(').replace(/\\right\]/g, ')')
+    .replace(/\\left\|/g, 'Math.abs(').replace(/\\right\|/g, ')')
+    .replace(/\\cdot/g, '*')
+    .replace(/\\times/g, '*')
+    .replace(/\\pm/g, '+')
+    .replace(/\\ln\b/g, 'Math.log')
+    .replace(/\\log\b/g, 'Math.log10')
+    .replace(/\\sin\b/g, 'Math.sin')
+    .replace(/\\cos\b/g, 'Math.cos')
+    .replace(/\\tan\b/g, 'Math.tan')
+    .replace(/\\exp\b/g, 'Math.exp')
+    .replace(/\\pi\b/gi, 'Math.PI')
+    .replace(/\\[a-zA-Z]+\*/g, '')
+    .replace(/\\\\/g, '')
+    .replace(/\{/g, '(').replace(/\}/g, ')')
+
+  // ── 3. Puissances → Math.pow ────────────────────────────────────────
+  // Ordre important : du plus spécifique au plus général
+  e = e
+    .replace(/x\*\*(\d+)/g, (_, n) => 'x*'.repeat(Number(n)-1) + 'x') // x**n → x*x*...
+    .replace(/x\^(\d+)/g,   (_, n) => 'x*'.repeat(Number(n)-1) + 'x') // x^n
+    .replace(/x\^(-\d+)/g,  (_, n) => `Math.pow(x,${n})`)             // x^-n
+    .replace(/\(([^()]+)\)\^(\d+)/g, (_, b, n) => `Math.pow(${b},${n})`) // (expr)^n
+    .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g, (_, b, n) => `Math.pow(${b},${n})`) // base^n
+
+  // ── 4. Multiplication implicite ──────────────────────────────────────
+  e = e
+    .replace(/(\d)([a-zA-Z(])/g, '$1*$2')   // 2x → 2*x | 2( → 2*(
+    .replace(/\)([a-zA-Z0-9(])/g, ')*$1')   // )x → )*x | )( → )*(
+    .replace(/([0-9])\s+([a-zA-Z])/g,'$1*$2')// "2 x" → "2*x"
+
+  // ── 5. Fonctions math (lookbehind pour ne pas doubler Math.) ─────────
   const mathFns: [RegExp, string][] = [
-    [/(?<![a-zA-Z0-9_.])ln\s*\(/g,   'Math.log('],
-    [/(?<![a-zA-Z0-9_.])log\s*\(/g,  'Math.log10('],
-    [/(?<![a-zA-Z0-9_.])sin\s*\(/g,  'Math.sin('],
-    [/(?<![a-zA-Z0-9_.])cos\s*\(/g,  'Math.cos('],
-    [/(?<![a-zA-Z0-9_.])tan\s*\(/g,  'Math.tan('],
-    [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g, 'Math.sqrt('],
-    [/(?<![a-zA-Z0-9_.])abs\s*\(/g,  'Math.abs('],
-    [/(?<![a-zA-Z0-9_.])exp\s*\(/g,  'Math.exp('],
+    [/(?<![a-zA-Z0-9_.])ln\s*\(/g,      'Math.log('],
+    [/(?<![a-zA-Z0-9_.])log10\s*\(/g,   'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])log\s*\(/g,     'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])sin\s*\(/g,     'Math.sin('],
+    [/(?<![a-zA-Z0-9_.])cos\s*\(/g,     'Math.cos('],
+    [/(?<![a-zA-Z0-9_.])tan\s*\(/g,     'Math.tan('],
+    [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g,    'Math.sqrt('],
+    [/(?<![a-zA-Z0-9_.])abs\s*\(/g,     'Math.abs('],
+    [/(?<![a-zA-Z0-9_.])exp\s*\(/g,     'Math.exp('],
+    [/(?<![a-zA-Z0-9_.])asin\s*\(/g,    'Math.asin('],
+    [/(?<![a-zA-Z0-9_.])acos\s*\(/g,    'Math.acos('],
+    [/(?<![a-zA-Z0-9_.])atan\s*\(/g,    'Math.atan('],
+    [/(?<![a-zA-Z0-9_.])atan2\s*\(/g,   'Math.atan2('],
+    [/(?<![a-zA-Z0-9_.])floor\s*\(/g,   'Math.floor('],
+    [/(?<![a-zA-Z0-9_.])ceil\s*\(/g,    'Math.ceil('],
+    [/(?<![a-zA-Z0-9_.])round\s*\(/g,   'Math.round('],
+    [/(?<![a-zA-Z0-9_.])max\s*\(/g,     'Math.max('],
+    [/(?<![a-zA-Z0-9_.])min\s*\(/g,     'Math.min('],
+    [/(?<![a-zA-Z0-9_.])pow\s*\(/g,     'Math.pow('],
+    [/(?<![a-zA-Z0-9_.])sign\s*\(/g,    'Math.sign('],
+    [/(?<![a-zA-Z0-9_.])sinh\s*\(/g,    'Math.sinh('],
+    [/(?<![a-zA-Z0-9_.])cosh\s*\(/g,    'Math.cosh('],
+    [/(?<![a-zA-Z0-9_.])tanh\s*\(/g,    'Math.tanh('],
+    [/(?<![a-zA-Z0-9_.])log2\s*\(/g,    'Math.log2('],
   ]
   for (const [re2, repl] of mathFns) { e = e.replace(re2, repl) }
-  // e isolé → Math.E (pas suivi ni précédé de lettre/chiffre/point/()
-  e = e.replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g, 'Math.E')
-  return e
+
+  // ── 6. Constantes ───────────────────────────────────────────────────
+  e = e
+    .replace(/\bpi\b/gi, 'Math.PI')
+    .replace(/π/g, 'Math.PI')
+    .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g, 'Math.E')
+    .replace(/\bInfinity\b/g, '1e15')
+    .replace(/\bNaN\b/g, '0')
+
+  // ── 7. Nettoyage final ──────────────────────────────────────────────
+  e = e
+    .replace(/\*{2,}/g, '*')      // ** → * (déjà géré mais sécurité)
+    .replace(/\s+/g, '')          // supprimer espaces
+    .replace(/,,/g, ',')          // virgules doubles
+
+  return e || '0'
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// AUTO-DÉTECTEUR DE TYPE — Analyse le contexte pour choisir le bon format
+// Permet à l'IA de générer des graphiques sans connaître le type exact
+// ══════════════════════════════════════════════════════════════════════
+function autoDetectGraphType(spec: any): 'function' | 'geometry' | 'ascii' | 'table' | 'bar' {
+  if (!spec) return 'function'
+  if (spec.type && ['function','geometry','ascii','table','bar','points','parametric','probability'].includes(spec.type)) {
+    return spec.type as any
+  }
+  // Auto-détection depuis le contenu
+  if (spec.content && typeof spec.content === 'string') return 'ascii'
+  if (spec.shapes && Array.isArray(spec.shapes)) return 'geometry'
+  if (spec.rows && Array.isArray(spec.rows)) return 'table'
+  if (spec.bars || spec.categories) return 'bar'
+  if (spec.expressions && Array.isArray(spec.expressions)) return 'function'
+  return 'function'
 }
 
 
@@ -1669,10 +1860,162 @@ function GeoGraph({ spec }: { spec: GeoSpec }) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════
+// TABLE GRAPH — Tableau de données (loi proba, algo, SVT)
+// ══════════════════════════════════════════════════════════════════════
+function TableGraph({ spec }: { spec: any }) {
+  const headers  = spec.headers  || []
+  const rows     = spec.rows     || []
+  const highlight = spec.highlight || []
+  return (
+    <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0'}}>
+      {spec.title && (
+        <div style={{padding:'8px 16px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>
+          📋 {spec.title}
+        </div>
+      )}
+      <div style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
+          {headers.length > 0 && (
+            <thead>
+              <tr>
+                {headers.map((h: string, i: number) => (
+                  <th key={i} style={{padding:'8px 12px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {rows.map((row: string[], i: number) => (
+              <tr key={i} style={{background: highlight.includes(i) ? 'rgba(99,102,241,0.1)' : i%2===0 ? 'rgba(255,255,255,0.02)' : 'transparent'}}>
+                {row.map((cell: string, j: number) => (
+                  <td key={j} style={{padding:'6px 12px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BAR GRAPH — Histogramme / Diagramme en barres
+// ══════════════════════════════════════════════════════════════════════
+function BarGraph({ spec }: { spec: any }) {
+  const categories = spec.categories || []
+  const values     = spec.values     || []
+  const colors     = spec.colors     || ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
+  const maxVal     = Math.max(...values, 1)
+  return (
+    <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0',background:'rgba(8,8,23,0.95)',padding:'16px'}}>
+      {spec.title && (
+        <div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:14,textAlign:'center'}}>{spec.title}</div>
+      )}
+      <div style={{display:'flex',alignItems:'flex-end',gap:8,height:160,paddingBottom:24,position:'relative'}}>
+        {/* Axes Y */}
+        {[0,25,50,75,100].map(p => (
+          <div key={p} style={{position:'absolute',left:0,right:0,bottom:`${p/100*130+24}px`,borderTop:'1px solid rgba(255,255,255,0.06)',fontSize:9,color:'rgba(255,255,255,0.25)',paddingLeft:2}}>
+            {Math.round(maxVal*p/100)}
+          </div>
+        ))}
+        {categories.map((cat: string, i: number) => {
+          const h = Math.max(4, (values[i]/maxVal)*130)
+          const color = colors[i % colors.length]
+          return (
+            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+              <div style={{fontSize:10,color:color,fontWeight:700}}>{values[i]}</div>
+              <div style={{width:'100%',height:`${h}px`,background:color,borderRadius:'4px 4px 0 0',opacity:0.85,transition:'height 0.3s'}}/>
+              <div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2,marginTop:2}}>{cat}</div>
+            </div>
+          )
+        })}
+      </div>
+      {spec.xLabel && <div style={{textAlign:'center',fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:4}}>{spec.xLabel}</div>}
+    </div>
+  )
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// RENDERER ASCII — Schémas pile, circuit, montage physique/chimie
+// ══════════════════════════════════════════════════════════════════════
+function AsciiGraph({ spec }: { spec: any }) {
+  const title   = spec.title   || ''
+  const content = spec.content || ''
+  const legend  = Array.isArray(spec.legend) ? spec.legend : []
+  return (
+    <div style={{
+      borderRadius: 14, overflow: 'hidden',
+      border: '1px solid rgba(6,182,212,0.3)',
+      margin: '14px 0',
+      background: 'rgba(6,182,212,0.04)',
+    }}>
+      {title && (
+        <div style={{
+          padding: '8px 18px',
+          borderBottom: '1px solid rgba(6,182,212,0.15)',
+          fontSize: 12, fontWeight: 700, color: '#06b6d4',
+          letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          📐 {title}
+        </div>
+      )}
+      <div style={{ padding: '16px 20px' }}>
+        {/* Schéma ASCII */}
+        <pre style={{
+          fontFamily: "'Courier New', Consolas, monospace",
+          fontSize: 13,
+          lineHeight: 1.7,
+          color: 'rgba(255,255,255,0.85)',
+          background: 'rgba(0,0,0,0.35)',
+          borderRadius: 10,
+          padding: '14px 18px',
+          margin: '0 0 14px',
+          overflowX: 'auto',
+          whiteSpace: 'pre',
+          border: '1px solid rgba(6,182,212,0.15)',
+        }}>
+          {content}
+        </pre>
+        {/* Légende */}
+        {legend.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {legend.map((item: string, i: number) => (
+              <span key={i} style={{
+                fontSize: 11, padding: '3px 10px',
+                background: 'rgba(6,182,212,0.1)',
+                color: '#67e8f9',
+                border: '1px solid rgba(6,182,212,0.2)',
+                borderRadius: 20, fontWeight: 600,
+              }}>
+                {item}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
 // ── Dispatch : function/points → Plotly, geometry → SVG ──────────
 function SmartGraph({ spec }: { spec: any }) {
-  if (spec?.type === 'geometry') return <GeoGraph spec={spec as GeoSpec}/>
-  return <MathGraph spec={spec as GraphSpec}/>
+  // Auto-détecter le type si absent ou inconnu
+  const detectedType = autoDetectGraphType(spec)
+  const effectiveSpec = detectedType !== spec?.type ? {...spec, type: detectedType} : spec
+
+  if (effectiveSpec?.type === 'ascii')    return <AsciiGraph spec={effectiveSpec}/>
+  if (effectiveSpec?.type === 'table')    return <TableGraph spec={effectiveSpec}/>
+  if (effectiveSpec?.type === 'bar')      return <BarGraph   spec={effectiveSpec}/>
+  if (effectiveSpec?.type === 'geometry') return <GeoGraph   spec={effectiveSpec as GeoSpec}/>
+  return <MathGraph spec={effectiveSpec as GraphSpec}/>
 }
 
 // Extrait le premier [GRAPH: {...}] d'un texte (ex: correction IA)
@@ -2897,7 +3240,8 @@ Règles STRICTES :
 GRAPHIQUES — FORMATS :
 FORMAT 1 — COURBE : [GRAPH: {"type":"function","expressions":["2*x*Math.exp(-x)"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
 FORMAT 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}]}]}]
-RÈGLES : champ "graph" SÉPARÉ du "statement" · JAMAIS x^2 → x*x · JAMAIS 2x → 2*x
+FORMAT 3 — PILE/CIRCUIT (ASCII) : [GRAPH: {"type":"ascii","title":"Pile Zn-Cu","content":"\n  Zn (-)  ||  Cu (+)\n  ZnSO₄  ||  CuSO₄\n  └───── e⁻ ─────┘","legend":["Anode: Zn→Zn²⁺+2e⁻","Cathode: Cu²⁺+2e⁻→Cu"]}]
+RÈGLES : champ "graph" SÉPARÉ du "statement" · JAMAIS x^2 → x*x · JAMAIS 2x → 2*x · pile/circuit → FORMAT 3 ascii · JAMAIS "geometry" pour une pile
 
 Réponds EXACTEMENT avec ce JSON :
 {
