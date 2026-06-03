@@ -1008,7 +1008,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   <!-- EN-TÊTE -->
   <div class="header">
     <div class="header-left">
-      <div class="brand">∑ Bac.AI Tunisie · Solveur IA</div>
+      <div class="brand">mathbac.ai</div>
       <div class="htitle">${icon} ${modeLabel}</div>
       <div class="hsub">Programme officiel CNP · Bac Tunisie</div>
     </div>
@@ -1033,8 +1033,7 @@ ${bodyLines}
 
   <!-- PIED DE PAGE -->
   <div class="footer">
-    <span><strong>Bac.AI Tunisie</strong> — Solveur IA · Programme CNP officiel</span>
-    <span>Session Bac Tunisie ${new Date().getFullYear()}</span>
+    <span><strong>mathbac.ai</strong></span>
     <span>Page 1/1</span>
   </div>
 
@@ -2662,7 +2661,7 @@ Structure OBLIGATOIRE :
           )}
 
           <div style={{ textAlign: 'center', fontSize: 11, color: 'rgba(255,255,255,0.18)', marginTop: 36 }}>
-            Solveur alimenté par Claude AI · Programme Bac Tunisie 2026
+            
           </div>
         </div>
       </main>
