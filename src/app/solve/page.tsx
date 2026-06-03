@@ -2203,32 +2203,73 @@ Structure OBLIGATOIRE :
             <div style={{ marginBottom: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden' }}>
               <div style={{ padding: '12px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)', fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span>🕘 Historique — {history.length} exercice{history.length > 1 ? 's' : ''}</span>
-                <button onClick={e => { e.stopPropagation(); const updated: HistoryItem[] = []; setHistory(updated); saveSolveHistory(updated, user?.id ?? undefined) }}
-                  style={{ fontSize:10, padding:'2px 8px', borderRadius:5, border:'1px solid rgba(239,68,68,0.3)', background:'transparent', color:'rgba(239,68,68,0.6)', cursor:'pointer', fontFamily:'inherit' }}>
-                  Vider
+                <button onClick={e => {
+                    e.stopPropagation()
+                    if (window.confirm('Vider tout l\'historique ? Cette action est irréversible.')) {
+                      const updated: HistoryItem[] = []
+                      setHistory(updated)
+                      saveSolveHistory(updated, user?.id ?? undefined)
+                    }
+                  }}
+                  style={{ fontSize:11, padding:'3px 10px', borderRadius:6, border:'1px solid rgba(239,68,68,0.3)', background:'rgba(239,68,68,0.06)', color:'rgba(239,68,68,0.7)', cursor:'pointer', fontFamily:'inherit', fontWeight:600, display:'flex', alignItems:'center', gap:5 }}>
+                  🗑 Vider tout
                 </button>
               </div>
               {history.map((item, i) => (
                 <div key={item.id}
-                  onClick={() => { setInput(item.exercise); setSolution(item.solution); setMode(item.mode); setPhase('done'); setShowHistory(false) }}
-                  style={{ padding: '11px 18px', borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, transition: 'background 0.15s' }}
+                  style={{ padding: '11px 18px', borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', display: 'flex', alignItems: 'center', gap: 12, transition: 'background 0.15s', position: 'relative' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(79,110,247,0.06)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                  <span style={{ fontSize: 16 }}>{item.mode === 'verify' ? '🔍' : '🧮'}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.exercise.slice(0, 70)}{item.exercise.length > 70 ? '…' : ''}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-                      {item.timestamp}
-                    </p>
+                  {/* Zone cliquable pour revoir */}
+                  <div onClick={() => { setInput(item.exercise); setSolution(item.solution); setMode(item.mode); setPhase('done'); setShowHistory(false) }}
+                    style={{ display:'flex', alignItems:'center', gap:12, flex:1, minWidth:0, cursor:'pointer' }}>
+                    <span style={{ fontSize: 16, flexShrink:0 }}>{item.mode === 'verify' ? '🔍' : '🧮'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {item.exercise.slice(0, 70)}{item.exercise.length > 70 ? '…' : ''}
+                      </p>
+                      <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop:2 }}>
+                        {item.timestamp} · {item.mode === 'verify' ? 'Vérification' : 'Résolution'}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 11, color: '#4f6ef7', flexShrink: 0, marginRight:4 }}>Revoir →</span>
                   </div>
-                  <span style={{ fontSize: 11, color: '#4f6ef7', flexShrink: 0 }}>Revoir →</span>
-                  <button onClick={e => { e.stopPropagation(); setHistory(prev => deleteSolveItem(item.id, prev, user?.id ?? undefined)) }}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(239,68,68,0.6)', fontSize:18, padding:'0 2px', flexShrink:0, lineHeight:1, transition:'color 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.color = 'rgba(239,68,68,1)'}
-                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(239,68,68,0.6)'}
-                    title="Supprimer cette résolution">×</button>
+                  {/* Bouton supprimer — séparé du onClick parent */}
+                  <button
+                    onClick={e => {
+                      e.stopPropagation()
+                      if (window.confirm('Supprimer cette résolution ?')) {
+                        setHistory(prev => deleteSolveItem(item.id, prev, user?.id ?? undefined))
+                      }
+                    }}
+                    title="Supprimer cette résolution"
+                    style={{
+                      flexShrink: 0,
+                      width: 28, height: 28,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: 'rgba(239,68,68,0.1)',
+                      border: '1px solid rgba(239,68,68,0.25)',
+                      borderRadius: 7,
+                      cursor: 'pointer',
+                      color: 'rgba(239,68,68,0.7)',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      transition: 'all 0.18s',
+                      fontFamily: 'inherit',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = 'rgba(239,68,68,0.22)'
+                      e.currentTarget.style.borderColor = 'rgba(239,68,68,0.55)'
+                      e.currentTarget.style.color = '#ef4444'
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'rgba(239,68,68,0.1)'
+                      e.currentTarget.style.borderColor = 'rgba(239,68,68,0.25)'
+                      e.currentTarget.style.color = 'rgba(239,68,68,0.7)'
+                    }}>
+                    🗑
+                  </button>
                 </div>
               ))}
             </div>
