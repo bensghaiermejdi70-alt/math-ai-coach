@@ -1114,35 +1114,80 @@ function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
     try {
       const xMin = spec.xMin ?? -5
       const xMax = spec.xMax ?? 5
-      const N = 400
-      const dx = (xMax - xMin) / N
       const traces: any[] = []
       const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
 
       if (spec.type === 'function' || spec.type === 'parametric') {
-        spec.expressions.forEach((expr, i) => {
+        // Vérifier que expressions est valide
+        const exprs = Array.isArray(spec.expressions)
+          ? spec.expressions.filter((e: string) => e && e.trim() !== '')
+          : []
+        if (exprs.length === 0) {
+          setError('Aucune expression à tracer')
+          return
+        }
+
+        exprs.forEach((expr: string, i: number) => {
+          // ── Pré-compiler UNE SEULE FOIS hors de la boucle ───────────
+          const safeExpr = sanitizeExpr(expr)
+          let safeFn: Function
+          try {
+            safeFn = new Function('x', 'Math',
+              `"use strict"; try { const _r=(${safeExpr}); return (_r===undefined||_r===null)?null:_r; } catch(e){ return null; }`)
+          } catch(compileErr) {
+            console.warn('Expr compile error:', expr, compileErr)
+            return
+          }
+
+          // ── Adapter la résolution selon la plage ─────────────────────
+          // Haute fréquence (ex: sin(440*x)) → plus de points
+          const hasHighFreq = safeExpr.includes('440') || safeExpr.includes('880') ||
+                              safeExpr.includes('1000') || safeExpr.includes('2000')
+          const N = hasHighFreq ? 2000 : 600
+          const dx = (xMax - xMin) / N
+
           const xs: number[] = [], ys: number[] = []
+          let hasValid = false
+          let yMax = 0
+
+          // Passe 1 : trouver la plage de valeurs réelles
           for (let j = 0; j <= N; j++) {
             const x = xMin + j * dx
-            try {
-              // Sanitize + évaluation sécurisée
-              const safeExpr = sanitizeExpr(expr)
-              const safeFn = new Function('x', 'Math',
-                `"use strict"; try { return (${safeExpr}); } catch(e) { return null; }`)
-              const y = safeFn(x, Math)
-              if (y !== null && isFinite(y) && Math.abs(y) < 1e6) {
-                xs.push(x); ys.push(y)
-              } else {
-                xs.push(x); ys.push(NaN)
-              }
-            } catch { xs.push(x); ys.push(NaN) }
+            const y = safeFn(x, Math)
+            if (y !== null && isFinite(y)) {
+              yMax = Math.max(yMax, Math.abs(y))
+              hasValid = true
+            }
           }
+
+          if (!hasValid) {
+            console.warn('Aucun point valide pour:', expr)
+            return
+          }
+
+          // Seuil dynamique : 100x la valeur max observée (pas un seuil fixe 1e6)
+          const threshold = Math.max(yMax * 100, 1e10)
+
+          // Passe 2 : tracer avec le bon seuil
+          for (let j = 0; j <= N; j++) {
+            const x = xMin + j * dx
+            const y = safeFn(x, Math)
+            xs.push(x)
+            ys.push((y !== null && isFinite(y) && Math.abs(y) <= threshold) ? y : NaN)
+          }
+
           traces.push({
             x: xs, y: ys, mode: 'lines', type: 'scatter',
             name: spec.labels?.[i] || expr,
-            line: { color: colors[i % colors.length], width: 2.5 }
+            line: { color: colors[i % colors.length], width: 2.5 },
+            connectgaps: false,
           })
         })
+
+        if (traces.length === 0) {
+          setError('Tracé impossible — aucune valeur calculable pour : ' + spec.expressions?.[0]?.slice(0,60))
+          return
+        }
       }
 
       if (spec.points && spec.points.length > 0) {
