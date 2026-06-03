@@ -973,7 +973,17 @@ QUAND UTILISER (OBLIGATOIRE dans la correction) :
 - Suites → [GRAPH: type "function"] courbe u_n + droite horizontale de la limite
 - Probabilités (loi binomiale/normale) → [GRAPH: type "function"] courbe de densité ou diagramme
 - Place le [GRAPH: ...] juste APRÈS l'explication théorique, AVANT les calculs
-- Exercice mixte → graphique "function" ET graphique "geometry" séparés`
+- Exercice mixte → graphique "function" ET graphique "geometry" séparés
+
+RÈGLES ABSOLUES ANTI-GRAPHIQUE-VIDE :
+1. JAMAIS "expressions":[] ou "expressions":[""] → graphique blanc interdit
+2. JAMAIS LaTeX dans expressions : INTERDIT x^2, \frac → UTILISER x*x, (a/b)
+3. TOUJOURS valeurs numériques CALCULÉES dans les expressions :
+   - Si τ=RC=2s calculé → Math.exp(-x/2) PAS Math.exp(-x/tau)
+   - Si f(x)=2x³-3x²+1 → "2*x*x*x - 3*x*x + 1" PAS "2x^3-3x^2+1"
+   - Si f'(x)=6x²-6x → ajouter "6*x*x - 6*x" dans expressions[]
+4. INTERPRÉTATION GRAPHIQUE demandée → courbes tracées, JAMAIS repère vide
+5. FORMAT EXACT : [GRAPH: {"type":"function","expressions":["2*x*x*x - 3*x*x + 1","6*x*x - 6*x"],"xMin":-2,"xMax":3,"labels":["f(x)","f\'(x)"],"title":"f et sa dérivée","xLabel":"x","yLabel":"y"}]`
 
   const withWork = studentWork.trim().length > 10
 
@@ -1181,25 +1191,66 @@ async function analyzeOneExerciseSim(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
-  const prompt = `Analyse cet exercice de simulation Bac.
+  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire, spécialiste Bac Tunisie CNP.
+Analyse précisément le travail de l'élève et propose une remédiation ciblée et progressive.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+
+  const prompt = `Analyse cet exercice de simulation Bac Tunisie et génère une remédiation précise.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
-${exercise.statement.substring(0,250)}
+Énoncé : ${exercise.statement.substring(0,300)}
 
-RÉPONSE ÉLÈVE : ${studentAnswer||('(Aucune réponse)')}
-CORRECTION : ${correction.substring(0,800)}
+RÉPONSE ÉLÈVE : ${studentAnswer||('(Aucune réponse — considérer comme non traité)')}
+CORRECTION OFFICIELLE : ${correction.substring(0,1000)}
 
-JSON requis :
+JSON requis (COMPLET) :
 {
-  "estimatedScore": [0 à ${exercise.points}],
+  "estimatedScore": [entier 0 à ${exercise.points} — estimation réaliste basée sur la réponse],
   "maxScore": ${exercise.points},
-  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Analyse précise]","priority":1}],
-  "strengths": ["[Ce qui est bien]"],
-  "globalAdvice": ["[Conseil ciblé]","[Méthode à retenir]"],
+  "weakAreas": [
+    {
+      "theme": "${exercise.theme}",
+      "severity": "critical|moderate|good",
+      "description": "[Erreur précise observée ou lacune identifiée — pas générique]",
+      "priority": 1,
+      "chapter": "[Chapitre CNP concerné]",
+      "targetScore": "[ex: +${Math.round(exercise.points * 0.6)} pts si maîtrisé]"
+    }
+  ],
+  "strengths": ["[Point fort observé dans la réponse — ou potentiel si pas de réponse]"],
+  "globalAdvice": [
+    "[Conseil CONCRET : ex: Retravailler la définition de la dérivée + 5 exercices]",
+    "[Méthode à retenir pour ce type d'exercice]",
+    "[Erreur classique à éviter au Bac sur ce thème]"
+  ],
   "remediationExercises": [
-    {"id":"remSim${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider la lacune]","statement":"Mini-exercice ciblé. 2-3 sous-questions. Minimum 60 mots.","hint":"[Indice]","officialCorrection":"[Correction complète]"},
-    {"id":"remSim${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Approfondir]","statement":"Exercice standard. Minimum 60 mots.","hint":"[Méthode]","officialCorrection":"[Correction]"}
+    {
+      "id":"remSim${exIdx}-1",
+      "theme":"${exercise.theme}",
+      "difficulty":"introductory",
+      "objective":"[Consolider la notion de base manquante]",
+      "statement":"Mini-exercice ORIGINAL avec données numériques. 2-3 sous-questions. Minimum 80 mots. Ne pas copier l'énoncé du sujet.",
+      "hint":"[Quelle formule ou méthode appliquer — sans donner la réponse]",
+      "officialCorrection":"[Correction étape par étape avec calculs développés. Minimum 60 mots.]"
+    },
+    {
+      "id":"remSim${exIdx}-2",
+      "theme":"${exercise.theme}",
+      "difficulty":"standard",
+      "objective":"[Appliquer la notion au niveau Bac]",
+      "statement":"Exercice niveau Bac sur le même thème. 3 sous-questions. Minimum 90 mots.",
+      "hint":"[Stratégie de résolution globale]",
+      "officialCorrection":"[Correction complète. Minimum 70 mots.]"
+    },
+    {
+      "id":"remSim${exIdx}-3",
+      "theme":"${exercise.theme}",
+      "difficulty":"advanced",
+      "objective":"[Maîtriser le thème en conditions Bac]",
+      "statement":"Exercice avancé type Bac Tunisie sur ce thème. 4 sous-parties. Minimum 100 mots.",
+      "hint":"[Conseil méthodologique niveau Bac]",
+      "officialCorrection":"[Correction officielle niveau Bac. Minimum 80 mots.]"
+    }
   ]
 }`
   const raw = await askClaude(prompt, system, 3000)
@@ -1216,46 +1267,95 @@ async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
   const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.
-Tu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.
+Tu analyses finement les travaux d'élèves et construis un plan d'amélioration PERSONNALISÉ et ACTIONNABLE.
+Ton analyse doit être précise, bienveillante et orienter l'élève vers des actions concrètes.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
-  const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.
+  const prompt = `Analyse ce travail d'élève BAC TUNISIE et génère un rapport de remédiation complet et personnalisé.
 
-SUJET :
+SUJET BAC :
 ${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}
 
 TRAVAIL ÉLÈVE :
-${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}
+${studentWork || '(Aucune réponse fournie — élève non préparé ou absent)'}
 
-CORRECTION :
-${correction.substring(0,1200)}
+CORRECTION OFFICIELLE :
+${correction.substring(0,1500)}
 
-Génère ce JSON :
+INSTRUCTIONS ANALYSE :
+- Évalue CHAQUE exercice séparément (points forts ET lacunes précises)
+- Identifie les thèmes NON MAÎTRISÉS avec description détaillée de l'erreur type
+- Génère 4 exercices de remédiation PROGRESSIFS (introductory→standard→advanced→bac)
+- Chaque exercice de remédiation doit cibler UNE lacune précise identifiée
+- Les exercices de remédiation doivent être COMPLETS avec vraies données numériques
+
+Génère ce JSON COMPLET :
 {
-  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],
+  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste basée sur le travail fourni],
   "maxScore": ${exam.totalPoints},
+  "scoreByExercise": [
+    {"exerciseTitle": "[titre]", "estimated": [pts estimés], "max": [pts max], "comment": "[commentaire précis 1 phrase]"}
+  ],
   "weakAreas": [
     {
-      "theme": "[Thème précis ex: Suites récurrentes]",
+      "theme": "[Thème PRÉCIS ex: Dérivation — règle du quotient]",
       "severity": "critical|moderate|good",
-      "description": "[Explication précise de la lacune ou de la maîtrise]",
-      "priority": [1=très urgent, 2=important, 3=secondaire]
+      "description": "[Erreur type observée + pourquoi c'est bloquant pour le bac]",
+      "priority": [1=bloquant bac, 2=important, 3=secondaire],
+      "chapter": "[Chapitre programme CNP]",
+      "targetScore": "[Score visé si maîtrisé: ex +3 points]"
     }
   ],
-  "strengths": ["[Point fort 1]", "[Point fort 2]"],
-  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],
+  "strengths": [
+    "[Point fort PRÉCIS avec exemple du travail élève]"
+  ],
+  "globalAdvice": [
+    "[Conseil ACTIONNABLE précis — ex: Refaire 10 exercices de dérivation avant vendredi]",
+    "[Méthode mnémotechnique ou astuce concrète]",
+    "[Priorité de révision sur les 2 semaines à venir]"
+  ],
+  "studyPlan": {
+    "week1": ["[Action jour 1-2]", "[Action jour 3-4]", "[Action jour 5-7]"],
+    "week2": ["[Action semaine 2 — approfondissement]"],
+    "dailyGoal": "[Objectif quotidien réaliste en minutes]"
+  },
   "remediationExercises": [
     {
       "id": "rem-1",
-      "theme": "[Thème à travailler en priorité]",
-      "difficulty": "introductory|standard|advanced",
-      "objective": "[Ce que l'élève va acquérir en faisant cet exercice]",
-      "statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.",
-      "hint": "Indication méthodologique pour commencer sans donner la réponse",
-      "officialCorrection": "Correction complète et développée, étape par étape"
+      "theme": "[Thème lacune prioritaire]",
+      "difficulty": "introductory",
+      "objective": "[Ce que l'élève va consolider — formule précise attendue]",
+      "statement": "Exercice ORIGINAL avec données numériques précises. 3 sous-questions progressives. Minimum 100 mots. Ne pas reprendre l'énoncé du sujet.",
+      "hint": "[Méthode de démarrage SANS donner la réponse — quelle formule appliquer ?]",
+      "officialCorrection": "[Correction COMPLÈTE étape par étape avec LaTeX : $formule$. Minimum 80 mots.]"
     },
-    { "id": "rem-2", "theme": "[2ème thème faible]", "difficulty": "standard", "objective": "...", "statement": "...", "hint": "...", "officialCorrection": "..." },
-    { "id": "rem-3", "theme": "[3ème thème faible]", "difficulty": "introductory", "objective": "...", "statement": "...", "hint": "...", "officialCorrection": "..." }
+    {
+      "id": "rem-2",
+      "theme": "[2ème thème faible]",
+      "difficulty": "standard",
+      "objective": "[Approfondissement ciblé]",
+      "statement": "Exercice standard niveau Bac. 3-4 sous-questions. Minimum 100 mots.",
+      "hint": "[Indice méthodologique]",
+      "officialCorrection": "[Correction complète. Minimum 80 mots.]"
+    },
+    {
+      "id": "rem-3",
+      "theme": "[3ème thème à travailler]",
+      "difficulty": "standard",
+      "objective": "[Maîtrise du thème]",
+      "statement": "Exercice de consolidation avec contexte réaliste. Minimum 90 mots.",
+      "hint": "[Conseil de démarrage]",
+      "officialCorrection": "[Correction détaillée. Minimum 70 mots.]"
+    },
+    {
+      "id": "rem-4",
+      "theme": "[Thème le plus critique]",
+      "difficulty": "advanced",
+      "objective": "[Préparation niveau Bac sur ce thème]",
+      "statement": "Exercice niveau Bac complet sur le thème le plus faible. 4 sous-parties. Minimum 120 mots.",
+      "hint": "[Stratégie de résolution globale]",
+      "officialCorrection": "[Correction officielle niveau Bac. Minimum 100 mots.]"
+    }
   ]
 }`
 
@@ -1273,13 +1373,44 @@ async function correctRemediationExercise(
   exercise: AnalysisResult['remediationExercises'][number],
   studentAnswer: string
 ): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant.
-Tu corriges les réponses d'élèves sur des exercices de remédiation.
-Sois précis, encourageant, et identifie exactement ce qui manque.`
+  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant, spécialiste Bac Tunisie.
+Tu corriges les réponses d'élèves sur des exercices de remédiation avec précision pédagogique.
+Utilise LaTeX pour les formules : $formule$ inline, $$formule$$ centré.
+Sois encourageant, précis, et guide l'élève vers la maîtrise complète.`
 
   return askClaude(
-    `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
-    system, 2000
+    `EXERCICE DE REMÉDIATION — ${exercise.theme}
+Objectif : ${exercise.objective}
+
+Énoncé :
+${exercise.statement}
+
+Réponse de l'élève :
+${studentAnswer || '(Aucune réponse fournie)'}
+
+Correction officielle de référence :
+${exercise.officialCorrection}
+
+Rédige une correction personnalisée avec cette structure OBLIGATOIRE :
+
+## ✅ Évaluation de ta réponse
+[Notation claire : ce qui est juste ✅, ce qui est incomplet ⚠️, ce qui est faux ❌]
+[Score estimé sur les points de l'exercice]
+
+## 📝 Correction commentée étape par étape
+[Pour CHAQUE sous-question : méthode → calcul LaTeX → résultat encadré]
+[> **Résultat :** $valeur$ pour les résultats clés]
+
+## 🔑 Ce qu'il faut absolument retenir
+[Max 3 règles ou formules ESSENTIELLES avec leur application directe]
+[Erreur classique à éviter sur ce type d'exercice]
+
+## 🎯 Exercice flash pour consolider
+[UN petit exercice de 1-2 questions sur le même concept — avec la réponse]
+
+## 📈 Prochain pas
+[Action concrète et spécifique pour maîtriser ce thème avant le Bac]`,
+    system, 2500
   )
 }
 
@@ -4425,6 +4556,61 @@ function PageAnalyseExercice({
                       </span>
                     </div>
                     <p style={{fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.6, margin:0}}>{w.description}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Plan d'étude personnalisé */}
+        {(analysis as any).studyPlan && (
+          <div style={{marginBottom:24,padding:'20px 24px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:16}}>
+            <h3 style={{margin:'0 0 16px',fontSize:15,fontWeight:800,color:'#10b981',display:'flex',alignItems:'center',gap:8}}>
+              📅 Plan de travail personnalisé
+            </h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+              <div style={{padding:'12px 16px',background:'rgba(16,185,129,0.08)',borderRadius:12,border:'1px solid rgba(16,185,129,0.2)'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#10b981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 1</div>
+                {((analysis as any).studyPlan?.week1||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(16,185,129,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+              <div style={{padding:'12px 16px',background:'rgba(79,110,247,0.07)',borderRadius:12,border:'1px solid rgba(79,110,247,0.2)'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#818cf8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 2</div>
+                {((analysis as any).studyPlan?.week2||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(79,110,247,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+            </div>
+            {(analysis as any).studyPlan?.dailyGoal && (
+              <div style={{padding:'10px 14px',background:'rgba(245,158,11,0.09)',borderRadius:10,border:'1px solid rgba(245,158,11,0.25)',fontSize:13,color:'#fcd34d',fontWeight:600}}>
+                ⏱ Objectif quotidien : {(analysis as any).studyPlan.dailyGoal}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Score par exercice */}
+        {(analysis as any).scoreByExercise?.length > 0 && (
+          <div style={{marginBottom:24,padding:'18px 22px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:16}}>
+            <h3 style={{margin:'0 0 14px',fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.6)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
+              📊 Détail par exercice
+            </h3>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {((analysis as any).scoreByExercise as {exerciseTitle:string;estimated:number;max:number;comment:string}[]).map((ex,i)=>{
+                const pct=Math.round((ex.estimated/ex.max)*100)
+                const barColor=pct>=70?'#10b981':pct>=40?'#f59e0b':'#ef4444'
+                return (
+                  <div key={i} style={{padding:'10px 14px',background:'rgba(255,255,255,0.03)',borderRadius:10,border:'1px solid rgba(255,255,255,0.07)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                      <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{ex.exerciseTitle}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:barColor}}>{ex.estimated}/{ex.max} pts ({pct}%)</span>
+                    </div>
+                    <div style={{height:5,background:'rgba(255,255,255,0.07)',borderRadius:3,marginBottom:6,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pct}%`,background:barColor,borderRadius:3}}/>
+                    </div>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{ex.comment}</div>
                   </div>
                 )
               })}
