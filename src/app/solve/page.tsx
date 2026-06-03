@@ -75,25 +75,46 @@ async function askClaudeWithImage(
 // GRAPHIQUES Plotly
 // ── Sanitize expression : corrige les erreurs courantes de l'IA ──
 function sanitizeExpr(expr: string): string {
+  if (!expr || typeof expr !== 'string') return '0'
   return expr
+    // Caractères Unicode math → ASCII
+    .replace(/²/g, '*x')
+    .replace(/³/g, '*x*x')
+    .replace(/·/g, '*')
+    .replace(/×/g, '*')
+    .replace(/−/g, '-')
+    .replace(/\u00b2/g, '*x')
+    .replace(/\u00b3/g, '*x*x')
+    // Puissances
     .replace(/x\^4/g, 'x*x*x*x')
     .replace(/x\^3/g, 'x*x*x')
     .replace(/x\^2/g, 'x*x')
     .replace(/x\^(-?\d+)/g, (_, n) => `Math.pow(x,${n})`)
     .replace(/\(([^)]+)\)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
     .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`)
+    // Multiplication implicite
     .replace(/(\d)(x)/g, '$1*$2')
-    .replace(/ln\(/g, 'Math.log(')
-    .replace(/log\(/g, 'Math.log10(')
-    .replace(/sin\(/g, 'Math.sin(')
-    .replace(/cos\(/g, 'Math.cos(')
-    .replace(/tan\(/g, 'Math.tan(')
-    .replace(/sqrt\(/g, 'Math.sqrt(')
-    .replace(/abs\(/g, 'Math.abs(')
-    .replace(/exp\(/g, 'Math.exp(')
-    .replace(/pi/gi, 'Math.PI')
+    .replace(/(\d)\s*\(/g, '$1*(')
+    // Fonctions math
+    .replace(/\bln\(/g, 'Math.log(')
+    .replace(/\blog\(/g, 'Math.log10(')
+    .replace(/\bsin\(/g, 'Math.sin(')
+    .replace(/\bcos\(/g, 'Math.cos(')
+    .replace(/\btan\(/g, 'Math.tan(')
+    .replace(/\bsqrt\(/g, 'Math.sqrt(')
+    .replace(/\babs\(/g, 'Math.abs(')
+    .replace(/\bexp\(/g, 'Math.exp(')
+    .replace(/\basin\(/g, 'Math.asin(')
+    .replace(/\bacos\(/g, 'Math.acos(')
+    .replace(/\batan\(/g, 'Math.atan(')
+    .replace(/\bceil\(/g, 'Math.ceil(')
+    .replace(/\bfloor\(/g, 'Math.floor(')
+    // Constantes
+    .replace(/\bpi\b/gi, 'Math.PI')
     .replace(/π/g, 'Math.PI')
     .replace(/(?<![a-zA-Z_])e(?![a-zA-Z_(])/g, 'Math.E')
+    // Nettoyage espaces
+    .replace(/\s+/g, '')
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -132,23 +153,46 @@ function MathGraph({ spec }: { spec: GraphSpec }) {
       const colors = ['#4f6ef7', '#06d6a0', '#f59e0b', '#ec4899', '#8b5cf6']
       const traces: any[] = []
 
-      spec.expressions.forEach((expr, i) => {
+      // Vérifier que expressions est valide et non-vide
+      const exprs = Array.isArray(spec.expressions) ? spec.expressions.filter(e => e && e.trim() !== '') : []
+      if (exprs.length === 0) {
+        setError('Aucune expression à tracer — vérifiez le format [GRAPH: ...]')
+        return
+      }
+
+      exprs.forEach((expr, i) => {
         const xs: number[] = [], ys: number[] = []
+        // Pré-compiler l'expression une seule fois (pas à chaque x)
+        const safeExpr = sanitizeExpr(expr)
+        let fn: Function
+        try {
+          fn = new Function('x', 'Math',
+            `"use strict"; try { const r=(${safeExpr}); return (r===undefined||r===null)?null:r; } catch(e) { return null; }`)
+        } catch(compileErr) {
+          console.warn('Expression invalide:', expr, '→', safeExpr, compileErr)
+          // Ajouter une trace vide pour ne pas bloquer les autres courbes
+          traces.push({ x:[], y:[], mode:'lines', type:'scatter', name: `⚠️ ${expr.slice(0,30)}`, line:{ color: colors[i % colors.length], width:1, dash:'dot' } })
+          return
+        }
+        let hasValidPoint = false
         for (let j = 0; j <= N; j++) {
           const x = xMin + j * dx
           try {
-            const safeExpr = sanitizeExpr(expr)
-            const fn = new Function('x', 'Math',
-              `"use strict"; try { return (${safeExpr}); } catch { return null; }`)
             const y = fn(x, Math)
             xs.push(x)
-            ys.push((y !== null && isFinite(y) && Math.abs(y) < 1e6) ? y : NaN)
+            const yVal = (y !== null && y !== undefined && isFinite(y) && Math.abs(y) < 1e8) ? y : NaN
+            if (!isNaN(yVal)) hasValidPoint = true
+            ys.push(yVal)
           } catch { xs.push(x); ys.push(NaN) }
+        }
+        if (!hasValidPoint) {
+          console.warn('Courbe vide pour expression:', expr, '→ sanitized:', safeExpr)
         }
         traces.push({
           x: xs, y: ys, mode: 'lines', type: 'scatter',
           name: spec.labels?.[i] || expr,
-          line: { color: colors[i % colors.length], width: 2.5 }
+          line: { color: colors[i % colors.length], width: 2.5 },
+          connectgaps: false,
         })
       })
 
@@ -597,7 +641,26 @@ function GeoGraph({ spec }: { spec: GeoSpec }) {
 
 // ── Dispatch : function/points → Plotly, geometry → SVG ──────────
 function SmartGraph({ spec }: { spec: any }) {
+  // Vérifications de base avant rendu
+  if (!spec || typeof spec !== 'object') return (
+    <div style={{padding:'10px 14px',fontSize:12,color:'#fcd34d',background:'rgba(245,158,11,0.08)',borderRadius:8,margin:'6px 0'}}>
+      📊 Format graphique invalide
+    </div>
+  )
   if (spec?.type === 'geometry') return <GeoGraph spec={spec as GeoSpec}/>
+  // Type function ou points : vérifier que expressions est bien un tableau
+  if (!Array.isArray(spec.expressions) || spec.expressions.length === 0) {
+    // Tenter de récupérer si expressions est une string
+    if (typeof spec.expressions === 'string') {
+      spec = { ...spec, expressions: [spec.expressions] }
+    } else {
+      return (
+        <div style={{padding:'10px 14px',fontSize:12,color:'#fcd34d',background:'rgba(245,158,11,0.08)',borderRadius:8,margin:'6px 0'}}>
+          📊 Graphique : aucune expression fournie par l\'IA — relancez la résolution
+        </div>
+      )
+    }
+  }
   return <MathGraph spec={spec as GraphSpec}/>
 }
 
@@ -667,13 +730,25 @@ function RichText({ text }: { text: string }) {
       <KaTeXLoader />
       {segments.map((seg, idx) => {
         if (seg.type === 'graph') {
-          try { return <SmartGraph key={idx} spec={JSON.parse(seg.content)} /> }
-          catch {
-            return (
-              <div key={idx} style={{ fontSize: 11, color: '#fcd34d', padding: '6px 10px', background: 'rgba(245,158,11,0.08)', borderRadius: 8, margin: '6px 0' }}>
-                📊 Graphique non disponible
-              </div>
-            )
+          try {
+            const parsed = JSON.parse(seg.content)
+            return <SmartGraph key={idx} spec={parsed} />
+          } catch(parseErr) {
+            // Tentative de réparation JSON simple (guillemets manquants, trailing comma)
+            try {
+              const fixed = seg.content
+                .replace(/,\s*}/g, '}')           // trailing comma
+                .replace(/,\s*]/g, ']')           // trailing comma dans array
+                .replace(/([{,]\s*)(\w+):/g, '$1"$2":')  // clés sans guillemets
+              const parsed = JSON.parse(fixed)
+              return <SmartGraph key={idx} spec={parsed} />
+            } catch {
+              return (
+                <div key={idx} style={{ fontSize: 11, color: '#fcd34d', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', borderRadius: 8, margin: '6px 0', fontFamily:'monospace' }}>
+                  📊 Graphique — expression IA non parseable. Relancez la résolution.
+                </div>
+              )
+            }
           }
         }
         return seg.content ? (
@@ -2030,10 +2105,16 @@ SCHÉMAS LITTÉRATURE (utiliser quand applicable) :
 EXERCICE :
 ${input}
 
-RAPPEL GRAPHIQUE OBLIGATOIRE :
-- Si l'exercice mentionne f(x), une fonction, une courbe, une droite, un repère, une figure géométrique, un vecteur → insère IMMÉDIATEMENT le graphique correspondant avec les expressions calculées
-- "Représenter graphiquement" = tracer les courbes avec les vraies expressions — JAMAIS un repère vide
-- Place le graphique APRÈS les calculs de la partie concernée, avec les valeurs numériques trouvées
+RÈGLES GRAPHIQUES ABSOLUES — LIRE AVANT DE RÉPONDRE :
+1. JAMAIS d'expressions vides : "expressions":[] ou "expressions":[""] = INTERDIT → graphique blanc
+2. JAMAIS de LaTeX dans expressions : INTERDIT x^2, \frac, ² → UTILISER x*x, (a/b)
+3. TOUJOURS des expressions JS valides : tester mentalement que x=1 retourne un nombre
+4. Si f(x) = 2x³-3x²+1 → "expressions":["2*x*x*x - 3*x*x + 1"] (JAMAIS "2x^3-3x^2+1")
+5. Si dérivée f'(x) = 6x²-6x → "expressions":["2*x*x*x - 3*x*x + 1","6*x*x - 6*x"]
+6. "Représenter graphiquement" = TRACER les courbes, pas un repère vide
+
+FORMAT EXACT OBLIGATOIRE (copier ce modèle) :
+[GRAPH: {"type":"function","expressions":["2*x*x*x - 3*x*x + 1","6*x*x - 6*x"],"xMin":-2,"xMax":3,"labels":["f(x)","f\'(x)"],"title":"Courbe de f et sa dérivée","xLabel":"x","yLabel":"y"}]
 
 Structure OBLIGATOIRE :
 
