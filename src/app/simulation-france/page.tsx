@@ -815,12 +815,12 @@ JSON requis :
 {
   "estimatedScore": [0 à ${exercise.points}],
   "maxScore": ${exercise.points},
-  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Analyse précise]","priority":1}],
-  "strengths": ["[Ce qui est bien]"],
-  "globalAdvice": ["[Conseil ciblé]","[Méthode à retenir]"],
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Analyse précise de la lacune — UNIQUEMENT basée sur le travail fourni, jamais inventée]","priority":1,"chapter":"[Chapitre concerné]","targetScore":"[ex: +${exercise.points} pts si maîtrisé]"}],
+  "globalAdvice": ["[Conseil CONCRET basé sur les lacunes observées]","[Méthode à retenir pour ce type d'exercice]","[Erreur classique à éviter au Bac]"],
   "remediationExercises": [
-    {"id":"remSim${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider la lacune]","statement":"Mini-exercice ciblé. 2-3 sous-questions. Minimum 60 mots.","hint":"[Indice]","officialCorrection":"[Correction complète]"},
-    {"id":"remSim${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Approfondir]","statement":"Exercice standard. Minimum 60 mots.","hint":"[Méthode]","officialCorrection":"[Correction]"}
+    {"id":"remSim${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider la notion de base]","statement":"Mini-exercice ORIGINAL avec données numériques précises. 2-3 sous-questions. Minimum 80 mots.","hint":"[Quelle formule appliquer — sans donner la réponse]","officialCorrection":"[Correction étape par étape. Minimum 60 mots.]"},
+    {"id":"remSim${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Appliquer au niveau Bac]","statement":"Exercice niveau Bac sur ce thème. 3 sous-questions. Minimum 90 mots.","hint":"[Stratégie de résolution]","officialCorrection":"[Correction complète. Minimum 70 mots.]"},
+    {"id":"remSim${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtriser en conditions Bac]","statement":"Exercice avancé type Bac France. 4 sous-parties. Minimum 100 mots.","hint":"[Conseil méthodologique niveau Bac]","officialCorrection":"[Correction officielle niveau Bac. Minimum 80 mots.]"}
   ]
 }`
   const raw = await askClaude(prompt, system, 3000)
@@ -865,28 +865,42 @@ Génère ce JSON :
 {
   "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],
   "maxScore": ${exam.totalPoints},
+  "scoreByExercise": [
+    {"exerciseTitle":"[titre exercice]","estimated":[pts estimés],"max":[pts max],"comment":"[commentaire précis 1 phrase basé sur la réponse fournie]"}
+  ],
   "weakAreas": [
     {
-      "theme": "[Thème précis ex: Suites récurrentes]",
+      "theme": "[Thème PRÉCIS ex: Dérivation — règle du quotient]",
       "severity": "critical|moderate|good",
-      "description": "[Explication précise de la lacune ou de la maîtrise]",
-      "priority": [1=très urgent, 2=important, 3=secondaire]
+      "description": "[Lacune OBSERVÉE dans le travail — JAMAIS inventée si pas de réponse]",
+      "priority": [1=bloquant bac, 2=important, 3=secondaire],
+      "chapter": "[Chapitre programme Bac France]",
+      "targetScore": "[ex: +3 pts si maîtrisé]"
     }
   ],
-  "strengths": ["[Point fort 1]", "[Point fort 2]"],
-  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],
+  "globalAdvice": [
+    "[Conseil ACTIONNABLE concret — ex: Refaire 10 exercices de dérivation]",
+    "[Méthode mnémotechnique ou astuce concrète]",
+    "[Priorité de révision sur les 2 semaines à venir]"
+  ],
+  "studyPlan": {
+    "week1": ["[Action jour 1-2]","[Action jour 3-4]","[Action jour 5-7]"],
+    "week2": ["[Action semaine 2 — approfondissement]"],
+    "dailyGoal": "[Objectif quotidien réaliste en minutes]"
+  },
   "remediationExercises": [
     {
       "id": "rem-1",
-      "theme": "[Thème à travailler en priorité]",
-      "difficulty": "introductory|standard|advanced",
-      "objective": "[Ce que l'élève va acquérir en faisant cet exercice]",
-      "statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.",
-      "hint": "Indication méthodologique pour commencer sans donner la réponse",
-      "officialCorrection": "Correction complète et développée, étape par étape"
+      "theme": "[Thème lacune prioritaire]",
+      "difficulty": "introductory",
+      "objective": "[Consolider la notion de base manquante]",
+      "statement": "Exercice ORIGINAL avec données numériques. 3 sous-questions progressives. Minimum 100 mots.",
+      "hint": "[Méthode de démarrage SANS donner la réponse]",
+      "officialCorrection": "[Correction étape par étape. Minimum 80 mots.]"
     },
-    { "id": "rem-2", "theme": "[2ème thème faible]", "difficulty": "standard", "objective": "...", "statement": "...", "hint": "...", "officialCorrection": "..." },
-    { "id": "rem-3", "theme": "[3ème thème faible]", "difficulty": "introductory", "objective": "...", "statement": "...", "hint": "...", "officialCorrection": "..." }
+    {"id":"rem-2","theme":"[2ème thème faible]","difficulty":"standard","objective":"[Approfondissement ciblé]","statement":"Exercice standard niveau Bac. 3-4 sous-questions. Minimum 100 mots.","hint":"[Stratégie globale]","officialCorrection":"[Correction complète. Minimum 80 mots.]"},
+    {"id":"rem-3","theme":"[3ème thème]","difficulty":"standard","objective":"[Maîtrise du thème]","statement":"Exercice de consolidation. Minimum 90 mots.","hint":"[Conseil de démarrage]","officialCorrection":"[Correction détaillée. Minimum 70 mots.]"},
+    {"id":"rem-4","theme":"[Thème le plus critique]","difficulty":"advanced","objective":"[Préparation niveau Bac sur ce thème]","statement":"Exercice niveau Bac complet. 4 sous-parties. Minimum 120 mots.","hint":"[Stratégie de résolution globale]","officialCorrection":"[Correction officielle niveau Bac. Minimum 100 mots.]"}
   ]
 }`
 
@@ -920,8 +934,38 @@ Tu corriges les réponses d'élèves sur des exercices de remédiation.
 Sois précis, encourageant, et identifie exactement ce qui manque.`
 
   return askClaude(
-    `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
-    system, 2000
+    `EXERCICE DE REMÉDIATION — ${exercise.theme}
+Objectif : ${exercise.objective}
+
+Énoncé :
+${exercise.statement}
+
+Réponse de l'élève :
+${studentAnswer || '(Aucune réponse fournie)'}
+
+Correction officielle de référence :
+${exercise.officialCorrection}
+
+Rédige une correction personnalisée avec cette structure OBLIGATOIRE :
+
+## ✅ Évaluation de ta réponse
+[Notation claire : ce qui est juste ✅, incomplet ⚠️, faux ❌]
+[Score estimé sur les points de l'exercice]
+
+## 📝 Correction commentée étape par étape
+[Pour CHAQUE sous-question : méthode → calcul LaTeX $formule$ → résultat encadré]
+[> **Résultat :** $valeur$ pour les résultats clés]
+
+## 🔑 Ce qu'il faut absolument retenir
+[Max 3 règles ou formules ESSENTIELLES avec application directe]
+[Erreur classique à éviter sur ce type d'exercice]
+
+## 🎯 Exercice flash pour consolider
+[UN petit exercice 1-2 questions sur le même concept — avec la réponse]
+
+## 📈 Prochain pas
+[Action concrète et spécifique pour maîtriser ce thème avant le Bac]`,
+    system, 2500
   )
 }
 
@@ -4484,20 +4528,7 @@ function PageAnalyseExercice({
             <div style={{fontSize:12, fontWeight:700, color:scoreColor}}>{mention}</div>
           </div>
           <div style={{display:'flex', flexDirection:'column', gap:12}}>
-            {analysis.strengths.length > 0 && (
-              <div>
-                <p style={{fontSize:11, fontWeight:700, color:'#6ee7b7', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
-                  💪 Points forts
-                </p>
-                <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
-                  {analysis.strengths.map((s,i) => (
-                    <span key={i} style={{fontSize:12, padding:'4px 12px', background:'rgba(16,185,129,0.12)', color:'#6ee7b7', border:'1px solid rgba(16,185,129,0.25)', borderRadius:20}}>
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
             {analysis.globalAdvice.length > 0 && (
               <div>
                 <p style={{fontSize:11, fontWeight:700, color:'#a5b4fc', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
@@ -4537,6 +4568,61 @@ function PageAnalyseExercice({
                       </span>
                     </div>
                     <p style={{fontSize:12, color:'rgba(255,255,255,0.6)', lineHeight:1.6, margin:0}}>{w.description}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Plan d'étude personnalisé */}
+        {(analysis as any).studyPlan && (
+          <div style={{marginBottom:24,padding:'20px 24px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:16}}>
+            <h3 style={{margin:'0 0 16px',fontSize:15,fontWeight:800,color:'#10b981',display:'flex',alignItems:'center',gap:8}}>
+              📅 Plan de travail personnalisé
+            </h3>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+              <div style={{padding:'12px 16px',background:'rgba(16,185,129,0.08)',borderRadius:12,border:'1px solid rgba(16,185,129,0.2)'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#10b981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 1</div>
+                {((analysis as any).studyPlan?.week1||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(16,185,129,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+              <div style={{padding:'12px 16px',background:'rgba(79,110,247,0.07)',borderRadius:12,border:'1px solid rgba(79,110,247,0.2)'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#818cf8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 2</div>
+                {((analysis as any).studyPlan?.week2||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(79,110,247,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+            </div>
+            {(analysis as any).studyPlan?.dailyGoal && (
+              <div style={{padding:'10px 14px',background:'rgba(245,158,11,0.09)',borderRadius:10,border:'1px solid rgba(245,158,11,0.25)',fontSize:13,color:'#fcd34d',fontWeight:600}}>
+                ⏱ Objectif quotidien : {(analysis as any).studyPlan.dailyGoal}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Score par exercice */}
+        {(analysis as any).scoreByExercise?.length > 0 && (
+          <div style={{marginBottom:24,padding:'18px 22px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:16}}>
+            <h3 style={{margin:'0 0 14px',fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.6)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
+              📊 Détail par exercice
+            </h3>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              {((analysis as any).scoreByExercise as {exerciseTitle:string;estimated:number;max:number;comment:string}[]).map((ex,i)=>{
+                const pct=Math.round((ex.estimated/ex.max)*100)
+                const barColor=pct>=70?'#10b981':pct>=40?'#f59e0b':'#ef4444'
+                return (
+                  <div key={i} style={{padding:'10px 14px',background:'rgba(255,255,255,0.03)',borderRadius:10,border:'1px solid rgba(255,255,255,0.07)'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                      <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{ex.exerciseTitle}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:barColor}}>{ex.estimated}/{ex.max} pts ({pct}%)</span>
+                    </div>
+                    <div style={{height:5,background:'rgba(255,255,255,0.07)',borderRadius:3,marginBottom:6,overflow:'hidden'}}>
+                      <div style={{height:'100%',width:`${pct}%`,background:barColor,borderRadius:3}}/>
+                    </div>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{ex.comment}</div>
                   </div>
                 )
               })}
@@ -5226,16 +5312,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
           </div>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          {analysis.strengths.length>0&&(
-            <div>
-              <p style={{fontSize:11,fontWeight:700,color:'#6ee7b7',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Points forts</p>
-              <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
-                {analysis.strengths.map((s,i)=>(
-                  <span key={i} style={{fontSize:12,padding:'4px 13px',background:'rgba(16,185,129,0.12)',color:'#6ee7b7',border:'1px solid rgba(16,185,129,0.25)',borderRadius:20}}>{s}</span>
-                ))}
-              </div>
-            </div>
-          )}
+
           {analysis.globalAdvice.length>0&&(
             <div>
               <p style={{fontSize:11,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Recommandations personnalisees</p>
