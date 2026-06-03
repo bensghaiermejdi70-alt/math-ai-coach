@@ -253,9 +253,9 @@ function MathGraph({ spec }: { spec: any }) {
 
       if (spec.points?.length) {
         traces.push({
-          x: spec.points.map(p => p.x), y: spec.points.map(p => p.y),
+          x: spec.points.map((p: {x:number;y:number;label?:string}) => p.x), y: spec.points.map((p: {x:number;y:number;label?:string}) => p.y),
           mode: 'markers+text', type: 'scatter',
-          text: spec.points.map(p => p.label || ''),
+          text: spec.points.map((p: {x:number;y:number;label?:string}) => p.label || ''),
           textposition: 'top center',
           marker: { color: '#f59e0b', size: 9, symbol: 'circle' },
           name: 'Points'
