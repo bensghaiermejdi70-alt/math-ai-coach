@@ -1217,7 +1217,7 @@ JSON requis (COMPLET) :
       "targetScore": "[ex: +${Math.round(exercise.points * 0.6)} pts si maîtrisé]"
     }
   ],
-  "strengths": ["[Point fort observé dans la réponse — ou potentiel si pas de réponse]"],
+  
   "globalAdvice": [
     "[Conseil CONCRET : ex: Retravailler la définition de la dérivée + 5 exercices]",
     "[Méthode à retenir pour ce type d'exercice]",
@@ -1306,9 +1306,7 @@ Génère ce JSON COMPLET :
       "targetScore": "[Score visé si maîtrisé: ex +3 points]"
     }
   ],
-  "strengths": [
-    "[Point fort PRÉCIS avec exemple du travail élève]"
-  ],
+
   "globalAdvice": [
     "[Conseil ACTIONNABLE précis — ex: Refaire 10 exercices de dérivation avant vendredi]",
     "[Méthode mnémotechnique ou astuce concrète]",
@@ -1552,35 +1550,80 @@ function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
     try {
       const xMin = spec.xMin ?? -5
       const xMax = spec.xMax ?? 5
-      const N = 400
-      const dx = (xMax - xMin) / N
-      const traces: any[] = []
       const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
+      const traces: any[] = []
 
       if (spec.type === 'function' || spec.type === 'parametric') {
-        spec.expressions.forEach((expr, i) => {
+        // Vérifier que expressions est valide
+        const exprs = Array.isArray(spec.expressions)
+          ? spec.expressions.filter((e: string) => e && e.trim() !== '')
+          : []
+        if (exprs.length === 0) {
+          setError('Aucune expression à tracer')
+          return
+        }
+
+        exprs.forEach((expr: string, i: number) => {
+          // ── Pré-compiler UNE SEULE FOIS hors de la boucle ───────────
+          const safeExpr = sanitizeExpr(expr)
+          let safeFn: Function
+          try {
+            safeFn = new Function('x', 'Math',
+              `"use strict"; try { const _r=(${safeExpr}); return (_r===undefined||_r===null)?null:_r; } catch(e){ return null; }`)
+          } catch(compileErr) {
+            console.warn('Expr compile error:', expr, compileErr)
+            return
+          }
+
+          // ── Adapter la résolution selon la plage ─────────────────────
+          // Haute fréquence (ex: sin(440*x)) → plus de points
+          const hasHighFreq = safeExpr.includes('440') || safeExpr.includes('880') ||
+                              safeExpr.includes('1000') || safeExpr.includes('2000')
+          const N = hasHighFreq ? 2000 : 600
+          const dx = (xMax - xMin) / N
+
           const xs: number[] = [], ys: number[] = []
+          let hasValid = false
+          let yMax = 0
+
+          // Passe 1 : trouver la plage de valeurs réelles
           for (let j = 0; j <= N; j++) {
             const x = xMin + j * dx
-            try {
-              // Sanitize + évaluation sécurisée
-              const safeExpr = sanitizeExpr(expr)
-              const safeFn = new Function('x', 'Math',
-                `"use strict"; try { return (${safeExpr}); } catch(e) { return null; }`)
-              const y = safeFn(x, Math)
-              if (y !== null && isFinite(y) && Math.abs(y) < 1e6) {
-                xs.push(x); ys.push(y)
-              } else {
-                xs.push(x); ys.push(NaN)
-              }
-            } catch { xs.push(x); ys.push(NaN) }
+            const y = safeFn(x, Math)
+            if (y !== null && isFinite(y)) {
+              yMax = Math.max(yMax, Math.abs(y))
+              hasValid = true
+            }
           }
+
+          if (!hasValid) {
+            console.warn('Aucun point valide pour:', expr)
+            return
+          }
+
+          // Seuil dynamique : 100x la valeur max observée (pas un seuil fixe 1e6)
+          const threshold = Math.max(yMax * 100, 1e10)
+
+          // Passe 2 : tracer avec le bon seuil
+          for (let j = 0; j <= N; j++) {
+            const x = xMin + j * dx
+            const y = safeFn(x, Math)
+            xs.push(x)
+            ys.push((y !== null && isFinite(y) && Math.abs(y) <= threshold) ? y : NaN)
+          }
+
           traces.push({
             x: xs, y: ys, mode: 'lines', type: 'scatter',
             name: spec.labels?.[i] || expr,
-            line: { color: colors[i % colors.length], width: 2.5 }
+            line: { color: colors[i % colors.length], width: 2.5 },
+            connectgaps: false,
           })
         })
+
+        if (traces.length === 0) {
+          setError('Tracé impossible — aucune valeur calculable pour : ' + spec.expressions?.[0]?.slice(0,60))
+          return
+        }
       }
 
       if (spec.points && spec.points.length > 0) {
@@ -4503,20 +4546,7 @@ function PageAnalyseExercice({
             <div style={{fontSize:12, fontWeight:700, color:scoreColor}}>{mention}</div>
           </div>
           <div style={{display:'flex', flexDirection:'column', gap:12}}>
-            {analysis.strengths.length > 0 && (
-              <div>
-                <p style={{fontSize:11, fontWeight:700, color:'#6ee7b7', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
-                  💪 Points forts
-                </p>
-                <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
-                  {analysis.strengths.map((s,i) => (
-                    <span key={i} style={{fontSize:12, padding:'4px 12px', background:'rgba(16,185,129,0.12)', color:'#6ee7b7', border:'1px solid rgba(16,185,129,0.25)', borderRadius:20}}>
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
             {analysis.globalAdvice.length > 0 && (
               <div>
                 <p style={{fontSize:11, fontWeight:700, color:'#a5b4fc', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
@@ -5300,16 +5330,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
           </div>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:14}}>
-          {analysis.strengths.length>0&&(
-            <div>
-              <p style={{fontSize:11,fontWeight:700,color:'#6ee7b7',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Points forts</p>
-              <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
-                {analysis.strengths.map((s,i)=>(
-                  <span key={i} style={{fontSize:12,padding:'4px 13px',background:'rgba(16,185,129,0.12)',color:'#6ee7b7',border:'1px solid rgba(16,185,129,0.25)',borderRadius:20}}>{s}</span>
-                ))}
-              </div>
-            </div>
-          )}
+
           {analysis.globalAdvice.length>0&&(
             <div>
               <p style={{fontSize:11,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Recommandations personnalisees</p>
