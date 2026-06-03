@@ -233,6 +233,20 @@ function getStats() {
 }
 
 // ── API Claude ────────────────────────────────────────────────────
+const UNIVERSAL_GRAPH_PROMPT = `
+GRAPHIQUES — 5 TYPES UNIVERSELS (copier le bon template) :
+TYPE 1 — COURBE : [GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
+RÈGLES : JAMAIS x^2→x*x | 2x→2*x | exp(-x)→Math.exp(-x)
+Exemples : RC(τ=2s)→["5*(1-Math.exp(-x/2))"] | pH(Véq=20)→["14/(1+Math.exp(-0.5*(x-20)))"] | Michaelis→["100*x/(x+5)"] | f(x)=2x³→["2*x*x*x"]
+TYPE 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},FORMES]}]
+TYPE 3 — ASCII (pile/circuit/synapse) : [GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN","legend":["légende"]}]
+Pile: content:"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\\n  └──── e⁻ ────┘" | Circuit RC: content:"  ┌──┤R├──┬──┐\\n  E      ═╪═C\\n  └─────┘"
+TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]],"highlight":[0]}]
+TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8],"colors":["#6366f1","#10b981"]}]
+RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
+JAMAIS expressions:[] vide · JAMAIS geometry pour une pile`
+
+
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -583,15 +597,35 @@ Réponds EXACTEMENT avec ce JSON :
 }
 
 // ── sanitizeExpr (identique simulation) ──────────────────────────
+// ══ SANITIZER UNIVERSEL — Maths · Physique · SVT · Info · Français ══
 function sanitizeExpr(expr: string): string {
-  let e = expr
-    .replace(/x\^4/g,'x*x*x*x').replace(/x\^3/g,'x*x*x').replace(/x\^2/g,'x*x')
-    .replace(/x\^(-?\d+)/g,(_,n)=>`Math.pow(x,${n})`)
-    .replace(/\(([^)]+)\)\^(\d+)/g,(_,b,p)=>`Math.pow(${b},${p})`)
-    .replace(/(\d)(x)/g,'$1*$2')
-    .replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+  if (!expr || typeof expr !== 'string') return '0'
+  let e = expr.trim()
+  if (e.startsWith('\\') && !e.includes('(')) return '0'
+  if (e.length > 300) e = e.slice(0, 300)
+  e = e.replace(/−/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/·/g,'*')
+       .replace(/²/g,'*x').replace(/³/g,'*x*x')
+       .replace(/\u00b2/g,'*x').replace(/\u00b3/g,'*x*x')
+       .replace(/\u221e/g,'1e15').replace(/\u03c0/g,'Math.PI')
+       .replace(/\u03c4/g,'6.2832').replace(/\u03bb/g,'0.693')
+  e = e.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1)/($2)')
+       .replace(/\\sqrt\{([^{}]+)\}/g,'Math.sqrt($1)')
+       .replace(/\\sqrt/g,'Math.sqrt')
+       .replace(/\\left\(/g,'(').replace(/\\right\)/g,')')
+       .replace(/\\cdot/g,'*').replace(/\\times/g,'*')
+       .replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10')
+       .replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos')
+       .replace(/\\tan\b/g,'Math.tan').replace(/\\exp\b/g,'Math.exp')
+       .replace(/\\pi\b/gi,'Math.PI').replace(/\{/g,'(').replace(/\}/g,')')
+  e = e.replace(/x\*\*(\d+)/g,(_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(\d+)/g,  (_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(-\d+)/g, (_,n)=>`Math.pow(x,${n})`)
+       .replace(/\(([^()]+)\)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+       .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+  e = e.replace(/(\d)([a-zA-Z(])/g,'$1*$2').replace(/\)([a-zA-Z0-9(])/g,')*$1')
   const fns:[RegExp,string][]=[
     [/(?<![a-zA-Z0-9_.])ln\s*\(/g,'Math.log('],
+    [/(?<![a-zA-Z0-9_.])log10\s*\(/g,'Math.log10('],
     [/(?<![a-zA-Z0-9_.])log\s*\(/g,'Math.log10('],
     [/(?<![a-zA-Z0-9_.])sin\s*\(/g,'Math.sin('],
     [/(?<![a-zA-Z0-9_.])cos\s*\(/g,'Math.cos('],
@@ -599,10 +633,34 @@ function sanitizeExpr(expr: string): string {
     [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g,'Math.sqrt('],
     [/(?<![a-zA-Z0-9_.])abs\s*\(/g,'Math.abs('],
     [/(?<![a-zA-Z0-9_.])exp\s*\(/g,'Math.exp('],
+    [/(?<![a-zA-Z0-9_.])sinh\s*\(/g,'Math.sinh('],
+    [/(?<![a-zA-Z0-9_.])cosh\s*\(/g,'Math.cosh('],
+    [/(?<![a-zA-Z0-9_.])tanh\s*\(/g,'Math.tanh('],
+    [/(?<![a-zA-Z0-9_.])asin\s*\(/g,'Math.asin('],
+    [/(?<![a-zA-Z0-9_.])acos\s*\(/g,'Math.acos('],
+    [/(?<![a-zA-Z0-9_.])atan\s*\(/g,'Math.atan('],
+    [/(?<![a-zA-Z0-9_.])floor\s*\(/g,'Math.floor('],
+    [/(?<![a-zA-Z0-9_.])ceil\s*\(/g,'Math.ceil('],
+    [/(?<![a-zA-Z0-9_.])round\s*\(/g,'Math.round('],
+    [/(?<![a-zA-Z0-9_.])max\s*\(/g,'Math.max('],
+    [/(?<![a-zA-Z0-9_.])min\s*\(/g,'Math.min('],
+    [/(?<![a-zA-Z0-9_.])pow\s*\(/g,'Math.pow('],
   ]
   for(const [re,repl] of fns) e=e.replace(re,repl)
-  e=e.replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
-  return e
+  e = e.replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+       .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
+       .replace(/\s+/g,'')
+  return e || '0'
+}
+function autoDetectGraphType(spec: any): string {
+  if (!spec) return 'function'
+  if (spec.type && ['function','geometry','ascii','table','bar','points','parametric'].includes(spec.type)) return spec.type
+  if (spec.content && typeof spec.content === 'string') return 'ascii'
+  if (spec.shapes && Array.isArray(spec.shapes)) return 'geometry'
+  if (spec.rows && Array.isArray(spec.rows)) return 'table'
+  if (spec.bars || spec.categories) return 'bar'
+  if (spec.expressions && Array.isArray(spec.expressions)) return 'function'
+  return 'function'
 }
 
 // ── graphToSvg (identique simulation) ─────────────────────────────
@@ -870,23 +928,34 @@ function MathGraph({spec}:{spec:any}){
   const plotlyLoaded=useScript('https://cdn.plot.ly/plotly-2.27.0.min.js')
   const[err,setErr]=useState('')
   useEffect(()=>{
-    if(!plotlyLoaded||!ref.current||!spec?.expressions?.length)return
+    if(!plotlyLoaded||!ref.current)return
+    const exprs=Array.isArray(spec?.expressions)?spec.expressions.filter((e:string)=>e&&e.trim()!==''):[]
+    if(exprs.length===0){setErr('Aucune expression à tracer');return}
     try{
-      const W=ref.current.clientWidth||340,H=220
-      const x:number[]=[]
-      const xMin=spec.xMin??-5,xMax=spec.xMax??5,steps=200
-      for(let k=0;k<=steps;k++)x.push(xMin+k*(xMax-xMin)/steps)
+      const xMin=spec.xMin??-5,xMax=spec.xMax??5
       const colors=['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
-      const traces=spec.expressions.map((expr:string,i:number)=>{
+      const traces:any[]=[]
+      exprs.forEach((expr:string,i:number)=>{
         const safe=sanitizeExpr(expr)
-        const fn=new Function('x','Math',`try{return(${safe})}catch(e){return null}`)
-        const y=x.map((v:number)=>{const r=fn(v,Math);return(r===null||!isFinite(r))?null:r})
-        return{x,y,type:'scatter',mode:'lines',name:spec.labels?.[i]??`f${i+1}(x)`,line:{color:colors[i%colors.length],width:2.5},connectgaps:false}
+        let fn:Function
+        try{fn=new Function('x','Math',`"use strict";try{const _r=(${safe});return(_r===undefined||_r===null)?null:_r;}catch(e){return null;}`)}
+        catch{return}
+        const hasHF=safe.includes('440')||safe.includes('880')||safe.includes('1000')||safe.includes('2000')
+        const N=hasHF?2000:600,dx=(xMax-xMin)/N
+        let yMax=0,hasValid=false
+        for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);if(y!==null&&isFinite(y)){yMax=Math.max(yMax,Math.abs(y));hasValid=true}}
+        if(!hasValid)return
+        const threshold=Math.max(yMax*100,1e10)
+        const xs:number[]=[],ys:number[]=[]
+        for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);xs.push(x);ys.push((y!==null&&isFinite(y)&&Math.abs(y)<=threshold)?y:NaN)}
+        traces.push({x:xs,y:ys,type:'scatter',mode:'lines',name:spec.labels?.[i]??`f${i+1}(x)`,line:{color:colors[i%colors.length],width:2.5},connectgaps:false})
       })
+      if(traces.length===0){setErr('Tracé impossible');return}
+      const W=ref.current.clientWidth||340,H=220
       const layout={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(255,255,255,0.04)',font:{color:'#e2e8f0',size:11,family:'system-ui'},title:{text:spec.title||'',font:{size:12,color:'#a5b4fc'},x:0.5},xaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.xLabel||'x',color:'#94a3b8'},yaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.yLabel||'y',color:'#94a3b8'},margin:{l:42,r:12,t:spec.title?36:12,b:36},legend:{font:{size:10,color:'#94a3b8'},bgcolor:'rgba(0,0,0,0)'},width:W,height:H}
       ;(window as any).Plotly.newPlot(ref.current,traces,layout,{displayModeBar:false,responsive:true})
       setErr('')
-    }catch(e:any){setErr(`Tracé impossible — ${spec.expressions?.[0]||''}`)}
+    }catch(e:any){setErr('Tracé impossible — '+String(e).slice(0,60))}
   },[plotlyLoaded,spec])
   if(err)return <div style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#fca5a5',margin:'8px 0'}}>{err}</div>
   return <div ref={ref} style={{width:'100%',borderRadius:8,overflow:'hidden',margin:'8px 0'}}/>
@@ -953,7 +1022,45 @@ function GeoGraph({spec}:{spec:any}){
   )
 }
 
-function SmartGraph({spec}:{spec:any}){if(!spec?.type)return null;if(spec.type==='geometry')return <GeoGraph spec={spec}/>;return <MathGraph spec={spec}/>}
+function AsciiGraph({spec}:{spec:any}){
+  const legend=Array.isArray(spec.legend)?spec.legend:[]
+  return(<div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(6,182,212,0.3)',margin:'10px 0',background:'rgba(6,182,212,0.04)'}}>
+    {spec.title&&<div style={{padding:'7px 16px',borderBottom:'1px solid rgba(6,182,212,0.15)',fontSize:12,fontWeight:700,color:'#06b6d4'}}>📐 {spec.title}</div>}
+    <div style={{padding:'14px 18px'}}>
+      <pre style={{fontFamily:"'Courier New',Consolas,monospace",fontSize:12,lineHeight:1.7,color:'rgba(255,255,255,0.85)',background:'rgba(0,0,0,0.35)',borderRadius:8,padding:'12px 16px',margin:'0 0 12px',overflowX:'auto',whiteSpace:'pre',border:'1px solid rgba(6,182,212,0.15)'}}>{spec.content}</pre>
+      {legend.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:6}}>{legend.map((item:string,i:number)=><span key={i} style={{fontSize:11,padding:'3px 10px',background:'rgba(6,182,212,0.1)',color:'#67e8f9',border:'1px solid rgba(6,182,212,0.2)',borderRadius:20,fontWeight:600}}>{item}</span>)}</div>}
+    </div>
+  </div>)
+}
+function TableGraph({spec}:{spec:any}){
+  const h=spec.headers||[],r=spec.rows||[],hl=spec.highlight||[]
+  return(<div style={{borderRadius:10,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'10px 0'}}>
+    {spec.title&&<div style={{padding:'7px 14px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>📋 {spec.title}</div>}
+    <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
+      {h.length>0&&<thead><tr>{h.map((c:string,i:number)=><th key={i} style={{padding:'7px 10px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>{c}</th>)}</tr></thead>}
+      <tbody>{r.map((row:string[],i:number)=><tr key={i} style={{background:hl.includes(i)?'rgba(99,102,241,0.1)':i%2===0?'rgba(255,255,255,0.02)':'transparent'}}>{row.map((cell:string,j:number)=><td key={j} style={{padding:'5px 10px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>{cell}</td>)}</tr>)}</tbody>
+    </table></div>
+  </div>)
+}
+function BarGraph({spec}:{spec:any}){
+  const cats=spec.categories||[],vals=spec.values||[],colors=spec.colors||['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4'],mx=Math.max(...vals,1)
+  return(<div style={{borderRadius:10,border:'1px solid rgba(99,102,241,0.25)',margin:'10px 0',background:'rgba(8,8,23,0.95)',padding:'14px'}}>
+    {spec.title&&<div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:12,textAlign:'center'}}>{spec.title}</div>}
+    <div style={{display:'flex',alignItems:'flex-end',gap:6,height:140,paddingBottom:20,position:'relative'}}>
+      {[0,25,50,75,100].map(p=><div key={p} style={{position:'absolute',left:0,right:0,bottom:`${p/100*110+20}px`,borderTop:'1px solid rgba(255,255,255,0.06)',fontSize:9,color:'rgba(255,255,255,0.2)'}}>{Math.round(mx*p/100)}</div>)}
+      {cats.map((cat:string,i:number)=>{const h=Math.max(4,(vals[i]/mx)*110);const c=colors[i%colors.length];return(<div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}><div style={{fontSize:10,color:c,fontWeight:700}}>{vals[i]}</div><div style={{width:'100%',height:`${h}px`,background:c,borderRadius:'3px 3px 0 0',opacity:0.85}}/><div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2}}>{cat}</div></div>)})}
+    </div>
+  </div>)
+}
+function SmartGraph({spec}:{spec:any}){
+  if(!spec)return null
+  const t=autoDetectGraphType(spec),s=t!==spec.type?{...spec,type:t}:spec
+  if(s.type==='ascii')    return <AsciiGraph spec={s}/>
+  if(s.type==='table')    return <TableGraph spec={s}/>
+  if(s.type==='bar')      return <BarGraph   spec={s}/>
+  if(s.type==='geometry') return <GeoGraph   spec={s}/>
+  return <MathGraph spec={s}/>
+}
 
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
@@ -1125,7 +1232,7 @@ Required JSON (ALL text in ENGLISH):
   "estimatedScore": [0 to ${exercise.points}],
   "maxScore": ${exercise.points},
   "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Precise analysis in English]","priority":1}],
-  "strengths": ["[What the student did well]"],
+
   "globalAdvice": ["[Targeted advice on ${exercise.theme} in English]","[Strategy to remember]"],
   "remediationExercises": [
     {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolidate the weakness]","statement":"Short English practice exercise on ${exercise.theme}. 2-3 sub-questions. Minimum 60 words. Written in ENGLISH.","hint":"[Methodological hint in English]","officialCorrection":"[Complete correction in ENGLISH]"},
@@ -1144,12 +1251,13 @@ JSON requis :
 {
   "estimatedScore": [0 à ${exercise.points}],
   "maxScore": ${exercise.points},
-  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Analyse précise]","priority":1}],
-  "strengths": ["[Ce qui est bien]"],
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Lacune précise observée]","priority":1,"chapter":"[Chapitre]","targetScore":"[+pts]"}],
+
   "globalAdvice": ["[Conseil ciblé sur ${exercise.theme}]","[Méthode à retenir]"],
   "remediationExercises": [
-    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider la lacune]","statement":"Mini-exercice progressif sur ${exercise.theme}. 2-3 sous-questions. Minimum 60 mots.","hint":"[Indice méthodologique]","officialCorrection":"[Correction complète]"},
-    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Approfondir]","statement":"Exercice standard sur ${exercise.theme}. Minimum 60 mots.","hint":"[Méthode]","officialCorrection":"[Correction]"}
+    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider notion]","statement":"Exercice ORIGINAL. 2-3 questions. Min 80 mots.","hint":"[Formule]","officialCorrection":"[Correction étape par étape. Min 60 mots.]"},
+    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Niveau Bac]","statement":"Exercice Bac. 3 questions. Min 90 mots.","hint":"[Stratégie]","officialCorrection":"[Correction. Min 70 mots.]"},
+    {"id":"rem${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtrise Bac]","statement":"Exercice avancé. 4 parties. Min 100 mots.","hint":"[Conseil Bac]","officialCorrection":"[Correction Bac. Min 80 mots.]"}
   ]
 }`
   const raw = await askClaude(prompt, system, 3000)
@@ -1171,8 +1279,9 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
     ? `You are an expert English language teacher and educational coach for the Tunisian Baccalaureate.\nYou analyse student work and build a personalised improvement plan.\nCRITICAL: ALL text in your JSON (descriptions, advice, statements, corrections) MUST be written in ENGLISH.\nRESPOND ONLY IN VALID JSON.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = isAnglaisExam
-    ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n  "strengths": ["[Strength 1 in English]", "[Strength 2 in English]"],\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
-    : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n  "strengths": ["[Point fort 1]", "[Point fort 2]"],\n  "globalAdvice": ["[Conseil pratique et actionnable 1]", "[Conseil 2]", "[Conseil 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
+    ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
+    : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
+  "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
   const raw = await askClaude(prompt, system, 5000)
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
@@ -1203,7 +1312,7 @@ Be precise, encouraging, and identify exactly what is missing.`
 
   const prompt = isAnglaisRem
     ? `REMEDIATION EXERCISE — ${exercise.theme}\nObjective: ${exercise.objective}\n\nStatement:\n${exercise.statement}\n\nStudent's answer:\n${studentAnswer || '(No answer provided)'}\n\nModel correction:\n${exercise.officialCorrection}\n\nProvide (ALL IN ENGLISH):\n## Assessment of the answer\n[What is correct, incomplete, or wrong]\n\n## Commented correction\n[Step-by-step correction with explanations]\n\n## Key points to remember\n[Grammar rule, vocabulary or writing strategy — max 3 essential points]\n\n## Next step\n[One concrete action to keep improving on this skill]`
-    : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`
+    : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse fournie)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\n## ✅ Évaluation de ta réponse\n[Ce qui est juste ✅, incomplet ⚠️, faux ❌ — score estimé]\n\n## 📝 Correction commentée étape par étape\n[Pour chaque sous-question : méthode → calcul $LaTeX$ → > **Résultat :** $valeur$]\n\n## 🔑 Ce qu'il faut absolument retenir\n[Max 3 règles/formules + erreur classique à éviter]\n\n## 🎯 Exercice flash pour consolider\n[1-2 questions sur le même concept — avec la réponse]\n\n## 📈 Prochain pas\n[Action concrète pour maîtriser ce thème avant le Bac]`
 
   return askClaude(prompt, system, 2000)
 }
@@ -3141,20 +3250,7 @@ function PageAnalyseExercice({
             <div style={{fontSize:12, fontWeight:700, color:scoreColor}}>{mention}</div>
           </div>
           <div style={{display:'flex', flexDirection:'column', gap:12}}>
-            {analysis.strengths.length > 0 && (
-              <div>
-                <p style={{fontSize:11, fontWeight:700, color:'#6ee7b7', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
-                  💪 Points forts
-                </p>
-                <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
-                  {analysis.strengths.map((s,i) => (
-                    <span key={i} style={{fontSize:12, padding:'4px 12px', background:'rgba(16,185,129,0.12)', color:'#6ee7b7', border:'1px solid rgba(16,185,129,0.25)', borderRadius:20}}>
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
             {analysis.globalAdvice.length > 0 && (
               <div>
                 <p style={{fontSize:11, fontWeight:700, color:'#a5b4fc', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
@@ -3198,6 +3294,50 @@ function PageAnalyseExercice({
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {/* Plan d'étude personnalisé */}
+        {(analysis as any).studyPlan && (
+          <div style={{marginBottom:20,padding:'16px 20px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:14}}>
+            <div style={{fontSize:13,fontWeight:800,color:'#10b981',marginBottom:12}}>📅 Plan de travail personnalisé</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+              <div style={{padding:'10px 14px',background:'rgba(16,185,129,0.08)',borderRadius:10,border:'1px solid rgba(16,185,129,0.2)'}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#10b981',textTransform:'uppercase',marginBottom:6}}>📆 Semaine 1</div>
+                {((analysis as any).studyPlan?.week1||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginBottom:4,paddingLeft:10,borderLeft:'2px solid rgba(16,185,129,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+              <div style={{padding:'10px 14px',background:'rgba(79,110,247,0.07)',borderRadius:10,border:'1px solid rgba(79,110,247,0.2)'}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#818cf8',textTransform:'uppercase',marginBottom:6}}>📆 Semaine 2</div>
+                {((analysis as any).studyPlan?.week2||[]).map((a:string,i:number)=>(
+                  <div key={i} style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginBottom:4,paddingLeft:10,borderLeft:'2px solid rgba(79,110,247,0.4)'}}>• {a}</div>
+                ))}
+              </div>
+            </div>
+            {(analysis as any).studyPlan?.dailyGoal&&(
+              <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.09)',borderRadius:8,fontSize:12,color:'#fcd34d',fontWeight:600}}>
+                ⏱ Objectif : {(analysis as any).studyPlan.dailyGoal}
+              </div>
+            )}
+          </div>
+        )}
+        {(analysis as any).scoreByExercise?.length>0&&(
+          <div style={{marginBottom:20,padding:'14px 18px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14}}>
+            <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.5)',textTransform:'uppercase',marginBottom:12}}>📊 Détail par exercice</div>
+            {((analysis as any).scoreByExercise as {exerciseTitle:string;estimated:number;max:number;comment:string}[]).map((ex,i)=>{
+              const pct=Math.round((ex.estimated/ex.max)*100),bc=pct>=70?'#10b981':pct>=40?'#f59e0b':'#ef4444'
+              return(<div key={i} style={{marginBottom:8,padding:'8px 12px',background:'rgba(255,255,255,0.03)',borderRadius:8,border:'1px solid rgba(255,255,255,0.07)'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                  <span style={{fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{ex.exerciseTitle}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:bc}}>{ex.estimated}/{ex.max} ({pct}%)</span>
+                </div>
+                <div style={{height:4,background:'rgba(255,255,255,0.07)',borderRadius:2,overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${pct}%`,background:bc,borderRadius:2}}/>
+                </div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:3}}>{ex.comment}</div>
+              </div>)
+            })}
           </div>
         )}
 
@@ -3765,16 +3905,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
             </div>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:14}}>
-            {analysis.strengths.length>0&&(
-              <div>
-                <p style={{fontSize:11,fontWeight:700,color:'#6ee7b7',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Points forts</p>
-                <div style={{display:'flex',flexWrap:'wrap',gap:7}}>
-                  {analysis.strengths.map((s,i)=>(
-                    <span key={i} style={{fontSize:12,padding:'4px 13px',background:'rgba(16,185,129,0.12)',color:'#6ee7b7',border:'1px solid rgba(16,185,129,0.25)',borderRadius:20}}>{s}</span>
-                  ))}
-                </div>
-              </div>
-            )}
+
             {analysis.globalAdvice.length>0&&(
               <div>
                 <p style={{fontSize:11,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Recommandations personnalisées</p>
