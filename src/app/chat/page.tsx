@@ -401,8 +401,27 @@ Utilise ce format JSON exact dans un bloc \`\`\`graph :
 
 Formes disponibles : axes, grid, point, segment, line, vector, circle, triangle, polygon, rect, angle, arc, median, label, rightangle
 
-### TYPE 3 — SCHÉMAS PHYSIQUE & CHIMIE
-Mots-clés déclencheurs : "circuit", "condensateur", "RC", "RL", "RLC", "ressort", "pendule", "lentille", "pile", "dosage", "dipôle", "charge", "décharge", "oscillation", "ondes"
+### TYPE 3 — SCHÉMAS ASCII (pile, circuit, synapse, ADN)
+Mots-clés déclencheurs : "circuit", "condensateur", "RC", "RL", "RLC", "pile", "dosage", "synapse", "ADN", "lentille"
+Format :
+\`\`\`graph
+{"type":"ascii","title":"Circuit RLC série","content":"  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘","legend":["R: résistance (Ω)","L: bobine (H)","C: condensateur (F)"]}
+\`\`\`
+
+### TYPE 4 — TABLEAU DE DONNÉES
+Mots-clés : "tableau", "loi de proba", "tableau de signe", "tableau de valeurs", "résultats", "algo"
+\`\`\`graph
+{"type":"table","title":"Loi binomiale B(5, 0.4)","headers":["k","P(X=k)","P(X≤k)"],"rows":[["0","0.078","0.078"],["1","0.259","0.337"],["2","0.346","0.683"],["3","0.230","0.913"],["4","0.077","0.990"],["5","0.010","1.000"]],"highlight":[2]}
+\`\`\`
+
+### TYPE 5 — HISTOGRAMME / BARRES
+Mots-clés : "histogramme", "diagramme en barres", "comparaison", "statistiques SVT"
+\`\`\`graph
+{"type":"bar","title":"Comparaison","categories":["A","B","C","D"],"values":[23,45,12,67],"colors":["#6366f1","#10b981","#f59e0b","#ec4899"],"xLabel":"Groupes","yLabel":"Fréquence"}
+\`\`\`
+
+RÈGLE ABSOLUE : JAMAIS écrire [FIGURE : ...] ou [SCHÉMA : ...] — TOUJOURS générer le bloc graphique correspondant.
+pile/circuit → TYPE 3 ascii · courbe → TYPE 1 · géo → TYPE 2 · tableau → TYPE 4 · histo → TYPE 5
 
 **Circuit RC charge :**
 \`\`\`graph
@@ -818,11 +837,12 @@ function FunctionGraph({ config }: { config: any }) {
         try {
           if (!fn?.expr) continue
           // eslint-disable-next-line no-new-func
-          const f = new Function('x', `try{const v=(${fn.expr});return(isFinite(v)&&Math.abs(v)<1e6)?v:null}catch(e){return null}`)
+          const f = new Function('x', `"use strict";try{const _r=(${fn.expr});return(_r===undefined||_r===null)?null:_r;}catch(e){return null}`)
           for (let i = 0; i <= N; i++) {
             const x = xMin + (i / N) * (xMax - xMin)
             const v = f(x)
-            if (v !== null) allY.push(v)
+            // Seuil dynamique : pas de seuil fixe 1e6 qui coupe les sigmoides
+            if (v !== null && isFinite(v)) allY.push(v)
           }
         } catch {}
       }
@@ -909,7 +929,7 @@ function FunctionGraph({ config }: { config: any }) {
         for (let i = 0; i <= N; i++) {
           const x = xMin + (i / N) * (xMax - xMin)
           const y = f(x)
-          if (y === null || y < yMin - (yMax - yMin) * 0.5 || y > yMax + (yMax - yMin) * 0.5) { pen = false; continue }
+          if (y === null || !isFinite(y) || y < yMin - (yMax - yMin) * 0.5 || y > yMax + (yMax - yMin) * 0.5) { pen = false; continue }
           const px = toPixX(x), py = toPixY(y)
           if (!pen) { ctx.moveTo(px, py); pen = true } else ctx.lineTo(px, py)
         }
@@ -1134,10 +1154,27 @@ function GeometryGraph({ config }: { config: any }) {
 // ══════════════════════════════════════════
 function parseBlocks(text: string): Array<{ type: 'text' | 'graph'; content: string; config?: any }> {
   const out: Array<{ type: 'text' | 'graph'; content: string; config?: any }> = []
+  // Normaliser [GRAPH: {JSON}] → format interne unifié
+  const normalized = text.replace(/\[GRAPH:\s*(\{[\s\S]*?\})\s*\]/g, (_match, json) => {
+    try {
+      const parsed = JSON.parse(json)
+      return '```graph\n' + JSON.stringify(parsed, null, 2) + '\n```'
+    } catch { return _match }
+  })
+  // Intercepter [FIGURE : ...] → ascii générique
+  const withFigure = normalized.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m) => {
+    const title = m.replace(/^\[FIGURE\s*:\s*/i,'').replace(/\]$/,'').trim()
+    const isRLC = /RLC/i.test(title), isRC = /RC\b/i.test(title) && !isRLC
+    const content = isRLC ? '  ┌──┤R├──┤L├──┬──┐\n  E             ═╪═C\n  └─────────────┘'
+                  : isRC  ? '  ┌──┤R├──┬──┐\n  E       ═╪═C\n  └────────┘'
+                  : '  [Schéma : ' + title + ']'
+    const obj = {type:'ascii',title,content,legend:['Voir énoncé pour les valeurs']}
+    return '```graph\n' + JSON.stringify(obj) + '\n```'
+  })
   const re = /```graph\n?([\s\S]*?)```/g
   let last = 0, m: RegExpExecArray | null
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) out.push({ type: 'text', content: text.slice(last, m.index) })
+  while ((m = re.exec(withFigure)) !== null) {
+    if (m.index > last) out.push({ type: 'text', content: withFigure.slice(last, m.index) })
     try {
       const cfg = JSON.parse(m[1].trim())
       out.push({ type: 'graph', content: m[1], config: cfg })
@@ -1146,7 +1183,7 @@ function parseBlocks(text: string): Array<{ type: 'text' | 'graph'; content: str
     }
     last = m.index + m[0].length
   }
-  if (last < text.length) out.push({ type: 'text', content: text.slice(last) })
+  if (last < withFigure.length) out.push({ type: 'text', content: withFigure.slice(last) })
   return out
 }
 
@@ -1207,14 +1244,50 @@ function renderText(text: string) {
   return <div>{els}</div>
 }
 
+// ── AsciiGraph inline ────────────────────────────────────────────
+function AsciiBlock({cfg}:{cfg:any}){
+  const legend=Array.isArray(cfg.legend)?cfg.legend:[]
+  return(<div style={{borderRadius:10,overflow:'hidden',border:'1px solid rgba(6,182,212,0.3)',margin:'12px 0',background:'rgba(6,182,212,0.04)'}}>
+    {cfg.title&&<div style={{padding:'7px 16px',borderBottom:'1px solid rgba(6,182,212,0.15)',fontSize:12,fontWeight:700,color:'#06b6d4'}}>📐 {cfg.title}</div>}
+    <div style={{padding:'12px 16px'}}>
+      <pre style={{fontFamily:"'Courier New',Consolas,monospace",fontSize:12,lineHeight:1.7,color:'rgba(255,255,255,0.85)',background:'rgba(0,0,0,0.3)',borderRadius:8,padding:'10px 14px',margin:'0 0 10px',overflowX:'auto',whiteSpace:'pre'}}>{cfg.content}</pre>
+      {legend.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:5}}>{legend.map((item:string,i:number)=><span key={i} style={{fontSize:11,padding:'2px 9px',background:'rgba(6,182,212,0.1)',color:'#67e8f9',border:'1px solid rgba(6,182,212,0.2)',borderRadius:20}}>{item}</span>)}</div>}
+    </div>
+  </div>)
+}
+// ── TableBlock inline ─────────────────────────────────────────────
+function TableBlock({cfg}:{cfg:any}){
+  const h=cfg.headers||[],r=cfg.rows||[],hl=cfg.highlight||[]
+  return(<div style={{borderRadius:10,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'12px 0'}}>
+    {cfg.title&&<div style={{padding:'7px 14px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>📋 {cfg.title}</div>}
+    <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
+      {h.length>0&&<thead><tr>{h.map((c:string,i:number)=><th key={i} style={{padding:'7px 10px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>{c}</th>)}</tr></thead>}
+      <tbody>{r.map((row:string[],i:number)=><tr key={i} style={{background:hl.includes(i)?'rgba(99,102,241,0.1)':i%2===0?'rgba(255,255,255,0.02)':'transparent'}}>{row.map((cell:string,j:number)=><td key={j} style={{padding:'5px 10px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>{cell}</td>)}</tr>)}</tbody>
+    </table></div>
+  </div>)
+}
+// ── BarBlock inline ───────────────────────────────────────────────
+function BarBlock({cfg}:{cfg:any}){
+  const cats=cfg.categories||[],vals=cfg.values||[],colors=cfg.colors||['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4'],mx=Math.max(...vals,1)
+  return(<div style={{borderRadius:10,border:'1px solid rgba(99,102,241,0.25)',margin:'12px 0',background:'rgba(10,10,25,0.95)',padding:'14px'}}>
+    {cfg.title&&<div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:10,textAlign:'center'}}>{cfg.title}</div>}
+    <div style={{display:'flex',alignItems:'flex-end',gap:6,height:130,paddingBottom:20,position:'relative'}}>
+      {cats.map((cat:string,i:number)=>{const h=Math.max(4,(vals[i]/mx)*110);const c=colors[i%colors.length];return(<div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}><div style={{fontSize:10,color:c,fontWeight:700}}>{vals[i]}</div><div style={{width:'100%',height:`${h}px`,background:c,borderRadius:'3px 3px 0 0',opacity:0.85}}/><div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2}}>{cat}</div></div>)})}
+    </div>
+  </div>)
+}
 function formatContent(text: string) {
   const blocks = parseBlocks(text)
   return (
     <div>
       {blocks.map((b, i) => {
         if (b.type === 'graph' && b.config) {
-          if (b.config.type === 'geometry') return <GeometryGraph key={i} config={b.config} />
-          return <FunctionGraph key={i} config={b.config} />
+          const t = b.config.type
+          if (t === 'ascii')    return <AsciiBlock    key={i} cfg={b.config}/>
+          if (t === 'table')    return <TableBlock    key={i} cfg={b.config}/>
+          if (t === 'bar')      return <BarBlock      key={i} cfg={b.config}/>
+          if (t === 'geometry') return <GeometryGraph key={i} config={b.config}/>
+          return <FunctionGraph key={i} config={b.config}/>
         }
         return <div key={i}>{renderText(b.content)}</div>
       })}
