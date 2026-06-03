@@ -1302,10 +1302,12 @@ function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
 
   useEffect(() => {
     if (!plotlyLoaded || !divRef.current) return
+    let traces: any[] = []
+    let layout: any = {}
+    let config: any = { responsive: true, displayModeBar: false }
     try {
       const xMin = spec.xMin ?? -5
       const xMax = spec.xMax ?? 5
-      const traces: any[] = []
       const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
 
       if (spec.type === 'function' || spec.type === 'parametric') {
@@ -1395,7 +1397,7 @@ function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
       }
 
       // Axes
-      const layout = {
+      layout = {
         title: { text: spec.title || '', font: { color: '#e2e8f0', size: 13 } },
         paper_bgcolor: 'rgba(15,15,30,0.9)',
         plot_bgcolor: 'rgba(20,20,40,0.8)',
@@ -1420,11 +1422,28 @@ function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
         height: 300,
       }
 
-      const config = { responsive: true, displayModeBar: false }
       ;(window as any).Plotly.newPlot(divRef.current, traces, layout, config)
     } catch(e: any) {
       console.error('MathGraph error:', e, 'spec:', spec)
-      setError('Tracé impossible — expression : ' + (spec.expressions?.[0] || '?'))
+      const errMsg = e?.message || String(e) || 'Erreur inconnue'
+      if (errMsg.includes('Plotly') || errMsg.includes('newPlot')) {
+        setError('Graphique — Plotly non chargé, rechargez la page')
+      } else if (errMsg.includes('SyntaxError') || errMsg.includes('ReferenceError')) {
+        setError('Expression invalide : ' + (spec.expressions?.[0]?.slice(0,50) || '?'))
+      } else {
+        try {
+          const safeTraces = (traces as any[]).map(tr => ({
+            ...tr,
+            y: (tr.y || []).map((v: any) => (v !== null && isFinite(v) ? v : null)),
+            connectgaps: true
+          }))
+          if (divRef.current && safeTraces.length > 0) {
+            ;(window as any).Plotly.newPlot(divRef.current, safeTraces, layout, config)
+          }
+        } catch {
+          setError('Tracé impossible — ' + errMsg.slice(0, 60))
+        }
+      }
     }
   }, [plotlyLoaded, spec])
 
