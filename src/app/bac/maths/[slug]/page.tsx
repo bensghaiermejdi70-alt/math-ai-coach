@@ -63,7 +63,8 @@ type Chap = { id:string; titre:string; badge:string; color:string; emoji:string;
 // ══════════════════════════════════════════════════════════════════════
 // DONNÉES — 10 CHAPITRES COMPLETS
 // ══════════════════════════════════════════════════════════════════════
-const ALL_CHAPTERS: Record<string,Chap> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ALL_CHAPTERS: Record<string, any> = {
 
 // ─────────────────────────────────────────────────────────────────────
 // CH 01 — SECOND DEGRÉ
@@ -236,7 +237,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
-  ]
+  ,
+    {
+      id:'sc-equations-complexes', titre:'2.4 Équations dans ℂ',
+      notions:['zⁿ=a : n racines complexes','Équation du second degré à coefficients complexes','Factorisation dans ℂ','Recherche de z sous forme a+ib'],
+      blocs:[
+        {
+          notion:'⚡ Équations et factorisation dans ℂ',
+          theoremes:[
+            { id:'T-CP3', type:'thm', nom:"Théorème fondamental de l'algèbre",
+              enonce:"Tout polynôme de degré n à coefficients complexes a exactement n racines dans ℂ (comptées avec multiplicité).\n\nConséquence :\nP(z) = aₙ(z−z₁)(z−z₂)···(z−zₙ)\n\nSi P est à coefficients réels :\n• Les racines complexes viennent par paires conjuguées (z₁ et z̄₁)\n• Factorisation réelle : (z−z₁)(z−z̄₁) = z² − 2Re(z₁)z + |z₁|²" },
+            { id:'M-CP2', type:'methode', nom:'Résoudre une équation du 2ème degré dans ℂ',
+              enonce:"z² + pz + q = 0  (p,q∈ℂ)\n\nMéthode : chercher z = a+ib tel que z²=−p\nSystem de 2 équations (partie réelle et imaginaire)\n\nAlternativement : formulaire directement :\nΔ = p²−4q (complexe)\n√Δ = x+iy → (x²−y²=Re(Δ), 2xy=Im(Δ))\nz = (−p±√Δ)/2\n\nExemple : z²−2iz−5=0\nΔ=4i²+20=16, √Δ=4\nz=(2i±4)/2 → z₁=2+i, z₂=−2+i",
+              remarque:"Toujours vérifier les solutions en substituant dans l'équation initiale." },
+          ],
+          exercices:[
+            { id:'EX-CE1', niveau:'Intermédiaire', titre:'Résoudre dans ℂ',
+              enonce:'Résoudre z²−(3+i)z+2+2i=0.',
+              correction:'Δ=(3+i)²−4(2+2i)=9+6i−1−8−8i=−2i.\nTrouver √(−2i) : (a+ib)²=−2i → a²−b²=0, 2ab=−2 → a=b ou a=−b ; ab=−1.\na=1,b=−1 → √(−2i)=1−i (ou −1+i).\nz=(3+i±(1−i))/2.\nz₁=(4)/2=2 ; z₂=(2+2i)/2=1+i.' },
+            { id:'EX-CE2', niveau:'Difficile', titre:'Factorisation',
+              enonce:"P(z)=z⁴−2z³+4z²−8z+16. Sachant que 2i est racine, factoriser P dans ℂ puis ℝ.",
+              correction:'2i racine → z̄=−2i aussi racine.\n(z−2i)(z+2i)=z²+4.\nDivision euclidienne : P=(z²+4)(z²−2z+4).\nz²−2z+4=0 : Δ=4−16=−12, racines 1±i√3.\nP=(z²+4)(z−1−i√3)(z−1+i√3).' },
+          ]
+        },
+      ]
+    }]
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -368,7 +393,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
-  ]
+  ,
+    {
+      id:'sc-suites-monotonie', titre:'4.4 Monotonie et convergence',
+      notions:['Suite croissante/décroissante par uₙ₊₁−uₙ','Suite majorée, minorée, bornée','Théorème de la limite monotone','Suites adjacentes'],
+      blocs:[
+        {
+          notion:'📊 Convergence et théorèmes',
+          theoremes:[
+            { id:'T-SU2', type:'thm', nom:'Théorème de la limite monotone',
+              enonce:"Toute suite croissante et majorée est convergente.\nToute suite décroissante et minorée est convergente.\n\nStratégie de démonstration :\n1. Montrer la monotonie : uₙ₊₁−uₙ ≥ 0 (croissante)\n2. Montrer la borne : uₙ ≤ M (majorée)\n3. Conclure : (uₙ) converge vers ℓ\n4. Calculer ℓ : passer à la limite dans uₙ₊₁=f(uₙ) → ℓ=f(ℓ)\n\nSuites adjacentes :\n(uₙ) et (vₙ) adjacentes si :\n• uₙ croissante, vₙ décroissante\n• vₙ−uₙ → 0\nAlors elles convergent vers la même limite ℓ et uₙ≤ℓ≤vₙ.",
+              remarque:"Le calcul de la limite se fait via le point fixe f(ℓ)=ℓ." },
+            { id:'M-SU2', type:'methode', nom:"Étude complète d'une suite récurrente uₙ₊₁=f(uₙ)",
+              enonce:"1. POINT(S) FIXE(S) : résoudre f(ℓ)=ℓ\n\n2. MONOTONIE : calculer uₙ₊₁−uₙ = f(uₙ)−uₙ\n   → signe dépend de uₙ et du point fixe\n\n3. BORNITUDE : prouver par récurrence que uₙ∈[a,b]\n\n4. CONVERGENCE : appliquer le théorème de la limite monotone\n\n5. LIMITE : résoudre ℓ=f(ℓ) et choisir la bonne racine\n\nExemple : uₙ₊₁=√(uₙ+2), u₀=0\nPoint fixe : ℓ=√(ℓ+2) → ℓ²−ℓ−2=0 → ℓ=2 (positif)\nCroissante et bornée par 2 → converge vers 2." },
+          ],
+          exercices:[
+            { id:'EX-MO1', niveau:'Intermédiaire', titre:'Suite bornée et convergente',
+              enonce:'uₙ₊₁=uₙ/2+1, u₀=0. Montrer que uₙ∈[0;2] et converge. Calculer la limite.',
+              correction:'f(ℓ)=ℓ/2+1 → ℓ=2.\n[0;2] stable : u∈[0;2] → u/2+1∈[1;2]⊂[0;2].\nMonotonie : u₁=1>u₀=0, puis croissante par récurrence (f croissante).\nBornée et croissante → converge vers ℓ=2.' },
+            { id:'EX-MO2', niveau:'Difficile', titre:'Suites adjacentes',
+              enonce:'uₙ=1+1/2+...+1/2ⁿ et vₙ=uₙ+1/2ⁿ. Montrer que ces suites sont adjacentes.',
+              correction:'uₙ₊₁−uₙ=1/2ⁿ⁺¹>0 (croissante).\nvₙ₊₁−vₙ=1/2ⁿ⁺¹−1/2ⁿ=−1/2ⁿ⁺¹<0 (décroissante).\nvₙ−uₙ=1/2ⁿ→0.\nDonc adjacentes → convergent vers ℓ=2 (somme série géométrique).' },
+          ]
+        },
+      ]
+    }]
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -432,7 +481,32 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
-  ]
+  ,
+    {
+      id:'sc-croissances-comparees', titre:'5.3 Croissances comparées et développements limités',
+      notions:['Hiérarchie ln≪xⁿ≪eˣ','Développements limités usuels en 0','Équivalents en 0 et +∞','Calcul de limite par DL'],
+      blocs:[
+        {
+          notion:'🚀 Croissances comparées et DL',
+          theoremes:[
+            { id:'T-CC1', type:'thm', nom:'Hiérarchie des croissances',
+              enonce:"En +∞ (pour α,β>0) :\nln x ≪ xᵅ ≪ eˣ ≪ eˣ²\n\nFormellement :\nlim(x→+∞) (ln x)/xᵅ = 0  (tout exposant)\nlim(x→+∞) xⁿ/eˣ = 0  (tout entier n)\n\nEn 0⁺ :\nlim(x→0⁺) xᵅ·ln x = 0  (tout α>0)\n\nApplication : tout morceau qui 'domine' l'emporte.",
+              remarque:"La fonction eˣ croît plus vite que tout polynôme et xⁿ plus vite que tout logarithme." },
+            { id:'F-DL1', type:'formule', nom:'Développements limités usuels en 0',
+              enonce:"eˣ = 1 + x + x²/2! + x³/3! + ... + xⁿ/n! + o(xⁿ)\n\nln(1+x) = x − x²/2 + x³/3 − ... + (−1)ⁿ⁺¹xⁿ/n + o(xⁿ)\n\nsin x = x − x³/6 + x⁵/120 + ... + o(xⁿ)\n\ncos x = 1 − x²/2 + x⁴/24 − ... + o(xⁿ)\n\n(1+x)ᵅ = 1 + αx + α(α−1)x²/2! + ... + o(xⁿ)  (binôme)",
+              remarque:"Les DL permettent de calculer rapidement des limites de formes indéterminées." },
+          ],
+          exercices:[
+            { id:'EX-DL1', niveau:'Intermédiaire', titre:'Limite par DL',
+              enonce:'Calculer lim(x→0) (eˣ−1−x)/x².',
+              correction:'eˣ=1+x+x²/2+o(x²).\neˣ−1−x=x²/2+o(x²).\n(eˣ−1−x)/x²→1/2.' },
+            { id:'EX-DL2', niveau:'Difficile', titre:'DL au voisinage de 0',
+              enonce:'Calculer lim(x→0) (sin x − x)/x³.',
+              correction:'sin x = x − x³/6 + o(x³).\nsin x − x = −x³/6 + o(x³).\n(sin x − x)/x³ → −1/6.' },
+          ]
+        },
+      ]
+    }]
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -498,7 +572,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
-  ]
+  ,
+    {
+      id:'sc-optimisation', titre:"5.3 Optimisation et problèmes d'extrema",
+      notions:["Problème d'optimisation sous contrainte",'Extrema globaux sur un intervalle fermé','Inégalités classiques par dérivation'],
+      blocs:[
+        {
+          notion:'🎯 Optimisation',
+          theoremes:[
+            { id:'M-OPT1', type:'methode', nom:"Résoudre un problème d'optimisation",
+              enonce:"MÉTHODE GÉNÉRALE :\n1. Identifier la quantité à optimiser (f) et les contraintes\n2. Exprimer f en fonction d'une seule variable x∈[a;b]\n3. Calculer f'(x) et le tableau de variations\n4. Identifier le maximum/minimum\n5. Répondre à la question posée (avec unités)" },
+            { id:'T-OPT1', type:'thm', nom:'Inégalités classiques par dérivation',
+              enonce:"1. eˣ ≥ 1+x pour tout x∈ℝ (avec égalité en x=0)\nDémonstration : f(x)=eˣ−1−x, f'(x)=eˣ−1, minimum en 0.\n\n2. ln x ≤ x−1 pour tout x>0 (avec égalité en x=1)\nDémonstration : f(x)=ln x−(x−1), f'(x)=1/x−1, maximum en 1.\n\n3. Inégalité AM-GM : (a+b)/2 ≥ √(ab) pour a,b>0\nDémonstration : (√a−√b)² ≥ 0." },
+          ],
+          exercices:[
+            { id:'EX-OPT1', niveau:'Intermédiaire', titre:'Boîte de volume maximal',
+              enonce:"On découpe 4 carrés de côté x dans un carton 20cm×30cm. Valeur de x maximisant le volume?",
+              correction:"V(x)=x(20−2x)(30−2x) sur [0;10].\nV'(x)=12x²−200x+600=0 → x=(50−10√7)/6≈3.92.\nV(3.92)≈1056 cm³." },
+            { id:'EX-OPT2', niveau:'Difficile', titre:'Distance minimale',
+              enonce:"Trouver le point de la parabole y=x² le plus proche de A(3;0).",
+              correction:"f(x)=(x−3)²+x⁴. f'(x)=2(x−3)+4x³=0.\n2x³+x−3=0 → (x−1)(2x²+2x+3)=0.\nx=1 (discriminant négatif pour l'autre facteur).\nPoint M(1;1), distance=√[(1−3)²+1]=√5." },
+          ]
+        },
+      ]
+    }]
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -659,7 +756,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
-  ]
+  ,
+    {
+      id:'sc-solides', titre:"9.3 Solides de l'espace — Volumes et sections",
+      notions:['Pyramide et cône V=Bh/3','Sphère V=4πR³/3, A=4πR²','Principe de Cavalieri',"Section plane d'un solide"],
+      blocs:[
+        {
+          notion:'📦 Volumes des solides',
+          theoremes:[
+            { id:'F-SO1', type:'formule', nom:'Volumes des solides usuels',
+              enonce:"Prisme droit (base B, hauteur h) : V = B×h\n\nPyramide (base B, hauteur h) : V = (1/3)Bh\n\nCylindre (rayon r, hauteur h) : V = πr²h, Alat = 2πrh\n\nCône (rayon r, hauteur h) : V = (1/3)πr²h, Alat = πrl (l=arête latérale)\n\nSphère (rayon R) : V = (4/3)πR³, A = 4πR²\n\nPrincipe de Cavalieri : deux solides de même hauteur ayant des sections de même aire ont le même volume." },
+          ],
+          exercices:[
+            { id:'EX-SO1', niveau:'Facile', titre:"Volume d'un cône",
+              enonce:"Un cône a r=3 et h=4. Calculer V et Alat.",
+              correction:"V=(1/3)π×9×4=12π.\nArête l=√(9+16)=5.\nAlat=π×3×5=15π." },
+            { id:'EX-SO2', niveau:'Difficile', titre:"Section d'une sphère",
+              enonce:"Sphère de centre O et rayon 5. Section par le plan 2x+2y+z=5. Rayon du cercle de section?",
+              correction:"Distance du centre au plan : d=|5|/√(4+4+1)=5/3.\nRayon du cercle : r=√(25−25/9)=√(200/9)=10√2/3≈4.71." },
+          ]
+        },
+      ]
+    }]
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -792,7 +910,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-applications-arcs', titre:"6.3 Applications et résolution d'équations",
+      notions:['Intégrales avec arctan et arcsin','Équations trigonométriques via fonctions arc','Inégalités avec fonctions arc'],
+      blocs:[
+        {
+          notion:'🔧 Applications des fonctions arc',
+          theoremes:[
+            { id:'F-FA1', type:'formule', nom:'Intégrales utilisant arcsin et arctan',
+              enonce:"∫ 1/√(a²−x²) dx = arcsin(x/a) + C  (|x|<a)\n\n∫ 1/(a²+x²) dx = (1/a)arctan(x/a) + C\n\nFormes composées :\n∫ u'/√(a²−u²) du = arcsin(u/a) + C\n∫ u'/(a²+u²) du = (1/a)arctan(u/a) + C\n\nExemple :\n∫ 1/(4+x²) dx = (1/2)arctan(x/2)+C" },
+            { id:'M-FA1', type:'methode', nom:'Résoudre sin(f(x))=k, cos(f(x))=k',
+              enonce:"sin θ = k  (|k|≤1) :\nθ = arcsin k + 2kπ  ou  θ = π−arcsin k + 2kπ\n\ncos θ = k  (|k|≤1) :\nθ = ±arccos k + 2kπ\n\ntan θ = k :\nθ = arctan k + kπ" },
+          ],
+          exercices:[
+            { id:'EX-FA1', niveau:'Intermédiaire', titre:'Intégrale avec arctan',
+              enonce:"Calculer ∫₀¹ x/(1+x⁴) dx.",
+              correction:"u=x², du=2x dx → x dx=du/2.\n∫₀¹ (1/2)·1/(1+u²)du=[arctan(u)/2]₀¹=π/8." },
+            { id:'EX-FA2', niveau:'Difficile', titre:'Équation trigonométrique',
+              enonce:"Résoudre cos(2x+π/3)=1/2 sur [0;π].",
+              correction:"cos θ=1/2 → θ=π/3 ou θ=5π/3 (+2kπ).\n2x+π/3=π/3 → x=0.\n2x+π/3=−π/3+2π → x=2π/3.\n2x+π/3=π/3+2π → x=π.\nSolutions : x∈{0;2π/3;π}." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -829,7 +970,27 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-ln-etude', titre:'7.2 Étude de fonctions contenant ln',
+      notions:['Domaine et parité','Branches infinies et asymptotes','Tableau de variations complet','Fonctions xᵃ = e^(a·ln x)'],
+      blocs:[
+        {
+          notion:'📈 Fonctions avec ln',
+          theoremes:[
+            { id:'M-LN2', type:'methode', nom:'Étude de f(x)=xⁿ·ln x',
+              enonce:"f(x) = xⁿ·ln x sur ]0;+∞[ (n>0)\n\nf'(x) = n·xⁿ⁻¹·ln x + xⁿ/x = xⁿ⁻¹(n·ln x+1)\n\nAnnulation : n·ln x = −1 → x = e^(−1/n)\n\nlim(x→0⁺) xⁿ·ln x = 0 (croissances comparées)\n\nMinimum : f(e^(-1/n)) = −1/(n·e^(1/n))" },
+            { id:'F-LN3', type:'formule', nom:'Puissances réelles xᵃ = e^(a·ln x)',
+              enonce:"Pour a∈ℝ et x>0 :\nxᵃ = eᵃ·ˡⁿˣ\n(xᵃ)' = a·xᵃ⁻¹  (vraie pour tout a réel)\n\nLog en base a (a>0, a≠1) :\nlog_a(x) = ln x/ln a\n(log_a x)' = 1/(x·ln a)" },
+          ],
+          exercices:[
+            { id:'EX-LN3', niveau:'Difficile', titre:'Étude complète de x²·ln x',
+              enonce:'Étudier f(x)=x²·ln x sur ]0;+∞[.',
+              correction:"Domaine ]0;+∞[. lim(x→0⁺)f=0, lim(x→+∞)f=+∞.\nf'(x)=2x·ln x+x=x(2ln x+1).\nf'=0 : ln x=−1/2 → x=1/√e.\nMinimum f(1/√e)=−1/(2e)≈−0.184." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -864,7 +1025,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-exp-etude', titre:'8.2 Étude de fonctions avec exp',
+      notions:['Fonctions eᵘ avec u polynôme','Modèles de croissance/décroissance','Équations avec exp et ln','Demi-vie'],
+      blocs:[
+        {
+          notion:"📉 Applications de l'exponentielle",
+          theoremes:[
+            { id:'F-EX2', type:'formule', nom:'Modèles de croissance/décroissance',
+              enonce:"Croissance exponentielle :\ny(t) = y₀·e^(rt)  (r>0)\n\nDécroissance exponentielle :\ny(t) = y₀·e^(-λt)  (λ>0)\nDemi-vie T₁/₂ : y(T₁/₂)=y₀/2 → T₁/₂=ln2/λ\n\nRefroidissement de Newton :\nT(t)=T_env+(T₀−T_env)·e^(-kt)" },
+            { id:'M-EX1', type:'methode', nom:'Résoudre e^u = k',
+              enonce:"e^(f(x)) = e^(g(x)) ↔ f(x) = g(x)  (exp injective)\ne^(f(x)) = k  (k>0) ↔ f(x) = ln k\ne^(f(x)) = k  (k≤0) : impossible (exp toujours >0)\n\nInéquation e^(f(x)) ≤ e^(g(x)) ↔ f(x) ≤ g(x)  (exp croissante)" },
+          ],
+          exercices:[
+            { id:'EX-EX3', niveau:'Intermédiaire', titre:'Décroissance radioactive',
+              enonce:"Le carbone 14 a une demi-vie de 5730 ans. Un os contient 60% du C14 initial. Quel est son âge?",
+              correction:"T₁/₂=5730 → λ=ln2/5730.\nN(t)=N₀e^(-λt)=0.6N₀.\nλt=ln(5/3).\nt=5730×ln(5/3)/ln2≈4227 ans." },
+            { id:'EX-EX4', niveau:'Difficile', titre:'Étude de f(x)=eˣ/(1+eˣ)',
+              enonce:"Étudier f(x)=eˣ/(1+eˣ) sur ℝ. Asymptotes, variations, point d'inflexion.",
+              correction:"lim(x→-∞)f=0 (AH y=0) ; lim(x→+∞)f=1 (AH y=1).\nf'(x)=eˣ/(1+eˣ)²>0 → croissante sur ℝ.\nf''(x)=eˣ(1−eˣ)/(1+eˣ)³=0 en x=0 (inflexion)." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -915,7 +1099,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-changement-var', titre:'9.3 Changement de variable et intégrales généralisées',
+      notions:['Changement de variable x=φ(t)','Primitives de fonctions trigonométriques','Intégrales impropres','Convergence/divergence'],
+      blocs:[
+        {
+          notion:'🔄 Changement de variable',
+          theoremes:[
+            { id:'F-CV1', type:'formule', nom:'Changement de variable',
+              enonce:"Si x = φ(t) est C¹ et bijective :\n∫_{φ(α)}^{φ(β)} f(x)dx = ∫_α^β f(φ(t))·φ'(t)dt\n\nMéthode :\n1. Choisir x=φ(t) et calculer dx=φ'(t)dt\n2. Changer les bornes : a=φ(α), b=φ(β)\n3. Intégrer la nouvelle expression en t\n\nExemples classiques :\n• ∫√(a²−x²)dx → x=a·sint\n• ∫1/(a²+x²)dx → x=a·tant → arctan",
+              remarque:"Toujours bien changer les bornes quand on change la variable !" },
+            { id:'F-CV2', type:'formule', nom:'Intégrales généralisées',
+              enonce:"Intégrale impropre en +∞ :\n∫_a^{+∞} f(x)dx = lim_{M→+∞} ∫_a^M f(x)dx\n\nConvergence des intégrales de Riemann :\n∫_1^{+∞} 1/xᵅ dx converge ↔ α>1\n∫_0^1 1/xᵅ dx converge ↔ α<1" },
+          ],
+          exercices:[
+            { id:'EX-CV1', niveau:'Intermédiaire', titre:'Changement de variable trigonométrique',
+              enonce:"Calculer ∫₀^1 √(1−x²)dx par x=sin(t).",
+              correction:"x=sint, dx=cost dt. Bornes : t=0→π/2.\n∫₀^{π/2} cos²t dt = (1/2)∫₀^{π/2}(1+cos2t)dt = π/4.\n(Aire d'un quart de disque unité.)" },
+            { id:'EX-CV2', niveau:'Difficile', titre:'Intégrale impropre',
+              enonce:"Étudier la convergence de ∫_1^{+∞} e^(-x)/x dx.",
+              correction:"0 < e^(-x)/x ≤ e^(-x) pour x≥1.\n∫_1^{+∞} e^(-x)dx = e^(-1) converge.\nDonc par comparaison : ∫_1^{+∞} e^(-x)/x dx converge." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -965,7 +1173,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-eq-avec-second-membre', titre:'10.3 Équations avec second membre',
+      notions:["y'=ay+f(x) — variation de la constante","y''+ay'+by=f(x) — solution particulière",'Second membre polynôme/exponentielle','Superposition des solutions'],
+      blocs:[
+        {
+          notion:'⚡ Équations avec second membre',
+          theoremes:[
+            { id:'T-ED4', type:'thm', nom:"Structure de l'ensemble des solutions",
+              enonce:"Pour L(y)=f(x) (équation différentielle linéaire) :\n\nSolution générale = Solution homogène + Solution particulière\ny = yₕ + yₚ\n\nyₕ : solution générale de L(y)=0 (avec C libre)\nyₚ : une solution particulière de L(y)=f(x)\n\nMéthode de variation de la constante (ordre 1) :\ny'=ay+f(x) → yₕ=Ceᵃˣ → poser C=C(x)\nC'(x)eᵃˣ=f(x) → C'(x)=f(x)e⁻ᵃˣ" },
+            { id:'M-ED1', type:'methode', nom:'Choix de la solution particulière',
+              enonce:"f(x) = Pₙ(x) (degré n) → yₚ = Qₙ(x)\nf(x) = Pₙ(x)·eᵅˣ → yₚ = Qₙ(x)·eᵅˣ\n(Si α est racine simple : yₚ=x·Qₙ(x)eᵅˣ)\nf(x) = A·cos(βx)+B·sin(βx) → yₚ = a·cos(βx)+b·sin(βx)\n(Si iβ est racine : yₚ = x(a·cos(βx)+b·sin(βx)))" },
+          ],
+          exercices:[
+            { id:'EX-ED3', niveau:'Intermédiaire', titre:'Second membre exponentiel',
+              enonce:"Résoudre y'−2y=3e^(2x).",
+              correction:"Éq. homogène → yₕ=Ce^(2x).\nα=2 est racine → yₚ=axe^(2x).\nyₚ'=ae^(2x)+2axe^(2x).\nyₚ'−2yₚ=ae^(2x)=3e^(2x) → a=3.\ny=(C+3x)e^(2x)." },
+            { id:'EX-ED4', niveau:'Difficile', titre:'Équation du 2ème ordre avec second membre',
+              enonce:"Résoudre y''−y=eˣ avec y(0)=1, y'(0)=0.",
+              correction:"Éq. caract. : r²−1=0 → r=±1.\nyₕ=C₁eˣ+C₂e^(−x).\nα=1 est racine simple → yₚ=axeˣ.\nyₚ''−yₚ=2aeˣ=eˣ → a=1/2.\ny=C₁eˣ+C₂e^(−x)+(x/2)eˣ.\ny(0)=C₁+C₂=1.\ny'(0)=C₁−C₂+1/2=0 → C₁=1/4, C₂=3/4." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1062,7 +1293,27 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-tangentes-coniques', titre:'13.3 Tangentes et propriétés optiques',
+      notions:['Tangente en un point de la conique','Propriété de réflexion de l\'ellipse et parabole','Excentricité et foyer-directrice'],
+      blocs:[
+        {
+          notion:'🔮 Propriétés optiques et tangentes',
+          theoremes:[
+            { id:'T-CO1', type:'thm', nom:'Tangentes et propriétés de réflexion',
+              enonce:"ELLIPSE — tangente en M₀(x₀,y₀) :\nx·x₀/a² + y·y₀/b² = 1\n\nPropriété optique : tout rayon issu de F₁ se réfléchit en M vers F₂.\nApplication : miroirs elliptiques, lithotriteur médical.\n\nPARABOLE — tangente en M₀(x₀,y₀) :\ny·y₀ = p(x+x₀)\n\nPropriété optique : tout rayon parallèle à l'axe est réfléchi vers le foyer F.\nApplication : antennes paraboliques, phares, fours solaires." },
+            { id:'F-CO2', type:'formule', nom:'Foyer-directrice et excentricité',
+              enonce:"Definition unifiée : la conique est le lieu des points M tels que\nMF / Md = e  (e = excentricité, d = distance à la directrice)\n\n• e = 1 → parabole\n• e < 1 → ellipse\n• e > 1 → hyperbole\n\nEllipse x²/a² + y²/b² = 1 : directrices x = ±a²/c" },
+          ],
+          exercices:[
+            { id:'EX-CO3', niveau:'Intermédiaire', titre:'Excentricité et classification',
+              enonce:"Une conique a pour foyer F(3;0) et directrice x=4/3. Identifier et donner son équation.",
+              correction:"e=MF/Md. Pour le sommet x=a : a·e=3−a/e... Essayons e=c/a avec c=3.\nSi e<1 → ellipse. e=c/a < 1 → a>3.\nEquation directrice x=a²/c=a²/3=4/3 → a²=4 → a=2.\nc=3? Non, c²=a²−b² et e=c/a.\nAvec x=a/e=4/3 : a/(c/a)=a²/c=4/3 et c=3 → a²=4 → a=2 → c²=4−b²=9? Non.\nc=a·e, directrice x=a/e=4/3. Essayons e=3/2>1 (hyperbole) : a/(3/2)=4/3 → a=2, c=ae=3, b²=c²-a²=5.\nHyperbole x²/4−y²/5=1." },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1114,7 +1365,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-esperance-variance', titre:'14.3 Espérance, variance et inégalités',
+      notions:['E(aX+b)=aE(X)+b','V(X)=E(X²)−[E(X)]²','Inégalité de Bienaymé-Tchébychev','Loi des grands nombres'],
+      blocs:[
+        {
+          notion:'📊 Moments et inégalités probabilistes',
+          theoremes:[
+            { id:'T-PD3', type:'thm', nom:"Propriétés de l'espérance et variance",
+              enonce:"E(aX+b) = aE(X)+b\nE(X+Y) = E(X)+E(Y)  (toujours)\nE(XY) = E(X)E(Y) si X et Y indépendants\n\nV(X) = E(X²)−[E(X)]² = E[(X−μ)²]\nV(aX+b) = a²V(X)\nV(X+Y) = V(X)+V(Y) si X et Y indépendants\n\nÉcart-type σ(X) = √V(X)" },
+            { id:'T-PD4', type:'thm', nom:'Inégalités et loi des grands nombres',
+              enonce:"Inégalité de Markov (X≥0) :\nP(X≥a) ≤ E(X)/a\n\nInégalité de Bienaymé-Tchébychev :\nP(|X−μ|≥kσ) ≤ 1/k²\n\nApplication : k=2 → P(|X−μ|≥2σ) ≤ 1/4 (75% des valeurs dans [μ−2σ;μ+2σ])\n\nLoi des grands nombres :\nX̄ₙ = (X₁+...+Xₙ)/n → E(X) en probabilité\nP(|X̄ₙ−μ|≥ε) ≤ σ²/(nε²) → 0" },
+          ],
+          exercices:[
+            { id:'EX-PD3', niveau:'Intermédiaire', titre:'Calcul espérance et variance',
+              enonce:'X : prend 1 avec prob 0.4, 2 avec prob 0.3, 3 avec prob 0.3. Calculer E(X), V(X), σ(X).',
+              correction:'E(X)=1×0.4+2×0.3+3×0.3=1.9.\nE(X²)=1×0.4+4×0.3+9×0.3=4.3.\nV(X)=4.3−3.61=0.69.\nσ(X)=√0.69≈0.83.' },
+            { id:'EX-PD4', niveau:'Difficile', titre:'Tchébychev appliqué',
+              enonce:'X~B(100,0.5). Encadrer P(40≤X≤60) par Tchébychev.',
+              correction:'E(X)=50, V(X)=25, σ=5.\nP(|X−50|≥10)=P(|X−50|≥2σ)≤1/4.\nDonc P(40≤X≤60)≥3/4=75%.' },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1164,7 +1438,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-tcl', titre:'15.3 Théorème Central Limite et estimation',
+      notions:['TCL : √n(X̄-μ)/σ → N(0,1)','Intervalle de confiance de μ','Estimation ponctuelle p̂','IC pour proportion'],
+      blocs:[
+        {
+          notion:'📐 TCL et intervalles de confiance',
+          theoremes:[
+            { id:'T-PC3', type:'thm', nom:'Théorème Central Limite',
+              enonce:"X₁,...,Xₙ i.i.d. avec E(Xᵢ)=μ et V(Xᵢ)=σ² finis.\n\nTCL : pour n grand (n≥30),\n√n(X̄ₙ−μ)/σ ~ N(0,1) approximativement\n\nIntervalle de confiance de niveau (1−α) pour μ :\nIC = [X̄ₙ − z_{α/2}·σ/√n ;  X̄ₙ + z_{α/2}·σ/√n]\n\nz_{0.025} = 1.96  (IC à 95%)\nz_{0.005} = 2.576 (IC à 99%)",
+              remarque:"Si σ est inconnue, on remplace σ par l'écart-type empirique S." },
+            { id:'F-PC3', type:'formule', nom:'Estimation de proportion',
+              enonce:"Sur n observations, on observe k succès.\nEstimateur ponctuel : p̂ = k/n\n\nIC de niveau 95% pour p (n≥30) :\nIC = [p̂ − 1.96√(p̂(1−p̂)/n) ; p̂ + 1.96√(p̂(1−p̂)/n)]\n\nTaille minimale : si p inconnue → n ≥ (1/ε)²/4" },
+          ],
+          exercices:[
+            { id:'EX-PC3', niveau:'Intermédiaire', titre:'Intervalle de confiance',
+              enonce:'Sur 400 élèves sondés, 220 ont réussi. Donner un IC à 95% pour p.',
+              correction:'p̂=0.55. IC=0.55±1.96×√(0.55×0.45/400)=0.55±0.0487.\nIC≈[0.501 ; 0.599].' },
+          ]
+        },
+      ]
+    }],
 },
 
 // ─────────────────────────────────────────────────────────────────────
@@ -1216,7 +1511,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
-  ],
+  ,
+    {
+      id:'sc-nombres-premiers', titre:'2.3 Nombres premiers et décomposition',
+      notions:['Nombre premier','Infinité des premiers (Euclide)','Décomposition en facteurs premiers','PPCM(a,b)=ab/PGCD(a,b)'],
+      blocs:[
+        {
+          notion:'🔑 Nombres premiers et décomposition',
+          theoremes:[
+            { id:'T-AR3', type:'thm', nom:"Théorème fondamental de l'arithmétique",
+              enonce:"Tout entier n≥2 s'écrit de façon unique (à l'ordre près) comme produit de nombres premiers :\nn = p₁^α₁ · p₂^α₂ · ... · pₖ^αₖ\n\nExemple : 360 = 2³ × 3² × 5\n\nInfinité des premiers (Euclide) :\nSi p₁,...,pₙ sont tous les premiers → considérer p₁p₂···pₙ+1\n(nouveau premier ou diviseur premier non listé → contradiction).",
+              remarque:"Les nombres premiers sont la brique fondamentale de l'arithmétique." },
+            { id:'F-AR2', type:'formule', nom:'PGCD, PPCM et applications',
+              enonce:"Si a = ∏ pᵢ^αᵢ et b = ∏ pᵢ^βᵢ :\nPGCD(a,b) = ∏ pᵢ^min(αᵢ,βᵢ)\nPPCM(a,b) = ∏ pᵢ^max(αᵢ,βᵢ)\n\nRelation fondamentale : PGCD(a,b) × PPCM(a,b) = |a × b|\n\nNombre de diviseurs de n=p₁^α₁·...·pₖ^αₖ :\n(α₁+1)(α₂+1)···(αₖ+1)" },
+          ],
+          exercices:[
+            { id:'EX-AR3', niveau:'Facile', titre:'Décomposition et PPCM',
+              enonce:'Décomposer 504 et 360. Calculer PGCD et PPCM.',
+              correction:'504=2³×3²×7 ; 360=2³×3²×5.\nPGCD=2³×3²=72.\nPPCM=2³×3²×5×7=2520.' },
+            { id:'EX-AR4', niveau:'Intermédiaire', titre:'Nombre de diviseurs',
+              enonce:'Combien n=1800 a-t-il de diviseurs ?',
+              correction:'1800=2³×3²×5².\nNombre de diviseurs=(3+1)(2+1)(2+1)=36.' },
+          ]
+        },
+      ]
+    }],
 },
 
 } // fin ALL_CHAPTERS
@@ -1254,7 +1573,7 @@ function NiveauBadge({ niveau }: { niveau: string }) {
 export default function MathsSlugPage() {
   const params = useParams()
   const slug = (params?.slug as string) || 'second-degre'
-  const chapter = ALL_CHAPTERS[slug]
+  const chapter = ALL_CHAPTERS[slug] as any
   const [openEx, setOpenEx] = useState<string|null>(null)
   const [openSc, setOpenSc] = useState<string|null>(null)
 
@@ -1334,7 +1653,7 @@ export default function MathsSlugPage() {
               </div>
 
               {/* SOUS-CHAPITRES */}
-              {chapter.souschapitres.map((sc, scIdx) => (
+              {chapter.souschapitres.map((sc: any, scIdx: number) => (
                 <div key={sc.id} style={{ marginBottom:28,
                   background:`${secColor}05`, border:`1px solid ${secColor}20`,
                   borderRadius:18, overflow:'hidden' }}>
@@ -1355,7 +1674,7 @@ export default function MathsSlugPage() {
                         <h2 style={{ fontSize:16, fontWeight:800, color:'var(--text)', margin:0 }}>{sc.titre}</h2>
                       </div>
                       <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-                        {sc.notions.map(n => (
+                        {sc.notions.map((n: string) => (
                           <span key={n} style={{ fontSize:10, padding:'2px 9px', borderRadius:12,
                             background:`${secColor}12`, color:'var(--text2)',
                             border:`1px solid ${secColor}18` }}>{n}</span>
@@ -1370,7 +1689,7 @@ export default function MathsSlugPage() {
                   {/* Contenu blocs */}
                   {(openSc===sc.id || scIdx===0) && (
                     <div style={{ padding:'18px 22px', display:'flex', flexDirection:'column', gap:28 }}>
-                      {sc.blocs.map(bloc => (
+                      {sc.blocs.map((bloc: any) => (
                         <div key={bloc.notion}>
 
                           {/* Titre notion */}
@@ -1381,7 +1700,7 @@ export default function MathsSlugPage() {
 
                           {/* Théorèmes / Définitions / Formules */}
                           <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
-                            {bloc.theoremes.map(t => {
+                            {bloc.theoremes.map((t: any) => {
                               const color = C[t.type as keyof typeof C] || C.def
                               return (
                                 <div key={t.id} style={{ borderLeft:`3px solid ${color}`,
@@ -1418,7 +1737,7 @@ export default function MathsSlugPage() {
                                 Exercices
                               </div>
                               <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-                                {bloc.exercices.map(ex => (
+                                {bloc.exercices.map((ex: any) => (
                                   <div key={ex.id} style={{ background:'var(--surface)',
                                     border:'1px solid var(--border)', borderRadius:12, overflow:'hidden' }}>
                                     <div style={{ padding:'12px 16px' }}>

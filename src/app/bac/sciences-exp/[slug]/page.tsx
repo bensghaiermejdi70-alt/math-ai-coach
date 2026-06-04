@@ -62,7 +62,7 @@ type SC   = { id:string; titre:string; notions:string[]; blocs:Bloc[] }
 type Chap = { id:string; titre:string; badge:string; color:string; emoji:string; desc:string; souschapitres:SC[] }
 
 // ══════════════════════════════════════════════════════════════════════
-// DONNÉES — 9 CHAPITRES COMPLETS
+// DONNÉES — 17 CHAPITRES COMPLETS
 // ══════════════════════════════════════════════════════════════════════
 const ALL_CHAPTERS: Record<string,Chap> = {
 
@@ -204,7 +204,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
               enonce:"(c)' = 0  (constante)\n(xⁿ)' = n·xⁿ⁻¹\n(√x)' = 1/(2√x)\n(1/x)' = −1/x²\n(eˣ)' = eˣ\n(ln x)' = 1/x  (x>0)\n(sin x)' = cos x\n(cos x)' = −sin x\n(tan x)' = 1/cos²x = 1+tan²x" },
             { id:'F-DE2', type:'formule', nom:'Règles de dérivation',
               enonce:"(u+v)' = u'+v'\n(ku)' = k·u'  (k constante)\n(uv)' = u'v + uv'\n(u/v)' = (u'v − uv')/v²\n(f∘g)' = (f'∘g)·g'  ← règle de la chaîne\n\nFormules chaîne (très utilisées en Sc.Exp.) :\n(uⁿ)' = n·u'·uⁿ⁻¹\n(√u)' = u'/(2√u)\n(eᵘ)' = u'·eᵘ\n(ln u)' = u'/u",
-              remarque:"En Sc.Exp. pas de complexes ni de Moivre, mais les composées eˣ, ln x, √ sont très fréquentes." },
+              remarque:"En Sc.Exp., les dérivées de composées (eᵘ)', (ln u)', (√u)' sont les plus fréquentes au Bac : maîtriser la règle de la chaîne est essentiel." },
           ],
           exercices:[
             { id:'EX-DE1', niveau:'Facile', titre:'Dérivée composée',
@@ -284,7 +284,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
               enonce:"DEGRÉ 1 : f(x)=ax+b → droite, toujours monotone\nDEGRÉ 2 : f(x)=ax²+bx+c → parabole, vertex en x=−b/2a\nDEGRÉ 3 : f(x)=ax³+bx²+cx+d → 0, 1 ou 2 extrema\n\nBICARRÉE : f(x)=ax⁴+bx²+c\nPoser X=x² → g(X)=aX²+bX+c (étudier pour X≥0)\nf paire → symétrie par rapport à Oy\n\nFONCTIONS RATIONNELLES :\nType 1 : (ax+b)/(cx+d) → AV x=−d/c, AH y=a/c\nType 2 : (ax²+bx+c)/(dx+e) → AV, AO (degré num = dég dénom +1)\nType 3 : (ax²+bx+c)/(dx²+ex+f) → AH y=a/d" },
             { id:'D-EF2', type:'def', nom:'Fonctions irrationnelles et circulaires',
               enonce:"IRRATIONNELLES :\n√(ax+b) : D=[−b/a;+∞[ si a>0. Dérivée : a/(2√(ax+b))\n√(ax²+bx+c) : D={x : ax²+bx+c≥0}. Dérivée : (2ax+b)/(2√(...))\n\nCirculaires (rappels) :\nsin x : D=ℝ, Im=[−1;1], T=2π\ncos x : D=ℝ, Im=[−1;1], T=2π, paire\ntan x : D=ℝ\\{π/2+kπ}, T=π, impaire\n\nf(x)=sin(ax+b) : T=2π/a, même propriétés\n\nPériodicité : étudier sur une période puis déduire",
-              remarque:"En Sc.Exp. : pas de complexes, mais eˣ et ln x peuvent apparaître dans les études." },
+              remarque:"En Sc.Exp., les fonctions eˣ et ln x apparaissent très fréquemment dans les études complètes (ex : f(x)=x·eˣ, f(x)=ln x / x)." },
           ],
           exercices:[
             { id:'EX-EF2', niveau:'Facile', titre:'Bicarrée',
@@ -363,7 +363,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 },
 
 // ─────────────────────────────────────────────────────────────────────
-// CH 06 — VECTEURS DE L'ESPACE
+// CH 12 — VECTEURS DE L'ESPACE
 // ─────────────────────────────────────────────────────────────────────
 'vecteurs-espace': {
   id:'vecteurs-espace', emoji:'🧊', badge:'Géométrie', color:'#4f6ef7',
@@ -416,7 +416,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 },
 
 // ─────────────────────────────────────────────────────────────────────
-// CH 07 — DROITES ET PLANS DANS L'ESPACE
+// CH 13 — DROITES ET PLANS DANS L'ESPACE
 // ─────────────────────────────────────────────────────────────────────
 'droites-plans-espace': {
   id:'droites-plans-espace', emoji:'📐', badge:'Géométrie', color:'#4f6ef7',
@@ -477,7 +477,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 },
 
 // ─────────────────────────────────────────────────────────────────────
-// CH 08 — DÉNOMBREMENT
+// CH 14 — DÉNOMBREMENT
 // ─────────────────────────────────────────────────────────────────────
 'denombrement': {
   id:'denombrement', emoji:'🔢', badge:'Probabilités', color:'#f5c842',
@@ -537,7 +537,7 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 },
 
 // ─────────────────────────────────────────────────────────────────────
-// CH 09 — PROBABILITÉS
+// CH 15 — PROBABILITÉS
 // ─────────────────────────────────────────────────────────────────────
 'probabilites': {
   id:'probabilites', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
@@ -603,24 +603,57 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'fonctions-reciproques': {
   id:'fonctions-reciproques', emoji:'🔄', badge:'Analyse', color:'#06d6a0',
   titre:'Fonctions Réciproques',
-  desc:"Bijection, fonction réciproque, domaine, représentation graphique, dérivée de la réciproque.",
+  desc:"Bijection d'un intervalle sur un intervalle, fonction réciproque f⁻¹, domaine et image, symétrie par rapport à y=x, dérivée de la réciproque, fonction racine n-ième et puissances rationnelles.",
   souschapitres:[
     {
-      id:'sc-bij', titre:'6.1 Bijection et réciproque',
-      notions:['Fonction bijective','Fonction réciproque f⁻¹','Symétrie par rapport à y=x',"Dérivée de la réciproque"],
+      id:'sc-bij', titre:'6.1 Bijection et fonction réciproque',
+      notions:['Bijection : continue + strictement monotone','Réciproque f⁻¹ : J→I','Symétrie des courbes par rapport à y=x',"Dérivée de la réciproque (f⁻¹)'=1/f'∘f⁻¹"],
       blocs:[
         {
           notion:'📐 Bijection et réciproque',
           theoremes:[
-            { id:'D-FR1', type:'def', nom:'Fonction réciproque',
-              enonce:"f : I → J bijective admet une réciproque f⁻¹ : J → I telle que :\nf⁻¹(f(x))=x pour x∈I  et  f(f⁻¹(y))=y pour y∈J\n\nCourbe de f⁻¹ = symétrique de celle de f par rapport à la droite y=x." },
-            { id:'T-FR1', type:'thm', nom:"Dérivée de la réciproque",
-              enonce:"Si f est bijective et dérivable avec f'(x)≠0 :\n(f⁻¹)'(y) = 1/f'(f⁻¹(y))\n\nOu : si y=f(x), alors (f⁻¹)'(y) = 1/f'(x)" },
+            { id:'T-FR0', type:'thm', nom:'Théorème de la bijection',
+              enonce:"Si f est continue et strictement monotone sur un intervalle I :\n→ f réalise une bijection de I sur J=f(I)\n→ J est un intervalle de mêmes bornes que f(I)\n\nDans ce cas :\n• f⁻¹ est aussi continue et strictement monotone, de même sens que f\n• Pour tout y∈J, l'équation f(x)=y admet une solution unique x∈I\n\nDétermination de J selon le sens :\nSi f croissante sur [a,b] : J=[f(a),f(b)]\nSi f décroissante sur [a,b] : J=[f(b),f(a)]" },
+            { id:'D-FR1', type:'def', nom:'Fonction réciproque f⁻¹',
+              enonce:"f : I → J bijective admet une réciproque f⁻¹ : J → I telle que :\nf⁻¹(f(x))=x pour tout x∈I\nf(f⁻¹(y))=y pour tout y∈J\n\nÉquivalence fondamentale :\ny=f(x) ⟺ x=f⁻¹(y)  (x∈I, y∈J)\n\nGRAPHIQUE :\nLa courbe de f⁻¹ est la symétrique de C_f par rapport à la droite d'équation y=x (première bissectrice).\n\nMéthode pour expliciter f⁻¹ :\nRésoudre y=f(x) d'inconnue x, puis échanger x et y.",
+              remarque:"D(f⁻¹)=f(I) et f⁻¹(J)=I : le domaine de f⁻¹ est l'ensemble image de f." },
+            { id:'T-FR1', type:'thm', nom:'Dérivée de la fonction réciproque',
+              enonce:"Si f est bijective, dérivable en x₀=f⁻¹(y₀) avec f'(x₀)≠0 :\nf⁻¹ est dérivable en y₀ et\n(f⁻¹)'(y₀) = 1/f'(f⁻¹(y₀)) = 1/f'(x₀)\n\nFormulation pratique : si y=f(x), alors (f⁻¹)'(y)=1/f'(x).\n\nInterprétation géométrique :\nLes tangentes en M(x₀,y₀) à C_f et en M'(y₀,x₀) à C_(f⁻¹) ont des pentes inverses (symétrie /y=x)." },
           ],
           exercices:[
-            { id:'EX-FR1', niveau:'Moyen', titre:'Réciproque et dérivée',
+            { id:'EX-FR1', niveau:'Facile', titre:'Bijection et image',
+              enonce:"f(x)=2x−3 sur ℝ. Montrer que f est bijective et déterminer f⁻¹.",
+              correction:"f'(x)=2>0 → f strictement croissante et continue → bijective de ℝ sur ℝ.\ny=2x−3 → x=(y+3)/2.\nDonc f⁻¹(y)=(y+3)/2, soit f⁻¹(x)=(x+3)/2." },
+            { id:'EX-FR2', niveau:'Intermédiaire', titre:'Réciproque et dérivée',
               enonce:"f(x)=x³+x sur ℝ. Montrer que f est bijective. Calculer (f⁻¹)'(2).",
-              correction:"f'(x)=3x²+1≥1>0 → bijective. f(1)=2 → f⁻¹(2)=1. (f⁻¹)'(2)=1/f'(1)=1/4." },
+              correction:"f'(x)=3x²+1≥1>0 → f strictement croissante, continue → bijective de ℝ sur ℝ.\nf(1)=1+1=2 → f⁻¹(2)=1.\n(f⁻¹)'(2)=1/f'(1)=1/(3+1)=1/4." },
+            { id:'EX-FR3', niveau:'Difficile', titre:'Restriction et réciproque',
+              enonce:"f(x)=x²−4x+1 sur [2;+∞[. Montrer que f admet une réciproque et expliciter f⁻¹.",
+              correction:"f'(x)=2x−4≥0 sur [2;+∞[ → f croissante, continue → bijective de [2;+∞[ sur [f(2);+∞[=[−3;+∞[.\ny=x²−4x+1 → x²−4x+(1−y)=0. Δ=16−4(1−y)=12+4y.\nx=(4+√(12+4y))/2=2+√(3+y) (racine ≥2).\nf⁻¹(x)=2+√(x+3), définie sur [−3;+∞[." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-racine-nieme', titre:'6.2 Fonction racine n-ième et puissances',
+      notions:['x↦xⁿ bijective sur [0;+∞[','Racine n-ième : ⁿ√x = x^(1/n)','Dérivée de ⁿ√x','Puissances à exposant rationnel x^(p/q)'],
+      blocs:[
+        {
+          notion:'√ Racine n-ième',
+          theoremes:[
+            { id:'D-FR2', type:'def', nom:'Fonction racine n-ième',
+              enonce:"Pour n∈ℕ*, x↦xⁿ est continue strictement croissante sur [0;+∞[ :\n→ elle réalise une bijection de [0;+∞[ sur [0;+∞[\n\nSa réciproque est la fonction racine n-ième :\nⁿ√ : [0;+∞[ → [0;+∞[ , notée ⁿ√x ou x^(1/n)\n\nDéfinition : y=ⁿ√x ⟺ yⁿ=x  (x≥0, y≥0)\n\nCas particuliers :\n²√x = √x  (racine carrée)\n³√x  (racine cubique, définie sur ℝ par prolongement impair)\n\nPropriétés : ⁿ√(ab)=ⁿ√a·ⁿ√b ; ⁿ√(aⁿ)=a (a≥0)" },
+            { id:'F-FR1', type:'formule', nom:'Dérivée et puissances rationnelles',
+              enonce:"Dérivée de la racine n-ième (x>0) :\n(ⁿ√x)' = (1/n)·x^(1/n − 1) = 1/(n·ⁿ√(x^(n−1)))\n\nVérification par la formule de la réciproque :\nf(x)=xⁿ, f'(x)=n·xⁿ⁻¹ → (f⁻¹)'(y)=1/(n·xⁿ⁻¹)\n\nPUISSANCES À EXPOSANT RATIONNEL (a>0) :\na^(p/q) = (aᵖ)^(1/q) = racine q-ième de aᵖ\n\nRègles (a,b>0, r,s∈ℚ) :\naʳ·aˢ=aʳ⁺ˢ ; (aʳ)ˢ=aʳˢ ; (ab)ʳ=aʳbʳ ; a⁻ʳ=1/aʳ",
+              remarque:"a^(p/q)=e^((p/q)ln a) : les puissances réelles se définissent via exp et ln." },
+          ],
+          exercices:[
+            { id:'EX-FR4', niveau:'Facile', titre:'Calcul de racine n-ième',
+              enonce:"Simplifier ³√27 , ⁴√16 et 8^(2/3).",
+              correction:"³√27=3 (car 3³=27).\n⁴√16=2 (car 2⁴=16).\n8^(2/3)=(³√8)²=2²=4." },
+            { id:'EX-FR5', niveau:'Intermédiaire', titre:'Dérivée',
+              enonce:"Dériver g(x)=³√x sur ]0;+∞[.",
+              correction:"g(x)=x^(1/3).\ng'(x)=(1/3)x^(1/3−1)=(1/3)x^(−2/3)=1/(3·³√(x²))." },
           ],
         },
       ],
@@ -634,27 +667,58 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'logarithme': {
   id:'logarithme', emoji:'📊', badge:'Analyse', color:'#06d6a0',
   titre:'Logarithme Népérien',
-  desc:"ln x, propriétés algébriques, dérivée (ln u)'=u'/u, limites, équations logarithmiques.",
+  desc:"Fonction ln, propriétés algébriques, équations et inéquations logarithmiques, dérivée (ln u)'=u'/u, limites et croissances comparées, étude de fonctions avec ln, logarithme décimal.",
   souschapitres:[
     {
-      id:'sc-ln', titre:'7.1 Définition et propriétés',
-      notions:['Définition de ln','Propriétés algébriques',"Dérivée (ln u)'=u'/u",'Limites en 0⁺ et +∞'],
+      id:'sc-ln-def', titre:'7.1 Définition et propriétés algébriques',
+      notions:['ln : ]0;+∞[ → ℝ, (ln x)′=1/x','ln(ab)=ln a+ln b, ln(aⁿ)=n ln a','Équations et inéquations avec ln','Nombre e : ln e = 1'],
       blocs:[
         {
-          notion:'📐 Logarithme népérien',
+          notion:'📐 Logarithme népérien — propriétés',
           theoremes:[
-            { id:'D-LN1', type:'def', nom:'Logarithme népérien',
-              enonce:"ln : ]0,+∞[ → ℝ est l'unique fonction telle que :\n• ln 1 = 0\n• (ln x)' = 1/x\n• ln est strictement croissante\n\nPropriétés algébriques (a,b>0, n∈ℤ) :\nln(ab) = ln a + ln b\nln(a/b) = ln a − ln b\nln(aⁿ) = n·ln a\nln(√a) = (1/2)ln a\nln e = 1  (e ≈ 2,718)" },
-            { id:'F-LN1', type:'formule', nom:'Dérivée et limites',
-              enonce:"Dérivée : (ln u)' = u'/u  (u>0)\n\nLimites :\nlim(x→0⁺) ln x = −∞\nlim(x→+∞) ln x = +∞\n\nCroissances comparées :\nlim(x→0⁺) x·ln x = 0\nlim(x→+∞) (ln x)/x = 0" },
+            { id:'D-LN1', type:'def', nom:'Définition du logarithme népérien',
+              enonce:"ln : ]0;+∞[ → ℝ est l'unique primitive de x↦1/x qui s'annule en 1 :\n• ln 1 = 0\n• (ln x)' = 1/x  (x>0)\n• ln strictement croissante sur ]0;+∞[\n\nNombre e : unique réel tel que ln e = 1  (e ≈ 2,718)\n\nPROPRIÉTÉS ALGÉBRIQUES (a,b>0, n∈ℤ) :\nln(ab) = ln a + ln b\nln(a/b) = ln a − ln b\nln(1/b) = −ln b\nln(aⁿ) = n·ln a\nln(√a) = (1/2)·ln a",
+              remarque:"Conséquence de la stricte croissance : ln a = ln b ⟺ a=b  et  ln a < ln b ⟺ a < b (a,b>0)." },
+            { id:'M-LN1', type:'methode', nom:'Équations et inéquations logarithmiques',
+              enonce:"ÉTAPE 1 — Domaine : tous les ln g(x) exigent g(x)>0.\nDéterminer l'ensemble de validité AVANT de résoudre.\n\nÉTAPE 2 — Réduire à une seule expression ln à l'aide des propriétés.\n\nÉTAPE 3 — Utiliser l'injectivité / la croissance :\nln A = ln B ⟺ A=B (avec A,B>0)\nln A ≤ ln B ⟺ A≤B (avec A,B>0)\nln A = k ⟺ A = eᵏ\n\nÉTAPE 4 — Garder uniquement les solutions du domaine." },
           ],
           exercices:[
-            { id:'EX-LN1', niveau:'Facile', titre:'Dérivée avec ln',
+            { id:'EX-LN1', niveau:'Facile', titre:'Simplification',
+              enonce:"Simplifier A=ln 8 − ln 2 + ln(1/4).",
+              correction:"A=ln(8/2)+ln(1/4)=ln 4 + ln(1/4)=ln(4×1/4)=ln 1=0." },
+            { id:'EX-LN2', niveau:'Intermédiaire', titre:'Équation logarithmique',
+              enonce:"Résoudre ln(x+1)+ln(x−1)=ln 3.",
+              correction:"Domaine : x+1>0 et x−1>0 → x>1.\nln((x+1)(x−1))=ln 3 → x²−1=3 → x²=4 → x=2 ou x=−2.\nSeul x=2 vérifie x>1. S={2}." },
+            { id:'EX-LN3', niveau:'Difficile', titre:'Inéquation',
+              enonce:"Résoudre ln(2x−1) < ln(x+3).",
+              correction:"Domaine : 2x−1>0 et x+3>0 → x>1/2.\nPar croissance : 2x−1 < x+3 → x < 4.\nIntersection avec x>1/2 : S=]1/2 ; 4[." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ln-etude', titre:'7.2 Dérivée, limites et étude',
+      notions:["Dérivée (ln u)'=u'/u",'Limites en 0⁺ et +∞','Croissances comparées (ln x)/x → 0','Étude de fonctions avec ln'],
+      blocs:[
+        {
+          notion:'∞ Limites et étude de fonctions',
+          theoremes:[
+            { id:'F-LN1', type:'formule', nom:'Dérivée et limites',
+              enonce:"DÉRIVÉE composée (u>0) : (ln u)' = u'/u\nExemple : (ln(x²+1))' = 2x/(x²+1)\n\nLIMITES :\nlim(x→0⁺) ln x = −∞\nlim(x→+∞) ln x = +∞\nlim(x→1) ln x/(x−1) = 1\n\nCROISSANCES COMPARÉES :\nlim(x→+∞) (ln x)/xᵅ = 0  (α>0)\nlim(x→0⁺) xᵅ·ln x = 0  (α>0)\n→ « x l'emporte sur ln x »\n\nLimite usuelle : lim(x→0) ln(1+x)/x = 1" },
+            { id:'F-LN2', type:'formule', nom:'Logarithme décimal',
+              enonce:"Logarithme décimal : log x = ln x / ln 10\n\nPropriétés analogues : log(ab)=log a+log b, log(10ⁿ)=n.\n\nUsage : pH=−log[H₃O⁺] (chimie), échelles (décibels, Richter).\nlog 10=1, log 1=0, log 100=2.",
+              remarque:"Le log décimal sert surtout aux applications en physique-chimie ; en analyse on travaille avec ln." },
+          ],
+          exercices:[
+            { id:'EX-LN4', niveau:'Facile', titre:'Dérivée avec ln',
               enonce:"Calculer f'(x) pour f(x)=ln(x²+1).",
-              correction:"f'(x) = 2x/(x²+1)." },
-            { id:'EX-LN2', niveau:'Moyen', titre:'Équation logarithmique',
-              enonce:"Résoudre ln(x+1)+ln(x−1)=ln(3).",
-              correction:"ln((x+1)(x−1))=ln 3 → x²−1=3 → x²=4 → x=2 (car x>1)." },
+              correction:"u=x²+1>0, u'=2x.\nf'(x)=u'/u=2x/(x²+1)." },
+            { id:'EX-LN5', niveau:'Intermédiaire', titre:'Croissance comparée',
+              enonce:"Calculer lim(x→+∞) (ln x)/√x et lim(x→0⁺) x·ln x.",
+              correction:"(ln x)/√x=(ln x)/x^(1/2) → 0 (croissance comparée, α=1/2).\nx·ln x → 0⁻ en 0⁺ (croissance comparée)." },
+            { id:'EX-LN6', niveau:'Difficile', titre:'Étude complète',
+              enonce:"Étudier f(x)=ln x / x sur ]0;+∞[ : variations et limites.",
+              correction:"f'(x)=(1−ln x)/x²=0 → ln x=1 → x=e.\nf'>0 sur ]0;e[, f'<0 sur ]e;+∞[ → maximum en e : f(e)=1/e.\nlim(x→0⁺)f=−∞ (ln x→−∞, /x→+∞) ; lim(x→+∞)f=0⁺ (croissance comparée).\nC_f admet l'axe Ox comme asymptote en +∞." },
           ],
         },
       ],
@@ -668,22 +732,58 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'exponentielle': {
   id:'exponentielle', emoji:'📈', badge:'Analyse', color:'#06d6a0',
   titre:'Fonction Exponentielle',
-  desc:"Réciproque de ln, (eᵘ)'=u'eᵘ, propriétés, croissances comparées, étude complète.",
+  desc:"Fonction exp réciproque de ln, propriétés algébriques, équations et inéquations, dérivée (eᵘ)'=u'eᵘ, limites et croissances comparées, étude de fonctions et modèles d'évolution.",
   souschapitres:[
     {
-      id:'sc-exp', titre:'8.1 Définition et propriétés',
-      notions:['Définition et propriétés',"Dérivée (eᵘ)'=u'eᵘ",'Croissances comparées','Étude de fonctions'],
+      id:'sc-exp-def', titre:'8.1 Définition et propriétés',
+      notions:['exp = réciproque de ln, eˣ>0','eᵃ⁺ᵇ=eᵃeᵇ, e⁻ˣ=1/eˣ','Équations/inéquations avec eˣ','Lien eˣ=y ⟺ x=ln y'],
       blocs:[
         {
-          notion:'📐 Fonction exponentielle',
+          notion:'📐 Exponentielle — propriétés',
           theoremes:[
-            { id:'D-EX1', type:'def', nom:'Exponentielle',
-              enonce:"exp = ln⁻¹ est l'unique solution de y'=y avec y(0)=1.\nOn note exp(x)=eˣ.\n\nPropriétés :\neᵃ⁺ᵇ=eᵃeᵇ ; e⁻ˣ=1/eˣ ; eˣ>0 pour tout x\n(eˣ)'=eˣ ; (eᵘ)'=u'eᵘ\n\nLimites :\nlim(x→−∞) eˣ=0 ; lim(x→+∞) eˣ=+∞\n\nCroissances comparées :\nlim(x→+∞) eˣ/xⁿ=+∞ ; lim(x→−∞) xⁿeˣ=0" },
+            { id:'D-EX1', type:'def', nom:"Fonction exponentielle",
+              enonce:"exp : ℝ → ]0;+∞[ est la réciproque de ln. On note exp(x)=eˣ.\n\nÉquivalence fondamentale :\ny=eˣ ⟺ x=ln y  (y>0)\neˡⁿ ˣ = x (x>0) ; ln(eˣ)=x (x∈ℝ)\n\nPropriétés (a,b∈ℝ, n∈ℤ) :\neˣ > 0 pour tout x\ne⁰=1 ; e¹=e\neᵃ⁺ᵇ = eᵃ·eᵇ\ne⁻ˣ = 1/eˣ\neᵃ⁻ᵇ = eᵃ/eᵇ\n(eᵃ)ⁿ = eⁿᵃ",
+              remarque:"exp est strictement croissante : eᵃ=eᵇ ⟺ a=b  et  eᵃ<eᵇ ⟺ a<b." },
+            { id:'M-EX1', type:'methode', nom:'Équations et inéquations exponentielles',
+              enonce:"eᴬ = eᴮ ⟺ A = B\neᴬ ≤ eᴮ ⟺ A ≤ B  (croissance)\neᴬ = k ⟺ A = ln k  (si k>0 ; impossible si k≤0)\n\nÉquation du type aX²+bX+c=0 avec X=eˣ :\n→ poser X=eˣ>0, résoudre en X, ne garder que X>0, puis x=ln X.\n\nExemple : e²ˣ−3eˣ+2=0 → X²−3X+2=0 → X=1 ou X=2\n→ eˣ=1 (x=0) ou eˣ=2 (x=ln 2)." },
           ],
           exercices:[
-            { id:'EX-EX1', niveau:'Facile', titre:'Dérivée exponentielle',
-              enonce:"f(x)=e^(x²-2x). Calculer f'(x).",
-              correction:"f'(x)=(2x-2)e^(x²-2x)." },
+            { id:'EX-EX1', niveau:'Facile', titre:'Simplification',
+              enonce:"Simplifier A = e³·e⁻¹ / e²  et  B = (eˣ)²·e⁻ˣ.",
+              correction:"A=e^(3−1−2)=e⁰=1.\nB=e^(2x−x)=eˣ." },
+            { id:'EX-EX2', niveau:'Intermédiaire', titre:'Équation par changement de variable',
+              enonce:"Résoudre e²ˣ − 5eˣ + 6 = 0.",
+              correction:"Poser X=eˣ>0 : X²−5X+6=0 → (X−2)(X−3)=0 → X=2 ou X=3.\neˣ=2 → x=ln 2 ; eˣ=3 → x=ln 3.\nS={ln 2 ; ln 3}." },
+            { id:'EX-EX3', niveau:'Difficile', titre:'Inéquation',
+              enonce:"Résoudre e^(2x) − eˣ − 2 > 0.",
+              correction:"Poser X=eˣ>0 : X²−X−2>0 → (X−2)(X+1)>0.\nRacines X=2 et X=−1. Comme X>0 : X>2.\neˣ>2 → x>ln 2. S=]ln 2 ; +∞[." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-exp-etude', titre:'8.2 Dérivée, limites et applications',
+      notions:["Dérivée (eᵘ)'=u'eᵘ",'Limites : eˣ→0 en −∞, +∞ en +∞','Croissances comparées eˣ/xⁿ→+∞','Modèles d\'évolution (eᵏᵗ)'],
+      blocs:[
+        {
+          notion:'∞ Limites, étude et modèles',
+          theoremes:[
+            { id:'F-EX1', type:'formule', nom:'Dérivée, limites, croissances comparées',
+              enonce:"DÉRIVÉE : (eˣ)'=eˣ ; (eᵘ)'=u'·eᵘ\nExemple : (e^(x²−2x))'=(2x−2)e^(x²−2x)\n\nLIMITES :\nlim(x→−∞) eˣ = 0⁺\nlim(x→+∞) eˣ = +∞\nlim(x→0) (eˣ−1)/x = 1\n\nCROISSANCES COMPARÉES (eˣ l'emporte sur xⁿ) :\nlim(x→+∞) eˣ/xⁿ = +∞\nlim(x→−∞) xⁿ·eˣ = 0\nlim(x→+∞) xⁿ·e⁻ˣ = 0" },
+            { id:'D-EX2', type:'def', nom:"Modèles d'évolution exponentielle",
+              enonce:"Fonction t↦A·eᵏᵗ (solution de y'=ky) :\n• k>0 : croissance exponentielle (population, intérêts composés)\n• k<0 : décroissance (désintégration radioactive, refroidissement, décharge RC)\n\nDemi-vie / temps caractéristique :\nDécroissance N(t)=N₀·e⁻ᵗ/τ :\n→ N(τ)=N₀/e (≈37%)\n→ demi-vie t½ : N(t½)=N₀/2 → t½ = τ·ln 2\n\nValeur à l'infini d'un modèle A+B·e⁻ᵏᵗ : tend vers A (asymptote horizontale).",
+              remarque:"Ces modèles relient le chapitre exp aux équations différentielles y'=ay+b (chap. 10)." },
+          ],
+          exercices:[
+            { id:'EX-EX4', niveau:'Facile', titre:'Dérivée composée',
+              enonce:"Dériver f(x)=e^(x²−2x).",
+              correction:"u=x²−2x, u'=2x−2.\nf'(x)=(2x−2)·e^(x²−2x)=2(x−1)e^(x²−2x)." },
+            { id:'EX-EX5', niveau:'Intermédiaire', titre:'Étude de x·eˣ',
+              enonce:"Étudier les variations de f(x)=x·eˣ sur ℝ et ses limites.",
+              correction:"f'(x)=eˣ+x·eˣ=(1+x)eˣ. Signe = signe de (1+x).\nf'<0 sur ]−∞;−1[, f'>0 sur ]−1;+∞[ → min en x=−1 : f(−1)=−1/e.\nlim(x→−∞)x·eˣ=0 (croissance comparée) ; lim(x→+∞)=+∞." },
+            { id:'EX-EX6', niveau:'Difficile', titre:'Modèle de décroissance',
+              enonce:"Une substance radioactive : N(t)=N₀·e⁻⁰·⁰⁵ᵗ (t en jours). Calculer la demi-vie.",
+              correction:"N(t½)=N₀/2 → e⁻⁰·⁰⁵ᵗ½=1/2 → −0,05·t½=ln(1/2)=−ln 2.\nt½=ln 2/0,05≈13,86 jours." },
           ],
         },
       ],
@@ -697,40 +797,58 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'primitives-integrales': {
   id:'primitives-integrales', emoji:'∫', badge:'Analyse', color:'#06d6a0',
   titre:'Primitives & Intégrales',
-  desc:"Primitives usuelles, intégrale définie ∫ₐᵇf(x)dx, aire sous une courbe, TFA.",
+  desc:"Primitives usuelles et de fonctions composées, intégrale définie ∫ₐᵇf(x)dx, théorème fondamental, propriétés (Chasles, linéarité, positivité), aire entre courbes, valeur moyenne, intégration par parties.",
   souschapitres:[
     {
       id:'sc-prim', titre:'9.1 Primitives',
-      notions:['Primitives des fonctions usuelles','Linéarité',"Primitive de u'vⁿ et u'/u"],
+      notions:['Primitive : F′=f, unicité à constante près','Primitives usuelles','Composées : u′eᵘ, u′/u, u′uⁿ','Linéarité'],
       blocs:[
         {
           notion:'📐 Primitives',
           theoremes:[
-            { id:'F-PI1', type:'formule', nom:'Primitives usuelles',
-              enonce:"xⁿ → xⁿ⁺¹/(n+1)  (n≠−1)\n1/x → ln|x|\neˣ → eˣ\nsin x → −cos x\ncos x → sin x\n\nComposées fréquentes :\nu'eᵘ → eᵘ\nu'/u → ln|u|\nu'uⁿ → uⁿ⁺¹/(n+1)  (n≠−1)" },
+            { id:'D-PI1', type:'def', nom:'Primitive d\'une fonction',
+              enonce:"F est une primitive de f sur I ⟺ F dérivable sur I et F'=f.\n\nThéorème : toute fonction continue sur I admet des primitives sur I.\n\nUnicité à une constante près :\nSi F est une primitive de f, toutes les primitives sont F(x)+C, C∈ℝ.\n\nPrimitive vérifiant une condition F(x₀)=y₀ : unique (détermine C).\n\nLinéarité : une primitive de af+bg est aF+bG." },
+            { id:'F-PI1', type:'formule', nom:'Primitives usuelles et composées',
+              enonce:"FONCTIONS USUELLES (primitive, +C) :\nxⁿ → xⁿ⁺¹/(n+1)  (n≠−1)\n1/x → ln|x|\n1/√x → 2√x\neˣ → eˣ\nsin x → −cos x ;  cos x → sin x\n1/cos²x → tan x\n\nFORMES COMPOSÉES (u dérivable) :\nu'·eᵘ → eᵘ\nu'/u → ln|u|\nu'·uⁿ → uⁿ⁺¹/(n+1)  (n≠−1)\nu'/√u → 2√u\nu'·cos u → sin u ;  u'·sin u → −cos u",
+              remarque:"Reconnaître la forme u'·(quelque chose en u) est la clé : c'est l'inverse de la règle de la chaîne." },
           ],
           exercices:[
             { id:'EX-PI1', niveau:'Facile', titre:'Primitive composée',
-              enonce:"Trouver une primitive de f(x)=(2x+1)e^(x²+x).",
-              correction:"F(x)=e^(x²+x) car F'(x)=(2x+1)e^(x²+x)." },
+              enonce:"Trouver une primitive de f(x)=(2x+1)·e^(x²+x).",
+              correction:"u=x²+x, u'=2x+1 → forme u'·eᵘ.\nF(x)=e^(x²+x)." },
+            { id:'EX-PI2', niveau:'Intermédiaire', titre:'Forme u′/u',
+              enonce:"Primitive de f(x)=2x/(x²+1) sur ℝ.",
+              correction:"u=x²+1>0, u'=2x → forme u'/u.\nF(x)=ln(x²+1)." },
+            { id:'EX-PI3', niveau:'Difficile', titre:'Primitive avec condition',
+              enonce:"Trouver la primitive F de f(x)=3x²−2 telle que F(1)=4.",
+              correction:"F(x)=x³−2x+C. F(1)=1−2+C=4 → C=5.\nF(x)=x³−2x+5." },
           ],
         },
       ],
     },
     {
-      id:'sc-int', titre:'9.2 Intégrale définie',
-      notions:['Intégrale de Riemann ∫ₐᵇf(x)dx','Théorème fondamental','Interprétation géométrique — aire'],
+      id:'sc-int', titre:'9.2 Intégrale définie et applications',
+      notions:['Théorème fondamental ∫ₐᵇf=F(b)−F(a)','Chasles, linéarité, positivité','Valeur moyenne, aire entre courbes','Intégration par parties (IPP)'],
       blocs:[
         {
           notion:'📐 Intégrale définie',
           theoremes:[
-            { id:'T-PI2', type:'thm', nom:"Théorème fondamental de l'analyse",
-              enonce:"Si F est une primitive de f sur [a,b] :\n∫ₐᵇ f(x)dx = [F(x)]ₐᵇ = F(b)−F(a)\n\nPropriétés :\n∫ₐᵃ f = 0 ; ∫ₐᵇ f = −∫ᵦᵃ f\nRelation de Chasles : ∫ₐᵇ f + ∫ᵦᶜ f = ∫ₐᶜ f\n\nInterprétation géométrique :\nAire entre f et Ox sur [a,b] = ∫ₐᵇ |f(x)| dx" },
+            { id:'T-PI2', type:'thm', nom:"Théorème fondamental et propriétés",
+              enonce:"Si F est une primitive de f (continue) sur [a,b] :\n∫ₐᵇ f(x)dx = [F(x)]ₐᵇ = F(b)−F(a)\n\nPROPRIÉTÉS :\n∫ₐᵃ f = 0 ;  ∫ₐᵇ f = −∫ᵦᵃ f\nChasles : ∫ₐᵇ f + ∫ᵦᶜ f = ∫ₐᶜ f\nLinéarité : ∫ₐᵇ(αf+βg) = α∫ₐᵇf + β∫ₐᵇg\nPositivité : si f≥0 sur [a,b] (a<b) alors ∫ₐᵇf≥0\nCroissance : f≤g sur [a,b] → ∫ₐᵇf ≤ ∫ₐᵇg\n\nVALEUR MOYENNE de f sur [a,b] :\nμ = 1/(b−a) · ∫ₐᵇ f(x)dx" },
+            { id:'F-PI2', type:'formule', nom:'Aires et intégration par parties',
+              enonce:"AIRE sous une courbe (f≥0 sur [a,b]) :\nA = ∫ₐᵇ f(x)dx  (en unités d'aire)\n\nAIRE entre deux courbes (f≥g sur [a,b]) :\nA = ∫ₐᵇ [f(x)−g(x)] dx\n\nSi f change de signe : A = ∫ₐᵇ |f(x)| dx (découper selon le signe).\n\nINTÉGRATION PAR PARTIES (u,v dérivables, dérivées continues) :\n∫ₐᵇ u'(x)v(x)dx = [u(x)v(x)]ₐᵇ − ∫ₐᵇ u(x)v'(x)dx\n\nChoix : v = partie qui se simplifie en dérivant (ex : x, ln x).",
+              remarque:"IPP typique : ∫ x·eˣ dx (poser v=x), ∫ ln x dx (poser v=ln x, u'=1)." },
           ],
           exercices:[
-            { id:'EX-PI2', niveau:'Moyen', titre:'Calcul intégral',
+            { id:'EX-PI4', niveau:'Facile', titre:'Calcul direct',
               enonce:"Calculer ∫₀² (x²+1)dx.",
-              correction:"[x³/3+x]₀² = 8/3+2−0 = 8/3+6/3 = 14/3." },
+              correction:"[x³/3+x]₀² = (8/3+2)−0 = 8/3+6/3 = 14/3." },
+            { id:'EX-PI5', niveau:'Intermédiaire', titre:'Aire entre courbes',
+              enonce:"Aire entre f(x)=x+2 et g(x)=x² sur [−1;2].",
+              correction:"Sur [−1;2], x+2≥x² (vérifié aux bornes et entre racines −1,2).\nA=∫₋₁²(x+2−x²)dx=[x²/2+2x−x³/3]₋₁²\n=(2+4−8/3)−(1/2−2+1/3)=(6−8/3)−(−7/6)=10/3+7/6=27/6=9/2." },
+            { id:'EX-PI6', niveau:'Difficile', titre:'Intégration par parties',
+              enonce:"Calculer ∫₀¹ x·eˣ dx.",
+              correction:"u'=eˣ→u=eˣ ; v=x→v'=1.\n∫₀¹ x·eˣ dx=[x·eˣ]₀¹−∫₀¹ eˣ dx=(1·e−0)−[eˣ]₀¹=e−(e−1)=1." },
           ],
         },
       ],
@@ -744,22 +862,52 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'equations-differentielles': {
   id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#06d6a0',
   titre:'Équations Différentielles',
-  desc:"y'=ay+b — solution générale, condition initiale, applications.",
+  desc:"Équations y'=ay et y'=ay+b — solution générale, solution particulière, condition initiale, et applications physiques (désintégration radioactive, charge/décharge d'un condensateur, refroidissement de Newton).",
   souschapitres:[
     {
-      id:'sc-ed', titre:"10.1 Équation y'=ay+b",
-      notions:["y'=ay — solution Ceᵃˣ","y'=ay+b — solution particulière + homogène",'Condition initiale'],
+      id:'sc-ed-resolution', titre:"10.1 Résolution de y'=ay+b",
+      notions:["y'=ay → y=Ceᵃˣ","y'=ay+b → y=Ceᵃˣ−b/a",'Condition initiale → détermine C','Vérifier qu\'une fonction est solution'],
       blocs:[
         {
           notion:'📐 Résolution',
           theoremes:[
-            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay+b",
-              enonce:"Équation y' = ay + b  (a≠0) :\n\n1. Solution homogène : y'=ay → yₕ=Ceᵃˣ\n2. Solution particulière constante : yₚ=−b/a\n3. Solution générale : y = Ceᵃˣ − b/a\n\nCondition initiale y(x₀)=y₀ :\nC = (y₀+b/a)e^(−ax₀)" },
+            { id:'T-ED1', type:'thm', nom:"Solutions de y'=ay et y'=ay+b",
+              enonce:"ÉQUATION HOMOGÈNE y'=ay (a∈ℝ) :\nSolutions : y(x)=C·eᵃˣ , C∈ℝ\n\nÉQUATION COMPLÈTE y'=ay+b (a≠0) :\n1. Solution particulière constante : yₚ=−b/a (car 0=a·yₚ+b)\n2. Solution générale : y(x) = C·eᵃˣ − b/a , C∈ℝ\n\nCONDITION INITIALE y(x₀)=y₀ :\ndétermine C de façon unique :\nC = (y₀ + b/a)·e^(−a x₀)\n\nThéorème de Cauchy : il existe une unique solution vérifiant une condition initiale donnée." },
+            { id:'M-ED1', type:'methode', nom:'Vérifier / utiliser une solution',
+              enonce:"VÉRIFIER qu'une fonction g est solution de y'=ay+b :\n→ calculer g'(x) et vérifier g'(x)=a·g(x)+b pour tout x.\n\nCAS y'=ay (sans second membre) :\nFonctions solutions ↔ x↦Ceᵃˣ uniquement.\n\nSTRATÉGIE TYPE BAC :\n1. Identifier a et b.\n2. Écrire la forme générale y=Ceᵃˣ−b/a.\n3. Appliquer la condition initiale pour trouver C.\n4. Étudier la limite / le comportement de la solution si demandé." },
           ],
           exercices:[
-            { id:'EX-ED1', niveau:'Facile', titre:"Résolution y'=2y−4",
+            { id:'EX-ED1', niveau:'Facile', titre:"Équation homogène",
+              enonce:"Résoudre y'=3y avec y(0)=2.",
+              correction:"y=Ce^(3x). y(0)=C=2.\ny(x)=2e^(3x)." },
+            { id:'EX-ED2', niveau:'Intermédiaire', titre:"Équation complète",
               enonce:"Résoudre y'=2y−4 avec y(0)=3.",
-              correction:"Sol. gén. y=Ce^(2x)+2. y(0)=C+2=3 → C=1. y=e^(2x)+2." },
+              correction:"yₚ=−(−4)/2=2. Sol. gén. : y=Ce^(2x)+2.\ny(0)=C+2=3 → C=1.\ny(x)=e^(2x)+2." },
+            { id:'EX-ED3', niveau:'Difficile', titre:'Vérification et limite',
+              enonce:"Soit y'=−y+5, y(0)=1. Résoudre puis donner lim(x→+∞) y(x).",
+              correction:"a=−1, b=5, yₚ=−5/(−1)=5. y=Ce⁻ˣ+5.\ny(0)=C+5=1 → C=−4. y(x)=−4e⁻ˣ+5.\nlim(x→+∞)e⁻ˣ=0 → lim y=5 (asymptote horizontale y=5)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ed-applications', titre:'10.2 Applications physiques',
+      notions:['Désintégration radioactive N′=−λN','Circuit RC : charge/décharge','Refroidissement de Newton','Lecture d\'un modèle A+Be⁻ᵏᵗ'],
+      blocs:[
+        {
+          notion:'🔬 Modèles d\'évolution',
+          theoremes:[
+            { id:'D-ED2', type:'def', nom:'Modèles différentiels classiques',
+              enonce:"DÉSINTÉGRATION RADIOACTIVE : N'(t)=−λN(t)\n→ N(t)=N₀·e⁻λᵗ\n→ demi-vie t½ = ln 2 / λ\n\nCHARGE D'UN CONDENSATEUR (RC) : u'+u/(RC)=E/(RC)\n→ u(t)=E·(1−e⁻ᵗ/(RC))  (tend vers E)\nConstante de temps τ=RC.\n\nDÉCHARGE : u'=−u/(RC) → u(t)=E·e⁻ᵗ/(RC)\n\nREFROIDISSEMENT DE NEWTON : T'=−k(T−Tₐ)\n→ T(t)=Tₐ+(T₀−Tₐ)·e⁻ᵏᵗ  (tend vers Tₐ ambiante)",
+              remarque:"Tous ces modèles se ramènent à y'=ay+b : repérer a (taux) et b puis appliquer la méthode 10.1." },
+          ],
+          exercices:[
+            { id:'EX-ED4', niveau:'Intermédiaire', titre:'Charge d\'un condensateur',
+              enonce:"u'+u/2=5 (RC=2, E·/(RC)=5 donc E=10), u(0)=0. Trouver u(t) et u(+∞).",
+              correction:"a=−1/2, b=5, yₚ=−5/(−1/2)=10. u=Ce⁻ᵗ/²+10.\nu(0)=C+10=0 → C=−10. u(t)=10(1−e⁻ᵗ/²).\nlim(t→+∞)u=10 V (tension de charge maximale)." },
+            { id:'EX-ED5', niveau:'Difficile', titre:'Refroidissement',
+              enonce:"Un café à 80°C dans une pièce à 20°C : T'=−0,1(T−20), T(0)=80. T(t) ? Température après 10 min ?",
+              correction:"Forme : T=20+(80−20)e⁻⁰·¹ᵗ=20+60e⁻⁰·¹ᵗ.\nT(10)=20+60e⁻¹=20+60×0,368≈42,1°C." },
           ],
         },
       ],
@@ -773,40 +921,55 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'complexes': {
   id:'complexes', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
   titre:'Nombres Complexes',
-  desc:"Forme algébrique, module, argument, forme trigonométrique, exponentielle, Moivre, équations dans ℂ.",
+  desc:"Forme algébrique, conjugué, module, opérations, équations du second degré dans ℂ, forme trigonométrique et exponentielle, argument, formule de Moivre, interprétation géométrique (affixe, distances, ensembles de points).",
   souschapitres:[
     {
-      id:'sc-cx-alg', titre:'11.1 Forme algébrique et module',
-      notions:['z=a+ib, Re(z), Im(z)','Module |z|, conjugué z̄','Opérations dans ℂ'],
+      id:'sc-cx-alg', titre:'11.1 Forme algébrique et équations',
+      notions:['z=a+ib, Re(z), Im(z), i²=−1','Conjugué z̄, module |z|','Opérations et quotient','Équations du second degré dans ℂ'],
       blocs:[
         {
-          notion:'📐 Nombres complexes — bases',
+          notion:'📐 Forme algébrique',
           theoremes:[
-            { id:'D-CX1', type:'def', nom:'Nombre complexe',
-              enonce:"z = a+ib  (a,b∈ℝ, i²=−1)\nRe(z)=a, Im(z)=b, z̄=a−ib\n\nModule : |z|=√(a²+b²)\n|z|²=z·z̄\n|z₁z₂|=|z₁||z₂| ; |z₁/z₂|=|z₁|/|z₂|\n\nConjugué : z₁+z₂ = z̄₁+z̄₂ ; z₁z₂ = z̄₁z̄₂\n\nDivision : z₁/z₂ = (z₁z̄₂)/(|z₂|²)" },
+            { id:'D-CX1', type:'def', nom:'Nombre complexe — forme algébrique',
+              enonce:"z = a+ib  (a,b∈ℝ, i²=−1)\nRe(z)=a (partie réelle), Im(z)=b (partie imaginaire)\nz réel ⟺ Im(z)=0 ; z imaginaire pur ⟺ Re(z)=0\n\nCONJUGUÉ : z̄ = a−ib\nz+z̄=2Re(z) ; z−z̄=2i·Im(z) ; z·z̄=a²+b²=|z|²\nz₁+z₂ = z̄₁+z̄₂ ;  z₁z₂ = z̄₁·z̄₂ ;  (z̄)̄=z\n\nMODULE : |z|=√(a²+b²)\n|z|=0 ⟺ z=0 ; |z₁z₂|=|z₁||z₂| ; |z₁/z₂|=|z₁|/|z₂|\n\nDIVISION : z₁/z₂ = z₁·z̄₂ / |z₂|²  (multiplier par le conjugué)" },
+            { id:'T-CX1', type:'thm', nom:'Équation du second degré dans ℂ',
+              enonce:"az²+bz+c=0 (a,b,c réels, a≠0), discriminant Δ=b²−4ac :\n\n• Δ>0 : deux racines réelles z=(−b±√Δ)/(2a)\n• Δ=0 : racine double z=−b/(2a)\n• Δ<0 : deux racines complexes conjuguées\n   z = (−b ± i√(−Δ)) / (2a)\n\nLes racines non réelles sont toujours conjuguées : z et z̄.\n\nSomme et produit : z₁+z₂=−b/a , z₁·z₂=c/a.",
+              remarque:"Quand Δ<0, écrire Δ=(i√(−Δ))² pour obtenir √Δ=i√(−Δ)." },
           ],
           exercices:[
-            { id:'EX-CX1', niveau:'Facile', titre:'Calcul dans ℂ',
-              enonce:"z=(2+i)/(1−i). Mettre sous forme algébrique.",
-              correction:"z=(2+i)(1+i)/((1−i)(1+i))=(2+2i+i+i²)/2=(1+3i)/2=1/2+3i/2." },
+            { id:'EX-CX1', niveau:'Facile', titre:'Forme algébrique d\'un quotient',
+              enonce:"Écrire z=(2+i)/(1−i) sous forme algébrique.",
+              correction:"z=(2+i)(1+i)/((1−i)(1+i))=(2+2i+i+i²)/2=(1+3i)/2=1/2+(3/2)i." },
+            { id:'EX-CX2', niveau:'Intermédiaire', titre:'Équation dans ℂ',
+              enonce:"Résoudre z²+2z+5=0 dans ℂ.",
+              correction:"Δ=4−20=−16=(4i)². √Δ=4i.\nz=(−2±4i)/2 → z₁=−1+2i, z₂=−1−2i." },
+            { id:'EX-CX3', niveau:'Difficile', titre:'Module et conjugué',
+              enonce:"z=3−4i. Calculer |z|, z·z̄ et 1/z sous forme algébrique.",
+              correction:"|z|=√(9+16)=5. z·z̄=|z|²=25.\n1/z=z̄/|z|²=(3+4i)/25=3/25+(4/25)i." },
           ],
         },
       ],
     },
     {
-      id:'sc-cx-trig', titre:'11.2 Forme trigonométrique et équations',
-      notions:['Forme trigonométrique r(cosθ+isinθ)','Forme exponentielle reⁱᶿ','Formule de Moivre','Racines carrées dans ℂ'],
+      id:'sc-cx-trig', titre:'11.2 Forme trigonométrique, Moivre et géométrie',
+      notions:['Module r, argument θ : z=r(cosθ+isinθ)','Forme exponentielle reⁱᶿ','Formule de Moivre','Affixe, distances, ensembles de points'],
       blocs:[
         {
-          notion:'📐 Forme trigonométrique',
+          notion:'📐 Forme trigonométrique et exponentielle',
           theoremes:[
-            { id:'F-CX2', type:'formule', nom:'Forme trigonométrique et Moivre',
-              enonce:"z = r(cosθ+isinθ) = reⁱᶿ  avec r=|z|, θ=arg(z)\n\nMultiplication : r₁eⁱᶿ¹ · r₂eⁱᶿ² = r₁r₂eⁱ⁽ᶿ¹⁺ᶿ²⁾\nDivision : (r₁eⁱᶿ¹)/(r₂eⁱᶿ²) = (r₁/r₂)eⁱ⁽ᶿ¹⁻ᶿ²⁾\n\nFormule de Moivre :\n(cosθ+isinθ)ⁿ = cos(nθ)+isin(nθ)\n\nRacines carrées de z=a+ib :\nx²=a, y²=b, 2xy=b" },
+            { id:'F-CX2', type:'formule', nom:'Forme trigonométrique, exponentielle et Moivre',
+              enonce:"FORME TRIGONOMÉTRIQUE : z=r(cosθ+isinθ), r=|z|, θ=arg(z) [2π]\nFORME EXPONENTIELLE : z=reⁱᶿ\ncosθ=a/r , sinθ=b/r\n\nPRODUIT / QUOTIENT :\nr₁eⁱᶿ¹ · r₂eⁱᶿ² = r₁r₂·eⁱ⁽ᶿ¹⁺ᶿ²⁾\n(r₁eⁱᶿ¹)/(r₂eⁱᶿ²) = (r₁/r₂)·eⁱ⁽ᶿ¹⁻ᶿ²⁾\narg(z₁z₂)=arg z₁+arg z₂ ; arg(z̄)=−arg z\n\nFORMULE DE MOIVRE :\n(cosθ+isinθ)ⁿ = cos(nθ)+isin(nθ)\nzⁿ = rⁿ·eⁱⁿᶿ\n\nFORMULES D'EULER :\ncosθ=(eⁱᶿ+e⁻ⁱᶿ)/2 ; sinθ=(eⁱᶿ−e⁻ⁱᶿ)/(2i)",
+              remarque:"Pour trouver arg(z) : placer (a,b), repérer le quadrant, et utiliser cosθ=a/r, sinθ=b/r." },
+            { id:'D-CX2', type:'def', nom:'Interprétation géométrique',
+              enonce:"Le plan est muni d'un repère orthonormé direct.\nAFFIXE : à M(x,y) on associe z=x+iy ; à u⃗(x,y) on associe z.\n\nDISTANCES ET VECTEURS :\nAffixe de AB⃗ = z_B − z_A\nAB = |z_B − z_A|\nMilieu I de [AB] : z_I=(z_A+z_B)/2\n\nANGLES : (u⃗ ; v⃗) = arg(z_v / z_u) [2π]\n\nENSEMBLES DE POINTS :\n|z−z_A|=r : cercle de centre A, rayon r\n|z−z_A|=|z−z_B| : médiatrice de [AB]\narg(z−z_A)=θ [2π] : demi-droite issue de A" },
           ],
           exercices:[
-            { id:'EX-CX2', niveau:'Moyen', titre:'Équation dans ℂ',
-              enonce:"Résoudre z²+2z+2=0 dans ℂ.",
-              correction:"Δ=4−8=−4=4i²=−4. √Δ=2i.\nz₁=(−2+2i)/2=−1+i ; z₂=(−2−2i)/2=−1−i." },
+            { id:'EX-CX4', niveau:'Intermédiaire', titre:'Forme trigonométrique',
+              enonce:"Écrire z=1+i√3 sous forme trigonométrique puis calculer z⁶.",
+              correction:"r=√(1+3)=2. cosθ=1/2, sinθ=√3/2 → θ=π/3.\nz=2(cos(π/3)+isin(π/3))=2e^(iπ/3).\nz⁶=2⁶·e^(i6π/3)=64·e^(2iπ)=64." },
+            { id:'EX-CX5', niveau:'Difficile', titre:'Ensemble de points',
+              enonce:"Déterminer l'ensemble des points M(z) tels que |z−2|=|z+i|.",
+              correction:"A(2;0), B(0;−1). |z−2|=distance MA, |z+i|=|z−(−i)|=distance MB.\nMA=MB ⟺ M sur la médiatrice du segment [AB].\nC'est la médiatrice de [AB]." },
           ],
         },
       ],
@@ -820,25 +983,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'variables-aleatoires': {
   id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
   titre:'Variables Aléatoires & Loi Binomiale',
-  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p).",
+  desc:"Variable aléatoire discrète, loi de probabilité, espérance, variance, écart-type, épreuve de Bernoulli, schéma de Bernoulli et loi binomiale B(n,p), calculs et applications.",
   souschapitres:[
     {
-      id:'sc-va', titre:'16.1 Variables aléatoires discrètes',
-      notions:['Loi de probabilité P(X=xᵢ)','Espérance E(X)','Variance V(X) et écart-type σ'],
+      id:'sc-va', titre:'16.1 Variable aléatoire discrète',
+      notions:['Loi de probabilité P(X=xᵢ)','Espérance E(X)=Σxᵢpᵢ','Variance V(X) et écart-type σ','Fonction de répartition'],
       blocs:[
         {
-          notion:'📐 Variable aléatoire discrète',
+          notion:'📐 Loi, espérance et variance',
           theoremes:[
             { id:'D-VA1', type:'def', nom:'Variable aléatoire et moments',
-              enonce:"X variable aléatoire discrète prenant valeurs x₁,...,xₙ avec P(X=xᵢ)=pᵢ (Σpᵢ=1)\n\nEspérance : E(X) = Σ xᵢ·pᵢ\nE(aX+b) = aE(X)+b\n\nVariance : V(X) = E(X²)−[E(X)]² = Σ xᵢ²pᵢ − [E(X)]²\nV(aX+b) = a²V(X)\n\nÉcart-type : σ(X) = √V(X)" },
-            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
-              enonce:"X ~ B(n,p) : n épreuves de Bernoulli indépendantes, p=P(succès)\n\nP(X=k) = Cₙᵏ·pᵏ·(1-p)ⁿ⁻ᵏ  (k=0,...,n)\n\nE(X) = np\nV(X) = np(1-p)\nσ(X) = √(np(1-p))",
-              remarque:"Reconnaître loi binomiale : n répétitions indépendantes, même probabilité p." },
+              enonce:"X variable aléatoire discrète prenant les valeurs x₁,…,xₙ avec P(X=xᵢ)=pᵢ.\nLOI DE PROBABILITÉ : tableau (xᵢ , pᵢ) avec Σpᵢ=1 et 0≤pᵢ≤1.\n\nESPÉRANCE (moyenne) :\nE(X) = Σ xᵢ·pᵢ\nLinéarité : E(aX+b)=a·E(X)+b\n\nVARIANCE :\nV(X) = E(X²) − [E(X)]² = Σ xᵢ²pᵢ − [E(X)]²\nV(aX+b) = a²·V(X)\n\nÉCART-TYPE : σ(X)=√V(X)\n\nFONCTION DE RÉPARTITION : F(x)=P(X≤x) (escalier, croissante de 0 à 1).",
+              remarque:"E(X) est la valeur moyenne « espérée » sur un grand nombre d'expériences ; σ mesure la dispersion." },
           ],
           exercices:[
-            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale',
+            { id:'EX-VA1', niveau:'Facile', titre:'Loi et espérance',
+              enonce:"X prend les valeurs 0,1,2 avec P(0)=0,5 ; P(1)=0,3 ; P(2)=0,2. Calculer E(X).",
+              correction:"Σp=0,5+0,3+0,2=1 ✓.\nE(X)=0×0,5+1×0,3+2×0,2=0,3+0,4=0,7." },
+            { id:'EX-VA2', niveau:'Intermédiaire', titre:'Variance',
+              enonce:"Avec la loi précédente, calculer V(X) et σ(X).",
+              correction:"E(X²)=0²×0,5+1²×0,3+2²×0,2=0,3+0,8=1,1.\nV(X)=1,1−0,7²=1,1−0,49=0,61.\nσ=√0,61≈0,78." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-binomiale', titre:'16.2 Schéma de Bernoulli et loi binomiale',
+      notions:['Épreuve de Bernoulli (succès/échec)','Schéma : n épreuves indépendantes','Loi binomiale B(n,p)','E(X)=np, V(X)=np(1−p)'],
+      blocs:[
+        {
+          notion:'🎯 Loi binomiale B(n,p)',
+          theoremes:[
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale',
+              enonce:"ÉPREUVE DE BERNOULLI : expérience à deux issues, succès (proba p) / échec (proba 1−p).\n\nSCHÉMA DE BERNOULLI : n épreuves identiques et INDÉPENDANTES.\nX = nombre de succès → X suit la loi binomiale B(n,p).\n\nP(X=k) = Cₙᵏ · pᵏ · (1−p)ⁿ⁻ᵏ   (k=0,1,…,n)\n\nPARAMÈTRES :\nE(X) = n·p\nV(X) = n·p·(1−p)\nσ(X) = √(n·p·(1−p))\n\nCALCULS COURANTS :\nP(X≥1)=1−P(X=0)=1−(1−p)ⁿ\nP(X≤k)=Σⱼ₌₀ᵏ P(X=j)",
+              remarque:"Reconnaître B(n,p) : nombre FIXE n de répétitions, INDÉPENDANTES, même probabilité p, on compte les succès." },
+          ],
+          exercices:[
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Loi binomiale',
               enonce:"Un dé est lancé 5 fois. X = nombre de 6 obtenus. Calculer P(X=2) et E(X).",
-              correction:"X~B(5,1/6). P(X=2)=C₅²·(1/6)²·(5/6)³=10·(1/36)·(125/216)=1250/7776≈0,161. E(X)=5/6≈0,833." },
+              correction:"X~B(5 ; 1/6). P(X=2)=C₅²·(1/6)²·(5/6)³=10·(1/36)·(125/216)=1250/7776≈0,161.\nE(X)=5×1/6≈0,833." },
+            { id:'EX-VA4', niveau:'Difficile', titre:'Au moins un succès',
+              enonce:"Une machine produit 8% de pièces défectueuses. Sur 10 pièces, P(au moins une défectueuse) ?",
+              correction:"X~B(10 ; 0,08). P(X≥1)=1−P(X=0)=1−(0,92)¹⁰.\n(0,92)¹⁰≈0,434. P(X≥1)≈1−0,434=0,566." },
           ],
         },
       ],
@@ -852,22 +1038,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'statistiques': {
   id:'statistiques', emoji:'📊', badge:'Probabilités', color:'#f5c842',
   titre:'Statistiques',
-  desc:"Paramètres statistiques (moyenne, variance, écart-type), histogrammes, diagrammes.",
+  desc:"Paramètres d'une série statistique (moyenne, médiane, variance, écart-type), séries regroupées en classes, séries à deux variables, ajustement affine par la méthode des moindres carrés et coefficient de corrélation.",
   souschapitres:[
     {
-      id:'sc-stat', titre:'17.1 Paramètres statistiques',
-      notions:['Moyenne x̄','Variance s² et écart-type s','Séries simples et regroupées en classes'],
+      id:'sc-stat-param', titre:'17.1 Paramètres statistiques',
+      notions:['Moyenne x̄, médiane, étendue','Variance s² et écart-type s','Séries regroupées en classes','Centres de classe'],
       blocs:[
         {
           notion:'📐 Statistiques descriptives',
           theoremes:[
-            { id:'F-ST1', type:'formule', nom:'Paramètres statistiques',
-              enonce:"Série x₁,...,xₙ (poids n₁,...,nₙ, N=Σnᵢ) :\n\nMoyenne : x̄ = (Σ nᵢxᵢ)/N\n\nVariance : s² = (Σ nᵢxᵢ²)/N − x̄²\n\nÉcart-type : s = √s²\n\nSéries regroupées en classes [aₖ,aₖ₊₁[ :\nCentre de classe : cₖ = (aₖ+aₖ₊₁)/2\nMême formules avec les centres de classe." },
+            { id:'F-ST1', type:'formule', nom:'Paramètres de position et de dispersion',
+              enonce:"Série x₁,…,xₚ d'effectifs n₁,…,nₚ, N=Σnᵢ :\n\nPOSITION :\nMoyenne x̄ = (Σ nᵢxᵢ)/N\nMédiane Me : valeur partageant l'effectif en deux moitiés\nMode : valeur (ou classe) de plus grand effectif\n\nDISPERSION :\nÉtendue = max − min\nVariance s² = (Σ nᵢxᵢ²)/N − x̄²  (formule de König)\nÉcart-type s = √s²\n\nSÉRIES EN CLASSES [aₖ;aₖ₊₁[ :\nCentre cₖ=(aₖ+aₖ₊₁)/2, on remplace xᵢ par cₖ dans les formules.",
+              remarque:"s² mesure la dispersion autour de la moyenne ; plus s est grand, plus la série est étalée." },
           ],
           exercices:[
-            { id:'EX-ST1', niveau:'Facile', titre:'Paramètres statistiques',
-              enonce:"Série : 2,4,4,6,8,2. Calculer moyenne et écart-type.",
-              correction:"x̄=(2+4+4+6+8+2)/6=26/6≈4,33.\ns²=(4+16+16+36+64+4)/6−x̄²=140/6−(26/6)²=23,33−18,78=4,56.\ns=√4,56≈2,13." },
+            { id:'EX-ST1', niveau:'Facile', titre:'Moyenne et écart-type',
+              enonce:"Série : 2, 4, 4, 6, 8, 2. Calculer x̄ et l'écart-type s.",
+              correction:"x̄=(2+4+4+6+8+2)/6=26/6≈4,33.\nΣx²=4+16+16+36+64+4=140. s²=140/6−(26/6)²≈23,33−18,78=4,56.\ns=√4,56≈2,13." },
+            { id:'EX-ST2', niveau:'Intermédiaire', titre:'Série en classes',
+              enonce:"Classes [0;10[, [10;20[, [20;30[ d'effectifs 4, 10, 6. Calculer x̄.",
+              correction:"Centres : 5, 15, 25. N=20.\nx̄=(4×5+10×15+6×25)/20=(20+150+150)/20=320/20=16." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-stat-ajustement', titre:'17.2 Séries doubles et ajustement affine',
+      notions:['Nuage de points, point moyen G(x̄;ȳ)','Covariance cov(x,y)','Droite de régression y=ax+b','Coefficient de corrélation r'],
+      blocs:[
+        {
+          notion:'📈 Ajustement affine (moindres carrés)',
+          theoremes:[
+            { id:'F-ST2', type:'formule', nom:'Droite de régression et corrélation',
+              enonce:"Série double (xᵢ ; yᵢ), point moyen G(x̄ ; ȳ).\n\nVARIANCES ET COVARIANCE :\nV(x)=(Σxᵢ²)/N − x̄² ;  V(y)=(Σyᵢ²)/N − ȳ²\ncov(x,y)=(Σxᵢyᵢ)/N − x̄·ȳ\n\nDROITE DE RÉGRESSION de y en x (moindres carrés) :\ny = a·x + b   avec   a = cov(x,y)/V(x)  ,  b = ȳ − a·x̄\n→ La droite passe TOUJOURS par le point moyen G.\n\nCOEFFICIENT DE CORRÉLATION LINÉAIRE :\nr = cov(x,y) / (σₓ·σ_y) ,  avec  −1 ≤ r ≤ 1\n|r| proche de 1 → forte corrélation linéaire (ajustement pertinent)\n|r| proche de 0 → pas de liaison linéaire.",
+              remarque:"On utilise l'ajustement pour faire une PRÉVISION : remplacer x par une valeur dans y=ax+b." },
+          ],
+          exercices:[
+            { id:'EX-ST3', niveau:'Intermédiaire', titre:'Point moyen',
+              enonce:"Données x : 1,2,3,4 et y : 3,5,6,8. Calculer le point moyen G.",
+              correction:"x̄=(1+2+3+4)/4=2,5 ; ȳ=(3+5+6+8)/4=22/4=5,5.\nG(2,5 ; 5,5)." },
+            { id:'EX-ST4', niveau:'Difficile', titre:'Droite de régression et prévision',
+              enonce:"Avec les données précédentes, déterminer la droite y=ax+b puis prévoir y pour x=5.",
+              correction:"Σxy=1×3+2×5+3×6+4×8=3+10+18+32=63. cov=63/4−2,5×5,5=15,75−13,75=2.\nV(x)=(1+4+9+16)/4−2,5²=7,5−6,25=1,25. a=2/1,25=1,6.\nb=ȳ−a·x̄=5,5−1,6×2,5=5,5−4=1,5. → y=1,6x+1,5.\nPrévision x=5 : y=1,6×5+1,5=9,5." },
           ],
         },
       ],
@@ -929,9 +1141,10 @@ export default function SciencesExpSlugPage() {
   const secColor = SEC_COLORS[slug] || '#06d6a0'
 
   const GROUPS = [
-    { label:'Partie 1 — Analyse (5 ch.)', slugs:NAV_ORDER.slice(0,5) },
-    { label:"Partie 2 — Géométrie (2 ch.)", slugs:NAV_ORDER.slice(5,7) },
-    { label:'Partie 3 — Dénombrement & Probas (2 ch.)', slugs:NAV_ORDER.slice(7) },
+    { label:'Partie 1 — Analyse (10 ch.)', slugs:NAV_ORDER.slice(0,10) },
+    { label:'Partie 2 — Algèbre (1 ch.)',  slugs:NAV_ORDER.slice(10,11) },
+    { label:'Partie 3 — Géométrie (2 ch.)', slugs:NAV_ORDER.slice(11,13) },
+    { label:'Partie 4 — Dénombrement & Probas (4 ch.)', slugs:NAV_ORDER.slice(13) },
   ]
 
   return (
@@ -1169,7 +1382,7 @@ export default function SciencesExpSlugPage() {
                 <div style={{ padding:'10px 14px', borderBottom:'1px solid var(--border)',
                   fontSize:11, color:'var(--muted)', fontWeight:700,
                   textTransform:'uppercase', letterSpacing:'0.08em' }}>
-                  🔬 Sciences Exp. · 9 chapitres
+                  🔬 Sciences Exp. · 17 chapitres
                 </div>
                 {GROUPS.map(g => (
                   <div key={g.label}>

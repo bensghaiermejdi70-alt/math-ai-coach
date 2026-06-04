@@ -771,22 +771,53 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'equations-differentielles': {
   id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#f59e0b',
   titre:'Équations Différentielles',
-  desc:"Équation y'=ay+b, solution générale, condition initiale, applications techniques.",
+  desc:"Équations y'=ay et y'=ay+b — solution générale, solution particulière, condition initiale, et applications techniques (charge/décharge d'un condensateur RC, courant dans un circuit RL, refroidissement).",
   souschapitres:[
     {
-      id:'sc-ed', titre:"10.1 Équation y'=ay+b",
-      notions:["y'=ay solution Ceax","y'=ay+b solution particulière+homogène","Condition initiale","Applications techniques"],
+      id:'sc-ed', titre:"10.1 Résolution de y'=ay+b",
+      notions:["y'=ay → y=Ceᵃˣ","y'=ay+b → y=Ceᵃˣ−b/a","Condition initiale → détermine C","Vérifier qu'une fonction est solution"],
       blocs:[
         {
           notion:'📐 Résolution',
           theoremes:[
-            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay+b",
-              enonce:"Équation y' = ay + b  (a≠0)\n\n1. Homogène y'=ay : yh=Ceax\n2. Particulière constante : yp=-b/a\n3. Solution générale : y = Ceax - b/a\n\nCondition initiale y(x0)=y0 :\nC = (y0+b/a)e^(-ax0)" },
+            { id:'T-ED1', type:'thm', nom:"Solutions de y'=ay et y'=ay+b",
+              enonce:"ÉQUATION HOMOGÈNE y'=ay (a∈ℝ) :\nSolutions : y(x)=C·eᵃˣ , C∈ℝ\n\nÉQUATION COMPLÈTE y'=ay+b (a≠0) :\n1. Solution particulière constante : yₚ=−b/a (car 0=a·yₚ+b)\n2. Solution générale : y(x)=C·eᵃˣ − b/a , C∈ℝ\n\nCONDITION INITIALE y(x₀)=y₀ :\ndétermine C de façon unique :\nC=(y₀+b/a)·e^(−a x₀)\n\nThéorème de Cauchy : il existe une unique solution vérifiant une condition initiale donnée.",
+              remarque:"Comportement à l'infini : si a<0, y(x) → −b/a (régime permanent) ; si a>0, |y(x)| → +∞." },
+            { id:'M-ED1', type:'methode', nom:'Vérifier / utiliser une solution',
+              enonce:"VÉRIFIER qu'une fonction g est solution de y'=ay+b :\n→ calculer g'(x) et vérifier g'(x)=a·g(x)+b pour tout x.\n\nSTRATÉGIE TYPE BAC :\n1. Identifier a et b.\n2. Écrire la forme générale y=Ceᵃˣ−b/a.\n3. Appliquer la condition initiale → trouver C.\n4. Étudier la limite / le régime permanent si demandé." },
           ],
           exercices:[
-            { id:'EX-ED1', niveau:'Facile', titre:"Résolution y'=2y-4",
-              enonce:"Résoudre y'=2y-4 avec y(0)=3.",
-              correction:"Sol. gén. y=Ce^(2x)+2. y(0)=C+2=3 donc C=1. y=e^(2x)+2." },
+            { id:'EX-ED1', niveau:'Facile', titre:"Équation homogène",
+              enonce:"Résoudre y'=3y avec y(0)=2.",
+              correction:"y=Ce^(3x). y(0)=C=2.\ny(x)=2e^(3x)." },
+            { id:'EX-ED2', niveau:'Intermédiaire', titre:"Équation complète",
+              enonce:"Résoudre y'=2y−4 avec y(0)=3.",
+              correction:"yₚ=−(−4)/2=2. Sol. gén. : y=Ce^(2x)+2.\ny(0)=C+2=3 → C=1.\ny(x)=e^(2x)+2." },
+            { id:'EX-ED3', niveau:'Difficile', titre:'Régime permanent',
+              enonce:"Soit y'=−y+5, y(0)=1. Résoudre puis donner lim(x→+∞) y(x).",
+              correction:"a=−1, b=5, yₚ=−5/(−1)=5. y=Ce⁻ˣ+5.\ny(0)=C+5=1 → C=−4. y(x)=−4e⁻ˣ+5.\nlim(x→+∞)e⁻ˣ=0 → lim y=5 (asymptote horizontale y=5)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ed-applications', titre:'10.2 Applications techniques',
+      notions:['Charge d\'un condensateur (circuit RC)','Décharge d\'un condensateur','Établissement du courant (circuit RL)','Constante de temps τ'],
+      blocs:[
+        {
+          notion:'🔌 Circuits RC et RL',
+          theoremes:[
+            { id:'D-ED2', type:'def', nom:'Modèles différentiels en électricité',
+              enonce:"CHARGE D'UN CONDENSATEUR (RC) : u'+u/(RC)=E/(RC)\n→ u(t)=E·(1−e⁻ᵗ/(RC))  (tend vers E)\nConstante de temps : τ=RC\n\nDÉCHARGE : u'=−u/(RC) → u(t)=E·e⁻ᵗ/(RC)\n→ à t=τ, u≈0,37·E ; à t=5τ, décharge quasi complète.\n\nÉTABLISSEMENT DU COURANT (RL) : i'+ (R/L)·i = E/L\n→ i(t)=(E/R)·(1−e⁻ᵗ⁽ᴿ/ᴸ⁾)  (tend vers E/R)\nConstante de temps : τ=L/R\n\nREFROIDISSEMENT (Newton) : T'=−k(T−Tₐ)\n→ T(t)=Tₐ+(T₀−Tₐ)·e⁻ᵏᵗ",
+              remarque:"Tous ces modèles se ramènent à y'=ay+b : repérer a (lié à τ) et b, puis appliquer la méthode 10.1." },
+          ],
+          exercices:[
+            { id:'EX-ED4', niveau:'Intermédiaire', titre:'Charge d\'un condensateur',
+              enonce:"u'+u/2=5 (donc RC=2, E=10), u(0)=0. Trouver u(t) et u(+∞).",
+              correction:"a=−1/2, b=5, yₚ=−5/(−1/2)=10. u=Ce⁻ᵗ/²+10.\nu(0)=C+10=0 → C=−10. u(t)=10(1−e⁻ᵗ/²).\nlim(t→+∞)u=10 V." },
+            { id:'EX-ED5', niveau:'Difficile', titre:'Décharge et constante de temps',
+              enonce:"Décharge : u(t)=12·e⁻ᵗ/⁰·⁰⁵ (t en s). Donner τ et u(0,1 s).",
+              correction:"τ=0,05 s (coefficient de t : −1/τ).\nu(0,1)=12·e⁻⁰·¹/⁰·⁰⁵=12·e⁻²=12×0,135≈1,62 V." },
           ],
         },
       ],
@@ -797,40 +828,55 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'complexes': {
   id:'complexes', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
   titre:'Nombres Complexes',
-  desc:"z=a+ib, module, argument, forme trigonométrique, exponentielle, Moivre, équations dans C.",
+  desc:"Forme algébrique, conjugué, module, opérations, équations du second degré dans ℂ, forme trigonométrique et exponentielle, argument, formule de Moivre, interprétation géométrique (affixe, distances, ensembles de points).",
   souschapitres:[
     {
-      id:'sc-cx-alg', titre:'11.1 Forme algébrique et module',
-      notions:['z=a+ib, Re(z), Im(z)','Module |z|, conjugué z bar','Opérations dans C'],
+      id:'sc-cx-alg', titre:'11.1 Forme algébrique et équations',
+      notions:['z=a+ib, Re(z), Im(z), i²=−1','Conjugué z̄, module |z|','Opérations et quotient','Équations du second degré dans ℂ'],
       blocs:[
         {
-          notion:'📐 Nombres complexes',
+          notion:'📐 Forme algébrique',
           theoremes:[
-            { id:'D-CX1', type:'def', nom:'Nombre complexe',
-              enonce:"z = a+ib  (a,b∈R, i²=-1)\nRe(z)=a, Im(z)=b, z̄=a-ib\n\nModule : |z|=√(a²+b²)\n|z|²=z·z̄\n|z1z2|=|z1||z2|\n\nDivision : z1/z2 = (z1z̄2)/(|z2|²)" },
+            { id:'D-CX1', type:'def', nom:'Nombre complexe — forme algébrique',
+              enonce:"z = a+ib  (a,b∈ℝ, i²=−1)\nRe(z)=a (partie réelle), Im(z)=b (partie imaginaire)\nz réel ⟺ Im(z)=0 ; z imaginaire pur ⟺ Re(z)=0\n\nCONJUGUÉ : z̄=a−ib\nz+z̄=2Re(z) ; z·z̄=a²+b²=|z|²\nz₁+z₂=z̄₁+z̄₂ ; z₁z₂=z̄₁·z̄₂\n\nMODULE : |z|=√(a²+b²)\n|z₁z₂|=|z₁||z₂| ; |z₁/z₂|=|z₁|/|z₂|\n\nDIVISION : z₁/z₂ = z₁·z̄₂ / |z₂|²  (multiplier par le conjugué)" },
+            { id:'T-CX1', type:'thm', nom:'Équation du second degré dans ℂ',
+              enonce:"az²+bz+c=0 (a,b,c réels, a≠0), discriminant Δ=b²−4ac :\n\n• Δ>0 : deux racines réelles z=(−b±√Δ)/(2a)\n• Δ=0 : racine double z=−b/(2a)\n• Δ<0 : deux racines complexes conjuguées\n   z=(−b ± i√(−Δ))/(2a)\n\nSomme et produit : z₁+z₂=−b/a , z₁·z₂=c/a.",
+              remarque:"Quand Δ<0, écrire Δ=(i√(−Δ))² pour obtenir √Δ=i√(−Δ)." },
           ],
           exercices:[
-            { id:'EX-CX1', niveau:'Facile', titre:'Calcul dans C',
-              enonce:"z=(2+i)/(1-i). Mettre sous forme algébrique.",
-              correction:"z=(2+i)(1+i)/2=(1+3i)/2=1/2+3i/2." },
+            { id:'EX-CX1', niveau:'Facile', titre:'Forme algébrique d\'un quotient',
+              enonce:"Écrire z=(2+i)/(1−i) sous forme algébrique.",
+              correction:"z=(2+i)(1+i)/((1−i)(1+i))=(2+2i+i+i²)/2=(1+3i)/2=1/2+(3/2)i." },
+            { id:'EX-CX2', niveau:'Intermédiaire', titre:'Équation dans ℂ',
+              enonce:"Résoudre z²−2z+2=0 dans ℂ.",
+              correction:"Δ=4−8=−4=(2i)². √Δ=2i.\nz=(2±2i)/2 → z₁=1+i, z₂=1−i." },
+            { id:'EX-CX3', niveau:'Difficile', titre:'Module et inverse',
+              enonce:"z=3−4i. Calculer |z|, z·z̄ et 1/z sous forme algébrique.",
+              correction:"|z|=√(9+16)=5. z·z̄=|z|²=25.\n1/z=z̄/|z|²=(3+4i)/25=3/25+(4/25)i." },
           ],
         },
       ],
     },
     {
-      id:'sc-cx-trig', titre:'11.2 Forme trigonométrique et Moivre',
-      notions:['Forme trigonométrique r(cosθ+isinθ)','Forme exponentielle re^(iθ)','Formule de Moivre','Équations dans C'],
+      id:'sc-cx-trig', titre:'11.2 Forme trigonométrique, Moivre et géométrie',
+      notions:['Module r, argument θ : z=r(cosθ+isinθ)','Forme exponentielle reⁱᶿ','Formule de Moivre','Affixe, distances, ensembles de points'],
       blocs:[
         {
-          notion:'📐 Forme trigonométrique',
+          notion:'📐 Forme trigonométrique et exponentielle',
           theoremes:[
-            { id:'F-CX2', type:'formule', nom:'Formule de Moivre',
-              enonce:"z = r(cosθ+isinθ) = re^(iθ)  r=|z|, θ=arg(z)\n\nProduit : r1e^(iθ1)·r2e^(iθ2) = r1r2·e^(i(θ1+θ2))\n\nMoivre : (cosθ+isinθ)^n = cos(nθ)+isin(nθ)\n\nÉquations z²+2z+2=0 :\nΔ=4-8=-4 ; z₁=-1+i ; z₂=-1-i" },
+            { id:'F-CX2', type:'formule', nom:'Forme trigonométrique, exponentielle et Moivre',
+              enonce:"FORME TRIGONOMÉTRIQUE : z=r(cosθ+isinθ), r=|z|, θ=arg(z) [2π]\nFORME EXPONENTIELLE : z=reⁱᶿ\ncosθ=a/r , sinθ=b/r\n\nPRODUIT / QUOTIENT :\nr₁eⁱᶿ¹·r₂eⁱᶿ² = r₁r₂·eⁱ⁽ᶿ¹⁺ᶿ²⁾\n(r₁eⁱᶿ¹)/(r₂eⁱᶿ²) = (r₁/r₂)·eⁱ⁽ᶿ¹⁻ᶿ²⁾\narg(z₁z₂)=arg z₁+arg z₂ ; arg(z̄)=−arg z\n\nFORMULE DE MOIVRE :\n(cosθ+isinθ)ⁿ = cos(nθ)+isin(nθ)\nzⁿ = rⁿ·eⁱⁿᶿ",
+              remarque:"Pour trouver arg(z) : placer (a,b), repérer le quadrant, utiliser cosθ=a/r et sinθ=b/r." },
+            { id:'D-CX2', type:'def', nom:'Interprétation géométrique',
+              enonce:"À M(x,y) on associe l'affixe z=x+iy.\n\nDISTANCES ET VECTEURS :\nAffixe de AB⃗ = z_B − z_A\nAB = |z_B − z_A|\nMilieu I de [AB] : z_I=(z_A+z_B)/2\n\nANGLES : (u⃗ ; v⃗) = arg(z_v / z_u) [2π]\n\nENSEMBLES DE POINTS :\n|z−z_A|=r : cercle de centre A, rayon r\n|z−z_A|=|z−z_B| : médiatrice de [AB]\narg(z−z_A)=θ [2π] : demi-droite issue de A" },
           ],
           exercices:[
-            { id:'EX-CX2', niveau:'Moyen', titre:'Équation dans C',
-              enonce:"Résoudre z²-2z+2=0 dans C.",
-              correction:"Δ=4-8=-4<0. z=(2±2i)/2. z₁=1+i, z₂=1-i." },
+            { id:'EX-CX4', niveau:'Intermédiaire', titre:'Forme trigonométrique',
+              enonce:"Écrire z=1+i√3 sous forme trigonométrique puis calculer z⁶.",
+              correction:"r=√(1+3)=2. cosθ=1/2, sinθ=√3/2 → θ=π/3.\nz=2(cos(π/3)+isin(π/3))=2e^(iπ/3).\nz⁶=2⁶·e^(i6π/3)=64·e^(2iπ)=64." },
+            { id:'EX-CX5', niveau:'Difficile', titre:'Ensemble de points',
+              enonce:"Déterminer l'ensemble des points M(z) tels que |z−2|=|z+i|.",
+              correction:"A(2;0), B(0;−1). |z−2|=MA, |z+i|=|z−(−i)|=MB.\nMA=MB ⟺ M sur la médiatrice de [AB].\nC'est la médiatrice du segment [AB]." },
           ],
         },
       ],
@@ -841,25 +887,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'variables-aleatoires': {
   id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
   titre:'Variables Aléatoires & Loi Binomiale',
-  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p).",
+  desc:"Variable aléatoire discrète, loi de probabilité, espérance, variance, écart-type, épreuve et schéma de Bernoulli, loi binomiale B(n,p), calculs et applications.",
   souschapitres:[
     {
-      id:'sc-va', titre:'15.1 Variables aléatoires discrètes',
-      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X) et écart-type σ','Loi binomiale B(n,p)'],
+      id:'sc-va', titre:'15.1 Variable aléatoire discrète',
+      notions:['Loi de probabilité P(X=xᵢ)','Espérance E(X)=Σxᵢpᵢ','Variance V(X) et écart-type σ','Linéarité E(aX+b), V(aX+b)'],
       blocs:[
         {
-          notion:'📐 Variable aléatoire et loi binomiale',
+          notion:'📐 Loi, espérance et variance',
           theoremes:[
-            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
-              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ(X) = √V(X)" },
-            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
-              enonce:"X ~ B(n,p) : n épreuves de Bernoulli, p=P(succès)\n\nP(X=k) = Cn^k·p^k·(1-p)^(n-k)\n\nE(X) = np\nV(X) = np(1-p)\nσ = √(np(1-p))",
-              remarque:"Reconnaître B(n,p) : n répétitions indépendantes, même p à chaque épreuve." },
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire et moments',
+              enonce:"X variable aléatoire discrète prenant les valeurs x₁,…,xₙ avec P(X=xᵢ)=pᵢ.\nLOI DE PROBABILITÉ : tableau (xᵢ , pᵢ) avec Σpᵢ=1 et 0≤pᵢ≤1.\n\nESPÉRANCE (moyenne) :\nE(X)=Σ xᵢ·pᵢ\nE(aX+b)=a·E(X)+b\n\nVARIANCE :\nV(X)=E(X²)−[E(X)]²=Σ xᵢ²pᵢ − [E(X)]²\nV(aX+b)=a²·V(X)\n\nÉCART-TYPE : σ(X)=√V(X)",
+              remarque:"E(X) est la valeur moyenne « espérée » sur un grand nombre d'expériences ; σ mesure la dispersion." },
           ],
           exercices:[
-            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale',
-              enonce:"On tire 6 fois une pièce. X=nombre de Face. Calculer P(X=4) et E(X).",
-              correction:"X~B(6,1/2). P(X=4)=C6^4·(1/2)^6=15/64≈0,234. E(X)=3." },
+            { id:'EX-VA1', niveau:'Facile', titre:'Loi et espérance',
+              enonce:"X prend les valeurs 0,1,2 avec P(0)=0,5 ; P(1)=0,3 ; P(2)=0,2. Calculer E(X).",
+              correction:"Σp=0,5+0,3+0,2=1 ✓.\nE(X)=0×0,5+1×0,3+2×0,2=0,3+0,4=0,7." },
+            { id:'EX-VA2', niveau:'Intermédiaire', titre:'Variance et écart-type',
+              enonce:"Avec la loi précédente, calculer V(X) et σ(X).",
+              correction:"E(X²)=0²×0,5+1²×0,3+2²×0,2=0,3+0,8=1,1.\nV(X)=1,1−0,7²=1,1−0,49=0,61.\nσ=√0,61≈0,78." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-binomiale', titre:'15.2 Schéma de Bernoulli et loi binomiale',
+      notions:['Épreuve de Bernoulli (succès/échec)','Schéma : n épreuves indépendantes','Loi binomiale B(n,p)','E(X)=np, V(X)=np(1−p)'],
+      blocs:[
+        {
+          notion:'🎯 Loi binomiale B(n,p)',
+          theoremes:[
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale',
+              enonce:"ÉPREUVE DE BERNOULLI : expérience à deux issues, succès (proba p) / échec (proba 1−p).\n\nSCHÉMA DE BERNOULLI : n épreuves identiques et INDÉPENDANTES.\nX = nombre de succès → X suit la loi binomiale B(n,p).\n\nP(X=k)=Cₙᵏ·pᵏ·(1−p)ⁿ⁻ᵏ   (k=0,1,…,n)\n\nPARAMÈTRES :\nE(X)=n·p\nV(X)=n·p·(1−p)\nσ(X)=√(n·p·(1−p))\n\nCALCULS COURANTS :\nP(X≥1)=1−P(X=0)=1−(1−p)ⁿ\nP(X≤k)=Σⱼ₌₀ᵏ P(X=j)",
+              remarque:"Reconnaître B(n,p) : nombre FIXE n de répétitions, INDÉPENDANTES, même probabilité p, on compte les succès." },
+          ],
+          exercices:[
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Loi binomiale',
+              enonce:"On lance 6 fois une pièce équilibrée. X = nombre de Face. Calculer P(X=4) et E(X).",
+              correction:"X~B(6 ; 1/2). P(X=4)=C₆⁴·(1/2)⁴·(1/2)²=15·(1/64)=15/64≈0,234.\nE(X)=6×1/2=3." },
+            { id:'EX-VA4', niveau:'Difficile', titre:'Au moins un succès',
+              enonce:"Une machine produit 8% de pièces défectueuses. Sur 10 pièces, P(au moins une défectueuse) ?",
+              correction:"X~B(10 ; 0,08). P(X≥1)=1−P(X=0)=1−(0,92)¹⁰.\n(0,92)¹⁰≈0,434. P(X≥1)≈1−0,434=0,566." },
           ],
         },
       ],

@@ -109,6 +109,41 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-reference', titre:'1.2 Fonctions de référence et transformations',
+      notions:['Fonctions usuelles : x, x², x³, 1/x, √x, |x|','Allure et sens de variation','Transformations : f(x)+k, f(x−a), −f(x), f(−x), |f(x)|','Lecture graphique : image, antécédents, signe'],
+      blocs:[
+        {
+          notion:'📈 Fonctions de référence',
+          theoremes:[
+            { id:'D-FG4', type:'def', nom:'Fonctions usuelles et leurs allures',
+              enonce:"AFFINE x↦ax+b : droite, monotone (croissante si a>0).\nCARRÉ x↦x² : parabole, paire, ↓ sur ]−∞;0], ↑ sur [0;+∞[, min 0.\nCUBE x↦x³ : impaire, strictement croissante sur ℝ.\nINVERSE x↦1/x : impaire, hyperbole, décroissante sur ]−∞;0[ et ]0;+∞[.\nRACINE x↦√x : définie sur [0;+∞[, croissante, concave.\nVALEUR ABSOLUE x↦|x| : paire, en V, min 0.\n\nCes allures servent de modèles : reconnaître la « forme » d'une courbe avant l'étude détaillée.",
+              remarque:"En informatique, ces courbes illustrent les ordres de grandeur : 1/x (gain décroissant), x² (coût quadratique), √x (test de primalité)." },
+          ],
+          exercices:[
+            { id:'EX-FG5', niveau:'Facile', titre:'Sens de variation',
+              enonce:"Donner le sens de variation de f(x)=x² sur ℝ et de g(x)=1/x sur ]0;+∞[.",
+              correction:"x² : décroissante sur ]−∞;0], croissante sur [0;+∞[.\n1/x : décroissante sur ]0;+∞[." },
+          ],
+        },
+        {
+          notion:'🔧 Transformations de courbes',
+          theoremes:[
+            { id:'D-FG5', type:'methode', nom:'Transformations à partir de C_f',
+              enonce:"À partir de la courbe C_f de f, on obtient :\n• f(x)+k : translation VERTICALE de vecteur k·j⃗ (vers le haut si k>0)\n• f(x−a) : translation HORIZONTALE de vecteur a·i⃗ (vers la droite si a>0)\n• −f(x) : symétrie par rapport à l'axe Ox\n• f(−x) : symétrie par rapport à l'axe Oy\n• |f(x)| : on replie au-dessus de Ox la partie située sous l'axe\n• k·f(x) : dilatation verticale de facteur k\n\nLECTURE GRAPHIQUE :\nimage de a = f(a) (lire l'ordonnée) ;\nantécédents de k = abscisses des points d'ordonnée k ;\nsigne de f = position de C_f / axe Ox ;\nf(x)=k ⟺ intersections de C_f avec la droite y=k.",
+              remarque:"Composer plusieurs transformations permet de tracer une courbe complexe sans tableau de valeurs." },
+          ],
+          exercices:[
+            { id:'EX-FG6', niveau:'Intermédiaire', titre:'Transformation',
+              enonce:"Décrire comment obtenir la courbe de g(x)=√(x−2)+1 à partir de celle de √x.",
+              correction:"√(x−2) : translation horizontale de 2 vers la droite.\n+1 : translation verticale de 1 vers le haut.\nDomaine : x−2≥0 → x≥2 ; sommet déplacé de O(0;0) à (2;1)." },
+            { id:'EX-FG7', niveau:'Difficile', titre:'Valeur absolue',
+              enonce:"À partir de f(x)=x²−4, tracer l'allure de |f(x)|=|x²−4|.",
+              correction:"f(x)=x²−4 < 0 sur ]−2;2[ et ≥0 ailleurs.\n|f| : on garde C_f là où f≥0 (x≤−2 ou x≥2) et on replie au-dessus de Ox la partie ]−2;2[.\nDeux « bosses » touchant l'axe en x=−2 et x=2, maximum local 4 en x=0." },
+          ],
+        },
+      ]
+    },
   ]
 },
 
@@ -631,24 +666,59 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'primitives-integrales': {
   id:'primitives-integrales', emoji:'∫', badge:'Analyse', color:'#6366f1',
   titre:'Primitives & Intégrales',
-  desc:"Primitives usuelles, intégrale définie, théorème fondamental, aire sous une courbe.",
+  desc:"Primitives usuelles et de fonctions composées, intégrale définie, théorème fondamental, propriétés (Chasles, linéarité, positivité), aire entre courbes, valeur moyenne, intégration par parties.",
   souschapitres:[
     {
-      id:'sc-prim', titre:'8.1 Primitives et intégrale définie',
-      notions:['Primitives des fonctions usuelles','Linéarité','Intégrale ∫ab f(x)dx',"Théorème fondamental de l'analyse"],
+      id:'sc-prim', titre:'8.1 Primitives',
+      notions:['Primitive : F′=f, unicité à constante près','Primitives usuelles','Composées : u′eᵘ, u′/u, u′uⁿ','Linéarité'],
       blocs:[
         {
-          notion:'📐 Primitives et intégrale',
+          notion:'📐 Primitives',
           theoremes:[
-            { id:'F-PI1', type:'formule', nom:'Primitives usuelles',
-              enonce:"x^n → x^(n+1)/(n+1)  (n≠1)\n1/x → ln|x|\ne^x → e^x\nsin x → -cos x\ncos x → sin x\n\nPrimitive de u'e^u : → e^u\nPrimitive de u'/u : → ln|u|" },
-            { id:'T-PI2', type:'thm', nom:"Théorème fondamental",
-              enonce:"Si F est une primitive de f sur [a,b] :\n∫ab f(x)dx = [F(x)]ab = F(b)-F(a)\n\nInterprétation géométrique :\nAire entre la courbe et Ox = ∫ab |f(x)| dx" },
+            { id:'D-PI3', type:'def', nom:'Primitive d\'une fonction',
+              enonce:"F est une primitive de f sur I ⟺ F dérivable sur I et F'=f.\n\nThéorème : toute fonction continue sur I admet des primitives sur I.\n\nUNICITÉ à une constante près :\nSi F est une primitive de f, toutes les primitives sont F(x)+C, C∈ℝ.\nUne condition F(x₀)=y₀ détermine C de façon unique.\n\nLinéarité : une primitive de a·f+b·g est a·F+b·G.",
+              remarque:"Analogie informatique : la primitive « accumule » f, comme une somme cumulée (prefix sum) accumule un tableau de valeurs." },
+            { id:'F-PI1', type:'formule', nom:'Primitives usuelles et composées',
+              enonce:"USUELLES (primitive, +C) :\nxⁿ → xⁿ⁺¹/(n+1)  (n≠−1)\n1/x → ln|x|\n1/√x → 2√x\neˣ → eˣ\nsin x → −cos x ; cos x → sin x\n\nFORMES COMPOSÉES (u dérivable) :\nu'·eᵘ → eᵘ\nu'/u → ln|u|\nu'·uⁿ → uⁿ⁺¹/(n+1)  (n≠−1)\nu'/√u → 2√u",
+              remarque:"Reconnaître la forme u'·(expression en u) : c'est l'inverse de la règle de la chaîne." },
           ],
           exercices:[
-            { id:'EX-PI1', niveau:'Facile', titre:'Calcul intégral',
-              enonce:"Calculer ∫02 (x²+1)dx.",
-              correction:"[x³/3+x]02 = 8/3+2 = 14/3." },
+            { id:'EX-PI2', niveau:'Facile', titre:'Primitive composée',
+              enonce:"Trouver une primitive de f(x)=(2x+1)·e^(x²+x).",
+              correction:"u=x²+x, u'=2x+1 → forme u'·eᵘ.\nF(x)=e^(x²+x)." },
+            { id:'EX-PI3', niveau:'Intermédiaire', titre:'Forme u′/u',
+              enonce:"Primitive de f(x)=2x/(x²+1) sur ℝ.",
+              correction:"u=x²+1>0, u'=2x → forme u'/u.\nF(x)=ln(x²+1)." },
+            { id:'EX-PI4', niveau:'Difficile', titre:'Primitive avec condition',
+              enonce:"Trouver la primitive F de f(x)=3x²−2 telle que F(1)=4.",
+              correction:"F(x)=x³−2x+C. F(1)=1−2+C=4 → C=5.\nF(x)=x³−2x+5." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-integrale', titre:'8.2 Intégrale définie et applications',
+      notions:['Théorème fondamental ∫ₐᵇf=F(b)−F(a)','Chasles, linéarité, positivité','Valeur moyenne, aire entre courbes','Intégration par parties (IPP)'],
+      blocs:[
+        {
+          notion:'📐 Intégrale définie',
+          theoremes:[
+            { id:'T-PI2', type:'thm', nom:"Théorème fondamental et propriétés",
+              enonce:"Si F est une primitive de f (continue) sur [a,b] :\n∫ₐᵇ f(x)dx = [F(x)]ₐᵇ = F(b)−F(a)\n\nPROPRIÉTÉS :\n∫ₐᵃ f = 0 ; ∫ₐᵇ f = −∫ᵦᵃ f\nChasles : ∫ₐᵇ f + ∫ᵦᶜ f = ∫ₐᶜ f\nLinéarité : ∫ₐᵇ(αf+βg)=α∫ₐᵇf+β∫ₐᵇg\nPositivité : f≥0 sur [a,b] (a<b) → ∫ₐᵇf≥0\n\nVALEUR MOYENNE de f sur [a,b] :\nμ = 1/(b−a) · ∫ₐᵇ f(x)dx" },
+            { id:'F-PI3', type:'formule', nom:'Aires et intégration par parties',
+              enonce:"AIRE sous une courbe (f≥0 sur [a,b]) :\nA = ∫ₐᵇ f(x)dx  (unités d'aire)\n\nAIRE entre deux courbes (f≥g sur [a,b]) :\nA = ∫ₐᵇ [f(x)−g(x)] dx\n\nINTÉGRATION PAR PARTIES (u,v dérivables) :\n∫ₐᵇ u'(x)v(x)dx = [u(x)v(x)]ₐᵇ − ∫ₐᵇ u(x)v'(x)dx\nChoix : v = partie qui se simplifie en dérivant (ex : x, ln x).",
+              remarque:"IPP typiques : ∫ x·eˣ dx (poser v=x), ∫ ln x dx (poser v=ln x, u'=1)." },
+          ],
+          exercices:[
+            { id:'EX-PI1', niveau:'Facile', titre:'Calcul direct',
+              enonce:"Calculer ∫₀² (x²+1)dx.",
+              correction:"[x³/3+x]₀² = (8/3+2)−0 = 8/3+6/3 = 14/3." },
+            { id:'EX-PI5', niveau:'Intermédiaire', titre:'Aire entre courbes',
+              enonce:"Aire entre f(x)=x+2 et g(x)=x² sur [−1;2].",
+              correction:"Sur [−1;2], x+2≥x². A=∫₋₁²(x+2−x²)dx=[x²/2+2x−x³/3]₋₁²\n=(2+4−8/3)−(1/2−2+1/3)=10/3+7/6=27/6=9/2." },
+            { id:'EX-PI6', niveau:'Difficile', titre:'Intégration par parties',
+              enonce:"Calculer ∫₀¹ x·eˣ dx.",
+              correction:"u'=eˣ→u=eˣ ; v=x→v'=1.\n∫₀¹ x·eˣ dx=[x·eˣ]₀¹−∫₀¹ eˣ dx=e−[eˣ]₀¹=e−(e−1)=1." },
           ],
         },
       ],
@@ -659,22 +729,53 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'equations-differentielles': {
   id:'equations-differentielles', emoji:'∂', badge:'Analyse', color:'#6366f1',
   titre:'Équations Différentielles',
-  desc:"y'=ay+b, solution générale, condition initiale, modélisation informatique.",
+  desc:"Équations y'=ay et y'=ay+b — solution générale, solution particulière, condition initiale, et applications de modélisation (croissance/décroissance exponentielle, refroidissement, charge d'un condensateur).",
   souschapitres:[
     {
-      id:'sc-ed', titre:"9.1 Équation y'=ay+b",
-      notions:["y'=ay → y=Ce^(ax)","y'=ay+b → y=Ce^(ax)-b/a","Condition initiale","Modélisation"],
+      id:'sc-ed', titre:"9.1 Résolution de y'=ay+b",
+      notions:["y'=ay → y=Ceᵃˣ","y'=ay+b → y=Ceᵃˣ−b/a","Condition initiale → détermine C","Vérifier qu'une fonction est solution"],
       blocs:[
         {
           notion:'📐 Résolution',
           theoremes:[
-            { id:'T-ED1', type:'thm', nom:"Solution de y'=ay+b",
-              enonce:"y' = ay + b  (a≠0) :\n\n1. Homogène y'=ay : yh=Ce^(ax)\n2. Particulière : yp=-b/a\n3. Générale : y = Ce^(ax) - b/a\n\nCondition initiale y(0)=y0 :\nC = y0 + b/a" },
+            { id:'T-ED1', type:'thm', nom:"Solutions de y'=ay et y'=ay+b",
+              enonce:"ÉQUATION HOMOGÈNE y'=ay (a∈ℝ) :\nSolutions : y(x)=C·eᵃˣ , C∈ℝ\n\nÉQUATION COMPLÈTE y'=ay+b (a≠0) :\n1. Solution particulière constante : yₚ=−b/a\n2. Solution générale : y(x)=C·eᵃˣ − b/a , C∈ℝ\n\nCONDITION INITIALE y(x₀)=y₀ :\ndétermine C de façon unique.\nCas x₀=0 : C=y₀+b/a.\n\nThéorème de Cauchy : il existe une unique solution vérifiant une condition initiale.",
+              remarque:"Si a<0, y(x) → −b/a (régime permanent / valeur d'équilibre) ; si a>0, |y(x)| → +∞." },
+            { id:'M-ED1', type:'methode', nom:'Méthode de résolution',
+              enonce:"1. Identifier a et b.\n2. Écrire la forme générale y=Ceᵃˣ−b/a.\n3. Appliquer la condition initiale → trouver C.\n4. Étudier la limite / le comportement si demandé.\n\nVÉRIFIER qu'une fonction g est solution :\ncalculer g'(x) et vérifier g'(x)=a·g(x)+b." },
           ],
           exercices:[
-            { id:'EX-ED1', niveau:'Facile', titre:"Résolution y'=3y-6",
-              enonce:"Résoudre y'=3y-6 avec y(0)=4.",
-              correction:"Sol. gén. y=Ce^(3x)+2. y(0)=C+2=4 → C=2. y=2e^(3x)+2." },
+            { id:'EX-ED1', niveau:'Facile', titre:"Équation complète",
+              enonce:"Résoudre y'=3y−6 avec y(0)=4.",
+              correction:"yₚ=−(−6)/3=2. Sol. gén. y=Ce^(3x)+2.\ny(0)=C+2=4 → C=2. y(x)=2e^(3x)+2." },
+            { id:'EX-ED2', niveau:'Intermédiaire', titre:"Équation homogène",
+              enonce:"Résoudre y'=−2y avec y(0)=5.",
+              correction:"y=Ce^(−2x). y(0)=C=5.\ny(x)=5e^(−2x), et lim(x→+∞)y=0." },
+            { id:'EX-ED3', niveau:'Difficile', titre:'Régime permanent',
+              enonce:"y'=−y+5, y(0)=1. Résoudre puis donner lim(x→+∞) y(x).",
+              correction:"a=−1, b=5, yₚ=5. y=Ce⁻ˣ+5. y(0)=C+5=1 → C=−4.\ny(x)=−4e⁻ˣ+5. lim=5 (asymptote horizontale y=5)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ed-modeles', titre:'9.2 Modélisation et applications',
+      notions:['Croissance exponentielle (k>0)','Décroissance (k<0), demi-vie','Refroidissement de Newton','Charge d\'un condensateur RC'],
+      blocs:[
+        {
+          notion:'🔬 Modèles d\'évolution',
+          theoremes:[
+            { id:'D-ED2', type:'def', nom:'Modèles différentiels classiques',
+              enonce:"CROISSANCE/DÉCROISSANCE : y'=ky → y=y₀·eᵏᵗ\n• k>0 : croissance exponentielle\n• k<0 : décroissance ; demi-vie t½=ln 2/|k|\n\nCHARGE D'UN CONDENSATEUR (RC) : u'+u/(RC)=E/(RC)\n→ u(t)=E·(1−e⁻ᵗ/(RC)) , constante de temps τ=RC\n\nREFROIDISSEMENT (Newton) : T'=−k(T−Tₐ)\n→ T(t)=Tₐ+(T₀−Tₐ)·e⁻ᵏᵗ (tend vers Tₐ)",
+              remarque:"Tous ces modèles se ramènent à y'=ay+b : repérer a et b, puis appliquer la méthode 9.1." },
+          ],
+          exercices:[
+            { id:'EX-ED4', niveau:'Intermédiaire', titre:'Demi-vie',
+              enonce:"Décroissance N(t)=N₀·e⁻⁰·⁰⁵ᵗ (t en jours). Calculer la demi-vie.",
+              correction:"N(t½)=N₀/2 → e⁻⁰·⁰⁵ᵗ½=1/2 → −0,05·t½=−ln 2.\nt½=ln 2/0,05≈13,86 jours." },
+            { id:'EX-ED5', niveau:'Difficile', titre:'Charge d\'un condensateur',
+              enonce:"u'+u/2=5 (RC=2, E=10), u(0)=0. Trouver u(t) et u(+∞).",
+              correction:"a=−1/2, b=5, yₚ=10. u=Ce⁻ᵗ/²+10. u(0)=C+10=0 → C=−10.\nu(t)=10(1−e⁻ᵗ/²). lim(t→+∞)u=10 V." },
           ],
         },
       ],
@@ -685,22 +786,55 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'complexes': {
   id:'complexes', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
   titre:'Nombres Complexes',
-  desc:"z=a+ib, module, argument, forme trigonométrique, Moivre, équations dans C.",
+  desc:"Forme algébrique, conjugué, module, opérations, équations du second degré dans ℂ, forme trigonométrique et exponentielle, argument, formule de Moivre, interprétation géométrique.",
   souschapitres:[
     {
-      id:'sc-cx', titre:'10.1 Formes algébrique et trigonométrique',
-      notions:['z=a+ib, Re(z), Im(z)','Module |z|, conjugué z*','Forme trigonométrique','Formule de Moivre'],
+      id:'sc-cx', titre:'10.1 Forme algébrique et équations',
+      notions:['z=a+ib, Re(z), Im(z), i²=−1','Conjugué z̄, module |z|','Opérations et quotient','Équations du second degré dans ℂ'],
       blocs:[
         {
-          notion:'📐 Nombres complexes',
+          notion:'📐 Forme algébrique',
           theoremes:[
-            { id:'D-CX1', type:'def', nom:'Nombre complexe',
-              enonce:"z = a+ib  (a,b∈R, i²=-1)\nRe(z)=a, Im(z)=b, z*=a-ib\n|z|=√(a²+b²)\n\nForme trigonométrique : z=r(cosθ+isinθ)=re^(iθ)\nr=|z|, θ=arg(z)\n\nMoivre : (cosθ+isinθ)^n = cos(nθ)+isin(nθ)" },
+            { id:'D-CX1', type:'def', nom:'Nombre complexe — forme algébrique',
+              enonce:"z = a+ib  (a,b∈ℝ, i²=−1)\nRe(z)=a, Im(z)=b\nz réel ⟺ Im(z)=0 ; z imaginaire pur ⟺ Re(z)=0\n\nCONJUGUÉ : z̄=a−ib\nz+z̄=2Re(z) ; z·z̄=a²+b²=|z|²\nz₁+z₂=z̄₁+z̄₂ ; z₁z₂=z̄₁·z̄₂\n\nMODULE : |z|=√(a²+b²)\n|z₁z₂|=|z₁||z₂| ; |z₁/z₂|=|z₁|/|z₂|\n\nDIVISION : z₁/z₂ = z₁·z̄₂ / |z₂|²" },
+            { id:'T-CX1', type:'thm', nom:'Équation du second degré dans ℂ',
+              enonce:"az²+bz+c=0 (a,b,c réels, a≠0), Δ=b²−4ac :\n• Δ>0 : deux racines réelles z=(−b±√Δ)/(2a)\n• Δ=0 : racine double z=−b/(2a)\n• Δ<0 : deux racines complexes conjuguées\n   z=(−b ± i√(−Δ))/(2a)\n\nSomme/produit : z₁+z₂=−b/a , z₁·z₂=c/a.",
+              remarque:"Quand Δ<0, écrire Δ=(i√(−Δ))² pour obtenir √Δ=i√(−Δ)." },
           ],
           exercices:[
-            { id:'EX-CX1', niveau:'Moyen', titre:'Équation dans C',
-              enonce:"Résoudre z²+2z+5=0 dans C.",
-              correction:"Δ=4-20=-16. z=(−2±4i)/2. z1=−1+2i, z2=−1−2i." },
+            { id:'EX-CX1', niveau:'Facile', titre:'Quotient sous forme algébrique',
+              enonce:"Écrire z=(2+i)/(1−i) sous forme algébrique.",
+              correction:"z=(2+i)(1+i)/((1−i)(1+i))=(1+3i)/2=1/2+(3/2)i." },
+            { id:'EX-CX2', niveau:'Intermédiaire', titre:'Équation dans ℂ',
+              enonce:"Résoudre z²+2z+5=0 dans ℂ.",
+              correction:"Δ=4−20=−16=(4i)². √Δ=4i.\nz=(−2±4i)/2 → z₁=−1+2i, z₂=−1−2i." },
+            { id:'EX-CX3', niveau:'Difficile', titre:'Module et inverse',
+              enonce:"z=3−4i. Calculer |z|, z·z̄ et 1/z.",
+              correction:"|z|=√(9+16)=5. z·z̄=25.\n1/z=z̄/|z|²=(3+4i)/25=3/25+(4/25)i." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-cx-trig', titre:'10.2 Forme trigonométrique, Moivre et géométrie',
+      notions:['z=r(cosθ+isinθ)=reⁱᶿ','Argument, produit/quotient','Formule de Moivre','Affixe, distances, ensembles de points'],
+      blocs:[
+        {
+          notion:'📐 Forme trigonométrique et exponentielle',
+          theoremes:[
+            { id:'F-CX2', type:'formule', nom:'Forme trigonométrique, exponentielle, Moivre',
+              enonce:"FORME TRIGONOMÉTRIQUE : z=r(cosθ+isinθ), r=|z|, θ=arg(z) [2π]\nFORME EXPONENTIELLE : z=reⁱᶿ\ncosθ=a/r , sinθ=b/r\n\nPRODUIT / QUOTIENT :\nr₁eⁱᶿ¹·r₂eⁱᶿ² = r₁r₂·eⁱ⁽ᶿ¹⁺ᶿ²⁾\narg(z₁z₂)=arg z₁+arg z₂ ; arg(z̄)=−arg z\n\nMOIVRE :\n(cosθ+isinθ)ⁿ = cos(nθ)+isin(nθ)\nzⁿ = rⁿ·eⁱⁿᶿ",
+              remarque:"Pour arg(z) : placer (a,b), repérer le quadrant, utiliser cosθ=a/r et sinθ=b/r." },
+            { id:'D-CX2', type:'def', nom:'Interprétation géométrique',
+              enonce:"À M(x,y) on associe l'affixe z=x+iy.\n\nDISTANCES : affixe de AB⃗ = z_B−z_A ; AB=|z_B−z_A|\nMilieu I de [AB] : z_I=(z_A+z_B)/2\nAngles : (u⃗ ; v⃗)=arg(z_v/z_u) [2π]\n\nENSEMBLES DE POINTS :\n|z−z_A|=r : cercle de centre A, rayon r\n|z−z_A|=|z−z_B| : médiatrice de [AB]\narg(z−z_A)=θ [2π] : demi-droite issue de A" },
+          ],
+          exercices:[
+            { id:'EX-CX4', niveau:'Intermédiaire', titre:'Forme trigonométrique',
+              enonce:"Écrire z=1+i√3 sous forme trigonométrique puis calculer z⁶.",
+              correction:"r=2, cosθ=1/2, sinθ=√3/2 → θ=π/3. z=2e^(iπ/3).\nz⁶=2⁶·e^(i2π)=64." },
+            { id:'EX-CX5', niveau:'Difficile', titre:'Ensemble de points',
+              enonce:"Ensemble des M(z) tels que |z−2|=|z+i|.",
+              correction:"A(2;0), B(0;−1). MA=MB ⟺ M sur la médiatrice de [AB].\nC'est la médiatrice du segment [AB]." },
           ],
         },
       ],
@@ -711,22 +845,53 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'systemes-lineaires': {
   id:'systemes-lineaires', emoji:'🧮', badge:'Algèbre', color:'#a78bfa',
   titre:'Systèmes Linéaires',
-  desc:"Systèmes de 2 et 3 équations, méthodes de résolution, pivot de Gauss, modélisation.",
+  desc:"Systèmes de 2 et 3 équations linéaires, méthodes de résolution (substitution, combinaison, pivot de Gauss), nature de l'ensemble des solutions, écriture matricielle, déterminant 2×2 et formules de Cramer.",
   souschapitres:[
     {
-      id:'sc-sys', titre:'11.1 Résolution de systèmes',
-      notions:['Substitution et élimination','Méthode de Gauss (pivot)','Méthode matricielle','Modélisation informatique'],
+      id:'sc-sys', titre:'11.1 Méthodes de résolution',
+      notions:['Substitution et combinaison linéaire','Pivot de Gauss (matrice augmentée)','Nature des solutions (0, 1, ∞)','Systèmes 3×3'],
       blocs:[
         {
-          notion:'📐 Systèmes linéaires',
+          notion:'📐 Résolution et pivot de Gauss',
           theoremes:[
-            { id:'T-SY1', type:'thm', nom:'Pivot de Gauss',
-              enonce:"Algorithme du pivot de Gauss :\n1. Écrire la matrice augmentée [A|b]\n2. Opérations Ã©lémentaires sur les lignes :\n   L_i ← L_i + k·L_j (élimination)\n3. Forme échelonnée → substitution ascendante\n\nExemple :\n2x+y=5 et x-y=1 :\n[2,1|5] [1,-1|1] → x=2, y=1" },
+            { id:'M-SY1', type:'methode', nom:'Méthodes élémentaires et pivot de Gauss',
+              enonce:"SUBSTITUTION : exprimer une inconnue, l'injecter dans les autres équations.\nCOMBINAISON : additionner des multiples de lignes pour éliminer une inconnue.\n\nPIVOT DE GAUSS (systématique, programmable) :\n1. Écrire la matrice augmentée [A | b].\n2. Opérations élémentaires sur les lignes :\n   Lᵢ ← Lᵢ + k·Lⱼ  (élimination des coefficients)\n   échange de lignes, multiplication par un scalaire ≠0\n3. Obtenir une forme échelonnée (triangulaire).\n4. Remontée (substitution ascendante).\n\nL'algorithme de Gauss est la base de la résolution numérique en informatique." },
+            { id:'D-SY2', type:'def', nom:'Nature de l\'ensemble des solutions',
+              enonce:"Un système linéaire a :\n• une solution unique (système de Cramer, déterminant ≠ 0)\n• aucune solution (système incompatible : ligne 0=k avec k≠0)\n• une infinité de solutions (lignes proportionnelles : 0=0)\n\nInterprétation géométrique (2 inconnues) :\n• droites sécantes → 1 solution\n• droites parallèles distinctes → 0 solution\n• droites confondues → ∞ solutions",
+              remarque:"Le repérage de 0=0 ou 0=k≠0 lors du pivot indique directement le nombre de solutions." },
           ],
           exercices:[
-            { id:'EX-SY1', niveau:'Moyen', titre:'Système 2 équations',
-              enonce:"Résoudre : 3x+2y=12 et x-y=1.",
-              correction:"De L2: x=1+y. Substitution: 3(1+y)+2y=12 → 5y=9 → y=9/5, x=14/5." },
+            { id:'EX-SY1', niveau:'Facile', titre:'Système 2×2',
+              enonce:"Résoudre : 3x+2y=12 et x−y=1.",
+              correction:"De L2 : x=1+y. Substitution : 3(1+y)+2y=12 → 5y=9 → y=9/5, x=14/5." },
+            { id:'EX-SY2', niveau:'Intermédiaire', titre:'Pivot de Gauss',
+              enonce:"Résoudre par Gauss : 2x+y=5 ; x−y=1.",
+              correction:"L1−2·L2 : (y+2y)=5−2 → 3y=3 → y=1.\nL2 : x=1+y=2. Solution (2 ; 1)." },
+            { id:'EX-SY3', niveau:'Difficile', titre:'Système 3×3',
+              enonce:"Résoudre : x+y+z=6 ; 2x−y+z=3 ; x+2y−z=2.",
+              correction:"L2−2L1 : −3y−z=−9. L3−L1 : y−2z=−4.\nDe la 2e : z=9−3y. Injecter : y−2(9−3y)=−4 → 7y=14 → y=2, z=3, x=1.\nSolution (1 ; 2 ; 3)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-matrices', titre:'11.2 Écriture matricielle et déterminant',
+      notions:['Écriture A·X=B','Déterminant 2×2','Formules de Cramer','Inverse d\'une matrice 2×2'],
+      blocs:[
+        {
+          notion:'🔢 Matrices et Cramer',
+          theoremes:[
+            { id:'F-SY3', type:'formule', nom:'Déterminant 2×2 et Cramer',
+              enonce:"ÉCRITURE MATRICIELLE : le système\n{ ax+by=e ; cx+dy=f }  s'écrit  A·X=B avec\nA=(a b ; c d), X=(x ; y), B=(e ; f)\n\nDÉTERMINANT : det(A)=ad−bc\n\nSi det(A)≠0 → système de Cramer (solution unique) :\nx = (e·d − b·f)/det(A)\ny = (a·f − e·c)/det(A)\n\nINVERSE 2×2 (si det≠0) :\nA⁻¹ = 1/det(A) · (d −b ; −c a)\nX = A⁻¹·B",
+              remarque:"det(A)=0 signale un système non-Cramer : soit 0, soit une infinité de solutions." },
+          ],
+          exercices:[
+            { id:'EX-SY4', niveau:'Intermédiaire', titre:'Cramer',
+              enonce:"Résoudre par Cramer : 2x+3y=8 ; x−y=−1.",
+              correction:"det=2·(−1)−3·1=−5≠0.\nx=(8·(−1)−3·(−1))/(−5)=(−8+3)/(−5)=1.\ny=(2·(−1)−8·1)/(−5)=(−10)/(−5)=2.\nSolution (1 ; 2)." },
+            { id:'EX-SY5', niveau:'Difficile', titre:'Inverse et discussion',
+              enonce:"Pour quelles valeurs de m le système { x+my=1 ; mx+y=1 } a-t-il une solution unique ?",
+              correction:"det=1·1−m·m=1−m². Solution unique ⟺ det≠0 ⟺ m≠1 et m≠−1.\nSi m=1 : les deux équations sont x+y=1 → ∞ solutions.\nSi m=−1 : x−y=1 et −x+y=1 incompatibles → 0 solution." },
           ],
         },
       ],
@@ -737,25 +902,56 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'arithmetique': {
   id:'arithmetique', emoji:'🔢', badge:'Algèbre', color:'#a78bfa',
   titre:'Arithmétique dans ℤ',
-  desc:"Divisibilité, PGCD, PPCM, nombres premiers, congruences, applications cryptographiques.",
+  desc:"Divisibilité, division euclidienne, PGCD (algorithme d'Euclide), identité de Bézout, PPCM, nombres premiers et décomposition, congruences modulo n et applications cryptographiques (RSA).",
   souschapitres:[
     {
-      id:'sc-div', titre:'12.1 Divisibilité et PGCD',
-      notions:['Division euclidienne',"PGCD — algorithme d'Euclide",'PPCM','Nombres premiers et décomposition'],
+      id:'sc-div', titre:'12.1 Divisibilité, PGCD et Bézout',
+      notions:['Division euclidienne a=bq+r','PGCD — algorithme d\'Euclide','Identité de Bézout','PPCM et relation PGCD·PPCM'],
       blocs:[
         {
-          notion:'📐 Arithmétique dans Z',
+          notion:'📐 Divisibilité et PGCD',
           theoremes:[
-            { id:'D-AR1', type:'def', nom:'Divisibilité et PGCD',
-              enonce:"a divise b (a|b) si ∃k∈Z : b=ka\n\nDivision euclidienne : a=bq+r, 0≤r<b\n\nAlgorithme d'Euclide :\nPGCD(a,b) = PGCD(b, a mod b) jusqu'à r=0\n\nExemple : PGCD(252,180)\n252=1×180+72 → PGCD(180,72)\n180=2×72+36 → PGCD(72,36)\n72=2×36+0 → PGCD=36" },
-            { id:'D-AR2', type:'def', nom:'Congruences modulo n',
-              enonce:"a ≡ b (mod n) si n|(a-b)\n\nPropriétés :\na+c ≡ b+d (mod n)\na·c ≡ b·d (mod n)\na^k ≡ b^k (mod n)\n\nApplication RSA :\nChiffrement : c = m^e mod n\nDéchiffrement : m = c^d mod n",
-              remarque:"Les congruences sont fondamentales en cryptographie et sécurité informatique." },
+            { id:'D-AR1', type:'def', nom:'Divisibilité et division euclidienne',
+              enonce:"a divise b (noté a|b) ⟺ ∃k∈ℤ : b=k·a\n\nDIVISION EUCLIDIENNE de a par b (b>0) :\nIl existe un unique couple (q,r) tel que\na = b·q + r  avec  0 ≤ r < b\nq = quotient, r = reste = a mod b\n\nPROPRIÉTÉS :\na|b et a|c → a|(bu+cv) pour tous u,v∈ℤ\na|b et b|a → |a|=|b|\nTransitivité : a|b et b|c → a|c",
+              remarque:"r = a mod b est l'opérateur modulo (%) en programmation, fondamental pour le hachage et l'indexation circulaire." },
+            { id:'T-AR1', type:'thm', nom:'Algorithme d\'Euclide et Bézout',
+              enonce:"ALGORITHME D'EUCLIDE :\nPGCD(a,b) = PGCD(b, a mod b), jusqu'à reste = 0.\nLe dernier reste non nul est le PGCD.\n\nExemple PGCD(252,180) :\n252=1×180+72 → PGCD(180,72)\n180=2×72+36 → PGCD(72,36)\n72=2×36+0 → PGCD=36\n\nIDENTITÉ DE BÉZOUT :\n∃ u,v∈ℤ : a·u + b·v = PGCD(a,b)\na et b premiers entre eux ⟺ PGCD(a,b)=1 ⟺ ∃u,v : au+bv=1\n\nPPCM : PGCD(a,b) × PPCM(a,b) = |a·b|" },
           ],
           exercices:[
-            { id:'EX-AR1', niveau:'Moyen', titre:'PGCD et congruences',
-              enonce:"Calculer PGCD(48,18). Vérifier que 17 ≡ 3 (mod 7).",
-              correction:"PGCD : 48=2×18+12 ; 18=1×12+6 ; 12=2×6+0. PGCD=6.\n17-3=14=2×7 → 17≡3 (mod 7). ✓" },
+            { id:'EX-AR1', niveau:'Facile', titre:'PGCD par Euclide',
+              enonce:"Calculer PGCD(48,18) par l'algorithme d'Euclide.",
+              correction:"48=2×18+12 ; 18=1×12+6 ; 12=2×6+0. PGCD=6." },
+            { id:'EX-AR2', niveau:'Intermédiaire', titre:'PPCM',
+              enonce:"Calculer PPCM(48,18).",
+              correction:"PGCD(48,18)=6. PPCM=48×18/6=864/6=144." },
+            { id:'EX-AR3', niveau:'Difficile', titre:'Coefficients de Bézout',
+              enonce:"Trouver u,v tels que 17u+5v=1.",
+              correction:"Euclide : 17=3×5+2 ; 5=2×2+1 ; 2=2×1.\nRemontée : 1=5−2×2=5−2(17−3×5)=7×5−2×17.\nDonc u=−2, v=7 : 17(−2)+5(7)=−34+35=1. ✓" },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-premiers-congruences', titre:'12.2 Nombres premiers et congruences',
+      notions:['Nombres premiers, crible, décomposition','Congruences a≡b (mod n)','Règles de calcul modulaire','Application RSA / cryptographie'],
+      blocs:[
+        {
+          notion:'🔐 Premiers et congruences',
+          theoremes:[
+            { id:'D-AR2', type:'def', nom:'Nombres premiers et décomposition',
+              enonce:"p premier ⟺ p≥2 et ses seuls diviseurs sont 1 et p.\n\nTEST DE PRIMALITÉ : p est premier si aucun entier d avec 2≤d≤√p ne divise p.\n\nTHÉORÈME FONDAMENTAL DE L'ARITHMÉTIQUE :\nTout entier n≥2 se décompose de façon unique en produit de facteurs premiers :\nn = p₁^a₁ · p₂^a₂ · … · pₖ^aₖ\n\nNombre de diviseurs de n : (a₁+1)(a₂+1)…(aₖ+1)\n\nExemple : 360=2³·3²·5 → (3+1)(2+1)(1+1)=24 diviseurs.",
+              remarque:"Le test jusqu'à √p est la base de l'algorithme de primalité naïf, de complexité O(√p)." },
+            { id:'F-AR1', type:'formule', nom:'Congruences modulo n',
+              enonce:"a ≡ b (mod n) ⟺ n | (a−b)\n\nRÈGLES DE CALCUL (compatibilité) :\nSi a≡b et c≡d (mod n) :\na+c ≡ b+d (mod n)\na·c ≡ b·d (mod n)\naᵏ ≡ bᵏ (mod n)\n\nEXPONENTIATION MODULAIRE (rapide) :\ncalculer aᵏ mod n par mises au carré successives.\n\nAPPLICATION RSA (cryptographie à clé publique) :\nChiffrement : c = mᵉ mod n\nDéchiffrement : m = cᵈ mod n",
+              remarque:"Les congruences sont au cœur de la cryptographie moderne (RSA, hachage, sommes de contrôle)." },
+          ],
+          exercices:[
+            { id:'EX-AR4', niveau:'Facile', titre:'Congruence',
+              enonce:"Vérifier que 17 ≡ 3 (mod 7) et donner 100 mod 7.",
+              correction:"17−3=14=2×7 → 17≡3 (mod 7). ✓\n100=14×7+2 → 100≡2 (mod 7)." },
+            { id:'EX-AR5', niveau:'Difficile', titre:'Exponentiation modulaire',
+              enonce:"Calculer 3¹⁰ mod 5.",
+              correction:"3¹≡3 ; 3²≡9≡4 ; 3⁴≡4²≡16≡1 (mod 5).\n3¹⁰=3⁸·3²≡(3⁴)²·3²≡1²·4≡4 (mod 5)." },
           ],
         },
       ],
@@ -766,25 +962,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'variables-aleatoires': {
   id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
   titre:'Variables Aléatoires & Loi Binomiale',
-  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p).",
+  desc:"Variable aléatoire discrète, loi de probabilité, espérance, variance, écart-type, schéma de Bernoulli et loi binomiale B(n,p), avec applications informatiques (fiabilité, transmission de bits).",
   souschapitres:[
     {
-      id:'sc-va', titre:'16.1 Variables aléatoires discrètes',
-      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X)','Loi binomiale B(n,p)'],
+      id:'sc-va', titre:'16.1 Variable aléatoire discrète',
+      notions:['Loi de probabilité P(X=xᵢ)','Espérance E(X)=Σxᵢpᵢ','Variance V(X) et écart-type σ','Linéarité E(aX+b), V(aX+b)'],
       blocs:[
         {
-          notion:'📐 Variable aléatoire et loi binomiale',
+          notion:'📐 Loi, espérance et variance',
           theoremes:[
-            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
-              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ = √V(X)" },
-            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
-              enonce:"X ~ B(n,p) : n épreuves de Bernoulli\nP(X=k) = Cn^k·p^k·(1-p)^(n-k)\nE(X)=np, V(X)=np(1-p)\n\nApplications : algorithmes probabilistes, tests de performance.",
-              remarque:"Loi binomiale utilisée pour modéliser les résultats binaires répétés (succès/échec)." },
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire et moments',
+              enonce:"X v.a. discrète prenant les valeurs x₁,…,xₙ avec P(X=xᵢ)=pᵢ.\nLOI : tableau (xᵢ , pᵢ) avec Σpᵢ=1, 0≤pᵢ≤1.\n\nESPÉRANCE : E(X)=Σ xᵢ·pᵢ\nE(aX+b)=a·E(X)+b\n\nVARIANCE : V(X)=E(X²)−[E(X)]²=Σ xᵢ²pᵢ − [E(X)]²\nV(aX+b)=a²·V(X)\n\nÉCART-TYPE : σ(X)=√V(X)",
+              remarque:"E(X) = comportement moyen sur un grand nombre d'exécutions (utile pour le coût moyen d'un algorithme)." },
           ],
           exercices:[
-            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale — test réseau',
-              enonce:"Prob. erreur de transmission = 0,1. Paquet de 8 bits. X = nombre d'erreurs. Calculer P(X=0) et E(X).",
-              correction:"X~B(8;0,1). P(X=0)=(0,9)^8≈0,430. E(X)=8×0,1=0,8." },
+            { id:'EX-VA1', niveau:'Facile', titre:'Loi et espérance',
+              enonce:"X prend 0,1,2 avec P(0)=0,5 ; P(1)=0,3 ; P(2)=0,2. Calculer E(X).",
+              correction:"Σp=1 ✓. E(X)=0×0,5+1×0,3+2×0,2=0,7." },
+            { id:'EX-VA2', niveau:'Intermédiaire', titre:'Variance et écart-type',
+              enonce:"Avec la loi précédente, calculer V(X) et σ(X).",
+              correction:"E(X²)=0,3+0,8=1,1. V(X)=1,1−0,7²=0,61. σ=√0,61≈0,78." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-binomiale', titre:'16.2 Schéma de Bernoulli et loi binomiale',
+      notions:['Épreuve de Bernoulli (succès/échec)','Schéma : n épreuves indépendantes','Loi binomiale B(n,p)','E(X)=np, V(X)=np(1−p)'],
+      blocs:[
+        {
+          notion:'🎯 Loi binomiale B(n,p)',
+          theoremes:[
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale',
+              enonce:"ÉPREUVE DE BERNOULLI : deux issues, succès (p) / échec (1−p).\nSCHÉMA : n épreuves identiques et INDÉPENDANTES.\nX = nombre de succès → X ~ B(n,p).\n\nP(X=k)=Cₙᵏ·pᵏ·(1−p)ⁿ⁻ᵏ   (k=0,…,n)\n\nE(X)=n·p\nV(X)=n·p·(1−p)\nσ(X)=√(n·p·(1−p))\n\nP(X≥1)=1−P(X=0)=1−(1−p)ⁿ",
+              remarque:"Modèle idéal pour des résultats binaires répétés : bits transmis, requêtes réussies, tests pass/fail." },
+          ],
+          exercices:[
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Transmission de bits',
+              enonce:"Prob. d'erreur d'un bit = 0,1. Paquet de 8 bits, X = nombre d'erreurs. Calculer P(X=0) et E(X).",
+              correction:"X~B(8 ; 0,1). P(X=0)=(0,9)⁸≈0,430. E(X)=8×0,1=0,8." },
+            { id:'EX-VA4', niveau:'Difficile', titre:'Au moins une panne',
+              enonce:"Un serveur tombe en panne avec proba 0,05 par jour, indépendamment. Sur 10 jours, P(au moins une panne) ?",
+              correction:"X~B(10 ; 0,05). P(X≥1)=1−(0,95)¹⁰.\n(0,95)¹⁰≈0,599. P(X≥1)≈0,401." },
           ],
         },
       ],
@@ -795,22 +1014,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'statistiques': {
   id:'statistiques', emoji:'📊', badge:'Probabilités', color:'#f5c842',
   titre:'Statistiques',
-  desc:"Paramètres statistiques, histogrammes, diagrammes, courbes statistiques.",
+  desc:"Paramètres d'une série (moyenne, médiane, variance, écart-type), séries regroupées en classes, séries à deux variables, ajustement affine par les moindres carrés et coefficient de corrélation.",
   souschapitres:[
     {
       id:'sc-stat', titre:'17.1 Paramètres statistiques',
-      notions:['Moyenne x-barre','Variance s² et écart-type s','Séries simples et groupées','Représentations graphiques'],
+      notions:['Moyenne x̄, médiane','Variance s² et écart-type s','Séries simples et groupées','Centres de classe'],
       blocs:[
         {
           notion:'📐 Statistiques descriptives',
           theoremes:[
-            { id:'F-ST1', type:'formule', nom:'Paramètres statistiques',
-              enonce:"Série x1,...,xn (poids n1,...,nk, N=Σni) :\n\nMoyenne : x̄ = (Σ ni·xi)/N\nVariance : s² = (Σ ni·xi²)/N - x̄²\nÉcart-type : s = √s²\n\nSéries regroupées en classes [ak,ak+1[ :\nCentre ck = (ak+ak+1)/2\nMêmes formules avec les centres." },
+            { id:'F-ST1', type:'formule', nom:'Paramètres de position et de dispersion',
+              enonce:"Série x₁,…,xₚ d'effectifs n₁,…,nₚ, N=Σnᵢ :\n\nPOSITION :\nMoyenne x̄=(Σ nᵢxᵢ)/N\nMédiane : valeur partageant l'effectif en deux moitiés\n\nDISPERSION :\nÉtendue = max − min\nVariance s²=(Σ nᵢxᵢ²)/N − x̄²  (formule de König)\nÉcart-type s=√s²\n\nSÉRIES EN CLASSES [aₖ;aₖ₊₁[ :\nCentre cₖ=(aₖ+aₖ₊₁)/2, on remplace xᵢ par cₖ.",
+              remarque:"En informatique : profils de temps de réponse, latence — la moyenne seule trompe ; toujours regarder σ." },
           ],
           exercices:[
-            { id:'EX-ST1', niveau:'Facile', titre:'Paramètres statistiques',
-              enonce:"Temps de réponse (ms) : 10, 12, 8, 15, 10. Calculer moyenne et écart-type.",
-              correction:"x̄=(10+12+8+15+10)/5=55/5=11. s²=(100+144+64+225+100)/5-121=126,6-121=5,6. s=√5,6≈2,37 ms." },
+            { id:'EX-ST1', niveau:'Facile', titre:'Moyenne et écart-type',
+              enonce:"Temps de réponse (ms) : 10, 12, 8, 15, 10. Calculer x̄ et s.",
+              correction:"x̄=(10+12+8+15+10)/5=55/5=11.\ns²=(100+144+64+225+100)/5−121=126,6−121=5,6. s=√5,6≈2,37 ms." },
+            { id:'EX-ST2', niveau:'Intermédiaire', titre:'Série en classes',
+              enonce:"Classes [0;10[, [10;20[, [20;30[ d'effectifs 4, 10, 6. Calculer x̄.",
+              correction:"Centres 5,15,25. N=20.\nx̄=(4×5+10×15+6×25)/20=320/20=16." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-ajustement', titre:'17.2 Séries doubles et ajustement affine',
+      notions:['Nuage de points, point moyen G','Covariance cov(x,y)','Droite de régression y=ax+b','Coefficient de corrélation r'],
+      blocs:[
+        {
+          notion:'📈 Ajustement affine (moindres carrés)',
+          theoremes:[
+            { id:'F-ST2', type:'formule', nom:'Droite de régression et corrélation',
+              enonce:"Série double (xᵢ ; yᵢ), point moyen G(x̄ ; ȳ).\n\nVARIANCES / COVARIANCE :\nV(x)=(Σxᵢ²)/N − x̄² ; cov(x,y)=(Σxᵢyᵢ)/N − x̄·ȳ\n\nDROITE DE RÉGRESSION de y en x :\ny = a·x + b , a = cov(x,y)/V(x) , b = ȳ − a·x̄\n→ passe TOUJOURS par le point moyen G.\n\nCOEFFICIENT DE CORRÉLATION :\nr = cov(x,y)/(σₓ·σ_y) , −1 ≤ r ≤ 1\n|r| proche de 1 → forte liaison linéaire.",
+              remarque:"Usage : prévision (interpoler/extrapoler y pour une valeur de x). Régression = base de l'apprentissage supervisé." },
+          ],
+          exercices:[
+            { id:'EX-ST3', niveau:'Intermédiaire', titre:'Point moyen',
+              enonce:"x : 1,2,3,4 et y : 3,5,6,8. Calculer le point moyen G.",
+              correction:"x̄=2,5 ; ȳ=22/4=5,5. G(2,5 ; 5,5)." },
+            { id:'EX-ST4', niveau:'Difficile', titre:'Régression et prévision',
+              enonce:"Avec ces données, déterminer y=ax+b puis prévoir y pour x=5.",
+              correction:"Σxy=63. cov=63/4−2,5×5,5=15,75−13,75=2.\nV(x)=7,5−6,25=1,25. a=2/1,25=1,6. b=5,5−1,6×2,5=1,5.\ny=1,6x+1,5 → pour x=5 : y=9,5." },
           ],
         },
       ],

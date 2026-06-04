@@ -107,6 +107,38 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-reference', titre:'1.2 Fonctions de référence et fonctions économiques',
+      notions:['Fonctions usuelles : x, x², x³, 1/x, √x, |x|','Allure et sens de variation','Coût C(q), coût moyen CM, coût marginal Cm','Recette, bénéfice, seuil de rentabilité'],
+      blocs:[
+        {
+          notion:'📈 Fonctions de référence',
+          theoremes:[
+            { id:'D-FG4', type:'def', nom:'Fonctions usuelles et leurs allures',
+              enonce:"AFFINE x↦ax+b : droite, monotone (croissante si a>0).\nCARRÉ x↦x² : parabole, paire, ↓ sur ]−∞;0], ↑ sur [0;+∞[.\nCUBE x↦x³ : impaire, strictement croissante.\nINVERSE x↦1/x : hyperbole, décroissante sur ]0;+∞[.\nRACINE x↦√x : sur [0;+∞[, croissante, concave.\nVALEUR ABSOLUE x↦|x| : en V, paire, min 0.\n\nCes allures servent de repères pour reconnaître la forme d'une courbe avant l'étude détaillée.",
+              remarque:"Lecture graphique : image f(a), antécédents (ordonnée donnée), signe (position /Ox), résolution de f(x)=k (intersection avec y=k)." },
+          ],
+          exercices:[
+            { id:'EX-FG5', niveau:'Facile', titre:'Sens de variation',
+              enonce:"Donner le sens de variation de f(x)=x² sur ℝ et de g(x)=1/x sur ]0;+∞[.",
+              correction:"x² : décroissante sur ]−∞;0], croissante sur [0;+∞[.\n1/x : décroissante sur ]0;+∞[." },
+          ],
+        },
+        {
+          notion:'💼 Fonctions économiques',
+          theoremes:[
+            { id:'D-FG5', type:'def', nom:'Coût, recette, bénéfice',
+              enonce:"q = quantité produite (q≥0).\n\nCOÛT TOTAL : C(q) (charges fixes + variables)\nCOÛT MOYEN (unitaire) : CM(q)=C(q)/q\nCOÛT MARGINAL : Cm(q)=C'(q) (coût de la (q+1)-ème unité)\n\nRECETTE : R(q)=p·q  (p = prix de vente unitaire)\nBÉNÉFICE : B(q)=R(q)−C(q)\n\nSEUIL DE RENTABILITÉ : plus petite quantité q telle que B(q)≥0 (R=C).\nLe bénéfice est maximal là où B'(q)=0, soit R'(q)=C'(q) (recette marginale = coût marginal).",
+              remarque:"Le coût moyen est minimal au point où CM(q)=Cm(q) : la courbe de coût marginal coupe celle du coût moyen en son minimum." },
+          ],
+          exercices:[
+            { id:'EX-FG6', niveau:'Intermédiaire', titre:'Seuil de rentabilité',
+              enonce:"C(q)=q²+2q+100, prix unitaire p=22 DT. Déterminer le bénéfice B(q) et la quantité qui le maximise.",
+              correction:"R(q)=22q. B(q)=22q−(q²+2q+100)=−q²+20q−100.\nB'(q)=−2q+20=0 → q=10. B(10)=−100+200−100=0.\nLe bénéfice maximal est 0, atteint pour q=10 (seuil de rentabilité tangent)." },
+          ],
+        },
+      ]
+    },
   ]
 },
 
@@ -677,40 +709,56 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'maths-financieres': {
   id:'maths-financieres', emoji:'💹', badge:'Analyse', color:'#10b981',
   titre:'Mathématiques Financières',
-  desc:"Intérêts simples, intérêts composés, valeur acquise, valeur actuelle, annuités.",
+  desc:"Intérêts simples et composés, valeur acquise et valeur actuelle, taux proportionnel et taux équivalent, annuités constantes (capitalisation et actualisation), amortissement d'un emprunt.",
   souschapitres:[
     {
       id:'sc-mf1', titre:'8.1 Intérêts simples et composés',
-      notions:['Intérêt simple I=C0·i·n','Intérêt composé Cn=C0(1+i)^n','Valeur acquise et valeur actuelle','Taux équivalent'],
+      notions:['Intérêt simple I=C₀·i·n','Intérêt composé Cₙ=C₀(1+i)ⁿ','Valeur acquise / valeur actuelle','Taux proportionnel vs taux équivalent'],
       blocs:[
         {
           notion:'📐 Intérêts',
           theoremes:[
             { id:'F-MF1', type:'formule', nom:'Intérêts simples et composés',
-              enonce:"Intérêts simples :\nI = C₀ · i · n\nCn = C₀(1 + i·n)\n\nIntérêts composés (capitalisation) :\nCn = C₀(1+i)^n\nValeur acquise = Cn\nValeur actuelle = Cn/(1+i)^n = C₀\n\nTaux effectif = (1+iₘois)^12 - 1" },
+              enonce:"INTÉRÊTS SIMPLES (l'intérêt ne se capitalise pas) :\nI = C₀ · i · n\nValeur acquise : Cₙ = C₀(1 + i·n)\n\nINTÉRÊTS COMPOSÉS (l'intérêt s'ajoute au capital) :\nValeur acquise : Cₙ = C₀·(1+i)ⁿ\nValeur actuelle (actualisation) : C₀ = Cₙ·(1+i)⁻ⁿ\n\ni = taux par période, n = nombre de périodes.",
+              remarque:"À court terme (n<1 an) on utilise souvent l'intérêt simple ; à long terme l'intérêt composé." },
+            { id:'D-MF1', type:'def', nom:'Taux proportionnel et taux équivalent',
+              enonce:"TAUX PROPORTIONNEL (intérêts simples) :\ntaux période = taux annuel / nombre de périodes\nEx : taux mensuel proportionnel = i_annuel/12\n\nTAUX ÉQUIVALENT (intérêts composés) :\nDeux taux sont équivalents s'ils donnent la même valeur acquise.\n(1+i_annuel) = (1+i_mensuel)¹²\n→ i_mensuel = (1+i_annuel)^(1/12) − 1\n\nTAUX EFFECTIF annuel à partir d'un taux périodique iₚ sur p périodes :\ni_eff = (1+iₚ)^p − 1",
+              remarque:"Le taux équivalent (composé) est légèrement inférieur au taux proportionnel correspondant." },
           ],
           exercices:[
             { id:'EX-MF1', niveau:'Facile', titre:'Placement à intérêts composés',
-              enonce:"C₀=5000 DT, i=4% annuel, n=3 ans. Calculer C3.",
-              correction:"C3=5000×(1,04)^3=5000×1,124864=5624,32 DT." },
+              enonce:"C₀=5000 DT, i=4% annuel, n=3 ans. Calculer C₃.",
+              correction:"C₃=5000×(1,04)³=5000×1,124864=5624,32 DT." },
+            { id:'EX-MF3', niveau:'Intermédiaire', titre:'Valeur actuelle',
+              enonce:"Quelle somme placer aujourd'hui à 5% composé pour disposer de 10000 DT dans 4 ans ?",
+              correction:"C₀=10000×(1,05)⁻⁴=10000/1,21550625≈8227,02 DT." },
+            { id:'EX-MF4', niveau:'Difficile', titre:'Taux équivalent',
+              enonce:"Un taux annuel est de 6%. Calculer le taux mensuel équivalent.",
+              correction:"i_mensuel=(1,06)^(1/12)−1≈1,00487−1=0,00487 soit ≈0,487%/mois.\n(à comparer au taux proportionnel 6%/12=0,5%)." },
           ],
         },
       ],
     },
     {
-      id:'sc-mf2', titre:'8.2 Annuités',
-      notions:["Annuité constante a","Valeur acquise Va=a·[(1+i)^n-1]/i","Valeur actuelle Vp=a·[1-(1+i)^(-n)]/i","Tableau d'amortissement"],
+      id:'sc-mf2', titre:'8.2 Annuités et amortissement',
+      notions:["Annuité constante a","Valeur acquise Vₐ=a·[(1+i)ⁿ−1]/i","Valeur actuelle V₀=a·[1−(1+i)⁻ⁿ]/i","Amortissement d'un emprunt"],
       blocs:[
         {
           notion:'📐 Annuités',
           theoremes:[
             { id:'F-MF2', type:'formule', nom:'Valeur acquise et actuelle des annuités',
-              enonce:"Annuités constantes a versées en fin de période :\n\nValeur acquise :\nVa = a · [(1+i)^n - 1] / i\n\nValeur actuelle :\nVp = a · [1 - (1+i)^(-n)] / i\n\nAmortissement d'emprunt :\nC₀ = Vp  (valeur actuelle = capital emprunté)\na = C₀ · i / [1-(1+i)^(-n)]" },
+              enonce:"Annuités constantes a versées en fin de chaque période :\n\nVALEUR ACQUISE (capitalisation) :\nVₐ = a · [(1+i)ⁿ − 1] / i\n\nVALEUR ACTUELLE (actualisation) :\nV₀ = a · [1 − (1+i)⁻ⁿ] / i\n\nAMORTISSEMENT D'UN EMPRUNT (capital C₀) :\nC₀ = V₀ (valeur actuelle des annuités = capital emprunté)\nAnnuité : a = C₀ · i / [1 − (1+i)⁻ⁿ]",
+              remarque:"Suite géométrique de raison (1+i) : ces formules sont la somme des termes d'une suite géométrique." },
+            { id:'M-MF1', type:'methode', nom:'Tableau d\'amortissement',
+              enonce:"Pour chaque période k (emprunt C₀, annuité a constante) :\n1. Intérêt de la période : Iₖ = i · (capital restant dû)\n2. Amortissement (part de capital remboursée) : Aₖ = a − Iₖ\n3. Nouveau capital restant dû : Cₖ = Cₖ₋₁ − Aₖ\n\nL'intérêt diminue et l'amortissement augmente à chaque période ;\nla somme des amortissements = C₀ ; le capital restant dû final = 0." },
           ],
           exercices:[
-            { id:'EX-MF2', niveau:'Moyen', titre:'Calcul annuité',
+            { id:'EX-MF2', niveau:'Intermédiaire', titre:'Calcul d\'annuité',
               enonce:"Emprunt de 20000 DT à 5% sur 4 ans. Calculer l'annuité a.",
-              correction:"a = 20000×0,05/[1-(1,05)^(-4)] = 1000/[1-0,8227] = 1000/0,1773 ≈ 5640,5 DT." },
+              correction:"a=20000×0,05/[1−(1,05)⁻⁴]=1000/[1−0,82270]=1000/0,17730≈5640,2 DT." },
+            { id:'EX-MF5', niveau:'Difficile', titre:'Valeur acquise d\'un plan d\'épargne',
+              enonce:"On verse 1000 DT en fin d'année pendant 5 ans à 4% composé. Valeur acquise ?",
+              correction:"Vₐ=1000×[(1,04)⁵−1]/0,04=1000×[1,2166529−1]/0,04=1000×5,4163≈5416,3 DT." },
           ],
         },
       ],
@@ -721,42 +769,55 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'matrices-systemes': {
   id:'matrices-systemes', emoji:'🧮', badge:'Algèbre', color:'#a78bfa',
   titre:'Matrices & Systèmes Linéaires',
-  desc:"Matrices, opérations, déterminants, inverse A^(-1), systèmes AX=b, applications économiques.",
+  desc:"Matrices et opérations (somme, produit, transposée), déterminant et inverse d'ordre 2 et 3, résolution de systèmes AX=b par méthode matricielle et formules de Cramer, applications économiques.",
   souschapitres:[
     {
       id:'sc-mat', titre:'9.1 Matrices et opérations',
-      notions:["Définition matrice (m×n)","Addition et produit scalaire","Produit AB","Matrice identité et inverse"],
+      notions:["Matrice (m×n), transposée","Addition et produit par un scalaire","Produit matriciel AB","Déterminant et inverse 2×2 / 3×3"],
       blocs:[
         {
           notion:'📐 Matrices',
           theoremes:[
             { id:'D-MA1', type:'def', nom:'Matrice et opérations',
-              enonce:"Matrice A de taille (m×n) : m lignes, n colonnes.\n\nAddition A+B : même taille, terme à terme.\nProduit λA : multiplier chaque terme par λ.\nProduit AB : (AB)ij = Σk aik·bkj (A:(m×p), B:(p×n))\n\nMatrice identité In : 1 sur diagonale, 0 ailleurs.\nA⁻¹ existe si det(A)≠0 : A·A⁻¹=In" },
+              enonce:"Matrice A de taille (m×n) : m lignes, n colonnes.\n\nADDITION A+B : même taille, terme à terme.\nPRODUIT λA : multiplier chaque terme par λ.\nPRODUIT AB : (AB)ᵢⱼ = Σₖ aᵢₖ·bₖⱼ\n  Condition : nb colonnes de A = nb lignes de B.\n  Attention : AB ≠ BA en général.\nTRANSPOSÉE Aᵀ : échange lignes et colonnes.\n\nMATRICE IDENTITÉ Iₙ : 1 sur la diagonale, 0 ailleurs (A·Iₙ=A).",
+              remarque:"Le produit matriciel modélise l'enchaînement de transformations ou la combinaison de ressources/coûts." },
             { id:'F-MA2', type:'formule', nom:'Déterminant et inverse',
-              enonce:"Déterminant ordre 2 :\ndet(A)=ad-bc pour A=[[a,b],[c,d]]\n\nInverse ordre 2 :\nA⁻¹ = (1/det(A))·[[d,-b],[-c,a]]\n\nDéterminant ordre 3 (développement selon ligne 1) :\ndet(A)=a11·M11-a12·M12+a13·M13" },
+              enonce:"DÉTERMINANT ORDRE 2 : A=(a b ; c d)\ndet(A) = ad − bc\n\nINVERSE ORDRE 2 (si det≠0) :\nA⁻¹ = (1/det(A))·(d −b ; −c a)\n\nDÉTERMINANT ORDRE 3 (développement selon la 1ʳᵉ ligne) :\ndet(A) = a₁₁·Δ₁₁ − a₁₂·Δ₁₂ + a₁₃·Δ₁₃\noù Δ₁ⱼ est le déterminant 2×2 obtenu en supprimant ligne 1 et colonne j.\n\nA inversible ⟺ det(A) ≠ 0." },
           ],
           exercices:[
-            { id:'EX-MA1', niveau:'Moyen', titre:'Inverse de matrice',
-              enonce:"A=[[2,1],[3,2]]. Calculer A^(-1).",
-              correction:"det(A)=4-3=1. A^(-1)=[[2,-1],[-3,2]]. Vérif: A·A^(-1)=I2." },
+            { id:'EX-MA1', niveau:'Facile', titre:'Inverse 2×2',
+              enonce:"A=(2 1 ; 3 2). Calculer A⁻¹.",
+              correction:"det(A)=2×2−1×3=1. A⁻¹=(2 −1 ; −3 2). Vérif : A·A⁻¹=I₂." },
+            { id:'EX-MA2', niveau:'Intermédiaire', titre:'Produit matriciel',
+              enonce:"A=(1 2 ; 0 3), B=(2 0 ; 1 4). Calculer AB.",
+              correction:"AB=(1×2+2×1, 1×0+2×4 ; 0×2+3×1, 0×0+3×4)=(4 8 ; 3 12)." },
+            { id:'EX-MA3', niveau:'Difficile', titre:'Déterminant 3×3',
+              enonce:"Calculer det de A=(1 2 0 ; 0 1 3 ; 2 0 1).",
+              correction:"det=1·(1×1−3×0) − 2·(0×1−3×2) + 0\n=1·1 − 2·(−6) + 0 = 1+12 = 13." },
           ],
         },
       ],
     },
     {
-      id:'sc-sys', titre:'9.2 Systèmes linéaires',
-      notions:["Système AX=b","Méthode matricielle X=A^(-1)b","Méthode de Gauss","Applications économiques"],
+      id:'sc-sys', titre:'9.2 Systèmes linéaires et applications',
+      notions:["Écriture AX=b","Méthode matricielle X=A⁻¹b","Formules de Cramer","Modélisation économique"],
       blocs:[
         {
           notion:'📐 Systèmes linéaires',
           theoremes:[
-            { id:'T-SY1', type:'thm', nom:'Résolution par méthode matricielle',
-              enonce:"Système AX=b (n équations, n inconnues) :\n\nSi det(A)≠0, unique solution : X = A^(-1)·b\n\nExemple économique :\n2x+y=100 (production A)\n3x+2y=180 (production B)\n\nA=[[2,1],[3,2]], b=[[100],[180]]\nA^(-1)=[[2,-1],[-3,2]]\nX=[[2×100-180],[(-3)×100+2×180]]=[[20],[60]]" },
+            { id:'T-SY1', type:'thm', nom:'Résolution matricielle et Cramer',
+              enonce:"Système AX=b (n équations, n inconnues) :\nSi det(A)≠0 → solution unique : X = A⁻¹·b\n\nFORMULES DE CRAMER (système 2×2) :\n{ ax+by=e ; cx+dy=f }, det=ad−bc≠0\nx = (e·d − b·f)/det ;  y = (a·f − e·c)/det\n\nNATURE DES SOLUTIONS :\ndet≠0 → solution unique ; det=0 → aucune ou une infinité.",
+              remarque:"Modélisation EG : équilibre offre/demande, répartition de production, mélange de ressources sous contraintes." },
+            { id:'D-SY1', type:'def', nom:'Mise en équation économique',
+              enonce:"Étapes pour modéliser un problème par un système :\n1. Identifier les inconnues (quantités, prix…).\n2. Traduire chaque contrainte en équation linéaire.\n3. Écrire sous forme AX=b.\n4. Résoudre (Cramer ou X=A⁻¹b) et interpréter (q≥0).\n\nExemple : 2 produits, contraintes de coût et de temps →\nsystème 2×2 dont la solution donne les quantités optimales." },
           ],
           exercices:[
-            { id:'EX-SY1', niveau:'Moyen', titre:'Système économique',
+            { id:'EX-SY1', niveau:'Intermédiaire', titre:'Système économique',
               enonce:"x+2y=14 et 3x+y=12. Résoudre par méthode matricielle.",
-              correction:"A=[[1,2],[3,1]], det=1-6=-5. A^(-1)=(1/-5)[[1,-2],[-3,1]].\nX=A^(-1)b=(-1/5)[[14-24],[(-3×14)+12]]=(-1/5)[[-10],[-30]]=[2,6]." },
+              correction:"A=(1 2 ; 3 1), det=1−6=−5. \nCramer : x=(14×1−2×12)/(−5)=(14−24)/(−5)=2 ;\ny=(1×12−14×3)/(−5)=(12−42)/(−5)=6.\nSolution (2 ; 6)." },
+            { id:'EX-SY2', niveau:'Difficile', titre:'Production sous contraintes',
+              enonce:"Deux produits A et B. 2A+3B=130 (heures), 4A+B=160 (matière). Trouver les quantités A et B.",
+              correction:"det=(2×1−3×4)=2−12=−10.\nA=(130×1−3×160)/(−10)=(130−480)/(−10)=35 ;\nB=(2×160−130×4)/(−10)=(320−520)/(−10)=20.\nA=35, B=20." },
           ],
         },
       ],
@@ -767,25 +828,48 @@ const ALL_CHAPTERS: Record<string,Chap> = {
 'variables-aleatoires': {
   id:'variables-aleatoires', emoji:'🎲', badge:'Probabilités', color:'#f5c842',
   titre:'Variables Aléatoires & Loi Binomiale',
-  desc:"Variable aléatoire discrète, espérance, variance, loi binomiale B(n,p), applications économiques.",
+  desc:"Variable aléatoire discrète, loi de probabilité, espérance, variance, écart-type, schéma de Bernoulli et loi binomiale B(n,p), avec applications économiques (contrôle qualité, espérance de gain).",
   souschapitres:[
     {
-      id:'sc-va', titre:'14.1 Variables aléatoires discrètes',
-      notions:['Loi de probabilité P(X=xi)','Espérance E(X)','Variance V(X) et écart-type','Loi binomiale B(n,p)'],
+      id:'sc-va', titre:'14.1 Variable aléatoire discrète',
+      notions:['Loi de probabilité P(X=xᵢ)','Espérance E(X)=Σxᵢpᵢ','Variance V(X) et écart-type σ','Espérance de gain'],
       blocs:[
         {
-          notion:'📐 Variable aléatoire et loi binomiale',
+          notion:'📐 Loi, espérance et variance',
           theoremes:[
-            { id:'D-VA1', type:'def', nom:'Variable aléatoire discrète',
-              enonce:"X prenant valeurs x1,...,xn avec P(X=xi)=pi (Σpi=1)\n\nEspérance : E(X) = Σ xi·pi\nVariance : V(X) = E(X²)-[E(X)]²\nÉcart-type : σ = √V(X)\n\nLinéarité : E(aX+b)=aE(X)+b\nV(aX+b)=a²V(X)" },
-            { id:'F-VA2', type:'formule', nom:'Loi binomiale B(n,p)',
-              enonce:"X ~ B(n,p) : n épreuves de Bernoulli indépendantes\n\nP(X=k) = Cn^k · p^k · (1-p)^(n-k)\n\nE(X) = np\nV(X) = np(1-p)\n\nApplication économique :\nTaux de défaut, contrôle qualité, sondages.",
-              remarque:"Si n grand et p petit : B(n,p) ≈ Poisson(λ=np)." },
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire et moments',
+              enonce:"X v.a. discrète prenant les valeurs x₁,…,xₙ avec P(X=xᵢ)=pᵢ.\nLOI : tableau (xᵢ , pᵢ) avec Σpᵢ=1, 0≤pᵢ≤1.\n\nESPÉRANCE : E(X)=Σ xᵢ·pᵢ\nE(aX+b)=a·E(X)+b\n\nVARIANCE : V(X)=E(X²)−[E(X)]²=Σ xᵢ²pᵢ − [E(X)]²\nV(aX+b)=a²·V(X)\n\nÉCART-TYPE : σ(X)=√V(X)",
+              remarque:"En EG, E(X) s'interprète comme un gain (ou coût) moyen espéré ; un jeu est équitable si E(X)=0." },
           ],
           exercices:[
-            { id:'EX-VA1', niveau:'Moyen', titre:'Loi binomiale — contrôle qualité',
-              enonce:"Lot de 10 pièces, 15% de défectueuses. X=nombre de défectueuses. Calculer P(X=0) et E(X).",
-              correction:"X~B(10;0,15). P(X=0)=(0,85)^10≈0,197. E(X)=10×0,15=1,5." },
+            { id:'EX-VA1', niveau:'Facile', titre:'Espérance et variance',
+              enonce:"X prend 0,1,2 avec P(0)=0,5 ; P(1)=0,3 ; P(2)=0,2. Calculer E(X) et V(X).",
+              correction:"E(X)=0×0,5+1×0,3+2×0,2=0,7.\nE(X²)=0,3+0,8=1,1. V(X)=1,1−0,49=0,61." },
+            { id:'EX-VA2', niveau:'Intermédiaire', titre:'Espérance de gain',
+              enonce:"Un billet de loterie coûte 2 DT. Gain de 10 DT avec proba 0,1, sinon rien. Le jeu est-il favorable au joueur ?",
+              correction:"Gain net G : +8 (proba 0,1) ou −2 (proba 0,9).\nE(G)=8×0,1+(−2)×0,9=0,8−1,8=−1 DT.\nE(G)<0 → jeu défavorable au joueur (espérance de perte 1 DT)." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-binomiale', titre:'14.2 Schéma de Bernoulli et loi binomiale',
+      notions:['Épreuve de Bernoulli (succès/échec)','Schéma : n épreuves indépendantes','Loi binomiale B(n,p)','E(X)=np, V(X)=np(1−p)'],
+      blocs:[
+        {
+          notion:'🎯 Loi binomiale B(n,p)',
+          theoremes:[
+            { id:'F-VA2', type:'formule', nom:'Loi binomiale',
+              enonce:"ÉPREUVE DE BERNOULLI : deux issues, succès (p) / échec (1−p).\nSCHÉMA : n épreuves identiques et INDÉPENDANTES.\nX = nombre de succès → X ~ B(n,p).\n\nP(X=k)=Cₙᵏ·pᵏ·(1−p)ⁿ⁻ᵏ   (k=0,…,n)\n\nE(X)=n·p\nV(X)=n·p·(1−p)\nσ(X)=√(n·p·(1−p))\n\nP(X≥1)=1−P(X=0)=1−(1−p)ⁿ",
+              remarque:"Modèle idéal pour le contrôle qualité, les taux de défaut et les sondages (réponses oui/non)." },
+          ],
+          exercices:[
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Contrôle qualité',
+              enonce:"Lot de 10 pièces, 15% de défectueuses. X = nombre de défectueuses. Calculer P(X=0) et E(X).",
+              correction:"X~B(10 ; 0,15). P(X=0)=(0,85)¹⁰≈0,197. E(X)=10×0,15=1,5." },
+            { id:'EX-VA4', niveau:'Difficile', titre:'Au moins un défaut',
+              enonce:"Avec les données précédentes, calculer P(X≥1).",
+              correction:"P(X≥1)=1−P(X=0)=1−(0,85)¹⁰≈1−0,197=0,803." },
           ],
         },
       ],
