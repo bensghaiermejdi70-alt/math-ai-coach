@@ -834,7 +834,7 @@ function RichText({ text }: { text: string }) {
         if (seg.type === 'graph') {
           try {
             const parsed = JSON.parse(seg.content)
-            return <SmartGraph key={idx} spec={parsed} />
+            return <div key={idx} className="graph-capture" data-graph-idx={segments.slice(0, idx).filter(s => s.type === 'graph').length}><SmartGraph spec={parsed} /></div>
           } catch(parseErr) {
             // Tentative de réparation JSON simple (guillemets manquants, trailing comma)
             try {
@@ -843,7 +843,7 @@ function RichText({ text }: { text: string }) {
                 .replace(/,\s*]/g, ']')           // trailing comma dans array
                 .replace(/([{,]\s*)(\w+):/g, '$1"$2":')  // clés sans guillemets
               const parsed = JSON.parse(fixed)
-              return <SmartGraph key={idx} spec={parsed} />
+              return <div key={idx} className="graph-capture" data-graph-idx={segments.slice(0, idx).filter(s => s.type === 'graph').length}><SmartGraph spec={parsed} /></div>
             } catch {
               return (
                 <div key={idx} style={{ fontSize: 11, color: '#fcd34d', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', borderRadius: 8, margin: '6px 0', fontFamily:'monospace' }}>
@@ -1061,6 +1061,8 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   .tbl-row { font-family: monospace; font-size: 12px; white-space: pre; color: #444; }
   .spacer { height: 8px; }
   .graph-note { color: #6366f1; font-size: 12px; font-style: italic; padding: 6px 10px; background: #f0f4ff; border-radius: 6px; margin: 8px 0; }
+  .graph-img { text-align: center; margin: 14px 0; }
+  .graph-img img { max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; background: #0f1020; }
 
   /* KaTeX display override pour l'impression */
   .katex-display { margin: 10px 0 !important; overflow-x: auto; }
@@ -1177,12 +1179,44 @@ ${bodyLines}
 </html>`
 }
 
-function openSolutionPdf(exercise: string, solution: string, mode: string, action: 'print' | 'download' = 'print') {
-  // Aplatit les blocs [GRAPH:{...}] multi-lignes en une seule note (évite la fuite du JSON brut)
+async function openSolutionPdf(exercise: string, solution: string, mode: string, action: 'print' | 'download' = 'print', targetWin?: Window | null) {
+  // Capture les graphiques DÉJÀ rendus dans la page (SVG/Plotly) en images PNG
+  function ensureHtml2Canvas(): Promise<any> {
+    return new Promise(res => {
+      const w = window as any
+      if (w.html2canvas) return res(w.html2canvas)
+      const s = document.createElement('script')
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+      s.onload = () => res((window as any).html2canvas)
+      s.onerror = () => res(null)
+      document.head.appendChild(s)
+    })
+  }
+  async function captureGraphs(): Promise<string[]> {
+    try {
+      const box = document.getElementById('solution-render-box')
+      if (!box) return []
+      const nodes = Array.from(box.querySelectorAll('.graph-capture')) as HTMLElement[]
+      if (nodes.length === 0) return []
+      const h2c = await ensureHtml2Canvas()
+      if (!h2c) return []
+      const imgs: string[] = []
+      for (const n of nodes) {
+        try {
+          const canvas = await h2c(n, { backgroundColor: '#0f1020', scale: 2, useCORS: true, logging: false })
+          imgs.push(canvas.toDataURL('image/png'))
+        } catch { imgs.push('') }
+      }
+      return imgs
+    } catch { return [] }
+  }
+  const graphImgs = await captureGraphs()
+
+  // Remplace chaque bloc [GRAPH:{...}] (multi-lignes) par un placeholder indexé
   function collapseGraphBlocks(sol: string): string {
     try {
-      const segs = parseGraphSegments(sol)
-      return segs.map(s => s.type === 'graph' ? '\n[GRAPH:x]\n' : s.content).join('')
+      let gi = -1
+      return parseGraphSegments(sol).map(s => s.type === 'graph' ? `\n[[GRAPHIMG:${++gi}]]\n` : s.content).join('')
     } catch { return sol }
   }
   // Pré-rendre le LaTeX avec KaTeX AVANT d'ouvrir la fenêtre
@@ -1227,6 +1261,13 @@ function openSolutionPdf(exercise: string, solution: string, mode: string, actio
       }
       return parts.join('')
     }
+    const gimg = ln.match(/^\[\[GRAPHIMG:(\d+)\]\]/)
+    if (gimg) {
+      const im = graphImgs[Number(gimg[1])]
+      return im
+        ? `<div class="graph-img"><img src="${im}" alt="graphique"/></div>`
+        : '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://app.mathsbac.com</div>'
+    }
     if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://app.mathsbac.com</div>'
     if (ln.startsWith('## '))  return `<h2>${ep(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${ep(ln.slice(4))}</h3>`
@@ -1240,9 +1281,9 @@ function openSolutionPdf(exercise: string, solution: string, mode: string, actio
 
   const preRenderedBody = preRenderLatex(solution)
   const html = buildSolutionHtml(exercise, solution, mode, preRenderedBody, action)
-  const w = window.open('', '_blank')
+  const w = targetWin || window.open('', '_blank')
   if (!w) throw new Error('Popup bloqué')
-  w.document.write(html); w.document.close()
+  w.document.open(); w.document.write(html); w.document.close()
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -2299,11 +2340,24 @@ Structure OBLIGATOIRE :
 [Les 2-3 points précis sur lesquels travailler + exercices similaires conseillés]`
 
     try {
-      const sol = await askClaude(prompt, system, 6000)
+      // max_tokens adaptatif : un sujet long (Bac complet) a besoin de beaucoup plus de tokens
+      const _len = input.length + (myAnswer?.length || 0)
+      const _maxTok = _len > 1200 ? 12000 : _len > 500 ? 8000 : 6000
+      const sol = await askClaude(prompt, system, _maxTok)
 
       // Vérifier si quota dépassé côté serveur (status 429)
       if (sol.startsWith('⚠️') && sol.includes('quota')) {
         setError(sol); setPhase('input'); return
+      }
+
+      // Résultat vide / trop court → l'exercice est probablement trop long (temps dépassé)
+      // On ne consomme PAS le quota dans ce cas.
+      if (!sol || sol.trim().length < 40) {
+        setError(
+          "⏱️ La résolution n'a pas abouti — l'exercice est probablement trop long pour une seule requête.\n\n" +
+          "👉 Astuce : découpez le sujet et résolvez-le par parties (collez « Exercice 1 » seul, puis « Exercice 2 »…), ou même question par question. Vous pouvez aussi relancer."
+        )
+        setPhase('input'); return
       }
 
       // Incrémenter quota via RPC Supabase (l'API route ne le fait plus)
@@ -2340,19 +2394,21 @@ Structure OBLIGATOIRE :
   }
 
   const handlePdf = () => {
-    try {
-      openSolutionPdf(input, solution, mode, 'print')
-      setPdfMsg('Ouvert dans un nouvel onglet !')
-      setTimeout(() => setPdfMsg(''), 3000)
-    } catch { setPdfMsg('Autorisez les popups') }
+    const w = window.open('', '_blank')
+    if (!w) { setPdfMsg('Autorisez les popups'); return }
+    w.document.write('<p style="font-family:Segoe UI,Arial,sans-serif;padding:28px;color:#1a1a2e">⏳ Préparation du document (rendu des graphiques)…</p>')
+    openSolutionPdf(input, solution, mode, 'print', w).catch(() => { try { w.close() } catch {} ; setPdfMsg('Erreur génération PDF') })
+    setPdfMsg('Ouvert dans un nouvel onglet !')
+    setTimeout(() => setPdfMsg(''), 3000)
   }
 
   const handleDownload = () => {
-    try {
-      openSolutionPdf(input, solution, mode, 'download')
-      setPdfMsg('Téléchargement du PDF en cours…')
-      setTimeout(() => setPdfMsg(''), 3000)
-    } catch { setPdfMsg('Autorisez les popups') }
+    const w = window.open('', '_blank')
+    if (!w) { setPdfMsg('Autorisez les popups'); return }
+    w.document.write('<p style="font-family:Segoe UI,Arial,sans-serif;padding:28px;color:#1a1a2e">⏳ Préparation du PDF couleur (rendu des graphiques)…</p>')
+    openSolutionPdf(input, solution, mode, 'download', w).catch(() => { try { w.close() } catch {} ; setPdfMsg('Erreur génération PDF') })
+    setPdfMsg('Téléchargement du PDF en cours…')
+    setTimeout(() => setPdfMsg(''), 3500)
   }
 
   const reset = () => {
