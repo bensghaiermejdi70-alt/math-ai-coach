@@ -2340,14 +2340,55 @@ Structure OBLIGATOIRE :
 [Les 2-3 points précis sur lesquels travailler + exercices similaires conseillés]`
 
     try {
-      const sol = await askClaude(prompt, system, 6000)
+      // ── Génération en plusieurs passes courtes ───────────────────────────
+      // Un sujet long ne peut PAS être rédigé en un seul appel : la génération
+      // dépasse le délai du serveur (timeout) → aucune réponse. On découpe donc
+      // la rédaction en passes de 6000 tokens (rapides, sous le timeout) que
+      // l'on assemble jusqu'au marqueur [[FIN]]. Un petit exercice = 1 seule passe.
+      const systemFull = system + '\n\nMARQUEUR DE FIN : quand la correction est ENTIÈREMENT terminée (toutes les questions traitées), termine ta réponse par une dernière ligne contenant exactement [[FIN]]. Si tu dois t\'arrêter avant la fin par manque de place, n\'écris PAS [[FIN]] (tu seras invité à continuer). Ne mets jamais [[FIN]] ailleurs qu\'à la toute fin.'
 
-      // Vérifier si quota dépassé côté serveur (status 429)
-      if (sol.startsWith('⚠️') && sol.includes('quota')) {
-        setError(sol); setPhase('input'); return
+      let full = ''
+      let quotaMsg = ''
+      let pass = 0
+      const MAX_PASSES = 6
+
+      while (pass < MAX_PASSES) {
+        pass++
+        const passPrompt = pass === 1
+          ? prompt
+          : `${prompt}\n\n=== DÉBUT DE LA CORRECTION DÉJÀ RÉDIGÉE (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT DÉJÀ RÉDIGÉ ===\n\nCONTINUE la correction EXACTEMENT là où l'extrait ci-dessus s'arrête : ne reprends pas depuis le début, ne réécris pas ce qui précède, ne répète aucune question déjà traitée. Poursuis directement la suite. Termine par [[FIN]] quand tout est résolu.`
+
+        const part = await askClaude(passPrompt, systemFull, 6000)
+
+        // Quota dépassé côté serveur (status 429)
+        if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
+        if (!part || part.trim().length < 2) break
+
+        const cleaned = part.replace(/\[\[\s*FIN\s*\]\]/g, '').trimEnd()
+        full = full ? (full.trimEnd() + '\n' + cleaned) : cleaned
+
+        // Affichage progressif (l'élève voit la correction se construire)
+        setSolution(full)
+        if (pass === 1) setPhase('done')
+
+        // Terminé si le modèle a signalé la fin
+        if (/\[\[\s*FIN\s*\]\]/.test(part)) break
+        // Sécurité : si la passe est nettement plus courte que la limite, c'est fini
+        if (part.trim().length < 1500) break
       }
 
-      // Incrémenter quota via RPC Supabase (l'API route ne le fait plus)
+      // Quota épuisé sans aucun contenu produit
+      if (quotaMsg && !full) { setError(quotaMsg); setPhase('input'); return }
+
+      // Aucun contenu exploitable
+      if (!full || full.trim().length < 40) {
+        setError("⏱️ La résolution n'a pas abouti. Réessayez, ou découpez le sujet (Exercice 1 seul, puis Exercice 2…).")
+        setPhase('input'); return
+      }
+
+      const sol = full
+
+      // Incrémenter quota via RPC Supabase (l'API route ne le fait plus) — UNE seule fois par résolution
       const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
