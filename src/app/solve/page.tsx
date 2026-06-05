@@ -1554,6 +1554,8 @@ function SolvePageInner() {
   const [showHistory, setShowHistory] = useState(false)
   const [similarQ, setSimilarQ] = useState<string[]>([])
   const [pdfMsg, setPdfMsg] = useState('')
+  const [streaming, setStreaming] = useState(false)
+  const [passNum, setPassNum] = useState(0)
 
   useEffect(() => {
     setHistory(loadSolveHistory(user?.id ?? undefined))
@@ -1646,6 +1648,7 @@ function SolvePageInner() {
     }
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
+    setStreaming(true); setPassNum(0)
     console.log('[Solve] ▶ démarrage — version MULTI-PASSES v3 (4000 tok/passe, garde-temps 110s)')
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
@@ -2362,11 +2365,12 @@ Structure OBLIGATOIRE :
       let quotaMsg = ''
       let pass = 0
       let firstPassError: any = null
-      const MAX_PASSES = 8
-      const PASS_TOKENS = 4000   // ≈ 60 s/passe : large marge sous le timeout serveur de 115 s
+      const MAX_PASSES = 12
+      const PASS_TOKENS = 2000   // ≈ 40-50 s/passe : aboutit même quand la génération est lente
 
       while (pass < MAX_PASSES) {
         pass++
+        setPassNum(pass)
         const passPrompt = pass === 1
           ? prompt
           : `${prompt}\n\n=== DÉBUT DE LA CORRECTION DÉJÀ RÉDIGÉE (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT DÉJÀ RÉDIGÉ ===\n\nCONTINUE la correction EXACTEMENT là où l'extrait ci-dessus s'arrête : ne reprends pas depuis le début, ne réécris pas ce qui précède, ne répète aucune question déjà traitée. Poursuis directement la suite. Termine par [[FIN]] quand tout est résolu.`
@@ -2397,25 +2401,28 @@ Structure OBLIGATOIRE :
 
         // Terminé si le modèle a signalé la fin
         if (/\[\[\s*FIN\s*\]\]/.test(part)) break
-        // Sécurité : si la passe est nettement plus courte que la limite, c'est fini
-        if (part.trim().length < 1200) break
+        // Sécurité : si la passe n'a pas atteint le plafond (sortie naturellement courte), c'est fini
+        if (part.trim().length < 2800) break
       }
 
       // Échec dès la 1re passe sans aucun contenu → message clair (et quota NON consommé)
       if (firstPassError && !full) {
+        setStreaming(false)
         setError("⏱️ La résolution n'a pas abouti (délai serveur dépassé pour ce sujet). Réessayez, ou collez un seul exercice (ou 2-3 questions) à la fois.")
         setPhase('input'); return
       }
 
       // Quota épuisé sans aucun contenu produit
-      if (quotaMsg && !full) { setError(quotaMsg); setPhase('input'); return }
+      if (quotaMsg && !full) { setStreaming(false); setError(quotaMsg); setPhase('input'); return }
 
       // Aucun contenu exploitable
       if (!full || full.trim().length < 40) {
+        setStreaming(false)
         setError("⏱️ La résolution n'a pas abouti. Réessayez, ou découpez le sujet (Exercice 1 seul, puis Exercice 2…).")
         setPhase('input'); return
       }
 
+      setStreaming(false)
       const sol = full
 
       // Incrémenter quota via RPC Supabase (l'API route ne le fait plus) — UNE seule fois par résolution
@@ -2447,6 +2454,7 @@ Structure OBLIGATOIRE :
         } catch { /* silencieux */ }
       }).catch(() => { /* silencieux */ })
     } catch (e: any) {
+      setStreaming(false)
       setError(e.message || 'Erreur de résolution'); setPhase('input')
     }
   }
@@ -2750,7 +2758,7 @@ Structure OBLIGATOIRE :
                   disabled={phase === 'solving' || !input.trim() || (mode === 'verify' && !myAnswer.trim()) || isQuotaFull}
                   style={{ marginTop: 10, width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: phase === 'solving' || !input.trim() || isQuotaFull ? 'rgba(255,255,255,0.06)' : 'linear-gradient(135deg,#4f6ef7,#7c3aed)', color: phase === 'solving' || !input.trim() || isQuotaFull ? 'rgba(255,255,255,0.25)' : 'white', fontSize: 15, fontWeight: 700, cursor: phase === 'solving' || !input.trim() || isQuotaFull ? 'not-allowed' : 'pointer', transition: 'all 0.2s', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                   {phase === 'solving'
-                    ? <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span> L&apos;IA résout en cours…</>
+                    ? <><span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span> L&apos;IA rédige{passNum > 0 ? ` — partie ${passNum}` : ''}…</>
                     : isQuotaFull ? '🔒 Quota hebdomadaire atteint'
                     : mode === 'solve' ? '🧮 Résoudre étape par étape →' : '🔍 Vérifier ma solution →'
                   }
@@ -2901,6 +2909,14 @@ Structure OBLIGATOIRE :
                 <div style={{ background: 'rgba(6,214,160,0.04)', border: '1px solid rgba(6,214,160,0.15)', borderRadius: 12, padding: '11px 16px', marginBottom: 14, fontFamily: 'monospace', fontSize: 13, color: 'rgba(255,255,255,0.5)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <span style={{ color: '#06d6a0', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 1, flexShrink: 0 }}>TA RÉPONSE</span>
                   <span style={{ whiteSpace: 'pre-wrap' }}>{myAnswer.slice(0, 300)}{myAnswer.length > 300 ? '…' : ''}</span>
+                </div>
+              )}
+
+              {/* Bannière de progression : la correction continue de se rédiger */}
+              {streaming && (
+                <div style={{ background: 'rgba(79,110,247,0.10)', border: '1px solid rgba(79,110,247,0.3)', borderRadius: 12, padding: '11px 16px', marginBottom: 14, fontSize: 13, fontWeight: 700, color: '#a5b4fc', display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ display: 'inline-block', animation: 'spin 1s linear infinite' }}>⟳</span>
+                  Rédaction de la suite en cours… (partie {passNum}) — la correction s&apos;allonge automatiquement.
                 </div>
               )}
 
