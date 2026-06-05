@@ -93,6 +93,53 @@ async function askClaudeWithImage(
   return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
 }
 
+// ── API Claude avec pièces jointes (figure/tableau/annexe : images ou PDF) ──
+async function askClaudeWithAttachments(
+  prompt: string, system: string,
+  attachments: { data: string; mediaType: string }[],
+  maxTokens = 2000, matiere?: string
+): Promise<string> {
+  const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
+  const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
+  const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
+  const content: any[] = []
+  for (const att of attachments.slice(0, 4)) {
+    if (att.mediaType === 'application/pdf') {
+      content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: att.data } })
+    } else {
+      content.push({ type: 'image', source: { type: 'base64', media_type: att.mediaType, data: att.data } })
+    }
+  }
+  content.push({ type: 'text', text: prompt })
+
+  const _ctrl = new AbortController()
+  const _timer = setTimeout(() => _ctrl.abort(), 110000)
+  let r: Response
+  try {
+    r = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content }],
+        type: 'solver',
+        matiere: _matiere,
+      }),
+      signal: _ctrl.signal,
+    })
+  } finally {
+    clearTimeout(_timer)
+  }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    throw new Error((err as any).error || `HTTP ${r.status}`)
+  }
+  const d = await r.json()
+  return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // GRAPHIQUES Plotly
 // ── Sanitize expression : corrige les erreurs courantes de l'IA ──
@@ -1556,6 +1603,7 @@ function SolvePageInner() {
   const [pdfMsg, setPdfMsg] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [passNum, setPassNum] = useState(0)
+  const [attachments, setAttachments] = useState<{ data: string; mediaType: string; name: string }[]>([])
 
   useEffect(() => {
     setHistory(loadSolveHistory(user?.id ?? undefined))
@@ -1616,6 +1664,21 @@ function SolvePageInner() {
     setInput(newVal)
     setTimeout(() => { ta.focus(); ta.setSelectionRange(start + sym.length, start + sym.length) }, 10)
   }, [input])
+
+  const addAttachment = (file: File) => {
+    if (!file) return
+    const okTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf']
+    const mediaType = file.type === 'image/jpg' ? 'image/jpeg' : file.type
+    if (!okTypes.includes(file.type)) { setError('Pièce jointe : formats acceptés = image (PNG, JPG, WEBP) ou PDF.'); return }
+    if (file.size > 8 * 1024 * 1024) { setError('Pièce jointe trop lourde (max 8 Mo).'); return }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64 = ((e.target?.result as string) || '').split(',')[1]
+      if (base64) setAttachments(prev => [...prev, { data: base64, mediaType, name: file.name }].slice(0, 4))
+    }
+    reader.readAsDataURL(file)
+  }
+  const removeAttachment = (i: number) => setAttachments(prev => prev.filter((_, idx) => idx !== i))
 
   const handleSolve = async () => {
     if (!input.trim()) return
@@ -2377,8 +2440,13 @@ Structure OBLIGATOIRE :
 
         let part = ''
         try {
-          console.log('[Solve] passe', pass, '— envoi… (', PASS_TOKENS, 'tokens )')
-          part = await askClaude(passPrompt, systemFull, PASS_TOKENS)
+          console.log('[Solve] passe', pass, '— envoi… (', PASS_TOKENS, 'tokens )', attachments.length ? `+ ${attachments.length} pièce(s) jointe(s)` : '')
+          const attachHint = attachments.length
+            ? "\n\n📎 IMPORTANT : une ou plusieurs PIÈCES JOINTES (figure, tableau, annexe) accompagnent cet énoncé. Analyse-les attentivement (points, angles, mesures, données du tableau, courbe…) et appuie-toi dessus pour la résolution."
+            : ''
+          part = attachments.length
+            ? await askClaudeWithAttachments(passPrompt + attachHint, systemFull, attachments, PASS_TOKENS)
+            : await askClaude(passPrompt, systemFull, PASS_TOKENS)
           console.log('[Solve] passe', pass, '— reçu', part.length, 'caractères · FIN?', /\[\[\s*FIN\s*\]\]/.test(part))
         } catch (passErr: any) {
           console.warn('[Solve] passe', pass, '— échec :', passErr?.name || passErr?.message || passErr)
@@ -2487,7 +2555,7 @@ Structure OBLIGATOIRE :
 
   const reset = () => {
     setPhase('input'); setInput(''); setMyAnswer('')
-    setSolution(''); setError(''); setSimilarQ([])
+    setSolution(''); setError(''); setSimilarQ([]); setAttachments([])
   }
 
   const EXAMPLES: Record<Mode, string[]> = {
@@ -2723,6 +2791,32 @@ Structure OBLIGATOIRE :
                     />
                   </>
                 )}
+
+                {/* ── Pièce jointe (figure / tableau / annexe) ── */}
+                <div style={{ marginTop: 16 }}>
+                  <input id="solve-attach-input" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple style={{ display: 'none' }}
+                    onChange={e => { const fs = e.target.files; if (fs) Array.from(fs).forEach(addAttachment); e.currentTarget.value = '' }} />
+                  <button onClick={() => document.getElementById('solve-attach-input')?.click()}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    📎 Joindre une figure / tableau
+                  </button>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 10 }}>Image ou PDF — l&apos;IA la lit pour résoudre avec toutes les données.</span>
+
+                  {attachments.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                      {attachments.map((att, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 10, padding: '6px 8px' }}>
+                          {att.mediaType === 'application/pdf'
+                            ? <span style={{ fontSize: 20 }}>📄</span>
+                            : <img src={`data:${att.mediaType};base64,${att.data}`} alt={att.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />}
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</span>
+                          <button onClick={() => removeAttachment(i)} title="Retirer"
+                            style={{ background: 'none', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: 14, fontWeight: 700, lineHeight: 1 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 {/* Exemples */}
                 <div style={{ marginTop: 14 }}>
