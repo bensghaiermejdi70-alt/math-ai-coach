@@ -2340,25 +2340,11 @@ Structure OBLIGATOIRE :
 [Les 2-3 points précis sur lesquels travailler + exercices similaires conseillés]`
 
     try {
-      // max_tokens adaptatif — PLAFONNÉ à 8000 (limite de sortie du modèle = 8192).
-      // Demander plus (ex. 12000) fait échouer l'API avec une erreur 400 → pas de solution.
-      const _len = input.length + (myAnswer?.length || 0)
-      const _maxTok = _len > 500 ? 8000 : 6000
-      const sol = await askClaude(prompt, system, _maxTok)
+      const sol = await askClaude(prompt, system, 6000)
 
       // Vérifier si quota dépassé côté serveur (status 429)
       if (sol.startsWith('⚠️') && sol.includes('quota')) {
         setError(sol); setPhase('input'); return
-      }
-
-      // Résultat vide / trop court → l'exercice est probablement trop long (temps dépassé)
-      // On ne consomme PAS le quota dans ce cas.
-      if (!sol || sol.trim().length < 40) {
-        setError(
-          "⏱️ La résolution n'a pas abouti — l'exercice est probablement trop long pour une seule requête.\n\n" +
-          "👉 Astuce : découpez le sujet et résolvez-le par parties (collez « Exercice 1 » seul, puis « Exercice 2 »…), ou même question par question. Vous pouvez aussi relancer."
-        )
-        setPhase('input'); return
       }
 
       // Incrémenter quota via RPC Supabase (l'API route ne le fait plus)
