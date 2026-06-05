@@ -2359,7 +2359,7 @@ Structure OBLIGATOIRE :
       // appel → 0 résultat. On découpe donc la rédaction en passes de 4000 tokens
       // (≈ 60 s chacune, sûres) assemblées jusqu'au marqueur [[FIN]].
       // Un petit exercice = 1 seule passe (comportement inchangé).
-      const systemFull = system + '\n\nMARQUEUR DE FIN : quand la correction est ENTIÈREMENT terminée (toutes les questions traitées), termine ta réponse par une dernière ligne contenant exactement [[FIN]]. Si tu dois t\'arrêter avant la fin par manque de place, n\'écris PAS [[FIN]] (tu seras invité à continuer). Ne mets jamais [[FIN]] ailleurs qu\'à la toute fin.'
+      const systemFull = system + '\n\nMARQUEUR DE FIN : n\'écris [[FIN]] QUE lorsque la TOUTE DERNIÈRE question de l\'énoncé (ex. la question 5, et toutes ses sous-questions a, b, c…) est ENTIÈREMENT résolue. Tant qu\'il reste ne serait-ce qu\'une sous-question non traitée, n\'écris PAS [[FIN]] : arrête-toi simplement, tu seras invité à continuer. Ne mets jamais [[FIN]] au milieu.'
 
       let full = ''
       let quotaMsg = ''
@@ -2373,7 +2373,7 @@ Structure OBLIGATOIRE :
         setPassNum(pass)
         const passPrompt = pass === 1
           ? prompt
-          : `${prompt}\n\n=== DÉBUT DE LA CORRECTION DÉJÀ RÉDIGÉE (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT DÉJÀ RÉDIGÉ ===\n\nCONTINUE la correction EXACTEMENT là où l'extrait ci-dessus s'arrête : ne reprends pas depuis le début, ne réécris pas ce qui précède, ne répète aucune question déjà traitée. Poursuis directement la suite. Termine par [[FIN]] quand tout est résolu.`
+          : `${prompt}\n\n=== CORRECTION DÉJÀ RÉDIGÉE — FIN DE L'EXTRAIT (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT ===\n\nReprends l'énoncé complet ci-dessus et IDENTIFIE les questions/sous-questions NON ENCORE traitées (par ex. la fin de la question 4, puis la question 5…). CONTINUE la correction à partir de là, sans répéter ce qui précède, sans recommencer depuis le début. Traite TOUTES les questions restantes. N'écris [[FIN]] que lorsque la dernière question de l'énoncé est entièrement résolue.`
 
         let part = ''
         try {
@@ -2393,16 +2393,24 @@ Structure OBLIGATOIRE :
         if (!part || part.trim().length < 2) break
 
         const cleaned = part.replace(/\[\[\s*FIN\s*\]\]/g, '').trimEnd()
+
+        // Détecter une passe de continuation « vide » ou de remplissage
+        // (le modèle n'a plus rien de neuf à ajouter) → on s'arrête sans polluer.
+        const filler = /(déjà (complète|complet|traitée|traité|résolue|terminée)|rien (de plus|à ajouter)|correction (est )?(déjà )?complète|toutes les questions ont (été|déjà))/i.test(cleaned)
+        if (pass > 1 && (cleaned.trim().length < 200 || filler)) {
+          console.log('[Solve] passe', pass, '— fin détectée (rien de nouveau à ajouter)')
+          break
+        }
+
         full = full ? (full.trimEnd() + '\n' + cleaned) : cleaned
 
         // Affichage progressif (l'élève voit la correction se construire)
         setSolution(full)
         if (pass === 1) setPhase('done')
 
-        // Terminé si le modèle a signalé la fin
-        if (/\[\[\s*FIN\s*\]\]/.test(part)) break
-        // Sécurité : si la passe n'a pas atteint le plafond (sortie naturellement courte), c'est fini
-        if (part.trim().length < 2800) break
+        // Terminé UNIQUEMENT si le modèle a explicitement signalé la fin
+        if (/\[\[\s*FIN\s*\]\]/.test(part)) { console.log('[Solve] [[FIN]] reçu, terminé'); break }
+        // (plus de coupure sur la longueur : on continue tant qu'il reste des questions)
       }
 
       // Échec dès la 1re passe sans aucun contenu → message clair (et quota NON consommé)
