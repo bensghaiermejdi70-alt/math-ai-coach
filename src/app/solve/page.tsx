@@ -920,7 +920,7 @@ function KaTeXLoader() {
 // ══════════════════════════════════════════════════════════════════════
 // PDF COLORÉ
 // ══════════════════════════════════════════════════════════════════════
-function buildSolutionHtml(exercise: string, solution: string, mode: string, preRenderedBody?: string): string {
+function buildSolutionHtml(exercise: string, solution: string, mode: string, preRenderedBody?: string, action: 'print' | 'download' = 'print'): string {
   const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
   const modeLabel = mode === 'verify' ? 'Vérification de solution' : 'Résolution complète'
   const icon = mode === 'verify' ? '🔍' : '🧮'
@@ -1005,7 +1005,8 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
     overflow: hidden;
   }
   .header-left { padding: 18px 24px; }
-  .brand { font-size: 11px; font-weight: 700; color: #4f6ef7; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+  .brand { font-size: 13px; font-weight: 800; color: #4f6ef7; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 2px; }
+  .brand-url { font-size: 10px; font-weight: 600; color: #4f6ef7; margin-bottom: 6px; text-decoration: none; }
   .htitle { font-size: 20px; font-weight: 800; color: #1a1a2e; margin-bottom: 2px; }
   .hsub { font-size: 12px; color: #666; }
   .header-right {
@@ -1103,21 +1104,21 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <div class="page">
 
   <div class="print-bar">
-    <button class="print-btn" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
-    <span style="font-size:12px;color:#666">Boîte d'impression → <strong>Enregistrer en PDF</strong> · Cochez <strong>Graphiques d'arrière-plan</strong></span>
+    <button class="print-btn" onclick="window.print()">🖨 Imprimer</button>
+    <button class="print-btn" id="dl-btn" style="background:#4f6ef7">⬇️ Télécharger le PDF (couleur)</button>
+    <span style="font-size:12px;color:#666">Astuce : « Télécharger » génère directement un PDF couleur. Sinon Imprimer → <strong>Enregistrer en PDF</strong> (cochez <strong>Graphiques d'arrière-plan</strong>).</span>
   </div>
 
   <!-- EN-TÊTE -->
   <div class="header">
     <div class="header-left">
-      <div class="brand">mathbac.ai</div>
+      <div class="brand">MATHBAC.AI</div>
+      <a class="brand-url" href="http://app.mathsbac.com">http://app.mathsbac.com</a>
       <div class="htitle">${icon} ${modeLabel}</div>
-      <div class="hsub">Programme officiel CNP · Bac Tunisie</div>
     </div>
     <div class="header-right">
       <strong>Date :</strong> ${date}<br>
-      <strong>Section :</strong> 4ème Année<br>
-      <strong>Source :</strong> Bac.AI Tunisie
+      <strong>Section :</strong> 4ème Année
     </div>
   </div>
 
@@ -1135,28 +1136,62 @@ ${bodyLines}
 
   <!-- PIED DE PAGE -->
   <div class="footer">
-    <span><strong>mathbac.ai</strong></span>
+    <span><strong>MATHBAC.AI</strong> · http://app.mathsbac.com</span>
     <span>Page 1/1</span>
   </div>
 
 </div>
 
 <script>
-  // Le LaTeX est déjà rendu (pré-rendu par KaTeX côté application)
-  // Impression immédiate sans délai
-  window.addEventListener('load', () => setTimeout(() => window.print(), 300));
+  function loadH2P(cb){
+    if (window.html2pdf) { cb(); return; }
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    s.onload=cb;
+    s.onerror=function(){ alert('Téléchargement PDF indisponible (réseau). Utilisez le bouton Imprimer → Enregistrer en PDF.'); };
+    document.head.appendChild(s);
+  }
+  function downloadPdf(){
+    var bar=document.querySelector('.print-bar');
+    loadH2P(function(){
+      if(bar) bar.style.display='none';
+      var el=document.querySelector('.page');
+      window.html2pdf().set({
+        margin:[8,8,10,8],
+        filename:'MathBac-solution.pdf',
+        image:{type:'jpeg',quality:0.98},
+        html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+        pagebreak:{mode:['avoid-all','css','legacy']}
+      }).from(el).save().then(function(){ if(bar) bar.style.display=''; });
+    });
+  }
+  var dlb=document.getElementById('dl-btn'); if(dlb) dlb.addEventListener('click', downloadPdf);
+  window.addEventListener('load', function(){
+    ${action === 'download'
+      ? 'setTimeout(downloadPdf, 450);'
+      : "setTimeout(function(){ window.print(); }, 300);"}
+  });
 <\/script>
 </body>
 </html>`
 }
 
-function openSolutionPdf(exercise: string, solution: string, mode: string) {
+function openSolutionPdf(exercise: string, solution: string, mode: string, action: 'print' | 'download' = 'print') {
+  // Aplatit les blocs [GRAPH:{...}] multi-lignes en une seule note (évite la fuite du JSON brut)
+  function collapseGraphBlocks(sol: string): string {
+    try {
+      const segs = parseGraphSegments(sol)
+      return segs.map(s => s.type === 'graph' ? '\n[GRAPH:x]\n' : s.content).join('')
+    } catch { return sol }
+  }
   // Pré-rendre le LaTeX avec KaTeX AVANT d'ouvrir la fenêtre
   // (utilise le KaTeX déjà chargé dans la page principale)
   function preRenderLatex(sol: string): string {
     const katex = (window as any).katex
-    if (!katex) return sol.split('\n').map(convertLineForPdf).join('\n')
-    return sol.split('\n').map((ln: string) => {
+    const collapsed = collapseGraphBlocks(sol)
+    if (!katex) return collapsed.split('\n').map(convertLineForPdf).join('\n')
+    return collapsed.split('\n').map((ln: string) => {
       if (!ln.trim()) return '<div class="spacer"></div>'
       const processed = convertLineForPdf(ln)
       // Rendre les $$...$$ (display)
@@ -1192,7 +1227,7 @@ function openSolutionPdf(exercise: string, solution: string, mode: string) {
       }
       return parts.join('')
     }
-    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Graphique — voir l&#39;application</div>'
+    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://app.mathsbac.com</div>'
     if (ln.startsWith('## '))  return `<h2>${ep(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${ep(ln.slice(4))}</h3>`
     if (ln.startsWith('#### ')) return `<h4>${ep(ln.slice(5))}</h4>`
@@ -1204,7 +1239,7 @@ function openSolutionPdf(exercise: string, solution: string, mode: string) {
   }
 
   const preRenderedBody = preRenderLatex(solution)
-  const html = buildSolutionHtml(exercise, solution, mode, preRenderedBody)
+  const html = buildSolutionHtml(exercise, solution, mode, preRenderedBody, action)
   const w = window.open('', '_blank')
   if (!w) throw new Error('Popup bloqué')
   w.document.write(html); w.document.close()
@@ -2306,8 +2341,16 @@ Structure OBLIGATOIRE :
 
   const handlePdf = () => {
     try {
-      openSolutionPdf(input, solution, mode)
+      openSolutionPdf(input, solution, mode, 'print')
       setPdfMsg('Ouvert dans un nouvel onglet !')
+      setTimeout(() => setPdfMsg(''), 3000)
+    } catch { setPdfMsg('Autorisez les popups') }
+  }
+
+  const handleDownload = () => {
+    try {
+      openSolutionPdf(input, solution, mode, 'download')
+      setPdfMsg('Téléchargement du PDF en cours…')
       setTimeout(() => setPdfMsg(''), 3000)
     } catch { setPdfMsg('Autorisez les popups') }
   }
@@ -2636,7 +2679,11 @@ Structure OBLIGATOIRE :
                   )}
                   <button onClick={handlePdf}
                     style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: 'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(139,92,246,0.2))', border: '1px solid rgba(99,102,241,0.35)', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#a5b4fc', fontFamily: 'inherit' }}>
-                    🎨 Imprimer PDF
+                    🖨 Imprimer
+                  </button>
+                  <button onClick={handleDownload}
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 16px', background: 'linear-gradient(135deg,#4f6ef7,#7c3aed)', border: '1px solid rgba(99,102,241,0.5)', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#fff', fontFamily: 'inherit' }}>
+                    ⬇️ Télécharger PDF
                   </button>
                   <button
                     onClick={() => {
@@ -2649,6 +2696,15 @@ Structure OBLIGATOIRE :
                           .replace(/\\[df]rac\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
                           .replace(/\\[df]rac\{\{([^}]*)\}\}\{([^{}]*)\}/g, '($1/$2)')
                           .replace(/\\binom\{([^}]*)\}\{([^}]*)\}/g, 'C($1,$2)')
+                          .replace(/\\overrightarrow\{([^{}]*)\}/g, '$1→')
+                          .replace(/\\overleftarrow\{([^{}]*)\}/g, '$1←')
+                          .replace(/\\vec\{([^{}]*)\}/g, '$1→')
+                          .replace(/\\widehat\{([^{}]*)\}/g, '$1̂')
+                          .replace(/\\hat\{([^{}]*)\}/g, '$1̂')
+                          .replace(/\\overline\{([^{}]*)\}/g, '$1̄')
+                          .replace(/\\bar\{([^{}]*)\}/g, '$1̄')
+                          .replace(/\\underline\{([^{}]*)\}/g, '$1')
+                          .replace(/\\(mathbb|mathbf|mathrm|mathcal|boldsymbol)\{([^{}]*)\}/g, '$2')
                           .replace(/\\times/g,'×').replace(/\\cdot/g,'·').replace(/\\div/g,'÷')
                           .replace(/\\pm/g,'±').replace(/\\leq/g,'≤').replace(/\\geq/g,'≥')
                           .replace(/\\neq/g,'≠').replace(/\\approx/g,'≈').replace(/\\infty/g,'∞')
@@ -2674,12 +2730,23 @@ Structure OBLIGATOIRE :
                           .replace(/\\[,;!]/g,' ').replace(/\\quad/g,' ').replace(/\\qquad/g,'  ')
                           .replace(/\\textbf?\{([^}]+)\}/g,'$1')
                           .replace(/\\text\{([^}]+)\}/g,'$1')
-                          .replace(/\\left[|(\[.]/g,'').replace(/\\right[|)\].]/g,'')
+                          .replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')')
+                          .replace(/\\left\s*\[/g,'[').replace(/\\right\s*\]/g,']')
+                          .replace(/\\left\s*\|/g,'|').replace(/\\right\s*\|/g,'|')
+                          .replace(/\\left\s*\./g,'').replace(/\\right\s*\./g,'')
+                          .replace(/\\left/g,'').replace(/\\right/g,'')
                           .replace(/\\\\/g,'\n')
                           .replace(/\{/g,'').replace(/\}/g,'')
                           .replace(/\\[a-zA-Z]+\*/g,'').replace(/\\[a-zA-Z]+/g,'')
                       }
-                      const lines = solution.split('\n').map((ln: string) => {
+                      const collapsedSol = (() => {
+                        try {
+                          return parseGraphSegments(solution)
+                            .map(s => s.type === 'graph' ? '\n[Graphique interactif : voir http://app.mathsbac.com]\n' : s.content)
+                            .join('')
+                        } catch { return solution }
+                      })()
+                      const lines = collapsedSol.split('\n').map((ln: string) => {
                         const converted = ln
                           .replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => latexToReadable(m.trim()))
                           .replace(/\$([^$\n]+?)\$/g, (_: string, m: string) => latexToReadable(m.trim()))
@@ -2736,7 +2803,11 @@ Structure OBLIGATOIRE :
                 </button>
                 <button onClick={handlePdf}
                   style={{ padding: '11px 20px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 12, color: '#a5b4fc', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  🎨 Imprimer cette solution
+                  🖨 Imprimer cette solution
+                </button>
+                <button onClick={handleDownload}
+                  style={{ padding: '11px 20px', background: 'linear-gradient(135deg,#4f6ef7,#7c3aed)', border: 'none', borderRadius: 12, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  ⬇️ Télécharger en PDF (couleur)
                 </button>
               </div>
 
