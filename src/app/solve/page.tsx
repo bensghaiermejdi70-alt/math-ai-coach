@@ -34,18 +34,27 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000, matie
   const _subj = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('subject') || '') : ''
   const _matiereMap: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
   const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
-  const r = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: 'user', content: prompt }],
-      type: 'solver',
-      matiere: _matiere
-    }),
-  })
+  // Garde-temps client : un appel ne doit jamais rester bloqué (le serveur coupe à 115 s)
+  const _ctrl = new AbortController()
+  const _timer = setTimeout(() => _ctrl.abort(), 110000)
+  let r: Response
+  try {
+    r = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content: prompt }],
+        type: 'solver',
+        matiere: _matiere
+      }),
+      signal: _ctrl.signal,
+    })
+  } finally {
+    clearTimeout(_timer)
+  }
   if (!r.ok) {
     const err = await r.json().catch(() => ({}))
     throw new Error((err as any).error || `HTTP ${r.status}`)
@@ -1637,6 +1646,7 @@ function SolvePageInner() {
     }
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
+    console.log('[Solve] ▶ démarrage — version MULTI-PASSES v3 (4000 tok/passe, garde-temps 110s)')
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
     // Utiliser selectedMatiere (UI) au lieu de l'URL
@@ -2363,8 +2373,11 @@ Structure OBLIGATOIRE :
 
         let part = ''
         try {
+          console.log('[Solve] passe', pass, '— envoi… (', PASS_TOKENS, 'tokens )')
           part = await askClaude(passPrompt, systemFull, PASS_TOKENS)
+          console.log('[Solve] passe', pass, '— reçu', part.length, 'caractères · FIN?', /\[\[\s*FIN\s*\]\]/.test(part))
         } catch (passErr: any) {
+          console.warn('[Solve] passe', pass, '— échec :', passErr?.name || passErr?.message || passErr)
           // Une passe a échoué (timeout serveur / réseau).
           // Si on a déjà du contenu des passes précédentes, on le conserve et on s'arrête là.
           if (full.trim().length > 40) break
