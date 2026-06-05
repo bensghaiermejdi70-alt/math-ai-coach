@@ -2341,16 +2341,19 @@ Structure OBLIGATOIRE :
 
     try {
       // ── Génération en plusieurs passes courtes ───────────────────────────
-      // Un sujet long ne peut PAS être rédigé en un seul appel : la génération
-      // dépasse le délai du serveur (timeout) → aucune réponse. On découpe donc
-      // la rédaction en passes de 6000 tokens (rapides, sous le timeout) que
-      // l'on assemble jusqu'au marqueur [[FIN]]. Un petit exercice = 1 seule passe.
+      // Le serveur coupe tout appel dépassant 115 s. Une correction longue et
+      // complexe (sujet de géométrie en 5 questions) dépasse ce délai en un seul
+      // appel → 0 résultat. On découpe donc la rédaction en passes de 4000 tokens
+      // (≈ 60 s chacune, sûres) assemblées jusqu'au marqueur [[FIN]].
+      // Un petit exercice = 1 seule passe (comportement inchangé).
       const systemFull = system + '\n\nMARQUEUR DE FIN : quand la correction est ENTIÈREMENT terminée (toutes les questions traitées), termine ta réponse par une dernière ligne contenant exactement [[FIN]]. Si tu dois t\'arrêter avant la fin par manque de place, n\'écris PAS [[FIN]] (tu seras invité à continuer). Ne mets jamais [[FIN]] ailleurs qu\'à la toute fin.'
 
       let full = ''
       let quotaMsg = ''
       let pass = 0
-      const MAX_PASSES = 6
+      let firstPassError: any = null
+      const MAX_PASSES = 8
+      const PASS_TOKENS = 4000   // ≈ 60 s/passe : large marge sous le timeout serveur de 115 s
 
       while (pass < MAX_PASSES) {
         pass++
@@ -2358,7 +2361,15 @@ Structure OBLIGATOIRE :
           ? prompt
           : `${prompt}\n\n=== DÉBUT DE LA CORRECTION DÉJÀ RÉDIGÉE (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT DÉJÀ RÉDIGÉ ===\n\nCONTINUE la correction EXACTEMENT là où l'extrait ci-dessus s'arrête : ne reprends pas depuis le début, ne réécris pas ce qui précède, ne répète aucune question déjà traitée. Poursuis directement la suite. Termine par [[FIN]] quand tout est résolu.`
 
-        const part = await askClaude(passPrompt, systemFull, 6000)
+        let part = ''
+        try {
+          part = await askClaude(passPrompt, systemFull, PASS_TOKENS)
+        } catch (passErr: any) {
+          // Une passe a échoué (timeout serveur / réseau).
+          // Si on a déjà du contenu des passes précédentes, on le conserve et on s'arrête là.
+          if (full.trim().length > 40) break
+          firstPassError = passErr; break
+        }
 
         // Quota dépassé côté serveur (status 429)
         if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
@@ -2374,7 +2385,13 @@ Structure OBLIGATOIRE :
         // Terminé si le modèle a signalé la fin
         if (/\[\[\s*FIN\s*\]\]/.test(part)) break
         // Sécurité : si la passe est nettement plus courte que la limite, c'est fini
-        if (part.trim().length < 1500) break
+        if (part.trim().length < 1200) break
+      }
+
+      // Échec dès la 1re passe sans aucun contenu → message clair (et quota NON consommé)
+      if (firstPassError && !full) {
+        setError("⏱️ La résolution n'a pas abouti (délai serveur dépassé pour ce sujet). Réessayez, ou collez un seul exercice (ou 2-3 questions) à la fois.")
+        setPhase('input'); return
       }
 
       // Quota épuisé sans aucun contenu produit
