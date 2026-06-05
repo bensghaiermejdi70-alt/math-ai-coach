@@ -2340,9 +2340,10 @@ Structure OBLIGATOIRE :
 [Les 2-3 points précis sur lesquels travailler + exercices similaires conseillés]`
 
     try {
-      // max_tokens adaptatif : un sujet long (Bac complet) a besoin de beaucoup plus de tokens
+      // max_tokens adaptatif — PLAFONNÉ à 8000 (limite de sortie du modèle = 8192).
+      // Demander plus (ex. 12000) fait échouer l'API avec une erreur 400 → pas de solution.
       const _len = input.length + (myAnswer?.length || 0)
-      const _maxTok = _len > 1200 ? 12000 : _len > 500 ? 8000 : 6000
+      const _maxTok = _len > 500 ? 8000 : 6000
       const sol = await askClaude(prompt, system, _maxTok)
 
       // Vérifier si quota dépassé côté serveur (status 429)
