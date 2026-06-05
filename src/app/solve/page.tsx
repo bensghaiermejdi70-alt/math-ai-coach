@@ -1013,7 +1013,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   function convertLine(ln: string): string {
     // Ignorer les graphiques
-    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application Bac.AI Tunisie</div>'
+    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application mathbac.ai : http://app.mathsbac.com</div>'
     // Titres
     if (ln.startsWith('## '))  return `<h2>${escPreservingLatex(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${escPreservingLatex(ln.slice(4))}</h3>`
@@ -1036,7 +1036,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Bac.AI Tunisie — ${modeLabel}</title>
+<title>mathbac.ai — ${modeLabel}</title>
 <!-- KaTeX CSS pour les formules pré-rendues -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
@@ -1186,7 +1186,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   <!-- SOLUTION -->
   <div class="sol-box">
-    <div class="sol-label">✅ ${modeLabel} — Bac.AI Tunisie</div>
+    <div class="sol-label">✅ ${modeLabel} — mathbac.ai : http://app.mathsbac.com</div>
     <div id="solution-body">
 ${bodyLines}
     </div>
@@ -2428,8 +2428,11 @@ Structure OBLIGATOIRE :
       let quotaMsg = ''
       let pass = 0
       let firstPassError: any = null
-      const MAX_PASSES = 12
-      const PASS_TOKENS = 2000   // ≈ 40-50 s/passe : aboutit même quand la génération est lente
+      let abortRetries = 0
+      const MAX_PASSES = 14
+      // Avec pièce jointe (image/PDF renvoyée à chaque passe), la génération est plus lente :
+      // passes plus courtes pour rester sous le garde-temps de 110 s.
+      const PASS_TOKENS = attachments.length ? 1400 : 2000
 
       while (pass < MAX_PASSES) {
         pass++
@@ -2451,10 +2454,17 @@ Structure OBLIGATOIRE :
         } catch (passErr: any) {
           console.warn('[Solve] passe', pass, '— échec :', passErr?.name || passErr?.message || passErr)
           // Une passe a échoué (timeout serveur / réseau).
-          // Si on a déjà du contenu des passes précédentes, on le conserve et on s'arrête là.
-          if (full.trim().length > 40) break
+          if (full.trim().length > 40) {
+            // On a déjà du contenu : on retente la suite (jusqu'à 2 fois) avant d'abandonner,
+            // pour ne pas s'arrêter en plein milieu (ex. à la question 3).
+            abortRetries++
+            if (abortRetries <= 2) { console.log('[Solve] reprise après échec (', abortRetries, '/2)'); continue }
+            console.log('[Solve] trop d\'échecs consécutifs — on garde la partie déjà rédigée')
+            break
+          }
           firstPassError = passErr; break
         }
+        abortRetries = 0  // une passe a réussi → on remet le compteur de reprises à zéro
 
         // Quota dépassé côté serveur (status 429)
         if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
@@ -2462,10 +2472,10 @@ Structure OBLIGATOIRE :
 
         const cleaned = part.replace(/\[\[\s*FIN\s*\]\]/g, '').trimEnd()
 
-        // Détecter une passe de continuation « vide » ou de remplissage
-        // (le modèle n'a plus rien de neuf à ajouter) → on s'arrête sans polluer.
-        const filler = /(déjà (complète|complet|traitée|traité|résolue|terminée)|rien (de plus|à ajouter)|correction (est )?(déjà )?complète|toutes les questions ont (été|déjà))/i.test(cleaned)
-        if (pass > 1 && (cleaned.trim().length < 200 || filler)) {
+        // Fin si la passe de continuation ne renvoie quasiment rien de neuf.
+        // (On NE coupe PAS sur des phrases : une passe substantielle peut contenir
+        //  « déjà traité », ce qui provoquait un arrêt prématuré.)
+        if (pass > 1 && cleaned.trim().length < 250) {
           console.log('[Solve] passe', pass, '— fin détectée (rien de nouveau à ajouter)')
           break
         }
