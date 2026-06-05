@@ -1364,15 +1364,15 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
           if (ext === 'pdf') {
             const r = await fetch('/api/solve', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1500, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Extrais uniquement le texte de cet exercice de mathématiques. Garde tous les symboles. Pas de commentaires.' }] }] })
+              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 6000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de la première à la dernière ligne, sans rien omettre ni résumer. Garde tous les symboles, toutes les questions et sous-questions. Aucune introduction ni commentaire.' }] }] })
             })
             const d = await r.json()
             text = d.content?.map((c: any) => c.text || '').join('') || ''
           } else {
             const mediaType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
             text = await askClaudeWithImage(
-              'Transcris exactement le texte de cet exercice de mathématiques. Garde tous les symboles. Retourne UNIQUEMENT le texte, sans commentaire.',
-              'Tu es un OCR mathématique précis.', base64, mediaType, 1500
+              'Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de haut en bas, sans rien omettre : tous les énoncés, toutes les questions et sous-questions, tous les symboles. Retourne UNIQUEMENT le texte transcrit, sans commentaire ni résumé.',
+              'Tu es un OCR mathématique précis et exhaustif.', base64, mediaType, 6000
             )
           }
           onExtracted(text.trim())
