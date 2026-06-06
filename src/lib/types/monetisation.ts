@@ -113,6 +113,7 @@ export interface PlanQuotas {
   analyses_per_week: number
   courses_unlimited: boolean
   bac_blanc: boolean
+  bac_blanc_per_week?: number // nombre d'examens Bac Blanc/semaine (0 = pas d'accès, -1 = illimité)
   weekly_report?: boolean
   advanced_program?: boolean
 }
@@ -152,12 +153,13 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     description: 'Résiliable à tout moment',
     quotas: {
       simulations_per_week: 5,
-      chat_per_week: 20,
-      solver_per_week: 20,      // ← 20/sem (was illimité)
+      chat_per_week: 10,
+      solver_per_week: 10,      // ← 10/sem
       remediation_per_week: 10,
       analyses_per_week: 5,
       courses_unlimited: true,
       bac_blanc: false,
+      bac_blanc_per_week: 0,
     },
   },
   annuel: {
@@ -170,12 +172,13 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     badge: '⭐ Meilleure valeur',
     quotas: {
       simulations_per_week: 2,
-      chat_per_week: 20,
-      solver_per_week: 40,      // ← 40/sem (was illimité)
+      chat_per_week: 10,
+      solver_per_week: 10,      // ← 10/sem
       remediation_per_week: 10,
       analyses_per_week: 5,
       courses_unlimited: true,
       bac_blanc: true,
+      bac_blanc_per_week: 5,
     },
   },
   sprint_bac: {
@@ -188,12 +191,13 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     badge: '🔥 Mode Intensif',
     quotas: {
       simulations_per_week: 10,
-      chat_per_week: 30,
-      solver_per_week: 40,      // ← 40/sem (was illimité)
+      chat_per_week: 15,
+      solver_per_week: 15,      // ← 15/sem
       remediation_per_week: 20,
       analyses_per_week: 10,
       courses_unlimited: true,
       bac_blanc: true,
+      bac_blanc_per_week: 5,
       weekly_report: true,
       advanced_program: true,
     },
@@ -239,6 +243,7 @@ function combineQuotas(a: PlanQuotas, b: PlanQuotas): PlanQuotas {
     analyses_per_week: a.analyses_per_week + b.analyses_per_week,
     courses_unlimited: a.courses_unlimited || b.courses_unlimited,
     bac_blanc: a.bac_blanc || b.bac_blanc,
+    bac_blanc_per_week: Math.max(a.bac_blanc_per_week || 0, b.bac_blanc_per_week || 0),
   }
 }
 
