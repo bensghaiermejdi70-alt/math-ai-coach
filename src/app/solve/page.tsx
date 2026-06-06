@@ -36,7 +36,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000, matie
   const _matiere = matiere || _matiereMap[_subj] || 'mathematiques'
   // Garde-temps client : un appel ne doit jamais rester bloqué (le serveur coupe à 115 s)
   const _ctrl = new AbortController()
-  const _timer = setTimeout(() => _ctrl.abort(), 110000)
+  const _timer = setTimeout(() => _ctrl.abort(), 125000)
   let r: Response
   try {
     r = await fetch('/api/anthropic', {
@@ -113,7 +113,7 @@ async function askClaudeWithAttachments(
   content.push({ type: 'text', text: prompt })
 
   const _ctrl = new AbortController()
-  const _timer = setTimeout(() => _ctrl.abort(), 110000)
+  const _timer = setTimeout(() => _ctrl.abort(), 125000)
   let r: Response
   try {
     r = await fetch('/api/anthropic', {
@@ -1728,7 +1728,7 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
     setStreaming(true); setPassNum(0)
-    console.log('[Solve] ▶ démarrage — version v4 (résolution question par question)')
+    console.log('[Solve] ▶ démarrage — version v5 (question/question + reprise, abort 125s)')
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
     // Utiliser selectedMatiere (UI) au lieu de l'URL
@@ -2462,7 +2462,7 @@ Structure OBLIGATOIRE :
       const attachHint = attachments.length
         ? "\n\n📎 IMPORTANT : une ou plusieurs PIÈCES JOINTES (figure, tableau, annexe) accompagnent cet énoncé. Analyse-les attentivement (points, angles, mesures, données du tableau, courbe…) et appuie-toi dessus."
         : ''
-      const Q_TOKENS = attachments.length ? 2500 : 3500
+      const Q_TOKENS = attachments.length ? 2000 : 2500
       const askOne = (p: string, sys: string, tok: number) =>
         attachments.length ? askClaudeWithAttachments(p, sys, attachments, tok) : askClaude(p, sys, tok)
 
@@ -2486,16 +2486,25 @@ ${blocks[i]}
 
 FORMAT : commence par un titre « ### Question ${i + 1} », puis pour chaque sous-question : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ».
 
-RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé (angles droits réels, triangles isocèles avec côtés réellement égaux, longueurs cohérentes). Si tu n'es pas certain des coordonnées exactes, NE mets PAS de figure (décris-la en mots). Le JSON du graphique doit être COMPACT (≤ 10 formes), VALIDE et tenir sur UNE seule ligne (jamais coupé).`
+RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé (angles droits réels, triangles isocèles avec côtés réellement égaux, longueurs cohérentes). Si tu n'es pas certain des coordonnées exactes, NE mets PAS de figure (décris-la en mots). Le JSON du graphique doit être COMPACT (≤ 10 formes), VALIDE et tenir sur UNE seule ligne (jamais coupé).
+
+Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remplissage ni répétition inutile (réponse rapide à générer).`
           console.log('[Solve] question', i + 1, '/', blocks.length, '— envoi…')
           let part = ''
-          try {
-            part = await askOne(qPrompt, systemFull, Q_TOKENS)
-          } catch (e: any) {
-            console.warn('[Solve] question', i + 1, '— échec :', e?.name || e?.message)
-            if (full) { full += `\n\n### Question ${i + 1}\n_(⏱️ Délai dépassé pour cette question — relancez-la seule pour l'obtenir.)_`; setSolution(full); continue }
-            firstError = e; break
+          let qOk = false
+          for (let attempt = 0; attempt < 2 && !qOk; attempt++) {
+            const tok = attempt === 0 ? Q_TOKENS : 1400   // 2e tentative : plus court = plus rapide
+            try {
+              part = await askOne(qPrompt, systemFull, tok)
+              qOk = true
+            } catch (e: any) {
+              console.warn('[Solve] question', i + 1, '— échec (tentative', attempt + 1, ') :', e?.name || e?.message)
+              if (attempt === 0) { console.log('[Solve] question', i + 1, '— reprise avec moins de tokens'); continue }
+              if (full) { full += `\n\n### Question ${i + 1}\n_(⏱️ Délai dépassé pour cette question — relancez-la seule pour l'obtenir.)_`; setSolution(full) }
+              else firstError = e
+            }
           }
+          if (!qOk) { if (firstError) break; else continue }
           if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
           console.log('[Solve] question', i + 1, '— reçu', part.length, 'car.')
           full = full ? full.trimEnd() + '\n\n' + part.trim() : part.trim()
