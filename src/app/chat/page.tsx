@@ -110,7 +110,7 @@ function deleteSession(id: string): void {
 // ══════════════════════════════════════════════════════════════════════
 // PDF COLORÉ — Conversation complète
 // ══════════════════════════════════════════════════════════════════════
-function buildChatHtml(messages: { role: string; content: string }[], graphImages: string[] = [], svgImages: string[] = []): string {
+function buildChatHtml(messages: { role: string; content: string }[], graphImages: string[] = []): string {
   const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
@@ -146,22 +146,16 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
     return `<p style="margin:3px 0;font-size:13.5px;line-height:1.75">${ep(ln)}</p>`
   }
 
+  let gIdx = 0 // index global des graphiques, dans l'ordre de la conversation
   const msgHtml = messages.map(m => {
     const isUser = m.role === 'user'
-    // Remplacer les blocs ```graph...``` (ouverts ou fermés) par une note propre
-    let graphIdx = 0
-    let svgIdx = 0
+    // Remplacer les blocs ```graph...``` (ouverts ou fermés) par l'image capturée (ou une note)
     const cleanContent = m.content
       .replace(/```graph[\s\S]*?```/g, () => {
-        // Essayer d'abord un canvas capturé
-        const canvasImg = graphImages[graphIdx]
-        const svgImg = svgImages[svgIdx]
-        if (canvasImg) {
-          graphIdx++
-          return `<div style="margin:12px 0;text-align:center"><img src="${canvasImg}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0" alt="Graphique"/></div>`
-        } else if (svgImg) {
-          svgIdx++
-          return `<div style="margin:12px 0;text-align:center"><img src="${svgImg}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0" alt="Graphique"/></div>`
+        const img = graphImages[gIdx]
+        gIdx++
+        if (img) {
+          return `<div style="margin:12px 0;text-align:center"><img src="${img}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0" alt="Graphique"/></div>`
         }
         return '<div style="background:#f0f4ff;border-left:3px solid #4f6ef7;padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;font-style:italic;color:#4f6ef7;font-size:12px">📊 Graphique — ouvrir dans MathBac.AI pour visualiser</div>'
       })
@@ -210,16 +204,17 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
     <div class="header-left">
       <div class="brand">🤖 MathBac.AI · Chat Prof IA</div>
       <div class="htitle">Conversation mathématiques</div>
+      <div style="font-size:11px;color:#4f6ef7;font-weight:600;margin-top:4px">http://app.mathsbac.com</div>
     </div>
     <div class="header-right">
       <strong>Date :</strong> ${date}<br>
       <strong>Messages :</strong> ${messages.length}<br>
-      <strong>Source :</strong> MathBac.AI
+      <strong>Site :</strong> app.mathsbac.com
     </div>
   </div>
   ${msgHtml}
   <div class="footer">
-    <span><strong>MathBac.AI</strong> — Chat Prof IA · Programme CNP officiel</span>
+    <span><strong>MathBac.AI</strong> — Chat Prof IA · http://app.mathsbac.com</span>
     <span>MathBac.AI ${new Date().getFullYear()}</span>
   </div>
 </div>
@@ -239,30 +234,25 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
 }
 
 function openChatPdf(messages: { role: string; content: string }[]): void {
-  // 1. Capturer tous les graphiques visibles dans le DOM avant de générer le PDF
+  // Capturer les graphiques DANS L'ORDRE DU DOCUMENT (conteneurs .graph-export uniquement,
+  // pour ne pas attraper les icônes SVG de l'interface).
   const graphImages: string[] = []
-
-  // Canvas (FunctionGraph)
-  document.querySelectorAll('canvas').forEach((canvas) => {
-    try {
-      const dataUrl = canvas.toDataURL('image/png')
-      graphImages.push(dataUrl)
-    } catch { /* canvas cross-origin ignoré */ }
+  document.querySelectorAll('.graph-export').forEach((el) => {
+    const canvas = el.querySelector('canvas')
+    const svg = el.querySelector('svg')
+    if (canvas) {
+      try { graphImages.push((canvas as HTMLCanvasElement).toDataURL('image/png')) } catch { graphImages.push('') }
+    } else if (svg) {
+      try {
+        const svgStr = new XMLSerializer().serializeToString(svg)
+        graphImages.push('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr))
+      } catch { graphImages.push('') }
+    } else {
+      graphImages.push('')
+    }
   })
 
-  // SVG (GeometryGraph) → convertir en image PNG via blob
-  // On les capture comme SVG inline (plus simple et fiable)
-  const svgImages: string[] = []
-  document.querySelectorAll('svg').forEach((svg) => {
-    try {
-      const serializer = new XMLSerializer()
-      const svgStr = serializer.serializeToString(svg)
-      const encoded = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgStr)
-      svgImages.push(encoded)
-    } catch { /* ignoré */ }
-  })
-
-  const html = buildChatHtml(messages, graphImages, svgImages)
+  const html = buildChatHtml(messages, graphImages)
   const w = window.open('', '_blank')
   if (!w) { alert('Popup bloqué — autorisez les popups pour ce site'); return }
   w.document.write(html); w.document.close()
@@ -1297,8 +1287,8 @@ function formatContent(text: string) {
           if (t === 'ascii')    return <AsciiBlock    key={i} cfg={b.config}/>
           if (t === 'table')    return <TableBlock    key={i} cfg={b.config}/>
           if (t === 'bar')      return <BarBlock      key={i} cfg={b.config}/>
-          if (t === 'geometry') return <GeometryGraph key={i} config={b.config}/>
-          return <FunctionGraph key={i} config={b.config}/>
+          if (t === 'geometry') return <div key={i} className="graph-export"><GeometryGraph config={b.config}/></div>
+          return <div key={i} className="graph-export"><FunctionGraph config={b.config}/></div>
         }
         return <div key={i}>{renderText(b.content)}</div>
       })}
@@ -1631,7 +1621,7 @@ export default function ChatPage() {
       }
 
       // ── Lecture du flux SSE : on affiche la réponse au fil de l'eau ──
-      const assistantId = nextMsgId
+      const assistantId = nextMsgId + 1 // ⚠️ id distinct de userMsg (qui utilise nextMsgId) pour éviter la collision
       setNextMsgId(p => p + 1)
       setMessages(prev => [...prev, { role: 'assistant', content: '', id: assistantId }])
 

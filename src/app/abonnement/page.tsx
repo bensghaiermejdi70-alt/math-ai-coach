@@ -153,10 +153,10 @@ const QUOTAS_SPRINT = [
 ]
 
 const QUOTAS_ANNUEL = [
-  { label:'Simulation Bac',        val:'10 / sem', note:'15h hors sprint · 30h mai-juin' },
+  { label:'Simulation Bac',        val:'5 / sem' },
   { label:'Chat IA Professeur',    val:'10 / sem' },
   { label:'Solveur étape/étape',   val:'10 / sem' },
-  { label:'Remédiation IA',        val:'20 / sem' },
+  { label:'Remédiation IA',        val:'10 / sem' },
   { label:'Analyses performance',  val:'10 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
   { label:'Programme personnalisé',val:'✅ Inclus + Avancé' },
