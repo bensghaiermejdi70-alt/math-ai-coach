@@ -1183,7 +1183,17 @@ function parseBlocks(text: string): Array<{ type: 'text' | 'graph'; content: str
     }
     last = m.index + m[0].length
   }
-  if (last < withFigure.length) out.push({ type: 'text', content: withFigure.slice(last) })
+  if (last < withFigure.length) {
+    const tail = withFigure.slice(last)
+    const gi = tail.indexOf('```graph')
+    if (gi !== -1) {
+      // Bloc graphique encore en cours de génération (streaming) ou tronqué : placeholder propre
+      if (gi > 0) out.push({ type: 'text', content: tail.slice(0, gi) })
+      out.push({ type: 'graph', content: '', config: { type: 'pending' } })
+    } else {
+      out.push({ type: 'text', content: tail })
+    }
+  }
   return out
 }
 
@@ -1283,6 +1293,7 @@ function formatContent(text: string) {
       {blocks.map((b, i) => {
         if (b.type === 'graph' && b.config) {
           const t = b.config.type
+          if (t === 'pending')  return <div key={i} style={{ margin: '12px 0', padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(99,102,241,0.3)', background: 'rgba(99,102,241,0.06)', color: '#94a3b8', fontSize: 13 }}>📊 Génération du graphique…</div>
           if (t === 'ascii')    return <AsciiBlock    key={i} cfg={b.config}/>
           if (t === 'table')    return <TableBlock    key={i} cfg={b.config}/>
           if (t === 'bar')      return <BarBlock      key={i} cfg={b.config}/>
@@ -1504,6 +1515,8 @@ export default function ChatPage() {
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 6000, // relevé pour des réponses exhaustives (reste sous le timeout serveur 115s)
+          stream: true, // affichage au fil de l'eau
+          type: 'chat', // comptage quota explicite (évite toute mauvaise détection)
           system: ((): string => {
               const REFUS_MATHS = '\u{1F512} Ce module est réservé aux **Mathématiques**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_PHYS  = '\u{1F512} Ce module est réservé à la **Physique-Chimie**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
@@ -1608,26 +1621,67 @@ export default function ChatPage() {
           messages: cachedPayload,
         }),
       })
-      const data = await res.json()
-
-      if (res.status === 429) {
+      // Erreur (quota 429, auth 401, etc.) → la route renvoie du JSON
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as any))
         setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${data.error || 'Quota hebdomadaire atteint. Renouvellement lundi.'}`, id: nextMsgId }])
         setNextMsgId(p => p + 1)
         setLoading(false)
         return
       }
 
-      const reply = data.content?.map((c: any) => c.text || '').join('') || 'Désolé, je n\'ai pas pu générer une réponse.'
-
-      const _matiereChat = selectedMatiere === 'litterature' ? 'francais' : selectedMatiere
-      await incrementQuota('chat', _matiereChat as any)
-      setLocalChatExtra(prev => prev + 1) // Mise à jour immédiate affichage
-
-      const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: nextMsgId }]
-      setMessages(prev => [...prev, { role: 'assistant', content: reply, id: nextMsgId }])
+      // ── Lecture du flux SSE : on affiche la réponse au fil de l'eau ──
+      const assistantId = nextMsgId
       setNextMsgId(p => p + 1)
-      // Sauvegarder dans l'historique
-      setTimeout(() => { saveSession(updatedMsgs); setSessions(loadSessions()) }, 100)
+      setMessages(prev => [...prev, { role: 'assistant', content: '', id: assistantId }])
+
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let acc = ''
+      let streamErr = false
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+          for (const raw of lines) {
+            const line = raw.trim()
+            if (!line.startsWith('data:')) continue
+            const payload = line.slice(5).trim()
+            if (!payload || payload === '[DONE]') continue
+            try {
+              const evt = JSON.parse(payload)
+              if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+                acc += evt.delta.text
+                setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: acc } : m))
+              } else if (evt.type === 'error') {
+                streamErr = true
+              }
+            } catch { /* ligne SSE partielle ou non-JSON : ignorée */ }
+          }
+        }
+      }
+
+      const reply = acc || (streamErr
+        ? '⚠️ Une erreur est survenue pendant la génération. Réessaie.'
+        : 'Désolé, je n\'ai pas pu générer une réponse.')
+
+      if (!acc) {
+        setMessages(prev => prev.map(m => m.id === assistantId ? { ...m, content: reply } : m))
+      }
+
+      // Quota + sauvegarde uniquement si une réponse a bien été générée
+      if (acc) {
+        const _matiereChat = selectedMatiere === 'litterature' ? 'francais' : selectedMatiere
+        await incrementQuota('chat', _matiereChat as any)
+        setLocalChatExtra(prev => prev + 1) // Mise à jour immédiate affichage
+        const updatedMsgs = [...messages, userMsg, { role: 'assistant', content: reply, id: assistantId }]
+        setTimeout(() => { saveSession(updatedMsgs); setSessions(loadSessions()) }, 100)
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: '⚠️ Erreur de connexion. Vérifie que le serveur est bien démarré.', id: nextMsgId }])
       setNextMsgId(p => p + 1)

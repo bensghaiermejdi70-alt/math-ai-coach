@@ -167,6 +167,26 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
   signal: AbortSignal.timeout(115000),
 })
 
+    // ── Mode streaming (SSE) : on relaie le flux Anthropic tel quel au client ──
+    if (anthropicBody.stream) {
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({} as any))
+        return NextResponse.json(
+          { error: errData?.error?.message || 'Erreur API Anthropic' },
+          { status: response.status }
+        )
+      }
+      return new Response(response.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        },
+      })
+    }
+
     const data = await response.json()
 
     if (!response.ok) {
