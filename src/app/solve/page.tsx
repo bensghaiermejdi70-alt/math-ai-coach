@@ -1226,7 +1226,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   <!-- EXERCICE -->
   <div class="ex-label">📝 Énoncé de l'exercice</div>
-  <div class="ex-box">${esc(exercise)}</div>
+  <div class="ex-box">${esc(exercise.replace(/\\\[/g, ' ').replace(/\\\]/g, ' ').replace(/\\\(/g, ' ').replace(/\\\)/g, ' ').replace(/\$\$/g, ' ').replace(/\$/g, ''))}</div>
 
   <!-- SOLUTION -->
   <div class="sol-box">
@@ -1472,9 +1472,16 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
   const handleFile = useCallback(async (file: File) => {
     setError(''); setFileName(file.name); setLoading(true)
     const ext = file.name.split('.').pop()?.toLowerCase()
+    // Nettoie le texte importé : retire les délimiteurs LaTeX et les symboles $ (que l'utilisateur ne veut pas voir)
+    const cleanImported = (t: string) => t
+      .replace(/\\\[/g, ' ').replace(/\\\]/g, ' ')
+      .replace(/\\\(/g, ' ').replace(/\\\)/g, ' ')
+      .replace(/\$\$/g, ' ').replace(/\$/g, '')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim()
     try {
       if (ext === 'txt' || ext === 'md') {
-        const text = await file.text(); onExtracted(text.trim()); setLoading(false); return
+        const text = await file.text(); onExtracted(cleanImported(text)); setLoading(false); return
       }
       const reader = new FileReader()
       reader.onload = async (e) => {
@@ -1484,18 +1491,18 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
           if (ext === 'pdf') {
             const r = await fetch('/api/solve', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 6000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: 'Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de la première à la dernière ligne, sans rien omettre ni résumer. Garde tous les symboles, toutes les questions et sous-questions. Aucune introduction ni commentaire.' }] }] })
+              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 6000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: "Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de la première à la dernière ligne, sans rien omettre ni résumer (toutes les questions et sous-questions). IMPORTANT : n'utilise AUCUN symbole dollar $ ni délimiteur LaTeX ($...$, \\(...\\), \\[...\\]). Écris les maths en notation lisible avec des symboles Unicode (½, √, π, ℂ, ζ, ≤, ≥, ∈, ∞, z̄ pour le conjugué, u⃗ pour les vecteurs, |z|, etc.). Aucune introduction ni commentaire." }] }] })
             })
             const d = await r.json()
             text = d.content?.map((c: any) => c.text || '').join('') || ''
           } else {
             const mediaType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg'
             text = await askClaudeWithImage(
-              'Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de haut en bas, sans rien omettre : tous les énoncés, toutes les questions et sous-questions, tous les symboles. Retourne UNIQUEMENT le texte transcrit, sans commentaire ni résumé.',
+              "Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de haut en bas, sans rien omettre (tous les énoncés, questions et sous-questions). IMPORTANT : n'utilise AUCUN symbole dollar $ ni délimiteur LaTeX. Écris les maths en notation lisible avec des symboles Unicode (½, √, π, ℂ, ζ, ≤, ≥, ∈, ∞, z̄ pour le conjugué, u⃗ pour les vecteurs, |z|, etc.). Retourne UNIQUEMENT le texte transcrit, sans commentaire.",
               'Tu es un OCR mathématique précis et exhaustif.', base64, mediaType, 6000
             )
           }
-          onExtracted(text.trim())
+          onExtracted(cleanImported(text))
         } catch { setError('Erreur de lecture. Vérifie ta clé API dans .env.local') }
         setLoading(false)
       }
