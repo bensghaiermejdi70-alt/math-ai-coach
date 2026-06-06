@@ -1480,13 +1480,30 @@ export default function ChatPage() {
 
     setPendingImage(null)
 
+    // ── Prompt caching de l'historique : marque la fin du contexte comme point de cache.
+    //    AUCUN impact sur la réponse (même contenu, même modèle, même max_tokens).
+    //    Les tours précédents sont relus à -90 % dès que la conversation dépasse ~1024 tokens.
+    const cachedPayload = (messagesPayload as any[]).map((m, i) => {
+      if (i !== messagesPayload.length - 1) return m
+      if (typeof m.content === 'string') {
+        return { ...m, content: [{ type: 'text', text: m.content, cache_control: { type: 'ephemeral' } }] }
+      }
+      if (Array.isArray(m.content) && m.content.length > 0) {
+        const blocks = m.content.map((b: any, j: number) =>
+          j === m.content.length - 1 ? { ...b, cache_control: { type: 'ephemeral' } } : b
+        )
+        return { ...m, content: blocks }
+      }
+      return m
+    })
+
     try {
       const res = await fetch('/api/anthropic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 3500, // compromis qualité/vitesse
+          max_tokens: 6000, // relevé pour des réponses exhaustives (reste sous le timeout serveur 115s)
           system: ((): string => {
               const REFUS_MATHS = '\u{1F512} Ce module est réservé aux **Mathématiques**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_PHYS  = '\u{1F512} Ce module est réservé à la **Physique-Chimie**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
@@ -1494,7 +1511,46 @@ export default function ChatPage() {
               const REFUS_ANG   = '\u{1F512} This module is reserved for **English**. For this question, please select the corresponding subject in the menu above.'
               const REFUS_INFO  = '\u{1F512} Ce module est réservé à l\'**Informatique**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_LIT   = '\u{1F512} Ce module est réservé à la **Littérature Française**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
-              const FORMAT = '\n\n## FORMAT DE RÉPONSE\n- LaTeX OBLIGATOIRE : $formule$ inline, $$formule$$ bloc\n- Graphiques : génère TOUJOURS un bloc ```graph JSON pour toute fonction/courbe/circuit/figure géométrique\n- Structure : ## parties, **gras** pour les résultats clés\n- Bienveillance et encouragement systématique'
+              const FORMAT = '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
+                + '## RÉPONSE EXHAUSTIVE — RÈGLE ABSOLUE\n'
+                + 'Réponds TOUJOURS de façon COMPLÈTE et DÉTAILLÉE, jamais abrégée ni tronquée.\n'
+                + 'Pour chaque question : (1) rappelle la définition/notion utile ; (2) explique la MÉTHODE étape par étape ; '
+                + '(3) détaille TOUS les calculs sans sauter aucune étape, en justifiant chaque passage ; '
+                + '(4) traite TOUTES les sous-questions une par une, sans en oublier aucune ; '
+                + '(5) si plusieurs cas ou méthodes existent, traite chaque cas ; '
+                + '(6) termine par une **Conclusion** claire puis un encadré **📌 À retenir**.\n'
+                + 'Ajoute des exemples concrets quand cela aide la compréhension. Reste rigoureux, structuré et bienveillant.\n\n'
+                + '## FORMAT\n'
+                + '- LaTeX OBLIGATOIRE : $formule$ en ligne, $$formule$$ en bloc.\n'
+                + '- Structure : titres ## pour les parties, **gras** pour les résultats clés, listes à puces pour les étapes.\n\n'
+                + '## GRAPHIQUES — CAPACITÉ COMPLÈTE (au niveau du solveur)\n'
+                + 'Pour TOUTE courbe, fonction, figure géométrique, circuit, schéma ou diagramme : génère TOUJOURS un bloc ```graph en JSON valide. '
+                + 'JAMAIS de schéma ASCII, JAMAIS [FIGURE:...].\n'
+                + 'FONCTION — ```graph {"type":"function","title":"...","xrange":[-5,5],"yrange":[-2,10],"functions":[{"expr":"x*x","label":"f(x)","color":"#6366f1"}],"points":[{"x":1,"y":1,"label":"A","color":"#f59e0b"}],"asymptotes":[{"type":"horizontal","y":0,"label":"y=0"}]} ``` '
+                + '(expressions JS : x*x, Math.sqrt(x), Math.abs(x), Math.sin(x), Math.exp(x), Math.log(x), Math.PI).\n'
+                + 'GÉOMÉTRIE — ```graph {"type":"geometry","title":"...","shapes":[ ... ]} ``` ; formes et paramètres EXACTS : '
+                + 'point {"type":"point","x":1,"y":2,"label":"A","color":"#f59e0b"} ; '
+                + 'segment {"type":"segment","x1":0,"y1":0,"x2":3,"y2":2,"label":"AB"} ; '
+                + 'vector {"type":"vector","x1":0,"y1":0,"x2":2,"y2":1,"label":"u","color":"#06d6a0"} ; '
+                + 'circle {"type":"circle","cx":0,"cy":0,"r":2,"label":"C","color":"#4f6ef7"} ; '
+                + 'triangle {"type":"triangle","points":[[0,0],[4,0],[2,3]],"label":"ABC","fill":"rgba(99,102,241,0.08)"} ; '
+                + 'polygon {"type":"polygon","points":[[0,0],[2,0],[2,2],[0,2]]} ; '
+                + 'rect {"type":"rect","x":0,"y":0,"w":2,"h":1,"label":"R"} ; '
+                + 'line {"type":"line","x1":0,"y1":0,"x2":1,"y2":2,"dashed":true} ; '
+                + 'angle {"type":"angle","cx":0,"cy":0,"r":1,"a1":0,"a2":60,"label":"60°"} ; '
+                + 'arc {"type":"arc","cx":0,"cy":0,"r":1,"a1":0,"a2":90} ; '
+                + 'rightangle {"type":"rightangle","cx":1,"cy":0,"size":0.3} ; '
+                + 'label {"type":"label","x":1,"y":1,"text":"texte"} ; ajoute si utile {"type":"axes"} et {"type":"grid"}.\n\n'
+                + '## MÉTHODE PÉDAGOGIQUE\n'
+                + '- Adapte le niveau au programme officiel du Bac (Tunisie et France) et au contexte de l\'élève.\n'
+                + '- Vérifie systématiquement le résultat avant de conclure : cohérence, unités, ordre de grandeur, cas limites.\n'
+                + '- Signale explicitement les pièges et erreurs fréquentes sur ce type de question.\n'
+                + '- Donne la rédaction-type attendue le jour du Bac : justifications complètes, quantificateurs, théorèmes cités, phrases de conclusion.\n'
+                + '- Quand c\'est pertinent, propose une courte vérification, un schéma, ou un contre-exemple éclairant.\n'
+                + '- Si une notion préalable est nécessaire, explique-la brièvement avant de poursuivre, sans supposer qu\'elle est acquise.\n'
+                + '- Pour les démonstrations, rédige chaque implication et chaque hypothèse ; ne saute aucun maillon logique.\n'
+                + '- Numérote les étapes, présente les résultats intermédiaires clés, et mets clairement en évidence la réponse finale.\n'
+                + '- Bienveillance et encouragement systématiques.'
 
               const instructions: Record<string,string> = {
                 mathematiques:
@@ -1549,7 +1605,7 @@ export default function ChatPage() {
               }
               return instructions[selectedMatiere] || instructions['mathematiques']
             })(),
-          messages: messagesPayload,
+          messages: cachedPayload,
         }),
       })
       const data = await res.json()
