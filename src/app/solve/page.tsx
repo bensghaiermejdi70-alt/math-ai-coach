@@ -1295,22 +1295,42 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
   // (utilise le KaTeX déjà chargé dans la page principale)
   function preRenderLatex(sol: string): string {
     const katex = (window as any).katex
-    const collapsed = collapseGraphBlocks(sol)
-    if (!katex) return collapsed.split('\n').map(convertLineForPdf).join('\n')
+    let collapsed = collapseGraphBlocks(sol)
+    // Convertir les délimiteurs \[...\] et \(...\) en $$...$$ / $...$
+    collapsed = collapsed
+      .replace(/\\\[/g, () => '$$')
+      .replace(/\\\]/g, () => '$$')
+      .replace(/\\\(/g, () => '$')
+      .replace(/\\\)/g, () => '$')
+
+    if (!katex) {
+      // Pas de KaTeX : au moins retirer les $ pour ne pas les afficher
+      return collapsed.split('\n').map(convertLineForPdf).map(l => l.replace(/\$/g, '')).join('\n')
+    }
+
+    // 1) Rendre les blocs $$...$$ MÊME multi-lignes, AVANT le découpage en lignes
+    const mathBlocks: string[] = []
+    collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
+      try {
+        const html = `<div class="katex-display-wrap">${katex.renderToString(math.trim(), { throwOnError: false, displayMode: true })}</div>`
+        mathBlocks.push(html)
+        return `\n[[MATHBLOCK:${mathBlocks.length - 1}]]\n`
+      } catch { return math }
+    })
+
+    // 2) Traiter ligne par ligne (titres, listes, résultats…) + inline $...$
     return collapsed.split('\n').map((ln: string) => {
       if (!ln.trim()) return '<div class="spacer"></div>'
-      const processed = convertLineForPdf(ln)
-      // Rendre les $$...$$ (display)
-      const withDisplay = processed.replace(/\$\$([^$]+?)\$\$/g, (_: string, math: string) => {
-        try { return `<div class="katex-display-wrap">${katex.renderToString(math.trim(), {throwOnError:false, displayMode:true})}</div>` }
+      const mb = ln.trim().match(/^\[\[MATHBLOCK:(\d+)\]\]$/)
+      if (mb) return mathBlocks[Number(mb[1])] || ''
+      let processed = convertLineForPdf(ln)
+      processed = processed.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
+        try { return katex.renderToString(math.trim(), { throwOnError: false, displayMode: false }) }
         catch { return math }
       })
-      // Rendre les $...$ (inline)
-      const withInline = withDisplay.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
-        try { return katex.renderToString(math.trim(), {throwOnError:false, displayMode:false}) }
-        catch { return math }
-      })
-      return withInline
+      // Retirer les $ résiduels (délimiteurs non appariés) pour ne jamais les afficher
+      processed = processed.replace(/\$/g, '')
+      return processed
     }).join('\n')
   }
 
