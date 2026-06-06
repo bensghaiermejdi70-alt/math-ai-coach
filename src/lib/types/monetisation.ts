@@ -171,11 +171,11 @@ export const PLAN_DEFINITIONS: Record<BasePlanType, {
     description: 'Paiement unique · Accès 12 mois',
     badge: '⭐ Meilleure valeur',
     quotas: {
-      simulations_per_week: 2,
+      simulations_per_week: 5,
       chat_per_week: 10,
       solver_per_week: 10,      // ← 10/sem
       remediation_per_week: 10,
-      analyses_per_week: 5,
+      analyses_per_week: 10,
       courses_unlimited: true,
       bac_blanc: true,
       bac_blanc_per_week: 5,
