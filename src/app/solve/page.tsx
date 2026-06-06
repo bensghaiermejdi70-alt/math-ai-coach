@@ -840,10 +840,15 @@ function parseGraphSegments(text: string): Array<{ type: 'text' | 'graph'; conte
       j++
     }
     if (!closed) {
-      // Objet JSON tronqué (graphique coupé par la limite de tokens) → note propre,
-      // surtout PAS le JSON brut. On arrête là.
+      // Objet JSON tronqué (graphique coupé). On remplace par une note propre,
+      // PUIS on reprend après le bloc tronqué (au prochain saut de paragraphe /
+      // titre) pour NE PAS perdre le contenu qui suit (ex. la question suivante).
       result.push({ type: 'text', content: '\n📊 (figure)\n' })
-      break
+      const after = text.slice(jsonStart)
+      const rel = after.search(/\n\s*\n|\n#{1,3}\s|\n>/)
+      if (rel === -1) break
+      i = jsonStart + rel
+      continue
     }
     // Objet complet : on récupère le graphe même si le ']' final manque
     const closeBracket = text.indexOf(']', j)
@@ -853,7 +858,30 @@ function parseGraphSegments(text: string): Array<{ type: 'text' | 'graph'; conte
   return result
 }
 
-// ── Rendu LaTeX inline avec KaTeX ─────────────────────────────────
+// Retire un éventuel bloc [GRAPH:{...}] tronqué (JSON non refermé) d'une réponse,
+// pour qu'un graphique coupé n'avale jamais le contenu suivant lors de l'assemblage.
+function stripIncompleteGraph(text: string): string {
+  let out = ''
+  let i = 0
+  const tag = '[GRAPH:'
+  while (i < text.length) {
+    const idx = text.indexOf(tag, i)
+    if (idx === -1) { out += text.slice(i); break }
+    const jsonStart = text.indexOf('{', idx + tag.length)
+    if (jsonStart === -1) { out += text.slice(i, idx); break }
+    let depth = 0, j = jsonStart, closed = false
+    while (j < text.length) {
+      if (text[j] === '{') depth++
+      else if (text[j] === '}') { depth--; if (depth === 0) { closed = true; break } }
+      j++
+    }
+    if (!closed) { out += text.slice(i, idx).replace(/\s*$/, '') ; break }  // graphe tronqué → on coupe ici
+    const cb = text.indexOf(']', j)
+    out += text.slice(i, cb === -1 ? j + 1 : cb + 1)
+    i = (cb === -1 ? j + 1 : cb + 1)
+  }
+  return out
+}
 function renderLatexLine(line: string): string {
   // Remplace $$...$$ (block) puis $...$ (inline) par du HTML KaTeX
   // On utilise une approche simple : convertir en HTML via pattern matching
@@ -2568,7 +2596,8 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
           if (!qOk) { if (firstError) break; else continue }
           if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
           console.log('[Solve]', items[i].label, '— reçu', part.length, 'car.')
-          full = full ? full.trimEnd() + '\n\n' + part.trim() : part.trim()
+          const cleanPart = stripIncompleteGraph(part).trim()
+          full = full ? full.trimEnd() + '\n\n' + cleanPart : cleanPart
           setSolution(full)
           if (i === 0) setPhase('done')
         }
@@ -2579,7 +2608,7 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
         try {
           const part = await askOne(prompt + attachHint, systemFull, attachments.length ? 4000 : 6000)
           if (part.startsWith('⚠️') && part.includes('quota')) quotaMsg = part
-          else { full = part.trim(); setPhase('done'); setSolution(full) }
+          else { full = stripIncompleteGraph(part).trim(); setPhase('done'); setSolution(full) }
         } catch (e: any) { firstError = e }
       }
 
