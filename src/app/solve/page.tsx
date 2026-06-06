@@ -1748,7 +1748,7 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
     setStreaming(true); setPassNum(0)
-    console.log('[Solve] ▶ démarrage — version v5 (question/question + reprise, abort 125s)')
+    console.log('[Solve] ▶ démarrage — version v6 (2 niveaux : question + sous-question)')
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
     // Utiliser selectedMatiere (UI) au lieu de l'URL
@@ -2459,16 +2459,17 @@ Structure OBLIGATOIRE :
       // l'énoncé complet servant de contexte. Aucun doublon, fin garantie.
       const systemFull = system
 
-      function splitMainQuestions(text: string): string[] {
+      function splitByMarkers(text: string, re: RegExp, seq: (m: RegExpMatchArray) => number): string[] {
         const lines = text.split('\n')
         const blocks: string[] = []
         let current: string[] | null = null
-        let expected = 1
+        let expected: number | null = null
         for (const line of lines) {
-          const m = line.match(/^\s*(\d+)\s*[.)]\s+\S/)
-          if (m && parseInt(m[1], 10) === expected) {
+          const m = line.match(re)
+          const val = m ? seq(m) : null
+          if (val !== null && (expected === null || val === expected)) {
             if (current) blocks.push(current.join('\n'))
-            current = [line]; expected++
+            current = [line]; expected = val + 1
           } else if (current) {
             current.push(line)
           }
@@ -2477,8 +2478,45 @@ Structure OBLIGATOIRE :
         return blocks
       }
 
+      // Découpage à DEUX niveaux : par question numérotée (1,2,3…), puis chaque
+      // question est elle-même redécoupée par ses sous-questions (a,b,c…).
+      // → liste plate { label, text } : CHAQUE sous-question = un appel dédié.
+      const subRe = /^\s*([a-z])\s*[.)]\s+\S/i
+      const numRe = /^\s*(\d+)\s*[.)]\s+\S/
+      function buildItems(text: string): { label: string; text: string }[] {
+        const items: { label: string; text: string }[] = []
+        const numBlocks = splitByMarkers(text, numRe, m => parseInt(m[1], 10))
+        if (numBlocks.length >= 2) {
+          for (const nb of numBlocks) {
+            const numLabel = nb.match(numRe)?.[1] || '?'
+            const subBlocks = splitByMarkers(nb, subRe, m => m[1].toLowerCase().charCodeAt(0) - 97)
+            if (subBlocks.length >= 2) {
+              const intro = nb.split('\n').slice(0, Math.max(1, nb.split('\n').findIndex(l => subRe.test(l)))).join('\n').trim()
+              for (const sb of subBlocks) {
+                const sl = sb.match(subRe)?.[1]?.toLowerCase() || ''
+                const body = intro ? `${intro}\n${sb}` : sb
+                items.push({ label: `Question ${numLabel}.${sl})`, text: body })
+              }
+            } else {
+              items.push({ label: `Question ${numLabel}`, text: nb })
+            }
+          }
+          return items
+        }
+        // Pas de numéros → découpage par lettres au niveau racine
+        const letterBlocks = splitByMarkers(text, subRe, m => m[1].toLowerCase().charCodeAt(0) - 97)
+        if (letterBlocks.length >= 2) {
+          for (const lb of letterBlocks) {
+            const sl = lb.match(subRe)?.[1]?.toLowerCase() || ''
+            items.push({ label: `Question ${sl})`, text: lb })
+          }
+          return items
+        }
+        return []
+      }
+
       const exerciseText = mode === 'verify' ? `${input}\n\nSOLUTION DE L'ÉLÈVE :\n${myAnswer}` : input
-      const blocks = splitMainQuestions(input)
+      const items = buildItems(input)
       const attachHint = attachments.length
         ? "\n\n📎 IMPORTANT : une ou plusieurs PIÈCES JOINTES (figure, tableau, annexe) accompagnent cet énoncé. Analyse-les attentivement (points, angles, mesures, données du tableau, courbe…) et appuie-toi dessus."
         : ''
@@ -2490,26 +2528,29 @@ Structure OBLIGATOIRE :
       let quotaMsg = ''
       let firstError: any = null
 
-      if (mode === 'solve' && blocks.length >= 2) {
-        console.log('[Solve] mode structuré —', blocks.length, 'questions détectées')
-        for (let i = 0; i < blocks.length; i++) {
+      if (mode === 'solve' && items.length >= 2) {
+        console.log('[Solve] mode structuré —', items.length, 'sous-questions détectées')
+        for (let i = 0; i < items.length; i++) {
           setPassNum(i + 1)
+          const priorContext = full
+            ? `\n\nRÉSULTATS DÉJÀ ÉTABLIS dans les questions précédentes (tu peux t'appuyer dessus) :\n${full.slice(-1800)}\n`
+            : ''
           const qPrompt =
 `Tu es professeur de mathématiques (Bac tunisien). Voici l'énoncé COMPLET de l'exercice (pour le contexte) :
 
-${exerciseText}${attachHint}
+${exerciseText}${attachHint}${priorContext}
 
-RÉSOUS MAINTENANT, de façon complète et détaillée, UNIQUEMENT la question ci-dessous (avec TOUTES ses sous-questions a) b) c)…). Tu peux utiliser les résultats des questions précédentes. NE traite AUCUNE autre question et ne les répète pas.
+RÉSOUS MAINTENANT, de façon complète et détaillée, UNIQUEMENT la question ci-dessous. Tu peux utiliser les résultats des questions précédentes. NE traite AUCUNE autre question et ne les répète pas.
 
-QUESTION À RÉSOUDRE :
-${blocks[i]}
+QUESTION À RÉSOUDRE (${items[i].label}) :
+${items[i].text}
 
-FORMAT : commence par un titre « ### Question ${i + 1} », puis pour chaque sous-question : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ».
+FORMAT : commence par un titre « ### ${items[i].label} », puis : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ».
 
-RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé (angles droits réels, triangles isocèles avec côtés réellement égaux, longueurs cohérentes). Si tu n'es pas certain des coordonnées exactes, NE mets PAS de figure (décris-la en mots). Le JSON du graphique doit être COMPACT (≤ 10 formes), VALIDE et tenir sur UNE seule ligne (jamais coupé).
+RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé. Sinon, décris la figure en mots. JSON COMPACT (≤ 10 formes), VALIDE, sur UNE seule ligne.
 
-Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remplissage ni répétition inutile (réponse rapide à générer).`
-          console.log('[Solve] question', i + 1, '/', blocks.length, '— envoi…')
+Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remplissage ni répétition inutile.`
+          console.log('[Solve]', items[i].label, '—', i + 1, '/', items.length, '— envoi…')
           let part = ''
           let qOk = false
           for (let attempt = 0; attempt < 2 && !qOk; attempt++) {
@@ -2518,15 +2559,15 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
               part = await askOne(qPrompt, systemFull, tok)
               qOk = true
             } catch (e: any) {
-              console.warn('[Solve] question', i + 1, '— échec (tentative', attempt + 1, ') :', e?.name || e?.message)
-              if (attempt === 0) { console.log('[Solve] question', i + 1, '— reprise avec moins de tokens'); continue }
-              if (full) { full += `\n\n### Question ${i + 1}\n_(⏱️ Délai dépassé pour cette question — relancez-la seule pour l'obtenir.)_`; setSolution(full) }
+              console.warn('[Solve]', items[i].label, '— échec (tentative', attempt + 1, ') :', e?.name || e?.message)
+              if (attempt === 0) { console.log('[Solve]', items[i].label, '— reprise avec moins de tokens'); continue }
+              if (full) { full += `\n\n### ${items[i].label}\n_(⏱️ Délai dépassé pour cette sous-question — relancez-la seule pour l'obtenir.)_`; setSolution(full) }
               else firstError = e
             }
           }
           if (!qOk) { if (firstError) break; else continue }
           if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
-          console.log('[Solve] question', i + 1, '— reçu', part.length, 'car.')
+          console.log('[Solve]', items[i].label, '— reçu', part.length, 'car.')
           full = full ? full.trimEnd() + '\n\n' + part.trim() : part.trim()
           setSolution(full)
           if (i === 0) setPhase('done')
