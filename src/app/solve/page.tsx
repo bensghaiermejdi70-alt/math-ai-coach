@@ -1712,7 +1712,7 @@ function SolvePageInner() {
 
     setPhase('solving'); setSolution(''); setError(''); setSimilarQ([])
     setStreaming(true); setPassNum(0)
-    console.log('[Solve] ▶ démarrage — version MULTI-PASSES v3 (4000 tok/passe, garde-temps 110s)')
+    console.log('[Solve] ▶ démarrage — version v4 (résolution question par question)')
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
     // Utiliser selectedMatiere (UI) au lieu de l'URL
@@ -2416,85 +2416,89 @@ Structure OBLIGATOIRE :
 [Les 2-3 points précis sur lesquels travailler + exercices similaires conseillés]`
 
     try {
-      // ── Génération en plusieurs passes courtes ───────────────────────────
-      // Le serveur coupe tout appel dépassant 115 s. Une correction longue et
-      // complexe (sujet de géométrie en 5 questions) dépasse ce délai en un seul
-      // appel → 0 résultat. On découpe donc la rédaction en passes de 4000 tokens
-      // (≈ 60 s chacune, sûres) assemblées jusqu'au marqueur [[FIN]].
-      // Un petit exercice = 1 seule passe (comportement inchangé).
-      const systemFull = system + '\n\nMARQUEUR DE FIN : n\'écris [[FIN]] QUE lorsque la TOUTE DERNIÈRE question de l\'énoncé (ex. la question 5, et toutes ses sous-questions a, b, c…) est ENTIÈREMENT résolue. Tant qu\'il reste ne serait-ce qu\'une sous-question non traitée, n\'écris PAS [[FIN]] : arrête-toi simplement, tu seras invité à continuer. Ne mets jamais [[FIN]] au milieu.'
+      // ── Résolution QUESTION PAR QUESTION (déterministe, sans doublon) ─────
+      // La continuation « aveugle » faisait répéter les questions et ne signalait
+      // jamais la fin. On découpe donc l'énoncé en questions principales (1,2,3…)
+      // et on résout UNE question par appel (court, rapide, sous le timeout),
+      // l'énoncé complet servant de contexte. Aucun doublon, fin garantie.
+      const systemFull = system
+
+      function splitMainQuestions(text: string): string[] {
+        const lines = text.split('\n')
+        const blocks: string[] = []
+        let current: string[] | null = null
+        let expected = 1
+        for (const line of lines) {
+          const m = line.match(/^\s*(\d+)\s*[.)]\s+\S/)
+          if (m && parseInt(m[1], 10) === expected) {
+            if (current) blocks.push(current.join('\n'))
+            current = [line]; expected++
+          } else if (current) {
+            current.push(line)
+          }
+        }
+        if (current) blocks.push(current.join('\n'))
+        return blocks
+      }
+
+      const exerciseText = mode === 'verify' ? `${input}\n\nSOLUTION DE L'ÉLÈVE :\n${myAnswer}` : input
+      const blocks = splitMainQuestions(input)
+      const attachHint = attachments.length
+        ? "\n\n📎 IMPORTANT : une ou plusieurs PIÈCES JOINTES (figure, tableau, annexe) accompagnent cet énoncé. Analyse-les attentivement (points, angles, mesures, données du tableau, courbe…) et appuie-toi dessus."
+        : ''
+      const Q_TOKENS = attachments.length ? 2500 : 3500
+      const askOne = (p: string, sys: string, tok: number) =>
+        attachments.length ? askClaudeWithAttachments(p, sys, attachments, tok) : askClaude(p, sys, tok)
 
       let full = ''
       let quotaMsg = ''
-      let pass = 0
-      let firstPassError: any = null
-      let abortRetries = 0
-      const MAX_PASSES = 14
-      // Avec pièce jointe (image/PDF renvoyée à chaque passe), la génération est plus lente :
-      // passes plus courtes pour rester sous le garde-temps de 110 s.
-      const PASS_TOKENS = attachments.length ? 1400 : 2000
+      let firstError: any = null
 
-      while (pass < MAX_PASSES) {
-        pass++
-        setPassNum(pass)
-        const passPrompt = pass === 1
-          ? prompt
-          : `${prompt}\n\n=== CORRECTION DÉJÀ RÉDIGÉE — FIN DE L'EXTRAIT (à ne PAS répéter) ===\n${full.slice(-3500)}\n=== FIN DE L'EXTRAIT ===\n\nReprends l'énoncé complet ci-dessus et IDENTIFIE les questions/sous-questions NON ENCORE traitées (par ex. la fin de la question 4, puis la question 5…). CONTINUE la correction à partir de là, sans répéter ce qui précède, sans recommencer depuis le début. Traite TOUTES les questions restantes. N'écris [[FIN]] que lorsque la dernière question de l'énoncé est entièrement résolue.`
+      if (mode === 'solve' && blocks.length >= 2) {
+        console.log('[Solve] mode structuré —', blocks.length, 'questions détectées')
+        for (let i = 0; i < blocks.length; i++) {
+          setPassNum(i + 1)
+          const qPrompt =
+`Tu es professeur de mathématiques (Bac tunisien). Voici l'énoncé COMPLET de l'exercice (pour le contexte) :
 
-        let part = ''
-        try {
-          console.log('[Solve] passe', pass, '— envoi… (', PASS_TOKENS, 'tokens )', attachments.length ? `+ ${attachments.length} pièce(s) jointe(s)` : '')
-          const attachHint = attachments.length
-            ? "\n\n📎 IMPORTANT : une ou plusieurs PIÈCES JOINTES (figure, tableau, annexe) accompagnent cet énoncé. Analyse-les attentivement (points, angles, mesures, données du tableau, courbe…) et appuie-toi dessus pour la résolution."
-            : ''
-          part = attachments.length
-            ? await askClaudeWithAttachments(passPrompt + attachHint, systemFull, attachments, PASS_TOKENS)
-            : await askClaude(passPrompt, systemFull, PASS_TOKENS)
-          console.log('[Solve] passe', pass, '— reçu', part.length, 'caractères · FIN?', /\[\[\s*FIN\s*\]\]/.test(part))
-        } catch (passErr: any) {
-          console.warn('[Solve] passe', pass, '— échec :', passErr?.name || passErr?.message || passErr)
-          // Une passe a échoué (timeout serveur / réseau).
-          if (full.trim().length > 40) {
-            // On a déjà du contenu : on retente la suite (jusqu'à 2 fois) avant d'abandonner,
-            // pour ne pas s'arrêter en plein milieu (ex. à la question 3).
-            abortRetries++
-            if (abortRetries <= 2) { console.log('[Solve] reprise après échec (', abortRetries, '/2)'); continue }
-            console.log('[Solve] trop d\'échecs consécutifs — on garde la partie déjà rédigée')
-            break
+${exerciseText}${attachHint}
+
+RÉSOUS MAINTENANT, de façon complète et détaillée, UNIQUEMENT la question ci-dessous (avec TOUTES ses sous-questions a) b) c)…). Tu peux utiliser les résultats des questions précédentes. NE traite AUCUNE autre question et ne les répète pas.
+
+QUESTION À RÉSOUDRE :
+${blocks[i]}
+
+FORMAT : commence par un titre « ### Question ${i + 1} », puis pour chaque sous-question : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ». Insère un bloc [GRAPH:{...}] uniquement si une figure aide vraiment.`
+          console.log('[Solve] question', i + 1, '/', blocks.length, '— envoi…')
+          let part = ''
+          try {
+            part = await askOne(qPrompt, systemFull, Q_TOKENS)
+          } catch (e: any) {
+            console.warn('[Solve] question', i + 1, '— échec :', e?.name || e?.message)
+            if (full) { full += `\n\n### Question ${i + 1}\n_(⏱️ Délai dépassé pour cette question — relancez-la seule pour l'obtenir.)_`; setSolution(full); continue }
+            firstError = e; break
           }
-          firstPassError = passErr; break
+          if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
+          console.log('[Solve] question', i + 1, '— reçu', part.length, 'car.')
+          full = full ? full.trimEnd() + '\n\n' + part.trim() : part.trim()
+          setSolution(full)
+          if (i === 0) setPhase('done')
         }
-        abortRetries = 0  // une passe a réussi → on remet le compteur de reprises à zéro
-
-        // Quota dépassé côté serveur (status 429)
-        if (part.startsWith('⚠️') && part.includes('quota')) { quotaMsg = part; break }
-        if (!part || part.trim().length < 2) break
-
-        const cleaned = part.replace(/\[\[\s*FIN\s*\]\]/g, '').trimEnd()
-
-        // Fin si la passe de continuation ne renvoie quasiment rien de neuf.
-        // (On NE coupe PAS sur des phrases : une passe substantielle peut contenir
-        //  « déjà traité », ce qui provoquait un arrêt prématuré.)
-        if (pass > 1 && cleaned.trim().length < 250) {
-          console.log('[Solve] passe', pass, '— fin détectée (rien de nouveau à ajouter)')
-          break
-        }
-
-        full = full ? (full.trimEnd() + '\n' + cleaned) : cleaned
-
-        // Affichage progressif (l'élève voit la correction se construire)
-        setSolution(full)
-        if (pass === 1) setPhase('done')
-
-        // Terminé UNIQUEMENT si le modèle a explicitement signalé la fin
-        if (/\[\[\s*FIN\s*\]\]/.test(part)) { console.log('[Solve] [[FIN]] reçu, terminé'); break }
-        // (plus de coupure sur la longueur : on continue tant qu'il reste des questions)
+      } else {
+        // Exercice non découpable, court, ou mode vérification → un seul appel
+        console.log('[Solve] mode simple — 1 appel')
+        setPassNum(1)
+        try {
+          const part = await askOne(prompt + attachHint, systemFull, attachments.length ? 4000 : 6000)
+          if (part.startsWith('⚠️') && part.includes('quota')) quotaMsg = part
+          else { full = part.trim(); setPhase('done'); setSolution(full) }
+        } catch (e: any) { firstError = e }
       }
 
-      // Échec dès la 1re passe sans aucun contenu → message clair (et quota NON consommé)
-      if (firstPassError && !full) {
+      // Échec total sans aucun contenu → message clair (quota NON consommé)
+      if (firstError && !full) {
         setStreaming(false)
-        setError("⏱️ La résolution n'a pas abouti (délai serveur dépassé pour ce sujet). Réessayez, ou collez un seul exercice (ou 2-3 questions) à la fois.")
+        setError("⏱️ La résolution n'a pas abouti (délai dépassé). Réessayez, ou collez une seule question à la fois.")
         setPhase('input'); return
       }
 
