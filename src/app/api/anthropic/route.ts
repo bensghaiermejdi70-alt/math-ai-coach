@@ -140,6 +140,22 @@ if (!apiKey) {
 
 // Construire le payload pour Anthropic en excluant les champs custom
 const { type, matiere, ...anthropicBody } = body
+
+// ── Prompt caching : met en cache le system prompt (réutilisé à chaque appel).
+//    AUCUN impact sur la réponse : même contenu, même modèle, même max_tokens, même détail.
+//    Seule la facturation de la portion répétée baisse (lecture du cache ≈ -90 %).
+if (typeof anthropicBody.system === 'string' && anthropicBody.system.trim().length > 0) {
+  anthropicBody.system = [
+    { type: 'text', text: anthropicBody.system, cache_control: { type: 'ephemeral' } },
+  ]
+} else if (Array.isArray(anthropicBody.system) && anthropicBody.system.length > 0) {
+  // system déjà sous forme de blocs : on marque le dernier bloc comme cacheable (sans double-emballage)
+  const _last = anthropicBody.system[anthropicBody.system.length - 1]
+  if (_last && typeof _last === 'object' && !_last.cache_control) {
+    _last.cache_control = { type: 'ephemeral' }
+  }
+}
+
 const response = await fetch('https://api.anthropic.com/v1/messages', {
   method: 'POST',
   headers: {
