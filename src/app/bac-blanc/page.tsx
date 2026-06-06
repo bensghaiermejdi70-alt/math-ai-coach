@@ -31,6 +31,23 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
   )
 }
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+
+// ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
+function bbWeekKey(): string {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(now); monday.setDate(diff)
+  return 'bb_week_' + monday.toISOString().split('T')[0]
+}
+function bbWeekCount(): number {
+  if (typeof window === 'undefined') return 0
+  return parseInt(localStorage.getItem(bbWeekKey()) || '0', 10) || 0
+}
+function incBbWeek(): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(bbWeekKey(), String(bbWeekCount() + 1))
+}
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
@@ -4155,10 +4172,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlanc(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
     } catch {
@@ -4183,10 +4205,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlancPhysique(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
     } catch {
@@ -4208,10 +4235,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlancInfo(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('informatique')
       setExam(e); setPhase('exam')
     } catch {
@@ -4235,10 +4267,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlancAnglais(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
     } catch {
@@ -4261,10 +4298,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlancSVT(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('svt')
       setExam(e); setPhase('exam')
     } catch {
@@ -4287,10 +4329,15 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
     setPhase('generating')
     try {
       const e = await generateBacBlancFrancais(candidat, dayNum)
       await incrementQuotaSub('simulations')
+      incBbWeek()
       markPassedTodayForMatiere('francais')
       setExam(e); setPhase('exam')
     } catch {

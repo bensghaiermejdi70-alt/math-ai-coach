@@ -132,8 +132,8 @@ const MATIERES = [
 // ── Quotas par plan ───────────────────────────────────────────────
 const QUOTAS_MENSUEL = [
   { label:'Simulation Bac',        val:'5 / sem' },
-  { label:'Chat IA Professeur',    val:'20 / sem' },
-  { label:'Solveur étape/étape',  val:'20 / sem' },
+  { label:'Chat IA Professeur',    val:'10 / sem' },
+  { label:'Solveur étape/étape',  val:'10 / sem' },
   { label:'Remédiation IA',        val:'10 / sem' },
   { label:'Analyses performance',  val:'5 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
@@ -143,24 +143,24 @@ const QUOTAS_MENSUEL = [
 
 const QUOTAS_SPRINT = [
   { label:'Simulation Bac',        val:'10 / sem' },
-  { label:'Chat IA Professeur',    val:'30 / sem' },
-  { label:'Solveur étape/étape',   val:'30 / sem' },
+  { label:'Chat IA Professeur',    val:'15 / sem' },
+  { label:'Solveur étape/étape',   val:'15 / sem' },
   { label:'Remédiation IA',        val:'20 / sem' },
   { label:'Analyses performance',  val:'10 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
   { label:'Programme personnalisé',val:'✅ Avancé' },
-  { label:'Bac Blanc',             val:'✅ Inclus' },
+  { label:'Bac Blanc',             val:'✅ 5 / sem' },
 ]
 
 const QUOTAS_ANNUEL = [
   { label:'Simulation Bac',        val:'10 / sem', note:'15h hors sprint · 30h mai-juin' },
-  { label:'Chat IA Professeur',    val:'30 / sem' },
-  { label:'Solveur étape/étape',   val:'20 / sem ' },
+  { label:'Chat IA Professeur',    val:'10 / sem' },
+  { label:'Solveur étape/étape',   val:'10 / sem' },
   { label:'Remédiation IA',        val:'20 / sem' },
   { label:'Analyses performance',  val:'10 / sem' },
   { label:'Cours CNP',             val:'♾️ Illimité' },
   { label:'Programme personnalisé',val:'✅ Inclus + Avancé' },
-  { label:'Bac Blanc (mai-juin)',  val:'✅ Inclus' },
+  { label:'Bac Blanc (mai-juin)',  val:'✅ 5 / sem' },
 ]
 
 const PAYMENT_METHODS = [
