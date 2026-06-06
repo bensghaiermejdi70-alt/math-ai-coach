@@ -823,7 +823,7 @@ function SmartGraph({ spec }: { spec: any }) {
 }
 
 
-// Parser [GRAPH:{...}] robuste (gère JSON imbriqué)
+// Parser [GRAPH:{...}] robuste (gère JSON imbriqué + blocs tronqués)
 function parseGraphSegments(text: string): Array<{ type: 'text' | 'graph'; content: string }> {
   const result: Array<{ type: 'text' | 'graph'; content: string }> = []
   let i = 0; const tag = '[GRAPH:'
@@ -832,17 +832,23 @@ function parseGraphSegments(text: string): Array<{ type: 'text' | 'graph'; conte
     if (idx === -1) { if (i < text.length) result.push({ type: 'text', content: text.slice(i) }); break }
     if (idx > i) result.push({ type: 'text', content: text.slice(i, idx) })
     const jsonStart = text.indexOf('{', idx + tag.length)
-    if (jsonStart === -1) { result.push({ type: 'text', content: text.slice(idx) }); break }
-    let depth = 0, j = jsonStart
+    if (jsonStart === -1) { result.push({ type: 'text', content: '\n📊 (figure)\n' }); break }
+    let depth = 0, j = jsonStart, closed = false
     while (j < text.length) {
       if (text[j] === '{') depth++
-      else if (text[j] === '}') { depth--; if (depth === 0) break }
+      else if (text[j] === '}') { depth--; if (depth === 0) { closed = true; break } }
       j++
     }
+    if (!closed) {
+      // Objet JSON tronqué (graphique coupé par la limite de tokens) → note propre,
+      // surtout PAS le JSON brut. On arrête là.
+      result.push({ type: 'text', content: '\n📊 (figure)\n' })
+      break
+    }
+    // Objet complet : on récupère le graphe même si le ']' final manque
     const closeBracket = text.indexOf(']', j)
-    if (closeBracket === -1) { result.push({ type: 'text', content: text.slice(idx) }); break }
     result.push({ type: 'graph', content: text.slice(jsonStart, j + 1) })
-    i = closeBracket + 1
+    i = (closeBracket === -1 ? j + 1 : closeBracket + 1)
   }
   return result
 }
@@ -852,6 +858,13 @@ function renderLatexLine(line: string): string {
   // Remplace $$...$$ (block) puis $...$ (inline) par du HTML KaTeX
   // On utilise une approche simple : convertir en HTML via pattern matching
   let result = line
+
+  // Convertir les délimiteurs \[...\] et \(...\) en $$...$$ / $...$ (rendus ensuite)
+  result = result
+    .replace(/\\\[/g, () => '$$')
+    .replace(/\\\]/g, () => '$$')
+    .replace(/\\\(/g, () => '$')
+    .replace(/\\\)/g, () => '$')
 
   // Bold markdown → HTML
   result = result.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e2e8f0;font-weight:700">$1</strong>')
@@ -871,6 +884,9 @@ function renderLatexLine(line: string): string {
       return (window as any).katex?.renderToString(math.trim(), {throwOnError:false,displayMode:false}) ?? math
     } catch { return math }
   })
+
+  // Retirer les éventuels '$' résiduels (délimiteurs non appariés) pour ne jamais les afficher
+  result = result.replace(/\$/g, '')
 
   return result
 }
@@ -2468,7 +2484,9 @@ RÉSOUS MAINTENANT, de façon complète et détaillée, UNIQUEMENT la question c
 QUESTION À RÉSOUDRE :
 ${blocks[i]}
 
-FORMAT : commence par un titre « ### Question ${i + 1} », puis pour chaque sous-question : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ». Insère un bloc [GRAPH:{...}] uniquement si une figure aide vraiment.`
+FORMAT : commence par un titre « ### Question ${i + 1} », puis pour chaque sous-question : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ».
+
+RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé (angles droits réels, triangles isocèles avec côtés réellement égaux, longueurs cohérentes). Si tu n'es pas certain des coordonnées exactes, NE mets PAS de figure (décris-la en mots). Le JSON du graphique doit être COMPACT (≤ 10 formes), VALIDE et tenir sur UNE seule ligne (jamais coupé).`
           console.log('[Solve] question', i + 1, '/', blocks.length, '— envoi…')
           let part = ''
           try {
