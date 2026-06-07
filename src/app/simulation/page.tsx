@@ -701,17 +701,71 @@ async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
   throw lastErr || new Error('Échec de génération')
 }
 
-async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType): Promise<string> {
-  // Appel via route Next.js (évite CORS) avec retry automatique
+// ── Streaming SSE depuis /api/anthropic (affichage au fur et à mesure) ──
+async function streamAnthropic(body: any, onDelta: (full: string) => void): Promise<string> {
+  let r: Response
+  try {
+    r = await fetch('/api/anthropic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...body, stream: true }),
+    })
+  } catch {
+    const d = await postAnthropicWithRetry(body)
+    const t = d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
+    onDelta(t); return t
+  }
+  if (!r.ok || !r.body) {
+    // erreur serveur (ex. quota) → repli non-stream (remonte l'erreur correctement)
+    const d = await postAnthropicWithRetry(body)
+    const t = d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
+    onDelta(t); return t
+  }
+  const reader = r.body.getReader()
+  const dec = new TextDecoder()
+  let buf = '', full = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += dec.decode(value, { stream: true })
+    const lines = buf.split('\n')
+    buf = lines.pop() || ''
+    for (const line of lines) {
+      const s = line.trim()
+      if (!s.startsWith('data:')) continue
+      const data = s.slice(5).trim()
+      if (!data || data === '[DONE]') continue
+      try {
+        const ev = JSON.parse(data)
+        if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') { full += ev.delta.text; onDelta(full) }
+        else if (ev.type === 'content_block_start' && ev.content_block?.type === 'text' && ev.content_block.text) { full += ev.content_block.text; onDelta(full) }
+      } catch { /* ligne SSE partielle : ignorée */ }
+    }
+  }
+  return full
+}
+
+// Masque un bloc [GRAPH: ...] non terminé pendant le streaming (évite l'affichage cassé)
+function stripIncompleteGraph(s: string): string {
+  const i = s.lastIndexOf('[GRAPH:')
+  if (i === -1) return s
+  if (s.indexOf(']', i) === -1) return s.slice(0, i)
+  return s
+}
+
+async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType, onDelta?: (full: string) => void): Promise<string> {
+  // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const m = matiere || globalMatiere
-  const d = await postAnthropicWithRetry({
+  const body = {
     model: 'claude-sonnet-4-20250514',
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: prompt }],
     type: 'simulations',
     matiere: m
-  })
+  }
+  if (onDelta) return streamAnthropic(body, onDelta)
+  const d = await postAnthropicWithRetry(body)
   return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
 }
 
@@ -721,12 +775,13 @@ async function askClaudeWithImages(
   images: { data: string; mediaType: string }[],
   system: string,
   maxTokens = 8000,
-  matiere?: MatiereType
+  matiere?: MatiereType,
+  onDelta?: (full: string) => void
 ): Promise<string> {
   const m = matiere || globalMatiere
   const CHUNK_SIZE = 2
 
-  const callChunk = async (imgs: { data: string; mediaType: string }[], prompt: string): Promise<string> => {
+  const callChunk = async (imgs: { data: string; mediaType: string }[], prompt: string, cb?: (full: string) => void): Promise<string> => {
     const content: any[] = []
     for (const img of imgs) {
       content.push({
@@ -735,14 +790,16 @@ async function askClaudeWithImages(
       })
     }
     content.push({ type: 'text', text: prompt })
-    const d = await postAnthropicWithRetry({
+    const body = {
       model: 'claude-sonnet-4-20250514',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],
       type: 'simulations',
       matiere: m
-    })
+    }
+    if (cb) return streamAnthropic(body, cb)
+    const d = await postAnthropicWithRetry(body)
     return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
   }
 
@@ -752,7 +809,7 @@ async function askClaudeWithImages(
     chunks.push(images.slice(i, i + CHUNK_SIZE))
   }
 
-  if (chunks.length === 1) return callChunk(chunks[0], textPrompt)
+  if (chunks.length === 1) return callChunk(chunks[0], textPrompt, onDelta)
 
   // Multi-chunks : traiter page par page et concatener
   const partials: string[] = []
@@ -996,7 +1053,8 @@ async function correctOneExercise(
   exercise: GeneratedExam['exercises'][number],
   totalPoints: number,
   studentWork: string,
-  examTitle: string
+  examTitle: string,
+  onDelta?: (full: string) => void
 ): Promise<string> {
   // Détecter Anglais depuis le titre de l'exercice ou l'examTitle
   const isAnglaisCorrection = examTitle.toLowerCase().includes('english') ||
@@ -1245,7 +1303,7 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 
 > **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`)
 
-  return askClaude(prompt, system, 8000)
+  return askClaude(prompt, system, 8000, undefined, onDelta)
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -1253,7 +1311,8 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 async function correctSingleExercise(
   exam: GeneratedExam,
   exerciseIndex: number,
-  studentWork: string
+  studentWork: string,
+  onDelta?: (full: string) => void
 ): Promise<string> {
   const ex = exam.exercises[exerciseIndex]
   if (!ex) return ''
@@ -1285,12 +1344,12 @@ ${cleanWork}
 Rédige la correction complète exercice par exercice avec analyse de la copie.`
       : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
 
-    return askClaudeWithImages(prompt, allImages, system, 8000)
+    return askClaudeWithImages(prompt, allImages, system, 8000, undefined, onDelta)
   }
 
   // Pas d'images → correction texte normale
   const cleanEx = { ...ex, statement: cleanStatement }
-  return correctOneExercise(cleanEx, exam.totalPoints, cleanWork || studentWork, exam.title)
+  return correctOneExercise(cleanEx, exam.totalPoints, cleanWork || studentWork, exam.title, onDelta)
 }
 
 // ── Analyse UN exercice immédiatement après correction ───────────
@@ -2733,7 +2792,7 @@ function buildCorrectionHtml(
           +'<text x="'+(FW-FP+6)+'" y="'+(Number(foy)+4)+'" fill="#888" font-size="12" font-style="italic">x</text>'
           +'<text x="'+(Number(fox)+5)+'" y="'+(FP-4)+'" fill="#888" font-size="12" font-style="italic">y</text>'
         const fttl=sp.title?'<text x="'+(FW/2)+'" y="'+(FH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
-        return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
+        return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
           +(fleg?'<svg width="'+FW+'" height="20" style="background:#0a0a18;display:block">'+fleg+'</svg>':'')
           +'<svg width="'+FW+'" height="'+FH+'" viewBox="0 0 '+FW+' '+FH+'" style="background:#0f0f1e;display:block">'+fax+fpaths+fttl+'</svg></div>'
       }
@@ -2802,7 +2861,7 @@ function buildCorrectionHtml(
           }
         }
         const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
-        return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
+        return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
           +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" style="background:#0f0f1e;display:block">'+gsvg+gttl+'</svg></div>'
       }
     }catch(_e){return ''}
@@ -2851,7 +2910,8 @@ function buildCorrectionHtml(
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
     }
-    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px}
+    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px;background:#0c0c1a}
+    .mb-graph{break-inside:avoid;page-break-inside:avoid}
 
     /* BARRE D'IMPRESSION */
     .print-bar{
@@ -3020,9 +3080,9 @@ ${MB_VEC_CSS}</style>
   function telechargerPDF(){
     var bar=document.querySelector('.print-bar'); if(bar)bar.style.display='none';
     var el=document.querySelector('.wrap');
-    var opt={margin:[8,8,8,8],filename:'MathBac-correction.pdf',image:{type:'jpeg',quality:0.95},
-      html2canvas:{scale:2,backgroundColor:'#0f1020',useCORS:true},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+    var opt={margin:[6,6,6,6],filename:'MathBac-correction.pdf',image:{type:'jpeg',quality:0.95},
+      html2canvas:{scale:2,backgroundColor:'#0c0c1a',useCORS:true,logging:false},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:'.mb-graph'}};
     if(typeof html2pdf==='undefined'){ alert('Chargement en cours, réessayez dans 1 seconde.'); if(bar)bar.style.display=''; return; }
     html2pdf().set(opt).from(el).save().then(function(){ if(bar)bar.style.display=''; });
   }
@@ -5247,7 +5307,9 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
     if (generating || corrections[currentIdx]) return
     setGenerating(true)
     try {
-      const text = await correctSingleExercise(exam, currentIdx, answers)
+      const text = await correctSingleExercise(exam, currentIdx, answers, (partial) => {
+        setCorrections(prev => ({ ...prev, [currentIdx]: stripIncompleteGraph(partial) }))
+      })
       setCorrections(prev => ({ ...prev, [currentIdx]: text }))
       // Extraire le graphique de la correction → injecter dans l'énoncé du sujet
       if (onGraphExtracted) {
@@ -5451,7 +5513,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
           ) : currentCorrection ? (
             <div>
               <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>
-                ✅ Correction complète
+                {generating ? '✍️ Rédaction en cours…' : '✅ Correction complète'}
               </p>
               <MD text={currentCorrection}/>
             </div>
