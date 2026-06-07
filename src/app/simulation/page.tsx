@@ -2659,7 +2659,8 @@ function buildCorrectionHtml(
   exam: GeneratedExam,
   correctionText: string,
   studentAnswers: string,
-  autoDownload = false
+  autoDownload = false,
+  graphImages: string[] = []
 ): string {
 
   const C = {
@@ -2874,6 +2875,7 @@ function buildCorrectionHtml(
     const GTAG='[GRAPH:'
     const parts:string[]=[]
     let gp=0
+    let gIdx=0
     while(gp<rawText.length){
       const gi=rawText.indexOf(GTAG,gp)
       if(gi===-1){parts.push(rawText.slice(gp).split('\n').map(line2html).join('\n'));break}
@@ -2883,8 +2885,15 @@ function buildCorrectionHtml(
       let gd=0,gjj=jgs
       while(gjj<rawText.length){if(rawText[gjj]==='{')gd++;else if(rawText[gjj]==='}'){gd--;if(gd===0)break};gjj++}
       const gcb=rawText.indexOf(']',gjj)
-      const svg=graphToSvg(rawText.slice(jgs,gjj+1))
-      parts.push(svg||'<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:11px;color:#fcd34d;margin:8px 0">📊 Figure mathématique</div>')
+      const captured=graphImages[gIdx]
+      gIdx++
+      if(captured){
+        // Image capturée à l'écran (rendu identique : Plotly / géométrie)
+        parts.push('<div class="mb-graph" style="margin:12px 0;text-align:center"><img src="'+captured+'" style="max-width:100%;display:block;margin:0 auto;border-radius:10px;border:1px solid #e5e7eb"/></div>')
+      } else {
+        const svg=graphToSvg(rawText.slice(jgs,gjj+1))
+        parts.push(svg||'<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:11px;color:#fcd34d;margin:8px 0">📊 Figure mathématique</div>')
+      }
       gp=(gcb!==-1?gcb:gjj)+1
     }
     return parts.join('\n')
@@ -3094,13 +3103,66 @@ ${MB_VEC_CSS}</style>
 </html>`
 }
 
+// ── Capture des graphiques AFFICHÉS à l'écran → images PNG (rendu identique à l'écran) ──
+function svgToPng(svg: SVGElement): Promise<string> {
+  return new Promise((resolve) => {
+    try {
+      const rect = svg.getBoundingClientRect()
+      const w = Math.max(Math.round(rect.width), 320), h = Math.max(Math.round(rect.height), 240)
+      const clone = svg.cloneNode(true) as SVGElement
+      clone.setAttribute('width', String(w))
+      clone.setAttribute('height', String(h))
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+      const xml = new XMLSerializer().serializeToString(clone)
+      const svg64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)))
+      const img = new Image()
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas')
+          canvas.width = w * 2; canvas.height = h * 2
+          const ctx = canvas.getContext('2d')!
+          ctx.scale(2, 2)
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h)
+          ctx.drawImage(img, 0, 0, w, h)
+          resolve(canvas.toDataURL('image/png'))
+        } catch { resolve('') }
+      }
+      img.onerror = () => resolve('')
+      img.src = svg64
+    } catch { resolve('') }
+  })
+}
+
+async function captureGraphsInOrder(container: HTMLElement | null): Promise<string[]> {
+  if (!container || typeof document === 'undefined') return []
+  const out: string[] = []
+  const nodes = Array.from(container.querySelectorAll('.js-plotly-plot, svg')) as HTMLElement[]
+  for (const node of nodes) {
+    // Ignore les <svg> internes à un graphique Plotly (déjà capturé via Plotly.toImage)
+    if (node.tagName.toLowerCase() === 'svg' && node.closest('.js-plotly-plot')) continue
+    try {
+      const P = (window as any).Plotly
+      if (node.classList.contains('js-plotly-plot') && P && typeof P.toImage === 'function') {
+        const w = (node as HTMLElement).offsetWidth || 700, h = (node as HTMLElement).offsetHeight || 400
+        out.push(await P.toImage(node, { format: 'png', width: w, height: h, scale: 2 }))
+      } else if (node.tagName.toLowerCase() === 'svg') {
+        out.push(await svgToPng(node as unknown as SVGElement))
+      }
+    } catch {
+      out.push('')
+    }
+  }
+  return out
+}
+
 function openCorrectionPdf(
   exam: GeneratedExam,
   correctionText: string,
   studentAnswers: string,
-  autoDownload = false
+  autoDownload = false,
+  graphImages: string[] = []
 ) {
-  const html = buildCorrectionHtml(exam, correctionText, studentAnswers, autoDownload)
+  const html = buildCorrectionHtml(exam, correctionText, studentAnswers, autoDownload, graphImages)
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
   const url  = URL.createObjectURL(blob)
   const win  = window.open(url, '_blank')
@@ -5293,6 +5355,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
   const [currentIdx, setCurrentIdx] = useState(0)
   // Correction de chaque exercice stockée séparément
   const [corrections, setCorrections] = useState<Record<number, string>>({})
+  const correctionRenderRef = useRef<HTMLDivElement>(null)
   // Est-ce qu'on génère en ce moment ?
   const [generating, setGenerating] = useState(false)
   // Message PDF
@@ -5342,7 +5405,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
   }, [])
 
   // Ouvrir le PDF d'un exercice spécifique
-  const openExercisePdf = (idx: number, download = false) => {
+  const openExercisePdf = async (idx: number, download = false) => {
     const ex = exam.exercises[idx]
     const corrText = corrections[idx] || ''
     const singleExam: GeneratedExam = {
@@ -5350,8 +5413,14 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
       title: `${exam.title} — Exercice ${idx + 1}`,
       exercises: [ex]
     }
+    // Capture les graphiques affichés (rendu identique à l'écran) — seulement pour l'exercice visible
+    let graphImgs: string[] = []
+    if (idx === currentIdx && correctionRenderRef.current) {
+      setPdfMsg(prev => ({ ...prev, [idx]: 'Préparation…' }))
+      try { graphImgs = await captureGraphsInOrder(correctionRenderRef.current) } catch { graphImgs = [] }
+    }
     try {
-      openCorrectionPdf(singleExam, corrText, answers, download)
+      openCorrectionPdf(singleExam, corrText, answers, download, graphImgs)
       setPdfMsg(prev => ({ ...prev, [idx]: download ? 'Téléchargement…' : 'Ouvert !' }))
       setTimeout(() => setPdfMsg(prev => ({ ...prev, [idx]: '' })), 3000)
     } catch {
@@ -5526,7 +5595,9 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
               <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>
                 {generating ? '✍️ Rédaction en cours…' : '✅ Correction complète'}
               </p>
-              <MD text={currentCorrection}/>
+              <div ref={correctionRenderRef}>
+                <MD text={currentCorrection}/>
+              </div>
             </div>
           ) : (
             <div style={{textAlign:'center',padding:'20px'}}>
@@ -6251,8 +6322,8 @@ function SimulationIAPageInner() {
         ? 'Anglais'
         : matiereLabels[activeMatiere] || 'Mathématiques'
 
-      // 5. Incrémenter le quota (correction directe = 1 simulation)
-      await incrementQuota('simulations')
+      // 5. Incrémenter le quota (NON bloquant : ne doit jamais empêcher l'affichage de la correction)
+      incrementQuota('simulations').catch(() => {})
 
       // 6. Créer le fakeExam avec la bonne matière
       // Injecter les images dans le statement si présentes
