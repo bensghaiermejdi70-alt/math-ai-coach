@@ -905,7 +905,7 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 
 > **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`
 
-  return askClaude(prompt, system, 8000, undefined, onDelta)
+  return askClaude(prompt, system, 12000, undefined, onDelta)
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -941,7 +941,7 @@ ${cleanWork}
 
 Rédige la correction complète avec analyse de la copie.`
       : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
-    return askClaudeWithImages(prompt, allImages, system, 8000, onDelta)
+    return askClaudeWithImages(prompt, allImages, system, 12000, onDelta)
   }
 
   const cleanEx = { ...ex, statement: cleanStmt }
@@ -2211,7 +2211,8 @@ function TextWithGraphs({ text }: { text: string }) {
 function buildCorrectionHtml(
   exam: GeneratedExam,
   correctionText: string,
-  studentAnswers: string
+  studentAnswers: string,
+  autoDownload = false
 ): string {
 
   const C = {
@@ -2254,7 +2255,7 @@ function buildCorrectionHtml(
       const bg  = C.exBg[Math.max(exIdx,0)]
       return (
         `<div class="q-hdr" style="border-left:3px solid ${col};` +
-        `background:${bg}88;color:${col}">${inline(t.slice(4))}</div>`
+        `background:${col}14;color:${col}">${inline(t.slice(4))}</div>`
       )
     }
 
@@ -2340,14 +2341,14 @@ function buildCorrectionHtml(
           fleg+='<text x="'+(FP+fi*140)+'" y="15" fill="'+fc+'" font-size="11" font-family="monospace">'+esc2(lbl)+'</text>'
         })
         const fox=ftx(0).toFixed(1),foy=fty(0).toFixed(1)
-        const fax='<line x1="'+FP+'" y1="'+foy+'" x2="'+(FW-FP)+'" y2="'+foy+'" stroke="#555" stroke-width="1.2"/>'
-          +'<line x1="'+fox+'" y1="'+FP+'" x2="'+fox+'" y2="'+(FH-FP)+'" stroke="#555" stroke-width="1.2"/>'
-          +'<text x="'+(FW-FP+6)+'" y="'+(Number(foy)+4)+'" fill="#888" font-size="12" font-style="italic">x</text>'
-          +'<text x="'+(Number(fox)+5)+'" y="'+(FP-4)+'" fill="#888" font-size="12" font-style="italic">y</text>'
-        const fttl=sp.title?'<text x="'+(FW/2)+'" y="'+(FH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+        const fax='<line x1="'+FP+'" y1="'+foy+'" x2="'+(FW-FP)+'" y2="'+foy+'" stroke="#475569" stroke-width="1.2"/>'
+          +'<line x1="'+fox+'" y1="'+FP+'" x2="'+fox+'" y2="'+(FH-FP)+'" stroke="#475569" stroke-width="1.2"/>'
+          +'<text x="'+(FW-FP+6)+'" y="'+(Number(foy)+4)+'" fill="#475569" font-size="12" font-style="italic">x</text>'
+          +'<text x="'+(Number(fox)+5)+'" y="'+(FP-4)+'" fill="#475569" font-size="12" font-style="italic">y</text>'
+        const fttl=sp.title?'<text x="'+(FW/2)+'" y="'+(FH-4)+'" fill="#64748b" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
         return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
-          +(fleg?'<svg width="'+FW+'" height="20" style="background:#0a0a18;display:block">'+fleg+'</svg>':'')
-          +'<svg width="'+FW+'" height="'+FH+'" viewBox="0 0 '+FW+' '+FH+'" style="background:#0f0f1e;display:block">'+fax+fpaths+fttl+'</svg></div>'
+          +(fleg?'<svg width="'+FW+'" height="20" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+fleg+'</svg>':'')
+          +'<svg width="'+FW+'" height="'+FH+'" viewBox="0 0 '+FW+' '+FH+'" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+fax+fpaths+fttl+'</svg></div>'
       }
 
       if (sp.type === 'geometry') {
@@ -2377,13 +2378,13 @@ function buildCorrectionHtml(
           const gc:string=gs.color||GC[gci++%GC.length]
           const gf:string=gs.fill||'none'
           if(gs.type==='grid'){
-            for(let gx=Math.ceil(gxMin);gx<=gxMax;gx++)gsvg+='<line x1="'+gtx(gx).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(gx).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#ffffff12" stroke-width="1"/>'
-            for(let gy=Math.ceil(gyMin);gy<=gyMax;gy++)gsvg+='<line x1="'+GP+'" y1="'+gty(gy).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(gy).toFixed(1)+'" stroke="#ffffff12" stroke-width="1"/>'
+            for(let gx=Math.ceil(gxMin);gx<=gxMax;gx++)gsvg+='<line x1="'+gtx(gx).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(gx).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#1e293b14" stroke-width="1"/>'
+            for(let gy=Math.ceil(gyMin);gy<=gyMax;gy++)gsvg+='<line x1="'+GP+'" y1="'+gty(gy).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(gy).toFixed(1)+'" stroke="#1e293b14" stroke-width="1"/>'
           }else if(gs.type==='axes'){
-            gsvg+='<line x1="'+GP+'" y1="'+gty(0).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(0).toFixed(1)+'" stroke="#ffffff55" stroke-width="1.5"/>'
-              +'<line x1="'+gtx(0).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(0).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#ffffff55" stroke-width="1.5"/>'
-              +'<text x="'+(GW-GP+8)+'" y="'+(gty(0)+4).toFixed(1)+'" fill="#888" font-size="12" font-style="italic">x</text>'
-              +'<text x="'+(gtx(0)+5).toFixed(1)+'" y="'+(GP-4)+'" fill="#888" font-size="12" font-style="italic">y</text>'
+            gsvg+='<line x1="'+GP+'" y1="'+gty(0).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(0).toFixed(1)+'" stroke="#475569" stroke-width="1.5"/>'
+              +'<line x1="'+gtx(0).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(0).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#475569" stroke-width="1.5"/>'
+              +'<text x="'+(GW-GP+8)+'" y="'+(gty(0)+4).toFixed(1)+'" fill="#475569" font-size="12" font-style="italic">x</text>'
+              +'<text x="'+(gtx(0)+5).toFixed(1)+'" y="'+(GP-4)+'" fill="#475569" font-size="12" font-style="italic">y</text>'
           }else if(gs.type==='triangle'&&gs.points){
             const gpts=(gs.points as any[]).map((p:any)=>gtx(p.x).toFixed(1)+','+gty(p.y).toFixed(1)).join(' ')
             gsvg+='<polygon points="'+gpts+'" fill="'+gf+'" stroke="'+gc+'" stroke-width="2"/>'
@@ -2413,9 +2414,9 @@ function buildCorrectionHtml(
             if(gs.label){const gmx2=(gtx(gsf.x)+gtx(gst.x))/2,gmy2=(gty(gsf.y)+gty(gst.y))/2;gsvg+='<text x="'+(gmx2+6).toFixed(1)+'" y="'+(gmy2-6).toFixed(1)+'" fill="'+gc+'" font-size="11" font-weight="bold">'+esc2(gs.label)+'</text>'}
           }
         }
-        const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+        const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#64748b" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
         return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
-          +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" style="background:#0f0f1e;display:block">'+gsvg+gttl+'</svg></div>'
+          +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+gsvg+gttl+'</svg></div>'
       }
     }catch(_e){return ''}
     return ''
@@ -2455,21 +2456,22 @@ function buildCorrectionHtml(
   const css = `
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
     *{box-sizing:border-box;margin:0;padding:0}
-    html{background:#0c0c1a}
+    html{background:#ffffff}
     body{
       font-family:'Inter','Segoe UI',system-ui,sans-serif;
-      background:#0c0c1a;color:#e2e8f0;
+      background:#ffffff;color:#1f2937;
       font-size:13.5px;line-height:1.8;
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
     }
-    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px;background:#0c0c1a}
+    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px;background:#ffffff}
     .mb-graph{break-inside:avoid;page-break-inside:avoid}
+    .mb-graph svg{max-width:100%;height:auto}
 
     /* BARRE D'IMPRESSION */
     .print-bar{
       position:sticky;top:0;z-index:99;
-      background:#0c0c1a;border-bottom:1px solid rgba(255,255,255,.1);
+      background:#ffffff;border-bottom:1px solid #e5e7eb;
       padding:10px 0 14px;margin-bottom:20px;
       display:flex;align-items:center;gap:12px;
     }
@@ -2479,16 +2481,16 @@ function buildCorrectionHtml(
       padding:10px 24px;font-size:14px;font-weight:700;
       cursor:pointer;font-family:inherit;
     }
-    .print-hint{font-size:11.5px;color:rgba(255,255,255,.4);max-width:500px;line-height:1.5}
+    .print-hint{font-size:11.5px;color:#94a3b8;max-width:500px;line-height:1.5}
 
     /* TITRE */
     .doc-title{
-      background:linear-gradient(135deg,#1e1b4b,#2e1065);
-      border:1px solid #6366f1;border-radius:12px;
+      background:linear-gradient(135deg,#312e81,#5b21b6);
+      border-radius:12px;
       padding:22px 28px;margin-bottom:28px;text-align:center;
     }
     .doc-title h1{font-size:20px;font-weight:900;color:#fff;margin-bottom:6px}
-    .doc-title .sub{color:#a5b4fc;font-size:12px}
+    .doc-title .sub{color:#c7d2fe;font-size:12px}
 
     /* EN-TÊTE EXERCICE */
     .ex-hdr{
@@ -2506,94 +2508,94 @@ function buildCorrectionHtml(
 
     /* CONCEPT */
     .concept{
-      background:#1e3254;border-left:3px solid #60a5fa;
+      background:#eff6ff;border-left:3px solid #3b82f6;
       border-radius:0 6px 6px 0;padding:10px 14px;
-      color:#bfdbfe;font-size:12.5px;margin:8px 0;
+      color:#1e3a8a;font-size:12.5px;margin:8px 0;
     }
 
     /* ÉTAPES */
     .step{
       padding:5px 12px 5px 26px;margin:3px 0;
-      color:#e2e8f0;font-size:12.5px;position:relative;
+      color:#1f2937;font-size:12.5px;position:relative;
     }
     .step::before{content:'→';position:absolute;left:8px;color:#6366f1;font-weight:900}
 
     /* RÉSULTAT */
     .result-box{
-      border:2px solid #10b981;background:#052e16;
+      border:2px solid #10b981;background:#ecfdf5;
       border-radius:8px;padding:12px 18px;margin:14px 0;
-      color:#6ee7b7;font-weight:700;font-size:13.5px;
+      color:#065f46;font-weight:700;font-size:13.5px;
     }
     .result-inline{
-      background:#052e16;border:1px solid #10b981;
+      background:#ecfdf5;border:1px solid #10b981;
       border-radius:6px;padding:8px 14px;
-      color:#6ee7b7;font-weight:700;margin:8px 0;
+      color:#065f46;font-weight:700;margin:8px 0;
     }
 
     /* BARÈME */
     .bareme{
-      background:#2e1065;border-radius:6px;
-      padding:7px 14px;color:#c4b5fd;font-size:12px;margin:6px 0;
+      background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;
+      padding:7px 14px;color:#5b21b6;font-size:12px;margin:6px 0;
     }
 
     /* ERREUR */
     .err{
-      background:#450a0a;border-left:3px solid #ef4444;
+      background:#fef2f2;border-left:3px solid #ef4444;
       border-radius:0 6px 6px 0;padding:8px 14px;
-      color:#fca5a5;font-size:12px;margin:6px 0;
+      color:#991b1b;font-size:12px;margin:6px 0;
     }
 
     /* ASTUCE / TIP */
     .tip-line,.tip-box{
-      background:#0c2340;border-left:3px solid #0ea5e9;
+      background:#ecfeff;border-left:3px solid #06b6d4;
       border-radius:0 6px 6px 0;padding:8px 14px;
-      color:#7dd3fc;font-size:12px;margin:6px 0;
+      color:#155e75;font-size:12px;margin:6px 0;
     }
 
     /* ANALYSE */
     .analysis{
-      background:rgba(255,255,255,.04);border-radius:5px;
-      padding:5px 12px;margin:3px 0;font-size:12.5px;
+      background:#f8fafc;border:1px solid #eef2f7;border-radius:5px;
+      padding:5px 12px;margin:3px 0;font-size:12.5px;color:#334155;
     }
 
     /* BULLET / LISTE */
     .bullet{
-      padding:3px 0 3px 20px;color:#cbd5e1;
+      padding:3px 0 3px 20px;color:#374151;
       font-size:12.5px;position:relative;
     }
     .bullet::before{content:'›';position:absolute;left:6px;color:#6366f1;font-weight:700}
 
-    p{color:#cbd5e1;font-size:12.5px;margin:4px 0}
-    hr{border:0;border-top:1px solid rgba(255,255,255,.1);margin:14px 0}
-    strong{color:#f1f5f9;font-weight:700}
-    code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.9em}
+    p{color:#1f2937;font-size:12.5px;margin:4px 0}
+    hr{border:0;border-top:1px solid #e5e7eb;margin:14px 0}
+    strong{color:#0f172a;font-weight:700}
+    code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.9em;color:#334155}
     .spacer{height:6px}
 
     /* RÉPONSES ÉLÈVE */
     .answers-block{
-      background:#1e3a5f;border:1px solid #3b82f6;
+      background:#eff6ff;border:1px solid #bfdbfe;
       border-radius:10px;padding:14px 18px;margin-bottom:24px;
     }
     .answers-block summary{
-      font-weight:700;color:#93c5fd;cursor:pointer;
+      font-weight:700;color:#1d4ed8;cursor:pointer;
       font-size:13px;margin-bottom:8px;
     }
     .answers-block pre{
       white-space:pre-wrap;font-family:inherit;
-      font-size:12px;color:#cbd5e1;line-height:1.7;
+      font-size:12px;color:#334155;line-height:1.7;
     }
 
     /* FOOTER */
     .footer{
       margin-top:48px;padding-top:12px;
-      border-top:1px solid rgba(255,255,255,.08);
-      text-align:center;color:rgba(255,255,255,.25);font-size:10.5px;
+      border-top:1px solid #e5e7eb;
+      text-align:center;color:#94a3b8;font-size:10.5px;
     }
 
     @media print{
       .print-bar{display:none!important}
       .wrap{padding:12px 20px}
-      div[style*="border-radius:10px"][style*="inline-block"]{page-break-inside:avoid}
+      .mb-graph{page-break-inside:avoid}
       svg{max-width:100%!important}
     }
   `
@@ -2634,11 +2636,12 @@ ${MB_VEC_CSS}</style>
     var bar=document.querySelector('.print-bar'); if(bar)bar.style.display='none';
     var el=document.querySelector('.wrap');
     var opt={margin:[8,8,8,8],filename:'MathBac-correction.pdf',image:{type:'jpeg',quality:0.95},
-      html2canvas:{scale:2,backgroundColor:'#0c0c1a',useCORS:true,logging:false},
+      html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false},
       jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:'.mb-graph'}};
     if(typeof html2pdf==='undefined'){ alert('Chargement en cours, réessayez dans 1 seconde.'); if(bar)bar.style.display=''; return; }
     html2pdf().set(opt).from(el).save().then(function(){ if(bar)bar.style.display=''; });
   }
+  ${autoDownload ? "window.addEventListener('load',function(){setTimeout(telechargerPDF,700)});" : ''}
 </script>
 </body>
 </html>`
@@ -2647,9 +2650,10 @@ ${MB_VEC_CSS}</style>
 function openCorrectionPdf(
   exam: GeneratedExam,
   correctionText: string,
-  studentAnswers: string
+  studentAnswers: string,
+  autoDownload = false
 ) {
-  const html = buildCorrectionHtml(exam, correctionText, studentAnswers)
+  const html = buildCorrectionHtml(exam, correctionText, studentAnswers, autoDownload)
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
   const url  = URL.createObjectURL(blob)
   const win  = window.open(url, '_blank')
@@ -5354,7 +5358,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
   }, [])
 
   // Ouvrir le PDF d'un exercice spécifique
-  const openExercisePdf = (idx: number) => {
+  const openExercisePdf = (idx: number, download = false) => {
     const ex = exam.exercises[idx]
     const corrText = corrections[idx] || ''
     const singleExam: GeneratedExam = {
@@ -5363,8 +5367,8 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
       exercises: [ex]
     }
     try {
-      openCorrectionPdf(singleExam, corrText, answers)
-      setPdfMsg(prev => ({ ...prev, [idx]: 'Ouvert !' }))
+      openCorrectionPdf(singleExam, corrText, answers, download)
+      setPdfMsg(prev => ({ ...prev, [idx]: download ? 'Téléchargement…' : 'Ouvert !' }))
       setTimeout(() => setPdfMsg(prev => ({ ...prev, [idx]: '' })), 3000)
     } catch {
       setPdfMsg(prev => ({ ...prev, [idx]: 'Autorisez les popups' }))
@@ -5481,6 +5485,13 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
                     border:'1px solid rgba(99,102,241,0.35)',borderRadius:9,cursor:'pointer',
                     fontSize:12,fontWeight:700,color:'#a5b4fc',fontFamily:'inherit'}}>
                   🎨 Imprimer
+                </button>
+                <button onClick={() => openExercisePdf(currentIdx, true)}
+                  style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
+                    background:'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                    border:'none',borderRadius:9,cursor:'pointer',
+                    fontSize:12,fontWeight:700,color:'#fff',fontFamily:'inherit'}}>
+                  ⬇ Télécharger PDF
                 </button>
                 <button onClick={()=>{ if(perExAnalysis[currentIdx] && onOpenAnalyse) onOpenAnalyse(currentIdx, perExAnalysis[currentIdx], exam.exercises[currentIdx]) }}
                   style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
@@ -5624,6 +5635,10 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
                     <button onClick={() => openExercisePdf(i)}
                       style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:`1px solid ${c}50`,background:`${c}12`,color:c,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
                       🎨 Imprimer
+                    </button>
+                    <button onClick={() => openExercisePdf(i, true)}
+                      style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
+                      ⬇ Télécharger
                     </button>
                   </div>
                 </div>
