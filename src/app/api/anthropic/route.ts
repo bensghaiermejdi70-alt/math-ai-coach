@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ADMIN_EMAIL, getQuotaLimits, extractMatiere, MatiereType } from '@/lib/types/monetisation'
+import { fetchAnthropicWithRetry } from '@/lib/anthropic/fetchWithRetry'
 
 export const maxDuration = 120
 
@@ -156,7 +157,7 @@ if (typeof anthropicBody.system === 'string' && anthropicBody.system.trim().leng
   }
 }
 
-const response = await fetch('https://api.anthropic.com/v1/messages', {
+const response = await fetchAnthropicWithRetry('https://api.anthropic.com/v1/messages', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -164,8 +165,7 @@ const response = await fetch('https://api.anthropic.com/v1/messages', {
     'anthropic-version': '2023-06-01',
   },
   body: JSON.stringify(anthropicBody),
-  signal: AbortSignal.timeout(115000),
-})
+}, { maxRetries: 2, overallTimeoutMs: 115000 })
 
     // ── Mode streaming (SSE) : on relaie le flux Anthropic tel quel au client ──
     if (anthropicBody.stream) {
