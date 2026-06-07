@@ -672,26 +672,46 @@ RÈGLE UNIVERSELLE DE SÉLECTION :
 • JAMAIS utiliser TYPE 2 pour une pile ou un circuit`
 
 
-async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType): Promise<string> {
-  // Appel via route Next.js pour eviter les erreurs CORS
-  const m = matiere || globalMatiere
-  const r = await fetch('/api/anthropic', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role:'user', content:prompt }],
-      type: 'simulations',
-      matiere: m
-    }),
-  })
-  if (!r.ok) {
-    const err = await r.json().catch(()=>({}))
-    throw new Error(err.error || `HTTP ${r.status}`)
+// ── Appel /api/anthropic avec retry automatique (gère les 500/502/503/429/529 transitoires) ──
+async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
+  const RETRYABLE = new Set([429, 500, 502, 503, 504, 529])
+  let lastErr: any = null
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const r = await fetch('/api/anthropic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (r.ok) return await r.json()
+      const err = await r.json().catch(() => ({}))
+      // Quota dépassé → NE PAS réessayer, remonter l'erreur telle quelle
+      if (r.status === 429 && err?.quota_exceeded) throw new Error(err.error || 'Quota dépassé')
+      // Erreur non transitoire (400/401/403...) ou dernier essai → on remonte
+      if (!RETRYABLE.has(r.status) || attempt === maxRetries) throw new Error(err.error || `HTTP ${r.status}`)
+      lastErr = new Error(err.error || `HTTP ${r.status}`)
+    } catch (e: any) {
+      // Erreur réseau / abort → réessayer si essais restants
+      lastErr = e
+      if (e?.message === 'Quota dépassé' || attempt === maxRetries) throw e
+    }
+    // backoff exponentiel + jitter avant le prochain essai
+    await new Promise(res => setTimeout(res, 900 * Math.pow(2, attempt) + Math.random() * 400))
   }
-  const d = await r.json()
+  throw lastErr || new Error('Échec de génération')
+}
+
+async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType): Promise<string> {
+  // Appel via route Next.js (évite CORS) avec retry automatique
+  const m = matiere || globalMatiere
+  const d = await postAnthropicWithRetry({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: 'user', content: prompt }],
+    type: 'simulations',
+    matiere: m
+  })
   return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
 }
 
@@ -715,23 +735,14 @@ async function askClaudeWithImages(
       })
     }
     content.push({ type: 'text', text: prompt })
-    const r = await fetch('/api/anthropic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: maxTokens,
-        system,
-        messages: [{ role: 'user', content }],
-        type: 'simulations',
-        matiere: m
-      }),
+    const d = await postAnthropicWithRetry({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: 'user', content }],
+      type: 'simulations',
+      matiere: m
     })
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}))
-      throw new Error(err.error || `HTTP ${r.status}`)
-    }
-    const d = await r.json()
     return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
   }
 
@@ -1003,6 +1014,13 @@ Use markdown: ### for sections, **bold** for key answers, > for important points
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
+
+NIVEAU DE DETAIL EXIGE (correction modele notee 20/20) :
+- Pour CHAQUE etape : rappelle d'abord la propriete / theoreme / formule du cours utilise (avec ses conditions), PUIS montre le calcul INTEGRAL (aucun saut, chaque ligne de calcul visible), PUIS justifie pourquoi cette etape est valide.
+- Explique le RAISONNEMENT, pas seulement le calcul : pourquoi cette methode, comment on sait quoi faire ensuite.
+- Quand c'est pertinent, termine la question par une VERIFICATION du resultat (substitution, ordre de grandeur, cas particulier).
+- Donne les valeurs exactes ET, si utile, une valeur approchee.
+- Redige comme une copie de Bac modele : un eleve moyen doit pouvoir tout reproduire seul.
 Utilise markdown : ### pour les parties, **gras** pour les resultats, > pour les points importants.
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
@@ -1177,6 +1195,8 @@ Redige la correction COMPLETE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE 
 
 > **Resultat :** [Reponse finale encadree]
 
+**Verification :** [Controle du resultat quand c'est pertinent : substitution dans l'equation, coherence/ordre de grandeur, cas limite]
+
 **Bareme question X :** [X] pts
 - [X] pt : [pour quoi exactement]
 - [X] pt : [pour quoi exactement]
@@ -1212,6 +1232,8 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 - Etape 3 : ... (continuer jusqu'au resultat final, AUCUNE etape sautee)
 
 > **Resultat :** [Reponse finale]
+
+**Verification :** [Controle du resultat quand c'est pertinent : substitution, coherence/ordre de grandeur, cas limite]
 
 **Bareme :** [X] pts — [Detail : X pt pour la demarche, X pt pour le calcul, X pt pour la conclusion]
 
@@ -1461,6 +1483,7 @@ async function correctRemediationExercise(
   const system = `Tu es un tuteur mathématiques bienveillant mais exigeant, spécialiste Bac Tunisie.
 Tu corriges les réponses d'élèves sur des exercices de remédiation avec précision pédagogique.
 Utilise LaTeX pour les formules : $formule$ inline, $$formule$$ centré.
+Pour les vecteurs, écris toujours \\overrightarrow{AB} (flèche au-dessus), jamais une flèche après les lettres.
 Sois encourageant, précis, et guide l'élève vers la maîtrise complète.`
 
   return askClaude(
@@ -2527,6 +2550,25 @@ function parseGraphSegments(text: string): Array<{type:'text'|'graph'; content:s
   return result
 }
 
+// ── Vecteurs : flèche AU-DESSUS (comme le solveur), via un span CSS ──
+function escVecHtml(s: string): string {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+function vecToHtml(s: string): string {
+  return s
+    .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '<span class="mb-vec">$1</span>')
+    .replace(/\\vec\s*\{([^}]*)\}/g, '<span class="mb-vec">$1</span>')
+    // héritage : lettres/parenthèses suivies de la flèche combinante U+20D7 → flèche au-dessus
+    .replace(/([A-Za-zΑ-Ωα-ω()]{1,14})\u20d7/g, '<span class="mb-vec">$1</span>')
+}
+const MB_VEC_CSS = '.mb-vec{position:relative;display:inline-block;white-space:nowrap;padding-top:.22em}'
+  + '.mb-vec::before{content:"";position:absolute;left:0;right:.16em;top:.04em;border-top:1.5px solid currentColor}'
+  + '.mb-vec::after{content:"";position:absolute;right:-.05em;top:-.12em;border-left:.36em solid currentColor;border-top:.2em solid transparent;border-bottom:.2em solid transparent}'
+if (typeof document !== 'undefined' && !document.getElementById('mb-vec-style')) {
+  const _st = document.createElement('style'); _st.id = 'mb-vec-style'; _st.textContent = MB_VEC_CSS
+  document.head.appendChild(_st)
+}
+
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
   return (
@@ -2574,8 +2616,8 @@ function buildCorrectionHtml(
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
 
-  /* ── inline : **gras** et `code` ── */
-  const inline = (s: string) => esc(s)
+  /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
+  const inline = (s: string) => vecToHtml(esc(s))
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
 
@@ -2948,17 +2990,22 @@ function buildCorrectionHtml(
 <head>
 <meta charset="UTF-8">
 <title>Correction — ${esc(exam.title)}</title>
-<style>${css}</style>
+<style>${css}
+${MB_VEC_CSS}</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 <div class="wrap">
 
   <div class="print-bar">
-    <button class="print-btn" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
-    <span class="print-hint">Dans la boîte d'impression → <strong style="color:rgba(255,255,255,.6)">Enregistrer en PDF</strong> · Activez <strong style="color:rgba(255,255,255,.6)">« Couleurs de fond »</strong></span>
+    <button class="print-btn" onclick="telechargerPDF()">⬇ Télécharger PDF couleur</button>
+    <button class="print-btn" onclick="window.print()" style="background:rgba(255,255,255,.08);color:#cbd5e1">🖨 Imprimer</button>
+    <span class="print-hint">PDF couleur (graphiques inclus) ou impression. En impression → activez <strong style="color:rgba(255,255,255,.6)">« Couleurs de fond »</strong></span>
   </div>
 
   <div class="doc-title">
+    <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBAC.AI</div>
+    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://app.mathsbac.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
     <h1>${esc(exam.title)}</h1>
     <div class="sub">Correction IA détaillée · ${exam.totalPoints}/20 pts · ${new Date().toLocaleDateString('fr-FR')}</div>
   </div>
@@ -2967,8 +3014,19 @@ function buildCorrectionHtml(
 
   ${bodyHtml}
 
-  <div class="footer">MathAI Coach — Correction générée par IA — ${esc(exam.title)}</div>
+  <div class="footer">MATHBAC.AI · http://app.mathsbac.com — Correction générée par IA</div>
 </div>
+<script>
+  function telechargerPDF(){
+    var bar=document.querySelector('.print-bar'); if(bar)bar.style.display='none';
+    var el=document.querySelector('.wrap');
+    var opt={margin:[8,8,8,8],filename:'MathBac-correction.pdf',image:{type:'jpeg',quality:0.95},
+      html2canvas:{scale:2,backgroundColor:'#0f1020',useCORS:true},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+    if(typeof html2pdf==='undefined'){ alert('Chargement en cours, réessayez dans 1 seconde.'); if(bar)bar.style.display=''; return; }
+    html2pdf().set(opt).from(el).save().then(function(){ if(bar)bar.style.display=''; });
+  }
+</script>
 </body>
 </html>`
 }
@@ -2996,21 +3054,21 @@ function openCorrectionPdf(
 
 // ── Rendu Markdown minimaliste (sans graphiques) ──────────────────
 function MDLines({ text }: { text: string; [key: string]: any }) {
+  const inl = (s: string) => vecToHtml(escVecHtml(s)).replace(/\*\*(.+?)\*\*/g,'<strong style="color:#e2e8f0;font-weight:700">$1</strong>')
   return (
     <div style={{lineHeight:1.85,color:'rgba(255,255,255,0.8)',fontSize:14}}>
       {text.split('\n').map((ln,i)=>{
         if(!ln.trim()) return <div key={i} style={{height:6}}/>
-        if(ln.startsWith('## ')) return <h3 key={i} style={{fontSize:15,fontWeight:700,color:'#a5b4fc',marginTop:20,marginBottom:8,borderBottom:'1px solid rgba(99,102,241,0.2)',paddingBottom:6}}>{ln.slice(3)}</h3>
-        if(ln.startsWith('### ')) return <h4 key={i} style={{fontSize:14,fontWeight:700,color:'#e2e8f0',marginTop:14,marginBottom:6}}>{ln.slice(4)}</h4>
+        if(ln.startsWith('## ')) return <h3 key={i} style={{fontSize:15,fontWeight:700,color:'#a5b4fc',marginTop:20,marginBottom:8,borderBottom:'1px solid rgba(99,102,241,0.2)',paddingBottom:6}} dangerouslySetInnerHTML={{__html:inl(ln.slice(3))}}/>
+        if(ln.startsWith('### ')) return <h4 key={i} style={{fontSize:14,fontWeight:700,color:'#e2e8f0',marginTop:14,marginBottom:6}} dangerouslySetInnerHTML={{__html:inl(ln.slice(4))}}/>
         if(ln.startsWith('- ')) return <p key={i} style={{margin:'3px 0',paddingLeft:16,position:'relative',fontSize:13,color:'rgba(255,255,255,0.75)'}}>
-          <span style={{position:'absolute',left:0,color:'#6366f1'}}>›</span>{ln.slice(2)}
+          <span style={{position:'absolute',left:0,color:'#6366f1'}}>›</span><span dangerouslySetInnerHTML={{__html:inl(ln.slice(2))}}/>
         </p>
         if(ln.match(/^\d+\.\s/)) return <p key={i} style={{margin:'4px 0',paddingLeft:22,fontSize:13,position:'relative'}}>
           <strong style={{position:'absolute',left:0,color:'#6366f1'}}>{ln.split(/\.\s/)[0]}.</strong>
-          {ln.replace(/^\d+\.\s/,'')}
+          <span dangerouslySetInnerHTML={{__html:inl(ln.replace(/^\d+\.\s/,''))}}/>
         </p>
-        const boldParsed = ln.replace(/\*\*(.+?)\*\*/g,'<strong style="color:#e2e8f0;font-weight:700">$1</strong>')
-        return <p key={i} style={{margin:'2px 0',fontSize:13}} dangerouslySetInnerHTML={{__html:boldParsed}}/>
+        return <p key={i} style={{margin:'2px 0',fontSize:13}} dangerouslySetInnerHTML={{__html:inl(ln)}}/>
       })}
     </div>
   )
