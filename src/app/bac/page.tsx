@@ -9,7 +9,7 @@ import Link from 'next/link'
 //  Programme officiel CNP Tunisie — 4ème année secondaire
 // ═══════════════════════════════════════════════════════════════
 
-type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | 'francais' | null
+type Matiere = 'maths' | 'physique-chimie' | 'informatique' | 'anglais' | 'svt' | 'francais' | 'economie' | 'gestion' | null
 
 // ──────────────────────────────────────────────────────────────
 //  DONNÉES MATHÉMATIQUES — Programme officiel CNP mis à jour
@@ -952,12 +952,56 @@ export default function BacTunisiePage() {
                   Voir les programmes →
                 </span>
               </button>
+
+              {/* ÉCONOMIE */}
+              <button
+                onClick={() => setMatiere('economie')}
+                style={{ padding: '36px 28px', background: 'rgba(6,182,212,0.06)', border: '1.5px solid rgba(6,182,212,0.22)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.55)'; e.currentTarget.style.background = 'rgba(6,182,212,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(6,182,212,0.22)'; e.currentTarget.style.background = 'rgba(6,182,212,0.06)' }}
+              >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#06b6d4,#0891b2)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>📈</div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#22d3ee' }}>Économie</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                  Croissance · Mondialisation · Développement durable<br />
+                  Section Sciences Économiques et Gestion
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(6,182,212,0.12)', color: '#22d3ee', fontWeight: 600 }}>Sc. Éco & Gestion</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#22d3ee', fontWeight: 700, fontSize: 13 }}>
+                  Voir les programmes →
+                </span>
+              </button>
+
+              {/* GESTION */}
+              <button
+                onClick={() => setMatiere('gestion')}
+                style={{ padding: '36px 28px', background: 'rgba(244,63,94,0.06)', border: '1.5px solid rgba(244,63,94,0.22)', borderRadius: 20, cursor: 'pointer', textAlign: 'left', transition: 'all 0.22s', fontFamily: 'var(--font-body)', position: 'relative' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.borderColor = 'rgba(244,63,94,0.55)'; e.currentTarget.style.background = 'rgba(244,63,94,0.11)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(244,63,94,0.22)'; e.currentTarget.style.background = 'rgba(244,63,94,0.06)' }}
+              >
+                <div style={{ position: 'absolute', top: 16, right: 16, background: 'linear-gradient(135deg,#f43f5e,#e11d48)', color: 'white', fontSize: 9, fontWeight: 800, padding: '2px 10px', borderRadius: 20, letterSpacing: '0.08em' }}>NOUVEAU</div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>💼</div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8, color: '#fb7185' }}>Gestion</h2>
+                <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 18px' }}>
+                  Comptabilité · Production · Commerciale · RH · Finance<br />
+                  Section Sciences Économiques et Gestion
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 20 }}>
+                  <span style={{ fontSize: 10, padding: '3px 9px', borderRadius: 20, background: 'rgba(244,63,94,0.12)', color: '#fb7185', fontWeight: 600 }}>Sc. Éco & Gestion</span>
+                </div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#fb7185', fontWeight: 700, fontSize: 13 }}>
+                  Voir les programmes →
+                </span>
+              </button>
             </div>
 
             {/* Stats globales */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 40 }}>
               {[
-                { num: '7', label: 'Matières', icon: '📚' },
+                { num: '9', label: 'Matières', icon: '📚' },
                 { num: '57+', label: 'Chapitres Maths', icon: '📐' },
                 { num: '45+', label: 'Chapitres PC', icon: '⚗️' },
                 { num: '27+', label: 'Chapitres SVT', icon: '🌱' },
@@ -1530,6 +1574,108 @@ export default function BacTunisiePage() {
               >
                 Voir SVT
               </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  // ── PAGE ÉCONOMIE ───────────────────────────────────────────
+  if (matiere === 'economie') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+            <div style={{ marginBottom: 40 }}>
+              <button
+                onClick={() => setMatiere(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16 }}
+              >← Toutes les matières</button>
+              <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+                📈 Économie<br />
+                <span style={{ color: '#22d3ee' }}>Bac 4ème Année Secondaire</span>
+              </h1>
+              <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
+                Programme officiel CNP Tunisie pour la <strong style={{ color: '#22d3ee' }}>Section Sciences Économiques et Gestion</strong>.
+                Croissance économique, mutations des structures, développement durable et mondialisation.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20, marginBottom: 48 }}>
+              <Link href="/bac/economie" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(6,182,212,0.08)', border: '1.5px solid rgba(6,182,212,0.3)', borderRadius: 20, padding: '28px 24px', transition: 'transform 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                  <span style={{ fontSize: 38 }}>📈</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#22d3ee', margin: '12px 0 4px' }}>Section Sciences Économiques et Gestion</div>
+                  <span style={{ fontSize: 11, background: 'rgba(6,182,212,0.15)', color: '#22d3ee', padding: '2px 10px', borderRadius: 20 }}>Programme complet · 4 parties</span>
+                  <div style={{ margin: '14px 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {['📊 Partie 1 — La croissance économique et ses facteurs','🏭 Partie 2 — Les mutations des structures économiques','🌱 Partie 3 — Le développement durable','🌍 Partie 4 — La mondialisation et ses enjeux'].map(b => (
+                      <div key={b} style={{ fontSize: 12, color: 'var(--text2)' }}>{b}</div>
+                    ))}
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#06b6d4,#0891b2)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    📚 Voir le programme →
+                  </span>
+                </div>
+              </Link>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac →</Link>
+              <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  // ── PAGE GESTION ────────────────────────────────────────────
+  if (matiere === 'gestion') {
+    return (
+      <>
+        <Navbar />
+        <main style={{ position: 'relative', zIndex: 1, paddingTop: 80 }}>
+          <div className="container" style={{ paddingTop: 40, paddingBottom: 80 }}>
+            <div style={{ marginBottom: 40 }}>
+              <button
+                onClick={() => setMatiere(null)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-body)', marginBottom: 16 }}
+              >← Toutes les matières</button>
+              <h1 style={{ fontSize: 'clamp(26px,4vw,44px)', marginBottom: 12 }}>
+                💼 Gestion<br />
+                <span style={{ color: '#fb7185' }}>Bac 4ème Année Secondaire</span>
+              </h1>
+              <p style={{ maxWidth: 640, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.7 }}>
+                Programme officiel CNP Tunisie pour la <strong style={{ color: '#fb7185' }}>Section Sciences Économiques et Gestion</strong>.
+                Comptabilité, approvisionnement, production, gestion commerciale, ressources humaines et finance.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20, marginBottom: 48 }}>
+              <Link href="/bac/gestion" style={{ textDecoration: 'none' }}>
+                <div style={{ background: 'rgba(244,63,94,0.08)', border: '1.5px solid rgba(244,63,94,0.3)', borderRadius: 20, padding: '28px 24px', transition: 'transform 0.2s' }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'}>
+                  <span style={{ fontSize: 38 }}>💼</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#fb7185', margin: '12px 0 4px' }}>Section Sciences Économiques et Gestion</div>
+                  <span style={{ fontSize: 11, background: 'rgba(244,63,94,0.15)', color: '#fb7185', padding: '2px 10px', borderRadius: 20 }}>Programme complet · 6 chapitres</span>
+                  <div style={{ margin: '14px 0 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {['📒 Ch.1 — Évaluation & Consolidation (comptabilité)','📦 Ch.2 — Gestion de l\'approvisionnement','🏭 Ch.3 — Gestion de la production','🛒 Ch.4 — Gestion commerciale','👥 Ch.5 — Gestion des ressources humaines','💰 Ch.6 — Gestion financière'].map(b => (
+                      <div key={b} style={{ fontSize: 12, color: 'var(--text2)' }}>{b}</div>
+                    ))}
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#f43f5e,#e11d48)', color: 'white', padding: '9px 20px', borderRadius: 11, fontWeight: 700, fontSize: 13 }}>
+                    📚 Voir le programme →
+                  </span>
+                </div>
+              </Link>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <Link href="/examens" className="btn btn-secondary" style={{ textDecoration: 'none' }}>📋 Examens Bac →</Link>
+              <Link href="/chat" className="btn btn-ghost" style={{ textDecoration: 'none' }}>🤖 Chat IA →</Link>
             </div>
           </div>
         </main>
