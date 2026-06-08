@@ -2542,7 +2542,7 @@ function PhaseChoixMatiere({
           <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:28}}>
             {MATIERES.map(m => {
               const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
-              const isLk = m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
+              const isLk = !isAdmin && m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
               return (
                 <button
                   key={m.key}
@@ -2671,7 +2671,7 @@ function PhaseChoixMatiere({
         </div>
 
         <p style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,marginTop:24}}>
-          Chaque jour = un nouveau concours · Revenez demain pour un nouveau sujet
+          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
         </p>
       </div>
       <Footer/>
@@ -2722,7 +2722,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
           </h1>
           <p style={{color:'rgba(255,255,255,0.5)',fontSize:15,margin:'0 0 6px'}}>
             {isMay
-              ? <span>🗓 Concours Jour <strong style={{color:'#fbbf24'}}>{dayNum}</strong> · Période 1 Mai – 30 Juin — Nouveau sujet chaque jour · 61 jours de concours</span>
+              ? <span>Période 1 Mai – 30 Juin — 5 nouveaux sujets chaque semaine</span>
               : <span>Préparation au Bac — Concours actif <strong style={{color:'#f59e0b',fontWeight:700}}>en mai</strong> uniquement</span>
             }
           </p>
@@ -2780,7 +2780,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
           <button onClick={handleSubmit}
             style={{width:'100%',padding:'15px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)',color:'#0a0a1a',fontSize:15,fontWeight:900,cursor:'pointer',boxShadow:'0 4px 24px rgba(245,158,11,0.5)',letterSpacing:'0.03em',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-            <span style={{fontSize:20}}>🏆</span> Commencer le Concours Jour {dayNum} · Période 1 Mai – 30 Juin
+            <span style={{fontSize:20}}>🏆</span> Commencer le Concours · Période 1 Mai – 30 Juin
           </button>
         </div>
 
@@ -2795,7 +2795,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
         )}
 
         <p style={{textAlign:'center',color:'rgba(255,255,255,0.25)',fontSize:11,marginTop:20}}>
-          Chaque jour = un nouveau concours · Revenez demain pour le suivant
+          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
         </p>
       </div>
       <Footer/>
@@ -4116,10 +4116,9 @@ function BacBlancInner() {
 
   // Vérifier si l'élève a déjà passé un examen pour une matière aujourd'hui
   const todayStr = new Date().toISOString().split('T')[0]
-  function hasPassedTodayForMatiere(matiere: string): boolean {
-    if (typeof window === 'undefined') return false
-    const key = `bb_today_${matiere}_${todayStr}`
-    return localStorage.getItem(key) === '1'
+  function hasPassedTodayForMatiere(_matiere: string): boolean {
+    // Modèle hebdomadaire (5/semaine) : plus de plafond quotidien (1/jour) — seul bbWeekCount fait foi
+    return false
   }
   function markPassedTodayForMatiere(matiere: string) {
     if (typeof window === 'undefined') return
@@ -4140,6 +4139,11 @@ function BacBlancInner() {
   const isInPeriode  = today >= periodeStart && today <= periodeEnd
   // En dev: toujours actif (calcul libre même hors période)
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
+
+  // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
+  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+    ? -1
+    : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
@@ -4172,8 +4176,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -4205,8 +4209,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -4235,8 +4239,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -4267,8 +4271,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -4298,8 +4302,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -4329,8 +4333,8 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
