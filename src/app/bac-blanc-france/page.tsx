@@ -187,6 +187,7 @@ const SECTIONS_NSI_FR = [
 interface Candidat {
   nom: string; prenom: string; lycee: string
   section: string; sectionKey: string
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
 }
 
 interface Exercise {
@@ -2270,13 +2271,24 @@ function PhaseChoixMatiereFR({
 // PHASE 1 — INSCRIPTION
 // ════════════════════════════════════════════════════════════════════
 function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void;onStatistiques:()=>void}){
-  const { isAdmin } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkMatiereAccess } = useAuth()
   const [nom,setNom]=useState('')
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
   const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>('maths')
   const [err,setErr]=useState('')
+  // Si l'élève est abonné à une seule matière, sélectionner par défaut une matière accessible
+  useEffect(() => {
+    if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return
+    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'> = ['maths','physique','informatique','anglais','svt','francais']
+    const accessible = (k: string) => checkMatiereAccess((k === 'maths' ? 'mathematiques' : k) as any)
+    if (!accessible(activeMatiereFiche)) {
+      const first = order.find(accessible)
+      if (first) { setActiveMatiereFiche(first); setSectionKey('') }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveSubscription, isAdmin])
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
   const periodeEnd  =new Date(today.getFullYear(),5,30)
@@ -2297,7 +2309,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const handleSubmit=()=>{
     if(!nom.trim()||!prenom.trim()||!lycee.trim()||!sectionKey){setErr('Veuillez remplir tous les champs.');return}
     setErr('')
-    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),section:sec!.label,sectionKey})
+    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),section:sec!.label,sectionKey,matiere:activeMatiereFiche})
   }
 
   return(
@@ -2316,7 +2328,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
           </h1>
           <p style={{color:'rgba(255,255,255,0.5)',fontSize:15,margin:'0 0 6px'}}>
             {isMay
-              ? <span>🗓 Concours Jour <strong style={{color:'#fbbf24'}}>{dayNum}</strong> · Période 1 Mai – 30 Juin — Nouveau sujet chaque jour · 61 jours de concours</span>
+              ? <span>Période 1 Mai – 30 Juin — 5 nouveaux sujets chaque semaine</span>
               : <span>Préparation au Bac — Concours actif <strong style={{color:'#f59e0b',fontWeight:700}}>en mai</strong> uniquement</span>
             }
           </p>
@@ -2367,23 +2379,28 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
               Matière & Section
             </label>
 
-            {/* Niveau 1 — Matière (grille 3×2) */}
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:6}}>
+            {/* Niveau 1 — Matière (filtrée selon l'abonnement ; admin voit tout) */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:8}}>
               {([
                 {key:'maths'        as const, icon:'🧮', label:'Maths',            color:'#f59e0b'},
                 {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie',  color:'#06d6a0'},
-                {key:'informatique' as const, icon:'💻', label:'NSI',              color:'#8b5cf6'},
+                {key:'informatique' as const, icon:'💻', label:'Informatique',     color:'#8b5cf6'},
                 {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
                 {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
                 {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
-              ]).map(m=>(
+              ].filter(m => {
+                // L'élève ne voit que les matières couvertes par son abonnement ; admin voit tout ; sans abonnement → tout
+                if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return true
+                const k = m.key === 'maths' ? 'mathematiques' : m.key
+                return checkMatiereAccess(k as any)
+              })).map(m=>(
                 <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
-                  style={{display:'flex',alignItems:'center',justifyContent:'center',gap:5,padding:'9px 6px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:700,transition:'all 0.2s',
-                    background:activeMatiereFiche===m.key?m.color:'transparent',
-                    color:activeMatiereFiche===m.key?'white':'rgba(255,255,255,0.4)',
-                    boxShadow:activeMatiereFiche===m.key?`0 4px 14px ${m.color}40`:'none'}}>
-                  <span style={{fontSize:15}}>{m.icon}</span>
-                  <span style={{fontSize:10,whiteSpace:'nowrap'}}>{m.label}</span>
+                  style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:7,padding:'16px 8px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:700,transition:'all 0.2s',
+                    background:activeMatiereFiche===m.key?m.color:'rgba(255,255,255,0.04)',
+                    color:activeMatiereFiche===m.key?'white':'rgba(255,255,255,0.55)',
+                    boxShadow:activeMatiereFiche===m.key?`0 4px 16px ${m.color}50`:'none'}}>
+                  <span style={{fontSize:24}}>{m.icon}</span>
+                  <span style={{fontSize:12,whiteSpace:'nowrap'}}>{m.label}</span>
                 </button>
               ))}
             </div>
@@ -2443,7 +2460,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
           <button onClick={handleSubmit}
             style={{width:'100%',padding:'15px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#4f6ef7,#6366f1,#818cf8)',color:'white',fontSize:15,fontWeight:900,cursor:'pointer',boxShadow:'0 4px 24px rgba(79,110,247,0.5)',letterSpacing:'0.03em',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-            <span style={{fontSize:20}}>🇫🇷</span> Commencer le Concours Jour {dayNum} · Période 1 Mai – 30 Juin
+            <span style={{fontSize:20}}>🇫🇷</span> Commencer le Concours · Période 1 Mai – 30 Juin
           </button>
         </div>
 
@@ -2458,7 +2475,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
         )}
 
         <p style={{textAlign:'center',color:'rgba(255,255,255,0.25)',fontSize:11,marginTop:20}}>
-          Chaque jour = un nouveau concours · Revenez demain pour le suivant
+          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
         </p>
       </div>
       <Footer/>
@@ -3778,10 +3795,9 @@ function BacBlancFranceInner() {
 
   // Vérifier si l'élève a déjà passé un examen pour une matière aujourd'hui
   const todayStr = new Date().toISOString().split('T')[0]
-  function hasPassedTodayForMatiere(matiere: string): boolean {
-    if (typeof window === 'undefined') return false
-    const key = `bb_today_${matiere}_${todayStr}`
-    return localStorage.getItem(key) === '1'
+  function hasPassedTodayForMatiere(_matiere: string): boolean {
+    // Modèle hebdomadaire (5/semaine) : plus de plafond quotidien — seul bbWeekCount fait foi
+    return false
   }
   function markPassedTodayForMatiere(matiere: string) {
     if (typeof window === 'undefined') return
@@ -3803,18 +3819,53 @@ function BacBlancFranceInner() {
   // En dev: toujours actif (calcul libre même hors période)
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
+  // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5, sinon la valeur du plan
+  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+    ? -1
+    : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
+
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
 
   const handleInscription = useCallback(async (c: Candidat) => {
-    // Vérifier quota simulation via Supabase (admin = illimité)
-    // Filet de sécurité anti-abus
+    // Filet de sécurité anti-abus (admin = illimité)
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    setCandidat(c); setPhase('choix-matiere')
-  }, [isAdmin, checkQuota])
+    // La matière est déjà choisie sur la fiche d'inscription → on lance directement (plus de page intermédiaire)
+    const m = c.matiere || 'maths'
+    const matiereKey = m === 'maths' ? 'mathematiques' : m
+    // Vérif abonnement (admin exempté)
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess(matiereKey as any)) {
+      alert(`🔒 Votre abonnement ne couvre pas cette matière.\n\n→ mathsbac.com/abonnement?matiere=${matiereKey}`)
+      return
+    }
+    // Vérif limite hebdomadaire (admin exempté)
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    globalMatiere = matiereKey
+    setCandidat(c)
+    setPhase('generating')
+    try {
+      const gen: Record<string, (cand: Candidat, d: number) => Promise<BacExam>> = {
+        maths: generateBacBlanc,
+        physique: generateBacBlancPhysiqueFR,
+        informatique: generateBacBlancInformatique,
+        anglais: generateBacBlancAnglais,
+        svt: generateBacBlancSVT,
+        francais: generateBacBlancFrancais,
+      }
+      const e = await (gen[m] || generateBacBlanc)(c, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('inscription')
+    }
+  }, [isAdmin, hasActiveSubscription, checkMatiereAccess, simLimit, simUsed, dayNum, bbWeeklyLimit, incrementQuotaSub])
 
   const handleStartMaths = useCallback(async () => {
     if (!candidat) return
@@ -3833,8 +3884,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'mathematiques'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -3866,8 +3917,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'physique'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -3897,8 +3948,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'informatique'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -3928,8 +3979,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'anglais'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -3959,8 +4010,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'svt'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
@@ -3992,8 +4043,8 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = 'francais'
-    if (!isAdmin && (quotaLimits.bac_blanc_per_week ?? 5) !== -1 && bbWeekCount() >= (quotaLimits.bac_blanc_per_week ?? 5)) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + (quotaLimits.bac_blanc_per_week ?? 5) + '/semaine). Revenez la semaine prochaine.')
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
