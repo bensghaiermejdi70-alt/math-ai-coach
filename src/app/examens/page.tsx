@@ -2009,8 +2009,8 @@ const BAC_INFO_PHYS_DATA: AnneeData[] = [
 // ════════════════════════════════════════════════════════════════
 //  CONFIG — MATIÈRES ET SECTIONS
 // ════════════════════════════════════════════════════════════════
-type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais' | 'svt' | 'francais'
-type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences' | 'svt-sc-exp' | 'svt-maths' | 'fr-lettres' | 'fr-scientifique'
+type Matiere = 'maths' | 'physique' | 'informatique' | 'anglais' | 'svt' | 'francais' | 'economie' | 'gestion'
+type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phys' | 'sc-tech-phys' | 'math-phys' | 'info-phys' | 'info-algo' | 'info-bd' | 'anglais-lettres' | 'anglais-sciences' | 'svt-sc-exp' | 'svt-maths' | 'fr-lettres' | 'fr-scientifique' | 'economie' | 'gestion'
 
 // FRANCAIS TUNISIE — liens 100% verifies par tests directs bacweb.tn
 // Lettres      : lettre/francais.pdf + francais_c.pdf quand disponible
@@ -2205,6 +2205,204 @@ const SECTIONS_INFO_EXAM = [
 const SECTIONS_SVT = [
   { key:'svt-sc-exp' as SKey, icon:'🔬', label:'Sciences Expérimentales', color:'#22c55e', coeff:'Coeff. 5', data:BAC_SVT_SC_EXP_DATA, links:svtScExpLinks, desc:'🧬 Génétique · 🧠 Milieu intérieur & Neuro · 👶 Reproduction · 🌿 Nutrition — Coefficient 5 · Durée 3h' },
   { key:'svt-maths'  as SKey, icon:'📐', label:'Section Mathématiques',    color:'#a78bfa', coeff:'Coeff. 2', data:BAC_SVT_MATHS_DATA,   links:svtMathsLinks,   desc:'🧬 Génétique · 🧠 Milieu intérieur · 👶 Reproduction · 🌿 Nutrition · 🌍 Géologie & Évolution — Coefficient 2 · Durée 2h' },
+]
+
+// ════════════════════════════════════════════════════════════════
+//  LIENS — BAC ÉCONOMIE  (section Économie & Gestion)
+//  Dossier bacweb : economie_gestion/   Fichier : economie.pdf · corrigé economie_c.pdf
+// ════════════════════════════════════════════════════════════════
+const G = 'economie_gestion'
+const EX = 'http://www.echoexam.edunet.tn/bac'   // miroir officiel (sujets récents non encore sur bacweb)
+// Sujet Éco 2023 Principale (année de réforme « nouveau régime », absent de bacweb) — PDF direct vérifié
+const ECO_2023_P = 'https://www.ecoles.com.tn/sites/default/files/devoirs/files/bac-eco-gestion-2023-principale-nouveau-regime-economie.pdf'
+
+// Disponibilité RÉELLE vérifiée (HTTP 200 + content-type PDF) — scan juin 2026.
+//  Valeur d'une cellule : 'bw' bacweb · 'eo' echoexam · 'rb' reviserbac (redirection) ·
+//  '' = aucun (pas de bouton) · une URL https = lien direct utilisé tel quel.
+//  ⚠️ Les corrigés ne sont mis QUE s'il existe un vrai PDF (jamais de redirection reviserbac en correction).
+type Cell = { s: string; c: string }
+const cell = (s:string, c:string):Cell => ({ s, c })
+
+const resolveSujet = (v:string, file:string, y:number, sess:'principale'|'controle') =>
+  !v ? undefined : (v.startsWith('http') || v.startsWith('/')) ? v
+  : v==='bw' ? bw(y,sess,G,`${file}.pdf`)
+  : v==='eo' ? `${EX}/${y}/${sess}/${G}/${file}.pdf`
+  : v==='rb' ? rb('economie-gestion', file, y, sess) : undefined
+
+const resolveCorr = (v:string, file:string, y:number, sess:'principale'|'controle') =>
+  !v ? undefined : (v.startsWith('http') || v.startsWith('/')) ? v
+  : v==='bw' ? bw(y,sess,G,`${file}_c.pdf`) : undefined   // pas de fallback redirection en correction
+
+const buildLinks = (file: string, avail: Record<number,{pr:Cell;co:Cell}>): Record<number, AnneeLinks> => {
+  const obj: Record<number, AnneeLinks> = {}
+  const mk = (y:number, sess:'principale'|'controle', cd:Cell): Session => {
+    const sujet = resolveSujet(cd.s, file, y, sess)
+    const correction = resolveCorr(cd.c, file, y, sess)
+    return { label: sess==='principale'?'Session Principale':'Session de Contrôle', session: sess==='principale'?'P':'C',
+      ...(sujet ? { sujet } : {}), ...(correction ? { correction } : {}) }
+  }
+  for (const ys of Object.keys(avail)) {
+    const y = Number(ys)
+    obj[y] = { principale: mk(y,'principale',avail[y].pr), controle: mk(y,'controle',avail[y].co) }
+  }
+  return obj
+}
+
+// ── ÉCONOMIE : corrigés réels = bacweb 2016-2019 (P+C), 2021 (P+C), 2022 P uniquement ──
+//    Sujets : 2023P via ecoles.com.tn · 2025P via echoexam · 2023C introuvable → redirection reviserbac
+const economieLinks: Record<number, AnneeLinks> = buildLinks('economie', {
+  2025:{ pr:cell('eo','' ),       co:cell('bw','' ) },
+  2024:{ pr:cell('bw','' ),       co:cell('bw','' ) },
+  2023:{ pr:cell(ECO_2023_P,''),  co:cell('/sujets/economie-2023-controle.pdf','' ) },
+  2022:{ pr:cell('bw','bw'),      co:cell('bw','' ) },
+  2021:{ pr:cell('bw','bw'),      co:cell('bw','bw') },
+  2020:{ pr:cell('bw','' ),       co:cell('bw','' ) },
+  2019:{ pr:cell('bw','bw'),      co:cell('bw','bw') },
+  2018:{ pr:cell('bw','bw'),      co:cell('bw','bw') },
+  2017:{ pr:cell('bw','bw'),      co:cell('bw','bw') },
+  2016:{ pr:cell('bw','bw'),      co:cell('bw','bw') },
+  2015:{ pr:cell('bw','' ),       co:cell('bw','' ) },
+})
+
+// ── GESTION : tous les sujets sur bacweb (2015-2025) ; corrigés réels = bacweb 2015-2019, 2021, 2022 (P+C) ──
+const gestionLinks: Record<number, AnneeLinks> = buildLinks('gestion', {
+  2025:{ pr:cell('bw','' ),  co:cell('bw','' ) },
+  2024:{ pr:cell('bw','' ),  co:cell('bw','' ) },
+  2023:{ pr:cell('bw','' ),  co:cell('bw','' ) },
+  2022:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2021:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2020:{ pr:cell('bw','' ),  co:cell('bw','' ) },
+  2019:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2018:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2017:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2016:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+  2015:{ pr:cell('bw','bw'), co:cell('bw','bw') },
+})
+
+// ── Données ÉCONOMIE : structure type de l'épreuve (programme CNP) ──
+const BAC_ECONOMIE_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — définitions et mécanismes économiques',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — lecture de données, calcul d\'indicateurs (taux, indices)',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — La mondialisation et ses enjeux',pts:8},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — croissance et développement',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — taux de croissance, TCAM, indices',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Les facteurs de la croissance économique',pts:8},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — mutations des structures',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — coefficients budgétaires, loi d\'Engel',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Le développement durable',pts:8},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — échanges internationaux',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — taux de couverture, d\'ouverture, termes de l\'échange',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — La division internationale du travail',pts:8},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — productivité et progrès technique',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — investissement et compétitivité',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Les firmes multinationales',pts:8},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — coûts de la croissance',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — IDH, indicateurs du développement',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Croissance et développement durable',pts:8},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — PIB, PNB, mesure de la croissance',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — fluctuations et cycles économiques',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — La tertiarisation de l\'économie',pts:8},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — facteurs travail et capital',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — ouverture et commerce extérieur',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Mondialisation et croissance',pts:8},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — concentration des entreprises',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — structure de la consommation',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Les mutations des modes de vie',pts:8},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — protectionnisme et libre-échange',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — solde commercial et taux de couverture',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — Les coûts environnementaux de la croissance',pts:8},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Partie 1',theme:'Mobilisation des connaissances — avantages comparatifs et compétitifs',pts:6},
+    {titre:'Partie 2',theme:'Étude de document — géographie des échanges (Triade, émergents)',pts:6},
+    {titre:'Partie 3',theme:'Sujet de réflexion — L\'irrégularité de la croissance',pts:8},
+  ]},
+]
+
+// ── Données GESTION : structure type de l'épreuve (dossiers) ──
+const BAC_GESTION_DATA: AnneeData[] = [
+  { year:2025, note:'🆕', exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité & analyse financière — bilan, FDR, BFR, trésorerie nette',pts:7},
+    {titre:'Dossier 2',theme:'Calcul des coûts — coût de revient, seuil de rentabilité',pts:7},
+    {titre:'Dossier 3',theme:'Gestion financière — financement, budgets, ratios',pts:6},
+  ]},
+  { year:2024, note:'🔥', exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité générale — charges, produits, résultat, TVA',pts:7},
+    {titre:'Dossier 2',theme:'Gestion de l\'approvisionnement — CUMP, rotation, modèle de Wilson',pts:7},
+    {titre:'Dossier 3',theme:'Gestion commerciale — étude de marché, marketing-mix',pts:6},
+  ]},
+  { year:2023, exercices:[
+    {titre:'Dossier 1',theme:'Analyse financière — bilan fonctionnel, équilibre financier',pts:7},
+    {titre:'Dossier 2',theme:'Coûts partiels — marge sur coût variable, point mort',pts:7},
+    {titre:'Dossier 3',theme:'Gestion des ressources humaines — recrutement, masse salariale',pts:6},
+  ]},
+  { year:2022, exercices:[
+    {titre:'Dossier 1',theme:'Évaluation & consolidation — patrimoine, capitaux propres',pts:7},
+    {titre:'Dossier 2',theme:'Coûts complets — centres d\'analyse, coût de production',pts:7},
+    {titre:'Dossier 3',theme:'Gestion budgétaire — budgets, contrôle, écarts',pts:6},
+  ]},
+  { year:2021, exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité — journal, comptes, plan comptable',pts:7},
+    {titre:'Dossier 2',theme:'Gestion des stocks — valorisation, stock de sécurité',pts:7},
+    {titre:'Dossier 3',theme:'Financement de l\'investissement — emprunt, crédit-bail',pts:6},
+  ]},
+  { year:2020, exercices:[
+    {titre:'Dossier 1',theme:'Analyse financière — FDR, BFR, trésorerie, ratios',pts:7},
+    {titre:'Dossier 2',theme:'Choix des quantités — sous-traitance, lot économique',pts:7},
+    {titre:'Dossier 3',theme:'Gestion commerciale — segmentation, ciblage, politique de prix',pts:6},
+  ]},
+  { year:2019, exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité & patrimoine — bilan, emplois et ressources',pts:7},
+    {titre:'Dossier 2',theme:'Calcul et analyse des écarts — coûts préétablis',pts:7},
+    {titre:'Dossier 3',theme:'Rémunération du personnel — salaire, prime, motivation',pts:6},
+  ]},
+  { year:2018, exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité générale — opérations commerciales, TVA',pts:7},
+    {titre:'Dossier 2',theme:'Coûts et seuil de rentabilité — charges fixes/variables',pts:7},
+    {titre:'Dossier 3',theme:'Système d\'information & organisation de l\'entreprise',pts:6},
+  ]},
+  { year:2017, exercices:[
+    {titre:'Dossier 1',theme:'Analyse financière — équilibre financier, fonds de roulement',pts:7},
+    {titre:'Dossier 2',theme:'Gestion de la production — coût de revient, résultat analytique',pts:7},
+    {titre:'Dossier 3',theme:'Besoins en personnel — prévision des effectifs',pts:6},
+  ]},
+  { year:2016, exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité — inventaire, bilan, résultat de l\'exercice',pts:7},
+    {titre:'Dossier 2',theme:'Approvisionnement — fiche de stock, rotation, durée de stockage',pts:7},
+    {titre:'Dossier 3',theme:'Gestion budgétaire — budget de trésorerie',pts:6},
+  ]},
+  { year:2015, exercices:[
+    {titre:'Dossier 1',theme:'Comptabilité & patrimoine — actif, passif, capitaux propres',pts:7},
+    {titre:'Dossier 2',theme:'Coûts complets — charges directes/indirectes, coût d\'achat',pts:7},
+    {titre:'Dossier 3',theme:'Gestion financière — autofinancement, choix du financement',pts:6},
+  ]},
+]
+
+const SECTIONS_ECONOMIE = [
+  { key:'economie' as SKey, icon:'📈', label:'Sc. Éco & Gestion', color:'#06b6d4', coeff:'Coeff. 3', data:BAC_ECONOMIE_DATA, links:economieLinks, desc:'Croissance · Mutations des structures · Développement durable · Mondialisation — Programme CNP · Durée 3h' },
+]
+
+const SECTIONS_GESTION = [
+  { key:'gestion' as SKey, icon:'💼', label:'Sc. Éco & Gestion', color:'#f43f5e', coeff:'Coeff. 4', data:BAC_GESTION_DATA, links:gestionLinks, desc:'Comptabilité · Coûts · Approvisionnement · Commerciale · RH · Finance — Programme CNP · Durée 3h' },
 ]
 
 // ════════════════════════════════════════════════════════════════
@@ -2412,7 +2610,9 @@ export default function ExamensTunisiePage() {
   const isAnglais    = activeMatiere === 'anglais'
   const isSvt        = activeMatiere === 'svt'
   const isFrancais   = activeMatiere === 'francais'
-  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : isSvt ? SECTIONS_SVT : isFrancais ? SECTIONS_FRANCAIS : SECTIONS_PHYS
+  const isEconomie   = activeMatiere === 'economie'
+  const isGestion    = activeMatiere === 'gestion'
+  const sections = isMaths ? SECTIONS_MATHS : isInfo_m ? SECTIONS_INFO_EXAM : isAnglais ? SECTIONS_ANGLAIS : isSvt ? SECTIONS_SVT : isFrancais ? SECTIONS_FRANCAIS : isEconomie ? SECTIONS_ECONOMIE : isGestion ? SECTIONS_GESTION : SECTIONS_PHYS
   const sec      = sections.find(s => s.key === activeSec) ?? sections[0]
   const detail   = sec.data.find(a => a.year === selectedYear)
   const isInfo   = activeSec === 'info' || activeSec === 'info-algo' || activeSec === 'info-bd'
@@ -2426,6 +2626,8 @@ export default function ExamensTunisiePage() {
       m === 'anglais'      ? 'anglais-lettres' :
       m === 'svt'          ? 'svt-sc-exp' :
       m === 'francais'     ? 'fr-lettres' :
+      m === 'economie'     ? 'economie' :
+      m === 'gestion'      ? 'gestion' :
       'info-algo'
     )
     setSelectedYear(null)
@@ -2449,6 +2651,8 @@ export default function ExamensTunisiePage() {
       'anglais-sciences': 'anglais-sciences',
       'svt-sc-exp':   'sc-exp',
       'svt-maths':    'maths',
+      'economie':     'eco',
+      'gestion':      'eco',
     }
     const simSection = simSectionMap[activeSec] ?? activeSec
     const isPhysSection = activeSec.endsWith('-phys')
@@ -2493,6 +2697,8 @@ export default function ExamensTunisiePage() {
               { key:'informatique' as Matiere, icon:'💻', label:'Informatique',    color:'#6366f1' },
               { key:'anglais'      as Matiere, icon:'🇬🇧', label:'Anglais',         color:'#f59e0b' },
               { key:'francais'     as Matiere, icon:'📚', label:'Francais',        color:'#ec4899' },
+              { key:'economie'     as Matiere, icon:'📈', label:'Économie',        color:'#06b6d4' },
+              { key:'gestion'      as Matiere, icon:'💼', label:'Gestion',         color:'#f43f5e' },
             ]).map(m => (
               <button key={m.key} onClick={() => switchMatiere(m.key)}
                 style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
@@ -2523,7 +2729,7 @@ export default function ExamensTunisiePage() {
                   <h2 style={{fontSize:18,margin:0}}>{sec.label}</h2>
                   <span style={{background:`${sec.color}22`,color:sec.color,fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>{sec.coeff}</span>
                   <span style={{background:'rgba(255,255,255,0.05)',color:'var(--muted)',fontSize:11,padding:'2px 10px',borderRadius:10,fontWeight:600}}>
-                    {isMaths ? 'Mathematiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : isSvt ? 'SVT' : isFrancais ? 'Francais' : 'Physique-Chimie'}
+                    {isMaths ? 'Mathematiques' : isInfo_m ? 'Informatique' : isAnglais ? 'Anglais' : isSvt ? 'SVT' : isFrancais ? 'Francais' : isEconomie ? 'Economie' : isGestion ? 'Gestion' : 'Physique-Chimie'}
                   </span>
                 </div>
                 <p style={{fontSize:12,color:'var(--text2)',margin:0}}>{sec.desc}</p>
@@ -2578,7 +2784,7 @@ export default function ExamensTunisiePage() {
               <div style={{marginBottom:24}}>
                 <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:8}}>
                   <span style={{fontSize:22}}>{sec.icon}</span>
-                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : isAnglais ? '🇬🇧 Anglais' : isSvt ? '🌱 SVT' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
+                  <h3 style={{margin:0}}>{isMaths ? 'Bac' : isInfo_m ? 'Informatique' : isAnglais ? '🇬🇧 Anglais' : isSvt ? '🌱 SVT' : isFrancais ? '📚 Francais' : isEconomie ? '📈 Économie' : isGestion ? '💼 Gestion' : 'Physique-Chimie'} {sec.label} — {selectedYear}</h3>
                   <span style={{fontSize:11,background:'rgba(6,214,160,0.12)',color:'#06d6a0',border:'1px solid rgba(6,214,160,0.3)',padding:'3px 10px',borderRadius:10,fontWeight:600}}>
                     ✅ Sujets + Corrections disponibles
                   </span>
