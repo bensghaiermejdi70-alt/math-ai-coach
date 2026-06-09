@@ -21,6 +21,8 @@ const PLAN_LABELS: Record<string, string> = {
   mensuel_anglais: 'Anglais Mensuel', sprint_anglais: 'Anglais Sprint', annuel_anglais: 'Anglais Annuel',
   mensuel_svt: 'SVT Mensuel', sprint_svt: 'SVT Sprint', annuel_svt: 'SVT Annuel',
   mensuel_francais: 'Français Mensuel', sprint_francais: 'Français Sprint', annuel_francais: 'Français Annuel',
+  mensuel_economie: 'Éco Mensuel', sprint_economie: 'Éco Sprint', annuel_economie: 'Éco Annuel',
+  mensuel_gestion: 'Gestion Mensuel', sprint_gestion: 'Gestion Sprint', annuel_gestion: 'Gestion Annuel',
 }
 
 // ── 2 méthodes uniquement ─────────────────────────────────────────
@@ -143,6 +145,16 @@ function AdminPanel() {
               <option value="sprint_francais">Français Sprint — 90 DT</option>
               <option value="annuel_francais">Français Annuel — 600 DT</option>
             </optgroup>
+            <optgroup label="📈 Économie">
+              <option value="mensuel_economie">Éco Mensuel — 60 DT</option>
+              <option value="sprint_economie">Éco Sprint — 90 DT</option>
+              <option value="annuel_economie">Éco Annuel — 600 DT</option>
+            </optgroup>
+            <optgroup label="💼 Gestion">
+              <option value="mensuel_gestion">Gestion Mensuel — 60 DT</option>
+              <option value="sprint_gestion">Gestion Sprint — 90 DT</option>
+              <option value="annuel_gestion">Gestion Annuel — 600 DT</option>
+            </optgroup>
           </select>
         </div>
         <button type="submit" disabled={loading}
@@ -170,6 +182,7 @@ function ActivationInner() {
   const MATIERE_LABELS: Record<string,string> = {
     mathematiques:'🧮 Mathématiques', physique:'⚗️ Physique-Chimie',
     svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Informatique', francais:'📚 Français',
+    economie:'📈 Économie', gestion:'💼 Gestion',
   }
   const matiereLabel = MATIERE_LABELS[matiereParam] ?? '🧮 Mathématiques'
 

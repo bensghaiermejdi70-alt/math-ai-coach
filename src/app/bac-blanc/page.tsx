@@ -2350,6 +2350,160 @@ REPONDS AVEC CE JSON EXACT :
   }
 }
 
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC ÉCONOMIE (Sc. Éco & Gestion) — programme CNP
+// Épreuve coeff 3 · 3h · 20 pts · 3 parties (connaissances / document / réflexion)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_ECO = [
+  { theme:'La croissance économique',                       reflexion:"La croissance économique est-elle toujours souhaitable ?" },
+  { theme:'Les facteurs de la croissance',                  reflexion:"Le progrès technique est-il le principal moteur de la croissance ?" },
+  { theme:'Les mutations de la structure de production',    reflexion:"La tertiarisation traduit-elle un affaiblissement de l'industrie ?" },
+  { theme:'Les transformations des modes de vie',           reflexion:"La hausse du niveau de vie suffit-elle à améliorer le bien-être ?" },
+  { theme:'Les coûts de la croissance',                     reflexion:"La croissance économique n'a-t-elle que des effets positifs ?" },
+  { theme:'Le développement durable',                       reflexion:"Croissance économique et développement durable sont-ils conciliables ?" },
+  { theme:'Les échanges internationaux',                    reflexion:"Le libre-échange profite-t-il à tous les pays ?" },
+  { theme:'Les mutations du commerce international',         reflexion:"La spécialisation internationale est-elle un facteur de développement ?" },
+  { theme:'Les firmes multinationales',                     reflexion:"Les firmes multinationales favorisent-elles le développement des pays d'accueil ?" },
+]
+function getProgrammeJourEco(dayNum: number) {
+  return PROGRAMME_JOUR_ECO[(dayNum - 1) % PROGRAMME_JOUR_ECO.length]
+}
+
+async function generateBacBlancEconomie(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_ECONOMIE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const prog = getProgrammeJourEco(dayNum)
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
+Tu crées des sujets BAC BLANC ÉCONOMIE originaux, rigoureux et de niveau officiel (épreuve coefficient 3, durée 3h, 20 points).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+INDICATEURS À MOBILISER selon le thème : taux de croissance t=(Vn-Vn-1)/Vn-1, TCAM, indices base 100, PIB réel/nominal, coefficient budgétaire, IDH, taux de couverture (X/M)x100, taux d'ouverture, termes de l'échange.`
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL ÉCONOMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+THÈME DOMINANT DU JOUR : ${prog.theme}
+
+═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE D'ÉCONOMIE (Bac Tunisie) ═══
+Durée : 3h · Total : 20 points
+Partie 1 — MOBILISATION DES CONNAISSANCES (6 points) : 2 à 3 questions de cours (définitions, mécanismes, distinctions) portant sur « ${prog.theme} ».
+Partie 2 — ÉTUDE D'UN DOCUMENT (6 points) : un document chiffré (tableau de données réalistes présenté dans le statement) + questions de lecture, de CALCUL d'indicateurs (taux, indices, coefficients) et d'interprétation.
+Partie 3 — SUJET DE RÉFLEXION (8 points) : une dissertation argumentée. Sujet : « ${prog.reflexion} »
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Données chiffrées réalistes et cohérentes (tableau dans le statement, valeurs plausibles pour la Tunisie)
+- Questions numérotées 1) 2) 3)
+- Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "id": "bb-economie-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Économie — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    { "num": 1, "theme": "Mobilisation des connaissances", "title": "Partie 1 — ${prog.theme}", "points": 6, "statement": "1) ...\n2) ...\n3) ...", "graph": null },
+    { "num": 2, "theme": "Étude de document", "title": "Partie 2 — Étude de document", "points": 6, "statement": "Document : [tableau de données chiffrées]\n\n1) ...\n2) Calculer ...\n3) Interpréter ...", "graph": null },
+    { "num": 3, "theme": "Sujet de réflexion", "title": "Partie 3 — Dissertation", "points": 8, "statement": "Sujet : « ${prog.reflexion} »\n\nConsignes : introduction (accroche, problématique, annonce du plan), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).", "graph": null }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-economie-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Économie',
+    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
+  })
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
+  return {
+    ...parsed,
+    id: parsed.id || `bb-economie-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel, date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC GESTION (Sc. Éco & Gestion) — programme CNP
+// Épreuve coeff 4 · 3h · 20 pts · 3 dossiers (compta-finance / coûts / domaine du jour)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_GES = [
+  { theme:'Évaluation & Consolidation', detail:'comptabilité, bilan, FDR/BFR/TN, résultat, TVA' },
+  { theme:"Gestion de l'approvisionnement", detail:'CUMP, stock moyen, rotation, durée de stockage, quantité économique de Wilson' },
+  { theme:'Gestion de la production', detail:'coûts complets, coût de revient, MCV, seuil de rentabilité, écarts' },
+  { theme:'Gestion commerciale', detail:'étude de marché, marketing-mix, part de marché, suivi des ventes' },
+  { theme:'Gestion des ressources humaines', detail:'effectifs, recrutement, formation, masse salariale' },
+  { theme:'Gestion financière', detail:'autofinancement, équilibre financier, ratios, gestion budgétaire' },
+]
+function getProgrammeJourGes(dayNum: number) {
+  return PROGRAMME_JOUR_GES[(dayNum - 1) % PROGRAMME_JOUR_GES.length]
+}
+
+async function generateBacBlancGestion(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_GESTION_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const prog = getProgrammeJourGes(dayNum)
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
+Tu crées des sujets BAC BLANC GESTION originaux, rigoureux et de niveau officiel (épreuve coefficient 4, durée 3h, 20 points).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+FORMULES À MOBILISER : FDR=Capitaux permanents-Actif immobilisé · BFR=Actif circulant(HT)-Passif circulant(HT) · TN=FDR-BFR · CUMP · rotation=Consommation/stock moyen · MCV=CA-charges variables · Seuil de rentabilité=CF/taux de MCV · masse salariale=Σ(salaires bruts+charges patronales).`
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL GESTION — Concours National — JOUR ${dayNum} — Section ${secLabel}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+DOMAINE DOMINANT DU JOUR : ${prog.theme} (${prog.detail})
+
+═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE DE GESTION (Bac Tunisie) ═══
+Durée : 3h · Total : 20 points · Sujet organisé en DOSSIERS indépendants avec données chiffrées.
+Dossier 1 — COMPTABILITÉ & ANALYSE FINANCIÈRE (7 points) : bilan, FDR, BFR, TN, résultat — données chiffrées + calculs + interprétation.
+Dossier 2 — CALCUL ET ANALYSE DES COÛTS / APPROVISIONNEMENT (7 points) : coût de revient ou gestion des stocks (CUMP, Wilson) ou seuil de rentabilité — tableau de charges + calculs.
+Dossier 3 — ${prog.theme.toUpperCase()} (6 points) : application sur ${prog.detail} — données chiffrées + questions de calcul et d'analyse.
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
+- Calculs explicites attendus (montrer les formules)
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "id": "bb-gestion-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Gestion — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 — Analyse financière", "points": 7, "statement": "Données : [extrait de bilan]\n\n1) Calculer le FDR ...\n2) Calculer le BFR ...\n3) En déduire la TN et interpréter ...", "graph": null },
+    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 — Coûts", "points": 7, "statement": "Données : [tableau de charges]\n\n1) ...\n2) Calculer le seuil de rentabilité ...\n3) Interpréter ...", "graph": null },
+    { "num": 3, "theme": "${prog.theme}", "title": "Dossier 3 — ${prog.theme}", "points": 6, "statement": "Données : [tableau]\n\n1) ...\n2) ...\n3) ...", "graph": null }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-gestion-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Gestion',
+    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
+  })
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
+  return {
+    ...parsed,
+    id: parsed.id || `bb-gestion-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel, date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
+  }
+}
+
 const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: string; color: string }[]> = {
   maths: [
     { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
@@ -2380,11 +2534,17 @@ const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: s
     { key:'fr-lettres',      label:'Section Lettres',        icon:'📚', color:'#ec4899' },
     { key:'fr-scientifique', label:'Sections Scientifiques', icon:'🔬', color:'#8b5cf6' },
   ],
+  economie: [
+    { key:'economie', label:'Sc. Éco & Gestion', icon:'📈', color:'#06b6d4' },
+  ],
+  gestion: [
+    { key:'gestion', label:'Sc. Éco & Gestion', icon:'💼', color:'#f43f5e' },
+  ],
 }
 
 function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour,
-  hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onEconomie, onGestion, onRetour,
+  hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin, weeklyLimit = 5
 }: {
   candidat: Candidat
   dayNum: number
@@ -2394,11 +2554,14 @@ function PhaseChoixMatiere({
   onAnglais: () => void
   onSvt: () => void
   onFrancais: () => void
+  onEconomie: () => void
+  onGestion: () => void
   onRetour: () => void
   hasActiveSubscription?: boolean
   checkMatiereAccess?: (m: any) => boolean
   matiereActive?: string
   isAdmin?: boolean
+  weeklyLimit?: number
 }) {
   const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
 
@@ -2482,6 +2645,30 @@ function PhaseChoixMatiere({
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
+    {
+      key: 'economie',
+      icon: '📈',
+      label: 'Économie',
+      desc: 'Mobilisation des connaissances · Étude de document · Sujet de réflexion · Programme Sc. Éco & Gestion',
+      color: '#06b6d4',
+      gradient: 'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(34,211,238,0.06))',
+      border: 'rgba(6,182,212,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'gestion',
+      icon: '💼',
+      label: 'Gestion',
+      desc: 'Comptabilité & finance · Coûts · Approvisionnement · Marketing · RH · Programme Sc. Éco & Gestion',
+      color: '#f43f5e',
+      gradient: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(251,113,133,0.06))',
+      border: 'rgba(244,63,94,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
   ]
 
   // Quand une matière disponible est cliquée → afficher ses sous-sections
@@ -2506,6 +2693,8 @@ function PhaseChoixMatiere({
     if (selectedMatiere === 'anglais') { onAnglais(); return }
     if (selectedMatiere === 'svt') { onSvt(); return }
     if (selectedMatiere === 'francais') { onFrancais(); return }
+    if (selectedMatiere === 'economie') { onEconomie(); return }
+    if (selectedMatiere === 'gestion') { onGestion(); return }
   }
 
   const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
@@ -2657,7 +2846,11 @@ function PhaseChoixMatiere({
                 fontFamily:'inherit', transition:'all 0.2s',
               }}>
               <span style={{fontSize:18}}>🏆</span>
-              Lancer le concours · Jour {dayNum}
+              {weeklyLimit === -1
+                ? 'Lancer le concours · Accès illimité'
+                : bbWeekCount() >= weeklyLimit
+                  ? `Quota atteint · ${weeklyLimit}/${weeklyLimit} cette semaine`
+                  : `Lancer le concours · ${bbWeekCount() + 1}/${weeklyLimit} cette semaine`}
             </button>
           </div>
         )}
@@ -4349,6 +4542,68 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
+  // ── Lancer le bac blanc Économie ────────────────────────────────────
+  const handleStartEconomie = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('economie' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie pour accéder au Bac Blanc Économie.\n→ mathsbac.com/abonnement?matiere=economie')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('economie')) {
+      alert("✅ Vous avez déjà passé votre examen Économie aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancEconomie(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('economie')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
+  // ── Lancer le bac blanc Gestion ─────────────────────────────────────
+  const handleStartGestion = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('gestion' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Gestion pour accéder au Bac Blanc Gestion.\n→ mathsbac.com/abonnement?matiere=gestion')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('gestion')) {
+      alert("✅ Vous avez déjà passé votre examen Gestion aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancGestion(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('gestion')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -4402,11 +4657,14 @@ function BacBlancInner() {
       onAnglais={handleStartAnglais}
       onSvt={handleStartSVT}
       onFrancais={handleStartFrancais}
+      onEconomie={handleStartEconomie}
+      onGestion={handleStartGestion}
       onRetour={()=>setPhase('inscription')}
       hasActiveSubscription={hasActiveSubscription}
       checkMatiereAccess={checkMatiereAccess}
       matiereActive={matiereActive}
       isAdmin={isAdmin}
+      weeklyLimit={bbWeeklyLimit}
     />
   )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>

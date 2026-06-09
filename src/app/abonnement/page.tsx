@@ -105,25 +105,47 @@ const MATIERES = [
     ],
   },
   {
-    key: 'francais',
-    icon: '📚',
-    label: 'Français',
-    desc: 'Compréhension · Langue & Expression · Production écrite · Bac Blanc Français · Programme CNP officiel',
-    color: '#ec4899',
-    gradient: 'linear-gradient(135deg,rgba(236,72,153,0.15),rgba(219,39,119,0.07))',
-    border: 'rgba(236,72,153,0.4)',
+    key: 'economie',
+    icon: '📈',
+    label: 'Économie',
+    desc: 'Simulation Économie · Chat Prof · Solveur · Bac Blanc Économie · Programme Sc. Éco & Gestion',
+    color: '#06b6d4',
+    gradient: 'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(34,211,238,0.07))',
+    border: 'rgba(6,182,212,0.4)',
     available: true,
     accesPayant: [
-      'Simulation Bac Français IA',
-      'Chat Professeur Français',
-      'Correction Dissertation & Essai IA',
-      'Bac Blanc Français (mai-juin)',
+      'Simulation Bac Économie IA',
+      'Chat Professeur Économie',
+      'Solveur & Dissertation IA',
+      'Bac Blanc Économie (mai-juin)',
     ],
     accesFree: [
-      'Cours Français officiels — 8 modules · Programme CNP',
-      'Examens officiels Français + sujets Section Lettres & Scientifiques (2015→2025)',
-      'Annales Bac Français Tunisie — Lettres · Sections Scientifiques',
-      'Auteurs & Axes d\'argumentation gratuits',
+      'Cours Économie officiels — 9 chapitres · Programme CNP',
+      'Examens officiels Économie + corrections (2015→2025)',
+      'Annales Bac Économie Tunisie — Section Éco & Gestion',
+      'Programme complet — Croissance · Développement durable · Mondialisation',
+    ],
+  },
+  {
+    key: 'gestion',
+    icon: '💼',
+    label: 'Gestion',
+    desc: 'Simulation Gestion · Chat Prof · Solveur · Bac Blanc Gestion · Programme Sc. Éco & Gestion',
+    color: '#f43f5e',
+    gradient: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(251,113,133,0.07))',
+    border: 'rgba(244,63,94,0.4)',
+    available: true,
+    accesPayant: [
+      'Simulation Bac Gestion IA',
+      'Chat Professeur Gestion',
+      'Solveur Comptabilité & Coûts IA',
+      'Bac Blanc Gestion (mai-juin)',
+    ],
+    accesFree: [
+      'Cours Gestion officiels — 6 chapitres · Programme CNP',
+      'Examens officiels Gestion + corrections (2015→2025)',
+      'Annales Bac Gestion Tunisie — Section Éco & Gestion',
+      'Programme complet — Comptabilité · Coûts · Approvisionnement · Marketing · RH · Finance',
     ],
   },
 
@@ -188,7 +210,7 @@ function QuotaRow({ label, val, note, highlight=false }: { label:string; val:str
 
 export default function AbonnementPage() {
   const { user, profile, quotas, quotaLimits, hasActiveSubscription, activePlanTypes, daysRemaining, isAdmin, signOut } = useAuth()
-  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel', mensuel_anglais:'Anglais Mensuel', sprint_anglais:'Anglais Sprint', annuel_anglais:'Anglais Annuel', mensuel_svt:'SVT Mensuel', sprint_svt:'SVT Sprint', annuel_svt:'SVT Annuel', mensuel_francais:'Français Mensuel', sprint_francais:'Français Sprint', annuel_francais:'Français Annuel' }
+  const PLAN_LABELS_DISPLAY: Record<string,string> = { mensuel_mathematiques:'Maths Mensuel', sprint_bac_mathematiques:'Maths Sprint', annuel_mathematiques:'Maths Annuel', mensuel_physique:'Physique Mensuel', sprint_bac_physique:'Physique Sprint', annuel_physique:'Physique Annuel', mensuel_informatique:'Info Mensuel', sprint_bac_informatique:'Info Sprint', annuel_informatique:'Info Annuel', mensuel_anglais:'Anglais Mensuel', sprint_anglais:'Anglais Sprint', annuel_anglais:'Anglais Annuel', mensuel_svt:'SVT Mensuel', sprint_svt:'SVT Sprint', annuel_svt:'SVT Annuel', mensuel_francais:'Français Mensuel', sprint_francais:'Français Sprint', annuel_francais:'Français Annuel', mensuel_economie:'Éco Mensuel', sprint_economie:'Éco Sprint', annuel_economie:'Éco Annuel', mensuel_gestion:'Gestion Mensuel', sprint_gestion:'Gestion Sprint', annuel_gestion:'Gestion Annuel' }
   const [payment, setPayment] = useState('d17')
   const [matiereKey, setMatiereKey] = useState<string>('')
   const matiere = MATIERES.find(m => m.key === matiereKey)

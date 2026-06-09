@@ -39,6 +39,8 @@ const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
   svt:           { label:'SVT',            color:'#10b981', icon:'🧬' },
   anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
   informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
+  economie:      { label:'Économie',        color:'#06b6d4', icon:'📈' },
+  gestion:       { label:'Gestion',         color:'#f43f5e', icon:'💼' },
 }
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
 import { useSearchParams } from 'next/navigation'
@@ -594,6 +596,80 @@ interface AnalysisResult {
 }
 
 type Phase = 'select' | 'generating' | 'choose-exam' | 'exam' | 'grading' | 'graded' | 'correcting' | 'correction' | 'analysing' | 'analysis'
+
+// ════════════════════════════════════════════════════════════════
+//  ÉCONOMIE & GESTION — Configs, archives et chapitres (Sc. Éco & Gestion)
+//  Programme CNP Tunisie · 4ème Économie & Gestion
+// ════════════════════════════════════════════════════════════════
+const SECTION_CONFIGS_ECO = [
+  { key:'economie', label:'Éco-Gestion', color:'#06b6d4', icon:'📈', folder:'economie_gestion', file:'economie.pdf',
+    themes:['Croissance économique','Mutations des structures','Développement durable','Mondialisation','Échanges internationaux'] },
+]
+const ARCHIVES_ECO: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_ECO.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
+  ])
+)
+
+const SECTION_CONFIGS_GES = [
+  { key:'gestion', label:'Éco-Gestion', color:'#f43f5e', icon:'💼', folder:'economie_gestion', file:'gestion.pdf',
+    themes:['Comptabilité & finance','Coûts','Approvisionnement','Gestion commerciale','Ressources humaines'] },
+]
+const ARCHIVES_GES: Archive[] = YEARS.flatMap(y =>
+  SECTION_CONFIGS_GES.flatMap(sc => [
+    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
+    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
+      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
+      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
+  ])
+)
+
+// ── Chapitres ÉCONOMIE (9) — programme CNP, 4 parties ──
+const CHAPITRES_ECO: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'economie': {
+    key:'economie', label:'Économie — Sc. Éco & Gestion', color:'#06b6d4', icon:'📈',
+    chapitres: [
+      { slug:'croissance-economique',   titre:'La croissance économique',          badge:'Partie I',   desc:'PIB, PNB, PIB réel/nominal, PPA. Taux de croissance t=(PIBn-PIBn-1)/PIBn-1, TCAM, indices. Croissance quantitative/qualitative, extensive/intensive, cycles et fluctuations.' },
+      { slug:'facteurs-croissance',     titre:'Les facteurs de la croissance',     badge:'Partie I',   desc:'Facteur travail (population active, productivité Pt=Production/travail, capital humain), facteur capital (investissement, progrès technique), échanges extérieurs (ouverture, compétitivité).' },
+      { slug:'structure-production',    titre:'La structure de production',        badge:'Partie II',  desc:'Secteurs primaire/secondaire/tertiaire, tertiarisation, désindustrialisation, mécanisation/automatisation, concentration horizontale/verticale/conglomérale, oligopole.' },
+      { slug:'modes-de-vie',            titre:'Les modes de vie',                  badge:'Partie II',  desc:'Pouvoir d achat, niveau de vie, coefficient budgétaire Cb=dépense poste/dépense totale x100, loi d Engel, urbanisation, mobilité, communication.' },
+      { slug:'couts-croissance',        titre:'Les coûts de la croissance',        badge:'Partie III', desc:'Coûts socio-économiques (chômage, pauvreté, inégalités, exclusion, précarité) et coûts environnementaux (pollution, effet de serre, réchauffement, épuisement des ressources).' },
+      { slug:'developpement-durable',   titre:'Le développement durable',          badge:'Partie III', desc:'Développement durable (Brundtland), 3 dimensions (économique, sociale, environnementale), équité, solidarité intergénérationnelle, IDH=(I_sante+I_education+I_revenu)/3, limites du PIB.' },
+      { slug:'echanges-internationaux', titre:'Les échanges internationaux',       badge:'Partie IV',  desc:'Solde commercial X-M, taux de couverture (X/M)x100, taux d ouverture, termes de l échange, libre-échange et protectionnisme.' },
+      { slug:'mutations-commerce',      titre:'Les mutations du commerce',         badge:'Partie IV',  desc:'Commerce interbranche/intrabranche, DIT, avantages comparatifs (Ricardo) et compétitifs, Triade, pays émergents.' },
+      { slug:'firmes-multinationales',  titre:'Les firmes multinationales',        badge:'Partie IV',  desc:'FMN, filiales, échanges intrafirmes, mobiles (marchés, coûts, ressources, délocalisation), effets sur pays d origine et d accueil.' },
+    ],
+  },
+}
+
+// ── Chapitres GESTION (6) — programme CNP ──
+const CHAPITRES_GES: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+  'gestion': {
+    key:'gestion', label:'Gestion — Sc. Éco & Gestion', color:'#f43f5e', icon:'💼',
+    chapitres: [
+      { slug:'evaluation-consolidation', titre:'Évaluation & Consolidation',        badge:'Comptabilité', desc:'Bilan comptable et fonctionnel, FDR=Capitaux permanents-Actif immobilisé, BFR=Actif circulant-Passif circulant, TN=FDR-BFR, résultat=Produits-Charges, TVA due.' },
+      { slug:'approvisionnement',        titre:'Gestion de l approvisionnement',    badge:'Stocks',       desc:'CUMP, stock moyen=(SI+SF)/2, rotation=Consommation/stock moyen, durée=360/rotation, stock de sécurité, quantité économique de Wilson Q*=racine(2.D.Cl/Cs).' },
+      { slug:'production',               titre:'Gestion de la production',          badge:'Coûts',        desc:'Coûts complets (coût d achat, de production, de revient), résultat analytique, coûts partiels (MCV=CA-charges variables, seuil de rentabilité=CF/taux de MCV), écarts, lot économique.' },
+      { slug:'commerciale',              titre:'Gestion commerciale',               badge:'Marketing',    desc:'Étude de marché, segmentation et ciblage, marketing-mix (produit, prix, communication, distribution), part de marché, suivi des ventes, fidélisation.' },
+      { slug:'ressources-humaines',      titre:'Gestion des ressources humaines',   badge:'RH',           desc:'Prévision des effectifs, pyramide des âges, recrutement interne/externe, formation, rémunération, masse salariale=somme(salaires bruts+charges patronales).' },
+      { slug:'financiere',               titre:'Gestion financière',                badge:'Finance',      desc:'Financement (autofinancement=CAF-dividendes, emprunt, crédit-bail), analyse financière (FDR, BFR, TN, ratios), gestion budgétaire (budgets, contrôle, prévision vs réalisation).' },
+    ],
+  },
+}
+
 
 // ── API Claude ────────────────────────────────────────────────────
 // ══════════════════════════════════════════════════════════════════════
@@ -4117,7 +4193,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   // Utiliser matiere (UI) en priorité sur matiereActive (abonnement AuthContext)
   const matiereMap: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
   }
   globalMatiere = ((matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
 
@@ -6124,7 +6200,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }) {
   const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
   const matiereMapC: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
   }
   globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
   const [exams, setExams] = useState<GeneratedExam[]>([])
@@ -6256,10 +6332,10 @@ function SimulationIAPageInner() {
   const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
-    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : s === 'francais' ? 'francais' : 'maths'
+    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : s === 'francais' ? 'francais' : s === 'economie' ? 'economie' : s === 'gestion' ? 'gestion' : 'maths'
   })
   const [phase, setPhase] = useState<Phase>('select')
   const [archives, setArchives] = useState<Archive[]>([])
@@ -6295,7 +6371,7 @@ function SimulationIAPageInner() {
 
       // 2. Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
       if (!isAdmin && hasActiveSubscription) {
-        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais' }[activeMatiere] || activeMatiere
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion' }[activeMatiere] || activeMatiere
         if (!checkMatiereAccess(matiereUIKey as any)) {
           const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
           alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
@@ -6316,7 +6392,8 @@ function SimulationIAPageInner() {
       // 4. Déduire le label matière — si abonnement Anglais → Anglais, sinon depuis activeMatiere
       const matiereLabels: Record<string,string> = {
         maths:'Mathématiques', physique:'Physique-Chimie',
-        informatique:'Informatique', anglais:'Anglais', svt:'SVT'
+        informatique:'Informatique', anglais:'Anglais', svt:'SVT',
+        francais:'Français', economie:'Économie', gestion:'Gestion'
       }
       const matiereLabel = matiereActive === 'anglais'
         ? 'Anglais'
@@ -6358,7 +6435,7 @@ function SimulationIAPageInner() {
     if (!isAdmin && hasActiveSubscription) {
       const matiereMapCheck: Record<string,string> = {
         maths:'mathematiques', physique:'physique', informatique:'informatique',
-        anglais:'anglais', svt:'svt', francais:'francais'
+        anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
       }
       const matiereUIKey = matiereMapCheck[activeMatiere] || activeMatiere
       if (!checkMatiereAccess(matiereUIKey as any)) {
@@ -6439,7 +6516,7 @@ function SimulationIAPageInner() {
             <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':activeMatiere==='svt'?'rgba(34,197,94,0.15)':activeMatiere==='francais'?'rgba(244,114,182,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':activeMatiere==='svt'?'rgba(34,197,94,0.3)':activeMatiere==='francais'?'rgba(244,114,182,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
               <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':activeMatiere==='svt'?'#22c55e':activeMatiere==='francais'?'#f472b6':'#6366f1',animation:'pulse 2s ease infinite'}}/>
               <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='svt'?'#86efac':activeMatiere==='anglais'?'#f9a8d4':activeMatiere==='francais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : activeMatiere==='francais' ? '📚 Simulation Français' : '🧮 Simulation Mathématiques'}
+                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : activeMatiere==='francais' ? '📚 Simulation Français' : activeMatiere==='economie' ? '📈 Simulation Économie' : activeMatiere==='gestion' ? '💼 Simulation Gestion' : '🧮 Simulation Mathématiques'}
               </span>
             </div>
             <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
@@ -6452,7 +6529,7 @@ function SimulationIAPageInner() {
                   ? 'linear-gradient(135deg,#ec4899,#db2777,#f472b6)'
                   : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : activeMatiere==='francais' ? 'Français — Bac Tunisie' : 'Personnalisée par l\'IA'}
+                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : activeMatiere==='francais' ? 'Français — Bac Tunisie' : activeMatiere==='economie' ? 'Économie — Bac Tunisie' : activeMatiere==='gestion' ? 'Gestion — Bac Tunisie' : 'Personnalisée par l\'IA'}
               </span>
             </h1>
             <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
@@ -6473,6 +6550,8 @@ function SimulationIAPageInner() {
                 { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais',          color:'#ec4899', matiere:'anglais' },
                 { key:'francais'     as const, icon:'📚', label:'Français',         color:'#f472b6', matiere:'francais' },
+                { key:'economie'     as const, icon:'📈', label:'Économie',         color:'#06b6d4', matiere:'economie' },
+                { key:'gestion'      as const, icon:'💼', label:'Gestion',          color:'#f43f5e', matiere:'gestion' },
               ]).map(m => {
                 return (
                 <div key={m.key} style={{position:'relative'}}>
@@ -6502,9 +6581,9 @@ function SimulationIAPageInner() {
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : activeMatiere==='francais' ? ARCHIVES_FRANCAIS : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : activeMatiere==='francais' ? CHAPITRES_FRANCAIS : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : activeMatiere==='francais' ? ARCHIVES_FRANCAIS : activeMatiere==='economie' ? ARCHIVES_ECO : activeMatiere==='gestion' ? ARCHIVES_GES : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : activeMatiere==='francais' ? CHAPITRES_FRANCAIS : activeMatiere==='economie' ? CHAPITRES_ECO : activeMatiere==='gestion' ? CHAPITRES_GES : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS : activeMatiere==='economie' ? SECTION_CONFIGS_ECO : activeMatiere==='gestion' ? SECTION_CONFIGS_GES : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}

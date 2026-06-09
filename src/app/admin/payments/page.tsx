@@ -49,6 +49,14 @@ const PLAN_LABELS: Record<string,string> = {
   annuel_francais:'Annuel · 📚 Français',
   sprint_bac_francais:'Sprint · 📚 Français',
   sprint_francais:'Sprint · 📚 Français',
+  mensuel_economie:'Mensuel · 📈 Économie',
+  annuel_economie:'Annuel · 📈 Économie',
+  sprint_bac_economie:'Sprint · 📈 Économie',
+  sprint_economie:'Sprint · 📈 Économie',
+  mensuel_gestion:'Mensuel · 💼 Gestion',
+  annuel_gestion:'Annuel · 💼 Gestion',
+  sprint_bac_gestion:'Sprint · 💼 Gestion',
+  sprint_gestion:'Sprint · 💼 Gestion',
 }
 const METHOD_ICONS: Record<string,string> = {
   d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵', stripe:'💳'
@@ -371,6 +379,8 @@ export default function AdminPaymentsPage() {
                           <option value="anglais">🇬🇧 Anglais</option>
                           <option value="informatique">💻 Informatique</option>
                           <option value="francais">📚 Français</option>
+                          <option value="economie">📈 Économie</option>
+                          <option value="gestion">💼 Gestion</option>
                         </select>
                         <button onClick={() => activate(s)} disabled={isAct}
                           style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
@@ -412,6 +422,8 @@ export default function AdminPaymentsPage() {
                           <option value="anglais">🇬🇧 Anglais</option>
                           <option value="informatique">💻 Informatique</option>
                           <option value="francais">📚 Français</option>
+                          <option value="economie">📈 Économie</option>
+                          <option value="gestion">💼 Gestion</option>
                         </select>
                         {matieres[s.id] && (
                           <button onClick={async () => {
