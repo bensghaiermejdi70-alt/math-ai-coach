@@ -142,6 +142,33 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-fractions-pgcd', titre:'2.2 Calcul fractionnaire et PGCD',
+      notions:['Opérations sur les fractions','PGCD et fraction irréductible','Algorithme d\'Euclide','Critères de divisibilité'],
+      blocs:[
+        {
+          notion:'🔢 Fractions et PGCD',
+          theoremes:[
+            { id:'F-NC2', type:'formule', nom:'Opérations sur les fractions',
+              enonce:"ADDITION (même dénominateur) : a/c + b/c = (a+b)/c\nAU MÊME DÉNOMINATEUR : a/b + c/d = (ad+bc)/(bd)\n\nPRODUIT : (a/b)×(c/d) = ac/bd\nQUOTIENT : (a/b)÷(c/d) = (a/b)×(d/c) = ad/bc\n\nFRACTION IRRÉDUCTIBLE :\na/b est irréductible ⟺ PGCD(a,b)=1\nSimplifier : diviser numérateur et dénominateur par PGCD(a,b)\n\nCRITÈRES DE DIVISIBILITÉ :\npar 2 : chiffre final pair ; par 5 : finit par 0 ou 5\npar 3 (ou 9) : somme des chiffres divisible par 3 (ou 9)\npar 4 : deux derniers chiffres divisibles par 4" },
+            { id:'M-NC1', type:'methode', nom:"Algorithme d'Euclide (PGCD)",
+              enonce:"PGCD(a,b) par divisions successives :\nPGCD(a,b) = PGCD(b, reste de a÷b), jusqu'à reste = 0.\nLe dernier reste non nul est le PGCD.\n\nExemple PGCD(60,36) :\n60 = 1×36 + 24\n36 = 1×24 + 12\n24 = 2×12 + 0  → PGCD = 12\n\nUSAGE : rendre 60/36 irréductible → 60/36 = 5/3.",
+              remarque:"Deux nombres premiers entre eux ont un PGCD égal à 1 : leur fraction est déjà irréductible." },
+          ],
+          exercices:[
+            { id:'EX-NC3', niveau:'Facile', titre:'Fraction irréductible',
+              enonce:"Rendre 84/126 irréductible.",
+              correction:"PGCD(84,126) : 126=1×84+42 ; 84=2×42+0 → PGCD=42.\n84/126=(84/42)/(126/42)=2/3." },
+            { id:'EX-NC4', niveau:'Intermédiaire', titre:'Calcul de fractions',
+              enonce:"Calculer 2/3 + 5/6 − 1/4.",
+              correction:"Dénominateur commun 12 : 8/12 + 10/12 − 3/12 = 15/12 = 5/4." },
+            { id:'EX-NC5', niveau:'Difficile', titre:'PGCD et application',
+              enonce:"Un fleuriste a 72 roses et 90 tulipes. Combien de bouquets identiques maximum (toutes les fleurs utilisées) ?",
+              correction:"Nombre de bouquets = PGCD(72,90). 90=1×72+18 ; 72=4×18+0 → PGCD=18.\n18 bouquets (4 roses et 5 tulipes chacun)." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -182,6 +209,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-encadrement', titre:'3.2 Encadrements et approximations',
+      notions:['Encadrement a≤x≤b, amplitude b−a','Arrondi et troncature','Valeur approchée à 10⁻ⁿ près','Encadrement d\'une somme / d\'un produit'],
+      blocs:[
+        {
+          notion:'± Encadrements et calcul approché',
+          theoremes:[
+            { id:'M-II1', type:'methode', nom:'Encadrement, arrondi et troncature',
+              enonce:"ENCADREMENT de x : a ≤ x ≤ b\nAmplitude (ou précision) = b − a.\n\nVALEUR APPROCHÉE de x à 10⁻ⁿ près :\n• par défaut : plus grand nombre à n décimales ≤ x\n• par excès : plus petit nombre à n décimales ≥ x\n\nTRONCATURE à n décimales : on coupe après la n-ième décimale.\nARRONDI à n décimales : on regarde la décimale suivante (≥5 → on augmente).\n\nExemple π=3,14159… :\ntroncature à 10⁻² : 3,14 ; arrondi à 10⁻² : 3,14\ntroncature à 10⁻³ : 3,141 ; arrondi à 10⁻³ : 3,142",
+              remarque:"Un encadrement d'amplitude 2×10⁻ⁿ autour de x fournit une valeur approchée à 10⁻ⁿ près." },
+            { id:'F-II1', type:'formule', nom:'Opérations sur les encadrements',
+              enonce:"Si a ≤ x ≤ b et c ≤ y ≤ d :\nSOMME : a+c ≤ x+y ≤ b+d\nOPPOSÉ : −b ≤ −x ≤ −a  (inverser et changer les signes)\nDIFFÉRENCE : a−d ≤ x−y ≤ b−c\n\nPRODUIT (cas x,y ≥ 0) : ac ≤ xy ≤ bd\n\nINVERSE (si 0 < a ≤ x ≤ b) : 1/b ≤ 1/x ≤ 1/a\n\n⚠️ Pour la différence et l'inverse, le sens des inégalités change : utiliser l'encadrement de −y ou 1/x.",
+              remarque:"On n'additionne jamais directement deux encadrements pour une différence : il faut d'abord encadrer l'opposé." },
+          ],
+          exercices:[
+            { id:'EX-II4', niveau:'Intermédiaire', titre:'Encadrement d\'une somme',
+              enonce:"On sait 2,3≤x≤2,4 et 5,1≤y≤5,2. Encadrer x+y et x−y.",
+              correction:"x+y : 7,4 ≤ x+y ≤ 7,6.\nx−y : −5,2≤−y≤−5,1 → 2,3−5,2 ≤ x−y ≤ 2,4−5,1 → −2,9 ≤ x−y ≤ −2,7." },
+            { id:'EX-II5', niveau:'Facile', titre:'Arrondi et troncature',
+              enonce:"Pour x=7,3856 : donner la troncature et l'arrondi à 10⁻² près.",
+              correction:"Troncature à 10⁻² : 7,38.\nArrondi à 10⁻² : 7,39 (car 3e décimale =5)." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -220,6 +272,33 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-equations', titre:'4.2 Équations et mise en équation',
+      notions:['Équation du premier degré ax+b=0','Équation-produit AB=0','Équation avec quotient (valeurs interdites)','Mise en équation d\'un problème'],
+      blocs:[
+        {
+          notion:'⚙️ Résolution d\'équations',
+          theoremes:[
+            { id:'M-CL1', type:'methode', nom:'Types d\'équations et résolution',
+              enonce:"PREMIER DEGRÉ ax+b=0 (a≠0) :\nx = −b/a\n\nÉQUATION-PRODUIT A×B=0 :\n⟺ A=0 ou B=0 (produit nul)\n→ factoriser puis résoudre chaque facteur\n\nÉQUATION-QUOTIENT A/B=0 :\n⟺ A=0 ET B≠0 (vérifier les valeurs interdites)\n\nÉQUATION avec x² isolé : x²=k\n• k>0 → x=√k ou x=−√k\n• k=0 → x=0\n• k<0 → pas de solution\n\nMÉTHODE GÉNÉRALE : tout ramener à un membre =0, factoriser, produit nul.",
+              remarque:"Toujours déterminer les valeurs interdites AVANT de résoudre une équation contenant une fraction." },
+            { id:'F-CL2', type:'methode', nom:'Mettre un problème en équation',
+              enonce:"ÉTAPES :\n1. Choisir l'inconnue (ex : x = nombre cherché) et préciser ce qu'elle représente.\n2. Traduire l'énoncé en une équation.\n3. Résoudre l'équation.\n4. Vérifier que la solution a un sens (ex : longueur > 0) et conclure par une phrase.\n\nExemple : « Le double d'un nombre augmenté de 7 vaut 19. »\nÉquation : 2x+7=19 → 2x=12 → x=6." },
+          ],
+          exercices:[
+            { id:'EX-CL4', niveau:'Facile', titre:'Équation du premier degré',
+              enonce:"Résoudre 5x−3=2x+9.",
+              correction:"5x−2x=9+3 → 3x=12 → x=4. S={4}." },
+            { id:'EX-CL5', niveau:'Intermédiaire', titre:'Équation-quotient',
+              enonce:"Résoudre (x²−9)/(x−1)=0.",
+              correction:"Valeur interdite : x=1. Numérateur =0 : x²−9=0 → x=3 ou x=−3.\nLes deux sont ≠1. S={−3 ; 3}." },
+            { id:'EX-CL6', niveau:'Difficile', titre:'Mise en équation',
+              enonce:"Un rectangle a une longueur de 3 cm de plus que sa largeur, et un périmètre de 26 cm. Dimensions ?",
+              correction:"Largeur x, longueur x+3. Périmètre : 2(x + x+3)=26 → 4x+6=26 → x=5.\nLargeur 5 cm, longueur 8 cm." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -256,6 +335,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-trigo', titre:'5.2 Trigonométrie dans le triangle rectangle',
+      notions:['cos, sin, tan d\'un angle aigu','SOH-CAH-TOA','Calcul d\'une longueur / d\'un angle','Relation cos²+sin²=1'],
+      blocs:[
+        {
+          notion:'📐 Trigonométrie',
+          theoremes:[
+            { id:'F-GV1', type:'formule', nom:'Cosinus, sinus, tangente',
+              enonce:"Dans un triangle rectangle, pour un angle aigu θ :\n\ncos θ = côté adjacent / hypoténuse\nsin θ = côté opposé / hypoténuse\ntan θ = côté opposé / côté adjacent = sin θ / cos θ\n\nMoyen mnémotechnique : SOH-CAH-TOA\n\nRELATION FONDAMENTALE :\ncos²θ + sin²θ = 1\n\nVALEURS REMARQUABLES :\nθ=30° : cos=√3/2, sin=1/2\nθ=45° : cos=sin=√2/2\nθ=60° : cos=1/2, sin=√3/2",
+              remarque:"0 < cos θ < 1 et 0 < sin θ < 1 pour un angle aigu : un cosinus > 1 signale une erreur de calcul." },
+            { id:'M-GV1', type:'methode', nom:'Calculer une longueur ou un angle',
+              enonce:"CALCULER UNE LONGUEUR (angle et un côté connus) :\nchoisir la relation reliant l'angle, le côté connu et le côté cherché.\nEx : opposé = hypoténuse × sin θ.\n\nCALCULER UN ANGLE (deux côtés connus) :\n1. former le rapport (cos, sin ou tan)\n2. utiliser la touche inverse cos⁻¹ / sin⁻¹ / tan⁻¹ de la calculatrice.\n\nExemple : adjacent=4, hypoténuse=8 → cos θ=0,5 → θ=cos⁻¹(0,5)=60°.",
+              remarque:"Vérifier que la calculatrice est en mode DEGRÉ (et non radian) au lycée en Seconde." },
+          ],
+          exercices:[
+            { id:'EX-GV3', niveau:'Facile', titre:'Calcul de longueur',
+              enonce:"Triangle rectangle en A, angle B=30°, hypoténuse BC=10. Calculer AC (côté opposé à B).",
+              correction:"sin(B)=AC/BC → AC=BC×sin(30°)=10×0,5=5." },
+            { id:'EX-GV4', niveau:'Intermédiaire', titre:'Calcul d\'angle',
+              enonce:"Triangle rectangle en A : AB=3, AC=4, BC=5. Calculer l'angle B.",
+              correction:"cos(B)=AB/BC=3/5=0,6 → B=cos⁻¹(0,6)≈53,1°.\n(vérif : tan B=AC/AB=4/3 → B≈53,1°)." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -290,6 +394,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-vr-applications', titre:'6.2 Parallélogramme, alignement et configurations',
+      notions:['Égalité de vecteurs AB⃗=DC⃗ → parallélogramme','Alignement par colinéarité','Recherche d\'un 4ᵉ sommet','Calcul de longueurs et nature d\'un triangle'],
+      blocs:[
+        {
+          notion:'📍 Applications dans le repère',
+          theoremes:[
+            { id:'M-VR1', type:'methode', nom:'Parallélogramme et 4ᵉ sommet',
+              enonce:"ABCD est un PARALLÉLOGRAMME ⟺ AB⃗ = DC⃗ ⟺ AD⃗ = BC⃗\n(côtés opposés représentés par des vecteurs égaux)\n\nÉquivalence par les milieux :\nABCD parallélogramme ⟺ [AC] et [BD] ont le même milieu.\n\nTROUVER LE 4ᵉ SOMMET D tel que ABCD parallélogramme :\nAB⃗=DC⃗ → (xB−xA ; yB−yA)=(xC−xD ; yC−yD)\n→ D = (xC−xB+xA ; yC−yB+yA).",
+              remarque:"Attention à l'ordre des sommets : ABCD ≠ ABDC ; le parallélogramme se lit dans l'ordre du contour." },
+            { id:'F-VR3', type:'formule', nom:'Nature d\'un triangle et longueurs',
+              enonce:"Avec les longueurs AB, AC, BC (calculées par la distance) :\n\nTRIANGLE ISOCÈLE : deux côtés égaux.\nTRIANGLE ÉQUILATÉRAL : trois côtés égaux.\nTRIANGLE RECTANGLE en A : BC²=AB²+AC² (réciproque de Pythagore)\n\nMILIEU et MÉDIANE : le milieu de [AB] sert à repérer médianes et centres.\n\nAIRE d'un triangle ABC : |det(AB⃗,AC⃗)|/2.",
+              remarque:"Comparer les CARRÉS des longueurs évite les racines et simplifie le test de Pythagore." },
+          ],
+          exercices:[
+            { id:'EX-VR3', niveau:'Intermédiaire', titre:'4ᵉ sommet d\'un parallélogramme',
+              enonce:"A(1;2), B(4;3), C(5;7). Trouver D tel que ABCD soit un parallélogramme.",
+              correction:"AB⃗=DC⃗ → D=(xC−xB+xA ; yC−yB+yA)=(5−4+1 ; 7−3+2)=(2 ; 6)." },
+            { id:'EX-VR4', niveau:'Difficile', titre:'Nature d\'un triangle',
+              enonce:"A(1;1), B(4;2), C(2;4). Le triangle ABC est-il rectangle ?",
+              correction:"AB²=(3)²+(1)²=10 ; AC²=(1)²+(3)²=10 ; BC²=(−2)²+(2)²=8.\nAB²=AC² → isocèle. Pythagore : AB²+? aucun ne vaut la somme des deux autres (10+8≠10) → non rectangle, mais isocèle." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -379,6 +508,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-fg-graphique', titre:'8.2 Résolution graphique d\'équations et d\'inéquations',
+      notions:['f(x)=k : intersections avec y=k','f(x)=g(x) : intersections des courbes','f(x)≤g(x) : C_f sous C_g','Tableau de valeurs et tracé'],
+      blocs:[
+        {
+          notion:'📊 Lecture et résolution graphiques',
+          theoremes:[
+            { id:'M-FG1', type:'methode', nom:'Résoudre graphiquement',
+              enonce:"ÉQUATION f(x)=k :\nLes solutions sont les ABSCISSES des points d'intersection de C_f avec la droite horizontale y=k.\n\nÉQUATION f(x)=g(x) :\nAbscisses des points d'intersection de C_f et C_g.\n\nINÉQUATION f(x)≤g(x) :\nensemble des x où C_f est EN-DESSOUS de C_g (ou confondue).\nf(x)>0 : x où la courbe est au-dessus de l'axe Ox.\n\nMÉTHODE :\n1. Tracer la ou les courbes (tableau de valeurs).\n2. Repérer intersections / positions relatives.\n3. Lire les abscisses et écrire l'ensemble solution.",
+              remarque:"Une lecture graphique donne des valeurs APPROCHÉES : pour des valeurs exactes, résoudre algébriquement." },
+          ],
+          exercices:[
+            { id:'EX-FG2', niveau:'Facile', titre:'Résolution graphique f(x)=k',
+              enonce:"Sur la courbe de f(x)=x², comment lire les solutions de x²=4 ?",
+              correction:"Intersections de la parabole avec la droite y=4 : points (−2;4) et (2;4).\nSolutions : x=−2 et x=2." },
+            { id:'EX-FG3', niveau:'Intermédiaire', titre:'Inéquation graphique',
+              enonce:"f(x)=x² et g(x)=x+2. Résoudre f(x)≤g(x) (vérification algébrique).",
+              correction:"x²≤x+2 → x²−x−2≤0 → (x−2)(x+1)≤0.\nSolution : x∈[−1;2] (la parabole est sous la droite entre les deux intersections x=−1 et x=2)." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -409,6 +560,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-var-reference', titre:'9.2 Variations des fonctions de référence',
+      notions:['Affine : sens donné par le signe de m','Carré : ↘ puis ↗, min en 0','Inverse : décroissante sur chaque intervalle','Comparer des images'],
+      blocs:[
+        {
+          notion:'📈 Variations des fonctions usuelles',
+          theoremes:[
+            { id:'F-VA1', type:'formule', nom:'Sens de variation des fonctions de référence',
+              enonce:"AFFINE f(x)=mx+p :\nm>0 → croissante sur ℝ ; m<0 → décroissante ; m=0 → constante.\n\nCARRÉ f(x)=x² :\ndécroissante sur ]−∞;0], croissante sur [0;+∞[, minimum 0 en x=0.\n\nRACINE f(x)=√x : croissante sur [0;+∞[.\n\nINVERSE f(x)=1/x :\ndécroissante sur ]−∞;0[ ET sur ]0;+∞[ (PAS sur ℝ entier).\n\nUSAGE : connaître le sens de variation permet de COMPARER des images sans calcul.\nEx : sur [0;+∞[, si 0≤a<b alors a²<b² et √a<√b.",
+              remarque:"Pour l'inverse, on ne dit jamais « décroissante sur ℝ\\{0} » : il faut séparer les deux intervalles." },
+          ],
+          exercices:[
+            { id:'EX-VA2', niveau:'Facile', titre:'Sens de variation',
+              enonce:"Donner le sens de variation de f(x)=−3x+7 et de g(x)=x² sur [0;+∞[.",
+              correction:"f : m=−3<0 → décroissante sur ℝ.\ng : croissante sur [0;+∞[." },
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Comparer des images',
+              enonce:"Sans calculatrice, comparer √7 et √10, puis (−5)² et (−3)².",
+              correction:"√ croissante : 7<10 → √7<√10.\nx² décroissante sur ]−∞;0] : −5<−3 → (−5)²>(−3)² (25>9). ✓" },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -442,6 +615,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-signe-affine', titre:'10.2 Signe d\'une fonction affine et inéquations-produit',
+      notions:['Signe de ax+b : zéro en −b/a','« Signe de a après le zéro »','Produit/quotient d\'affines','Inéquations f(x)≤0'],
+      blocs:[
+        {
+          notion:'± Signe d\'une fonction affine',
+          theoremes:[
+            { id:'F-SF1', type:'formule', nom:'Signe de ax+b',
+              enonce:"La fonction affine f(x)=ax+b (a≠0) s'annule en x₀=−b/a.\n\nRÈGLE : f est « du signe de a après le zéro ».\n• si a>0 : f<0 sur ]−∞;−b/a[, f>0 sur ]−b/a;+∞[\n• si a<0 : f>0 sur ]−∞;−b/a[, f<0 sur ]−b/a;+∞[\n\nTableau (a>0) :\nx    | −∞    −b/a    +∞\nax+b |  −  0   +\n\nINÉQUATION-PRODUIT / QUOTIENT :\n1. trouver les zéros de chaque facteur (et valeurs interdites au dénominateur)\n2. dresser le tableau de signes ligne par ligne\n3. multiplier les signes colonne par colonne\n4. lire l'ensemble solution.",
+              remarque:"Au dénominateur, la valeur interdite est exclue de la solution même si le quotient « change de signe » en ce point." },
+          ],
+          exercices:[
+            { id:'EX-SF3', niveau:'Facile', titre:'Signe d\'une affine',
+              enonce:"Étudier le signe de f(x)=−2x+6.",
+              correction:"Zéro : −2x+6=0 → x=3. a=−2<0.\nf>0 sur ]−∞;3[, f(3)=0, f<0 sur ]3;+∞[." },
+            { id:'EX-SF4', niveau:'Difficile', titre:'Inéquation-produit',
+              enonce:"Résoudre (2x−1)(−x+3)>0.",
+              correction:"Zéros : x=1/2 et x=3.\nx    | −∞   1/2    3    +∞\n2x−1 |  −  0  +    +\n−x+3 |  +     +  0  −\nprod |  −  0  +  0  −\nSolution : x∈]1/2 ; 3[." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -478,6 +673,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-pe-applications', titre:'11.2 Proportions, taux moyen et applications',
+      notions:['Proportion d\'une proportion (×)','Fréquence et répartition','Taux d\'évolution moyen','Indice base 100'],
+      blocs:[
+        {
+          notion:'% Applications des proportions',
+          theoremes:[
+            { id:'M-PE1', type:'methode', nom:'Proportions composées et taux moyen',
+              enonce:"PROPORTION D'UNE PROPORTION (sous-population) :\nproportion finale = produit des proportions.\nEx : 40% des élèves sont en STMG, 60% de ceux-ci sont des filles\n→ filles de STMG = 0,40×0,60 = 0,24 = 24% du total.\n\nTAUX D'ÉVOLUTION MOYEN sur n périodes (CM global connu) :\nCM_moyen = (CM_global)^(1/n)\ntaux moyen = (CM_moyen − 1)×100\n\nINDICE base 100 :\nindice = (valeur / valeur de référence) × 100\nUn indice de 112 signale une hausse de 12% par rapport à la base.",
+              remarque:"Le taux moyen n'est PAS la moyenne des taux : il faut passer par la racine n-ième du coefficient global." },
+          ],
+          exercices:[
+            { id:'EX-PE3', niveau:'Intermédiaire', titre:'Proportion composée',
+              enonce:"Dans une ville, 55% sont des actifs ; parmi eux, 8% sont au chômage. Quelle proportion de chômeurs dans la population totale ?",
+              correction:"0,55×0,08=0,044=4,4% de la population totale." },
+            { id:'EX-PE4', niveau:'Difficile', titre:'Taux moyen',
+              enonce:"Un capital augmente de 21% en 2 ans. Quel est le taux d'évolution annuel moyen ?",
+              correction:"CM global=1,21. CM_moyen=√1,21=1,1.\nTaux moyen annuel = 10%." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -512,6 +729,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-stats-classes', titre:'12.2 Séries en classes et fréquences',
+      notions:['Effectifs et fréquences','Effectifs / fréquences cumulés','Moyenne pondérée (centres de classe)','Effet d\'une transformation affine'],
+      blocs:[
+        {
+          notion:'📊 Fréquences et regroupement',
+          theoremes:[
+            { id:'F-ST3', type:'formule', nom:'Fréquences et séries regroupées',
+              enonce:"FRÉQUENCE d'une valeur : fᵢ = nᵢ / N  (souvent en %)\nΣ fᵢ = 1 (ou 100%).\n\nEFFECTIFS / FRÉQUENCES CUMULÉS croissants :\nsomme des effectifs (ou fréquences) jusqu'à une valeur.\nutiles pour lire médiane et quartiles.\n\nSÉRIE REGROUPÉE EN CLASSES [aₖ;aₖ₊₁[ :\non remplace chaque classe par son centre cₖ=(aₖ+aₖ₊₁)/2.\nMoyenne pondérée : x̄ = Σ(nₖ·cₖ)/N.",
+              remarque:"Avec des classes, moyenne et écart-type sont APPROCHÉS (on suppose les valeurs concentrées au centre)." },
+            { id:'M-ST1', type:'methode', nom:'Transformation affine d\'une série',
+              enonce:"Si on transforme chaque donnée par yᵢ = a·xᵢ + b :\n\nMOYENNE : ȳ = a·x̄ + b\nÉCART-TYPE : σ_y = |a|·σ_x\nVARIANCE : σ_y² = a²·σ_x²\n\nINTERPRÉTATION :\n• ajouter b (translation) : décale la moyenne, ne change PAS l'écart-type\n• multiplier par a : multiplie moyenne ET écart-type par |a|.\n\nExemple : convertir des notes /20 en /100 (×5) multiplie moyenne et écart-type par 5.",
+              remarque:"Ajouter une constante à toutes les valeurs ne modifie jamais la dispersion (σ inchangé)." },
+          ],
+          exercices:[
+            { id:'EX-ST3', niveau:'Intermédiaire', titre:'Moyenne par classes',
+              enonce:"Classes [0;10[, [10;20[, [20;30[ d'effectifs 5, 12, 3. Calculer la moyenne.",
+              correction:"Centres 5,15,25. N=20.\nx̄=(5×5+12×15+3×25)/20=(25+180+75)/20=280/20=14." },
+            { id:'EX-ST4', niveau:'Difficile', titre:'Transformation affine',
+              enonce:"Une série a pour moyenne 12 et écart-type 3. On applique y=2x−1. Donner ȳ et σ_y.",
+              correction:"ȳ=2×12−1=23. σ_y=|2|×3=6." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -550,6 +792,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-proba-arbres', titre:'13.2 Arbres, tableaux et échantillonnage',
+      notions:['Tableau croisé d\'effectifs','Arbre de probabilités','Expériences à deux épreuves','Prise de décision à partir d\'un échantillon'],
+      blocs:[
+        {
+          notion:'🌳 Arbres et tableaux',
+          theoremes:[
+            { id:'M-PR1', type:'methode', nom:'Tableaux croisés et arbres',
+              enonce:"TABLEAU CROISÉ : répartition selon deux caractères.\nP(A∩B) = (effectif A et B) / (effectif total).\nP(A) = (total ligne ou colonne A) / total.\n\nARBRE DE PROBABILITÉS (deux épreuves successives) :\n• sur chaque branche on note la probabilité\n• la somme des probabilités issues d'un même nœud vaut 1\n• probabilité d'un CHEMIN = PRODUIT des probabilités des branches\n• probabilité d'un événement = SOMME des chemins qui le réalisent.",
+              remarque:"L'arbre est l'outil privilégié pour les expériences en deux étapes ; chaque feuille correspond à une issue." },
+            { id:'F-PR2', type:'methode', nom:'Échantillonnage et prise de décision',
+              enonce:"On suppose une proportion p dans une population.\nÉCHANTILLON de taille n → fréquence observée f.\n\nINTERVALLE DE FLUCTUATION (95%) : I=[p−1/√n ; p+1/√n].\n\nRÈGLE DE DÉCISION :\n• f ∈ I → l'échantillon est compatible avec p (on ne rejette pas)\n• f ∉ I → résultat improbable (<5%), on REJETTE l'hypothèse sur p.\n\nPlus n est grand, plus l'intervalle est étroit (estimation plus précise).",
+              remarque:"On ne « prouve » jamais p : on décide seulement si l'observation est compatible, au risque de 5% de se tromper." },
+          ],
+          exercices:[
+            { id:'EX-PR4', niveau:'Intermédiaire', titre:'Tableau croisé',
+              enonce:"Sur 200 personnes : 120 femmes dont 30 fument ; 80 hommes dont 20 fument. P(fumeur) et P(femme et fumeuse) ?",
+              correction:"Fumeurs=30+20=50. P(fumeur)=50/200=0,25.\nP(femme∩fumeuse)=30/200=0,15." },
+            { id:'EX-PR5', niveau:'Difficile', titre:'Arbre à deux épreuves',
+              enonce:"Une urne A (2 rouges, 3 bleues) et une urne B (1 rouge, 4 bleues). On choisit une urne au hasard puis une boule. P(rouge) ?",
+              correction:"P(A)=P(B)=1/2.\nChemin A-rouge : (1/2)×(2/5)=1/5. Chemin B-rouge : (1/2)×(1/5)=1/10.\nP(rouge)=1/5+1/10=3/10." },
+          ],
+        },
+      ],
     },
   ]
 },

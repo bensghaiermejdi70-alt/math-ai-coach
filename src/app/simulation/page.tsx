@@ -3491,7 +3491,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES

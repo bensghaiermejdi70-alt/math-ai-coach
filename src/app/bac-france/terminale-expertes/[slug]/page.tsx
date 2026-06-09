@@ -75,6 +75,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-DZ2', niveau:'Intermédiaire', titre:'Propriétés de divisibilité',
               enonce:"Montrer que si 6|n alors 2|n et 3|n.",
               correction:"6|n ⟹ ∃k∈ℤ: n=6k=2(3k) → 2|n.\n6|n ⟹ n=6k=3(2k) → 3|n. ✓" },
+            { id:'EX-DZ3', niveau:'Difficile', titre:'Divisibilité d\'un produit consécutif',
+              enonce:"Montrer que 3 divise n³−n pour tout n∈ℤ.",
+              correction:"n³−n=n(n²−1)=(n−1)·n·(n+1) : produit de trois entiers CONSÉCUTIFS.\nParmi trois entiers consécutifs, l'un est multiple de 3 → 3 | (n−1)n(n+1).\nDonc 3 | n³−n. ✓ (de même 2| le produit, donc 6 | n³−n)." },
           ]
         },
       ]
@@ -136,6 +139,12 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-PG1', niveau:'Facile', titre:'Algorithme d\'Euclide',
               enonce:"Calculer PGCD(756, 315).",
               correction:"756=315×2+126\n315=126×2+63\n126=63×2+0\nPGCD=63." },
+            { id:'EX-PG2', niveau:'Intermédiaire', titre:'PGCD par Euclide',
+              enonce:"Calculer PGCD(1071, 462).",
+              correction:"1071=462×2+147\n462=147×3+21\n147=21×7+0\nPGCD=21." },
+            { id:'EX-PG3', niveau:'Difficile', titre:'Entiers consécutifs',
+              enonce:"Montrer que pour tout n∈ℕ, PGCD(n, n+1)=1.",
+              correction:"Soit d un diviseur commun de n et n+1.\nAlors d | (n+1)−n = 1, donc d=1.\nLe seul diviseur commun est 1 : PGCD(n,n+1)=1 (entiers consécutifs toujours premiers entre eux)." },
           ]
         },
       ]
@@ -162,6 +171,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-BZ2', niveau:'Difficile', titre:'Équation diophantienne',
               enonce:"Résoudre dans ℤ² : 12x+8y=4.",
               correction:"d=PGCD(12,8)=4. 4|4 ✓.\nDiviser : 3x+2y=1.\nBézout : 3×1+2×(−1)=1 → (x₀,y₀)=(1,−1).\nSolutions générales : x=1+2k, y=−1−3k, k∈ℤ." },
+            { id:'EX-BZ3', niveau:'Facile', titre:'Premiers entre eux ?',
+              enonce:"Les entiers 15 et 28 sont-ils premiers entre eux ?",
+              correction:"28=15×1+13 ; 15=13×1+2 ; 13=2×6+1 ; 2=1×2+0 → PGCD=1.\nDonc 15 et 28 sont premiers entre eux." },
           ]
         },
       ]
@@ -199,6 +211,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-NP2', niveau:'Intermédiaire', titre:'PGCD par décomposition',
               enonce:"Calculer PGCD(360,504) et PPCM(360,504).",
               correction:"360=2³×3²×5 ; 504=2³×3²×7.\nPGCD=2³×3²=72.\nPPCM=2³×3²×5×7=2520." },
+            { id:'EX-NP3', niveau:'Difficile', titre:'Nombres de Mersenne',
+              enonce:"Montrer que si 2ⁿ−1 est premier, alors n est premier.",
+              correction:"Par contraposée : supposons n composé, n=ab avec a,b>1.\nOr 2^(ab)−1 = (2^a)^b − 1 est divisible par 2^a−1 (identité xᵇ−1=(x−1)(…)).\nComme 1<2^a−1<2ⁿ−1, le nombre 2ⁿ−1 admet un diviseur strict → composé.\nDonc si 2ⁿ−1 est premier, n est nécessairement premier." },
           ]
         },
       ]
@@ -223,6 +238,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-FE2', niveau:'Difficile', titre:'Fermat et divisibilité',
               enonce:"Montrer que pour p premier, p|nᵖ−n pour tout n∈ℤ.",
               correction:"nᵖ≡n[p] (petit théorème de Fermat, cas n multiple de p : nᵖ≡0≡n).\nDonc p|(nᵖ−n) ✓" },
+            { id:'EX-FE3', niveau:'Facile', titre:'Application directe de Fermat',
+              enonce:"Calculer 5⁶ mod 7.",
+              correction:"7 est premier et PGCD(5,7)=1 → par Fermat 5⁶≡1[7].\n5⁶ mod 7 = 1." },
           ]
         },
       ]
@@ -255,6 +273,12 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-CF1', niveau:'Facile', titre:'Forme exponentielle',
               enonce:"Écrire z=1−i et w=√3+i en forme exponentielle, puis calculer z·w.",
               correction:"z=√2·e^(−iπ/4) ; w=2·e^(iπ/6).\nzw=2√2·e^(i(π/6−π/4))=2√2·e^(−iπ/12)." },
+            { id:'EX-CF2', niveau:'Intermédiaire', titre:'Module et argument',
+              enonce:"Déterminer le module et un argument de z=−1+i√3, puis l'écrire en forme exponentielle.",
+              correction:"|z|=√(1+3)=2. cosθ=−1/2, sinθ=√3/2 → θ=2π/3.\nz=2·e^(i2π/3)." },
+            { id:'EX-CF3', niveau:'Difficile', titre:'Puissance par forme exponentielle',
+              enonce:"Calculer (1+i)¹⁰.",
+              correction:"1+i=√2·e^(iπ/4).\n(1+i)¹⁰=(√2)¹⁰·e^(i10π/4)=2⁵·e^(i5π/2)=32·e^(iπ/2)=32i." },
           ]
         },
       ]
@@ -280,6 +304,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-MR2', niveau:'Difficile', titre:'Linéarisation sin²θcos²θ',
               enonce:"Linéariser sin²θ·cos²θ.",
               correction:"sin²θcos²θ=(sinθcosθ)²=(sin(2θ)/2)²=sin²(2θ)/4.\nsin²(2θ)=(1−cos4θ)/2.\nsin²θcos²θ=(1−cos4θ)/8." },
+            { id:'EX-MR3', niveau:'Facile', titre:'Racines cubiques de l\'unité',
+              enonce:"Déterminer les trois racines cubiques de l'unité.",
+              correction:"ωₖ=e^(2ikπ/3), k=0,1,2 :\nω₀=1 ; ω₁=e^(2iπ/3)=−1/2+i√3/2 (=j) ; ω₂=e^(4iπ/3)=−1/2−i√3/2 (=j²).\nLeur somme vaut 0." },
           ]
         },
       ]
@@ -315,6 +342,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-PC2', niveau:'Intermédiaire', titre:'Factorisation',
               enonce:"Factoriser P(z)=z³−1 dans ℂ.",
               correction:"z³−1=(z−1)(z²+z+1).\nRacines de z²+z+1 : Δ=−3, z=(-1±i√3)/2.\nP(z)=(z−1)(z−j)(z−j̄) où j=e^(2iπ/3)." },
+            { id:'EX-PC3', niveau:'Difficile', titre:'Second degré à coefficients complexes',
+              enonce:"Résoudre dans ℂ : z²−(3+2i)z+(1+3i)=0.",
+              correction:"Δ=(3+2i)²−4(1+3i)=(9+12i−4)−(4+12i)=1. √Δ=1.\nz=((3+2i)±1)/2 → z₁=2+i, z₂=1+i.\nVérif : somme=3+2i ✓, produit=(2+i)(1+i)=1+3i ✓." },
           ]
         },
       ]
@@ -336,6 +366,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-VT2', niveau:'Difficile', titre:'Polynôme réel et racine complexe',
               enonce:"P∈ℝ[z] de degré 3, P(i)=0, P(2)=0, P(0)=−2. Trouver P.",
               correction:"P∈ℝ[z] et P(i)=0 → P(−i)=0.\nP(z)=a(z−i)(z+i)(z−2)=a(z²+1)(z−2).\nP(0)=a(1)(−2)=−2a=−2 → a=1.\nP(z)=(z²+1)(z−2)=z³−2z²+z−2." },
+            { id:'EX-VT3', niveau:'Facile', titre:'Somme et produit sans calcul',
+              enonce:"Donner la somme et le produit des racines de z²−5z+6=0 sans les calculer.",
+              correction:"Pour z²−5z+6 : somme =−(−5)/1=5 ; produit =6/1=6.\n(les racines sont d'ailleurs 2 et 3 : 2+3=5, 2×3=6)." },
           ]
         },
       ]
@@ -373,6 +406,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-GR2', niveau:'Intermédiaire', titre:'Condition eulérienne',
               enonce:"Graphe avec sommets {A,B,C,D,E} et arêtes AB,AC,BC,BD,CD,DE,EA. Circuit eulérien possible ?",
               correction:"d(A)=3, d(B)=3, d(C)=3, d(D)=3, d(E)=3.\n5 sommets impairs → pas de chaîne eulérienne. (Il en faut 0 ou 2.)" },
+            { id:'EX-GR3', niveau:'Difficile', titre:'Degrés et chaîne eulérienne',
+              enonce:"Un graphe connexe a 6 sommets de degrés 2, 2, 3, 3, 4, 4. Combien d'arêtes possède-t-il ? Admet-il une chaîne eulérienne ?",
+              correction:"Σd=2+2+3+3+4+4=18 → |E|=18/2=9 arêtes.\nSommets de degré impair : les deux sommets de degré 3 → exactement 2 sommets impairs.\nGraphe connexe + exactement 2 sommets impairs → il admet une chaîne eulérienne (ouverte), d'extrémités ces deux sommets." },
           ]
         },
       ]
@@ -388,9 +424,15 @@ const ALL_CHAPTERS: Record<string,Chap> = {
               enonce:"A=(aᵢⱼ) matrice n×n :\naᵢⱼ=1 si arête (vᵢ,vⱼ) ; 0 sinon\n\nGraphe non orienté : A symétrique\nd(vᵢ) = somme de la ligne i\n\nPROPRIÉTÉ FONDAMENTALE :\n(Aᵏ)ᵢⱼ = nombre de chemins de longueur k de vᵢ à vⱼ\n\nGRAPHE PROBABILISTE :\nSommet = état ; arc (i,j) de probabilité pᵢⱼ\nΣⱼ pᵢⱼ = 1 (probabilités sortantes somment à 1)" },
           ],
           exercices:[
-            { id:'EX-MA1', niveau:'Intermédiaire', titre:'Matrice d\'adjacence',
+            { id:'EX-GA1', niveau:'Intermédiaire', titre:'Matrice d\'adjacence',
               enonce:"Graphe G : sommets {1,2,3,4}, arêtes 1-2, 2-3, 3-4, 1-4, 2-4. Écrire A et calculer (A²)₁₃.",
               correction:"A=[[0,1,0,1],[1,0,1,1],[0,1,0,1],[1,1,1,0]].\n(A²)₁₃=A[1]·A[:,3]=0×0+1×1+0×0+1×1=2.\n→ 2 chemins de longueur 2 de 1 à 3 : 1→2→3 et 1→4→3." },
+            { id:'EX-GA2', niveau:'Facile', titre:'Lecture d\'une matrice d\'adjacence',
+              enonce:"Graphe orienté de matrice A=[[0,1,1],[0,0,1],[1,0,0]]. Combien d'arcs ? Quels arcs partent du sommet 1 ?",
+              correction:"Nombre d'arcs = nombre de 1 = 2+1+1 = 4.\nArcs partant de 1 (ligne 1) : 1→2 et 1→3." },
+            { id:'EX-GA3', niveau:'Difficile', titre:'Carré de la matrice d\'adjacence',
+              enonce:"Pour le graphe complet K₃ (A=[[0,1,1],[1,0,1],[1,1,0]]), calculer A² et interpréter les coefficients diagonaux.",
+              correction:"A²=[[2,1,1],[1,2,1],[1,1,2]].\n(A²)ᵢᵢ=2 = nombre de chemins de longueur 2 reliant le sommet i à lui-même = degré du sommet (aller-retour vers chacun des 2 voisins)." },
           ]
         },
       ]
@@ -426,6 +468,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-MA2', niveau:'Intermédiaire', titre:'Produit matriciel',
               enonce:"A=[[1,2],[3,4]], B=[[5,1],[0,2]]. Calculer AB et BA.",
               correction:"AB=[[5,5],[15,11]].\nBA=[[8,14],[6,8]].\nAB≠BA ✓ (non-commutativité)" },
+            { id:'EX-MA5', niveau:'Difficile', titre:'Système par méthode matricielle',
+              enonce:"Résoudre {2x+y=5 ; x+3y=10} via X=A⁻¹B.",
+              correction:"A=[[2,1],[1,3]], det=6−1=5. A⁻¹=(1/5)[[3,−1],[−1,2]].\nX=A⁻¹[5;10]=(1/5)[3×5−1×10 ; −1×5+2×10]=(1/5)[5;15]=[1;3].\nx=1, y=3." },
           ]
         },
       ]
@@ -450,6 +495,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-MA4', niveau:'Difficile', titre:'Mⁿ par diagonalisation',
               enonce:"M=[[3,1],[0,2]]. Calculer Mⁿ.",
               correction:"λ₁=3, λ₂=2.\nP=[[1,1],[0,1]], P⁻¹=[[1,−1],[0,1]].\nD=[[3,0],[0,2]].\nMⁿ=PDⁿP⁻¹=[[3ⁿ,3ⁿ−2ⁿ],[0,2ⁿ]]." },
+            { id:'EX-MA6', niveau:'Facile', titre:'Puissance d\'une matrice diagonale',
+              enonce:"M=[[2,0],[0,3]]. Calculer Mⁿ.",
+              correction:"Une matrice diagonale s'élève à la puissance terme à terme :\nMⁿ=[[2ⁿ,0],[0,3ⁿ]]." },
           ]
         },
       ]
@@ -482,6 +530,12 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-MK1', niveau:'Facile', titre:'Évolution d\'une chaîne',
               enonce:"T=[[0,8;0,2],[0,3;0,7]], P₀=[0,6;0,4]. Calculer P₁ et P₂.",
               correction:"P₁=P₀·T=[0,6×0,8+0,4×0,3 ; 0,6×0,2+0,4×0,7]=[0,60 ; 0,40].\nP₂=P₁·T=[même calcul]=P₁ (fixe ! P₁ est déjà stationnaire ?)\nVérifier : 0,6=0,6×0,8+0,4×0,3=0,48+0,12=0,60 ✓. Oui, P₀ était déjà l'état stationnaire." },
+            { id:'EX-MK4', niveau:'Intermédiaire', titre:'Deux étapes',
+              enonce:"T=[[0,9;0,1],[0,5;0,5]], P₀=[1 ; 0]. Calculer P₁ et P₂.",
+              correction:"P₁=P₀·T=[0,9 ; 0,1].\nP₂=P₁·T=[0,9×0,9+0,1×0,5 ; 0,9×0,1+0,1×0,5]=[0,86 ; 0,14]." },
+            { id:'EX-MK5', niveau:'Difficile', titre:'Matrice stochastique et évolution',
+              enonce:"Vérifier que T=[[0,7;0,3],[0,4;0,6]] est stochastique, puis calculer P₂ à partir de P₀=[0,5 ; 0,5].",
+              correction:"Chaque ligne somme à 1 (0,7+0,3=1 ; 0,4+0,6=1) → stochastique ✓.\nP₁=[0,5×0,7+0,5×0,4 ; 0,5×0,3+0,5×0,6]=[0,55 ; 0,45].\nP₂=[0,55×0,7+0,45×0,4 ; 0,55×0,3+0,45×0,6]=[0,565 ; 0,435]." },
           ]
         },
       ]
@@ -506,6 +560,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-MK3', niveau:'Difficile', titre:'3 états',
               enonce:"T=[[0,5;0,3;0,2],[0,2;0,6;0,2],[0,1;0,2;0,7]]. Trouver π.",
               correction:"π·T=π :\n0,5π₁+0,2π₂+0,1π₃=π₁ → 0,5π₁=0,2π₂+0,1π₃ (I)\n0,3π₁+0,6π₂+0,2π₃=π₂ → 0,3π₁=0,4π₂−0,2π₃ (II)\n0,2π₁+0,2π₂+0,7π₃=π₃ → 0,2π₁+0,2π₂=0,3π₃ (III)\nπ₁+π₂+π₃=1 (IV)\n\nDe (III) : π₃=(0,2π₁+0,2π₂)/0,3. Substituer dans (I) et (II). Résoudre.\nSolution : π₁≈0,222, π₂≈0,433, π₃≈0,344." },
+            { id:'EX-MK6', niveau:'Facile', titre:'État stationnaire immédiat',
+              enonce:"T=[[0,5;0,5],[0,5;0,5]]. Trouver l'état stationnaire π.",
+              correction:"Les deux lignes sont identiques (0,5;0,5), donc pour toute distribution P₀ on a P₁=(0,5;0,5).\nL'état stationnaire est π=(0,5 ; 0,5) (vérifie π·T=π et π₁+π₂=1)." },
           ]
         },
       ]

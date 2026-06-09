@@ -116,6 +116,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-SL5', niveau:'Difficile', titre:'Récurrence — encadrement',
               enonce:"Montrer par récurrence que 0≤uₙ≤4 pour uₙ₊₁=(uₙ+4)/2, u₀=0.",
               correction:"n=0 : 0≤0≤4 ✓\nHérédité : si 0≤uₙ≤4, alors uₙ₊₁=(uₙ+4)/2.\n0≤uₙ→(0+4)/2=2≤uₙ₊₁≤(4+4)/2=4. ✓" },
+            { id:'EX-SL6', niveau:'Facile', titre:'Monotonie d\'une suite explicite',
+              enonce:"Étudier la monotonie de la suite uₙ=2n+1.",
+              correction:"uₙ₊₁−uₙ=2(n+1)+1−(2n+1)=2>0 → suite strictement croissante." },
           ]
         },
       ]
@@ -148,6 +151,12 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-CX1', niveau:'Facile', titre:'Forme exponentielle',
               enonce:"Écrire z=−√3+i sous forme exponentielle.",
               correction:"|z|=√(3+1)=2.\ncosθ=−√3/2, sinθ=1/2 → θ=5π/6.\nz=2e^(i5π/6)." },
+            { id:'EX-CX4', niveau:'Intermédiaire', titre:'Module et conjugué',
+              enonce:"z=3−4i. Calculer |z|, z̄ et z·z̄.",
+              correction:"|z|=√(9+16)=5. z̄=3+4i. z·z̄=|z|²=25." },
+            { id:'EX-CX5', niveau:'Difficile', titre:'Racines de z²+z+1=0',
+              enonce:"Résoudre z²+z+1=0 dans ℂ.",
+              correction:"Δ=1−4=−3=(i√3)². z=(−1±i√3)/2.\nCe sont j=e^(2iπ/3) et j̄=e^(−2iπ/3)." },
           ]
         },
       ]
@@ -173,6 +182,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-CX3', niveau:'Difficile', titre:'Linéarisation cos²θsin θ',
               enonce:"Linéariser cos²θ·sinθ.",
               correction:"cos²θ=(1+cos2θ)/2 ; sinθ=sinθ.\ncos²θ·sinθ=(sinθ+sinθcos2θ)/2.\nsinθcos2θ=[sin3θ+sin(−θ)]/2=[sin3θ−sinθ]/2.\ncos²θ·sinθ=[sinθ+sin3θ/2−sinθ/2]/2=(sinθ/2+sin3θ/2)/2... simplifié : (2sinθ+sin3θ−sinθ)... Résultat : (sinθ−sin3θ)/4+sinθ/2. Vérifier par Moivre." },
+            { id:'EX-CX6', niveau:'Facile', titre:'Puissance par Moivre',
+              enonce:"z=2e^(iπ/3). Calculer z³ par la formule de Moivre.",
+              correction:"z³=2³·e^(i·3·π/3)=8·e^(iπ)=8×(−1)=−8." },
           ]
         },
       ]
@@ -210,6 +222,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-LC2', niveau:'Intermédiaire', titre:'Forme ∞−∞',
               enonce:"lim(x→+∞) (√(x²+x)−x).",
               correction:"Conjugué : x/[√(x²+x)+x]=1/[√(1+1/x)+1] → 1/2." },
+            { id:'EX-LC4', niveau:'Difficile', titre:'Asymptote oblique',
+              enonce:"Déterminer l'asymptote oblique de f(x)=(2x²+1)/(x−1) en +∞.",
+              correction:"Division : f(x)=2x+2+3/(x−1).\nQuand x→+∞, 3/(x−1)→0 → asymptote oblique y=2x+2." },
           ]
         },
       ]
@@ -229,6 +244,12 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-LC3', niveau:'Intermédiaire', titre:'TVI + dichotomie',
               enonce:"f(x)=x³−x−2. Montrer ∃ racine dans [1;2] et encadrer à 0,25.",
               correction:"f(1)=−2<0 ; f(2)=4>0 → ∃c (TVI).\nf(1,5)=3,375−1,5−2=−0,125<0 → c∈]1,5;2[.\nf(1,75)=5,359−1,75−2=1,609>0 → c∈]1,5;1,75[.\nEncadrement à 0,25 : c∈]1,5;1,75[." },
+            { id:'EX-LC5', niveau:'Facile', titre:'Application du TVI',
+              enonce:"Montrer que x³+x−1=0 admet une solution dans ]0;1[.",
+              correction:"f(x)=x³+x−1 continue. f(0)=−1<0, f(1)=1>0.\nPar le TVI, ∃c∈]0;1[ tel que f(c)=0." },
+            { id:'EX-LC6', niveau:'Difficile', titre:'Nombre de solutions',
+              enonce:"Montrer que x³−3x+1=0 admet exactement 3 solutions réelles.",
+              correction:"f'=3x²−3=0 en x=±1. Max local f(−1)=3>0, min local f(1)=−1<0.\nlim(±∞)=±∞. f change 3 fois de signe → 3 solutions (TVI sur chaque intervalle de monotonie)." },
           ]
         },
       ]
@@ -264,9 +285,40 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-DA2', niveau:'Intermédiaire', titre:'Point d\'inflexion',
               enonce:"f(x)=x³−6x²+9x. Trouver les points d'inflexion.",
               correction:"f'=3x²−12x+9, f''=6x−12.\nf''=0 ↔ x=2. f''<0 pour x<2, f''>0 pour x>2 → inflexion en (2,f(2))=(2,2)." },
+            { id:'EX-DA6', niveau:'Difficile', titre:'Convexité de x⁴−6x²',
+              enonce:"Étudier la convexité de f(x)=x⁴−6x² et ses points d'inflexion.",
+              correction:"f''(x)=12x²−12=12(x²−1).\nf''>0 sur ]−∞;−1[∪]1;+∞[ (convexe), f''<0 sur ]−1;1[ (concave).\nPoints d'inflexion en x=−1 et x=1." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-ineg-convex', titre:'4.2 Inégalités de convexité et applications du TAF',
+      notions:['f convexe ⟹ graphe au-dessus des tangentes','Inégalités classiques : eˣ≥1+x, ln x≤x−1','TAF : encadrement de f(b)−f(a)','Corollaire de Rolle'],
+      blocs:[
+        {
+          notion:'📐 Inégalités et accroissements',
+          theoremes:[
+            { id:'F-DA1', type:'formule', nom:'Inégalités via convexité',
+              enonce:"Si f est CONVEXE sur I, pour tout a∈I :\nf(x) ≥ f(a) + f'(a)·(x−a)  ∀x∈I\n(graphe au-dessus de chaque tangente)\n\nINÉGALITÉS CLASSIQUES déduites :\n• eˣ convexe → eˣ ≥ 1+x  (∀x∈ℝ, égalité en x=0)\n• −ln x convexe → ln x ≤ x−1  (∀x>0, égalité en x=1)\n• x/(1+x) ≤ ln(1+x) ≤ x  (encadrement de ln)\n\nAPPLICATION : comparer ln(1+a/b) avec a/b pour démontrer des inégalités.",
+              remarque:"Retenir eˣ≥1+x et ln x≤x−1 : ce sont les deux inégalités les plus utilisées au Bac." },
+            { id:'M-DA1', type:'methode', nom:'TAF — encadrement et égalité',
+              enonce:"THÉORÈME DES ACCROISSEMENTS FINIS :\nm ≤ f'(x) ≤ M sur ]a,b[ →\nm(b−a) ≤ f(b)−f(a) ≤ M(b−a)\n\nUSAGE : encadrer f(b)−f(a) ou f(b) quand on connaît les bornes de f'.\n\nEXEMPLE : f(x)=√x, f'(x)=1/(2√x).\nSur [100;101] : 1/20,2 ≤ f'≤ 1/20\n→ 1/20,2 ≤ √101−10 ≤ 1/20\n→ 10,049… ≤ √101 ≤ 10,05\n\nTHÉORÈME DE ROLLE : f(a)=f(b) → ∃c∈]a,b[ : f'(c)=0.",
+              remarque:"Le TAF est l'outil de démonstration d'inégalités et d'encadrements par excellence en Terminale." },
+          ],
+          exercices:[
+            { id:'EX-DA3', niveau:'Facile', titre:'Inégalité eˣ≥1+x',
+              enonce:"Montrer que eˣ≥1+x pour tout x∈ℝ.",
+              correction:"f(x)=eˣ−(1+x). f'(x)=eˣ−1. f'=0 en x=0.\nf'<0 sur ]−∞;0[, f'>0 sur ]0;+∞[ → minimum en 0 : f(0)=0.\nDonc eˣ−(1+x)≥0 soit eˣ≥1+x ∀x. Égalité en x=0." },
+            { id:'EX-DA4', niveau:'Intermédiaire', titre:'Encadrement par le TAF',
+              enonce:"Encadrer ln(1,1) à l'aide du TAF appliqué à ln sur [1;1,1].",
+              correction:"f(x)=ln x, f'(x)=1/x. Sur [1;1,1] : 1/1,1 ≤ f'(x) ≤ 1.\nTAF : 0,1/1,1 ≤ ln(1,1)−0 ≤ 0,1\n0,0909... ≤ ln(1,1) ≤ 0,1." },
+            { id:'EX-DA5', niveau:'Difficile', titre:'Inégalité ln x ≤ x−1',
+              enonce:"Démontrer que ln x ≤ x−1 pour tout x>0.",
+              correction:"g(x)=(x−1)−ln x. g'(x)=1−1/x=(x−1)/x.\ng'=0 en x=1. g'<0 sur ]0;1[, g'>0 sur ]1;+∞[ → min en 1 : g(1)=0.\nDonc (x−1)−ln x ≥ 0 → ln x ≤ x−1. Égalité en x=1." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -300,9 +352,37 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-LN2', niveau:'Intermédiaire', titre:'Étude de x−ln x',
               enonce:"f(x)=x−ln x sur ]0;+∞[. Variations, minimum.",
               correction:"f'(x)=1−1/x=(x−1)/x.\nf'=0 en x=1. Min en x=1 : f(1)=1.\nlim(x→0⁺)f=+∞ ; lim(x→+∞)f=+∞." },
+            { id:'EX-LN6', niveau:'Difficile', titre:'Croissances comparées',
+              enonce:"Calculer lim(x→+∞) (ln x)/√x et lim(x→0⁺) x²·ln x.",
+              correction:"(ln x)/√x=(ln x)/x^(1/2) → 0 (croissance comparée, α=1/2).\nx²·ln x → 0 en 0⁺ (croissance comparée)." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-ln-etude', titre:'5.2 Étude de fonctions avec ln et équations',
+      notions:['Méthode d\'étude : domaine, limites, f\'','Fonctions x·ln x, (ln x)/x, ln²x','Équations et inéquations avec ln','Comparaison eˣ et xⁿ via ln'],
+      blocs:[
+        {
+          notion:'📊 Fonctions et équations logarithmiques',
+          theoremes:[
+            { id:'M-LN1', type:'methode', nom:'Étude d\'une fonction contenant ln',
+              enonce:"MÉTHODE GÉNÉRALE :\n1. DOMAINE : déterminer {x : argument de ln > 0}\n2. LIMITES AUX BORNES :\n   • lim(x→0⁺) x ln x = 0 (croissances comparées)\n   • lim(x→+∞) (ln x)/xᵅ = 0 (α>0)\n   • lim(x→+∞) x·ln x = +∞\n3. DÉRIVÉE : (ln u)' = u'/u, puis signe → tableau de variations\n4. LIMITES DES TANGENTES en bornes du domaine si besoin.\n\nFONCTIONS CLASSIQUES :\nf(x)=x ln x : min en 1/e (f(1/e)=−1/e) ; lim(0⁺)=0\nf(x)=(ln x)/x : max en e (f(e)=1/e) ; lim(+∞)=0\nf(x)=ln²x : min en 1 (f(1)=0)",
+              remarque:"Pour f(x)=x·ln x au voisinage de 0⁺ : utiliser la croissance comparée lim x·ln x=0 (par LHôpital ou substitution)." },
+          ],
+          exercices:[
+            { id:'EX-LN3', niveau:'Facile', titre:'Équation logarithmique',
+              enonce:"Résoudre ln(x+1)+ln(x−1)=ln 3.",
+              correction:"Domaine : x>1. ln((x+1)(x−1))=ln 3 → x²−1=3 → x²=4 → x=2.\nS={2} (x=−2 hors domaine)." },
+            { id:'EX-LN4', niveau:'Intermédiaire', titre:'Étude de x·ln x',
+              enonce:"f(x)=x·ln x sur ]0;+∞[. Variations et minimum.",
+              correction:"f'(x)=ln x + x·(1/x)=ln x+1. f'=0 ↔ ln x=−1 ↔ x=e⁻¹=1/e.\nf'<0 sur ]0;1/e[, f'>0 sur ]1/e;+∞[ → min en 1/e : f(1/e)=(1/e)·(−1)=−1/e.\nlim(x→0⁺)x·ln x=0 ; lim(x→+∞)=+∞." },
+            { id:'EX-LN5', niveau:'Difficile', titre:'Inéquation',
+              enonce:"Résoudre ln(2x−1) < ln(x+3).",
+              correction:"Domaine : 2x−1>0 et x+3>0 → x>1/2.\nln strictement croissante → 2x−1<x+3 → x<4.\nS=]1/2 ; 4[." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -334,6 +414,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-IN2', niveau:'Intermédiaire', titre:'Aire entre deux courbes',
               enonce:"Calculer l'aire entre f(x)=x² et g(x)=x sur [0;1].",
               correction:"f≤g sur [0;1] (x²≤x). A=∫₀¹(x−x²)dx=[x²/2−x³/3]₀¹=1/2−1/3=1/6." },
+            { id:'EX-IN5', niveau:'Difficile', titre:'Primitive par reconnaissance',
+              enonce:"Calculer ∫₀¹ 2x·e^(x²) dx.",
+              correction:"Forme u'·eᵘ avec u=x². ∫=[e^(x²)]₀¹=e¹−e⁰=e−1." },
           ]
         },
       ]
@@ -356,6 +439,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-IN4', niveau:'Difficile', titre:'Intégrale de ln',
               enonce:"Calculer ∫₁² ln x dx.",
               correction:"u'=1→u=x ; v=ln x→v'=1/x.\n[x ln x]₁²−∫₁²dx=(2ln2−0)−[x]₁²=2ln2−1." },
+            { id:'EX-IN6', niveau:'Facile', titre:'IPP simple',
+              enonce:"Calculer ∫₀¹ x·eˣ dx par parties.",
+              correction:"u'=eˣ→u=eˣ ; v=x→v'=1.\n[x·eˣ]₀¹−∫₀¹eˣdx=e−[eˣ]₀¹=e−(e−1)=1." },
           ]
         },
       ]
@@ -398,6 +484,33 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-ed2', titre:'7.2 Modélisation et comportement asymptotique',
+      notions:['Croissance logistique (population)','Demi-vie et constante de temps τ','Comportement en +∞ : régime permanent','Mise en équation d\'un phénomène réel'],
+      blocs:[
+        {
+          notion:'🔬 Modèles différentiels',
+          theoremes:[
+            { id:'D-ED3', type:'def', nom:'Tableau des modèles classiques',
+              enonce:"MODÈLE                ÉQUATION        SOLUTION\nCroissance libre      y'=ay (a>0)     y=y₀eᵃᵗ\nDécroissance          y'=ay (a<0)     y=y₀eᵃᵗ\nRadioactivité         N'=−λN          N=N₀e^(−λt), t½=ln2/λ\nRefroidissement       T'=−k(T−Tₐ)    T=Tₐ+(T₀−Tₐ)e^(−kt)\nCharge RC             u'=−u/τ+E/τ    u=E(1−e^(−t/τ))\nCroissance limitée    y'=a(L−y)       y=L(1−e^(−at))\n\nτ = constante de temps : au bout de τ, la quantité a atteint 63% de sa valeur finale.\nRégime permanent : lim(t→+∞) y(t) = valeur d'équilibre = −b/a (solution particulière constante).",
+              remarque:"La constante de temps τ=−1/a (si a<0) donne l'échelle de temps du phénomène : après 5τ, le régime permanent est atteint à 99%." },
+            { id:'M-ED1', type:'methode', nom:'Mise en équation d\'un phénomène',
+              enonce:"ÉTAPES :\n1. Identifier la grandeur y(t), son unité et son domaine (t≥0).\n2. Lire la loi d'évolution : « varie proportionnellement à » → y'=ay.\n3. Identifier a et b (si second membre constant).\n4. Écrire la solution générale y=Ceᵃᵗ+yₚ.\n5. Appliquer la condition initiale pour trouver C.\n6. Calculer la limite (régime permanent) et interpréter.\n7. Si demandé : trouver la demi-vie, le temps pour atteindre un seuil (résoudre y(t)=valeur)." },
+          ],
+          exercices:[
+            { id:'EX-ED4', niveau:'Facile', titre:'Désintégration radioactive',
+              enonce:"N(t)=N₀e^(−0,02t). Calculer la demi-vie.",
+              correction:"N(t½)=N₀/2 → e^(−0,02t½)=1/2 → −0,02t½=−ln2.\nt½=ln2/0,02=34,66 (même unité que t)." },
+            { id:'EX-ED5', niveau:'Difficile', titre:'Refroidissement de Newton',
+              enonce:"T'=−0,1(T−20), T(0)=80°C. Trouver T(t), sa limite et l'instant où T=30°C.",
+              correction:"Éq. y'=−0,1y+2 (a=−0,1, b=2). Sol. part. y*=20.\nT=Ce^(−0,1t)+20. T(0)=C+20=80 → C=60.\nT(t)=60e^(−0,1t)+20. lim(t→+∞)=20°C (temp. ambiante).\nT(t)=30 → 60e^(−0,1t)=10 → e^(−0,1t)=1/6 → t=10ln6≈17,9." },
+            { id:'EX-ED6', niveau:'Intermédiaire', titre:'Croissance d\'une population',
+              enonce:"Une population suit P'=0,03P, P(0)=1000. Donner P(t) et P(10).",
+              correction:"P(t)=1000·e^(0,03t).\nP(10)=1000·e^(0,3)≈1000×1,3499≈1350." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -428,9 +541,40 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-VE2', niveau:'Intermédiaire', titre:'Droite paramétrique',
               enonce:"Droite D par A(1;0;2) de direction u⃗(1;2;−1). Représentation paramétrique.",
               correction:"{x=1+t ; y=2t ; z=2−t}  t∈ℝ." },
+            { id:'EX-VE6', niveau:'Difficile', titre:'Coplanéité de 4 points',
+              enonce:"Les points A(1;0;0), B(0;1;0), C(0;0;1), D(1;1;1) sont-ils coplanaires ?",
+              correction:"AB⃗(−1;1;0), AC⃗(−1;0;1), AD⃗(0;1;1).\ndet=−1(0−1)−1(−1−0)+0=1+1=2≠0 → NON coplanaires." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-prod-vect', titre:'8.2 Produit vectoriel et distances dans l\'espace',
+      notions:['u⃗∧v⃗ : vecteur orthogonal aux deux','Calcul : composantes (b₁c₂−c₁b₂ ; …)','Distance d\'un point à une droite','Positions relatives de deux droites de l\'espace'],
+      blocs:[
+        {
+          notion:'✖️ Produit vectoriel et distance',
+          theoremes:[
+            { id:'F-VE2', type:'formule', nom:'Produit vectoriel',
+              enonce:"u⃗(a₁;b₁;c₁) ∧ v⃗(a₂;b₂;c₂) =\n(b₁c₂−c₁b₂ ; c₁a₂−a₁c₂ ; a₁b₂−b₁a₂)\n\nPROPRIÉTÉS :\n• u⃗∧v⃗ ⊥ u⃗ et u⃗∧v⃗ ⊥ v⃗\n• u⃗∧v⃗ = 0⃗ ⟺ u⃗ et v⃗ colinéaires\n• |u⃗∧v⃗| = |u⃗|·|v⃗|·|sinθ| = aire du parallélogramme\n• u⃗∧v⃗ = −v⃗∧u⃗ (anticommutativité)\n\nAPPLICATIONS :\n→ Vecteur normal à un plan : n⃗ = AB⃗∧AC⃗\n→ Distance d'un point M à une droite (A,u⃗) :\nd = |AM⃗∧u⃗| / |u⃗|",
+              remarque:"Le produit vectoriel n'est défini que dans ℝ³ (espace) ; il n'existe pas dans ℝ²." },
+            { id:'M-VE1', type:'methode', nom:'Positions relatives de deux droites',
+              enonce:"Droites D₁(A;u⃗) et D₂(B;v⃗) :\n1. Si u⃗ et v⃗ COLINÉAIRES : parallèles (et distinctes ou confondues).\n2. Sinon, résoudre le système AM⃗=t·u⃗, BM⃗=s·v⃗ :\n   → système en t,s,t (3 eq., 2 inconnues) :\n   • compatible → SÉCANTES (1 point d'intersection)\n   • incompatible → GAUCHES (non parallèles, non sécantes)\n\nDISTANCE ENTRE DEUX DROITES GAUCHES :\nd = |AB⃗·(u⃗∧v⃗)| / |u⃗∧v⃗|",
+              remarque:"Les droites gauches n'existent pas dans le plan (R²) : c'est un concept purement spatial." },
+          ],
+          exercices:[
+            { id:'EX-VE3', niveau:'Facile', titre:'Calcul de produit vectoriel',
+              enonce:"u⃗(1;2;0) et v⃗(−1;1;3). Calculer u⃗∧v⃗.",
+              correction:"u⃗∧v⃗=(2×3−0×1 ; 0×(−1)−1×3 ; 1×1−2×(−1))\n=(6 ; −3 ; 3).\nVérif : (6;−3;3)·(1;2;0)=6−6+0=0 ✓" },
+            { id:'EX-VE4', niveau:'Intermédiaire', titre:'Distance point-droite',
+              enonce:"Droite D : A(0;0;0), u⃗(1;1;0). Distance de M(2;0;3) à D.",
+              correction:"AM⃗=(2;0;3). AM⃗∧u⃗=(0×0−3×1 ; 3×1−2×0 ; 2×1−0×1)=(−3;3;2).\n|AM⃗∧u⃗|=√(9+9+4)=√22. |u⃗|=√2.\nd=√22/√2=√11≈3,32." },
+            { id:'EX-VE5', niveau:'Difficile', titre:'Droites sécantes ou gauches',
+              enonce:"D₁ : A(1;0;0), u⃗(1;1;0). D₂ : B(0;1;1), v⃗(0;1;1). Sécantes ou gauches ?",
+              correction:"u⃗=(1;1;0), v⃗=(0;1;1) non colinéaires.\nSystème : 1+t=0 → t=−1 ; t=1+s → s=−2 ; 0=1+s=−1 ≠ 0.\nIncompatible → droites GAUCHES." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -467,6 +611,34 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-droites3d', titre:'9.2 Intersection de deux plans et angle droite-plan',
+      notions:['Intersection de deux plans non parallèles → droite','Équation paramétrique de l\'intersection','Angle entre une droite et un plan','Droite perpendiculaire à un plan'],
+      blocs:[
+        {
+          notion:'📏 Intersections et angles',
+          theoremes:[
+            { id:'M-DP1', type:'methode', nom:'Intersection de deux plans',
+              enonce:"DEUX PLANS non parallèles se coupent selon une droite.\n\nMÉTHODE :\n1. Vérifier que les normales n⃗₁ et n⃗₂ ne sont pas colinéaires.\n2. Résoudre le système des deux équations cartésiennes :\n   {a₁x+b₁y+c₁z+d₁=0\n   {a₂x+b₂y+c₂z+d₂=0\n   → 2 équations, 3 inconnues → une infinité de solutions paramétrées.\n3. Introduire un paramètre t (ex : poser z=t ou x=t) pour exprimer x,y en fonction de t.\n4. Écrire la représentation paramétrique de la droite intersection.\n\nVECTEUR DIRECTEUR de la droite d'intersection : n⃗₁∧n⃗₂.",
+              remarque:"La droite d'intersection a pour vecteur directeur le produit vectoriel des normales des deux plans." },
+            { id:'F-DP2', type:'formule', nom:'Angle droite-plan et perpendiculaire',
+              enonce:"ANGLE entre une droite (u⃗) et un plan (normale n⃗) :\nNON le même que l'angle avec la normale.\nsin(α) = |u⃗·n⃗| / (|u⃗|·|n⃗|)  (α ∈ [0°;90°])\n\nDROITE ⊥ AU PLAN :\nu⃗ parallèle à n⃗ ↔ u⃗∧n⃗=0⃗ ↔ u⃗ et n⃗ colinéaires.\n\nDROITE PERPENDICULAIRE depuis M₀ à un plan Π :\n— passe par M₀ et a pour direction n⃗ (la normale de Π)\n— Repr. param. : {x=x₀+at ; y=y₀+bt ; z=z₀+ct}\n— Le pied de la perpendiculaire est le projeté orthogonal de M₀ sur Π.",
+              remarque:"Confondre l'angle droite-normal et l'angle droite-plan est une erreur classique : sin(α droite-plan)=cos(angle avec la normale)." },
+          ],
+          exercices:[
+            { id:'EX-DP4', niveau:'Intermédiaire', titre:'Droite intersection de deux plans',
+              enonce:"P₁ : x+y+z=1 et P₂ : x−y+z=3. Trouver la droite d'intersection.",
+              correction:"n⃗₁(1;1;1), n⃗₂(1;−1;1) non colinéaires → plans sécants.\nSomme : 2x+2z=4 → x+z=2. Diff. : 2y=−2 → y=−1.\nPoser z=t : x=2−t, y=−1, z=t.\nRepr. param. : {x=2−t ; y=−1 ; z=t}. Direction : u⃗(−1;0;1)." },
+            { id:'EX-DP5', niveau:'Difficile', titre:'Droite perpendiculaire à un plan',
+              enonce:"Plan Π : 2x−y+2z=5, M(1;2;3). Trouver le projeté orthogonal H de M sur Π.",
+              correction:"Droite ⊥ par M : {x=1+2t ; y=2−t ; z=3+2t}.\nH∈Π : 2(1+2t)−(2−t)+2(3+2t)=5\n→ 2+4t−2+t+6+4t=5 → 9t+6=5 → t=−1/9.\nH=(1−2/9 ; 2+1/9 ; 3−2/9)=(7/9 ; 19/9 ; 25/9)." },
+            { id:'EX-DP6', niveau:'Facile', titre:'Droite parallèle à un plan',
+              enonce:"Droite de direction u⃗(1;1;1) et plan x+y−2z=4 (normale n⃗(1;1;−2)). La droite est-elle parallèle au plan ?",
+              correction:"u⃗·n⃗=1+1−2=0 → la droite est parallèle au plan (ou incluse)." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -485,20 +657,51 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         {
           notion:'🔔 Loi normale et standardisation',
           theoremes:[
-            { id:'D-LN1', type:'def', nom:'Loi normale N(μ,σ²)',
+            { id:'D-NO1', type:'def', nom:'Loi normale N(μ,σ²)',
               enonce:"X~N(μ,σ²) :\nDensité : f(x)=(1/(σ√2π))·e^(−(x−μ)²/(2σ²))\nE(X)=μ (espérance) ; V(X)=σ² (variance)\n\nSTANDARDISATION :\nZ=(X−μ)/σ ~ N(0,1) (loi centrée réduite)\nP(a≤X≤b)=P((a−μ)/σ≤Z≤(b−μ)/σ)\n\nRÈGLES :\nP(μ−σ<X<μ+σ)≈0,683 (68%)\nP(μ−2σ<X<μ+2σ)≈0,954 (95%)\nP(μ−3σ<X<μ+3σ)≈0,997 (99,7%)\n\nSYMÉTRIE de N(0,1) :\nP(Z≤−z)=1−P(Z≤z)=P(Z≥z)",
               remarque:"La table de N(0,1) donne P(Z≤z). Toujours ramener à cette table en standardisant." },
           ],
           exercices:[
-            { id:'EX-LN1', niveau:'Facile', titre:'Standardisation',
+            { id:'EX-NO1', niveau:'Facile', titre:'Standardisation',
               enonce:"X~N(50;9). Calculer P(47≤X≤56).",
               correction:"σ=3. Z=(X−50)/3.\nP=(47−50)/3≤Z≤(56−50)/3=P(−1≤Z≤2).\n=P(Z≤2)−P(Z≤−1)=Φ(2)−(1−Φ(1))\n≈0,9772−0,1587=0,8185." },
-            { id:'EX-LN2', niveau:'Intermédiaire', titre:'Moivre-Laplace',
+            { id:'EX-NO2', niveau:'Intermédiaire', titre:'Moivre-Laplace',
               enonce:"X~B(400;0,5). Approximation normale. P(X≥220).",
               correction:"μ=200, σ²=100, σ=10.\nP(X≥220)≈P(Z≥(220−200)/10)=P(Z≥2)≈1−0,9772=0,0228." },
+            { id:'EX-NO5', niveau:'Difficile', titre:'Seuil à partir d\'une probabilité',
+              enonce:"X~N(100;25) (σ=5). Trouver a tel que P(X≤a)=0,975.",
+              correction:"P(Z≤z)=0,975 → z=1,96 (table).\na=μ+1,96σ=100+1,96×5=109,8." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-normale-app', titre:'10.2 Approximation B(n,p)→N et intervalle 95%',
+      notions:['Conditions : n≥30, np≥5, n(1−p)≥5','B(n,p)≈N(np, np(1−p))','P(μ−2σ<X<μ+2σ)≈95%','Intervalle de valeurs typiques'],
+      blocs:[
+        {
+          notion:'📊 Approximation normale',
+          theoremes:[
+            { id:'M-NO1', type:'methode', nom:'Approx. de B(n,p) par la loi normale',
+              enonce:"CONDITIONS (Moivre-Laplace) :\nn ≥ 30  ET  np ≥ 5  ET  n(1−p) ≥ 5\n\nAPPROXIMATION :\nX~B(n,p) → X≈N(μ, σ²) avec μ=np, σ²=np(1−p)\n\nÉTAPES :\n1. Vérifier les 3 conditions.\n2. Calculer μ=np et σ=√(np(1−p)).\n3. Standardiser : Z=(X−μ)/σ ~ N(0,1)\n4. Lire P(Z≤z) dans la table de la loi normale.\n\nCORRECTION DE CONTINUITÉ (optionnelle) :\nP(X≤k) ≈ P(X≤k+0,5) pour améliorer la précision.",
+              remarque:"L'approximation est d'autant meilleure que n est grand et que p est proche de 0,5." },
+            { id:'F-NO1', type:'formule', nom:'Intervalles de confiance via la règle des σ',
+              enonce:"Pour X~N(μ,σ²) :\n\nP(μ−1,65σ < X < μ+1,65σ) ≈ 0,90  (90%)\nP(μ−1,96σ < X < μ+1,96σ) ≈ 0,95  (95%)\nP(μ−2,58σ < X < μ+2,58σ) ≈ 0,99  (99%)\n\nUSAGE : exprimer les intervalles de confiance en fonction de σ.\n\nAPPROXIMATION PRATIQUE (Terminale) :\n1,96 ≈ 2 (règle des 2σ) pour le niveau 95%.",
+              remarque:"1,96 vient de la table N(0,1) : P(−1,96≤Z≤1,96)=0,95. On arrondit à 2 pour les calculs rapides." },
+          ],
+          exercices:[
+            { id:'EX-NO3', niveau:'Intermédiaire', titre:'Approximation normale',
+              enonce:"X~B(200;0,6). Calculer P(X≥130) par approximation normale.",
+              correction:"Conditions : n=200≥30, np=120≥5, n(1−p)=80≥5 ✓\nμ=120, σ=√48≈6,93.\nP(X≥130)≈P(Z≥(130−120)/6,93)=P(Z≥1,44)≈1−0,9251=0,0749." },
+            { id:'EX-NO4', niveau:'Difficile', titre:'Intervalle à 95%',
+              enonce:"Taille moyenne μ=170 cm, σ=8 cm. Quel intervalle contient 95% de la population (N(170;64)) ?",
+              correction:"I=[μ−1,96σ ; μ+1,96σ]=[170−15,68 ; 170+15,68]=[154,32 ; 185,68].\nArrondi pratique (2σ) : [170−16 ; 170+16]=[154 ; 186] cm." },
+            { id:'EX-NO6', niveau:'Facile', titre:'Conditions d\'approximation',
+              enonce:"X~B(50;0,4). Peut-on approcher par une loi normale ? Donner μ et σ.",
+              correction:"n=50≥30, np=20≥5, n(1−p)=30≥5 ✓ → approximation valide.\nμ=np=20, σ=√(np(1−p))=√12≈3,46." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -529,9 +732,40 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-BI2', niveau:'Intermédiaire', titre:'Espérance et écart-type',
               enonce:"X~B(100;0,4). Calculer E(X), V(X) et σ.",
               correction:"E(X)=100×0,4=40.\nV(X)=100×0,4×0,6=24.\nσ=√24≈4,9." },
+            { id:'EX-BI5', niveau:'Difficile', titre:'Au moins un / au moins deux succès',
+              enonce:"X~B(20;0,1). Calculer P(X≥1) et P(X≥2).",
+              correction:"P(X≥1)=1−0,9²⁰≈1−0,1216=0,878.\nP(X≥2)=1−P(0)−P(1)=1−0,1216−20×0,1×0,9¹⁹≈1−0,1216−0,2702=0,608." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-binom-concentr', titre:'11.2 Inégalité de concentration et loi des grands nombres',
+      notions:['Inégalité de concentration : P(|X/n−p|≥ε)≤1/(4nε²)','Loi des grands nombres : X/n → p','Taille minimale n pour garantir une précision','Application au contrôle qualité'],
+      blocs:[
+        {
+          notion:'🎯 Concentration et estimation',
+          theoremes:[
+            { id:'T-BI1', type:'thm', nom:'Inégalité de concentration',
+              enonce:"X~B(n,p). Pour tout ε>0 :\nP(|X/n − p| ≥ ε) ≤ 1/(4nε²)\n\nINTERPRÉTATION :\nLa fréquence observée X/n s'écarte de p d'au moins ε\navec une probabilité AU PLUS 1/(4nε²).\n\nLOI DES GRANDS NOMBRES :\nQuand n→+∞, X/n converge (en probabilité) vers p.\n« Plus l'échantillon est grand, plus la fréquence est proche de la probabilité. »\n\nCOROLLAIRE : pour garantir P(|X/n−p|≥ε)≤α :\nIl suffit de prendre n ≥ 1/(4αε²).",
+              remarque:"Cette inégalité est une majoration grossière mais universelle : elle ne dépend pas de la valeur de p." },
+            { id:'M-BI1', type:'methode', nom:'Trouver la taille d\'échantillon minimale',
+              enonce:"PROBLÈME : choisir n pour que P(|X/n−p|≥ε)≤α.\n\nRÉPONSE : n ≥ 1/(4αε²)\n\nEXEMPLE COURANT :\nα=0,05 (risque 5%), ε=0,01 (précision au centième) :\nn ≥ 1/(4×0,05×0,0001) = 1/0,0002 = 5000\n\nα=0,05, ε=0,02 :\nn ≥ 1/(4×0,05×0,0004) = 1250\n\nα=0,05, ε=0,05 :\nn ≥ 1/(4×0,05×0,0025) = 200",
+              remarque:"Plus la précision ε souhaitée est petite, plus n doit être grand : n varie comme 1/ε²." },
+          ],
+          exercices:[
+            { id:'EX-BI3', niveau:'Intermédiaire', titre:'Inégalité de concentration',
+              enonce:"X~B(400;0,5). Majorer P(|X/400−0,5|≥0,05).",
+              correction:"ε=0,05, n=400. 1/(4×400×0,0025)=1/4=0,25.\nP(|X/400−0,5|≥0,05) ≤ 0,25." },
+            { id:'EX-BI4', niveau:'Difficile', titre:'Taille minimale',
+              enonce:"Quelle taille d'échantillon garantit P(|X/n−p|≥0,02)≤0,05 ?",
+              correction:"n ≥ 1/(4×0,05×0,02²)=1/(4×0,05×0,0004)=1/0,0008=1250.\nIl faut n ≥ 1250." },
+            { id:'EX-BI6', niveau:'Facile', titre:'Majoration directe',
+              enonce:"X~B(100;0,5). Majorer P(|X/100−0,5|≥0,1).",
+              correction:"Inégalité de concentration : 1/(4nε²)=1/(4×100×0,1²)=1/4=0,25.\nP(|X/100−0,5|≥0,1) ≤ 0,25." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -562,9 +796,40 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-EC2', niveau:'Intermédiaire', titre:'Intervalle de confiance',
               enonce:"Sondage : 420 favorables sur 700. Donner un IC 95% pour p.",
               correction:"f=0,6. √700≈26,46. 1/√700≈0,038.\nIC=[0,562 ; 0,638]." },
+            { id:'EX-EC5', niveau:'Difficile', titre:'Test de conformité d\'un dé',
+              enonce:"Sur 250 lancers d'un dé, on obtient 30 fois la face 6. Tester si le dé est équilibré (p₀=1/6) au seuil 95%.",
+              correction:"1/√250≈0,063. IF=[1/6−0,063 ; 1/6+0,063]=[0,103 ; 0,230].\nf=30/250=0,12 ∈ IF → compatible avec p₀=1/6 : on ne rejette pas l'équilibre." },
           ]
         },
       ]
+    },
+    {
+      id:'sc-confiance', titre:'12.2 Intervalle de confiance et estimation',
+      notions:['IC 95% : [f−1/√n ; f+1/√n]','Interprétation : 95% des IC couvrent p','Différence IC vs intervalle de fluctuation','Taille minimale pour une précision donnée'],
+      blocs:[
+        {
+          notion:'📐 Estimation et décision',
+          theoremes:[
+            { id:'M-EC1', type:'methode', nom:'Construire et interpréter un IC 95%',
+              enonce:"DONNÉES : n individus sondés, f fréquence observée.\n\nIC 95% pour p :\nIC = [f − 1/√n ; f + 1/√n]\n\nINTERPRÉTATION EXACTE :\n« Si l'on répétait l'expérience un grand nombre de fois, 95% des intervalles ainsi construits contiendraient la vraie valeur p. »\n(≠ 'p est dans IC avec probabilité 95%' : p est fixe, c'est IC qui est aléatoire.)\n\nDIFFÉRENCE IC / FLUCTUATION :\n• Fluctuation [p₀−1/√n ; p₀+1/√n] : centré sur p₀ connu, sert au test.\n• Confiance [f−1/√n ; f+1/√n] : centré sur f observée, sert à estimer p inconnu.",
+              remarque:"En pratique on dit «p est dans l'IC à 95% de confiance» par abus de langage, mais c'est l'intervalle qui est aléatoire." },
+            { id:'F-EC2', type:'formule', nom:'Précision et taille minimale',
+              enonce:"La demi-largeur de l'IC 95% est e = 1/√n (précision).\n\nPour une précision souhaitée e :\nn ≥ 1/e²\n\nTableau :\ne=0,05 → n ≥ 400\ne=0,02 → n ≥ 2500\ne=0,01 → n ≥ 10000\n\nVALEUR EXACTE avec la table N(0,1) :\ne = 1,96·√(p(1−p)/n) ≈ 0,98/√n (max en p=0,5).\n→ n ≥ (1,96)²/(4e²) ≈ 0,9604/e²",
+              remarque:"1/√n est l'approximation simplifiée du programme. En pratique les sondeurs utilisent 1,96/√n et connaissent p approximativement." },
+          ],
+          exercices:[
+            { id:'EX-EC3', niveau:'Intermédiaire', titre:'IC à construire',
+              enonce:"Sondage : 312 personnes favorables sur 500. Construire un IC 95% pour p.",
+              correction:"f=312/500=0,624. 1/√500≈0,0447.\nIC=[0,624−0,0447 ; 0,624+0,0447]=[0,579 ; 0,669]." },
+            { id:'EX-EC4', niveau:'Difficile', titre:'Taille minimale',
+              enonce:"Combien de personnes faut-il sonder pour obtenir une précision de 0,03 ?",
+              correction:"Précision e=0,03. n ≥ 1/e²=1/0,0009≈1111.\nIl faut au moins 1111 personnes." },
+            { id:'EX-EC6', niveau:'Facile', titre:'Intervalle de confiance',
+              enonce:"Sur 400 sondés, 220 sont favorables. Donner un IC 95% pour p.",
+              correction:"f=220/400=0,55. 1/√400=0,05.\nIC=[0,55−0,05 ; 0,55+0,05]=[0,50 ; 0,60]." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -597,6 +862,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-PY2', niveau:'Intermédiaire', titre:'Suite récurrente',
               enonce:"Calculer les 10 premiers termes de uₙ₊₁=0,5uₙ+2, u₀=0.",
               correction:"u = 0\nfor i in range(10):\n    print(f'u_{i}={u:.4f}')\n    u = 0.5*u + 2\n# → converge vers 4" },
+            { id:'EX-PY5', niveau:'Difficile', titre:'PGCD récursif (Euclide)',
+              enonce:"Écrire une fonction récursive Python calculant le PGCD de deux entiers.",
+              correction:"def pgcd(a, b):\n    if b == 0:\n        return a\n    return pgcd(b, a % b)\n# pgcd(252,180) → 36" },
           ]
         },
       ]
@@ -621,6 +889,9 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-PY4', niveau:'Difficile', titre:'Newton — racine de cos x = x',
               enonce:"Résoudre cos x=x par la méthode de Newton depuis x₀=0,7.",
               correction:"def f(x): return np.cos(x)-x\ndef df(x): return -np.sin(x)-1\nnewton(f, df, 0.7)  # → 0.73909 (point fixe du cosinus)" },
+            { id:'EX-PY6', niveau:'Facile', titre:'Simulation d\'un dé',
+              enonce:"Simuler 1000 lancers d'un dé et estimer la fréquence du 6 (numpy).",
+              correction:"import numpy.random as rnd\nX = rnd.randint(1, 7, 1000)\nprint((X == 6).mean())  # ≈ 0.167" },
           ]
         },
       ]

@@ -149,6 +149,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-sd-optim', titre:'2.2 Optimisation et problèmes du second degré',
+      notions:['Extremum au sommet S(α;β)','Axe de symétrie x=α','Nombre de points d\'intersection avec Ox','Mise en équation d\'un problème'],
+      blocs:[
+        {
+          notion:'△ Applications du second degré',
+          theoremes:[
+            { id:'M-SD1', type:'methode', nom:'Optimisation par le sommet',
+              enonce:"Pour maximiser ou minimiser une grandeur modélisée par f(x)=ax²+bx+c :\n1. Identifier a, b, c.\n2. Calculer l'abscisse du sommet : α=−b/(2a).\n3. L'extremum vaut β=f(α).\n   • a<0 → MAXIMUM en α\n   • a>0 → MINIMUM en α\n4. Vérifier que α appartient au domaine autorisé (ex : longueur ≥0).\n\nL'axe de symétrie de la parabole est la droite verticale x=α : f(α−t)=f(α+t).",
+              remarque:"En optimisation (aire, trajectoire, coût), c'est le sommet de la parabole qui donne la valeur optimale." },
+            { id:'F-SD2', type:'formule', nom:'Intersections avec les axes',
+              enonce:"INTERSECTIONS AVEC Ox (résoudre f(x)=0) :\n• Δ>0 : deux points distincts (deux racines)\n• Δ=0 : un point (tangence au sommet)\n• Δ<0 : aucun point\n\nINTERSECTION AVEC Oy : point (0 ; c) = (0 ; f(0)).\n\nINTERSECTION DE DEUX COURBES f(x)=g(x) :\nse ramène à une équation du second degré ; le nombre de points dépend du signe de son discriminant.",
+              remarque:"Le signe de Δ donne directement le nombre de solutions réelles donc de points d'intersection avec l'axe des abscisses." },
+          ],
+          exercices:[
+            { id:'EX-SD4', niveau:'Intermédiaire', titre:'Optimisation d\'une aire',
+              enonce:"Un rectangle a un périmètre de 20 m. Quelle largeur x maximise son aire ?",
+              correction:"Longueur =10−x. Aire A(x)=x(10−x)=−x²+10x.\nα=−10/(2×(−1))=5. A(5)=25.\nAire maximale 25 m² pour x=5 (carré 5×5)." },
+            { id:'EX-SD5', niveau:'Difficile', titre:'Discussion selon un paramètre',
+              enonce:"Pour quelles valeurs de m l'équation x²−4x+m=0 a-t-elle deux solutions distinctes ?",
+              correction:"Δ=16−4m. Deux solutions distinctes ⟺ Δ>0 ⟺ 16−4m>0 ⟺ m<4." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -249,6 +274,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-exp-composee', titre:'4.2 Dérivée de e^(u) et applications',
+      notions:["(e^u)'=u'·e^u","Étude de fonctions composées en e","Modèle d'évolution e^(kt)","Tangentes et signe"],
+      blocs:[
+        {
+          notion:'📈 Composée et modélisation',
+          theoremes:[
+            { id:'F-EX2', type:'formule', nom:'Dérivée de e^(u(x))',
+              enonce:"Pour u dérivable sur I :\n(e^(u))' = u' · e^(u)\n\nExemples :\n(e^(2x))' = 2·e^(2x)\n(e^(x²))' = 2x·e^(x²)\n(e^(−x))' = −e^(−x)\n\nSIGNE : e^(u(x)) > 0 toujours → le signe de (e^u)' est celui de u'.\n→ e^(u) a les MÊMES variations que u.\n\nDÉRIVÉES DE PRODUITS courantes :\n(x·eˣ)' = (1+x)eˣ\n(eˣ/x)' = eˣ(x−1)/x²",
+              remarque:"e^(u) garde le sens de variation de u : pour étudier e^(u), il suffit d'étudier le signe de u'." },
+            { id:'M-EX1', type:'methode', nom:'Modèles d\'évolution exponentielle',
+              enonce:"Fonction t↦A·e^(kt) :\n• k>0 : croissance exponentielle (population, capital)\n• k<0 : décroissance (refroidissement, désintégration, décharge)\n\nLECTURE :\n• valeur initiale = A (en t=0)\n• la fonction est strictement monotone (signe de k)\n• si k<0 : limite 0 en +∞ (asymptote horizontale)\n\nÉTUDE TYPE : dériver, déterminer le signe de la dérivée, dresser le tableau de variations, interpréter.",
+              remarque:"Ces modèles relient l'exponentielle aux situations concrètes (physique, économie, biologie)." },
+          ],
+          exercices:[
+            { id:'EX-EX4', niveau:'Facile', titre:'Dérivée composée',
+              enonce:"Dériver f(x)=e^(x²−3x).",
+              correction:"u=x²−3x, u'=2x−3.\nf'(x)=(2x−3)·e^(x²−3x)." },
+            { id:'EX-EX5', niveau:'Intermédiaire', titre:'Variations',
+              enonce:"Étudier les variations de f(x)=e^(−x²) sur ℝ.",
+              correction:"f'(x)=−2x·e^(−x²). e^(−x²)>0 → signe de f' = signe de −2x.\nf'>0 sur ]−∞;0[, f'<0 sur ]0;+∞[ → maximum en 0 : f(0)=1." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -348,6 +398,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-ps-applications', titre:'6.2 Applications : équations et lieux géométriques',
+      notions:['Angle entre deux vecteurs','Équation de droite via vecteur normal','Cercle de diamètre [AB] : MA⃗·MB⃗=0','Ensembles de points'],
+      blocs:[
+        {
+          notion:'📐 Produit scalaire en repère',
+          theoremes:[
+            { id:'M-PS1', type:'methode', nom:'Angle et droite via le produit scalaire',
+              enonce:"ANGLE entre deux vecteurs u⃗(a;b) et v⃗(a';b') :\ncos(u⃗,v⃗) = (u⃗·v⃗)/(|u⃗|·|v⃗|) = (aa'+bb')/(√(a²+b²)·√(a'²+b'²))\n\nDROITE passant par A(x₀;y₀) de vecteur NORMAL n⃗(a;b) :\nM(x;y)∈d ⟺ AM⃗·n⃗=0\n⟺ a(x−x₀)+b(y−y₀)=0\n→ équation cartésienne ax+by+c=0 avec n⃗(a;b) normal.\n\nPERPENDICULARITÉ de deux droites : leurs vecteurs directeurs (ou normaux) sont orthogonaux (produit scalaire nul).",
+              remarque:"Le vecteur normal donne immédiatement les coefficients a et b de l'équation cartésienne." },
+            { id:'F-PS2', type:'formule', nom:'Lieux géométriques (ensembles de points)',
+              enonce:"CERCLE DE DIAMÈTRE [AB] :\nM appartient au cercle de diamètre [AB] ⟺ MA⃗·MB⃗=0\n(angle droit inscrit)\n→ équation : (x−xA)(x−xB)+(y−yA)(y−yB)=0\n\nMÉDIATRICE de [AB] :\nMA=MB ⟺ MA²=MB² (ensemble équidistant).\n\nENSEMBLE MA⃗·u⃗=k : une droite perpendiculaire à u⃗.\n\nMÉTHODE : exprimer la condition vectorielle, développer en coordonnées, reconnaître droite ou cercle.",
+              remarque:"MA⃗·MB⃗=0 caractérise le cercle de diamètre [AB] : un outil classique pour trouver une équation de cercle." },
+          ],
+          exercices:[
+            { id:'EX-PS4', niveau:'Intermédiaire', titre:'Cercle de diamètre [AB]',
+              enonce:"A(1;2), B(5;4). Équation du cercle de diamètre [AB].",
+              correction:"MA⃗·MB⃗=0 : (x−1)(x−5)+(y−2)(y−4)=0.\nDéveloppé : x²−6x+5+y²−6y+8=0 → x²+y²−6x−6y+13=0.\n(centre milieu (3;3), rayon =√5)." },
+            { id:'EX-PS5', niveau:'Difficile', titre:'Angle entre vecteurs',
+              enonce:"u⃗(1;2) et v⃗(3;1). Calculer une valeur approchée de l'angle (u⃗,v⃗).",
+              correction:"u⃗·v⃗=3+2=5. |u⃗|=√5, |v⃗|=√10.\ncosθ=5/(√5·√10)=5/√50=5/(5√2)=1/√2 → θ=45°." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -385,6 +460,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-geo-positions', titre:'7.2 Positions relatives, parallélisme et perpendicularité',
+      notions:['Parallélisme : vecteurs directeurs colinéaires','Perpendicularité : m·m\'=−1 ou n⃗·n⃗\'=0','Intersection de deux droites','Tangente à un cercle'],
+      blocs:[
+        {
+          notion:'📏 Droites parallèles, perpendiculaires et intersections',
+          theoremes:[
+            { id:'M-GR1', type:'methode', nom:'Parallélisme et perpendicularité',
+              enonce:"Deux droites de coefficients directeurs m et m' :\nPARALLÈLES ⟺ m=m' (ou directeurs colinéaires : det=0)\nPERPENDICULAIRES ⟺ m·m'=−1\n\nEN FORME CARTÉSIENNE ax+by+c=0 et a'x+b'y+c'=0 :\nparallèles ⟺ ab'−a'b=0 (vecteurs normaux colinéaires)\nperpendiculaires ⟺ aa'+bb'=0 (normaux orthogonaux)\n\nINTERSECTION de deux droites :\nrésoudre le système des deux équations.\n• une solution → sécantes (point d'intersection)\n• aucune → strictement parallèles ; une infinité → confondues.",
+              remarque:"Une droite verticale x=k n'a pas de coefficient directeur : traiter ce cas à part." },
+            { id:'F-GR3', type:'formule', nom:'Tangente à un cercle',
+              enonce:"Cercle de centre Ω, rayon r. Une droite d est :\n• TANGENTE au cercle ⟺ distance(Ω,d)=r (un seul point commun)\n• SÉCANTE ⟺ distance(Ω,d)<r (deux points)\n• EXTÉRIEURE ⟺ distance(Ω,d)>r (aucun point)\n\nLa tangente en un point M₀(x₀;y₀) du cercle est PERPENDICULAIRE au rayon ΩM₀.\nVecteur normal de la tangente : ΩM₀⃗.\n\nMéthode : calculer la distance centre–droite et la comparer au rayon.",
+              remarque:"Le critère distance(centre, droite) vs rayon évite de résoudre le système pour conclure sur la position." },
+          ],
+          exercices:[
+            { id:'EX-GR4', niveau:'Intermédiaire', titre:'Perpendiculaire',
+              enonce:"Droite d : y=2x+1. Équation de la droite perpendiculaire à d passant par A(0;3).",
+              correction:"Pente de d : m=2 → pente perpendiculaire m'=−1/2.\ny=−x/2+3, soit y=−0,5x+3." },
+            { id:'EX-GR5', niveau:'Difficile', titre:'Position droite-cercle',
+              enonce:"Cercle de centre Ω(0;0), rayon 2. La droite 3x+4y−10=0 est-elle tangente ?",
+              correction:"d(Ω,droite)=|3×0+4×0−10|/√(9+16)=10/5=2.\nd=r=2 → la droite est TANGENTE au cercle." },
+          ],
+        },
+      ],
+    },
   ]
 },
 
@@ -418,6 +518,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-pc-repetition', titre:'8.2 Succession d\'épreuves indépendantes',
+      notions:['Épreuves identiques et indépendantes','Arbre d\'une succession d\'épreuves','Probabilité d\'un chemin = produit','Tableaux croisés d\'effectifs'],
+      blocs:[
+        {
+          notion:'🌳 Répétitions et tableaux',
+          theoremes:[
+            { id:'M-PC1', type:'methode', nom:'Répétition d\'épreuves indépendantes',
+              enonce:"Lorsqu'on répète n fois une même épreuve de façon INDÉPENDANTE :\n• on modélise par un arbre où chaque niveau = une épreuve\n• la probabilité d'un chemin (issue précise) = PRODUIT des probabilités des branches\n• la probabilité d'un événement = SOMME des probabilités des chemins qui le réalisent\n\nÉVÉNEMENT « AU MOINS UN succès » :\nP(au moins un) = 1 − P(aucun) = 1 − (1−p)ⁿ\n(passer par le complémentaire est souvent le plus rapide).",
+              remarque:"« Au moins un » se calcule presque toujours par le complémentaire « aucun »." },
+            { id:'F-PC1', type:'formule', nom:'Tableaux croisés et fréquences',
+              enonce:"Un tableau croisé répartit une population selon DEUX caractères.\n\nP(A∩B) = effectif(A et B) / effectif total\nP(A) = total marginal de A / total (probabilité marginale)\nP(A|B) = effectif(A et B) / effectif(B)\n\nLIEN AVEC L'INDÉPENDANCE :\nA et B indépendants ⟺ P(A∩B)=P(A)·P(B)\n→ se vérifie directement à partir des fréquences du tableau.",
+              remarque:"Le tableau croisé et l'arbre pondéré décrivent la même situation : on passe de l'un à l'autre selon ce qui est donné." },
+          ],
+          exercices:[
+            { id:'EX-PC3', niveau:'Intermédiaire', titre:'Au moins un succès',
+              enonce:"On lance 3 fois une pièce équilibrée. Probabilité d'obtenir au moins un Pile ?",
+              correction:"P(aucun Pile)=(1/2)³=1/8.\nP(au moins un Pile)=1−1/8=7/8." },
+            { id:'EX-PC4', niveau:'Difficile', titre:'Épreuves indépendantes',
+              enonce:"Une machine produit une pièce conforme avec proba 0,9, indépendamment. Sur 3 pièces, probabilité que les 3 soient conformes, puis qu'au moins une soit défectueuse ?",
+              correction:"3 conformes : (0,9)³=0,729.\nAu moins une défectueuse =1−0,729=0,271." },
+          ],
+        },
+      ],
     },
   ]
 },
@@ -453,6 +578,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
           ]
         },
       ]
+    },
+    {
+      id:'sc-va-applications', titre:'9.2 Applications : gain, équité et variable transformée',
+      notions:['Espérance de gain','Jeu équitable : E(X)=0','Variable transformée aX+b','Décision à partir de E(X)'],
+      blocs:[
+        {
+          notion:'🎯 Espérance en situation',
+          theoremes:[
+            { id:'M-VA1', type:'methode', nom:'Espérance de gain et équité',
+              enonce:"ESPÉRANCE DE GAIN : gain moyen attendu par partie sur un grand nombre de parties.\n\nJEU ÉQUITABLE ⟺ E(X)=0 (ni favorable ni défavorable au joueur).\nE(X)>0 : favorable au joueur ; E(X)<0 : défavorable (favorable à l'organisateur).\n\nGAIN NET = gain brut − mise.\n\nMÉTHODE :\n1. Définir X = gain (net) du joueur et sa loi.\n2. Calculer E(X).\n3. Conclure sur l'équité / la rentabilité.",
+              remarque:"Pour un jeu payant, toujours raisonner sur le gain NET (en retranchant la mise) pour juger l'équité." },
+            { id:'F-VA2', type:'formule', nom:'Variable transformée Y=aX+b',
+              enonce:"Si Y=aX+b (a,b réels) :\nE(Y) = a·E(X) + b\nV(Y) = a²·V(X)\nσ(Y) = |a|·σ(X)\n\nINTERPRÉTATION :\n• ajouter b décale l'espérance, sans changer la dispersion (σ inchangé)\n• multiplier par a multiplie l'espérance ET l'écart-type par |a|.\n\nExemple : si X est un gain en euros et Y=1,2X (hausse de 20%), alors E(Y)=1,2·E(X) et σ(Y)=1,2·σ(X).",
+              remarque:"Ces relations évitent de recalculer toute la loi quand on applique une transformation affine au gain." },
+          ],
+          exercices:[
+            { id:'EX-VA3', niveau:'Intermédiaire', titre:'Jeu équitable',
+              enonce:"Un jeu coûte 2€. On gagne 5€ avec proba 0,3, sinon rien. Le jeu est-il équitable ?",
+              correction:"Gain net G : +3 (proba 0,3) ou −2 (proba 0,7).\nE(G)=3×0,3+(−2)×0,7=0,9−1,4=−0,5€.\nE(G)<0 → jeu défavorable au joueur (non équitable)." },
+            { id:'EX-VA4', niveau:'Difficile', titre:'Variable transformée',
+              enonce:"X a pour espérance 4 et écart-type 2. Soit Y=3X−5. Calculer E(Y), V(Y) et σ(Y).",
+              correction:"E(Y)=3×4−5=7.\nV(X)=σ²=4 → V(Y)=3²×4=36. σ(Y)=|3|×2=6." },
+          ],
+        },
+      ],
     },
   ]
 },
