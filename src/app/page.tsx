@@ -7,268 +7,138 @@ import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 
 // ═══════════════════════════════════════════════════════════════
-//  DONNÉES & CONSTANTES
+//  MathBac.AI — HOME V2  (design inspiré des meilleurs EdTech mondiaux)
+//  Palette : encre #0A0B0F · indigo #5B6CFF · violet #9D7BFF
 // ═══════════════════════════════════════════════════════════════
 
-const SLOGANS = [
-  "Ton Bac, notre Mission 🎯",
-  "L'IA qui te comprend, le prof qui ne dort jamais 🤖",
-  "De la Terminale au Diplôme, on est avec toi 🎓",
-  "Réussir n'est plus une question de chance ✨",
+const VIDEO_ID = '_6atlDlzhwI'
+
+const MATIERES = [
+  { icon: '🧮', label: 'Mathématiques', color: '#5B6CFF', href: '/bac/maths' },
+  { icon: '⚗️', label: 'Physique-Chimie', color: '#06d6a0', href: '/bac/sciences-exp' },
+  { icon: '🧬', label: 'SVT', color: '#10b981', href: '/bac/sciences-exp' },
+  { icon: '🇬🇧', label: 'Anglais', color: '#f59e0b', href: '/bac' },
+  { icon: '💻', label: 'Informatique', color: '#8b5cf6', href: '/bac/informatique' },
+  { icon: '📚', label: 'Français', color: '#a78bfa', href: '/bac' },
+  { icon: '📈', label: 'Économie', color: '#06b6d4', href: '/bac/economie', isNew: true },
+  { icon: '💼', label: 'Gestion', color: '#f43f5e', href: '/bac/gestion', isNew: true },
 ]
 
 const STATS = [
-  { n: '6', l: 'Matières', s: 'Maths · PC · SVT · Anglais · Info · Français' },
+  { n: '8', l: 'Matières', s: 'Maths · PC · SVT · Anglais · Info · Français · Éco · Gestion' },
   { n: '2', l: 'Programmes', s: 'Bac Tunisie & Bac France' },
   { n: '10+', l: "Ans d'archives", s: 'Examens officiels' },
   { n: '24/7', l: 'Disponible', s: 'Professeur IA toujours là' },
 ]
 
+const PROCESS = [
+  { n: '01', icon: '🎯', t: 'Choisis ta matière', d: "8 matières, 2 programmes (Tunisie & France), toutes les sections — du tronc commun à la spécialité." },
+  { n: '02', icon: '⚡', t: "Génère un sujet IA", d: "Un sujet original au format officiel du Bac, créé en quelques secondes, jamais deux fois le même." },
+  { n: '03', icon: '✍️', t: 'Compose & dépose', d: "Tu rédiges, tu déposes ta copie (ou une photo). Chrono réel comme le jour J." },
+  { n: '04', icon: '📈', t: 'Correction & remédiation', d: "Note détaillée, correction exercice par exercice, lacunes ciblées et plan de révision personnalisé." },
+]
+
 const FEATURES = [
-  {
-    icon: '📝',
-    title: 'Simulation IA',
-    desc: "Examens originaux générés par IA, corrigés exercice par exercice avec remédiation personnalisée.",
-    color: '#6366f1',
-    href: '/simulation',
-    img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
-  },
-  {
-    icon: '🧮',
-    title: 'Solveur Étape par Étape',
-    desc: "Chaque étape expliquée avec justification. La méthode complète, pas juste le résultat.",
-    color: '#4f6ef7',
-    href: '/solve',
-    img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80',
-  },
-  {
-    icon: '🤖',
-    title: 'Chat IA Professeur',
-    desc: "Pose tes questions en français. L'IA répond comme un enignant avec graphiques interactifs.",
-    color: '#7c3aed',
-    href: '/chat',
-    img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80',
-  },
-  {
-    icon: '📊',
-    title: 'Analyse & Remédiation',
-    desc: "Détection des lacunes, exercices ciblés et plan de révision personnalisé généré par l'IA.",
-    color: '#ec4899',
-    href: '/chat',
-    img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80',
-  },
-  {
-    icon: '🏆',
-    title: 'Bac Blanc National',
-    desc: "Concours quotidien (1er Mai – 30 Juin) avec chrono, correction IA, classement national.",
-    color: '#f59e0b',
-    href: '/bac-blanc',
-    img: 'https://images.unsplash.com/photo-1523050854058-8df90110c8f5?w=600&q=80',
-  },
-  {
-    icon: '📚',
-    title: 'Cours & Programme Officiel',
-    desc: "Tous les chapitres, définitions, théorèmes, formules et exercices corrigés du programme.",
-    color: '#06b6d4',
-    href: '/bac',
-    img: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80',
-  },
+  { icon: '📝', title: 'Simulation IA', desc: "Sujets originaux au format officiel, corrigés exercice par exercice avec remédiation personnalisée.", color: '#5B6CFF', href: '/simulation' },
+  { icon: '🧮', title: 'Solveur étape par étape', desc: "Chaque étape justifiée. La méthode complète, pas seulement le résultat.", color: '#4f6ef7', href: '/solve' },
+  { icon: '🤖', title: 'Chat IA Professeur', desc: "Pose tes questions en français. L'IA répond comme un enseignant, avec graphiques interactifs.", color: '#9D7BFF', href: '/chat' },
+  { icon: '📊', title: 'Analyse & remédiation', desc: "Détection des lacunes, exercices ciblés et plan de révision généré par l'IA.", color: '#ec4899', href: '/chat' },
+  { icon: '🏆', title: 'Bac Blanc national', desc: "Concours quotidien avec chrono, correction IA et classement national.", color: '#f59e0b', href: '/bac-blanc' },
+  { icon: '📚', title: 'Cours & programme officiel', desc: "Tous les chapitres, définitions, théorèmes, formules et exercices corrigés.", color: '#06b6d4', href: '/bac' },
 ]
 
 const SECTIONS_TN = [
-  { href: '/bac/maths', icon: '🧮', titre: 'Mathématiques', couleur: '#4f6ef7', desc: 'Analyse, Algèbre, Géométrie', coeff: 'Coeff. 4' },
-  { href: '/bac/sciences-exp', icon: '⚗️', titre: 'Sciences Exp.', couleur: '#10b981', desc: 'Biologie, Physique, Chimie', coeff: 'Coeff. 3' },
-  { href: '/bac/sciences-tech', icon: '⚙️', titre: 'Sciences Tech.', couleur: '#06b6d4', desc: 'Analyse & Algèbre appliquées', coeff: 'Coeff. 3' },
-  { href: '/bac/informatique', icon: '💻', titre: 'Informatique', couleur: '#8b5cf6', desc: 'Logique, Algorithmique', coeff: 'Coeff. 3', isNew: true },
-  { href: '/bac/eco-gestion', icon: '📊', titre: 'Économie-Gestion', couleur: '#f59e0b', desc: 'Stats, Suites financières', coeff: 'Coeff. 2', isNew: true },
+  { href: '/bac/maths', icon: '🧮', titre: 'Mathématiques', couleur: '#5B6CFF' },
+  { href: '/bac/sciences-exp', icon: '⚗️', titre: 'Sciences Exp.', couleur: '#10b981' },
+  { href: '/bac/sciences-tech', icon: '⚙️', titre: 'Sciences Tech.', couleur: '#06b6d4' },
+  { href: '/bac/informatique', icon: '💻', titre: 'Informatique', couleur: '#8b5cf6' },
+  { href: '/bac/economie', icon: '📈', titre: 'Économie', couleur: '#06b6d4', isNew: true },
+  { href: '/bac/gestion', icon: '💼', titre: 'Gestion', couleur: '#f43f5e', isNew: true },
 ]
 
 const SECTIONS_FR = [
-  { href: '/bac-france/terminale-generale', icon: '🎓', titre: 'Terminale Générale', couleur: '#4f6ef7', desc: 'Suites, Complexes, Proba', coeff: 'Coeff. 16' },
-  { href: '/bac-france/premiere', icon: '📗', titre: 'Première Spécialité', couleur: '#3b82f6', desc: 'Second degré, Dérivation', coeff: 'Épreuve anticipée' },
-  { href: '/bac-france/terminale-techno', icon: '📊', titre: 'STMG / STI2D', couleur: '#10b981', desc: 'Suites financières, Stats', coeff: 'Maths techno' },
-  { href: '/bac-france/expertes', icon: '★', titre: 'Maths Expertes', couleur: '#8b5cf6', desc: 'Arithmétique, Matrices', coeff: 'Option', isNew: true },
+  { href: '/bac-france/terminale-generale', icon: '🎓', titre: 'Terminale Générale', couleur: '#5B6CFF' },
+  { href: '/bac-france/premiere', icon: '📗', titre: 'Première Spécialité', couleur: '#3b82f6' },
+  { href: '/bac-france/terminale-techno', icon: '📊', titre: 'STMG / STI2D', couleur: '#10b981' },
+  { href: '/bac-france/expertes', icon: '★', titre: 'Maths Expertes', couleur: '#8b5cf6' },
+  { href: '/bac-france/eco-gestion', icon: '📊', titre: 'Éco-Gestion · SES', couleur: '#14b8a6', isNew: true },
 ]
+
+const TYPED_WORDS = ['Mathématiques', 'Physique-Chimie', 'Économie', 'Gestion', 'Anglais', 'Informatique']
 
 // ═══════════════════════════════════════════════════════════════
 //  MICRO-COMPOSANTS
 // ═══════════════════════════════════════════════════════════════
 
-function Pill({ children, color = '#4f6ef7' }: { children: React.ReactNode; color?: string }) {
+function StatCounter({ value, label, sub }: { value: string; label: string; sub: string }) {
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 4,
-      fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
-      background: `${color}18`, color, border: `1px solid ${color}30`,
-    }}>{children}</span>
+    <div className="v2-stat">
+      <div className="v2-stat-n">{value}</div>
+      <div className="v2-stat-l">{label}</div>
+      <div className="v2-stat-s">{sub}</div>
+    </div>
   )
 }
-
-function SectionCard({ s }: { s: any }) {
-  const [hov, setHov] = useState(false)
-  return (
-    <Link href={s.href} style={{ textDecoration: 'none' }}>
-      <div style={{
-        background: hov ? `${s.couleur}0d` : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${hov ? s.couleur + '40' : 'rgba(255,255,255,0.08)'}`,
-        borderRadius: 16, padding: '20px 18px',
-        transition: 'all 0.3s ease', cursor: 'pointer',
-        transform: hov ? 'translateY(-4px) scale(1.02)' : 'none',
-        boxShadow: hov ? `0 20px 40px ${s.couleur}15` : 'none',
-        position: 'relative', overflow: 'hidden',
-      }}
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
-      >
-        {s.isNew && (
-          <div style={{
-            position: 'absolute', top: 8, right: 8,
-            background: 'linear-gradient(135deg,#6366f1,#a78bfa)',
-            color: 'white', fontSize: 8, fontWeight: 900,
-            padding: '2px 8px', borderRadius: 20, letterSpacing: '0.06em'
-          }}>NEW</div>
-        )}
-        <div style={{ fontSize: 32, marginBottom: 10 }}>{s.icon}</div>
-        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, color: 'var(--text)' }}>{s.titre}</div>
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 10, lineHeight: 1.5 }}>{s.desc}</div>
-        <Pill color={s.couleur}>{s.coeff}</Pill>
-      </div>
-    </Link>
-  )
-}
-
-function FeatureCard({ f, i }: { f: typeof FEATURES[0]; i: number }) {
-  const [hov, setHov] = useState(false)
-  return (
-    <Link href={f.href} style={{ textDecoration: 'none' }}>
-      <div style={{
-        background: hov ? `${f.color}0a` : 'rgba(255,255,255,0.02)',
-        border: `1px solid ${hov ? f.color + '35' : 'rgba(255,255,255,0.07)'}`,
-        borderRadius: 20, padding: 0, overflow: 'hidden',
-        transition: 'all 0.35s ease', cursor: 'pointer',
-        transform: hov ? 'translateY(-6px)' : 'none',
-        boxShadow: hov ? `0 24px 60px ${f.color}12` : 'none',
-      }}
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
-      >
-        {/* Image de la feature */}
-        <div style={{
-          height: 140, overflow: 'hidden', position: 'relative',
-          background: `linear-gradient(135deg, ${f.color}20, ${f.color}05)`,
-        }}>
-          <img
-            src={f.img}
-            alt={f.title}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              opacity: hov ? 0.9 : 0.6,
-              transform: hov ? 'scale(1.05)' : 'scale(1)',
-              transition: 'all 0.5s ease',
-            }}
-          />
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: `linear-gradient(to top, rgba(10,10,26,0.9) 0%, transparent 60%)`,
-          }} />
-          <div style={{
-            position: 'absolute', bottom: 12, left: 16,
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 12,
-              background: `${f.color}25`, border: `1px solid ${f.color}40`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, backdropFilter: 'blur(10px)',
-            }}>{f.icon}</div>
-            <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{f.title}</span>
-          </div>
-        </div>
-
-        <div style={{ padding: '18px 20px 20px' }}>
-          <div style={{ fontSize: 13, lineHeight: 1.65, color: 'var(--text2)', marginBottom: 14 }}>
-            {f.desc}
-          </div>
-          <div style={{
-            fontSize: 12, color: f.color, fontWeight: 700,
-            opacity: hov ? 1 : 0.5, transition: 'opacity 0.3s',
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}>
-            Découvrir →
-          </div>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  COMPOSANT PRINCIPAL
-// ═══════════════════════════════════════════════════════════════
-
-
-// ── Composant Video Player avec thumbnail cliquable ──────────────
-const VIDEO_ID = '_6atlDlzhwI'
 
 function VideoPlayer() {
   const [playing, setPlaying] = useState(false)
-
   return (
-    <div style={{ maxWidth: 820, margin: '0 auto', position: 'relative', borderRadius: 22, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.6)' }}>
+    <div className="v2-video">
       {!playing ? (
-        <div onClick={() => setPlaying(true)} style={{ position: 'relative', cursor: 'pointer', display: 'block', lineHeight: 0 }}>
-          <img
-            src="/Réussis_ton_Bac_avec_MATHBAC_AI.png"
-            alt="MathBac.AI — Présentation"
-            style={{ width: '100%', display: 'block', borderRadius: 22 }}
-          />
-          <div style={{
-            position: 'absolute', inset: 0, borderRadius: 22,
-            background: 'rgba(0,0,0,0.25)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.2s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.4)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.25)')}
-          >
-            <div style={{
-              width: 80, height: 80, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.95)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.5)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)' }}
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <path d="M8 5.14v14l11-7-11-7z" fill="#1a1a2e"/>
-              </svg>
-            </div>
-            <div style={{
-              position: 'absolute', bottom: 16, right: 20,
-              background: 'rgba(0,0,0,0.8)', color: 'white',
-              fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 8,
-              fontFamily: 'var(--font-mono)',
-            }}>
-              30 min
-            </div>
-          </div>
-        </div>
+        <button className="v2-video-thumb" onClick={() => setPlaying(true)} aria-label="Lire la vidéo de démonstration">
+          <img src={`https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`} alt="Démonstration MathBac.AI" />
+          <span className="v2-video-play"><span className="v2-video-tri" /></span>
+          <span className="v2-video-cap">Voir MathBac.AI en action · 2 min</span>
+        </button>
       ) : (
-        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, background: '#000', borderRadius: 22, overflow: 'hidden' }}>
-          <iframe
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-            src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
-            title="MathBac.AI — Présentation complète"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
+        <iframe
+          src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
+          title="MathBac.AI" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
+        />
       )}
     </div>
   )
 }
+
+// Démo live : faux flux de génération de sujet (signature du hero)
+function LiveDemo() {
+  const lines = [
+    { k: 'matiere', label: 'Matière', val: 'Économie · Bac', delay: 0 },
+    { k: 'gen', label: 'Génération du sujet', val: 'Exercice 1 — Croissance & PIB', delay: 600 },
+    { k: 'doc', label: 'Document statistique', val: 'Tableau INS 2024 ✓', delay: 1200 },
+    { k: 'corr', label: 'Correction IA', val: 'Barème + remédiation', delay: 1800 },
+  ]
+  const [shown, setShown] = useState(0)
+  useEffect(() => {
+    const timers = lines.map((_, i) => setTimeout(() => setShown((s) => Math.max(s, i + 1)), 500 + i * 650))
+    const loop = setInterval(() => setShown(0), 6000)
+    return () => { timers.forEach(clearTimeout); clearInterval(loop) }
+  }, [])
+  return (
+    <div className="v2-demo" role="img" aria-label="Aperçu d'une génération de sujet par l'IA">
+      <div className="v2-demo-top">
+        <span className="v2-dot" style={{ background: '#ff5f57' }} />
+        <span className="v2-dot" style={{ background: '#febc2e' }} />
+        <span className="v2-dot" style={{ background: '#28c840' }} />
+        <span className="v2-demo-title">simulation · sujet IA</span>
+      </div>
+      <div className="v2-demo-body">
+        {lines.map((l, i) => (
+          <div key={l.k} className={`v2-demo-line ${i < shown ? 'on' : ''}`}>
+            <span className="v2-demo-k">{l.label}</span>
+            <span className="v2-demo-v">{l.val}</span>
+          </div>
+        ))}
+        <div className={`v2-demo-bar ${shown >= 4 ? 'full' : ''}`}><span /></div>
+        <div className={`v2-demo-grade ${shown >= 4 ? 'on' : ''}`}>17.5<span>/20</span></div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PAGE
+// ═══════════════════════════════════════════════════════════════
 
 export default function HomePage() {
   const supabase = createClient(
@@ -276,34 +146,40 @@ export default function HomePage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const [sloganIndex, setSloganIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(false)
+  const [typed, setTyped] = useState('')
+  const [wordIdx, setWordIdx] = useState(0)
 
-  // Rotation des slogans
+  // Effet machine à écrire sur le mot-matière du hero
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSloganIndex((prev) => (prev + 1) % SLOGANS.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [])
+    const word = TYPED_WORDS[wordIdx]
+    let i = 0
+    let deleting = false
+    let timer: ReturnType<typeof setTimeout>
+    const tick = () => {
+      if (!deleting) {
+        setTyped(word.slice(0, i + 1)); i++
+        if (i === word.length) { deleting = true; timer = setTimeout(tick, 1400); return }
+      } else {
+        setTyped(word.slice(0, i - 1)); i--
+        if (i === 0) { deleting = false; setWordIdx((w) => (w + 1) % TYPED_WORDS.length); return }
+      }
+      timer = setTimeout(tick, deleting ? 45 : 90)
+    }
+    timer = setTimeout(tick, 200)
+    return () => clearTimeout(timer)
+  }, [wordIdx])
 
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
-
-  // Intersection Observer pour animations au scroll
+  // Reveal au scroll
   useEffect(() => {
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((x) => {
-        if (x.isIntersecting) x.target.classList.add('revealed')
-      }),
-      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+      (entries) => entries.forEach((x) => { if (x.isIntersecting) x.target.classList.add('revealed') }),
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
     )
-    document.querySelectorAll('.reveal-scroll').forEach((el) => obs.observe(el))
+    document.querySelectorAll('.reveal').forEach((el) => obs.observe(el))
     return () => obs.disconnect()
   }, [])
 
-  // Session check (conservé de votre code original)
+  // Session check (conservé)
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -313,10 +189,7 @@ export default function HomePage() {
       const localId = localStorage.getItem('mathbac_session_id')
       if (!localId) return
       const { data: prof } = await supabase
-        .from('profiles')
-        .select('current_session_id, is_active')
-        .eq('id', user.id)
-        .single()
+        .from('profiles').select('current_session_id, is_active').eq('id', user.id).single()
       if (prof?.is_active && prof?.current_session_id && prof.current_session_id !== localId) {
         localStorage.removeItem('mathbac_session_id')
         await supabase.auth.signOut()
@@ -331,987 +204,343 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      <main style={{ position: 'relative', zIndex: 1, overflow: 'hidden' }}>
+      <main className="v2">
 
-        {/* ═══════════════════════════════════════════════════════ HERO SECTION */}
-        <section style={{
-          minHeight: '100vh',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center',
-          padding: '100px clamp(20px, 5vw, 60px) 60px',
-          position: 'relative',
-          background: 'linear-gradient(180deg, rgba(79,110,247,0.03) 0%, transparent 50%)',
-        }}>
-          {/* Orbes décoratifs */}
-          <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute', top: '5%', left: '10%',
-              width: 500, height: 500,
-              background: 'radial-gradient(circle, rgba(79,110,247,0.12) 0%, transparent 60%)',
-              filter: 'blur(60px)', animation: 'float 8s ease-in-out infinite',
-            }} />
-            <div style={{
-              position: 'absolute', top: '30%', right: '5%',
-              width: 400, height: 400,
-              background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 60%)',
-              filter: 'blur(50px)', animation: 'float 10s ease-in-out infinite 2s',
-            }} />
-            <div style={{
-              position: 'absolute', bottom: '10%', left: '30%',
-              width: 600, height: 300,
-              background: 'radial-gradient(ellipse, rgba(6,214,160,0.06) 0%, transparent 70%)',
-              filter: 'blur(60px)', animation: 'float 12s ease-in-out infinite 4s',
-            }} />
+        {/* ─────────────────────────── HERO */}
+        <section className="v2-hero">
+          <div className="v2-aurora" aria-hidden />
+          <div className="v2-grid-bg" aria-hidden />
+          <div className="v2-hero-inner">
+            <div className="v2-hero-left">
+              <span className="v2-eyebrow">★ Plateforme IA · Bac Tunisie &amp; France</span>
+              <h1 className="v2-h1">
+                Révise{' '}
+                <span className="v2-typed">{typed}<span className="v2-caret" /></span>
+                <br />avec un prof IA qui ne dort jamais.
+              </h1>
+              <p className="v2-sub">
+                Sujets originaux générés par l'IA au format officiel, corrigés exercice par exercice,
+                avec remédiation personnalisée. 8 matières, 2 programmes, un seul objectif : ton Bac.
+              </p>
+              <div className="v2-cta-row">
+                <Link href="/simulation" className="v2-btn v2-btn-primary">Générer un sujet gratuit →</Link>
+                <Link href="/bac" className="v2-btn v2-btn-ghost">Explorer les cours</Link>
+              </div>
+              <div className="v2-trust">
+                <span>✓ Sans carte bancaire</span><span>✓ Programmes CNP &amp; Éducation nationale</span>
+              </div>
+            </div>
+            <div className="v2-hero-right reveal">
+              <LiveDemo />
+            </div>
           </div>
 
-          <div style={{
-            maxWidth: 900, position: 'relative',
-            opacity: isVisible ? 1 : 0,
-            transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
-            transition: 'all 1s ease',
-          }}>
-
-            {/* Badge bilingue animé */}
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 12,
-              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 100, padding: '8px 20px', fontSize: 12, color: 'var(--text2)',
-              marginBottom: 32,
-              animation: 'fadeInDown 0.8s ease both',
-            }}>
-              <span style={{
-                width: 8, height: 8, borderRadius: '50%', background: '#10b981',
-                display: 'inline-block', animation: 'pulse 2s ease infinite',
-              }} />
-              <span style={{ color: '#60a5fa', fontWeight: 700 }}>🇫🇷 Bac France</span>
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-              <span style={{ color: '#4f6ef7', fontWeight: 700 }}>🇹🇳 Bac Tunisie</span>
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
-              <span>IA Pédagogique</span>
+          {/* Bandeau matières défilant */}
+          <div className="v2-marquee" aria-hidden>
+            <div className="v2-marquee-track">
+              {[...MATIERES, ...MATIERES].map((m, i) => (
+                <span key={i} className="v2-chip" style={{ ['--c' as any]: m.color }}>
+                  <span>{m.icon}</span>{m.label}
+                </span>
+              ))}
             </div>
+          </div>
+        </section>
 
-            {/* Slogan rotatif */}
-            <div style={{
-              height: 28, marginBottom: 24, overflow: 'hidden',
-              animation: 'fadeInDown 0.8s ease 0.2s both',
-            }}>
-              <div style={{
-                transition: 'transform 0.6s ease, opacity 0.6s ease',
-                transform: `translateY(-${sloganIndex * 28}px)`,
-              }}>
-                {SLOGANS.map((s, i) => (
-                  <div key={i} style={{
-                    height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 15, fontWeight: 600, color: 'var(--accent)',
-                    letterSpacing: '0.02em',
-                  }}>
-                    ✨ {s}
-                  </div>
+        {/* ─────────────────────────── STATS */}
+        <section className="v2-section v2-stats reveal">
+          {STATS.map((s) => <StatCounter key={s.l} value={s.n} label={s.l} sub={s.s} />)}
+        </section>
+
+        {/* ─────────────────────────── MATIÈRES (mosaïque) */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">Tout le programme, un seul endroit</span>
+            <h2 className="v2-h2">8 matières couvertes de A à Z</h2>
+            <p className="v2-p">Cours, examens officiels, simulations IA et Bac Blanc — pour chaque matière et chaque section.</p>
+          </div>
+          <div className="v2-mosaic">
+            {MATIERES.map((m) => (
+              <Link key={m.label} href={m.href} className="v2-tile" style={{ ['--c' as any]: m.color }}>
+                {m.isNew && <span className="v2-new">Nouveau</span>}
+                <span className="v2-tile-icon">{m.icon}</span>
+                <span className="v2-tile-label">{m.label}</span>
+                <span className="v2-tile-go">Découvrir →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ─────────────────────────── PROCESS (séquentiel numéroté) */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">Comment ça marche</span>
+            <h2 className="v2-h2">De la matière au 20/20, en 4 étapes</h2>
+          </div>
+          <div className="v2-steps">
+            {PROCESS.map((p) => (
+              <div key={p.n} className="v2-step">
+                <div className="v2-step-n">{p.n}</div>
+                <div className="v2-step-icon">{p.icon}</div>
+                <h3 className="v2-step-t">{p.t}</h3>
+                <p className="v2-step-d">{p.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─────────────────────────── DÉMO VIDÉO */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">Voir en action</span>
+            <h2 className="v2-h2">2 minutes pour tout comprendre</h2>
+          </div>
+          <VideoPlayer />
+        </section>
+
+        {/* ─────────────────────────── FEATURES */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">Tout l'arsenal pour réussir</span>
+            <h2 className="v2-h2">Six outils, une seule plateforme</h2>
+          </div>
+          <div className="v2-features">
+            {FEATURES.map((f) => (
+              <Link key={f.title} href={f.href} className="v2-feature" style={{ ['--c' as any]: f.color }}>
+                <span className="v2-feature-icon">{f.icon}</span>
+                <h3 className="v2-feature-t">{f.title}</h3>
+                <p className="v2-feature-d">{f.desc}</p>
+                <span className="v2-feature-go">Essayer →</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ─────────────────────────── 2 PROGRAMMES */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">Deux pays · un seul niveau d'exigence</span>
+            <h2 className="v2-h2">Tunisie &amp; France</h2>
+          </div>
+          <div className="v2-prog">
+            <div className="v2-prog-card" style={{ ['--c' as any]: '#5B6CFF' }}>
+              <div className="v2-prog-top"><span className="v2-flag">🇹🇳</span>
+                <div><span className="v2-prog-kicker">Programme CNP 2026</span><h3>Bac Tunisie</h3></div>
+              </div>
+              <p className="v2-prog-desc">Toutes matières, toutes sections — cours, examens officiels, simulations IA et Bac Blanc.</p>
+              <div className="v2-prog-tags">
+                {SECTIONS_TN.map((s) => (
+                  <Link key={s.href} href={s.href} className="v2-tag" style={{ ['--c' as any]: s.couleur }}>
+                    <span>{s.icon}</span>{s.titre}{s.isNew && <span className="v2-tag-new">•</span>}
+                  </Link>
                 ))}
               </div>
+              <Link href="/bac" className="v2-btn v2-btn-primary v2-prog-btn">Explorer le programme →</Link>
             </div>
-
-            {/* Titre principal */}
-            <h1 style={{
-              fontFamily: 'var(--font-display)', fontWeight: 900,
-              fontSize: 'clamp(20px, 3vw, 38px)', lineHeight: 1.1,
-              letterSpacing: '-0.03em', marginBottom: 24,
-              animation: 'fadeInUp 0.8s ease 0.3s both',
-            }}>
-              <span style={{ display: 'block', marginBottom: 16, color: 'rgba(255,255,255,0.95)' }}>
-                Ton professeur IA personnel
-              </span>
-              <span style={{
-                background: 'linear-gradient(90deg, #4f6ef7, #7c3aed, #ec4899)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>
-                pour réussir ton Bac
-              </span>
-            </h1>
-
-            {/* Chips matières */}
-            <div style={{
-              display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap',
-              marginBottom: 32,
-              animation: 'fadeInUp 0.8s ease 0.4s both',
-            }}>
-              {[
-                { icon: '🧮', label: 'Mathématiques', color: '#4f6ef7' },
-                { icon: '⚗️', label: 'Physique-Chimie', color: '#06d6a0' },
-                { icon: '🧬', label: 'SVT', color: '#10b981' },
-                { icon: '🇬🇧', label: 'Anglais', color: '#f59e0b' },
-                { icon: '💻', label: 'Informatique', color: '#8b5cf6' },
-                { icon: '📚', label: 'Français', color: '#a78bfa' },
-              ].map((m) => (
-                <span key={m.label} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '8px 16px', borderRadius: 100,
-                  background: `${m.color}15`, border: `1.5px solid ${m.color}40`,
-                  color: m.color, fontSize: 13, fontWeight: 700,
-                  transition: 'all 0.2s', cursor: 'default',
-                }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `${m.color}25`
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = `${m.color}15`
-                    e.currentTarget.style.transform = 'translateY(0)'
-                  }}
-                >
-                  <span style={{ fontSize: 16 }}>{m.icon}</span>
-                  <span>{m.label}</span>
-                </span>
-              ))}
-            </div>
-
-            {/* Sous-titre */}
-            <p style={{
-              fontSize: 'clamp(14px, 1.6vw, 17px)', color: 'var(--muted)',
-              maxWidth: 620, margin: '0 auto 40px', fontWeight: 400, lineHeight: 1.8,
-              animation: 'fadeInUp 0.8s ease 0.5s both',
-            }}>
-              Le <strong style={{ color: '#4f6ef7' }}>premier site éducatif</strong> qui utilise l'intelligence artificielle
-              conçu pour les élèves du Bac. Simulation d'examens, solveur étape par étape,
-              chat professeur IA, Bac Blanc national et remédiation personnalisée.
-            </p>
-
-            {/* CTA Buttons */}
-            <div style={{
-              display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap',
-              marginBottom: 60,
-              animation: 'fadeInUp 0.8s ease 0.6s both',
-            }}>
-              <Link href="/bac" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #4f6ef7, #7c3aed)',
-                color: 'white', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 800, fontSize: 15, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(79,110,247,0.45)',
-                transition: 'all 0.3s ease',
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 16px 48px rgba(79,110,247,0.55)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,110,247,0.45)'
-                }}
-              >
-                🇹🇳 Programme Tunisie
-              </Link>
-
-              <Link href="/bac-france" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #2563eb, #4f6ef7)',
-                color: 'white', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 800, fontSize: 15, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(37,99,235,0.4)',
-                transition: 'all 0.3s ease',
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                }}
-              >
-                🇫🇷 Programme France
-              </Link>
-
-              <Link href="/chat" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(6,214,160,0.12)', border: '1px solid rgba(6,214,160,0.35)',
-                color: '#06d6a0', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 700, fontSize: 15, textDecoration: 'none',
-                transition: 'all 0.3s ease',
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(6,214,160,0.2)'
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(6,214,160,0.12)'
-                  e.currentTarget.style.transform = 'translateY(0)'
-                }}
-              >
-                💬 Chat Professeur IA
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: 'clamp(24px, 5vw, 56px)', flexWrap: 'wrap',
-              animation: 'fadeInUp 0.8s ease 0.7s both',
-            }}>
-              {STATS.map((s, i) => (
-                <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 900,
-                    fontSize: 'clamp(28px, 3.5vw, 40px)', lineHeight: 1,
-                    background: 'linear-gradient(135deg, var(--text), var(--accent))',
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                  }}>{s.n}</div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginTop: 4 }}>{s.l}</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{s.s}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div style={{
-            position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
-            animation: 'bounce 2s ease infinite',
-          }}>
-            <div style={{
-              width: 24, height: 40, borderRadius: 12,
-              border: '2px solid rgba(255,255,255,0.2)',
-              display: 'flex', justifyContent: 'center', paddingTop: 8,
-            }}>
-              <div style={{
-                width: 4, height: 8, borderRadius: 2,
-                background: 'var(--accent)', animation: 'scrollDown 2s ease infinite',
-              }} />
+            <div className="v2-prog-card" style={{ ['--c' as any]: '#3b82f6' }}>
+              <div className="v2-prog-top"><span className="v2-flag">🇫🇷</span>
+                <div><span className="v2-prog-kicker">Éducation nationale</span><h3>Bac France</h3></div>
+              </div>
+              <p className="v2-prog-desc">Toutes filières — cours, examens officiels, simulations IA et Bac Blanc.</p>
+              <div className="v2-prog-tags">
+                {SECTIONS_FR.map((s) => (
+                  <Link key={s.href} href={s.href} className="v2-tag" style={{ ['--c' as any]: s.couleur }}>
+                    <span>{s.icon}</span>{s.titre}{s.isNew && <span className="v2-tag-new">•</span>}
+                  </Link>
+                ))}
+              </div>
+              <Link href="/bac-france" className="v2-btn v2-btn-primary v2-prog-btn">Explorer le programme →</Link>
             </div>
           </div>
         </section>
 
-        {/* ═══════════════════════════════════════════════════════ SECTION PHOTOS LYCÉENS */}
-        <section className="reveal-scroll" style={{
-          padding: 'clamp(60px, 10vh, 100px) clamp(20px, 5vw, 60px)',
-          position: 'relative',
-        }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <span className="label">Ils l'ont fait, toi aussi !</span>
-              <h2 style={{
-                fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 900,
-                lineHeight: 1.2, marginBottom: 14,
-              }}>
-                La réussite commence par{' '}
-                <span style={{
-                  background: 'linear-gradient(90deg, #4f6ef7, #ec4899)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>
-                  la bonne méthode
-                </span>
-              </h2>
-              <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 540, margin: '0 auto', lineHeight: 1.7 }}>
-                Des milliers d'élèves utilisent déjà MathBac.AI pour réviser, s'entraîner et réussir leur Bac avec confiance.
-              </p>
-            </div>
-
-            {/* Grille photos */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 16,
-            }}>
-              {/* Photo 1 - Groupe qui célèbre */}
-              <div style={{
-                gridColumn: 'span 2', gridRow: 'span 2',
-                borderRadius: 20, overflow: 'hidden', position: 'relative',
-                minHeight: 320,
-              }}>
-                <img
-                  src="https://kimi-web-img.moonshot.cn/img/images.stockcake.com/df2c2fd8e28569ed8d00ea18b7c730c2aaf02de6.jpg"
-                  alt="Lycéens célébrant leur réussite"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,10,26,0.85) 0%, transparent 50%)',
-                }} />
-                <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20 }}>
-                  <div style={{
-                    fontSize: 20, fontWeight: 800, color: 'white', marginBottom: 6,
-                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                  }}>
-                    🎓 "On a tous réussi grâce à MathBac !"
-                  </div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-                    Lycée Pilote — Tunis
-                  </div>
-                </div>
-              </div>
-
-              {/* Photo 2 - Étudiant sur laptop */}
-              <div style={{
-                borderRadius: 16, overflow: 'hidden', position: 'relative',
-                minHeight: 150,
-              }}>
-                <img
-                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80"
-                  alt="Élève étudiant avec IA"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,10,26,0.7) 0%, transparent 60%)',
-                }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>💻 "Le solveur m'a tout expliqué"</div>
-                </div>
-              </div>
-
-              {/* Photo 3 - High five */}
-              <div style={{
-                borderRadius: 16, overflow: 'hidden', position: 'relative',
-                minHeight: 150,
-              }}>
-                <img
-                  src="https://kimi-web-img.moonshot.cn/img/photos.peopleimages.com/21225217fd75244e859ecde66782c379bbe80c17.jpg"
-                  alt="Élèves motivés"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,10,26,0.7) 0%, transparent 60%)',
-                }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>🙌 "Ensemble on y arrive"</div>
-                </div>
-              </div>
-
-              {/* Photo 4 - Salle informatique */}
-              <div style={{
-                borderRadius: 16, overflow: 'hidden', position: 'relative',
-                minHeight: 150,
-              }}>
-                <img
-                  src="https://kimi-web-img.moonshot.cn/img/www.aver.com/4dde66837190d1cae0a697d7094eaf3c2b9ca95a.jpg"
-                  alt="Classe moderne avec ordinateurs"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,10,26,0.7) 0%, transparent 60%)',
-                }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>🏫 "Classe moderne & connectée"</div>
-                </div>
-              </div>
-
-              {/* Photo 5 - Diplômés */}
-              <div style={{
-                borderRadius: 16, overflow: 'hidden', position: 'relative',
-                minHeight: 150,
-              }}>
-                <img
-                  src="https://images.unsplash.com/photo-1525921429624-479b6a26d84d?w=600&q=80"
-                  alt="Diplômés heureux"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,10,26,0.7) 0%, transparent 60%)',
-                }} />
-                <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>🎉 "Bac 2026, on l'a eu !"</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-
-        {/* ═══════════════════════════════════════════════════════ VIDÉO DÉMO */}
-        <section className="reveal-scroll" style={{
-          padding: 'clamp(60px, 10vh, 100px) clamp(20px, 5vw, 60px)',
-          position: 'relative',
-        }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 36 }}>
-              <span className="label">Voir en action</span>
-              <h2 style={{
-                fontSize: 'clamp(22px, 3.5vw, 40px)', fontWeight: 900,
-                lineHeight: 1.2, marginBottom: 14,
-              }}>
-                Comment ça marche ?
-              </h2>
-              <p style={{ maxWidth: 500, margin: '0 auto', color: 'var(--text2)', fontSize: 14, lineHeight: 1.65 }}>
-                Simulation Bac · Correction IA · Bac Blanc national · Programme personnalisé — tout en un.
-              </p>
-            </div>
-            <VideoPlayer />
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════ 2 PROGRAMMES */}
-        <section className="reveal-scroll" style={{
-          padding: 'clamp(40px, 8vh, 80px) clamp(20px, 5vw, 60px)',
-        }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <span className="label">Deux pays · Un seul objectif</span>
-              <h2 style={{
-                fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 900,
-                lineHeight: 1.15, marginBottom: 14,
-              }}>
-                Tunisie <span style={{ color: 'rgba(255,255,255,0.15)' }}>&</span> France
-              </h2>
-              <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
-                Le même niveau d'excellence, adapté à chaque programme officiel.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              {/* Tunisie */}
-              <div style={{
-                background: 'linear-gradient(145deg, rgba(79,110,247,0.08), rgba(79,110,247,0.02))',
-                border: '1px solid rgba(79,110,247,0.2)', borderRadius: 24,
-                padding: '32px 36px', position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{
-                  position: 'absolute', top: -60, right: -60,
-                  width: 200, height: 200,
-                  background: 'radial-gradient(circle, rgba(79,110,247,0.15) 0%, transparent 70%)',
-                  filter: 'blur(40px)',
-                }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                  <span style={{ fontSize: 44 }}>🇹🇳</span>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#4f6ef7', marginBottom: 3 }}>
-                      Programme CNP 2026
-                    </div>
-                    <h3 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Bac Tunisie</h3>
-                  </div>
-                </div>
-                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 18 }}>
-                  Toutes matières · Toutes sections — cours, examens officiels, simulations IA et Bac Blanc.
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {SECTIONS_TN.map((s) => (
-                    <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 5,
-                        padding: '6px 12px', borderRadius: 100,
-                        background: `${s.couleur}14`, border: `1px solid ${s.couleur}30`,
-                        color: s.couleur, fontSize: 12, fontWeight: 600,
-                        transition: 'all 0.2s', cursor: 'pointer',
-                      }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLElement).style.background = `${s.couleur}28`
-                          e.currentTarget.style.transform = 'translateY(-1px)'
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLElement).style.background = `${s.couleur}14`
-                          e.currentTarget.style.transform = 'translateY(0)'
-                        }}
-                      >
-                        <span style={{ fontSize: 14 }}>{s.icon}</span> {s.titre}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-                <Link href="/bac" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'linear-gradient(135deg, #4f6ef7, #7c3aed)',
-                  color: 'white', padding: '11px 22px', borderRadius: 12,
-                  fontWeight: 700, fontSize: 14, textDecoration: 'none',
-                  boxShadow: '0 6px 20px rgba(79,110,247,0.35)',
-                  transition: 'all 0.2s',
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
-                >
-                  Explorer le programme →
-                </Link>
-              </div>
-
-              {/* France */}
-              <div style={{
-                background: 'linear-gradient(145deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))',
-                border: '1px solid rgba(59,130,246,0.2)', borderRadius: 24,
-                padding: '32px 36px', position: 'relative', overflow: 'hidden',
-              }}>
-                <div style={{
-                  position: 'absolute', top: -60, right: -60,
-                  width: 200, height: 200,
-                  background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)',
-                  filter: 'blur(40px)',
-                }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                  <span style={{ fontSize: 44 }}>🇫🇷</span>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#60a5fa', marginBottom: 3 }}>
-                      Éducation Nationale
-                    </div>
-                    <h3 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Bac France</h3>
-                  </div>
-                </div>
-                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 18 }}>
-                  Toutes filières — cours, examens officiels, simulations IA et Bac Blanc.
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-                  {SECTIONS_FR.map((s) => (
-                    <Link key={s.href} href={s.href} style={{ textDecoration: 'none' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 5,
-                        padding: '6px 12px', borderRadius: 100,
-                        background: `${s.couleur}14`, border: `1px solid ${s.couleur}30`,
-                        color: s.couleur, fontSize: 12, fontWeight: 600,
-                        transition: 'all 0.2s', cursor: 'pointer',
-                      }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLElement).style.background = `${s.couleur}28`
-                          e.currentTarget.style.transform = 'translateY(-1px)'
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLElement).style.background = `${s.couleur}14`
-                          e.currentTarget.style.transform = 'translateY(0)'
-                        }}
-                      >
-                        <span style={{ fontSize: 14 }}>{s.icon}</span> {s.titre}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-                <Link href="/bac-france" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'linear-gradient(135deg, #2563eb, #4f6ef7)',
-                  color: 'white', padding: '11px 22px', borderRadius: 12,
-                  fontWeight: 700, fontSize: 14, textDecoration: 'none',
-                  boxShadow: '0 6px 20px rgba(37,99,235,0.35)',
-                  transition: 'all 0.2s',
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
-                >
-                  Explorer le programme →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════ 6 FEATURES AVEC IMAGES */}
-        <section className="reveal-scroll" style={{
-          padding: 'clamp(40px, 8vh, 80px) clamp(20px, 5vw, 60px)',
-        }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 52 }}>
-              <span className="label">5 super-pouvoirs IA</span>
-              <h2 style={{
-                fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 900,
-                lineHeight: 1.2, marginBottom: 14,
-              }}>
-                Plus qu'une calculatrice —<br />
-                <span style={{
-                  background: 'linear-gradient(90deg, #4f6ef7, #7c3aed)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>
-                  un vrai professeur IA
-                </span>
-              </h2>
-              <p style={{ fontSize: 15, color: 'var(--text2)', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>
-                Chaque outil est conçu pour un objectif précis : comprendre, s'entraîner, progresser et réussir.
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-              {FEATURES.map((f, i) => <FeatureCard key={i} f={f} i={i} />)}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════ BAC BLANC */}
-        <section className="reveal-scroll" style={{
-          padding: 'clamp(30px, 6vh, 60px) clamp(20px, 5vw, 60px)',
-        }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(249,115,22,0.04))',
-              border: '1px solid rgba(245,158,11,0.25)', borderRadius: 24,
-              padding: '36px 44px', display: 'flex', alignItems: 'center',
-              gap: 36, flexWrap: 'wrap', position: 'relative', overflow: 'hidden',
-            }}>
-              <div aria-hidden style={{
-                position: 'absolute', top: -50, right: -50,
-                width: 220, height: 220,
-                background: 'radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%)',
-                filter: 'blur(40px)',
-              }} />
-              <div style={{
-              position: 'relative',
-              width: 140, height: 140, flexShrink: 0,
-              borderRadius: 20, overflow: 'hidden',
-              boxShadow: '0 8px 32px rgba(245,158,11,0.25)',
-            }}>
-              <img
-                src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&q=80"
-                alt="Élèves en examen Bac Blanc"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(135deg, rgba(245,158,11,0.3), transparent)',
-              }} />
-              <div style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: 'translate(-50%, -50%)',
-                fontSize: 48, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))',
-              }}>🏆</div>
-            </div>
-              <div style={{ flex: 1, minWidth: 240 }}>
-                <div style={{
-                  fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
-                  letterSpacing: '0.12em', color: '#fbbf24', marginBottom: 8,
-                }}>
-                  Concours National · 1er Mai – 30 Juin
-                </div>
-                <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 800, marginBottom: 10 }}>
-                  Bac Blanc IA — Tunisie & France
-                </h2>
-                <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.7, maxWidth: 480 }}>
-                  Un vrai concours <strong>quotidien</strong> avec chrono, correction IA détaillée,
-                  classement national et analyse complète des faiblesses.
-                </p>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
-                <Link href="/bac-blanc" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-                  color: '#0a0a1a', padding: '12px 24px', borderRadius: 12,
-                  fontWeight: 800, fontSize: 14, textDecoration: 'none',
-                  boxShadow: '0 6px 22px rgba(245,158,11,0.35)',
-                  transition: 'all 0.2s',
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
-                >
-                  🇹🇳 Bac Blanc Tunisie →
-                </Link>
-                <Link href="/bac-blanc-france" style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)',
-                  color: '#fbbf24', padding: '12px 24px', borderRadius: 12,
-                  fontWeight: 700, fontSize: 14, textDecoration: 'none',
-                  transition: 'all 0.2s',
-                }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.08)' }}
-                >
-                  🇫🇷 Bac Blanc France →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════ CTA FINAL */}
-        <section style={{
-          textAlign: 'center',
-          padding: 'clamp(80px, 12vh, 140px) clamp(20px, 5vw, 60px)',
-          position: 'relative',
-        }}>
-          <div aria-hidden style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 700, height: 400,
-            background: 'radial-gradient(ellipse, rgba(79,110,247,0.12) 0%, transparent 70%)',
-            filter: 'blur(50px)',
-          }} />
-          <div className="reveal-scroll" style={{ position: 'relative' }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(6,214,160,0.1)', border: '1px solid rgba(6,214,160,0.25)',
-              borderRadius: 100, padding: '6px 16px', fontSize: 12,
-              color: '#06d6a0', marginBottom: 26,
-            }}>
-              <span style={{
-                width: 6, height: 6, borderRadius: '50%', background: '#06d6a0',
-                display: 'inline-block', animation: 'pulse 2s ease infinite',
-              }} />
-              Prêt pour réussir ton Bac ?
-            </div>
-            <h2 style={{
-              fontFamily: 'var(--font-display)', fontWeight: 900,
-              fontSize: 'clamp(24px, 3.5vw, 42px)', lineHeight: 1.1,
-              letterSpacing: '-0.02em', marginBottom: 20,
-            }}>
-              Commence aujourd'hui.<br />
-              <span style={{
-                background: 'linear-gradient(90deg, #4f6ef7, #7c3aed)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-              }}>
-                Réussis ton Bac.
-              </span>
-            </h2>
-            <p style={{
-              fontSize: 17, color: 'var(--text2)', maxWidth: 520,
-              margin: '0 auto 44px', lineHeight: 1.75, fontWeight: 300,
-            }}>
-              Le premier site éducatif avec IA pour le{' '}
-              <span style={{ color: '#4f6ef7', fontWeight: 600 }}>Bac Tunisie</span> et le{' '}
-              <span style={{ color: '#60a5fa', fontWeight: 600 }}>Bac France</span>.
-            </p>
-            <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href="/bac" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #4f6ef7, #7c3aed)',
-                color: 'white', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 800, fontSize: 16, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(79,110,247,0.5)',
-                transition: 'all 0.3s',
-              }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 14px 40px rgba(79,110,247,0.6)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(79,110,247,0.5)'
-                }}
-              >
-                🇹🇳 Programme Tunisie →
-              </Link>
-              <Link href="/bac-france" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'linear-gradient(135deg, #2563eb, #4f6ef7)',
-                color: 'white', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 800, fontSize: 16, textDecoration: 'none',
-                boxShadow: '0 8px 32px rgba(37,99,235,0.45)',
-                transition: 'all 0.3s',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0) scale(1)' }}
-              >
-                🇫🇷 Programme France →
-              </Link>
-              <Link href="/solve" style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
-                color: 'var(--text)', padding: '16px 32px', borderRadius: 14,
-                fontWeight: 700, fontSize: 16, textDecoration: 'none',
-                transition: 'all 0.3s',
-              }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
-              >
-                🧮 Solveur IA
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════ CONTACT */}
-        <section id="contact" style={{
-          padding: 'clamp(50px, 8vh, 80px) clamp(20px, 5vw, 60px)',
-          position: 'relative',
-        }}>
-          <div aria-hidden style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 600, height: 300,
-            background: 'radial-gradient(ellipse, rgba(79,110,247,0.08) 0%, transparent 70%)',
-            filter: 'blur(40px)',
-          }} />
-          <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center', position: 'relative' }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              background: 'rgba(79,110,247,0.08)', border: '1px solid rgba(79,110,247,0.2)',
-              borderRadius: 100, padding: '6px 16px', fontSize: 12,
-              color: '#818cf8', marginBottom: 24,
-            }}>
-              📬 Contactez-nous
-            </div>
-
-            <h2 style={{
-              fontFamily: 'var(--font-display)', fontWeight: 900,
-              fontSize: 'clamp(22px, 3vw, 34px)', marginBottom: 12, letterSpacing: '-0.02em',
-            }}>
-              Une question ? On vous répond.
-            </h2>
-            <p style={{ fontSize: 15, color: 'var(--text2)', marginBottom: 36, lineHeight: 1.7 }}>
-              Support pédagogique, abonnements, partenariats —<br />
-              disponible 7j/7 via WhatsApp ou email.
-            </p>
-
-            <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr',
-              gap: 16, maxWidth: 560, margin: '0 auto',
-            }}>
-              {/* WhatsApp */}
-              <a href="https://wa.me/21699268970" target="_blank" rel="noopener noreferrer"
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                  padding: '28px 20px', borderRadius: 18,
-                  background: 'rgba(37,211,102,0.06)', border: '1px solid rgba(37,211,102,0.2)',
-                  textDecoration: 'none', transition: 'all 0.25s', cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(37,211,102,0.12)'
-                  e.currentTarget.style.borderColor = 'rgba(37,211,102,0.4)'
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(37,211,102,0.06)'
-                  e.currentTarget.style.borderColor = 'rgba(37,211,102,0.2)'
-                  e.currentTarget.style.transform = 'none'
-                }}
-              >
-                <div style={{
-                  width: 52, height: 52, borderRadius: '50%',
-                  background: 'rgba(37,211,102,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 26,
-                }}>
-                  💬
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 15, color: '#25d366', marginBottom: 4 }}>
-                    WhatsApp
-                  </div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>
-                    +216 99 268 970
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(37,211,102,0.7)', fontWeight: 600 }}>
-                  Réponse rapide →
-                </div>
-              </a>
-
-              {/* Email */}
-              <a href="mailto:bensghaiermejdi70@gmail.com"
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                  padding: '28px 20px', borderRadius: 18,
-                  background: 'rgba(79,110,247,0.06)', border: '1px solid rgba(79,110,247,0.18)',
-                  textDecoration: 'none', transition: 'all 0.25s', cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(79,110,247,0.12)'
-                  e.currentTarget.style.borderColor = 'rgba(79,110,247,0.4)'
-                  e.currentTarget.style.transform = 'translateY(-3px)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(79,110,247,0.06)'
-                  e.currentTarget.style.borderColor = 'rgba(79,110,247,0.18)'
-                  e.currentTarget.style.transform = 'none'
-                }}
-              >
-                <div style={{
-                  width: 52, height: 52, borderRadius: '50%',
-                  background: 'rgba(79,110,247,0.12)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 26,
-                }}>
-                  ✉️
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 15, color: '#818cf8', marginBottom: 4 }}>
-                    Email
-                  </div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontFamily: 'var(--font-mono)' }}>
-                    bensghaiermejdi70@gmail.com
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(79,110,247,0.7)', fontWeight: 600 }}>
-                  Réponse sous 24h →
-                </div>
-              </a>
-            </div>
-
-            <div style={{
-              marginTop: 24, padding: '12px 24px',
-              background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
-              borderRadius: 12, display: 'inline-flex', alignItems: 'center', gap: 10,
-              fontSize: 13, color: 'var(--muted)',
-            }}>
-              <span>🕐</span>
-              <span>
-                Disponible <strong style={{ color: 'var(--text)' }}>7j/7</strong> ·
-                Réponse WhatsApp en moins de <strong style={{ color: 'var(--text)' }}>2h</strong>
-              </span>
+        {/* ─────────────────────────── CTA FINAL */}
+        <section className="v2-section reveal">
+          <div className="v2-final">
+            <div className="v2-aurora v2-aurora-2" aria-hidden />
+            <h2 className="v2-final-h">Ton Bac commence aujourd'hui.</h2>
+            <p className="v2-final-p">Génère ton premier sujet en moins d'une minute. Gratuit, sans carte bancaire.</p>
+            <div className="v2-cta-row v2-center">
+              <Link href="/simulation" className="v2-btn v2-btn-primary">Commencer gratuitement →</Link>
+              <Link href="/abonnement" className="v2-btn v2-btn-ghost">Voir les offres</Link>
             </div>
           </div>
         </section>
 
       </main>
       <Footer />
-
-      {/* ═══════════════════════════════════════════════════════ STYLES CSS */}
-      <style suppressHydrationWarning>{`
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: none; }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: none; }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.3; }
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes bounce {
-          0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-          40% { transform: translateX(-50%) translateY(-10px); }
-          60% { transform: translateX(-50%) translateY(-5px); }
-        }
-        @keyframes scrollDown {
-          0% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(12px); }
-        }
-        
-        .reveal-scroll {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-        .reveal-scroll.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        
-        .label {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: rgba(79,110,247,0.08);
-          border: 1px solid rgba(79,110,247,0.2);
-          border-radius: 100px;
-          padding: 4px 14px;
-          font-size: 11px;
-          font-weight: 700;
-          color: #818cf8;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin-bottom: 16px;
-        }
-        
-        @media (max-width: 900px) {
-          .reveal-scroll + section > div > div[style*="grid-template-columns: repeat(4"] {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .reveal-scroll + section > div > div[style*="grid-template-columns: 1fr 1fr"] {
-            grid-template-columns: 1fr !important;
-          }
-          div[style*="grid-template-columns: repeat(3, 1fr)"] {
-            grid-template-columns: 1fr 1fr !important;
-          }
-        }
-        
-        @media (max-width: 640px) {
-          .reveal-scroll + section > div > div[style*="grid-template-columns: repeat(4"] {
-            grid-template-columns: 1fr !important;
-          }
-          div[style*="grid-template-columns: repeat(3, 1fr)"] {
-            grid-template-columns: 1fr !important;
-          }
-          div[style*="grid-template-columns: 1fr 1fr"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+      <style>{V2_CSS}</style>
     </>
   )
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  STYLES V2
+// ═══════════════════════════════════════════════════════════════
+const V2_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.v2 { --ink:#0A0B0F; --ink2:#101218; --line:rgba(255,255,255,0.08); --txt:#F5F6FA; --txt2:#A2A6B4; --txt3:#6B6F7E; --indigo:#5B6CFF; --violet:#9D7BFF;
+  position:relative; z-index:1; overflow:hidden; background:var(--ink); color:var(--txt);
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif; }
+.v2 *{ box-sizing:border-box; }
+.v2 a{ text-decoration:none; color:inherit; }
+
+/* reveal */
+.v2 .reveal{ opacity:0; transform:translateY(26px); transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1); }
+.v2 .reveal.revealed{ opacity:1; transform:none; }
+
+/* ── HERO ── */
+.v2-hero{ position:relative; padding:clamp(90px,14vh,150px) clamp(20px,5vw,64px) 0; overflow:hidden; }
+.v2-aurora{ position:absolute; inset:-20% -10% auto; height:560px;
+  background:radial-gradient(60% 60% at 25% 30%,rgba(91,108,255,.30),transparent 70%),radial-gradient(50% 50% at 80% 20%,rgba(157,123,255,.22),transparent 70%);
+  filter:blur(40px); pointer-events:none; }
+.v2-grid-bg{ position:absolute; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:54px 54px; mask-image:radial-gradient(circle at 50% 30%,#000,transparent 75%); opacity:.5; pointer-events:none; }
+.v2-hero-inner{ position:relative; max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; }
+.v2-eyebrow{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--violet); background:rgba(157,123,255,.10); border:1px solid rgba(157,123,255,.28); padding:7px 14px; border-radius:100px; margin-bottom:22px; }
+.v2-h1{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(34px,5.2vw,62px); line-height:1.04; letter-spacing:-.02em; margin:0 0 20px; }
+.v2-typed{ background:linear-gradient(100deg,var(--indigo),var(--violet)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.v2-caret{ display:inline-block; width:3px; height:.92em; margin-left:4px; vertical-align:-.08em; background:var(--violet); border-radius:2px; animation:v2blink 1s steps(1) infinite; }
+@keyframes v2blink{ 50%{opacity:0} }
+.v2-sub{ font-size:clamp(15px,1.5vw,18px); line-height:1.65; color:var(--txt2); max-width:560px; margin:0 0 30px; }
+.v2-cta-row{ display:flex; gap:14px; flex-wrap:wrap; }
+.v2-cta-row.v2-center{ justify-content:center; }
+.v2-btn{ display:inline-flex; align-items:center; gap:8px; padding:14px 26px; border-radius:14px; font-weight:700; font-size:15px; transition:transform .2s,box-shadow .2s,opacity .2s; }
+.v2-btn-primary{ background:linear-gradient(135deg,var(--indigo),var(--violet)); color:#fff; box-shadow:0 10px 30px rgba(91,108,255,.40); }
+.v2-btn-primary:hover{ transform:translateY(-2px); box-shadow:0 16px 40px rgba(91,108,255,.52); }
+.v2-btn-ghost{ background:rgba(255,255,255,.04); color:var(--txt); border:1px solid var(--line); }
+.v2-btn-ghost:hover{ background:rgba(255,255,255,.08); transform:translateY(-2px); }
+.v2-trust{ display:flex; gap:18px; flex-wrap:wrap; margin-top:22px; font-size:13px; color:var(--txt3); font-weight:600; }
+
+/* démo live */
+.v2-demo{ background:linear-gradient(160deg,#13151d,#0c0e14); border:1px solid var(--line); border-radius:20px; overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.55); transform:perspective(1200px) rotateY(-7deg) rotateX(3deg); }
+.v2-demo-top{ display:flex; align-items:center; gap:7px; padding:13px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.02); }
+.v2-dot{ width:11px; height:11px; border-radius:50%; }
+.v2-demo-title{ margin-left:8px; font-size:12px; color:var(--txt3); font-family:'Plus Jakarta Sans'; }
+.v2-demo-body{ padding:18px; min-height:230px; position:relative; }
+.v2-demo-line{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:12px 14px; margin-bottom:10px; border-radius:11px;
+  background:rgba(255,255,255,.03); border:1px solid var(--line); opacity:0; transform:translateX(-10px); transition:opacity .5s,transform .5s; }
+.v2-demo-line.on{ opacity:1; transform:none; }
+.v2-demo-k{ font-size:12.5px; color:var(--txt3); font-weight:600; }
+.v2-demo-v{ font-size:13px; color:var(--txt); font-weight:700; text-align:right; }
+.v2-demo-bar{ height:8px; border-radius:100px; background:rgba(255,255,255,.06); overflow:hidden; margin:16px 0 12px; }
+.v2-demo-bar span{ display:block; height:100%; width:0; background:linear-gradient(90deg,var(--indigo),var(--violet)); transition:width 1.1s ease; }
+.v2-demo-bar.full span{ width:88%; }
+.v2-demo-grade{ font-family:'Fraunces',serif; font-weight:700; font-size:36px; text-align:right; color:#10b981; opacity:0; transition:opacity .5s .3s; }
+.v2-demo-grade.on{ opacity:1; }
+.v2-demo-grade span{ font-size:16px; color:var(--txt3); }
+
+/* marquee */
+.v2-marquee{ position:relative; margin-top:64px; padding:18px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  overflow:hidden; mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+.v2-marquee-track{ display:flex; gap:14px; width:max-content; animation:v2scroll 32s linear infinite; }
+@keyframes v2scroll{ to{ transform:translateX(-50%) } }
+.v2-chip{ display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:100px; white-space:nowrap; font-size:14px; font-weight:700;
+  color:var(--c); background:color-mix(in srgb,var(--c) 12%,transparent); border:1px solid color-mix(in srgb,var(--c) 32%,transparent); }
+
+/* sections */
+.v2-section{ max-width:1180px; margin:0 auto; padding:clamp(56px,9vh,100px) clamp(20px,5vw,64px); }
+.v2-head{ text-align:center; margin-bottom:48px; }
+.v2-label{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--violet); margin-bottom:14px; }
+.v2-h2{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(26px,3.6vw,44px); line-height:1.1; letter-spacing:-.02em; margin:0 0 14px; }
+.v2-p{ font-size:15px; color:var(--txt2); max-width:560px; margin:0 auto; line-height:1.7; }
+
+/* stats */
+.v2-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+.v2-stat{ background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.01)); border:1px solid var(--line); border-radius:18px; padding:26px 22px; text-align:center; }
+.v2-stat-n{ font-family:'Fraunces',serif; font-weight:700; font-size:clamp(30px,4vw,46px); background:linear-gradient(135deg,var(--indigo),var(--violet)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.v2-stat-l{ font-size:15px; font-weight:800; margin-top:4px; }
+.v2-stat-s{ font-size:11.5px; color:var(--txt3); margin-top:6px; line-height:1.5; }
+
+/* mosaïque matières */
+.v2-mosaic{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.v2-tile{ position:relative; display:flex; flex-direction:column; gap:8px; padding:26px 22px; border-radius:18px; overflow:hidden;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--c) 9%,transparent),rgba(255,255,255,.01));
+  border:1px solid color-mix(in srgb,var(--c) 22%,transparent); transition:transform .22s,box-shadow .22s,border-color .22s; }
+.v2-tile:hover{ transform:translateY(-5px); border-color:color-mix(in srgb,var(--c) 55%,transparent); box-shadow:0 20px 50px color-mix(in srgb,var(--c) 22%,transparent); }
+.v2-tile-icon{ font-size:34px; }
+.v2-tile-label{ font-size:16px; font-weight:800; }
+.v2-tile-go{ font-size:13px; font-weight:700; color:var(--c); opacity:.85; }
+.v2-new{ position:absolute; top:12px; right:12px; font-size:9.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  color:#fff; background:linear-gradient(135deg,var(--indigo),var(--violet)); padding:3px 9px; border-radius:100px; }
+
+/* steps */
+.v2-steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.v2-step{ position:relative; padding:28px 22px; border-radius:18px; background:rgba(255,255,255,.025); border:1px solid var(--line); transition:transform .22s,border-color .22s; }
+.v2-step:hover{ transform:translateY(-4px); border-color:rgba(157,123,255,.4); }
+.v2-step-n{ font-family:'Fraunces',serif; font-weight:700; font-size:15px; color:var(--violet); letter-spacing:.05em; }
+.v2-step-icon{ font-size:30px; margin:10px 0 12px; }
+.v2-step-t{ font-size:16px; font-weight:800; margin:0 0 8px; }
+.v2-step-d{ font-size:13.5px; color:var(--txt2); line-height:1.6; margin:0; }
+
+/* video */
+.v2-video{ position:relative; max-width:900px; margin:0 auto; aspect-ratio:16/9; border-radius:22px; overflow:hidden; border:1px solid var(--line); box-shadow:0 30px 80px rgba(0,0,0,.5); }
+.v2-video iframe,.v2-video img{ width:100%; height:100%; object-fit:cover; border:0; display:block; }
+.v2-video-thumb{ position:relative; width:100%; height:100%; padding:0; border:0; cursor:pointer; background:#000; }
+.v2-video-thumb img{ opacity:.72; transition:opacity .3s,transform .5s; }
+.v2-video-thumb:hover img{ opacity:.85; transform:scale(1.03); }
+.v2-video-play{ position:absolute; inset:0; margin:auto; width:78px; height:78px; border-radius:50%; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--indigo),var(--violet)); box-shadow:0 12px 40px rgba(91,108,255,.6); transition:transform .25s; }
+.v2-video-thumb:hover .v2-video-play{ transform:scale(1.08); }
+.v2-video-tri{ width:0; height:0; border-left:22px solid #fff; border-top:14px solid transparent; border-bottom:14px solid transparent; margin-left:6px; }
+.v2-video-cap{ position:absolute; left:0; right:0; bottom:18px; text-align:center; font-size:13px; font-weight:600; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+
+/* features */
+.v2-features{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.v2-feature{ position:relative; padding:28px 24px; border-radius:18px; background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); border:1px solid var(--line); transition:transform .22s,border-color .22s,box-shadow .22s; }
+.v2-feature:hover{ transform:translateY(-5px); border-color:color-mix(in srgb,var(--c) 50%,transparent); box-shadow:0 20px 50px color-mix(in srgb,var(--c) 18%,transparent); }
+.v2-feature-icon{ display:inline-grid; place-items:center; width:50px; height:50px; border-radius:14px; font-size:24px; margin-bottom:14px;
+  background:color-mix(in srgb,var(--c) 14%,transparent); border:1px solid color-mix(in srgb,var(--c) 30%,transparent); }
+.v2-feature-t{ font-size:17px; font-weight:800; margin:0 0 8px; }
+.v2-feature-d{ font-size:13.5px; color:var(--txt2); line-height:1.6; margin:0 0 14px; }
+.v2-feature-go{ font-size:13px; font-weight:700; color:var(--c); }
+
+/* programmes */
+.v2-prog{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+.v2-prog-card{ position:relative; padding:32px 34px; border-radius:24px; overflow:hidden;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--c) 8%,transparent),rgba(255,255,255,.01)); border:1px solid color-mix(in srgb,var(--c) 22%,transparent); }
+.v2-prog-top{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.v2-flag{ font-size:42px; }
+.v2-prog-kicker{ display:block; font-size:10px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--c); margin-bottom:3px; }
+.v2-prog-top h3{ font-size:22px; font-weight:800; margin:0; }
+.v2-prog-desc{ font-size:14px; color:var(--txt2); line-height:1.7; margin:0 0 18px; }
+.v2-prog-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:22px; }
+.v2-tag{ display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:100px; font-size:12.5px; font-weight:700;
+  color:var(--c); background:color-mix(in srgb,var(--c) 12%,transparent); border:1px solid color-mix(in srgb,var(--c) 30%,transparent); transition:transform .18s,background .18s; }
+.v2-tag:hover{ transform:translateY(-2px); background:color-mix(in srgb,var(--c) 22%,transparent); }
+.v2-tag-new{ color:#fff; }
+.v2-prog-btn{ width:100%; justify-content:center; }
+
+/* final */
+.v2-final{ position:relative; text-align:center; padding:clamp(48px,8vw,84px) 28px; border-radius:28px; overflow:hidden;
+  background:linear-gradient(160deg,#13151d,#0b0d13); border:1px solid var(--line); }
+.v2-aurora-2{ inset:-40% -10% auto; height:420px; opacity:.7; }
+.v2-final-h{ position:relative; font-family:'Fraunces',serif; font-weight:600; font-size:clamp(28px,4.4vw,52px); letter-spacing:-.02em; margin:0 0 14px; }
+.v2-final-p{ position:relative; font-size:16px; color:var(--txt2); margin:0 auto 28px; max-width:480px; line-height:1.7; }
+
+/* responsive */
+@media (max-width:980px){
+  .v2-hero-inner{ grid-template-columns:1fr; gap:40px; }
+  .v2-hero-right{ order:-1; }
+  .v2-demo{ transform:none; max-width:460px; margin:0 auto; }
+  .v2-stats{ grid-template-columns:repeat(2,1fr); }
+  .v2-mosaic{ grid-template-columns:repeat(2,1fr); }
+  .v2-steps{ grid-template-columns:repeat(2,1fr); }
+  .v2-features{ grid-template-columns:repeat(2,1fr); }
+  .v2-prog{ grid-template-columns:1fr; }
+}
+@media (max-width:560px){
+  .v2-stats,.v2-mosaic,.v2-steps,.v2-features{ grid-template-columns:1fr; }
+  .v2-cta-row{ flex-direction:column; }
+  .v2-btn{ justify-content:center; }
+  .v2-marquee-track{ animation-duration:22s; }
+}
+@media (prefers-reduced-motion:reduce){
+  .v2 .reveal{ transition:none; opacity:1; transform:none; }
+  .v2-marquee-track,.v2-caret{ animation:none; }
+  .v2-demo-line{ opacity:1; transform:none; }
+}
+`
