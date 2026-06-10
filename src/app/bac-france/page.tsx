@@ -114,6 +114,24 @@ const MATIERES = [
       { label: '🎓 Grand Oral',     items: ['Préparation oral','Thèse & contre-thèse','Figures de style','Contraction de texte'] },
     ],
   },
+  {
+    slug: 'eco-gestion',
+    icon: '📊',
+    titre: 'Économie & Gestion',
+    sous: 'Seconde · Première · Terminale (SES) · STMG',
+    couleur: '#14b8a6',
+    gradient: 'linear-gradient(135deg,rgba(20,184,166,0.16),rgba(6,182,212,0.08))',
+    border: 'rgba(20,184,166,0.3)',
+    badgeColor: '#2dd4bf',
+    badge: 'Bac 2027 · SES & STMG',
+    stats: { voies: 4, chapitres: 34, thm: 255, ex: 300 },
+    apercu: [
+      { label: '📘 Seconde (SES)',      items: ['PIB & croissance','Marché & prix','Socialisation','Vote','Emploi'] },
+      { label: '📗 Première Spé SES',   items: ['Marché','Monnaie','Financement','Liens sociaux','Protection sociale'] },
+      { label: '🎓 Terminale Spé SES',  items: ['Croissance','Commerce int.','Chômage','Mobilité','Justice sociale'] },
+      { label: '🏢 STMG',               items: ['Management','Gestion-Finance','Droit','Système d\'information'] },
+    ],
+  },
 ]
 
 export default function BacFrancePage() {
@@ -137,10 +155,10 @@ export default function BacFrancePage() {
               Cours, théorèmes, formules et exercices corrigés avec IA professeur.
             </p>
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: 'var(--muted)' }}>
-              <span>🏫 6 matières</span><span>·</span>
-              <span>📚 204 chapitres</span><span>·</span>
-              <span>📊 1549+ notions</span><span>·</span>
-              <span>📝 1299+ exercices</span>
+              <span>🏫 7 matières</span><span>·</span>
+              <span>📚 238 chapitres</span><span>·</span>
+              <span>📊 1804+ notions</span><span>·</span>
+              <span>📝 1599+ exercices</span>
             </div>
           </div>
 
