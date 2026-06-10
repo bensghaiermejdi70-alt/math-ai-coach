@@ -40,6 +40,7 @@ const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
   anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
   informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
   francais:       { label:'Français',       color:'#ec4899', icon:'📚' },
+  'eco-gestion':  { label:'Économie & Gestion', color:'#14b8a6', icon:'📊' },
 }
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
 import { useSearchParams } from 'next/navigation'
@@ -450,12 +451,19 @@ async function generateOneExam(
   // Détecter si matière Anglais → tout le contenu en anglais
   const isAnglais = matiere === 'anglais'
   const isFrancais = matiere === 'francais'
+  const isEco = matiere === 'eco-gestion'
 
   const system = isAnglais
     ? `You are an expert author of French Baccalauréat LLCER English exams (official curriculum).
 You create ORIGINAL, realistic exam papers based on the 8 official thematic axes.
 RESPOND ONLY IN VALID JSON, no backticks, no comments.
 ALL TEXT (titles, statements, document excerpts, questions) MUST BE IN ENGLISH.`
+    : isEco
+    ? `Tu es un auteur expert de sujets du Baccalauréat français en Sciences Économiques et Sociales (SES) et en série STMG (programme officiel Éducation nationale).
+Tu crées des sujets ORIGINAUX et réalistes : épreuves composées (EC1 mobilisation de connaissances, EC2 étude d'un document statistique, EC3 raisonnement sur dossier documentaire), dissertations, études de cas STMG.
+Tes documents statistiques sont RÉALISTES : vraies grandeurs (PIB, taux de chômage, indices base 100, parts en %, données INSEE/Eurostat plausibles), sources et dates citées.
+Vocabulaire SES précis : notions du programme officiel, auteurs (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls…).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : `Tu es un auteur expert de sujets du Baccalauréat français (programme officiel Éducation nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 NOTATION FRANÇAISE : f'(x), ∫, √, ℝ, ∈, ≤, ≥, →, Δ, θ, xₙ, uₙ₊₁, x², eˣ — JAMAIS \frac ni \sqrt ni LaTeX brut.
@@ -499,6 +507,98 @@ Respond EXACTLY with this JSON (no text before or after):
       "points": ${totalPts},
       "graph": null,
       "statement": "THEMATIC AXIS: [Different Axis Title]\n\nDOCUMENT A — [Author, Title, Year]:\n[Realistic literary or journalistic excerpt, 8-12 lines]\n\nDOCUMENT B — [Author/Source, Title, Year]:\n[Realistic excerpt from a different register, 6-10 lines]\n\nDOCUMENT C — [Artist/Photographer, Title, Year]:\n[Detailed description of an image, painting or photograph, 4-6 lines]\n\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---\nPaying particular attention to the specificities of the three documents, show how they interact to [precise synthesis question linked to the axis].\n(approximately 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate the following passage from Document A into French:\n[Extract of 4-6 lines from Document A]"
+    }
+  ]
+}`
+    : isEco
+    ? `Crée un sujet de Bac SES/STMG ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+${contextLines}
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+Règles STRICTES :
+- NOUVEAU sujet ORIGINAL, jamais une copie. Change toujours thèmes, données chiffrées, documents, contexte
+- Respecte la structure officielle des épreuves SES / STMG du Bac français
+- Documents statistiques RÉALISTES : sources citées (INSEE, Eurostat, OCDE…), dates, unités précises
+- Notions et auteurs du programme officiel
+- Total : ${totalPts} points
+
+GRAPHIQUES & TABLEAUX — UTILISER LE SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+
+GRAPHIQUES SES — RÈGLES ABSOLUES :
+- EC2 (étude de document) : champ "graph" OBLIGATOIRE avec un document statistique de type "table" OU "bar"
+- TABLEAU statistique → [GRAPH: {"type":"table","title":"Taux de chômage par diplôme (France, 2024, en %)","headers":["Niveau de diplôme","Taux de chômage (%)","Part des actifs (%)"],"rows":[["Sans diplôme","12,4","14"],["Bac","7,8","22"],["Bac+2","5,1","26"],["Bac+5 et plus","3,9","38"]],"highlight":[0]}]
+- DIAGRAMME en barres → [GRAPH: {"type":"bar","title":"Taux de croissance du PIB (en %)","categories":["2021","2022","2023","2024"],"values":[6.4,2.6,1.1,0.9],"colors":["#14b8a6","#14b8a6","#14b8a6","#14b8a6"],"yLabel":"Taux (%)","xLabel":"Année"}]
+- ÉVOLUTION indice base 100 → [GRAPH: {"type":"function","expressions":["100*Math.pow(1.015,x)"],"xMin":0,"xMax":10,"labels":["PIB (indice base 100)"],"title":"Évolution du PIB en volume","xLabel":"Années","yLabel":"Indice"}]
+- COURBE de Lorenz (inégalités) → [GRAPH: {"type":"function","expressions":["x","x*x"],"xMin":0,"xMax":1,"labels":["Égalité parfaite","Courbe de Lorenz"],"title":"Courbe de Lorenz des revenus","xLabel":"Part cumulée population","yLabel":"Part cumulée revenus"}]
+- Offre/Demande → [GRAPH: {"type":"function","expressions":["20+2*x","100-3*x"],"xMin":0,"xMax":30,"labels":["Offre","Demande"],"title":"Équilibre du marché","xLabel":"Quantité","yLabel":"Prix"}]
+- Le graphique va dans le champ "graph" SÉPARÉ — PAS dans "statement" — guillemets du JSON interne échappés \\"type\\"
+- Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" OU null
+- Dans "statement", écrire : "DOCUMENT — [Titre, Source, Année] [voir document ci-dessous] Questions : 1) ..."
+- Les données du tableau/graphique doivent être COHÉRENTES avec les questions posées (calculs de taux de variation, lecture de données, parts en %)
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après).
+
+STRUCTURE OBLIGATOIRE SELON LA SECTION :
+
+Si section Terminale Spécialité SES → ÉPREUVE COMPOSÉE, 3 exercices (4+6+10=20) :
+Ex1 = EC1 Mobilisation de connaissances (4 pts) : 2 questions de cours sur 2 chapitres différents (économie + sociologie/science politique), graph:null
+Ex2 = EC2 Étude d'un document (6 pts) : un document STATISTIQUE (graph type "table" ou "bar" OBLIGATOIRE) + 2 questions (1. lecture/calcul de donnée précise — 2 pts ; 2. à l'aide du document et de vos connaissances — 4 pts)
+Ex3 = EC3 Raisonnement appuyé sur un dossier documentaire (10 pts) : sujet de raisonnement + 2 documents décrits dans le statement (dont 1 statistique en graph type "table"), réponse organisée attendue (intro, arguments, conclusion)
+
+Si section Première Spécialité SES → 3 exercices (6+6+8=20) :
+Ex1 = Mobilisation de connaissances : définitions, mécanismes (6 pts), graph:null
+Ex2 = Étude d'un document statistique avec calculs (élasticité, taux de variation, taux d'intérêt, inflation IPC) (6 pts), graph "table" ou "bar" OBLIGATOIRE
+Ex3 = Raisonnement / mini-dissertation sur dossier (8 pts), graph "table" si données utiles
+
+Si section Seconde SES → 4 exercices (5+5+5+5=20) :
+Ex1 = Questions de cours (VA, PIB, socialisation, vote…) (5 pts), graph:null
+Ex2 = Calculs économiques (VA = P − CI, taux de croissance, productivité, taux de chômage, recette) (5 pts), graph:null
+Ex3 = Étude d'un document statistique (5 pts), graph "table" ou "bar" OBLIGATOIRE
+Ex4 = Mini-raisonnement structuré (5 pts), graph:null
+
+Si section STMG → ÉTUDE DE CAS, 3 exercices (7+6+7=20) :
+Ex1 = Management & Sciences de gestion : analyse d'une organisation (finalités, parties prenantes, performance, SWOT, KPI) (7 pts), graph "table" possible (indicateurs de gestion)
+Ex2 = Droit & Économie : qualification juridique (contrat, responsabilité, personne) + question économique (marché, chômage, inflation) (6 pts), graph:null
+Ex3 = Gestion-Finance : calculs sur données chiffrées — résultat, FDR, BFR, trésorerie nette, MCV, seuil de rentabilité (7 pts), graph "table" OBLIGATOIRE (bilan ou compte de résultat simplifié)
+
+{
+  "title": "${section} — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 240,
+  "totalPoints": ${totalPts},
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — [Intitulé précis : EC1 / Mobilisation / Management…]",
+      "theme": "[Chapitre(s) du programme]",
+      "points": 4,
+      "graph": null,
+      "statement": "Énoncé complet avec les questions numérotées 1), 2). Notions SES précises. Minimum 100 mots."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — [EC2 Étude d'un document / Document statistique]",
+      "theme": "[Chapitre]",
+      "points": 6,
+      "graph": "[GRAPH: {JSON_TABLE_OU_BAR_ICI}] — OBLIGATOIRE pour cet exercice",
+      "statement": "DOCUMENT — [Titre précis, Source : INSEE/Eurostat…, Année] [voir document ci-dessous]\\n\\nQuestions :\\n1) [Lecture ou calcul d'une donnée précise du document — taux de variation, part, écart en points] (2 pts)\\n2) À l'aide du document et de vos connaissances, [question d'analyse] (4 pts). Minimum 120 mots."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — [EC3 Raisonnement / Gestion-Finance…]",
+      "theme": "[Chapitre]",
+      "points": 10,
+      "graph": "[GRAPH: {JSON_TABLE_ICI}] ou null",
+      "statement": "SUJET : [Sujet de raisonnement précis]\\n\\nDOCUMENT 1 — [Titre, Source, Année] : [contenu textuel résumé 4-6 lignes]\\nDOCUMENT 2 — [Titre, Source, Année] [voir document ci-dessous si graph]\\n\\nConsigne : réponse organisée (introduction, arguments appuyés sur les documents et vos connaissances, conclusion). Minimum 140 mots."
+    },
+    {
+      "num": 4,
+      "title": "Exercice 4 — [SEULEMENT pour la Seconde SES, sinon SUPPRIMER cet exercice et répartir les points]",
+      "theme": "[Chapitre]",
+      "points": 5,
+      "graph": null,
+      "statement": "4ème exercice UNIQUEMENT pour la Seconde (4×5=20). Pour Terminale (4+6+10), Première (6+6+8) et STMG (7+6+7) : 3 exercices seulement. Minimum 80 mots."
     }
   ]
 }`
@@ -608,7 +708,7 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title: isAnglais ? `LLCER Anglais — Simulation Variante ${idx+1}` : `${section} — Simulation Variante ${idx+1}`,
     section: isAnglais ? 'Terminale LLCER Anglais' : section,
-    duration: isAnglais ? 210 : 180,
+    duration: isAnglais ? 210 : isEco ? 240 : 180,
     totalPoints:totalPts,
     exercises:[{num:1,title: isAnglais ? 'Subject 1' : 'Exercice 1',theme: isAnglais ? 'Identities & Exchanges' : 'Analyse',points:20,statement: isAnglais ? 'Generation error — please retry.' : 'Erreur de génération — veuillez réessayer.'}]
   })
@@ -638,12 +738,28 @@ async function correctOneExercise(
     || exercise.title?.toLowerCase().includes('subject 1')
     || exercise.title?.toLowerCase().includes('subject 2')
 
+  const isEcoCorrect = globalMatiere === 'eco-gestion'
+
   const system = isAnglaisCorrect
     ? `You are an expert LLCER English examiner and teacher correcting a French Baccalauréat paper.
 You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
 NEVER summarise a step. Develop EVERYTHING. The student must understand without any other resource.
 Use markdown: ### for parts, **bold** for results, > for important points.
 ALL your correction text MUST BE IN ENGLISH — vocabulary, explanations, feedback, everything.`
+    : isEcoCorrect
+    ? `Tu es un professeur correcteur du Baccalauréat français, spécialiste de SES (Sciences Économiques et Sociales) et de la série STMG.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
+Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource.
+Tu as suffisamment de tokens pour tout rédiger. Ne t'arrête JAMAIS avant la fin.
+
+NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
+- MOBILISATION DE CONNAISSANCES (EC1) : définis chaque notion avec précision (définition du programme), illustre par un exemple ou un mécanisme, cite les auteurs pertinents (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls…).
+- ÉTUDE DE DOCUMENT (EC2) : montre COMMENT lire le document (titre, source, unités, champ), fais les CALCULS demandés en entier (taux de variation = (VA−VD)/VD×100, écarts en points de %, coefficients multiplicateurs, lecture d'une donnée : « Selon l'INSEE, en 2024, … »), puis structure la réponse (idée + donnée chiffrée à l'appui).
+- RAISONNEMENT (EC3) / DISSERTATION : donne la méthode (analyse du sujet, mots-clés), propose un plan détaillé (I/A,B — II/A,B), rédige une introduction modèle (accroche, définitions, problématique, annonce du plan), développe CHAQUE argument en AEI (Affirmation, Explicitation, Illustration par les documents et les connaissances), conclusion modèle.
+- STMG GESTION-FINANCE : pose chaque formule (FDR = capitaux permanents − actif immobilisé ; BFR = stocks + créances clients − dettes fournisseurs ; TN = FDR − BFR ; MCV = CA − charges variables ; taux de MCV = MCV/CA ; seuil de rentabilité = charges fixes / taux de MCV), montre le calcul complet, interprète le résultat (situation saine ou non, point mort…).
+- Termine chaque question par le barème détaillé et les pièges classiques.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.
+Vocabulaire SES rigoureux. Données chiffrées toujours accompagnées de leur unité et de leur source.`
     : `Tu es un professeur correcteur du Baccalaureat français, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -964,6 +1080,8 @@ async function analyzeOneExerciseSim(
     || exercise.title?.toLowerCase().includes('subject')
   const system = isAnglaisAnalyze
     ? `You are an expert LLCER English pedagogy specialist. Analyse ONE exercise and generate targeted remediation. RESPOND ONLY IN VALID JSON. ALL text fields in ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG (Bac français). Analyse UN exercice (EC1/EC2/EC3, dissertation, étude de cas, calculs économiques ou de gestion) et génère une remédiation ciblée : méthode (AEI, lecture de document statistique, calculs de taux de variation, FDR/BFR/seuil), notions et auteurs du programme. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en pédagogie mathématique. Analyse UN exercice et génère une remédiation ciblée. RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de simulation Bac.
 
@@ -1008,6 +1126,10 @@ async function analyzeStudentWork(
     ? `You are an expert LLCER English pedagogy specialist and student work analyst.
 You analyse student work and build a personalised improvement plan.
 RESPOND ONLY IN VALID JSON. ALL text fields in ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG, et en remédiation scolaire.
+Tu analyses les travaux d'élèves (épreuve composée EC1/EC2/EC3, dissertation, étude de cas STMG, calculs économiques et de gestion) et construis un plan d'amélioration personnalisé : méthodologie (AEI, plan, lecture de documents statistiques, calculs), notions et auteurs du programme.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.
 Tu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
@@ -1091,6 +1213,10 @@ async function correctRemediationExercise(
 You correct student responses on remediation exercises.
 Be precise, encouraging, and identify exactly what is missing.
 ALL your feedback MUST BE IN ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un tuteur SES / éco-gestion STMG bienveillant mais exigeant.
+Tu corriges les réponses d'élèves sur des exercices de remédiation : définitions de notions, mécanismes économiques et sociologiques, calculs (taux de variation, élasticité, taux de chômage, FDR, BFR, seuil de rentabilité), lecture de documents statistiques, méthode AEI.
+Sois précis, encourageant, et identifie exactement ce qui manque (notion, donnée chiffrée, étape de calcul, structure de l'argument).`
     : `Tu es un tuteur mathématiques bienveillant mais exigeant.
 Tu corriges les réponses d'élèves sur des exercices de remédiation.
 Sois précis, encourageant, et identifie exactement ce qui manque.`
@@ -1148,6 +1274,9 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
   const system = isAnglaisGrade
     ? `You are a French Baccalauréat LLCER English examiner. Give a QUICK and FAIR grade.
 Respond ONLY in valid JSON, no markdown, no explanation outside JSON. ALL text fields in ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un correcteur du Baccalaureat français en SES / éco-gestion STMG. Tu donnes une note RAPIDE et JUSTE selon les critères officiels (maîtrise des notions, exploitation des documents, calculs exacts, structure de l'argumentation).
+Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
     : `Tu es un correcteur du Baccalaureat français. Tu donnes une note RAPIDE et JUSTE.
 Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
 
@@ -3400,6 +3529,99 @@ const CHAPITRES_PHYS_FR: Record<string, {
   },
 }
 
+// ================================================================
+//  ÉCONOMIE & GESTION FRANCE (SES + STMG) — Simulation IA
+//  4 sections : Terminale Spé SES · Première Spé SES · Seconde SES · STMG
+//  Annales Terminale vérifiées 200 OK (sujetdebac.fr, slug spe-sciences-eco-sociales)
+// ================================================================
+
+const SECTION_CONFIGS_ECO_FR = [
+  { key:'terminale-eco', label:'Terminale Spécialité SES', color:'#14b8a6', icon:'📊',
+    themes:['Croissance économique','Commerce international','Chômage','Crises financières','Politiques européennes','Structure sociale','École & mobilité','Travail & emploi','Engagement politique','Justice sociale'] },
+  { key:'premiere-eco',  label:'Première Spécialité SES', color:'#4f6ef7', icon:'📗',
+    themes:['Marché concurrentiel','Défaillances du marché','Financement','Monnaie','Socialisation','Liens sociaux','Déviance','Opinion publique & vote','Protection sociale'] },
+  { key:'seconde-eco',   label:'Seconde SES', color:'#10b981', icon:'📘',
+    themes:['Création & mesure des richesses','Formation des prix','Socialisation','Vie politique','Diplôme, emploi & salaire'] },
+  { key:'stmg-eco',      label:'Terminale STMG — Éco-Gestion', color:'#8b5cf6', icon:'🏢',
+    themes:['Management','Sciences de gestion & numérique','Droit','Économie','Gestion-Finance (FDR, BFR, seuil)'] },
+]
+
+const ARCHIVES_ECO_FR: Archive[] = [
+  { id:'eco-2025-m1', year:2025, session:'Terminale SES · Métropole 1 · 17 juin 2025', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2025/spe-sciences-eco-sociales-2025-metropole-1-sujet-officiel.pdf`, themes:['Classes sociales & structure sociale','Politiques monétaire & budgétaire zone euro'] },
+  { id:'eco-2025-m2', year:2025, session:'Terminale SES · Métropole 2 · 18 juin 2025', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2025/spe-sciences-eco-sociales-2025-metropole-2-sujet-officiel.pdf`, themes:['Asymétries d\'information & chômage structurel','PGF & croissance','Structure socioprofessionnelle'] },
+  { id:'eco-2024-m1', year:2024, session:'Terminale SES · Métropole 1 · 19 juin 2024', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2024/spe-sciences-eco-sociales-2024-metropole-1-sujet-officiel.pdf`, themes:['Sources de la croissance','Commerce international & mondialisation'] },
+  { id:'eco-2024-m2', year:2024, session:'Terminale SES · Métropole 2 · 20 juin 2024', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2024/spe-sciences-eco-sociales-2024-metropole-2-sujet-officiel.pdf`, themes:['Mobilité sociale','Marché & défaillances','Engagement politique'] },
+  { id:'eco-2023-m1', year:2023, session:'Terminale SES · Métropole 1 · 20 mars 2023', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2023/spe-sciences-eco-sociales-2023-metropole-1-sujet-officiel.pdf`, themes:['Croissance & innovation','Justice sociale & inégalités'] },
+  { id:'eco-2023-m2', year:2023, session:'Terminale SES · Métropole 2 · 21 mars 2023', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2023/spe-sciences-eco-sociales-2023-metropole-2-sujet-officiel.pdf`, themes:['Chômage','Commerce international','Structure sociale'] },
+  { id:'eco-2022-m1', year:2022, session:'Terminale SES · Métropole 1 · 11 mai 2022', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2022/spe-sciences-eco-sociales-2022-metropole-1-sujet-officiel.pdf`, themes:['Action publique environnement','Mondialisation'] },
+  { id:'eco-2022-m2', year:2022, session:'Terminale SES · Métropole 2 · 12 mai 2022', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2022/spe-sciences-eco-sociales-2022-metropole-2-sujet-officiel.pdf`, themes:['Monnaie & financement','Mobilité sociale','Déviance'] },
+  { id:'eco-2021-m1', year:2021, session:'Terminale SES · Métropole 1 · 15 mars 2021', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2021/spe-sciences-eco-sociales-2021-metropole-1-sujet-officiel.pdf`, themes:['Sources de la croissance','Action publique environnement'] },
+  { id:'eco-2021-m2', year:2021, session:'Terminale SES · Métropole 2 · juin 2021', section:'Terminale Spécialité SES', sectionKey:'terminale-eco', color:'#14b8a6', icon:'📊', url:`${SD}/2021/spe-sciences-eco-sociales-2021-metropole-2-sujet-officiel.pdf`, themes:['Marché & concurrence','Socialisation','Protection sociale'] },
+]
+
+const CHAPITRES_ECO_FR: Record<string, {
+  key: string; label: string; color: string; icon: string
+  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
+}> = {
+
+  // ══ TERMINALE SPÉCIALITÉ SES (programme BO, épreuve coef.16) ══════════════
+  'terminale-eco': {
+    key:'terminale-eco', label:'Terminale Spécialité SES', color:'#14b8a6', icon:'📊',
+    chapitres: [
+      { slug:'sources-defis-croissance',  titre:"Sources et défis de la croissance",        badge:"Économie",    desc:"Facteurs de production, PGF, progrès technique, innovation (Schumpeter), croissance endogène, limites écologiques, soutenabilité, taux de croissance, PIB." },
+      { slug:'commerce-international',    titre:"Fondements du commerce international",      badge:"Économie",    desc:"Avantages comparatifs (Ricardo), dotations factorielles, fragmentation chaîne de valeur, compétitivité prix/hors-prix, libre-échange vs protectionnisme, balance commerciale." },
+      { slug:'chomage-politiques-emploi', titre:"Comment lutter contre le chômage ?",        badge:"Économie",    desc:"Chômage structurel/conjoncturel, taux de chômage BIT, appariement, asymétries d'information, salaire minimum, politiques de l'emploi (soutien demande, flexibilisation, formation)." },
+      { slug:'crises-financieres',        titre:"Comprendre les crises financières",          badge:"Économie",    desc:"Crise de 1929 vs 2008, bulles spéculatives, comportements mimétiques, panique bancaire, effet de richesse négatif, régulation (ratios prudentiels, supervision)." },
+      { slug:'politiques-economiques-europeennes', titre:"Politiques économiques dans l'UE", badge:"Économie",    desc:"Intégration européenne, marché unique, euro, politique monétaire BCE (taux directeurs, inflation 2%), politique budgétaire, coordination, chocs asymétriques." },
+      { slug:'structure-sociale',         titre:"Structure de la société française",          badge:"Sociologie",  desc:"Classes sociales (Marx, Weber), PCS, moyennisation vs distances, rapports sociaux de genre, intersection des inégalités (revenus, patrimoine, diplôme)." },
+      { slug:'ecole-mobilite-sociale',    titre:"École et mobilité sociale",                  badge:"Sociologie",  desc:"Massification vs démocratisation, capital culturel (Bourdieu), tables de mobilité (lecture en %, destinée/recrutement), mobilité observée, fluidité sociale, reproduction." },
+      { slug:'mutations-travail-emploi',  titre:"Mutations du travail et de l'emploi",        badge:"Sociologie",  desc:"Taylorisme, post-taylorisme, polarisation des emplois, numérique et travail, précarisation, intégration par le travail, plateformes." },
+      { slug:'engagement-politique',      titre:"L'engagement politique",                      badge:"Science po", desc:"Vote, militantisme, engagement associatif, consommation engagée, paradoxe de l'action collective (Olson), incitations sélectives, répertoires d'action, variables sociodémographiques." },
+      { slug:'justice-sociale-inegalites', titre:"Justice sociale et action publique",         badge:"Regards",    desc:"Égalité des droits/chances/situations, théories de la justice (Rawls), redistribution, fiscalité (progressive, courbe de Lorenz, coefficient de Gini), discrimination positive, État-providence." },
+    ],
+  },
+
+  // ══ PREMIÈRE SPÉCIALITÉ SES ═══════════════════════════════════════════════
+  'premiere-eco': {
+    key:'premiere-eco', label:'Première Spécialité SES', color:'#4f6ef7', icon:'📗',
+    chapitres: [
+      { slug:'marche-concurrentiel',   titre:"Le marché concurrentiel",            badge:"Économie",   desc:"CPP (atomicité, homogénéité…), offre/demande, prix d'équilibre, élasticité-prix, surplus consommateur/producteur, preneur de prix, gains à l'échange." },
+      { slug:'defaillances-marche',    titre:"Les défaillances du marché",          badge:"Économie",   desc:"Externalités positives/négatives, biens publics (non-rival, non-excluable), asymétries d'information, antisélection, aléa moral, taxe pigouvienne, quotas, réglementation." },
+      { slug:'financement-economie',   titre:"Le financement de l'économie",        badge:"Économie",   desc:"Capacité/besoin de financement, autofinancement, financement direct (actions, obligations) / indirect (crédit bancaire), taux d'intérêt, marché primaire/secondaire." },
+      { slug:'monnaie',                titre:"La monnaie et sa création",            badge:"Économie",   desc:"Fonctions de la monnaie, monnaie fiduciaire/scripturale, création monétaire (crédits font les dépôts), banque centrale, taux directeurs, inflation, IPC, pouvoir d'achat." },
+      { slug:'socialisation',          titre:"La socialisation",                     badge:"Sociologie", desc:"Socialisation primaire/secondaire, instances (famille, école, pairs, médias), normes/valeurs, socialisation différentielle (genre, milieu), trajectoires improbables." },
+      { slug:'liens-sociaux',          titre:"Les liens sociaux",                    badge:"Sociologie", desc:"4 types de liens (Paugam : filiation, élective, organique, citoyenneté), solidarité mécanique/organique (Durkheim), intégration, désaffiliation (Castel), exclusion." },
+      { slug:'deviance-controle-social', titre:"Déviance et contrôle social",        badge:"Sociologie", desc:"Déviance vs délinquance, relativité, anomie (Durkheim), étiquetage (Becker), stigmatisation, contrôle social formel/informel, chiffre noir, statistiques de délinquance." },
+      { slug:'opinion-publique-vote',  titre:"Opinion publique et vote",             badge:"Science po", desc:"Opinion publique, sondages (échantillon, limites), participation/abstention (calculs), variables lourdes du vote, vote de classe, volatilité, vote sur enjeux." },
+      { slug:'protection-sociale-risques', titre:"Protection sociale et risques",    badge:"Regards",    desc:"Risques sociaux, assurance (Bismarck, cotisations) / assistance (Beveridge, impôt), redistribution horizontale/verticale, branches Sécu, vieillissement, taux de remplacement." },
+    ],
+  },
+
+  // ══ SECONDE SES ═══════════════════════════════════════════════════════════
+  'seconde-eco': {
+    key:'seconde-eco', label:'Seconde SES', color:'#10b981', icon:'📘',
+    chapitres: [
+      { slug:'richesses-creation-mesure', titre:"Création et mesure des richesses",  badge:"Économie",   desc:"Production marchande/non marchande, facteurs de production, VA = Production − CI, PIB (somme des VA), taux de croissance, productivité, limites du PIB." },
+      { slug:'formation-prix-marche',     titre:"Formation des prix sur un marché",  badge:"Économie",   desc:"Loi de l'offre, loi de la demande, prix d'équilibre, excès d'offre/pénurie, déplacements de courbes, recette = prix × quantité, élasticité-prix (initiation)." },
+      { slug:'socialisation-acteurs-sociaux', titre:"Socialisation et acteurs sociaux", badge:"Sociologie", desc:"Normes et valeurs, instances de socialisation (famille, école, pairs, médias), socialisation différenciée selon le genre et le milieu social." },
+      { slug:'organisation-vie-politique', titre:"Organisation de la vie politique",  badge:"Science po", desc:"Démocratie directe/représentative, citoyenneté, séparation des pouvoirs (Montesquieu), suffrage universel, participation/abstention (taux), institutions." },
+      { slug:'diplome-emploi-salaire',    titre:"Diplôme, emploi et salaire",         badge:"Regards",    desc:"Qualification, insertion professionnelle, salaire brut/net, SMIC, population active, chômage BIT, taux de chômage et taux d'activité (calculs), diplôme et chômage." },
+    ],
+  },
+
+  // ══ TERMINALE STMG — ÉCO-GESTION ══════════════════════════════════════════
+  'stmg-eco': {
+    key:'stmg-eco', label:'Terminale STMG — Éco-Gestion', color:'#8b5cf6', icon:'🏢',
+    chapitres: [
+      { slug:'management',               titre:"Management",                           badge:"Management", desc:"Types d'organisations, finalités, parties prenantes, décisions stratégiques/opérationnelles, performance (efficacité/efficience), styles de direction, RSE, SWOT, part de marché." },
+      { slug:'sciences-gestion-numerique', titre:"Sciences de gestion et numérique",   badge:"Gestion",    desc:"Système d'information, donnée/information/connaissance, bases de données (tables, requêtes), PGI/ERP, CRM, KPI, transformation numérique, RGPD, tableur (totaux, moyennes, taux d'évolution)." },
+      { slug:'droit',                    titre:"Droit",                                 badge:"Droit",      desc:"Règle de droit, sources et hiérarchie des normes, personne physique/morale, capacité juridique, contrat (validité, obligations), responsabilité contractuelle/délictuelle, contrat de travail (CDI/CDD, subordination)." },
+      { slug:'economie',                 titre:"Économie",                              badge:"Économie",   desc:"Marché (offre/demande, équilibre), croissance et PIB, VA, chômage BIT (taux), inflation et IPC, pouvoir d'achat, mondialisation, rôle de l'État, politiques conjoncturelles/structurelles." },
+      { slug:'gestion-finance',          titre:"Gestion et Finance",                    badge:"Finance",    desc:"Bilan (actif/passif), compte de résultat (produits − charges), FDR = capitaux permanents − actif immobilisé, BFR = stocks + créances − dettes fournisseurs, TN = FDR − BFR, charges fixes/variables, MCV, taux de MCV, seuil de rentabilité = CF / taux de MCV, CAF." },
+    ],
+  },
+}
+
 
 
 // ── Fonction génération examen par chapitres ──────────────────────
@@ -3471,7 +3693,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   archives?: Archive[]
   chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
   sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -6269,7 +6491,7 @@ function SimulationFrancePageInner() {
   // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>(() => {
+  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'>(() => {
     if (typeof window === 'undefined') return 'maths'
     const s = new URLSearchParams(window.location.search).get('subject')
     return s==='physique' ? 'physique' : s==='informatique' ? 'informatique' : s==='anglais' ? 'anglais' : s==='svt' ? 'svt' : s==='francais' ? 'francais' : 'maths'
@@ -6277,13 +6499,13 @@ function SimulationFrancePageInner() {
   // Synchroniser globalMatiere — activeMatiere (UI) prime sur matiereActive (AuthContext)
   useEffect(() => {
     const matiereMap: Record<string,string> = {
-      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
+      maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion'
     }
     globalMatiere = matiereMap[activeMatiere] || 'mathematiques'
   }, [activeMatiere])
   // Sync initial immédiat (avant le premier render du useEffect)
   const matiereMapImmediat: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais'
+    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion'
   }
   globalMatiere = matiereMapImmediat[activeMatiere] || 'mathematiques'
   const [phase, setPhase] = useState<Phase>('select')
@@ -6325,7 +6547,7 @@ function SimulationFrancePageInner() {
       }
       // Vérification abonnement — correction directe compte comme 1 simulation
       if (!isAdmin && hasActiveSubscription) {
-        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais' }[activeMatiere] || activeMatiere
+        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion' }[activeMatiere] || activeMatiere
         if (!checkMatiereAccess(matiereUIKey as any)) {
           const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
           alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".
@@ -6365,7 +6587,7 @@ Vos abonnements actifs : ${matieresList}
     if (!isAdmin && hasActiveSubscription) {
       const _mapCheck: Record<string,string> = {
         maths:'mathematiques', physique:'physique', informatique:'informatique',
-        anglais:'anglais', svt:'svt', francais:'francais'
+        anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion'
       }
       const matiereUIKey = _mapCheck[activeMatiere] || activeMatiere
       // checkMatiereAccess vérifie si l'utilisateur a UN abonnement actif pour cette matière
@@ -6481,6 +6703,7 @@ Vos abonnements actifs : ${matieresList}
                 { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e', matiere:'anglais' },
                 { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
                 { key:'francais'    as const, icon:'📚', label:'Français',         color:'#ec4899', matiere:'francais' },
+                { key:'eco-gestion' as const, icon:'📊', label:'Éco & Gestion',    color:'#14b8a6', matiere:'eco-gestion' },
               ]).map(m => {
                 const locked = false
                 return (
@@ -6504,9 +6727,9 @@ Vos abonnements actifs : ${matieresList}
             {phase==='select'&&(
               <PhaseSelect
                 onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : activeMatiere==='svt' ? ARCHIVES_SVT_FR : activeMatiere==='francais' ? ARCHIVES_FRANCAIS_FR : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : activeMatiere==='svt' ? CHAPITRES_SVT_FR : activeMatiere==='francais' ? CHAPITRES_FRANCAIS_FR : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : activeMatiere==='svt' ? SECTION_CONFIGS_SVT_FR : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS_FR : SECTION_CONFIGS}
+                archives={activeMatiere==='physique' ? ARCHIVES_PHYS_FR : activeMatiere==='informatique' ? ARCHIVES_INFO_FR : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS_FR : activeMatiere==='svt' ? ARCHIVES_SVT_FR : activeMatiere==='francais' ? ARCHIVES_FRANCAIS_FR : activeMatiere==='eco-gestion' ? ARCHIVES_ECO_FR : ARCHIVES}
+                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS_FR : activeMatiere==='informatique' ? CHAPITRES_INFO_FR : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS_FR : activeMatiere==='svt' ? CHAPITRES_SVT_FR : activeMatiere==='francais' ? CHAPITRES_FRANCAIS_FR : activeMatiere==='eco-gestion' ? CHAPITRES_ECO_FR : CHAPITRES_PAR_SECTION}
+                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS_FR : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO_FR : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS_FR : activeMatiere==='svt' ? SECTION_CONFIGS_SVT_FR : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS_FR : activeMatiere==='eco-gestion' ? SECTION_CONFIGS_ECO_FR : SECTION_CONFIGS}
                 matiere={activeMatiere}
               />
             )}
