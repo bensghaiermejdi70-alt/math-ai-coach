@@ -960,6 +960,8 @@ async function generateOneExam(
   // Détecter la matière pour adapter le system prompt
   const isPhysExam    = archives[0]?.sectionKey?.includes('phys') ?? false
   const isAnglaisExam = archives[0]?.sectionKey?.includes('anglais') ?? false
+  const isEcoExam     = globalMatiere === 'economie'
+  const isGestionExam = globalMatiere === 'gestion'
 
   const system = isAnglaisExam
     ? `You are an expert author of official Tunisian Baccalaureate English exam papers (CNP official programme).
@@ -968,6 +970,16 @@ RESPOND ONLY IN VALID JSON — no backticks, no comments.
 
 IMPORTANT LANGUAGE RULE: ALL content (statements, questions, passages, answer keys) MUST be written in ENGLISH.
 The correction and model answers MUST also be entirely in ENGLISH.`
+    : isEcoExam
+    ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
+Tu crées des sujets ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
+Tes documents sont RÉALISTES : vraies grandeurs (PIB, taux de croissance, solde commercial, taux de couverture, IDH, coefficient budgétaire…), sources et années citées (INS, Banque Mondiale, FMI).
+Notions et formules du programme tunisien.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isGestionExam
+    ? `Tu es un auteur expert de sujets de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
+Tu crées des ÉTUDES DE CAS ORIGINALES d'une entreprise : comptabilité (bilan, compte de résultat), analyse financière (FDR, BFR, TN, ratios), gestion des stocks (CUMP, Wilson), coûts (coût complet, MCV, seuil de rentabilité), avec des données chiffrées COHÉRENTES.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isPhysExam
     ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques et des contextes scientifiques précis.
@@ -985,7 +997,18 @@ Structure officielle Bac Anglais Tunisie :
 - Exercise 3 — Language (4 pts) : grammar exercises (Exercise A 2pts + Exercise B 2pts)
 Total : 20 points — Duration : 2 hours
 NEVER use French in the exam — every word must be in English.
-The model correction must also be entirely in English.` : isPhysExam ? `
+The model correction must also be entirely in English.` : isEcoExam ? `
+RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
+- Structure : Ex1 Mobilisation de connaissances (questions de cours, 6 pts) · Ex2 Travail sur document statistique (lecture + calculs, 6 pts) · Ex3 Analyse de document(s) (4 pts) · Ex4 Synthèse argumentée (4 pts)
+- Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar" (données INS / Banque Mondiale / FMI réalistes, avec source et année)
+- Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture ((X+M)/2)/PIB×100, coefficient budgétaire, TCAM, IDH
+- Notions du programme : croissance (extensive/intensive), facteurs de croissance, développement durable, échanges extérieurs, mondialisation, FMN, coûts de la croissance
+- Toujours citer la source et l'année des documents` : isGestionExam ? `
+RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion) :
+- ÉTUDE DE CAS d'une entreprise (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices)
+- Documents comptables en tableaux : champ "graph" type "table" (extrait de bilan, compte de résultat, tableau de stocks, tableau de coûts)
+- Calculs OBLIGATOIRES selon les dossiers : Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · Taux de MCV=MCV/CA · Seuil de rentabilité=Charges fixes/Taux de MCV · CUMP · Rotation des stocks=Consommation/Stock moyen · Masse salariale
+- Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isPhysExam ? `
 RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
 - Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
 - Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
@@ -1074,6 +1097,84 @@ ${isAnglaisExam ? `{
       "statement": "EXERCISE A (2 pts) — Fill in the blanks / Transform the sentences:\n1. [sentence]  2. [sentence]  3. [sentence]  4. [sentence]\n\nEXERCISE B (2 pts) — Rewrite / Vocabulary matching:\n1. [item]  2. [item]  3. [item]  4. [item]"
     }
   ]
+}` : isEcoExam ? `{
+  "title": "Économie — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — Mobilisation de connaissances",
+      "theme": "[Chapitre du programme]",
+      "points": 6,
+      "graph": null,
+      "statement": "Questions de cours numérotées 1), 2), 3) sur des notions précises (définitions, mécanismes, formules économiques). Minimum 120 mots."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — Travail sur document statistique",
+      "theme": "[Chapitre]",
+      "points": 6,
+      "graph": "[GRAPH: {JSON type table OU bar — OBLIGATOIRE}]",
+      "statement": "DOCUMENT — [Titre, Source : INS/Banque Mondiale/FMI, Année] [voir document ci-dessus]\\n\\nQuestions :\\n1) Lecture d'une donnée précise du document (1 pt)\\n2) Calcul (taux de variation / indice base 100 / taux de couverture / coefficient budgétaire) — écrire la formule puis le résultat (3 pts)\\n3) Interprétation à l'aide du document et de vos connaissances (2 pts). Minimum 120 mots."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — Analyse de document",
+      "theme": "[Chapitre]",
+      "points": 4,
+      "graph": null,
+      "statement": "DOCUMENT — [texte 4-6 lignes, source, année]\\n\\nQuestions d'analyse 1), 2). Minimum 90 mots."
+    },
+    {
+      "num": 4,
+      "title": "Exercice 4 — Synthèse argumentée",
+      "theme": "[Chapitre]",
+      "points": 4,
+      "graph": null,
+      "statement": "SUJET : [question de réflexion]. Réponse organisée (introduction, arguments appuyés sur le cours et les documents, conclusion). Minimum 100 mots."
+    }
+  ]
+}` : isGestionExam ? `{
+  "title": "Gestion — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Dossier 1 — Comptabilité",
+      "theme": "Comptabilité",
+      "points": 6,
+      "graph": "[GRAPH: {JSON type table — extrait de compte de résultat ou de bilan}]",
+      "statement": "L'entreprise [Raison sociale], spécialisée dans [activité], vous communique ses données. [voir document ci-dessus]\\n\\nTravail à faire :\\n1) Calculer le résultat de l'exercice (Produits − Charges) (3 pts)\\n2) [TVA due / variation / commentaire] (3 pts). Données chiffrées cohérentes."
+    },
+    {
+      "num": 2,
+      "title": "Dossier 2 — Analyse financière",
+      "theme": "Analyse financière",
+      "points": 6,
+      "graph": "[GRAPH: {JSON type table — bilan fonctionnel condensé}]",
+      "statement": "À partir du bilan fonctionnel [voir document ci-dessus] :\\n1) Calculer le FDR = Capitaux permanents − Actif immobilisé (2 pts)\\n2) Calculer le BFR = Actif circulant − Passif circulant (2 pts)\\n3) Calculer la TN = FDR − BFR et interpréter la situation de trésorerie (2 pts)."
+    },
+    {
+      "num": 3,
+      "title": "Dossier 3 — Gestion des stocks / des coûts",
+      "theme": "Coûts & Stocks",
+      "points": 4,
+      "graph": "[GRAPH: {JSON type table — données de coûts ou de stocks}]",
+      "statement": "[voir document ci-dessus]\\n\\nTravail à faire :\\n1) [CUMP / rotation des stocks / MCV = CA − charges variables] (2 pts)\\n2) Calculer le seuil de rentabilité = Charges fixes / Taux de MCV et l'interpréter (2 pts)."
+    },
+    {
+      "num": 4,
+      "title": "Dossier 4 — Gestion (RH / commerciale / financière)",
+      "theme": "Gestion",
+      "points": 4,
+      "graph": null,
+      "statement": "Questions de gestion 1), 2) (masse salariale, part de marché, financement, budget). Minimum 90 mots."
+    }
+  ]
 }` : `{
   "title": "${section} — Simulation IA Variante ${idx+1}",
   "section": "${section}",
@@ -1138,12 +1239,26 @@ async function correctOneExercise(
     exercise.theme.toLowerCase().includes('reading') ||
     exercise.theme.toLowerCase().includes('writing') ||
     exercise.theme.toLowerCase().includes('grammar')
+  const isEcoCorrection = globalMatiere === 'economie' || globalMatiere === 'gestion'
 
   const system = isAnglaisCorrection
     ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
 You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
 IMPORTANT: ALL your correction must be written in ENGLISH — never use French.
 Use markdown: ### for sections, **bold** for key answers, > for important points.`
+    : isEcoCorrection
+    ? `Tu es un professeur correcteur du Baccalauréat tunisien, section Sciences Économiques et de Gestion (Économie & Gestion, programme CNP).
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
+Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
+
+NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
+- QUESTIONS DE COURS / MOBILISATION : définis chaque notion avec précision, explique le mécanisme économique, illustre par un exemple.
+- TRAVAIL SUR DOCUMENT (économie) : montre COMMENT lire le document (titre, source, unité, année), fais CHAQUE calcul en entier en rappelant la formule puis le résultat : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture, coefficient budgétaire, TCAM, IDH. Termine par une phrase d'interprétation chiffrée (« En 2023, selon l'INS, … »).
+- GESTION (étude de cas) : pose CHAQUE formule puis le calcul complet et l'interprétation : Résultat=Produits−Charges ; FDR=Capitaux permanents−Actif immobilisé ; BFR=Actif circulant−Passif circulant ; TN=FDR−BFR (et commentaire sur la trésorerie) ; MCV=CA−Charges variables ; taux de MCV=MCV/CA ; seuil de rentabilité=Charges fixes/taux de MCV (point mort) ; CUMP ; rotation des stocks ; masse salariale.
+- SYNTHÈSE / RÉFLEXION : propose une introduction (définitions, problématique), des arguments structurés appuyés sur le cours et les documents, une conclusion.
+- Termine chaque question par le barème détaillé.
+Vocabulaire économique et comptable rigoureux. Données toujours accompagnées de leur unité et de leur source.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
     : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1405,10 +1520,10 @@ async function correctSingleExercise(
 
     const system = isAnglais
       ? `You are an expert English teacher for the Baccalaureate. Write an EXHAUSTIVE correction ENTIRELY IN ENGLISH based on the exam image(s) provided. Use markdown.`
-      : `Tu es un professeur correcteur expert du Baccalauréat tunisien${isPhysique ? ' en Physique-Chimie' : ''}.
+      : `Tu es un professeur correcteur expert du Baccalauréat tunisien${isPhysique ? ' en Physique-Chimie' : (globalMatiere==='economie' ? ' en Économie (Sciences Éco & Gestion)' : globalMatiere==='gestion' ? ' en Gestion (Sciences Éco & Gestion)' : '')}.
 Tu analyses l'image de l'examen fournie et rédiges une CORRECTION COMPLÈTE, EXHAUSTIVE et PÉDAGOGIQUE.
 Identifie tous les exercices et questions visibles dans l'image.
-Pour chaque question : énoncé reconstitué → concept → résolution étape par étape → résultat.
+Pour chaque question : énoncé reconstitué → concept → résolution étape par étape → résultat.${globalMatiere==='economie'||globalMatiere==='gestion' ? ' Économie : lecture de documents et calculs (taux de variation, indices, taux de couverture, IDH). Gestion : formules posées et appliquées (FDR, BFR, TN, MCV, seuil de rentabilité, CUMP) avec interprétation.' : ''}
 Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
 
     const prompt = cleanWork && cleanWork !== '(Aucune copie — fournir la correction complète)'
@@ -1435,7 +1550,11 @@ async function analyzeOneExerciseSim(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire, spécialiste Bac Tunisie CNP.
+  const system = (globalMatiere==='economie'||globalMatiere==='gestion')
+    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie CNP, Sciences Éco & Gestion).
+Analyse précisément le travail de l'élève (notions, lecture de documents, calculs économiques, formules de gestion : FDR, BFR, TN, MCV, seuil de rentabilité) et propose une remédiation ciblée et progressive.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire, spécialiste Bac Tunisie CNP.
 Analyse précisément le travail de l'élève et propose une remédiation ciblée et progressive.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
@@ -1510,7 +1629,12 @@ JSON requis (COMPLET) :
 async function analyzeStudentWork(
   exam: GeneratedExam, studentWork: string, correction: string
 ): Promise<AnalysisResult> {
-  const system = `Tu es un expert en pédagogie mathématique et remédiation scolaire.
+  const system = (globalMatiere==='economie'||globalMatiere==='gestion')
+    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie) et en remédiation scolaire.
+Tu analyses finement les travaux d'élèves (mobilisation de connaissances, travail sur documents, calculs économiques et de gestion) et construis un plan d'amélioration PERSONNALISÉ et ACTIONNABLE.
+Ton analyse doit être précise, bienveillante et orienter l'élève vers des actions concrètes.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.
 Tu analyses finement les travaux d'élèves et construis un plan d'amélioration PERSONNALISÉ et ACTIONNABLE.
 Ton analyse doit être précise, bienveillante et orienter l'élève vers des actions concrètes.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
@@ -1615,7 +1739,7 @@ async function correctRemediationExercise(
   exercise: AnalysisResult['remediationExercises'][number],
   studentAnswer: string
 ): Promise<string> {
-  const system = `Tu es un tuteur mathématiques bienveillant mais exigeant, spécialiste Bac Tunisie.
+  const system = `Tu es un tuteur ${(globalMatiere==='economie'||globalMatiere==='gestion') ? "d'Économie & Gestion (Bac Tunisie) — tu corriges notions, lecture de documents et calculs (taux de variation, indices, IDH ; FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), en identifiant la notion/donnée/étape/formule manquante," : "mathématiques, spécialiste Bac Tunisie,"} bienveillant mais exigeant.
 Tu corriges les réponses d'élèves sur des exercices de remédiation avec précision pédagogique.
 Utilise LaTeX pour les formules : $formule$ inline, $$formule$$ centré.
 Pour les vecteurs, écris toujours \\overrightarrow{AB} (flèche au-dessus), jamais une flèche après les lettres.
@@ -1667,7 +1791,7 @@ async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<
   breakdown: {title:string;pts:number;max:number;reason:string}[]
 }> {
   const hasWork = studentWork.trim().length > 10
-  const system = `Tu es un correcteur du Baccalaureat tunisien. Tu donnes une note RAPIDE et JUSTE.
+  const system = `Tu es un correcteur du Baccalaureat tunisien${globalMatiere==='economie' ? ' en Économie' : globalMatiere==='gestion' ? ' en Gestion' : ''}. Tu donnes une note RAPIDE et JUSTE.
 Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
 
   const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${e.statement.slice(0,180)}`).join(' | ')
@@ -3434,7 +3558,12 @@ async function generateChapterExam(
   const totalPts = 20
   const nEx = Math.max(chapitres.length, 3)
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+  const isEcoGes = globalMatiere === 'economie' || globalMatiere === 'gestion'
+  const system = isEcoGes
+    ? `Tu es un auteur expert de sujets d'ÉCONOMIE et de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
+Tu crées des sujets ORIGINAUX : questions de cours, travail sur documents statistiques (tableaux, graphiques), calculs (économie : taux de variation, indices, taux de couverture, IDH ; gestion : FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), études de cas d'entreprise.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
@@ -3449,6 +3578,8 @@ Règles STRICTES :
 - Niveau Bac Tunisien officiel — vraies données numériques précises
 - Chaque exercice a des sous-parties 1), 2), 3)...
 - Pour tout exercice sur une fonction : graphique OBLIGATOIRE
+${isEcoGes ? `- ÉCONOMIE/GESTION : pour les documents statistiques et tableaux comptables, utiliser le champ "graph" type "table" ou "bar". ÉCONOMIE → calculs (taux de variation, indice base 100, taux de couverture (X/M)×100, coefficient budgétaire, IDH) avec source et année. GESTION → tableaux comptables (bilan, résultat, coûts) et calculs FDR=Cap. permanents−Actif immobilisé, BFR=Actif circ.−Passif circ., TN=FDR−BFR, MCV=CA−charges variables, seuil de rentabilité=CF/taux de MCV, CUMP. Interprétation exigée.
+${UNIVERSAL_GRAPH_PROMPT}` : ''}
 
 GRAPHIQUES — FORMATS :
 FORMAT 1 — COURBE : [GRAPH: {"type":"function","expressions":["2*x*Math.exp(-x)"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
@@ -3468,8 +3599,8 @@ ${chapitres.map((c,i)=>`    {
       "title": "Exercice ${i+1} — ${c.titre}",
       "theme": "${c.titre}",
       "points": ${Math.round(totalPts/chapitres.length)},
-      "graph": null,
-      "statement": "Énoncé complet sur ${c.titre}. Minimum 120 mots. Sous-parties numérotées 1), 2), 3)."
+      "graph": ${isEcoGes ? '"[GRAPH: {JSON type table ou bar si document statistique/comptable, sinon null}]"' : 'null'},
+      "statement": "Énoncé complet sur ${c.titre}. Minimum 120 mots. Sous-parties numérotées 1), 2), 3).${isEcoGes ? ' Inclure les calculs avec formule puis résultat, et une interprétation.' : ''}"
     }`).join(',\n')}
   ]
 }`
