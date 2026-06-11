@@ -4360,9 +4360,11 @@ function BacBlancInner() {
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
   // Limite Bac Blanc / semaine : 1 abonnement → 5 · 2 abonnements ou plus → 7 (≈ 1/jour mai-juin)
   // (plan illimité conservé à -1). nbMatieres = nombre d'abonnements actifs.
-  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+  const bbWeeklyLimit = isAdmin
     ? -1
-    : (nbMatieres >= 2 ? 7 : 5)
+    : (quotaLimits.bac_blanc_per_week === -1
+        ? -1
+        : (nbMatieres >= 2 ? 7 : 5))
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])

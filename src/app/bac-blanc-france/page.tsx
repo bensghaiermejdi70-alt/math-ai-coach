@@ -4045,9 +4045,11 @@ function BacBlancFranceInner() {
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5, sinon la valeur du plan
-  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+  const bbWeeklyLimit = isAdmin
     ? -1
-    : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
+    : (quotaLimits.bac_blanc_per_week === -1
+        ? -1
+        : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5))
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
