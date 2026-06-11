@@ -2523,6 +2523,8 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
         ? {key:sectionKey,label:sectionKey==='terminale-francais'?'Terminale — Philosophie':sectionKey==='premiere-francais'?'Première — EAF (Écrit + Oral)':'Seconde — Français',icon:'📚',color:'#ec4899',duration:sectionKey==='terminale-francais'||sectionKey==='premiere-francais'?240:120,coeff:sectionKey==='terminale-francais'?8:sectionKey==='premiere-francais'?5:1,themes:[],programme:[]}
         : sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
         ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
+        : sectionKey.includes('-eco')
+        ? {key:sectionKey,label:sectionKey==='terminale-eco'?'Terminale Spé SES':sectionKey==='premiere-eco'?'Première Spé SES':sectionKey==='seconde-eco'?'Seconde SES':'Terminale STMG',icon:'📊',color:'#14b8a6',duration:sectionKey==='seconde-eco'?60:240,coeff:sectionKey==='seconde-eco'?1:sectionKey==='premiere-eco'?5:16,themes:[],programme:[]}
         : undefined)
 
   const handleSubmit=()=>{
