@@ -37,6 +37,10 @@ const PRICE_TO_PLAN: Record<string, string> = {
   "price_1TdyBiCwS8UwOtxylDeBXcrH": "mensuel_francais",
   "price_1TdyEuCwS8UwOtxyZS86m22l": "sprint_bac_francais",
   "price_1TdyHeCwS8UwOtxyevGTRFCs": "annuel_francais",
+  // ── Économie & Gestion France (production) ───────────────────────
+  "price_1Tgr8tCwS8UwOtxya4xZcWFR": "mensuel_eco-gestion",
+  "price_1TgrBPCwS8UwOtxyiuM00lEG": "sprint_bac_eco-gestion",
+  "price_1TgrE6CwS8UwOtxy5isKiv38": "annuel_eco-gestion",
   // ── Sandbox / Test ────────────────────────────────────────────────
   "price_1TLNKLERX5ozBo4IelzRW5rG": "mensuel_mathematiques",
 }
@@ -47,7 +51,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
   if (!RESEND_KEY) return
 
   const MATIERE_ICONS: Record<string, string> = {
-    mathematiques: "📐", physique: "⚗️", svt: "🌱", anglais: "🇬🇧", informatique: "💻", francais: "📚",
+    mathematiques: "📐", physique: "⚗️", svt: "🌱", anglais: "🇬🇧", informatique: "💻", francais: "📚", "eco-gestion": "📊",
   }
   const planLabels: Record<string, string> = {
     // Mathématiques
@@ -74,6 +78,10 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
     "mensuel_francais":        "📚 Français Mensuel — 19€/mois",
     "sprint_bac_francais":     "📚 Sprint Bac Français — 29€/mois",
     "annuel_francais":         "📚 Français Annuel — 199€/an",
+    // Économie & Gestion
+    "mensuel_eco-gestion":     "📊 Éco-Gestion Mensuel — 19€/mois",
+    "sprint_bac_eco-gestion":  "📊 Sprint Bac Éco-Gestion — 29€/mois",
+    "annuel_eco-gestion":      "📊 Éco-Gestion Annuel — 199€/an",
     // Legacy (sans matière) — compatibilité anciens abonnements
     mensuel:    "📐 MathBac Mensuel — 19€/mois",
     sprint:     "📐 Sprint Bac — 29€/mois",
