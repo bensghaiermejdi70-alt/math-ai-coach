@@ -1143,11 +1143,28 @@ async function correctOneExercise(exercise: Exercise, totalPoints: number, stude
     exercise.theme.toLowerCase().includes('grammar') ||
     exercise.theme.toLowerCase().includes('language')
 
+  const isEcoGesCorrection = globalMatiere === 'economie' || globalMatiere === 'gestion'
+    || examTitle.toLowerCase().includes('économie') || examTitle.toLowerCase().includes('economie')
+    || examTitle.toLowerCase().includes('gestion')
+
   const system = isAnglaisCorrection
     ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
 You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
 CRITICAL RULE: ALL your correction MUST be written in ENGLISH — never use French, even a single word.
 Use markdown: ### for sections, **bold** for key answers, > for important points.`
+    : isEcoGesCorrection
+    ? `Tu es un professeur correcteur du Baccalauréat tunisien, section Sciences Économiques et de Gestion (Économie & Gestion, programme CNP).
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
+Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
+
+NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
+- MOBILISATION DES CONNAISSANCES : définis chaque notion (définition du programme), explique le mécanisme économique, illustre par un exemple.
+- ÉTUDE DE DOCUMENT (économie) : montre COMMENT lire le document (titre, source, unité, année), fais CHAQUE calcul en entier en rappelant la formule puis le résultat — taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture, coefficient budgétaire, TCAM, IDH — puis une phrase d'interprétation chiffrée.
+- SUJET DE RÉFLEXION / DISSERTATION : méthode (analyse du sujet, problématique), plan détaillé, introduction modèle (accroche, définitions, problématique, annonce), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).
+- GESTION (dossiers) : pose CHAQUE formule puis le calcul complet et l'interprétation — Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · taux de MCV · Seuil de rentabilité=CF/taux de MCV (point mort) · CUMP · rotation des stocks · masse salariale.
+- Termine chaque question par le barème détaillé.
+Vocabulaire économique et comptable rigoureux. Données toujours accompagnées de leur unité et de leur source.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
     : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1257,6 +1274,9 @@ async function analyzeOneExercise(
   const system = isAnglaisTheme
     ? `You are an expert English language teacher and Bac examiner. Analyse ONE English Bac Blanc exercise.
 RESPOND ONLY IN VALID JSON. ALL text fields (description, advice, statements, corrections) MUST be in ENGLISH.`
+    : (globalMatiere === 'economie' || globalMatiere === 'gestion')
+    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie CNP, Sciences Éco & Gestion). Analyse UN exercice de Bac Blanc (mobilisation, étude de document, dissertation, dossier de gestion) et génère une remédiation ciblée : méthode (lecture de document statistique, calculs de taux/indices/IDH, formules FDR/BFR/TN/MCV/seuil, méthodologie de dissertation), notions du programme.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
@@ -1319,6 +1339,8 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
 
   const system = isAnglaisExam
     ? `You are an expert English language teacher and educational coach for the Tunisian Baccalaureate.\nYou analyse student work and build a personalised improvement plan.\nCRITICAL: ALL text in your JSON (descriptions, advice, statements, corrections) MUST be written in ENGLISH.\nRESPOND ONLY IN VALID JSON.`
+    : (globalMatiere === 'economie' || globalMatiere === 'gestion')
+    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie) et en remédiation scolaire.\nTu analyses les copies (mobilisation des connaissances, étude de document, dissertation, dossiers de gestion) et construis un plan d'amélioration personnalisé : méthodologie (lecture de documents, calculs économiques et de gestion, dissertation), notions du programme.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = isAnglaisExam
     ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
@@ -1350,6 +1372,8 @@ async function correctRemediationExercise(exercise: AnalysisResult['remediationE
 You correct student answers on remediation exercises.
 CRITICAL RULE: ALL your feedback MUST be written in ENGLISH — never use French.
 Be precise, encouraging, and identify exactly what is missing.`
+    : (globalMatiere === 'economie' || globalMatiere === 'gestion')
+    ? `Tu es un tuteur d'Économie et de Gestion (Bac Tunisie) bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation : notions, lecture de documents, calculs (taux de variation, indices, IDH ; FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), méthodologie de dissertation.\nIdentifie exactement ce qui manque (notion, donnée chiffrée, étape de calcul, formule, structure de l'argument).\nSois précis, encourageant, et identifie exactement ce qui manque.`
     : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
 
   const prompt = isAnglaisRem
@@ -4563,6 +4587,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
+    globalMatiere = 'economie'
     setPhase('generating')
     try {
       const e = await generateBacBlancEconomie(candidat, dayNum)
@@ -4594,6 +4619,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
+    globalMatiere = 'gestion'
     setPhase('generating')
     try {
       const e = await generateBacBlancGestion(candidat, dayNum)
