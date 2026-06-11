@@ -953,6 +953,46 @@ Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY.
     return askClaude(promptEN, systemEN, 8000, 'anglais')
   }
 
+  const isEcoCorrect = globalMatiere === 'eco-gestion'
+    || examTitle?.toLowerCase().includes('éco-gestion')
+    || examTitle?.toLowerCase().includes('eco-gestion')
+    || exercise.title?.toLowerCase().includes('ec1')
+    || exercise.title?.toLowerCase().includes('ec2')
+    || exercise.title?.toLowerCase().includes('ec3')
+    || exercise.title?.toLowerCase().includes('gestion-finance')
+
+  if (isEcoCorrect) {
+    const systemECO = `Tu es un professeur correcteur du Baccalauréat France, spécialiste de SES (Sciences Économiques et Sociales) et de la série STMG.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
+Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
+
+NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
+- EC1 / Mobilisation : définis chaque notion (définition du programme), explique le mécanisme, cite les auteurs pertinents (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls…).
+- EC2 / Étude de document : montre COMMENT lire le document (titre, source, unité, champ), fais les CALCULS en entier (taux de variation = (VA−VD)/VD×100, écarts en points de %, coefficients multiplicateurs, lecture : « Selon l'INSEE, en 2024, … »), puis structure la réponse (idée + donnée chiffrée).
+- EC3 / Raisonnement / Dissertation : méthode (analyse du sujet), plan détaillé (I/A,B — II/A,B), introduction modèle (accroche, définitions, problématique, annonce), développement en AEI (Affirmation-Explicitation-Illustration par documents et connaissances), conclusion.
+- STMG Gestion-Finance : pose chaque formule (FDR = capitaux permanents − actif immobilisé ; BFR = actif circulant − passif circulant ; TN = FDR − BFR ; MCV = CA − charges variables ; taux de MCV = MCV/CA ; seuil de rentabilité = charges fixes / taux de MCV), calcul complet, interprétation (situation saine, point mort).
+- Termine chaque question par le barème détaillé.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
+
+    const withWorkECO = studentWork.trim().length > 10
+    const promptECO = `Corrige cet exercice de Bac Blanc SES/STMG de façon COMPLÈTE et DÉTAILLÉE.
+
+EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
+${exercise.statement}
+${withWorkECO ? `\nCOPIE DE L'ÉLÈVE :\n${studentWork}\n\nÉvalue la copie, attribue une note sur ${exercise.points}, puis donne la correction modèle.` : ''}
+
+Rédige :
+### Correction modèle détaillée
+[Méthodologie + réponse complète : définitions, lecture/calculs de données chiffrées, raisonnement AEI ou calculs de gestion posés et interprétés]
+
+### Barème détaillé
+[Répartition des ${exercise.points} points + pièges classiques à éviter]
+
+> **À retenir pour ${exercise.theme} :** [notions clés, formules, méthode]`
+
+    return askClaude(promptECO, systemECO, 8000, 'eco-gestion')
+  }
+
   const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1124,6 +1164,164 @@ NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
 
 
 // ════════════════════════════════════════════════════════════════════
+//  BAC BLANC ÉCONOMIE & GESTION (SES + STMG) — France
+//  Sections : terminale-eco (Spé SES) · premiere-eco · seconde-eco · stmg-eco
+//  Épreuve composée EC1/EC2/EC3 · documents statistiques (tableaux & graphiques)
+// ════════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_ECO_FR: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+}[]> = {
+  'terminale-eco': [
+    {ex1:{theme:"Sources de la croissance",sousTh:"Facteurs de production, PGF, progrès technique, innovation (Schumpeter), croissance endogène, limites écologiques"},ex2:{theme:"Mobilité sociale",sousTh:"Tables de mobilité (lecture en %, destinée/recrutement), fluidité sociale, capital culturel (Bourdieu), reproduction"},ex3:{theme:"Commerce international",sousTh:"Avantages comparatifs (Ricardo), dotations factorielles, fragmentation de la chaîne de valeur, compétitivité prix/hors-prix"}},
+    {ex1:{theme:"Chômage & emploi",sousTh:"Chômage structurel/conjoncturel, taux de chômage BIT, asymétries d'information, politiques de l'emploi, flexibilité"},ex2:{theme:"Structure sociale",sousTh:"Classes sociales (Marx, Weber), PCS, moyennisation vs distances, rapports sociaux de genre, intersection des inégalités"},ex3:{theme:"Engagement politique",sousTh:"Vote, militantisme, paradoxe de l'action collective (Olson), incitations sélectives, répertoires d'action"}},
+    {ex1:{theme:"Crises financières",sousTh:"Crise de 1929 vs 2008, bulles spéculatives, comportements mimétiques, panique bancaire, régulation (ratios prudentiels)"},ex2:{theme:"École & mobilité",sousTh:"Massification vs démocratisation, capital culturel, fluidité sociale, lecture de tables de mobilité"},ex3:{theme:"Justice sociale",sousTh:"Égalité droits/chances/situations (Rawls), redistribution, fiscalité progressive, courbe de Lorenz, coefficient de Gini"}},
+    {ex1:{theme:"Politiques européennes",sousTh:"Marché unique, euro, politique monétaire BCE (taux directeurs, inflation 2%), politique budgétaire, chocs asymétriques"},ex2:{theme:"Mutations du travail",sousTh:"Taylorisme/post-taylorisme, polarisation des emplois, numérique, précarisation, intégration par le travail"},ex3:{theme:"Commerce & mondialisation",sousTh:"Firmes multinationales, division internationale du travail, gains et perdants de la mondialisation, protectionnisme"}},
+    {ex1:{theme:"Croissance & innovation",sousTh:"Destruction créatrice, PGF, brevets, droits de propriété, externalités de la connaissance, État stratège"},ex2:{theme:"Déviance & contrôle social",sousTh:"Anomie (Durkheim), étiquetage (Becker), contrôle social formel/informel, chiffre noir, statistiques de la délinquance"},ex3:{theme:"Action publique environnement",sousTh:"Externalités, instruments (taxe, marché de quotas, réglementation), coordination internationale, soutenabilité"}},
+  ],
+  'premiere-eco': [
+    {ex1:{theme:"Marché concurrentiel",sousTh:"CPP, offre/demande, prix d'équilibre, élasticité-prix, surplus, preneur de prix, gains à l'échange"},ex2:{theme:"Socialisation",sousTh:"Socialisation primaire/secondaire, instances (famille, école, pairs, médias), socialisation différentielle (genre, milieu)"},ex3:{theme:"Monnaie & financement",sousTh:"Création monétaire, banque centrale, taux directeurs, inflation (IPC), financement direct/indirect, taux d'intérêt"}},
+    {ex1:{theme:"Défaillances du marché",sousTh:"Externalités, biens publics (non-rival, non-excluable), asymétries d'information, antisélection, aléa moral, taxe pigouvienne"},ex2:{theme:"Liens sociaux",sousTh:"4 types de liens (Paugam), solidarité mécanique/organique (Durkheim), intégration, désaffiliation (Castel)"},ex3:{theme:"Opinion publique & vote",sousTh:"Sondages (échantillon, limites), participation/abstention (calculs), variables lourdes du vote, vote de classe"}},
+  ],
+  'seconde-eco': [
+    {ex1:{theme:"Création de richesses",sousTh:"Production marchande/non marchande, VA = Production − CI, PIB (somme des VA), taux de croissance, productivité, limites du PIB"},ex2:{theme:"Formation des prix",sousTh:"Loi de l'offre, loi de la demande, prix d'équilibre, excès d'offre/pénurie, recette = prix × quantité"},ex3:{theme:"Diplôme & emploi",sousTh:"Population active, salaire brut/net, SMIC, taux de chômage et taux d'activité (calculs), diplôme et chômage"}},
+  ],
+  'stmg-eco': [
+    {ex1:{theme:"Management",sousTh:"Finalités, parties prenantes, performance (efficacité/efficience), styles de direction, RSE, SWOT, part de marché"},ex2:{theme:"Droit & Économie",sousTh:"Contrat (validité, obligations), responsabilité, contrat de travail (CDI/CDD), marché, chômage BIT, inflation (IPC)"},ex3:{theme:"Gestion-Finance",sousTh:"Compte de résultat (produits − charges), FDR = capitaux permanents − actif immobilisé, BFR, TN = FDR − BFR, MCV, seuil de rentabilité = CF / taux de MCV"}},
+  ],
+}
+
+function getProgrammeJourEcoFR(sectionKey: string, dayNum: number) {
+  const prog = PROGRAMME_JOUR_ECO_FR[sectionKey] || PROGRAMME_JOUR_ECO_FR['terminale-eco']
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
+// ── Génération examen Bac Blanc Économie & Gestion France ─────────
+async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section
+  const sk = candidat.sectionKey
+  const isStmg = sk === 'stmg-eco'
+  const isSeconde = sk === 'seconde-eco'
+  const isPremiere = sk === 'premiere-eco'
+  const secDuration = isSeconde ? 60 : 240
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy = today.getFullYear()
+  const seed = 'BBFR_ECO_' + sk + '_J' + dayNum + '_' + yyyy
+
+  const prog = getProgrammeJourEcoFR(sk, dayNum)
+  const t1 = prog?.ex1.sousTh || 'Sources de la croissance économique'
+  const t2 = prog?.ex2.sousTh || 'Structure sociale et inégalités'
+  const t3 = prog?.ex3.sousTh || 'Commerce international et mondialisation'
+  const th1 = prog?.ex1.theme || 'Économie'
+  const th2 = prog?.ex2.theme || 'Sociologie'
+  const th3 = prog?.ex3.theme || 'Économie'
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France en Sciences Économiques et Sociales (SES) et en série STMG (programme officiel Éducation Nationale).
+Tu crées des sujets BAC BLANC ÉCONOMIE & GESTION originaux, rigoureux, de niveau Bac France.
+Tes documents statistiques sont RÉALISTES : vraies grandeurs (PIB, taux de chômage, indices base 100, parts en %, données INSEE/Eurostat plausibles), sources et années citées.
+Vocabulaire SES précis, auteurs du programme (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls…).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+${UNIVERSAL_GRAPH_PROMPT}
+
+GRAPHIQUES SES — RÈGLES ABSOLUES :
+- L'exercice d'étude de document a OBLIGATOIREMENT un champ "graph" de type "table" ou "bar"
+- TABLEAU statistique → [GRAPH: {"type":"table","title":"Taux de chômage par diplôme (France, 2024, %)","headers":["Diplôme","Taux (%)","Part actifs (%)"],"rows":[["Sans diplôme","12,4","14"],["Bac","7,8","22"],["Bac+5","3,9","38"]]}]
+- DIAGRAMME barres → [GRAPH: {"type":"bar","title":"Croissance du PIB (%)","categories":["2021","2022","2023","2024"],"values":[6.4,2.6,1.1,0.9],"yLabel":"Taux (%)","xLabel":"Année"}]
+- Le graphique va dans le champ "graph" SÉPARÉ, jamais dans "statement" — guillemets internes échappés \\"`
+
+  const ptsEx1 = isStmg ? 7 : (isSeconde ? 6 : (isPremiere ? 6 : 4))
+  const ptsEx2 = isStmg ? 6 : (isSeconde ? 8 : 6)
+  const ptsEx3 = isStmg ? 7 : (isSeconde ? 6 : (isPremiere ? 8 : 10))
+
+  const structure = isStmg
+    ? `STRUCTURE STMG (étude de cas, 20 points) :
+Exercice 1 — MANAGEMENT (7 pts) : ${t1}
+Exercice 2 — DROIT & ÉCONOMIE (6 pts) : ${t2}
+Exercice 3 — GESTION-FINANCE (7 pts, calculs FDR/BFR/TN/MCV/seuil, tableau OBLIGATOIRE) : ${t3}`
+    : isSeconde
+    ? `STRUCTURE SECONDE SES (20 points) :
+Exercice 1 — Questions de cours (6 pts) : ${t1}
+Exercice 2 — Calculs économiques + document statistique (8 pts, graph table/bar OBLIGATOIRE) : ${t2}
+Exercice 3 — Mini-raisonnement (6 pts) : ${t3}`
+    : isPremiere
+    ? `STRUCTURE PREMIÈRE SES (20 points) :
+Exercice 1 — Mobilisation de connaissances (6 pts) : ${t1}
+Exercice 2 — Étude d'un document statistique (6 pts, graph table/bar OBLIGATOIRE, calculs) : ${t2}
+Exercice 3 — Raisonnement sur dossier (8 pts) : ${t3}`
+    : `STRUCTURE TERMINALE SES — ÉPREUVE COMPOSÉE (20 points) :
+Exercice 1 — EC1 Mobilisation de connaissances (4 pts, 2 questions de cours : ${th1} + ${th2})
+Exercice 2 — EC2 Étude d'un document statistique (6 pts, graph table/bar OBLIGATOIRE, 1 lecture/calcul + 1 analyse) : ${t1}
+Exercice 3 — EC3 Raisonnement appuyé sur un dossier documentaire (10 pts) : ${t3}`
+
+  const prompt = `Crée un sujet BAC BLANC ÉCONOMIE & GESTION France ORIGINAL pour ${secLabel}. Graine : ${seed}.
+
+${structure}
+
+Durée : ${secDuration/60}h · Total : 20 points
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL, jamais une copie des annales
+- Niveau exactement équivalent au vrai Bac France
+- Données statistiques réalistes, sources (INSEE, Eurostat, OCDE) et années citées
+- Calculs précis attendus : taux de variation, indices base 100, points de %, coefficient de Gini, FDR/BFR/TN, seuil de rentabilité (STMG)
+- L'exercice d'étude de document a OBLIGATOIREMENT un champ "graph" type "table" ou "bar"
+- Chaque exercice avec questions numérotées 1), 2), 3)
+- Minimum 120 mots par exercice
+
+RÉPONSE JSON EXACTE (échappe les guillemets internes du graph avec \\") :
+{
+  "id": "bbfr-eco-${dayNum}-${sk}",
+  "day": ${dayNum},
+  "title": "Bac Blanc Éco-Gestion — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": ${secDuration},
+  "exercises": [
+    { "num": 1, "theme": "${th1}", "title": "Titre exercice 1", "points": ${ptsEx1}, "statement": "Questions numérotées avec notions SES précises (définitions, mécanismes, auteurs).", "graph": null },
+    { "num": 2, "theme": "${th2}", "title": "Titre exercice 2 — étude de document", "points": ${ptsEx2}, "statement": "DOCUMENT — [Titre, Source : INSEE/Eurostat, Année] [voir document ci-dessous]\\n\\nQuestions :\\n1) Lecture ou calcul d'une donnée précise du document\\n2) À l'aide du document et de vos connaissances, ...", "graph": "[GRAPH: {\\"type\\":\\"table\\",\\"title\\":\\"...\\",\\"headers\\":[\\"...\\"],\\"rows\\":[[\\"...\\"]]}]" },
+    { "num": 3, "theme": "${th3}", "title": "Titre exercice 3", "points": ${ptsEx3}, "statement": "SUJET : [sujet de raisonnement]\\n\\nDOCUMENT 1 — [texte, source, année]\\nDOCUMENT 2 — [...]\\n\\nConsigne : réponse organisée (introduction, arguments appuyés sur les documents et les connaissances, conclusion).", "graph": null }
+  ]
+}
+
+RÈGLE GRAPHIQUE ABSOLUE : l'exercice 2 (étude de document) DOIT contenir un vrai [GRAPH: {...}] de type "table" ou "bar" avec des données cohérentes avec les questions.`
+
+  const raw = await askClaude(prompt, system, 5500)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-eco-' + dayNum + '-' + sk + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc Éco-Gestion — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: sk,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-eco-' + dayNum + '-' + sk + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: sk,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════════════
 //  BAC BLANC FRANÇAIS — Philosophie (Terminale) + EAF (Première)
 //  Structure officielle Bac France · Coef. 8 (Philo) · Coef. 5 (EAF)
 // ════════════════════════════════════════════════════════════════════
@@ -1279,6 +1477,9 @@ async function analyzeOneExercise(
   const system = isAnglaisAnalyze
     ? `You are an expert LLCER English pedagogy specialist. Analyse ONE Bac Blanc exercise and generate targeted remediation.
 RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG (Bac France). Analyse UN exercice de Bac Blanc (EC1/EC2/EC3, étude de cas) et génère une remédiation ciblée : méthode (AEI, lecture de document statistique, calculs de taux de variation, FDR/BFR/seuil), notions et auteurs du programme.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de Bac et génère une remédiation ciblée.
@@ -1321,6 +1522,8 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
     ? `You are an expert LLCER English pedagogy specialist and student work analyst.
 You analyse student work on LLCER English Bac Blanc papers and build a personalised improvement plan.
 RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG, et en remédiation scolaire.\nTu analyses les copies (épreuve composée EC1/EC2/EC3, étude de cas STMG) et construis un plan d'amélioration personnalisé : méthodologie (AEI, plan, lecture de documents statistiques, calculs), notions et auteurs du programme.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
   "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
@@ -1346,6 +1549,8 @@ async function correctRemediationExercise(exercise: AnalysisResult['remediationE
     ? `You are a supportive but demanding LLCER English tutor correcting student responses on remediation exercises.
 Be precise, encouraging, and identify exactly what is missing.
 ALL feedback MUST BE IN ENGLISH — evaluation, commentary, key points, next steps.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un tuteur SES / éco-gestion STMG bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation : définitions, mécanismes, calculs (taux de variation, élasticité, FDR, BFR, seuil de rentabilité), lecture de documents, méthode AEI.\nSois précis, encourageant, et identifie exactement ce qui manque.`
     : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
   return askClaude(
     `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
@@ -2074,7 +2279,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onEco, onRetour
 }: {
   candidat: Candidat
   dayNum: number
@@ -2084,6 +2289,7 @@ function PhaseChoixMatiereFR({
   onAnglais: () => void
   onSvt: () => void
   onFrancais: () => void
+  onEco: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -2172,6 +2378,18 @@ function PhaseChoixMatiereFR({
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
+    {
+      key: 'eco-gestion',
+      icon: '📊',
+      label: 'Économie & Gestion',
+      desc: 'Spé SES (épreuve composée EC1/EC2/EC3, coef. 16) · STMG · Documents statistiques · Gestion-Finance (FDR/BFR/seuil) · Correction IA',
+      color: '#14b8a6',
+      gradient: 'linear-gradient(135deg,rgba(20,184,166,0.18),rgba(13,148,136,0.08))',
+      border: 'rgba(20,184,166,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
   ]
 
   return (
@@ -2221,6 +2439,7 @@ function PhaseChoixMatiereFR({
                 if (m.key === 'anglais') { onAnglais(); return }
                 if (m.key === 'svt') { onSvt(); return }
                 if (m.key === 'francais') { onFrancais(); return }
+                if (m.key === 'eco-gestion') { onEco(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -2276,7 +2495,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
-  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>('maths')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'>('maths')
   const [err,setErr]=useState('')
   // Si l'élève est abonné à une seule matière, sélectionner par défaut une matière accessible
   useEffect(() => {
@@ -2388,6 +2607,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
                 {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
                 {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
+                {key:'eco-gestion'  as const, icon:'📊', label:'Éco & Gestion',    color:'#14b8a6'},
               ].filter(m => {
                 // L'élève ne voit que les matières couvertes par son abonnement ; admin voit tout ; sans abonnement → tout
                 if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return true
@@ -2430,6 +2650,11 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'terminale-francais', label:'Terminale — Philosophie', icon:'🧠', color:'#ec4899', duration:240, coeff:8},
                 {key:'premiere-francais',  label:'Première — EAF',          icon:'📗', color:'#f472b6', duration:240, coeff:5},
                 {key:'seconde-francais',   label:'Seconde — Français',       icon:'📘', color:'#a78bfa', duration:120, coeff:1},
+              ] : activeMatiereFiche==='eco-gestion' ? [
+                {key:'terminale-eco', label:'Terminale Spé SES',         icon:'🎓', color:'#14b8a6', duration:240, coeff:16},
+                {key:'premiere-eco',  label:'Première Spé SES',          icon:'📗', color:'#4f6ef7', duration:240, coeff:5},
+                {key:'seconde-eco',   label:'Seconde SES',               icon:'📘', color:'#10b981', duration:60,  coeff:1},
+                {key:'stmg-eco',      label:'Terminale STMG',            icon:'🏢', color:'#8b5cf6', duration:240, coeff:16},
               ] : [
                 {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
                 {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
@@ -4059,6 +4284,37 @@ function BacBlancFranceInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
+  const handleStartEco = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('eco-gestion')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie & Gestion pour accéder au Bac Blanc.\n→ mathsbac.com/abonnement?matiere=eco-gestion')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('eco-gestion')) {
+      alert('✅ Vous avez déjà passé votre examen Économie & Gestion aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    globalMatiere = 'eco-gestion'
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancEcoFR(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('eco-gestion')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
   }, [])
@@ -4112,6 +4368,7 @@ function BacBlancFranceInner() {
       onAnglais={handleStartAnglais}
       onSvt={handleStartSvt}
       onFrancais={handleStartFrancais}
+      onEco={handleStartEco}
       onRetour={()=>setPhase('inscription')}
     />
   )
