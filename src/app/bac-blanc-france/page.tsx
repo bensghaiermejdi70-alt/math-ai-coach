@@ -4286,7 +4286,7 @@ function BacBlancFranceInner() {
 
   const handleStartEco = useCallback(async () => {
     if (!candidat) return
-    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('eco-gestion')) {
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('eco-gestion' as any)) {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie & Gestion pour accéder au Bac Blanc.\n→ mathsbac.com/abonnement?matiere=eco-gestion')
       return
     }
