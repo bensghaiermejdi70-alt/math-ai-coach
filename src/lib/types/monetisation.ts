@@ -4,7 +4,7 @@
 export type BasePlanType = 'mensuel' | 'annuel' | 'sprint_bac'
 
 // Matières disponibles pour l'abonnement
-export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique' | 'francais' | 'economie' | 'gestion'
+export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique' | 'francais' | 'eco-gestion'
 
 // PlanType = plan seul (legacy) OU plan_matiere (nouveau format)
 // Format : "mensuel_mathematiques" | "annuel_physique" | "sprint_mathematiques"
@@ -18,8 +18,6 @@ export type PlanType = 'mensuel' | 'annuel' | 'sprint_bac'
   | 'mensuel_anglais'       | 'annuel_anglais'       | 'sprint_bac_anglais'       | 'sprint_anglais'
   | 'mensuel_informatique'  | 'annuel_informatique'  | 'sprint_bac_informatique'  | 'sprint_informatique'
   | 'mensuel_francais'      | 'annuel_francais'      | 'sprint_bac_francais'      | 'sprint_francais'
-  | 'mensuel_economie'      | 'annuel_economie'      | 'sprint_bac_economie'      | 'sprint_economie'
-  | 'mensuel_gestion'       | 'annuel_gestion'       | 'sprint_bac_gestion'       | 'sprint_gestion'
 
 // ── Helpers pour extraire plan et matière ──────────────────────────
 export function extractPlan(planType: string | null | undefined): 'mensuel' | 'annuel' | 'sprint_bac' {
@@ -33,7 +31,7 @@ export function extractMatiere(planType: string | null | undefined): MatiereType
   if (!planType) return 'mathematiques'
   // Pattern "sprint_<matiere>" (sans _bac) → extraire la matière après "sprint_"
   // Ex: sprint_physique → physique, sprint_svt → svt
-  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique','francais','economie','gestion']
+  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique','francais','eco-gestion']
   const parts = planType.split('_')
   // Chercher la matière dans toutes les parties (gère sprint_bac_physique et sprint_physique)
   for (let i = parts.length - 1; i >= 0; i--) {
@@ -51,8 +49,7 @@ export const MATIERE_LABELS: Record<MatiereType, string> = {
   anglais:       '🇬🇧 Anglais',
   informatique:  '💻 Informatique',
   francais:      '📖 Français',
-  economie:      '📈 Économie',
-  gestion:       '💼 Gestion',
+  'eco-gestion': '📊 Économie & Gestion',
 }
 export type PaymentMethod = 'd17' | 'konnect' | 'flouci' | 'recharge_mobile' | 'manual'
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled'
