@@ -24,6 +24,15 @@ const MATIERES = [
   { icon: '💼', label: 'Gestion', color: '#f43f5e', href: '/bac/gestion', isNew: true },
 ]
 
+const DEMO_BY_MATIERE = [
+  { mat: 'Économie · Bac', color: '#06b6d4', gen: 'Exercice 1 — Croissance & PIB', doc: 'Tableau INS 2024 ✓', corr: 'Barème + remédiation', grade: '17.5' },
+  { mat: 'Gestion · Bac', color: '#f43f5e', gen: 'Dossier — Analyse financière', doc: 'Bilan · FDR / BFR / TN ✓', corr: 'Calculs + interprétation', grade: '16' },
+  { mat: 'Mathématiques · Bac', color: '#5B6CFF', gen: 'Exercice 2 — Suites & limites', doc: 'Graphique de fonction ✓', corr: 'Étapes justifiées', grade: '18' },
+  { mat: 'Physique-Chimie · Bac', color: '#06d6a0', gen: 'Exercice 1 — Cinétique chimique', doc: 'Courbe [A] = f(t) ✓', corr: 'Méthode + schéma', grade: '15.5' },
+  { mat: 'Anglais · Bac', color: '#f59e0b', gen: 'Reading comprehension', doc: 'Press article excerpt ✓', corr: 'Feedback in English', grade: '17' },
+  { mat: 'Informatique · Bac', color: '#8b5cf6', gen: 'Algorithmique — Tri', doc: 'Trace d\'exécution ✓', corr: 'Complexité + code', grade: '18.5' },
+]
+
 const STATS = [
   { n: '8', l: 'Matières', s: 'Maths · PC · SVT · Anglais · Info · Français · Éco · Gestion' },
   { n: '2', l: 'Programmes', s: 'Bac Tunisie & Bac France' },
@@ -39,12 +48,12 @@ const PROCESS = [
 ]
 
 const FEATURES = [
-  { icon: '📝', title: 'Simulation IA', desc: "Sujets originaux au format officiel, corrigés exercice par exercice avec remédiation personnalisée.", color: '#5B6CFF', href: '/simulation' },
-  { icon: '🧮', title: 'Solveur étape par étape', desc: "Chaque étape justifiée. La méthode complète, pas seulement le résultat.", color: '#4f6ef7', href: '/solve' },
-  { icon: '🤖', title: 'Chat IA Professeur', desc: "Pose tes questions en français. L'IA répond comme un enseignant, avec graphiques interactifs.", color: '#9D7BFF', href: '/chat' },
-  { icon: '📊', title: 'Analyse & remédiation', desc: "Détection des lacunes, exercices ciblés et plan de révision généré par l'IA.", color: '#ec4899', href: '/chat' },
-  { icon: '🏆', title: 'Bac Blanc national', desc: "Concours quotidien avec chrono, correction IA et classement national.", color: '#f59e0b', href: '/bac-blanc' },
-  { icon: '📚', title: 'Cours & programme officiel', desc: "Tous les chapitres, définitions, théorèmes, formules et exercices corrigés.", color: '#06b6d4', href: '/bac' },
+  { icon: '📝', title: 'Simulation IA', desc: "Sujets originaux au format officiel, corrigés exercice par exercice avec remédiation personnalisée.", color: '#5B6CFF', href: '/simulation', img: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80' },
+  { icon: '🧮', title: 'Solveur étape par étape', desc: "Chaque étape justifiée. La méthode complète, pas seulement le résultat.", color: '#4f6ef7', href: '/solve', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80' },
+  { icon: '🤖', title: 'Chat IA Professeur', desc: "Pose tes questions en français. L'IA répond comme un enseignant, avec graphiques interactifs.", color: '#9D7BFF', href: '/chat', img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80' },
+  { icon: '📊', title: 'Analyse & remédiation', desc: "Détection des lacunes, exercices ciblés et plan de révision généré par l'IA.", color: '#ec4899', href: '/chat', img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80' },
+  { icon: '🏆', title: 'Bac Blanc national', desc: "Concours quotidien avec chrono, correction IA et classement national.", color: '#f59e0b', href: '/bac-blanc', img: 'https://images.unsplash.com/photo-1523050854058-8df90110c8f5?w=600&q=80' },
+  { icon: '📚', title: 'Cours & programme officiel', desc: "Tous les chapitres, définitions, théorèmes, formules et exercices corrigés.", color: '#06b6d4', href: '/bac', img: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80' },
 ]
 
 const SECTIONS_TN = [
@@ -88,7 +97,7 @@ function VideoPlayer() {
         <button className="v2-video-thumb" onClick={() => setPlaying(true)} aria-label="Lire la vidéo de démonstration">
           <img src={`https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`} alt="Démonstration MathBac.AI" />
           <span className="v2-video-play"><span className="v2-video-tri" /></span>
-          <span className="v2-video-cap">Voir MathBac.AI en action · 2 min</span>
+          <span className="v2-video-cap">Voir MathBac.AI en action · 25 min</span>
         </button>
       ) : (
         <iframe
@@ -100,20 +109,23 @@ function VideoPlayer() {
   )
 }
 
-// Démo live : faux flux de génération de sujet (signature du hero)
+// Démo live : flux de génération qui change selon la matière (signature du hero)
 function LiveDemo() {
-  const lines = [
-    { k: 'matiere', label: 'Matière', val: 'Économie · Bac', delay: 0 },
-    { k: 'gen', label: 'Génération du sujet', val: 'Exercice 1 — Croissance & PIB', delay: 600 },
-    { k: 'doc', label: 'Document statistique', val: 'Tableau INS 2024 ✓', delay: 1200 },
-    { k: 'corr', label: 'Correction IA', val: 'Barème + remédiation', delay: 1800 },
-  ]
+  const [mi, setMi] = useState(0)
   const [shown, setShown] = useState(0)
+  const d = DEMO_BY_MATIERE[mi]
   useEffect(() => {
-    const timers = lines.map((_, i) => setTimeout(() => setShown((s) => Math.max(s, i + 1)), 500 + i * 650))
-    const loop = setInterval(() => setShown(0), 6000)
-    return () => { timers.forEach(clearTimeout); clearInterval(loop) }
-  }, [])
+    setShown(0)
+    const timers = [1, 2, 3, 4].map((n, i) => setTimeout(() => setShown((s) => Math.max(s, i + 1)), 450 + i * 600))
+    const next = setTimeout(() => setMi((m) => (m + 1) % DEMO_BY_MATIERE.length), 5200)
+    return () => { timers.forEach(clearTimeout); clearTimeout(next) }
+  }, [mi])
+  const lines = [
+    { label: 'Matière', val: d.mat },
+    { label: 'Génération du sujet', val: d.gen },
+    { label: 'Document', val: d.doc },
+    { label: 'Correction IA', val: d.corr },
+  ]
   return (
     <div className="v2-demo" role="img" aria-label="Aperçu d'une génération de sujet par l'IA">
       <div className="v2-demo-top">
@@ -121,16 +133,17 @@ function LiveDemo() {
         <span className="v2-dot" style={{ background: '#febc2e' }} />
         <span className="v2-dot" style={{ background: '#28c840' }} />
         <span className="v2-demo-title">simulation · sujet IA</span>
+        <span className="v2-demo-badge" style={{ ['--c' as any]: d.color }}>{d.mat.split(' · ')[0]}</span>
       </div>
       <div className="v2-demo-body">
         {lines.map((l, i) => (
-          <div key={l.k} className={`v2-demo-line ${i < shown ? 'on' : ''}`}>
+          <div key={l.label} className={`v2-demo-line ${i < shown ? 'on' : ''}`} style={{ ['--c' as any]: d.color }}>
             <span className="v2-demo-k">{l.label}</span>
             <span className="v2-demo-v">{l.val}</span>
           </div>
         ))}
-        <div className={`v2-demo-bar ${shown >= 4 ? 'full' : ''}`}><span /></div>
-        <div className={`v2-demo-grade ${shown >= 4 ? 'on' : ''}`}>17.5<span>/20</span></div>
+        <div className={`v2-demo-bar ${shown >= 4 ? 'full' : ''}`} style={{ ['--c' as any]: d.color }}><span /></div>
+        <div className={`v2-demo-grade ${shown >= 4 ? 'on' : ''}`}>{d.grade}<span>/20</span></div>
       </div>
     </div>
   )
@@ -212,7 +225,7 @@ export default function HomePage() {
           <div className="v2-grid-bg" aria-hidden />
           <div className="v2-hero-inner">
             <div className="v2-hero-left">
-              <span className="v2-eyebrow">★ Plateforme IA · Bac Tunisie &amp; France</span>
+              <span className="v2-eyebrow">★ Plateforme IA · Tunisie &amp; France</span>
               <h1 className="v2-h1">
                 Révise{' '}
                 <span className="v2-typed">{typed}<span className="v2-caret" /></span>
@@ -223,11 +236,11 @@ export default function HomePage() {
                 avec remédiation personnalisée. 8 matières, 2 programmes, un seul objectif : ton Bac.
               </p>
               <div className="v2-cta-row">
-                <Link href="/simulation" className="v2-btn v2-btn-primary">Générer un sujet gratuit →</Link>
+                <Link href="/simulation" className="v2-btn v2-btn-primary">Générer un sujet →</Link>
                 <Link href="/bac" className="v2-btn v2-btn-ghost">Explorer les cours</Link>
               </div>
               <div className="v2-trust">
-                <span>✓ Sans carte bancaire</span><span>✓ Programmes CNP &amp; Éducation nationale</span>
+                <span>✓ Programmes CNP &amp; Éducation nationale</span><span>✓ 8 matières · Tunisie &amp; France</span>
               </div>
             </div>
             <div className="v2-hero-right reveal">
@@ -257,16 +270,15 @@ export default function HomePage() {
           <div className="v2-head">
             <span className="v2-label">Tout le programme, un seul endroit</span>
             <h2 className="v2-h2">8 matières couvertes de A à Z</h2>
-            <p className="v2-p">Cours, examens officiels, simulations IA et Bac Blanc — pour chaque matière et chaque section.</p>
+            <p className="v2-p">Cours, examens officiels, simulations IA et Bac Blanc — disponibles dans les deux programmes, Tunisie et France.</p>
           </div>
           <div className="v2-mosaic">
             {MATIERES.map((m) => (
-              <Link key={m.label} href={m.href} className="v2-tile" style={{ ['--c' as any]: m.color }}>
+              <div key={m.label} className="v2-tile" style={{ ['--c' as any]: m.color }}>
                 {m.isNew && <span className="v2-new">Nouveau</span>}
                 <span className="v2-tile-icon">{m.icon}</span>
                 <span className="v2-tile-label">{m.label}</span>
-                <span className="v2-tile-go">Découvrir →</span>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
@@ -293,7 +305,7 @@ export default function HomePage() {
         <section className="v2-section reveal">
           <div className="v2-head">
             <span className="v2-label">Voir en action</span>
-            <h2 className="v2-h2">2 minutes pour tout comprendre</h2>
+            <h2 className="v2-h2">La démo complète en vidéo</h2>
           </div>
           <VideoPlayer />
         </section>
@@ -307,10 +319,15 @@ export default function HomePage() {
           <div className="v2-features">
             {FEATURES.map((f) => (
               <Link key={f.title} href={f.href} className="v2-feature" style={{ ['--c' as any]: f.color }}>
-                <span className="v2-feature-icon">{f.icon}</span>
-                <h3 className="v2-feature-t">{f.title}</h3>
-                <p className="v2-feature-d">{f.desc}</p>
-                <span className="v2-feature-go">Essayer →</span>
+                <span className="v2-feature-media">
+                  <img src={f.img} alt="" loading="lazy" />
+                  <span className="v2-feature-icon">{f.icon}</span>
+                </span>
+                <span className="v2-feature-body">
+                  <h3 className="v2-feature-t">{f.title}</h3>
+                  <p className="v2-feature-d">{f.desc}</p>
+                  <span className="v2-feature-go">Essayer →</span>
+                </span>
               </Link>
             ))}
           </div>
@@ -354,14 +371,43 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ─────────────────────────── CONTACT & RÉSEAUX */}
+        <section className="v2-section reveal">
+          <div className="v2-head">
+            <span className="v2-label">On reste en contact</span>
+            <h2 className="v2-h2">Une question ? On répond en 2h</h2>
+            <p className="v2-p">Support disponible 7j/7. Suis-nous aussi sur YouTube pour les nouveautés et tutos.</p>
+          </div>
+          <div className="v2-contact">
+            <a href="https://wa.me/21699268970" target="_blank" rel="noopener noreferrer" className="v2-contact-card" style={{ ['--c' as any]: '#25D366' }}>
+              <span className="v2-contact-icon">💬</span>
+              <span className="v2-contact-t">WhatsApp</span>
+              <span className="v2-contact-v">+216 99 268 970</span>
+              <span className="v2-contact-go">Écrire →</span>
+            </a>
+            <a href="mailto:bensghaiermejdi70@gmail.com" className="v2-contact-card" style={{ ['--c' as any]: '#5B6CFF' }}>
+              <span className="v2-contact-icon">✉️</span>
+              <span className="v2-contact-t">Email</span>
+              <span className="v2-contact-v">bensghaiermejdi70@gmail.com</span>
+              <span className="v2-contact-go">Envoyer →</span>
+            </a>
+            <a href="https://www.youtube.com/@mathbacai" target="_blank" rel="noopener noreferrer" className="v2-contact-card" style={{ ['--c' as any]: '#FF0000' }}>
+              <span className="v2-contact-icon">▶️</span>
+              <span className="v2-contact-t">YouTube</span>
+              <span className="v2-contact-v">@mathbacai</span>
+              <span className="v2-contact-go">S'abonner →</span>
+            </a>
+          </div>
+        </section>
+
         {/* ─────────────────────────── CTA FINAL */}
         <section className="v2-section reveal">
           <div className="v2-final">
             <div className="v2-aurora v2-aurora-2" aria-hidden />
             <h2 className="v2-final-h">Ton Bac commence aujourd'hui.</h2>
-            <p className="v2-final-p">Génère ton premier sujet en moins d'une minute. Gratuit, sans carte bancaire.</p>
+            <p className="v2-final-p">Génère ton premier sujet en moins d'une minute et reçois une correction détaillée.</p>
             <div className="v2-cta-row v2-center">
-              <Link href="/simulation" className="v2-btn v2-btn-primary">Commencer gratuitement →</Link>
+              <Link href="/simulation" className="v2-btn v2-btn-primary">Commencer maintenant →</Link>
               <Link href="/abonnement" className="v2-btn v2-btn-ghost">Voir les offres</Link>
             </div>
           </div>
@@ -498,6 +544,33 @@ const V2_CSS = `
 .v2-feature-d{ font-size:13.5px; color:var(--txt2); line-height:1.6; margin:0 0 14px; }
 .v2-feature-go{ font-size:13px; font-weight:700; color:var(--c); }
 
+/* badge matière dans la démo */
+.v2-demo-badge{ margin-left:auto; font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--c);
+  background:color-mix(in srgb,var(--c) 16%,transparent); border:1px solid color-mix(in srgb,var(--c) 34%,transparent); padding:3px 9px; border-radius:100px; }
+.v2-demo-line{ border-left:2px solid transparent; }
+.v2-demo-line.on{ border-left-color:var(--c); }
+.v2-demo-bar span{ background:linear-gradient(90deg,var(--c),var(--violet)) !important; }
+
+/* feature avec photo */
+.v2-feature{ display:flex; flex-direction:column; overflow:hidden; padding:0; }
+.v2-feature-media{ position:relative; display:block; height:148px; overflow:hidden; }
+.v2-feature-media img{ width:100%; height:100%; object-fit:cover; opacity:.62; transition:transform .5s,opacity .3s; }
+.v2-feature:hover .v2-feature-media img{ transform:scale(1.06); opacity:.78; }
+.v2-feature-media::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,transparent 40%,#0c0e14); }
+.v2-feature .v2-feature-icon{ position:absolute; left:18px; bottom:-22px; z-index:2; margin:0; }
+.v2-feature-body{ display:block; padding:32px 24px 26px; }
+
+/* contact */
+.v2-contact{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.v2-contact-card{ display:flex; flex-direction:column; gap:6px; padding:28px 24px; border-radius:18px; text-align:left;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--c) 9%,transparent),rgba(255,255,255,.01));
+  border:1px solid color-mix(in srgb,var(--c) 24%,transparent); transition:transform .22s,border-color .22s,box-shadow .22s; }
+.v2-contact-card:hover{ transform:translateY(-5px); border-color:color-mix(in srgb,var(--c) 55%,transparent); box-shadow:0 20px 50px color-mix(in srgb,var(--c) 20%,transparent); }
+.v2-contact-icon{ font-size:30px; }
+.v2-contact-t{ font-size:16px; font-weight:800; }
+.v2-contact-v{ font-size:13px; color:var(--txt2); word-break:break-all; }
+.v2-contact-go{ font-size:13px; font-weight:700; color:var(--c); margin-top:4px; }
+
 /* programmes */
 .v2-prog{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
 .v2-prog-card{ position:relative; padding:32px 34px; border-radius:24px; overflow:hidden;
@@ -531,6 +604,7 @@ const V2_CSS = `
   .v2-steps{ grid-template-columns:repeat(2,1fr); }
   .v2-features{ grid-template-columns:repeat(2,1fr); }
   .v2-prog{ grid-template-columns:1fr; }
+  .v2-contact{ grid-template-columns:1fr; }
 }
 @media (max-width:560px){
   .v2-stats,.v2-mosaic,.v2-steps,.v2-features{ grid-template-columns:1fr; }
