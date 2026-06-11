@@ -4,7 +4,7 @@
 export type BasePlanType = 'mensuel' | 'annuel' | 'sprint_bac'
 
 // Matières disponibles pour l'abonnement
-export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique' | 'francais' | 'eco-gestion'
+export type MatiereType = 'mathematiques' | 'physique' | 'svt' | 'anglais' | 'informatique' | 'francais' | 'eco-gestion' | 'economie' | 'gestion'
 
 // PlanType = plan seul (legacy) OU plan_matiere (nouveau format)
 // Format : "mensuel_mathematiques" | "annuel_physique" | "sprint_mathematiques"
@@ -31,7 +31,7 @@ export function extractMatiere(planType: string | null | undefined): MatiereType
   if (!planType) return 'mathematiques'
   // Pattern "sprint_<matiere>" (sans _bac) → extraire la matière après "sprint_"
   // Ex: sprint_physique → physique, sprint_svt → svt
-  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique','francais','eco-gestion']
+  const known: MatiereType[] = ['mathematiques','physique','svt','anglais','informatique','francais','eco-gestion','economie','gestion']
   const parts = planType.split('_')
   // Chercher la matière dans toutes les parties (gère sprint_bac_physique et sprint_physique)
   for (let i = parts.length - 1; i >= 0; i--) {
@@ -50,6 +50,8 @@ export const MATIERE_LABELS: Record<MatiereType, string> = {
   informatique:  '💻 Informatique',
   francais:      '📖 Français',
   'eco-gestion': '📊 Économie & Gestion',
+  economie:      '📈 Économie',
+  gestion:       '💼 Gestion',
 }
 export type PaymentMethod = 'd17' | 'konnect' | 'flouci' | 'recharge_mobile' | 'manual'
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled'
