@@ -1,6 +1,5 @@
 'use client'
 
-// ── Composant verrou matière (Option C) ────────────────────────────
 function MatiereLockOverlay({ matiere, label, color, icon }: {
   matiere: string; label: string; color: string; icon: string
 }) {
@@ -31,557 +30,166 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
     </div>
   )
 }
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
-// Mapping matière → infos visuelles
-const MATIERE_INFOS: Record<string,{label:string;color:string;icon:string}> = {
-  mathematiques: { label:'Mathématiques', color:'#4f6ef7', icon:'🧮' },
-  physique:      { label:'Physique-Chimie',color:'#06d6a0', icon:'⚗️' },
-  svt:           { label:'SVT',            color:'#10b981', icon:'🧬' },
-  anglais:       { label:'Anglais',        color:'#f59e0b', icon:'🇬🇧' },
-  informatique:  { label:'Informatique',   color:'#8b5cf6', icon:'💻' },
-  economie:      { label:'Économie',        color:'#06b6d4', icon:'📈' },
-  gestion:       { label:'Gestion',         color:'#f43f5e', icon:'💼' },
+// ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
+function bbWeekKey(): string {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+  const monday = new Date(now); monday.setDate(diff)
+  return 'bb_week_' + monday.toISOString().split('T')[0]
 }
-import { useState, useEffect, useRef, useCallback, Suspense } from 'react'  
-import { useSearchParams } from 'next/navigation'
+function bbWeekCount(): number {
+  if (typeof window === 'undefined') return 0
+  return parseInt(localStorage.getItem(bbWeekKey()) || '0', 10) || 0
+}
+function incBbWeek(): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(bbWeekKey(), String(bbWeekCount() + 1))
+}
+import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { MatiereType, sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
-// Track current subject for askClaude calls
-let globalMatiere: MatiereType = 'mathematiques'
+let globalMatiere: string = 'mathematiques'
 
-// Stockage correction directe (évite parsing regex fragile)
-const correctionDirecteData: { examContent: string; copyContent: string; examImages: {data:string;mediaType:string}[] } = {
-  examContent: '', copyContent: '', examImages: []
-}
+// ═══════════════════════════════════════════════════════════════════
+// BAC BLANC — CONCOURS NATIONAL IA  (1er mai – 15 juin)
+// Admin : bensghaiermejdi70@gmail.com — accès permanent, illimité
+// Quotas gérés via Supabase AuthContext (plus localStorage)
+// ═══════════════════════════════════════════════════════════════════
 
-// ════════════════════════════════════════════════════════════════════
-// QUOTAS HEBDOMADAIRES — Simulation IA (géré par Supabase via AuthContext)
-// Standard   : 5 simulations/semaine
-// Sprint Bac :10 simulations/semaine
-// Admin bensghaiermejdi70@gmail.com = ILLIMITÉ (tous les PC)
-// ════════════════════════════════════════════════════════════════════
-
-// Plotly chargé dynamiquement (CDN)
-// jsPDF chargé dynamiquement (CDN)
 declare const Plotly: any
-declare const jspdf: any
 
-// ═══════════════════════════════════════════════════════════════════
-// SIMULATION IA — LE FER DE LANCE DE MATHAI COACH
-// 5 phases : Sélection → Génération → Examen → Correction → Analyse+Remédiation
-// Chaque phase est propulsée par Claude via l'API Anthropic
-// ═══════════════════════════════════════════════════════════════════
+import { ADMIN_EMAIL } from '@/lib/types/monetisation'
 
-// ── Données Archives bacweb.tn ────────────────────────────────────
-const W = 'http://www.bacweb.tn/bac'
-const bw = (y: number, s: 'principale'|'controle', f: string, fi: string) =>
-  `${W}/${y}/${s}/${f}/${fi}`
+const GOUVERNORATS = [
+  'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
+  'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
+  'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
+  'Tataouine','Tozeur','Tunis','Zaghouan',
+]
 
-type SessionType = 'Principale' | 'Contrôle'
-interface Archive {
-  id: string; year: number; session: SessionType
-  section: string; sectionKey: string; color: string
-  url: string; themes: string[]; icon: string
-}
-
-const YEARS = [2025,2024,2023,2022,2021,2020,2019,2018,2017,2016,2015] as const
-
-const SECTION_CONFIGS = [
-  { key:'maths', label:'Bac-Mathématiques', color:'#6366f1', icon:'∑', folder:'math', file:'math.pdf',
+const SECTIONS = [
+  { key:'maths',  label:'Mathématiques',          color:'#6366f1', icon:'∑', duration:240, coeff:4,
     themes:['Analyse & Suites','Nombres complexes','Probabilités','Géométrie espace','Isométries'] },
-  { key:'scexp', label:'Sciences-Expérimentales', color:'#06d6a0', icon:'⚗', folder:'sciences_ex', file:'math.pdf',
+  { key:'scexp',  label:'Sciences Expérimentales', color:'#06d6a0', icon:'⚗', duration:180, coeff:3,
     themes:['Analyse','Complexes','Probabilités','Géométrie','Intégrales'] },
-  { key:'sctech', label:'Sciences-Techniques', color:'#f59e0b', icon:'⚙', folder:'technique', file:'technique.pdf',
+  { key:'sctech', label:'Sciences Techniques',     color:'#f59e0b', icon:'⚙', duration:180, coeff:3,
     themes:['Analyse','Arithmétique','Probabilités','Complexes','Géométrie'] },
-  { key:'eco', label:'Éco-Gestion', color:'#10b981', icon:'💹', folder:'economie_gestion', file:'math.pdf',
-    themes:['Analyse & Suites','Probabilités & Statistiques','Matrices & Systèmes','Maths Financières','Logarithme & Exponentielle'] },
-  { key:'info',             label:'Sc-Informatiques',       color:'#6366f1', icon:'💻', folder:'informatique', file:'algorithme.pdf',
-    themes:['Algorithmique & Récursivité','Tri & Recherche','Structures de données','Bases de données SQL','TIC & Réseaux'] },
-  { key:'autres-sections',  label:'Autres Sections (TIC)',    color:'#f59e0b', icon:'🎓', folder:'math', file:'info.pdf',
-    themes:['Internet & Réseaux','HTML & CSS','JavaScript','Systèmes informatiques','Sécurité & RGPD'] },
+  { key:'eco',    label:'Éco-Gestion',             color:'#10b981', icon:'💹', duration:120, coeff:2,
+    themes:['Analyse & Suites','Probabilités','Matrices','Maths Financières','Logarithme'] },
+  { key:'info',   label:'Informatique',            color:'#8b5cf6', icon:'⌨', duration:180, coeff:3,
+    themes:['Algorithmique','Bases de données','Mathématiques','STI Web'] },
 ]
 
-const ARCHIVES: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
-  ])
-)
-
-
-// ════════════════════════════════════════════════════════════════
-//  PHYSIQUE-CHIMIE — Configs sections et archives
-// ════════════════════════════════════════════════════════════════
-const SECTION_CONFIGS_PHYS = [
-  {
-    key:'scexp-phys',
-    label:'Sciences-Expérimentales',
-    color:'#06d6a0',
-    icon:'🔬',
-    folder:'sciences_ex',
-    file:'physique.pdf', // ✅ AJOUT
-    themes:['Cinétique chimique','Acide-base & pH','Oxydoréduction','Oscillations RLC','Mécanique Newton','Ondes']
-  },
-  {
-    key:'sctech-phys',
-    label:'Sciences-Techniques',
-    color:'#f59e0b',
-    icon:'⚙️',
-    folder:'technique',
-    file:'physique.pdf', // ✅ AJOUT
-    themes:['Chimie & pH','Électricité','Mécanique','Ondes','Optique','Nucléaire']
-  },
-  {
-    key:'maths-phys',
-    label:'Bac-Mathématiques',
-    color:'#4f6ef7',
-    icon:'🧮',
-    folder:'math',
-    file:'physique.pdf', // ✅ AJOUT
-    themes:['Cinétique chimique','Acide-base','Oxydoréduction','Circuits RC/RL/RLC','Mécanique','Ondes']
-  },
-  {
-    key:'info-phys',
-    label:'Informatique',
-    color:'#8b5cf6',
-    icon:'💻',
-    folder:'informatique',
-    file:'physique.pdf', // ✅ AJOUT
-    themes:['Chimie','Physique','Circuits','Mécanique','Ondes','Nucléaire']
-  },
-]
-
-const bwPhys = (y: number, session: 'principale'|'controle', folder: string) =>
-  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/physique.pdf`
-
-const ARCHIVES_PHYS: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_PHYS.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwPhys(y,'principale',sc.folder), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwPhys(y,'controle',sc.folder), themes:sc.themes },
-  ])
-)
-
-// ── Chapitres Physique-Chimie ─────────────────────────────────────────────────
-// ════════════════════════════════════════════════════════════════
-//  INFORMATIQUE — Configs et archives séparés
-// ════════════════════════════════════════════════════════════════
-const SECTION_CONFIGS_INFO = [
-  {
-    key:'info',
-    label:'Informatiques',
-    color:'#6366f1',
-    icon:'💻',
-    folder:'informatique',
-    file:'algorithme.pdf',
-    themes:['Algorithmique & Récursivité','Tri & Recherche','Structures de données','Bases de données SQL','TIC & Réseaux']
-  },
-  {
-    key:'autres-sections',
-    label:'Autres-Sections-(TIC)',
-    color:'#f59e0b',
-    icon:'🎓',
-    folder:'math',
-    file:'info.pdf',
-    themes:['Internet & Réseaux','HTML & CSS','JavaScript','Systèmes informatiques','Sécurité & RGPD']
-  },
-]
-
-const ARCHIVES_INFO: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_INFO.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
-  ])
-)
-
-const CHAPITRES_INFO: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  info: {
-    key:'info', label:'Sc. Informatiques', color:'#6366f1', icon:'💻',
-    chapitres: [
-      { slug:'algo-recursivite',  titre:'Récursivité',               badge:'Algorithmique',    desc:'Fonctions récursives — factorielle, Fibonacci, PGCD, Tours de Hanoï.' },
-      { slug:'algo-tri',          titre:'Algorithmes de Tri',         badge:'Algorithmique',    desc:'Tri sélection, insertion, bulles, fusion, rapide — complexités.' },
-      { slug:'algo-recherche',    titre:'Algorithmes de Recherche',   badge:'Algorithmique',    desc:'Recherche séquentielle et dichotomique — complexité et comparaison.' },
-      { slug:'algo-structures',   titre:'Structures de données',      badge:'Algorithmique',    desc:'Tableaux, listes chaînées, piles, files, arbres binaires.' },
-      { slug:'algo-fichiers',     titre:'Fichiers & Enregistrements', badge:'Algorithmique',    desc:'Fichiers séquentiels, accès direct, enregistrements Pascal/Python.' },
-      { slug:'bd-modele',         titre:'Modélisation E/A',           badge:'Bases de données', desc:'Modèle Entité-Association, cardinalités, clés primaires/étrangères.' },
-      { slug:'bd-sql-select',     titre:'SQL — SELECT avancé',        badge:'Bases de données', desc:'SELECT, WHERE, JOIN, GROUP BY, HAVING, sous-requêtes imbriquées.' },
-      { slug:'bd-sql-lmd',        titre:'SQL — LMD',                  badge:'Bases de données', desc:'INSERT, UPDATE, DELETE, CREATE TABLE, ALTER TABLE, contraintes.' },
-      { slug:'bd-normalisation',  titre:'Normalisation',              badge:'Bases de données', desc:'1FN, 2FN, 3FN — dépendances fonctionnelles, décomposition.' },
-      { slug:'tic-reseaux',       titre:'Réseaux informatiques',      badge:'TIC',              desc:'TCP/IP, DNS, HTTP, LAN/WAN, adressage IP, modèle OSI.' },
-      { slug:'tic-web',           titre:'Développement Web',          badge:'TIC',              desc:'HTML5, CSS3, JavaScript, PHP, MySQL PDO, formulaires, sessions.' },
-      { slug:'tic-securite',      titre:'Cybersécurité',              badge:'TIC',              desc:'Menaces, pare-feu, antivirus, RGPD, chiffrement, authentification.' },
-    ],
-  },
-  'autres-sections': {
-    key:'autres-sections', label:'Autres Sections (TIC)', color:'#f59e0b', icon:'🎓',
-    chapitres: [
-      { slug:'tic-internet',     titre:'Internet & Réseaux',      badge:'TIC', desc:'Protocoles TCP/IP, DNS, HTTP, HTTPS — architecture client/serveur.' },
-      { slug:'tic-web-html',     titre:'Web — HTML & CSS',         badge:'TIC', desc:'Structure HTML5, sélecteurs CSS3, mise en page, responsive design.' },
-      { slug:'tic-javascript',   titre:'Web — JavaScript',         badge:'TIC', desc:'Variables, fonctions, DOM, événements, validation formulaire.' },
-      { slug:'tic-os',           titre:'Systèmes informatiques',   badge:'TIC', desc:'CPU, RAM, SSD, systèmes d\'exploitation, gestionnaire de fichiers.' },
-      { slug:'tic-securite-gen', titre:'Sécurité informatique',    badge:'TIC', desc:'Virus, malware, pare-feu, données personnelles, RGPD.' },
-    ],
-  },
+// ── Programme complet par jour — rotation sur 31 jours ────────────
+// Chaque jour = thèmes précis différents pour chaque exercice
+// Couvre TOUT le programme officiel sur 31 jours
+const PROGRAMME_JOUR: Record<string, {
+  ex1: { theme: string; sousTh: string; typeFunc?: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+  ex4: { theme: string; sousTh: string }
+}[]> = {
+  maths: [
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction exponentielle f(x)=ae^(bx)+c",typeFunc:"exp"}, ex2:{theme:"Complexes",sousTh:"Module, argument, forme trigonométrique"}, ex3:{theme:"Probabilités",sousTh:"Loi binomiale"}, ex4:{theme:"Géométrie espace",sousTh:"Vecteurs et coplanéité"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction logarithme f(x)=a·ln(bx+c)+d",typeFunc:"ln"}, ex2:{theme:"Complexes",sousTh:"Puissances et formule de Moivre"}, ex3:{theme:"Probabilités",sousTh:"Loi géométrique et espérance"}, ex4:{theme:"Isométries",sousTh:"Rotation et translation dans le plan"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction trigonométrique f(x)=a·sin(bx+c)",typeFunc:"sin"}, ex2:{theme:"Complexes",sousTh:"Racines n-ièmes de l'unité"}, ex3:{theme:"Suites",sousTh:"Suite arithmétique et somme"}, ex4:{theme:"Géométrie espace",sousTh:"Plans et droites dans l'espace"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction rationnelle f(x)=(ax+b)/(cx+d)",typeFunc:"rat"}, ex2:{theme:"Complexes",sousTh:"Transformations du plan complexe"}, ex3:{theme:"Suites",sousTh:"Suite géométrique et somme"}, ex4:{theme:"Géométrie espace",sousTh:"Sphère et distance"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=(ax+b)e^(cx)",typeFunc:"poly_exp"}, ex2:{theme:"Complexes",sousTh:"Applications géométriques des complexes"}, ex3:{theme:"Probabilités",sousTh:"Probabilités conditionnelles et indépendance"}, ex4:{theme:"Isométries",sousTh:"Similitudes directes et indirectes"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=a·ln(x)/x+b",typeFunc:"ln_div"}, ex2:{theme:"Complexes",sousTh:"Résolution d'équations dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suite récurrente un+1=f(un)"}, ex4:{theme:"Géométrie espace",sousTh:"Angles dièdres et orthogonalité"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=x²·e^(-x)",typeFunc:"poly2_exp"}, ex2:{theme:"Complexes",sousTh:"Interprétation géométrique des complexes"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire et espérance"}, ex4:{theme:"Géométrie espace",sousTh:"Tétraèdre et pyramide"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=x-2·√x",typeFunc:"racine"}, ex2:{theme:"Complexes",sousTh:"Exponentielle complexe et forme algébrique"}, ex3:{theme:"Suites",sousTh:"Convergence et limite d'une suite"}, ex4:{theme:"Isométries",sousTh:"Composition d'isométries"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=a·cos(x)+b·sin(x)",typeFunc:"cos_sin"}, ex2:{theme:"Complexes",sousTh:"Polynômes à coefficients complexes"}, ex3:{theme:"Probabilités",sousTh:"Loi de Poisson et approximation"}, ex4:{theme:"Géométrie espace",sousTh:"Projections et distances dans l'espace"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x²+a)",typeFunc:"ln_comp"}, ex2:{theme:"Complexes",sousTh:"Argument et inégalité triangulaire"}, ex3:{theme:"Suites",sousTh:"Suites monotones et suites adjacentes"}, ex4:{theme:"Géométrie espace",sousTh:"Perpendiculaires et parallèles"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x²-1)·e^x",typeFunc:"poly_exp2"}, ex2:{theme:"Complexes",sousTh:"Lieu géométrique dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Dénombrement et combinatoire"}, ex4:{theme:"Isométries",sousTh:"Homothéties et similitudes"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=1/(1+x²) et sa primitive",typeFunc:"arctan"}, ex2:{theme:"Complexes",sousTh:"Nombres complexes et trigonométrie"}, ex3:{theme:"Suites",sousTh:"Suites définies par récurrence — convergence"}, ex4:{theme:"Géométrie espace",sousTh:"Vecteurs dans l'espace et produit scalaire"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=xe^(-x²)",typeFunc:"gauss"}, ex2:{theme:"Complexes",sousTh:"Applications : rotations et similitudes"}, ex3:{theme:"Probabilités",sousTh:"Schéma de Bernoulli"}, ex4:{theme:"Géométrie espace",sousTh:"Cylindre et cône"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x+√(1+x²))",typeFunc:"ln_comp2"}, ex2:{theme:"Complexes",sousTh:"Racines carrées d'un complexe"}, ex3:{theme:"Suites",sousTh:"Encadrement et comparaison de suites"}, ex4:{theme:"Isométries",sousTh:"Frises et pavages"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x+a)·e^(x/b)",typeFunc:"exp_gen"}, ex2:{theme:"Complexes",sousTh:"Triangle dans ℂ : équilatéral, rectangle"}, ex3:{theme:"Probabilités",sousTh:"Probabilité totale et Bayes"}, ex4:{theme:"Géométrie espace",sousTh:"Sections planes d'un solide"} },
+    { ex1:{theme:"Analyse",sousTh:"Intégration — calcul d'aire sous une courbe",typeFunc:"integrale"}, ex2:{theme:"Complexes",sousTh:"Résolution de systèmes dans ℂ"}, ex3:{theme:"Suites",sousTh:"Majoration et minoration"}, ex4:{theme:"Géométrie espace",sousTh:"Trièdre trirectangle"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x·ln(x)",typeFunc:"x_ln"}, ex2:{theme:"Complexes",sousTh:"Forme exponentielle et rotation"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire — variance et écart-type"}, ex4:{theme:"Isométries",sousTh:"Réflexions et glissements"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=e^x·sin(x)",typeFunc:"exp_sin"}, ex2:{theme:"Complexes",sousTh:"Inégalités dans ℂ — module"}, ex3:{theme:"Suites",sousTh:"Comparaison par récurrence"}, ex4:{theme:"Géométrie espace",sousTh:"Parallélépipède et cube"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=√(ax²+bx+c)",typeFunc:"racine_poly"}, ex2:{theme:"Complexes",sousTh:"Droites et cercles dans le plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Loi normale et loi de Laplace-Gauss"}, ex4:{theme:"Isométries",sousTh:"Symétries axiales et centrales"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(ax²+bx+c)·e^(-x)",typeFunc:"poly2_exp_neg"}, ex2:{theme:"Complexes",sousTh:"Équations du 2nd degré dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suites et inégalités — récurrence"}, ex4:{theme:"Géométrie espace",sousTh:"Angles et distances — méthode vectorielle"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x)/√x",typeFunc:"ln_racine"}, ex2:{theme:"Complexes",sousTh:"Groupe des isométries directes — complexes"}, ex3:{theme:"Probabilités",sousTh:"Espérance conditionnelle"}, ex4:{theme:"Isométries",sousTh:"Similitudes — point fixe"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x-a)²·e^x",typeFunc:"poly_exp3"}, ex2:{theme:"Complexes",sousTh:"Applications : angles orientés dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suite de Fibonacci et suites explicites"}, ex4:{theme:"Géométrie espace",sousTh:"Volume et aire de solides de révolution"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=a·tan(x)+b",typeFunc:"tan"}, ex2:{theme:"Complexes",sousTh:"Représentation géométrique — ensembles de points"}, ex3:{theme:"Probabilités",sousTh:"Simulations et fréquences"}, ex4:{theme:"Géométrie espace",sousTh:"Barycentres dans l'espace"} },
+    { ex1:{theme:"Analyse",sousTh:"Équation différentielle y'+ay=b",typeFunc:"eq_diff"}, ex2:{theme:"Complexes",sousTh:"Complexes et trigonométrie — formule d'Euler"}, ex3:{theme:"Suites",sousTh:"Suite et point fixe — stabilité"}, ex4:{theme:"Isométries",sousTh:"Droite invariante par une isométrie"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x/(x²+1)",typeFunc:"rat2"}, ex2:{theme:"Complexes",sousTh:"Image d'une droite ou cercle par f(z)=az+b"}, ex3:{theme:"Probabilités",sousTh:"Espérance et loi des grands nombres"}, ex4:{theme:"Géométrie espace",sousTh:"Repère dans l'espace — coordonnées"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(ln x)²",typeFunc:"ln_carre"}, ex2:{theme:"Complexes",sousTh:"Décomposition — complexes"}, ex3:{theme:"Suites",sousTh:"Raisonnement par récurrence — applications"}, ex4:{theme:"Isométries",sousTh:"Composition de deux réflexions"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=e^x/(e^x+1)",typeFunc:"sigmoide"}, ex2:{theme:"Complexes",sousTh:"Résolution graphique dans le plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Inégalité de Bienaymé-Tchebychev"}, ex4:{theme:"Géométrie espace",sousTh:"Droite et plan — positions relatives"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=sin(x)/x pour x≠0",typeFunc:"sinc"}, ex2:{theme:"Complexes",sousTh:"Complexes et géométrie — orthocentre"}, ex3:{theme:"Suites",sousTh:"Suites et algorithmes — calcul numérique"}, ex4:{theme:"Isométries",sousTh:"Homothétie-rotation et similitude directe"} },
+    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x·e^(1/x)",typeFunc:"exp_inv"}, ex2:{theme:"Complexes",sousTh:"Bilan complexes : module, argument, transformation"}, ex3:{theme:"Probabilités",sousTh:"Bilan probabilités : loi discrète et continue"}, ex4:{theme:"Géométrie espace",sousTh:"Bilan géométrie : droites, plans, distances"} },
+    { ex1:{theme:"Analyse",sousTh:"Révision complète — f(x)=(x²-x+1)e^x",typeFunc:"revision"}, ex2:{theme:"Complexes",sousTh:"Révision : applications géométriques des complexes"}, ex3:{theme:"Suites",sousTh:"Révision suites : récurrence, convergence, limite"}, ex4:{theme:"Isométries",sousTh:"Révision isométries et similitudes"} },
+    { ex1:{theme:"Analyse",sousTh:"Sujet final — f(x)=ln(1+e^x)",typeFunc:"softplus"}, ex2:{theme:"Complexes",sousTh:"Concours final complexes"}, ex3:{theme:"Probabilités",sousTh:"Concours final probabilités"}, ex4:{theme:"Géométrie espace",sousTh:"Concours final géométrie espace"} },
+  ],
+  scexp: [
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(2x-1)e^(-x)+1 — variation, limite, asymptote",typeFunc:"exp"}, ex2:{theme:"Complexes",sousTh:"Affixe, module, argument, forme trigonométrique"}, ex3:{theme:"Probabilités",sousTh:"Loi binomiale et espérance"}, ex4:{theme:"Géométrie",sousTh:"Vecteurs et produit scalaire"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x·ln(x)-x — étude complète",typeFunc:"ln"}, ex2:{theme:"Complexes",sousTh:"Forme algébrique et opérations"}, ex3:{theme:"Intégrales",sousTh:"Calcul d'intégrales et primitives"}, ex4:{theme:"Géométrie",sousTh:"Droites et cercles dans le plan"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=2sin(x)+cos(2x) — étude sur [0,2π]",typeFunc:"trig"}, ex2:{theme:"Complexes",sousTh:"Résolution d'équation dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Probabilité conditionnelle et indépendance"}, ex4:{theme:"Géométrie",sousTh:"Triangle et droites remarquables"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=√(x²+1) — dérivée, variations",typeFunc:"racine"}, ex2:{theme:"Complexes",sousTh:"Racines n-ièmes et applications"}, ex3:{theme:"Intégrales",sousTh:"Intégrale définie — aire entre courbes"}, ex4:{theme:"Géométrie",sousTh:"Cercle — propriétés et équation"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(x+1)e^(x-1) — tableau de variations complet",typeFunc:"poly_exp"}, ex2:{theme:"Complexes",sousTh:"Transformation du plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire discrète — loi et espérance"}, ex4:{theme:"Géométrie",sousTh:"Vecteurs et repère orthonormé"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(x+1)/x — asymptotes, variations",typeFunc:"ln_rat"}, ex2:{theme:"Complexes",sousTh:"Applications géométriques : similitude"}, ex3:{theme:"Intégrales",sousTh:"Valeur moyenne d'une fonction"}, ex4:{theme:"Géométrie",sousTh:"Coniques — parabole et ellipse"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x²·e^(-x/2)",typeFunc:"poly2_exp"}, ex2:{theme:"Complexes",sousTh:"Argument et inégalité triangulaire"}, ex3:{theme:"Probabilités",sousTh:"Loi normale centrée réduite"}, ex4:{theme:"Géométrie",sousTh:"Droites perpendiculaires et parallèles"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=e^x·cos(x) sur [-π,π]",typeFunc:"exp_cos"}, ex2:{theme:"Complexes",sousTh:"Forme exponentielle et formule d'Euler"}, ex3:{theme:"Intégrales",sousTh:"Intégration par parties"}, ex4:{theme:"Géométrie",sousTh:"Lieu géométrique"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(3x-1)/(x²+1) — fonction rationnelle",typeFunc:"rat"}, ex2:{theme:"Complexes",sousTh:"Résolution graphique dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Dénombrement et arrangements"}, ex4:{theme:"Géométrie",sousTh:"Projection orthogonale"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(e^x+1) — étude et représentation",typeFunc:"ln_exp"}, ex2:{theme:"Complexes",sousTh:"Triangle dans ℂ et propriétés"}, ex3:{theme:"Intégrales",sousTh:"Calcul de volume par intégration"}, ex4:{theme:"Géométrie",sousTh:"Angles inscrits dans un cercle"} },
+    { ex1:{theme:"Analyse",sousTh:"Équation différentielle y'+y=e^x",typeFunc:"eq_diff"}, ex2:{theme:"Complexes",sousTh:"Image d'un cercle ou une droite"}, ex3:{theme:"Probabilités",sousTh:"Loi de Poisson"}, ex4:{theme:"Géométrie",sousTh:"Coordonnées polaires et cartésiennes"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=arcsin(x) ou arccos(x)",typeFunc:"arcsin"}, ex2:{theme:"Complexes",sousTh:"Conjugué et module — propriétés"}, ex3:{theme:"Intégrales",sousTh:"Sommes de Riemann et limite"}, ex4:{theme:"Géométrie",sousTh:"Parabole — propriété de la directrice"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x^n·e^(-x) — généralisation",typeFunc:"xn_exp"}, ex2:{theme:"Complexes",sousTh:"Corps des complexes — structure algébrique"}, ex3:{theme:"Probabilités",sousTh:"Variance et écart-type"}, ex4:{theme:"Géométrie",sousTh:"Transformation plane — homothétie"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(x-a)·ln(x)",typeFunc:"x_ln"}, ex2:{theme:"Complexes",sousTh:"Nombres complexes et trigonométrie"}, ex3:{theme:"Intégrales",sousTh:"Intégrale de fonctions trigonométriques"}, ex4:{theme:"Géométrie",sousTh:"Hexagone régulier et symétries"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(-x²) — courbe de Gauss",typeFunc:"gauss"}, ex2:{theme:"Complexes",sousTh:"Racines du polynôme z^n=a"}, ex3:{theme:"Probabilités",sousTh:"Loi exponentielle et durée de vie"}, ex4:{theme:"Géométrie",sousTh:"Médiatrice, bissectrice — constructions"} },
+    { ex1:{theme:"Analyse",sousTh:"Bilan analyse : f(x) mêlant exp et trig",typeFunc:"mix"}, ex2:{theme:"Complexes",sousTh:"Bilan complexes"}, ex3:{theme:"Intégrales",sousTh:"Bilan intégrales"}, ex4:{theme:"Géométrie",sousTh:"Bilan géométrie"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=sin(x)/(1+cos(x))",typeFunc:"trig2"}, ex2:{theme:"Complexes",sousTh:"Applications en physique — oscillations"}, ex3:{theme:"Probabilités",sousTh:"Statistiques — moyenne, médiane, mode"}, ex4:{theme:"Géométrie",sousTh:"Transformations isométriques"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x^(1/3) — fonction puissance fractionnaire",typeFunc:"puissance"}, ex2:{theme:"Complexes",sousTh:"Plan complexe — ensembles de points"}, ex3:{theme:"Intégrales",sousTh:"Intégrale impropre et convergence"}, ex4:{theme:"Géométrie",sousTh:"Ellipse et hyperbole"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(ax+b)/(cx²+d) — étude complète",typeFunc:"rat3"}, ex2:{theme:"Complexes",sousTh:"Complexes et géométrie analytique"}, ex3:{theme:"Probabilités",sousTh:"Bilan probabilités conditionnelles"}, ex4:{theme:"Géométrie",sousTh:"Droite et cercle — tangente"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(x)·e^x — étude et représentation",typeFunc:"ln_exp2"}, ex2:{theme:"Complexes",sousTh:"Symétries dans ℂ"}, ex3:{theme:"Intégrales",sousTh:"Calcul d'intégrales définies"}, ex4:{theme:"Géométrie",sousTh:"Angle au centre et angle inscrit"} },
+    { ex1:{theme:"Analyse",sousTh:"Révision type bac session principale",typeFunc:"rev1"}, ex2:{theme:"Complexes",sousTh:"Révision type bac complexes"}, ex3:{theme:"Probabilités",sousTh:"Révision type bac probabilités"}, ex4:{theme:"Géométrie",sousTh:"Révision type bac géométrie"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=cos(x)·ln(1+x²)",typeFunc:"trig_ln"}, ex2:{theme:"Complexes",sousTh:"Équations de degré 3 dans ℂ"}, ex3:{theme:"Intégrales",sousTh:"Volume de révolution"}, ex4:{theme:"Géométrie",sousTh:"Barycentres et propriétés"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(sin x)",typeFunc:"exp_sin"}, ex2:{theme:"Complexes",sousTh:"Argument principal d'un complexe"}, ex3:{theme:"Probabilités",sousTh:"Loi hypergéométrique"}, ex4:{theme:"Géométrie",sousTh:"Construction à la règle et au compas"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x/(x-1) — branches infinies",typeFunc:"rat4"}, ex2:{theme:"Complexes",sousTh:"Complexes et vecteurs — parallélogramme"}, ex3:{theme:"Intégrales",sousTh:"Méthode des rectangles et trapèzes"}, ex4:{theme:"Géométrie",sousTh:"Similitudes et rapports"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(1+x)^α — étude générale",typeFunc:"puissance2"}, ex2:{theme:"Complexes",sousTh:"Résoudre |z-a|=|z-b| dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire continue — densité"}, ex4:{theme:"Géométrie",sousTh:"Rotation — centre et angle"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(-|x|) — valeur absolue",typeFunc:"exp_abs"}, ex2:{theme:"Complexes",sousTh:"Cercle de Moivre et applications"}, ex3:{theme:"Intégrales",sousTh:"Changement de variable"}, ex4:{theme:"Géométrie",sousTh:"Triangles semblables et rapport"} },
+    { ex1:{theme:"Analyse",sousTh:"Fonction implicite et dérivation",typeFunc:"implicite"}, ex2:{theme:"Complexes",sousTh:"Nombre complexe et matrice 2x2"}, ex3:{theme:"Probabilités",sousTh:"Simulation de Monte-Carlo"}, ex4:{theme:"Géométrie",sousTh:"Inversion dans le plan"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=(x²-4)e^(-x/2) — étude complète",typeFunc:"poly2_exp_half"}, ex2:{theme:"Complexes",sousTh:"Complexes — résoudre sur ℝ et ℂ"}, ex3:{theme:"Intégrales",sousTh:"Intégrale et équation différentielle"}, ex4:{theme:"Géométrie",sousTh:"Théorème de Thalès et applications"} },
+    { ex1:{theme:"Analyse",sousTh:"f(x)=x·arctan(x)-½·ln(1+x²)",typeFunc:"arctan_ln"}, ex2:{theme:"Complexes",sousTh:"Formulaire complexes — récapitulatif"}, ex3:{theme:"Probabilités",sousTh:"Convergence en probabilité"}, ex4:{theme:"Géométrie",sousTh:"Géométrie vectorielle — repère affine"} },
+    { ex1:{theme:"Analyse",sousTh:"Sujet de concours final — fonction avec paramètre",typeFunc:"final"}, ex2:{theme:"Complexes",sousTh:"Concours final — complexes"}, ex3:{theme:"Probabilités",sousTh:"Concours final — probabilités"}, ex4:{theme:"Géométrie",sousTh:"Concours final — géométrie"} },
+    { ex1:{theme:"Analyse",sousTh:"Révision générale toutes notions",typeFunc:"bilan"}, ex2:{theme:"Complexes",sousTh:"Révision générale complexes"}, ex3:{theme:"Intégrales",sousTh:"Révision générale intégrales"}, ex4:{theme:"Géométrie",sousTh:"Révision générale géométrie"} },
+  ],
 }
 
 
-// ════════════════════════════════════════════════════════════════
-//  ANGLAIS — Configs sections et archives
-//  Dossier bacweb : lettre/ (Lettres) · math/ (Toutes sections)
-// ════════════════════════════════════════════════════════════════
-const SECTION_CONFIGS_ANGLAIS = [
-  {
-    key:'anglais-lettres',
-    label:'Section-Lettres',
-    color:'#ec4899',
-    icon:'📚',
-    folder:'lettre',
-    file:'anglais.pdf',
-    themes:['Reading Comprehension','Essay Writing','Argumentative Text','Grammar & Vocabulary','Opinion & Description']
-  },
-  {
-    key:'anglais-toutes',
-    label:'Toutes-Sections',
-    color:'#6366f1',
-    icon:'🔬',
-    folder:'math',
-    file:'anglais.pdf',
-    themes:['Reading Comprehension','Essay Writing','Technical Text','Grammar & Vocabulary','Science & Technology']
-  },
-]
-
-const bwAnglais = (y: number, session: 'principale'|'controle', folder: string) =>
-  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/anglais.pdf`
-
-const ARCHIVES_ANGLAIS: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_ANGLAIS.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwAnglais(y,'principale',sc.folder), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwAnglais(y,'controle',sc.folder), themes:sc.themes },
-  ])
-)
-
-// ── Chapitres Anglais par section ─────────────────────────────────
-const CHAPITRES_ANGLAIS: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  'anglais-lettres': {
-    key:'anglais-lettres', label:'Section Lettres', color:'#ec4899', icon:'📚',
-    chapitres: [
-      { slug:'reading-comprehension', titre:'Reading Comprehension', badge:'Reading', desc:'Compréhension de textes — True/False, questions ouvertes, inférences, référents, synonymes.' },
-      { slug:'essay-writing',         titre:'Essay Writing',          badge:'Writing', desc:'Essay argumentatif structuré — introduction, développement, conclusion, exemples.' },
-      { slug:'article-writing',       titre:'Article & Opinion',      badge:'Writing', desc:'Article de journal, lettre, email formel — formats et registres de langue.' },
-      { slug:'grammar-focus',         titre:'Grammar Focus',          badge:'Language', desc:'Reported speech, passive voice, modals, conditionals, relative clauses.' },
-      { slug:'vocabulary',            titre:'Vocabulary in Context',  badge:'Language', desc:'Vocabulaire thématique — Art, Education, Creativity, Environment, Society.' },
-    ],
-  },
-  'anglais-toutes': {
-    key:'anglais-toutes', label:'Toutes sections (sauf Lettres)', color:'#6366f1', icon:'🔬',
-    chapitres: [
-      { slug:'reading-sciences',  titre:'Reading — Sciences & Tech', badge:'Reading', desc:'Textes scientifiques — AI, innovation, space, environment — compréhension et analyse.' },
-      { slug:'essay-sciences',    titre:'Essay — Sciences & Society', badge:'Writing', desc:'Essay argumentatif — technologie, IA, changement climatique, innovation.' },
-      { slug:'grammar-sciences',  titre:'Grammar & Language',         badge:'Language', desc:'Relative clauses, gerund/infinitive, passive, future forms, linking words.' },
-      { slug:'vocabulary-sci',    titre:'Scientific Vocabulary',      badge:'Language', desc:'Vocabulaire des sciences — technology, AI, environment, innovation, discovery.' },
-      { slug:'reading-eco',       titre:'Reading — Economy & Society',badge:'Reading', desc:'Textes économiques et sociaux — commerce, mondialisation, entrepreneuriat.' },
-    ],
-  },
+function getProgrammeJour(sectionKey: string, dayNum: number) {
+  const prog = PROGRAMME_JOUR[sectionKey]
+  if (!prog) return null
+  const idx = (dayNum - 1) % prog.length  // 0-indexed, cyclique
+  return prog[idx]
 }
 
-
-const SECTION_CONFIGS_FRANCAIS = [
-  {
-    key:'fr-lettres',
-    label:'Section-Lettres',
-    color:'#ec4899',
-    icon:'📚',
-    folder:'lettre',
-    file:'francais.pdf',
-    themes:['Comprehension de texte','Essay argumentatif','Production ecrite','Analyse litteraire','Connecteurs logiques']
-  },
-  {
-    key:'fr-scientifique',
-    label:'Sections-Scientifiques',
-    color:'#8b5cf6',
-    icon:'🔬',
-    folder:'sciences_ex',
-    file:'francais.pdf',
-    themes:['Comprehension de texte','Essay argumentatif','Production ecrite','Texte scientifique','Science et progres']
-  },
-]
-
-const bwFrancais = (y: number, session: 'principale'|'controle', folder: string) =>
-  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/francais.pdf`
-
-const ARCHIVES_FRANCAIS: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_FRANCAIS.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwFrancais(y,'principale',sc.folder), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Controle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwFrancais(y,'controle',sc.folder), themes:sc.themes },
-  ])
-)
-
-const CHAPITRES_FRANCAIS: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  'fr-lettres': {
-    key:'fr-lettres', label:'Section Lettres', color:'#ec4899', icon:'📚',
-    chapitres: [
-      { slug:'partage',           titre:'Le Partage',                  badge:'Theme',   desc:'Solidarite, tolerance, vivre ensemble, dialogue des cultures. Camus, Maalouf, Ben Jelloun.' },
-      { slug:'engagement',        titre:"Engagement en Litterature",   badge:'Theme',   desc:'Liberte, justice, droits humains, role de l\'ecrivain. Hugo, Zola, Sartre.' },
-      { slug:'modernite',         titre:"L'Appel de la Modernite",     badge:'Theme',   desc:'Technologie, modernisation, tradition vs modernite. Jacquard, Diderot, Rousseau.' },
-      { slug:'lumieres',          titre:'La Raison et les Lumieres',   badge:'Theme',   desc:'Esprit critique, philosophie, liberte de pensee. Voltaire, Montesquieu, Diderot.' },
-      { slug:'poesie',            titre:'La Poesie',                   badge:'Theme',   desc:'Poesie lyrique et engagee. Metaphore, symbolisme. Baudelaire, Eluard, Rimbaud.' },
-      { slug:'production-ecrite', titre:'Production Ecrite',           badge:'Methode', desc:'Dissertation, essai argumentatif, resume. Structure et argumentation Bac Lettres.' },
-      { slug:'langue',            titre:'Langue et Expression',        badge:'Langue',  desc:'Connecteurs, modalisation, subordination, registres, figures de style.' },
-      { slug:'culture-litteraire', titre:'Culture Litteraire',           badge:'Culture', desc:'Mouvements litteraires : Humanisme, Lumieres, Romantisme, Realisme, Symbolisme. Genres : Roman, Theatre, Poesie, Essai.' },
-    ],
-  },
-  'fr-scientifique': {
-    key:'fr-scientifique', label:'Sections Scientifiques', color:'#8b5cf6', icon:'🔬',
-    chapitres: [
-      { slug:'science-progres',   titre:'Science et Progres',          badge:'Theme',   desc:'Developpement scientifique, technologie, impact. Jacquard, Reeves, Rabelais.' },
-      { slug:'homme-nature',      titre:"Homme et Nature",             badge:'Theme',   desc:'Environnement, pollution, ecologie, developpement durable. Giono, Hulot, Camus.' },
-      { slug:'communication',     titre:'Communication et Medias',     badge:'Theme',   desc:'Medias modernes, reseaux sociaux, internet, fake news. McLuhan, Eco.' },
-      { slug:'tolerance',         titre:'Tolerance et Humanisme',      badge:'Theme',   desc:'Respect, liberte, dialogue des cultures. Voltaire, Maalouf, Ben Jelloun.' },
-      { slug:'litt-engagee',      titre:'La Litterature Engagee',      badge:'Theme',   desc:'Justice, liberte, engagement de l\'ecrivain. Hugo, Zola, Sartre.' },
-      { slug:'poesie-sc',         titre:'La Poesie',                   badge:'Theme',   desc:'Poesie lyrique et engagee. Metaphore, symbolisme, musicalite. Baudelaire, Eluard, Rimbaud.' },
-      { slug:'production-sc',     titre:'Production Ecrite',           badge:'Methode', desc:'Essai argumentatif, sujet de reflexion, resume. Bac sections scientifiques.' },
-      { slug:'langue-sc',         titre:'Langue et Expression',        badge:'Langue',  desc:'Connecteurs, modalisation, discours rapporte, champ lexical scientifique.' },
-    ],
-  },
+// ── Types ──────────────────────────────────────────────────────────
+interface Candidat {
+  nom: string; prenom: string; lycee: string
+  gouvernorat: string; section: string; sectionKey: string
+  email?: string
 }
 
-const CHAPITRES_PHYS: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-
-  // ══ BAC SCIENCES EXPÉRIMENTALES ══════════════════════════════════════════
-  // Source: BAC_SC_EXP_PHYS_DATA (examens-tunisie) + mathinfo.tn/physique/p4sc.php
-  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Mécanique,Chimie T2) T3(Ondes,Optique,Chimie T3+Nucléaire)
-  'scexp-phys': {
-    key:'scexp-phys', label:'Sciences-Experimentales', color:'#06d6a0', icon:'\U0001f52c',
-    chapitres: [
-      { slug:'dipole-rc',              titre:'Dipole RC',                         badge:'Physique T1', desc:'Condensateur, charge uC(t)=E(1-e^(-t/tau)), decharge, tau=RC, energie E=1/2 CU2.' },
-      { slug:'dipole-rl',              titre:'Dipole RL',                         badge:'Physique T1', desc:'Bobine, auto-induction, i(t)=(E/R)(1-e^(-t/tau)), tau=L/R, energie E=1/2 LI2, loi de Lenz.' },
-      { slug:'rlc-libre',              titre:'Oscillations electriques libres',   badge:'Physique T1', desc:'Circuit LC/RLC, T0=2pi racine(LC), oscillations libres, pseudo-periodique, echanges Ec/Em.' },
-      { slug:'oscillateurs-mecaniques',titre:'Oscillations mecaniques libres',    badge:'Physique T2', desc:'Pendule T=2pi racine(l/g), ressort T=2pi racine(m/k), energie mecanique, amortissement.' },
-      { slug:'oscillations-forcees-mec',titre:'Oscillations mecaniques forcees', badge:'Physique T2', desc:'Oscillateur force, resonance mecanique, x(t)=Xm sin(omega t+phi), bande passante, facteur Q.' },
-      { slug:'ondes-mecaniques',       titre:'Ondes mecaniques progressives',     badge:'Physique T2', desc:'Propagation, celebrite v=lambda f, retard d/v, ondes sinusoidales, cordes, ultrasons.' },
-      { slug:'ondes-lumineuses',       titre:'Ondes lumineuses',                  badge:'Physique T3', desc:'Diffraction, interferences Young i=lambda D/a, spectres, spectre emission/absorption.' },
-      { slug:'nucleaire',              titre:'Reactions nucleaires',              badge:'Physique T3', desc:'Radioactivite alpha beta gamma, N(t)=N0 e^(-lambda t), t1/2=ln2/lambda, fission, fusion, E=Deltam c2.' },
-      { slug:'interaction-onde-matiere',titre:'Interaction onde-matiere',        badge:'Physique T3', desc:'Effet photoelectrique E=hf, frequence seuil, dualite onde-corpuscule lambda=h/mv.' },
-      { slug:'cinetique-chimique',     titre:'Cinetique chimique',               badge:'Chimie T1',   desc:'Vitesse v=-d[A]/dt, facteurs cinetiques, taux avancement, t1/2, catalyse homo/heterogene.' },
-      { slug:'equilibres-chimiques',   titre:'Equilibres chimiques',             badge:'Chimie T1',   desc:'Avancement final, taux tau, quotient Qr, constante K, loi de moderation Le Chatelier.' },
-      { slug:'acide-base',             titre:'Acides et bases',                  badge:'Chimie T2',   desc:'Couples AH/A-, pH=-log[H3O+], Ka, pKa, diagramme predominance, dosage acide-base.' },
-      { slug:'electrochimie',          titre:'Electrochimie',                    badge:'Chimie T2',   desc:'Reactions redox, oxydant/reducteur, pile electrochimique, anode/cathode, loi de Faraday.' },
-      { slug:'chimie-organique',       titre:'Chimie organique',                 badge:'Chimie T3',   desc:'Composes carbonyles, aldehydes, cetones, acides carboxyliques, esterification, polymeres.' },
-    ],
-  },
-
-  // ══ BAC SCIENCES TECHNIQUES ══════════════════════════════════════════════
-  // Source: BAC_SC_TECH_PHYS_DATA + mathinfo.tn/physique/p4t.php
-  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Filtres,Mécanique,Chimie T2) T3(Ondes,Chimie T3)
-  'sctech-phys': {
-    key:'sctech-phys', label:'Sciences-Techniques', color:'#f59e0b', icon:'\u2699',
-    chapitres: [
-      { slug:'dipole-rc',              titre:'Dipole RC',                         badge:'Physique T1', desc:'Condensateur, charge/decharge, tau=RC, applications filtrage et temporisation.' },
-      { slug:'dipole-rl',              titre:'Dipole RL',                         badge:'Physique T1', desc:'Bobine, inductance L, tau=L/R, loi de Lenz, e_L=-L di/dt, energie E=1/2 LI2.' },
-      { slug:'rlc-libre',              titre:'Oscillations electriques libres',   badge:'Physique T1', desc:'Circuit RLC, T0=2pi racine(LC), oscillations libres, pseudo-periodique, echanges energetiques.' },
-      { slug:'oscillateurs-mecaniques',titre:'Oscillations mecaniques libres',    badge:'Physique T2', desc:'Pendule T=2pi racine(l/g), ressort T=2pi racine(m/k), amortissement, analogie elec-meca.' },
-      { slug:'ondes-mecaniques',       titre:'Ondes mecaniques progressives',     badge:'Physique T2', desc:'Propagation, celebrite v, retard temporel, lambda=vT, reflexion, refraction.' },
-      { slug:'ondes-lumineuses',       titre:'Ondes lumineuses',                  badge:'Physique T2', desc:'Diffraction, interferences Young i=lambda D/a, applications laser, fibre optique.' },
-      { slug:'nucleaire',              titre:'Reactions nucleaires',              badge:'Physique T3', desc:'Radioactivite alpha beta gamma, N(t)=N0 e^(-lambda t), fission, centrale nucleaire, medecine.' },
-      { slug:'rlc-force',              titre:'Oscillations electriques forcees',  badge:'Physique T2', desc:'Resonance omega=omega0, Im_max=E/R, facteur Q=L omega0/R, bande passante Deltaf=f0/Q.' },
-      { slug:'electronique',           titre:'Electronique',                      badge:'Physique T3', desc:'Diodes (jonction PN, redressement), transistors NPN/PNP (IC=betaIB), amplification, commutation.' },
-      { slug:'interaction-onde-matiere',titre:'Interaction onde-matiere',        badge:'Physique T3', desc:'Diffraction (a aprox lambda), interferences Young i=lambda D/a, effet photoelectrique E=hf.' },
-      { slug:'cinetique-chimique',     titre:'Cinetique chimique',               badge:'Chimie T1',   desc:'Vitesse de reaction, facteurs cinetiques, tableau avancement, catalyse, applications industrielles.' },
-      { slug:'equilibres-chimiques',   titre:'Equilibres chimiques',             badge:'Chimie T1',   desc:'Quotient Qr, constante K, loi moderation, synthese Haber NH3, procede Contact H2SO4.' },
-      { slug:'acide-base',             titre:'Acides et bases',                  badge:'Chimie T2',   desc:'pH, Ka, pKa, diagramme predominance, dosage, indicateurs colores, controle qualite.' },
-      { slug:'electrochimie',          titre:'Electrochimie et corrosion',       badge:'Chimie T2',   desc:'Reactions redox, pile, corrosion, protection des metaux, galvanisation, electrolyse industrielle.' },
-      { slug:'chimie-organique',       titre:'Chimie organique',                 badge:'Chimie T3',   desc:'Composes carbonyles, esterification, hydrolyse, polymeres (polyaddition, polycondensation).' },
-    ],
-  },
-
-  // ══ BAC MATHÉMATIQUES ════════════════════════════════════════════════════
-  // Source: BAC_MATH_PHYS_DATA + mathinfo.tn/physique/p4m.php
-  // Programme: T1(RC,RL,RLC libre,Chimie T1) T2(RLC forcé,Ondes,Mécanique,Chimie T2) T3(Nucléaire,Chimie T3)
-  'maths-phys': {
-    key:'maths-phys', label:'Bac-Mathematiques', color:'#4f6ef7', icon:'\U0001f9ee',
-    chapitres: [
-      { slug:'cinematique',          titre:'Cinematique du point',              badge:'Mecanique',        desc:'Vecteur position, vitesse instantanee, acceleration, MRU, MRUV, MCU, mouvement de projectiles.' },
-      { slug:'dynamique',            titre:'Dynamique du point materiel',       badge:'Mecanique',        desc:'Lois de Newton, quantite de mouvement, travail, energie cinetique, energie potentielle, conservation.' },
-      { slug:'satellites',           titre:'Satellites et champ gravitationnel',badge:'Mecanique',        desc:'Champ g=GM/r2, vitesse orbitale v=racine(GM/r), 3e loi de Kepler T2=kr3, satellites geostationnaires.' },
-      { slug:'champ-electrique',     titre:'Champ electrique',                  badge:'Electromagnetisme', desc:'Loi de Coulomb, champ E=kq/r2, condensateur plan, travail W=qU, potentiel electrique.' },
-      { slug:'champ-magnetique',     titre:'Champ magnetique',                  badge:'Electromagnetisme', desc:'Sources, solenoidale B=mu0nI, force de Laplace F=BIl sin(a), force de Lorentz F=qvB sin(a).' },
-      { slug:'induction',            titre:'Induction electromagnetique',       badge:'Electromagnetisme', desc:'Flux Phi=BS cos(theta), loi de Faraday e=-dPhi/dt, loi de Lenz, auto-induction, transformateur.' },
-      { slug:'lentilles',            titre:'Lentilles minces',                  badge:'Optique',          desc:'Relation de conjugaison 1/OA prime-1/OA=1/f prime, grandissement gamma, vergence V=1/f prime, instruments.' },
-      { slug:'ondes-lumineuses',     titre:'Ondes lumineuses et diffraction',   badge:'Optique',          desc:'Diffraction, fentes Young, interfrange i=lambdaD/a, indice n=c/v, loi Snell-Descartes.' },
-      { slug:'dipole-rc',            titre:'Dipole RC',                         badge:'Electricite',      desc:'Condensateur, charge uC(t)=E(1-e^(-t/tau)), decharge, constante tau=RC, energie E=1/2 CU2.' },
-      { slug:'dipole-rl',            titre:'Dipole RL',                         badge:'Electricite',      desc:'Bobine, auto-induction, i(t)=(E/R)(1-e^(-t/tau)), constante tau=L/R, energie E=1/2 LI2.' },
-      { slug:'rlc-libre',            titre:'Oscillations electriques libres',   badge:'Electricite',      desc:'Circuit RLC, regime pseudo-periodique, T0=2pi racine(LC), echanges Ec/Em, resistance critique.' },
-      { slug:'rlc-force',            titre:'Oscillations forcees RLC',          badge:'Electricite',      desc:'Resonance omega=omega0, Im_max=E/R, facteur de qualite Q=L omega0/R, bande passante Deltaf.' },
-      { slug:'filtres-electriques',  titre:'Filtres electriques',               badge:'Electricite',      desc:'Passe-bas fc=1/(2piRC), passe-haut, passe-bande, gain G=Us/Ue, G(dB)=20 log(Us/Ue).' },
-      { slug:'redox',                titre:'Reactions oxydoreduction',          badge:'Chimie',           desc:'Oxydant/reducteur, couples Ox/Red, equilibrage, pile electrochimique, FEM, loi de Faraday.' },
-      { slug:'acide-base',           titre:'Reactions acide-base et pH',        badge:'Chimie',           desc:'Ka, pKa, pH=-log[H3O+], acides/bases faibles et forts, diagramme de predominance, dosages.' },
-      { slug:'cinetique-chimique',   titre:'Cinetique chimique',                badge:'Chimie',           desc:'Vitesse v=-d[A]/dt, facteurs cinetiques, tableau avancement, temps demi-reaction t1/2, catalyse.' },
-      { slug:'equilibre-chimique',   titre:'Equilibre chimique',                badge:'Chimie',           desc:'Quotient Qr, constante K, loi de moderation Le Chatelier, deplacement equilibre.' },
-      { slug:'chimie-organique',     titre:'Chimie organique',                  badge:'Chimie',           desc:'Groupes fonctionnels, substitution, addition, elimination, esterification, polymeres.' },
-    ],
-  },
-
-  // ══ BAC INFORMATIQUE ════════════════════════════════════════════════════
-  // Source: BAC_INFO_PHYS_DATA + mathinfo.tn/physique/p4si.php
-  // Programme: T1(RC,RL,RLC libre,Dosage) T2(RLC forcé,Ondes,Pile) T3(Mécanique,Nucléaire)
-  'info-phys': {
-    key:'info-phys', label:'Informatique', color:'#8b5cf6', icon:'\U0001f4bb',
-    chapitres: [
-      { slug:'condensateur',           titre:'Condensateur',                      badge:'Physique T1', desc:'Charge q=CU, energie E=1/2 CU2, condensateur plan, applications flash, defibrillateur.' },
-      { slug:'dipole-rc',              titre:'Dipole RC',                         badge:'Physique T1', desc:'tau=RC, uC(t)=E(1-e^(-t/tau)), i(t)=(E/R)e^(-t/tau), filtrage, temporisation.' },
-      { slug:'dipole-rl',              titre:'Bobine et Dipole RL',               badge:'Physique T1', desc:'Flux Phi=Li, e_L=-L di/dt, loi de Lenz, tau=L/R, i(t)=(E/R)(1-e^(-t/tau)), energie E=1/2 LI2.' },
-      { slug:'rlc-libre',              titre:'Oscillations electriques libres',   badge:'Physique T1', desc:'RLC amorti et non amorti, T0=2pi racine(LC), f0=1/(2pi racine(LC)), echanges Ec/Em.' },
-      { slug:'rlc-force',              titre:'Oscillations electriques forcees',  badge:'Physique T2', desc:'Resonance omega=omega0, Im_max=E/R, facteur Q=L omega0/R, bande passante Deltaf=f0/Q.' },
-      { slug:'filtres-electriques',    titre:'Filtres electriques',               badge:'Physique T2', desc:'Passe-bas fc=1/(2piRC), passe-haut, passe-bande, gain G=Us/Ue, diagrammes de Bode.' },
-      { slug:'multivibrateurs',        titre:'Multivibrateurs et electronique',   badge:'Physique T2', desc:'Multivibrateur astable, signal carre, T=f(R,C), transistors saturation/blocage, horloge electronique.' },
-      { slug:'ondes-mecaniques',       titre:'Ondes mecaniques progressives',     badge:'Physique T2', desc:'Propagation, celebrite v, retard tau=d/v, lambda=vT, transmission des signaux.' },
-      { slug:'ondes-optique',          titre:'Ondes et optique',                  badge:'Physique T2', desc:'Diffraction theta aprox lambda/a, dispersion (prisme, indice n(lambda)), spectres emission/absorption.' },
-      { slug:'nucleaire',              titre:'Physique nucleaire',                badge:'Physique T3', desc:'Radioactivite alpha beta gamma, N(t)=N0 e^(-lambda t), t1/2=ln2/lambda, fission, fusion, E=Deltam c2.' },
-      { slug:'acide-base',             titre:'Acides-bases',                      badge:'Chimie T1',   desc:'pH=-log[H3O+], Ka, pKa, diagramme predominance, dosages titrages, indicateurs colores.' },
-      { slug:'cinetique-chimique',     titre:'Cinetique chimique',               badge:'Chimie T1',   desc:'Vitesse v=-d[A]/dt, loi de vitesse, ordre, facteurs cinetiques, catalyse, suivi temporel.' },
-      { slug:'transformations',        titre:'Transformations chimiques',         badge:'Chimie T2',   desc:'Esterification, formation amides, taux avancement tau=xf/xmax, equilibre, distillation.' },
-      { slug:'equilibre-chimique',     titre:'Equilibre chimique',               badge:'Chimie T2',   desc:'Loi Le Chatelier, quotient Qr, constante K, critere evolution Qr vs K.' },
-      { slug:'electrochimie',          titre:'Electrochimie',                    badge:'Chimie T2',   desc:'Couples redox, pile (cathode/anode, FEM), electrolyse, loi Faraday m=MIt/(nF).' },
-      { slug:'avancement',             titre:'Tableau avancement',               badge:'Chimie T3',   desc:'Variable x, reactif limitant, xmax, taux tau=xf/xmax, reaction totale tau=1, bilan matiere.' },
-    ],
-  },
+interface Exercise {
+  num: number; title: string; theme: string; points: number
+  statement: string; graph?: string
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  SVT — Configs sections, archives et chapitres
-//  2 sections : Sciences Expérimentales (coef.5) · Mathématiques (coef.2)
-//  Fichiers bacweb.tn : sciences_ex/svt.pdf · math/svt.pdf
-// ═══════════════════════════════════════════════════════════════════
-const SECTION_CONFIGS_SVT = [
-  {
-    key: 'svt-scexp',
-    label: 'SVT-Sciences-Expérimentales',
-    color: '#22c55e',
-    icon: '🔬',
-    folder: 'sciences_ex',
-    file: 'svt.pdf',
-    themes: ['Génétique & Brassage','Transmission héréditaire','Milieu intérieur','Neurophysiologie','Immunité','Reproduction humaine','Nutrition & Photosynthèse']
-  },
-  {
-    key: 'svt-maths',
-    label: 'SVT-Section-Mathématiques',
-    color: '#a78bfa',
-    icon: '📐',
-    folder: 'math',
-    file: 'svt.pdf',
-    themes: ['Génétique & Hérédité','Milieu intérieur','Neurophysiologie','Immunité','Reproduction humaine','Nutrition','Géologie & Évolution']
-  },
-]
-
-const bwSVT = (y: number, session: 'principale'|'controle', folder: string) =>
-  `http://www.bacweb.tn/bac/${y}/${session}/${folder}/svt.pdf`
-
-const ARCHIVES_SVT: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_SVT.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwSVT(y,'principale',sc.folder), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bwSVT(y,'controle',sc.folder), themes:sc.themes },
-  ])
-)
-
-// ── Chapitres SVT par section ──────────────────────────────────────
-const CHAPITRES_SVT: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-
-  // ══ SVT SCIENCES EXPÉRIMENTALES — 14 chapitres ═══════════════════
-  'svt-scexp': {
-    key: 'svt-scexp', label: 'SVT-Sciences-Exp.', color: '#22c55e', icon: '🔬',
-    chapitres: [
-      // Thème I — Génétique (4 chapitres)
-      { slug:'brassage-genetique',       titre:'Brassage de l\'information génétique', badge:'Génétique', desc:'Méiose · brassage interchromosomique (Anaphase I) · crossing-over (Prophase I) · gamètes recombinants · 2ⁿ types de gamètes.' },
-      { slug:'transmission-hereditaire', titre:'Transmission de l\'information génétique', badge:'Génétique', desc:'Lois de Mendel · monohybridisme (3:1) · dihybridisme (9:3:3:1) · gènes liés · hérédité liée au sexe · diagnostic prénatal · sonde moléculaire.' },
-      { slug:'mutations-svt',            titre:'Les mutations',                          badge:'Génétique', desc:'Mutations géniques (substitution · délétion · insertion · faux-sens · non-sens) · mutations chromosomiques · trisomie 21 · non-disjonction · agents mutagènes.' },
-      { slug:'genetique-populations',    titre:'Génétique des populations',              badge:'Génétique', desc:'Fréquences alléliques p et q · p+q=1 · loi de Hardy-Weinberg p²+2pq+q²=1 · conditions d\'équilibre · applications médicales.' },
-      // Thème II — Milieu intérieur (5 chapitres)
-      { slug:'milieu-interieur-svt',     titre:'Constance du milieu intérieur',          badge:'Milieu intérieur', desc:'Plasma · liquide interstitiel · liquide intracellulaire · glycémie 0,8-1,2 g/L · pH 7,35-7,45 · température 37°C · homéostasie.' },
-      { slug:'regulation-glycemie-svt',  titre:'Régulation de la glycémie',              badge:'Milieu intérieur', desc:'Rôle du foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · insuline (cellules β) · glucagon (cellules α) · rétrocontrôle négatif · diabète type 1 et 2.' },
-      { slug:'systeme-nerveux-svt',      titre:'Système nerveux et régulation',          badge:'Neurophysiologie', desc:'Structure du neurone · potentiel de repos (-70mV) · dépolarisation Na⁺ · repolarisation K⁺ · loi du tout ou rien · synapse chimique · PPSE · PPSI · réflexe myotatique.' },
-      { slug:'defense-organisme-svt',    titre:'Défense de l\'organisme',                badge:'Immunité', desc:'Immunité non spécifique (phagocytose · inflammation) · immunité humorale (LB · anticorps · plasmocytes) · immunité cellulaire (LT cytotoxiques) · mémoire · vaccination · sérothérapie.' },
-      { slug:'hygiene-sn-svt',           titre:'Hygiène du système nerveux',             badge:'Neurophysiologie', desc:'Drogues et SN · cocaïne (blocage recapture dopamine) · dépendance · stress · cortisol · adrénaline · mesures de protection.' },
-      // Thème III — Reproduction (3 chapitres)
-      { slug:'reproduction-homme-svt',   titre:'Fonction reproductrice chez l\'homme',   badge:'Reproduction', desc:'Structure du spermatozoïde (tête · pièce intermédiaire · flagelle) · spermatogenèse (multiplication · accroissement · maturation · différenciation) · testostérone · GnRH · LH · FSH · rétrocontrôle.' },
-      { slug:'reproduction-femme-svt',   titre:'Fonction reproductrice chez la femme',   badge:'Reproduction', desc:'Folliculogenèse (follicule primordial → De Graaf) · ovogenèse · cycle ovarien · cycle utérin · FSH · LH · œstrogènes · progestérone · pic de LH → ovulation · corps jaune.' },
-      { slug:'fecondation-svt',          titre:'Fécondation et procréation',             badge:'Reproduction', desc:'Capacitation · pénétration (enzymes acrosomiales) · réaction corticale · fusion des pronuclei → zygote 2n · contraception (pilule · préservatif) · FIVETE · IAD.' },
-      // Thème IV — Nutrition (2 chapitres)
-      { slug:'nutrition-animale-svt',    titre:'Nutrition animale',                      badge:'Nutrition', desc:'Digestion enzymatique (amylase · pepsine · lipase · pH et température optimaux) · absorption (villosités intestinales) · respiration cellulaire : glycolyse → Krebs → chaîne respiratoire → 38 ATP · C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP.' },
-      { slug:'nutrition-vegetale-svt',   titre:'Nutrition végétale',                     badge:'Nutrition', desc:'Osmose · absorption eau · sels minéraux N·P·K·Mg·Fe · xylème · transpiration (stomates) · photosynthèse : phase photochimique (photolyse eau → O₂) · cycle de Calvin (CO₂ → glucose) · 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂ · facteurs limitants.' },
-    ],
-  },
-
-  // ══ SVT SECTION MATHÉMATIQUES — 13 chapitres ═════════════════════
-  'svt-maths': {
-    key: 'svt-maths', label: 'SVT-Section-Maths', color: '#a78bfa', icon: '📐',
-    chapitres: [
-      // Thème I — Génétique (2 chapitres — programme allégé)
-      { slug:'brassage-genetique-maths', titre:'Brassage de l\'information génétique',   badge:'Génétique', desc:'Méiose · brassage interchromosomique · brassage intrachromosomique (crossing-over) · gamètes parentaux et recombinants · fréquence de recombinaison · diversité génétique.' },
-      { slug:'transmission-hereditaire-maths', titre:'Transmission et hérédité',         badge:'Génétique', desc:'Lois de Mendel · monohybridisme · dihybridisme · hérédité liée au sexe (transmission croisée) · conductrice · diagnostic prénatal · caryotype · sonde moléculaire.' },
-      // Thème II — Milieu intérieur (5 chapitres — identiques à Sc.Exp.)
-      { slug:'milieu-interieur-maths',   titre:'Constance du milieu intérieur',          badge:'Milieu intérieur', desc:'Compartiments liquidiens · plasma · liquide interstitiel · constantes biologiques (glycémie · pH · température) · homéostasie · troubles liés aux variations.' },
-      { slug:'regulation-glycemie-maths',titre:'Régulation de la glycémie',              badge:'Milieu intérieur', desc:'Foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · insuline (cellules β) · glucagon (cellules α) · rétrocontrôle négatif · diabète type 1 (autoimmun) · diabète type 2 (résistance).' },
-      { slug:'systeme-nerveux-maths',    titre:'Système nerveux et régulation',          badge:'Neurophysiologie', desc:'Neurone · potentiel de repos (-70mV) · potentiel d\'action ionique (Na⁺/K⁺) · propagation · synapse chimique · PPSE · PPSI · intégration postsynaptique · réflexe myotatique · muscles antagonistes.' },
-      { slug:'defense-organisme-maths',  titre:'Défense de l\'organisme',                badge:'Immunité', desc:'Immunité non spécifique (phagocytose · barrières) · spécificité et mémoire immunologique · LB (anticorps) · LT (cytotoxicité) · vaccination (protection active durable) · sérothérapie (protection passive immédiate).' },
-      { slug:'hygiene-sn-maths',         titre:'Hygiène du système nerveux',             badge:'Neurophysiologie', desc:'Mécanismes d\'action des drogues · cocaïne et recapture de la dopamine · dépendance physique et psychologique · stress · cortisol · adrénaline · mesures de protection et hygiène de vie.' },
-      // Thème III — Reproduction (3 chapitres — programme allégé méiose)
-      { slug:'reproduction-homme-maths', titre:'Fonction reproductrice chez l\'homme',   badge:'Reproduction', desc:'Structure du spermatozoïde · spermatogenèse (méiose signalée sans détails) · testostérone (cellules de Leydig) · GnRH → LH + FSH · rétrocontrôle négatif · rôle des cellules de Sertoli.' },
-      { slug:'reproduction-femme-maths', titre:'Fonction reproductrice chez la femme',   badge:'Reproduction', desc:'Folliculogenèse · ovogenèse (méiose signalée) · structure ovocyte II · cycle ovarien 28 jours · cycle utérin · GnRH pulsatile · pic LH → ovulation · rétrocontrôle positif et négatif.' },
-      { slug:'fecondation-maths',        titre:'Fécondation et procréation',             badge:'Reproduction', desc:'Conditions et étapes de la fécondation · capacitation · réaction corticale · fusion pronuclei → zygote · contraception (pilule bloque GnRH/FSH/LH) · FIVETE · IAD · hygiène procréation.' },
-      // Thème IV — Nutrition (2 chapitres)
-      { slug:'nutrition-animale-maths',  titre:'Nutrition animale',                      badge:'Nutrition', desc:'Digestion enzymatique (glucides · protides · lipides) · conditions d\'activité enzymatique (pH · température) · absorption intestinale · respiration cellulaire · glycolyse · cycle de Krebs · chaîne respiratoire · 38 ATP.' },
-      { slug:'nutrition-vegetale-maths', titre:'Nutrition végétale',                     badge:'Nutrition', desc:'Absorption eau (osmose) · sels minéraux (N·P·K·Mg·Fe) · xylème · transpiration · photosynthèse bilan · phase lumineuse (photolyse eau → O₂) · cycle de Calvin · facteurs limitants (lumière · CO₂ · température).' },
-      // Thème V — Géologie & Évolution (exclusif section Maths)
-      { slug:'evolution-geologie-maths', titre:'Évolution biologique & Géologie',        badge:'Géologie & Évolution', desc:'Théories de l\'évolution (Darwin · sélection naturelle) · preuves fossiles · anatomie comparée · données génétiques · spéciation · tectonique des plaques · dorsales · subduction · séismes · volcanisme.' },
-    ],
-  },
-}
-
-interface GeneratedExam {
-  id: string; index: number; title: string; section: string
+interface BacExam {
+  id: string; day: number; date: string
+  section: string; sectionKey: string
   duration: number; totalPoints: number
-  exercises: { num:number; title:string; theme:string; points:number; statement:string; graph?:string }[]
+  exercises: Exercise[]
+  // alias pour buildCorrectionHtml
+  title: string; index?: number
 }
 
 interface AnalysisResult {
@@ -590,686 +198,960 @@ interface AnalysisResult {
   strengths: string[]
   globalAdvice: string[]
   remediationExercises: {
-    id: string; theme:string; difficulty:'introductory'|'standard'|'advanced'
-    objective:string; statement:string; hint:string; officialCorrection:string
+    id:string; theme:string; difficulty:'introductory'|'standard'|'advanced'
+    objective:string; statement:string; hint:string; officialCorrection:string; graph?:string
   }[]
 }
 
-type Phase = 'select' | 'generating' | 'choose-exam' | 'exam' | 'grading' | 'graded' | 'correcting' | 'correction' | 'analysing' | 'analysis'
-
-// ════════════════════════════════════════════════════════════════
-//  ÉCONOMIE & GESTION — Configs, archives et chapitres (Sc. Éco & Gestion)
-//  Programme CNP Tunisie · 4ème Économie & Gestion
-// ════════════════════════════════════════════════════════════════
-const SECTION_CONFIGS_ECO = [
-  { key:'economie', label:'Éco-Gestion', color:'#06b6d4', icon:'📈', folder:'economie_gestion', file:'economie.pdf',
-    themes:['Croissance économique','Mutations des structures','Développement durable','Mondialisation','Échanges internationaux'] },
-]
-const ARCHIVES_ECO: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_ECO.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
-  ])
-)
-
-const SECTION_CONFIGS_GES = [
-  { key:'gestion', label:'Éco-Gestion', color:'#f43f5e', icon:'💼', folder:'economie_gestion', file:'gestion.pdf',
-    themes:['Comptabilité & finance','Coûts','Approvisionnement','Gestion commerciale','Ressources humaines'] },
-]
-const ARCHIVES_GES: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_GES.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
-  ])
-)
-
-// ── Chapitres ÉCONOMIE (9) — programme CNP, 4 parties ──
-const CHAPITRES_ECO: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  'economie': {
-    key:'economie', label:'Économie — Sc. Éco & Gestion', color:'#06b6d4', icon:'📈',
-    chapitres: [
-      { slug:'croissance-economique',   titre:'La croissance économique',          badge:'Partie I',   desc:'PIB, PNB, PIB réel/nominal, PPA. Taux de croissance t=(PIBn-PIBn-1)/PIBn-1, TCAM, indices. Croissance quantitative/qualitative, extensive/intensive, cycles et fluctuations.' },
-      { slug:'facteurs-croissance',     titre:'Les facteurs de la croissance',     badge:'Partie I',   desc:'Facteur travail (population active, productivité Pt=Production/travail, capital humain), facteur capital (investissement, progrès technique), échanges extérieurs (ouverture, compétitivité).' },
-      { slug:'structure-production',    titre:'La structure de production',        badge:'Partie II',  desc:'Secteurs primaire/secondaire/tertiaire, tertiarisation, désindustrialisation, mécanisation/automatisation, concentration horizontale/verticale/conglomérale, oligopole.' },
-      { slug:'modes-de-vie',            titre:'Les modes de vie',                  badge:'Partie II',  desc:'Pouvoir d achat, niveau de vie, coefficient budgétaire Cb=dépense poste/dépense totale x100, loi d Engel, urbanisation, mobilité, communication.' },
-      { slug:'couts-croissance',        titre:'Les coûts de la croissance',        badge:'Partie III', desc:'Coûts socio-économiques (chômage, pauvreté, inégalités, exclusion, précarité) et coûts environnementaux (pollution, effet de serre, réchauffement, épuisement des ressources).' },
-      { slug:'developpement-durable',   titre:'Le développement durable',          badge:'Partie III', desc:'Développement durable (Brundtland), 3 dimensions (économique, sociale, environnementale), équité, solidarité intergénérationnelle, IDH=(I_sante+I_education+I_revenu)/3, limites du PIB.' },
-      { slug:'echanges-internationaux', titre:'Les échanges internationaux',       badge:'Partie IV',  desc:'Solde commercial X-M, taux de couverture (X/M)x100, taux d ouverture, termes de l échange, libre-échange et protectionnisme.' },
-      { slug:'mutations-commerce',      titre:'Les mutations du commerce',         badge:'Partie IV',  desc:'Commerce interbranche/intrabranche, DIT, avantages comparatifs (Ricardo) et compétitifs, Triade, pays émergents.' },
-      { slug:'firmes-multinationales',  titre:'Les firmes multinationales',        badge:'Partie IV',  desc:'FMN, filiales, échanges intrafirmes, mobiles (marchés, coûts, ressources, délocalisation), effets sur pays d origine et d accueil.' },
-    ],
-  },
+interface RankingEntry {
+  nom: string; prenom: string; lycee: string; gouvernorat: string
+  section: string; sectionKey: string; score: number; maxScore: number
+  day: number; date: string; ts: number
 }
 
-// ── Chapitres GESTION (6) — programme CNP ──
-const CHAPITRES_GES: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  'gestion': {
-    key:'gestion', label:'Gestion — Sc. Éco & Gestion', color:'#f43f5e', icon:'💼',
-    chapitres: [
-      { slug:'evaluation-consolidation', titre:'Évaluation & Consolidation',        badge:'Comptabilité', desc:'Bilan comptable et fonctionnel, FDR=Capitaux permanents-Actif immobilisé, BFR=Actif circulant-Passif circulant, TN=FDR-BFR, résultat=Produits-Charges, TVA due.' },
-      { slug:'approvisionnement',        titre:'Gestion de l approvisionnement',    badge:'Stocks',       desc:'CUMP, stock moyen=(SI+SF)/2, rotation=Consommation/stock moyen, durée=360/rotation, stock de sécurité, quantité économique de Wilson Q*=racine(2.D.Cl/Cs).' },
-      { slug:'production',               titre:'Gestion de la production',          badge:'Coûts',        desc:'Coûts complets (coût d achat, de production, de revient), résultat analytique, coûts partiels (MCV=CA-charges variables, seuil de rentabilité=CF/taux de MCV), écarts, lot économique.' },
-      { slug:'commerciale',              titre:'Gestion commerciale',               badge:'Marketing',    desc:'Étude de marché, segmentation et ciblage, marketing-mix (produit, prix, communication, distribution), part de marché, suivi des ventes, fidélisation.' },
-      { slug:'ressources-humaines',      titre:'Gestion des ressources humaines',   badge:'RH',           desc:'Prévision des effectifs, pyramide des âges, recrutement interne/externe, formation, rémunération, masse salariale=somme(salaires bruts+charges patronales).' },
-      { slug:'financiere',               titre:'Gestion financière',                badge:'Finance',      desc:'Financement (autofinancement=CAF-dividendes, emprunt, crédit-bail), analyse financière (FDR, BFR, TN, ratios), gestion budgétaire (budgets, contrôle, prévision vs réalisation).' },
-    ],
-  },
+type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'correction'|'analysing'|'analysis'|'statistiques'
+
+// ── LocalStorage helpers ──────────────────────────────────────────
+function saveRanking(entry: RankingEntry) {
+  try {
+    const all: RankingEntry[] = JSON.parse(localStorage.getItem('bb_ranking')||'[]')
+    all.push(entry)
+    // garder les 500 derniers
+    if (all.length > 500) all.splice(0, all.length - 500)
+    localStorage.setItem('bb_ranking', JSON.stringify(all))
+  } catch {}
 }
 
+function getRanking(): RankingEntry[] {
+  try { return JSON.parse(localStorage.getItem('bb_ranking')||'[]') }
+  catch { return [] }
+}
+
+function saveVisit() {
+  try {
+    const v = parseInt(localStorage.getItem('bb_visits')||'0') + 1
+    localStorage.setItem('bb_visits', String(v))
+  } catch {}
+}
+
+function getStats() {
+  try {
+    const ranking = getRanking()
+    const visits = parseInt(localStorage.getItem('bb_visits')||'0')
+    const byGov: Record<string,number> = {}
+    const byDay: Record<number, RankingEntry[]> = {}
+    ranking.forEach(r => {
+      byGov[r.gouvernorat] = (byGov[r.gouvernorat]||0) + 1
+      if (!byDay[r.day]) byDay[r.day] = []
+      byDay[r.day].push(r)
+    })
+    return { visits, ranking, byGov, byDay, totalParticipants: ranking.length }
+  } catch { return { visits:0, ranking:[], byGov:{}, byDay:{}, totalParticipants:0 } }
+}
 
 // ── API Claude ────────────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════════
-// PROMPT GRAPHIQUE UNIVERSEL — Injecté dans TOUS les prompts IA
-// Couvre : Maths · Physique-Chimie · SVT · Informatique · Français
-// L'IA n'a qu'à copier le bon template selon l'exercice
-// ══════════════════════════════════════════════════════════════════════
 const UNIVERSAL_GRAPH_PROMPT = `
-GRAPHIQUES — SYSTÈME UNIVERSEL (5 TYPES, copier le bon template) :
-
-━━━ TYPE 1 : COURBE MATHÉMATIQUE ━━━
-Utiliser pour : fonctions, dérivées, suites, intégrales, probabilités, RC/RL, pH, cinétique
-[GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
-
-RÈGLES EXPRESSIONS JS (OBLIGATOIRES) :
-✅ x*x | x*x*x | 2*x | Math.exp(-x) | Math.sin(2*x) | (x+1)/(x-1)
-❌ JAMAIS : x^2 | x^3 | 2x | exp(-x) | sin(2x) | \\frac{x}{2}
-
-EXEMPLES PAR MATIÈRE :
-• Maths f(x)=2x³-3x²+1 et f' → ["2*x*x*x - 3*x*x + 1", "6*x*x - 6*x"]
-• Physique RC (τ=2s,E=5V) charge → ["5*(1-Math.exp(-x/2))"] xMin:0 xMax:10
-• Physique pH dosage (Véq=20mL) → ["14/(1+Math.exp(-0.5*(x-20)))"] xMin:0 xMax:40
-• SVT Michaelis-Menten (Km=5,Vmax=100) → ["100*x/(x+5)"] xMin:0 xMax:30
-• SVT population logistique (K=1000,r=0.3) → ["1000/(1+999*Math.exp(-0.3*x))"] xMin:0 xMax:30
-• SVT cinétique enzymatique inhibée → ["100*x/(x+5)","60*x/(x+15)"] labels:["sans inhibiteur","avec inhibiteur"]
-• SVT désintégration radioactive (t½=5730) → ["Math.exp(-0.000121*x)"] xMin:0 xMax:20000
-• Physique oscillations amorties → ["Math.exp(-0.3*x)*Math.cos(2*x)"] xMin:0 xMax:20
-• Info tri bulles nb comparaisons → ["x*x/2"] xMin:0 xMax:20 labels:["O(n²)"]
-
-━━━ TYPE 2 : FIGURE GÉOMÉTRIQUE ━━━
-Utiliser pour : triangles, cercles, vecteurs, repères, plan complexe, géo espace
-[GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},FORMES]}]
-
-FORMES DISPONIBLES (copier) :
-• Triangle: {"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":2,"y":3,"label":"C"}],"fill":"#6366f120"}
-• Cercle: {"type":"circle","cx":0,"cy":0,"r":3,"label":"C","color":"#6366f1","fill":"#6366f120"}
-• Segment: {"type":"segment","x1":0,"y1":0,"x2":4,"y2":2,"label":"AB"}
-• Vecteur: {"type":"vector","from":{"x":0,"y":0,"label":"O"},"to":{"x":3,"y":2,"label":"A"},"label":"u⃗"}
-• Point: {"type":"point","cx":2,"cy":3,"label":"M","color":"#f59e0b"}
-• Angle droit: {"type":"angle","vertex":{"x":0,"y":0},"p1":{"x":1,"y":0},"p2":{"x":0,"y":1},"showRight":true}
-• Angle: {"type":"angle","vertex":{"x":1,"y":0,"label":"B"},"p1":{"x":0,"y":0},"p2":{"x":2,"y":2},"value":"45°"}
-• Rectangle: {"type":"rect","x":0,"y":0,"w":4,"h":2,"label":"ABCD","fill":"#10b98120"}
-
-━━━ TYPE 3 : SCHÉMA ASCII ━━━
-Utiliser pour : pile électrochimique, circuit RC/RL/RLC, montage optique, synapse, ADN
-[GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN_ASCII","legend":["légende1","légende2"]}]
-
-EXEMPLES ASCII PAR MATIÈRE :
-• Pile Zn-Cu: content:"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\\n  └────── e⁻ ──────┘\\n  Zn→Zn²⁺+2e⁻  Cu²⁺+2e⁻→Cu"
-• Circuit RC: content:"  ┌──┤R├──┬──┐\\n  E      ═╪═C  \\n  └────────┘"
-• Circuit RLC: content:"  ┌──┤R├──┤L├──┬──┐\\n  E            ═╪═C\\n  └────────────┘"
-• Synapse: content:"  NEURONE PRÉ\\n  [vésicules NT]\\n  ↓ exocytose\\n  ══fente synaptique══\\n  [récepteurs]\\n  NEURONE POST"
-• Chromatide: content:"  5'─A─T─G─C─A─T─3'\\n     │ │ │ │ │ │\\n  3'─T─A─C─G─T─A─5'"
-
-━━━ TYPE 4 : TABLEAU DE DONNÉES ━━━
-Utiliser pour : table de loi proba, tableau de valeurs SVT, résultats Info, tableau de signe
-[GRAPH: {"type":"table","title":"Titre","headers":["col1","col2","col3"],"rows":[["val1","val2","val3"],["val4","val5","val6"]],"highlight":[0]}]
-
-EXEMPLES :
-• Loi binomiale B(5,0.4): headers:["k","P(X=k)","P(X≤k)"] rows:[["0","0.078","0.078"],["1","0.259","0.337"],["2","0.346","0.683"],["3","0.230","0.913"],["4","0.077","0.990"],["5","0.010","1.000"]]
-• Tableau de signe f'(x): headers:["x","-∞","...","2","...","5","...","∞"] rows:[["f'(x)","−","0","+","0","−"],["f(x)","↘","min","↗","max","↘"]]
-• SVT expérience: headers:["Condition","Témoin","Expér.1","Expér.2"] rows:[["Résultat","normal","absent","réduit"]]
-• Info tableau algo: headers:["i","T[i]","min","swap"] rows:[["1","[5,3,8,1]","T[4]=1","T[1]↔T[4]"],["2","[1,3,8,5]","T[2]=3","—"]]
-
-━━━ TYPE 5 : DIAGRAMME EN BARRES ━━━
-Utiliser pour : histogramme proba, résultats SVT comparatifs, statistiques Info
-[GRAPH: {"type":"bar","title":"Titre","categories":["A","B","C"],"values":[12,8,15],"colors":["#6366f1","#10b981","#f59e0b"],"yLabel":"Valeur","xLabel":"Catégorie"}]
-
-RÈGLE UNIVERSELLE DE SÉLECTION :
-• Fonction mathématique → TYPE 1
-• Figure géométrique / repère / vecteur → TYPE 2
-• Pile / circuit / synapse / structure bio → TYPE 3 (ASCII)
-• Tableau de valeurs / loi proba / algo → TYPE 4
-• Histogramme / comparaison / statistiques → TYPE 5
-• JAMAIS laisser "expressions":[] vide → mettre au moins ["0"]
-• JAMAIS utiliser TYPE 2 pour une pile ou un circuit`
+GRAPHIQUES — 5 TYPES UNIVERSELS (copier le bon template) :
+TYPE 1 — COURBE : [GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
+RÈGLES : JAMAIS x^2→x*x | 2x→2*x | exp(-x)→Math.exp(-x)
+Exemples : RC(τ=2s)→["5*(1-Math.exp(-x/2))"] | pH(Véq=20)→["14/(1+Math.exp(-0.5*(x-20)))"] | Michaelis→["100*x/(x+5)"] | f(x)=2x³→["2*x*x*x"]
+TYPE 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},FORMES]}]
+TYPE 3 — ASCII (pile/circuit/synapse) : [GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN","legend":["légende"]}]
+Pile: content:"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\\n  └──── e⁻ ────┘" | Circuit RC: content:"  ┌──┤R├──┬──┐\\n  E      ═╪═C\\n  └─────┘"
+TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]],"highlight":[0]}]
+TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8],"colors":["#6366f1","#10b981"]}]
+RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
+JAMAIS expressions:[] vide · JAMAIS geometry pour une pile`
 
 
-// ── Appel /api/anthropic avec retry automatique (gère les 500/502/503/429/529 transitoires) ──
-async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
-  const RETRYABLE = new Set([429, 500, 502, 503, 504, 529])
-  let lastErr: any = null
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const r = await fetch('/api/anthropic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      if (r.ok) return await r.json()
-      const err = await r.json().catch(() => ({}))
-      // Quota dépassé → NE PAS réessayer, remonter l'erreur telle quelle
-      if (r.status === 429 && err?.quota_exceeded) throw new Error(err.error || 'Quota dépassé')
-      // Erreur non transitoire (400/401/403...) ou dernier essai → on remonte
-      if (!RETRYABLE.has(r.status) || attempt === maxRetries) throw new Error(err.error || `HTTP ${r.status}`)
-      lastErr = new Error(err.error || `HTTP ${r.status}`)
-    } catch (e: any) {
-      // Erreur réseau / abort → réessayer si essais restants
-      lastErr = e
-      if (e?.message === 'Quota dépassé' || attempt === maxRetries) throw e
-    }
-    // backoff exponentiel + jitter avant le prochain essai
-    await new Promise(res => setTimeout(res, 900 * Math.pow(2, attempt) + Math.random() * 400))
-  }
-  throw lastErr || new Error('Échec de génération')
-}
-
-// ── Streaming SSE depuis /api/anthropic (affichage au fur et à mesure) ──
-async function streamAnthropic(body: any, onDelta: (full: string) => void): Promise<string> {
-  let r: Response
-  try {
-    r = await fetch('/api/anthropic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...body, stream: true }),
-    })
-  } catch {
-    const d = await postAnthropicWithRetry(body)
-    const t = d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
-    onDelta(t); return t
-  }
-  if (!r.ok || !r.body) {
-    // erreur serveur (ex. quota) → repli non-stream (remonte l'erreur correctement)
-    const d = await postAnthropicWithRetry(body)
-    const t = d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
-    onDelta(t); return t
-  }
-  const reader = r.body.getReader()
-  const dec = new TextDecoder()
-  let buf = '', full = ''
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buf += dec.decode(value, { stream: true })
-    const lines = buf.split('\n')
-    buf = lines.pop() || ''
-    for (const line of lines) {
-      const s = line.trim()
-      if (!s.startsWith('data:')) continue
-      const data = s.slice(5).trim()
-      if (!data || data === '[DONE]') continue
-      try {
-        const ev = JSON.parse(data)
-        if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') { full += ev.delta.text; onDelta(full) }
-        else if (ev.type === 'content_block_start' && ev.content_block?.type === 'text' && ev.content_block.text) { full += ev.content_block.text; onDelta(full) }
-      } catch { /* ligne SSE partielle : ignorée */ }
-    }
-  }
-  return full
-}
-
-// Masque un bloc [GRAPH: ...] non terminé pendant le streaming (évite l'affichage cassé)
-function stripIncompleteGraph(s: string): string {
-  const i = s.lastIndexOf('[GRAPH:')
-  if (i === -1) return s
-  if (s.indexOf(']', i) === -1) return s.slice(0, i)
-  return s
-}
-
-async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType, onDelta?: (full: string) => void): Promise<string> {
-  // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
-  const m = matiere || globalMatiere
-  const body = {
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: maxTokens,
-    system,
-    messages: [{ role: 'user', content: prompt }],
-    type: 'simulations',
-    matiere: m
-  }
-  if (onDelta) return streamAnthropic(body, onDelta)
-  const d = await postAnthropicWithRetry(body)
-  return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
-}
-
-// ── API Claude avec images (pour correction directe PDF/photo) ───
-async function askClaudeWithImages(
-  textPrompt: string,
-  images: { data: string; mediaType: string }[],
-  system: string,
-  maxTokens = 8000,
-  matiere?: MatiereType,
-  onDelta?: (full: string) => void
-): Promise<string> {
-  const m = matiere || globalMatiere
-  const CHUNK_SIZE = 2
-
-  const callChunk = async (imgs: { data: string; mediaType: string }[], prompt: string, cb?: (full: string) => void): Promise<string> => {
-    const content: any[] = []
-    for (const img of imgs) {
-      content.push({
-        type: 'image',
-        source: { type: 'base64', media_type: img.mediaType, data: img.data }
-      })
-    }
-    content.push({ type: 'text', text: prompt })
-    const body = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: 'user', content }],
+async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
+  const r = await fetch('/api/anthropic', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system,
+      messages: [{ role:'user', content:prompt }],
       type: 'simulations',
-      matiere: m
-    }
-    if (cb) return streamAnthropic(body, cb)
-    const d = await postAnthropicWithRetry(body)
-    return d.content?.map((b: any) => b.type === 'text' ? b.text : '').join('') || ''
-  }
-
-  // Découper en chunks de 2 images max
-  const chunks: { data: string; mediaType: string }[][] = []
-  for (let i = 0; i < images.length; i += CHUNK_SIZE) {
-    chunks.push(images.slice(i, i + CHUNK_SIZE))
-  }
-
-  if (chunks.length === 1) return callChunk(chunks[0], textPrompt, onDelta)
-
-  // Multi-chunks : traiter page par page et concatener
-  const partials: string[] = []
-  for (let i = 0; i < chunks.length; i++) {
-    const pageLabel = `Pages ${i * CHUNK_SIZE + 1}-${Math.min((i + 1) * CHUNK_SIZE, images.length)} sur ${images.length}`
-    const chunkPrompt = i === 0
-      ? `[${pageLabel}] ${textPrompt}`
-      : `[${pageLabel}] Continue la correction des pages suivantes. Garde la même structure.`
-    partials.push(await callChunk(chunks[i], chunkPrompt))
-  }
-  return partials.join('\n\n---\n\n')
-}
-
-// ── Extraire images base64 depuis un statement/answers ────────────
-// Format: [IMAGE_BASE64:data:image/webp;base64,XXXX]
-function extractImagesFromText(text: string): { images: { data: string; mediaType: string }[]; cleanText: string } {
-  const images: { data: string; mediaType: string }[] = []
-  const cleanText = text.replace(/\[IMAGE_BASE64:(data:[^;]+;base64,[^\]]+)\]/g, (_, dataUrl) => {
-    const match = dataUrl.match(/data:([^;]+);base64,(.+)/)
-    if (match) {
-      images.push({ mediaType: match[1], data: match[2] })
-    }
-    return "[Image de l'examen — voir ci-dessus]"
+      matiere: matiere || globalMatiere || 'mathematiques'
+    }),
   })
-  return { images, cleanText }
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
+  const d = await r.json()
+  return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
 }
 
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   try { return JSON.parse(cleaned) }
   catch {
-    // Tentative de réparation : extraire les champs statement cassés par les guillemets du [GRAPH:]
-    // Stratégie : extraire chaque "statement": "..." en gérant les guillemets imbriqués mal échappés
     try {
-      // Remplacer les [GRAPH: {...}] dans les strings JSON par un placeholder
-      // puis re-parser, puis réinjecter
-      let repaired = cleaned
-      // Trouver et sauvegarder les blocs [GRAPH: {...}]
-      const graphBlocks: string[] = []
-      repaired = repaired.replace(/\[GRAPH:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\]/g, (_match, json) => {
-        graphBlocks.push(json)
-        return `__GRAPH_${graphBlocks.length - 1}__`
+      const blocks: string[] = []
+      let rep = cleaned.replace(/\[GRAPH:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\]/g, (_m:string, j:string) => {
+        blocks.push(j); return `__G_${blocks.length-1}__`
       })
-      // Maintenant tenter le parse
-      const parsed = JSON.parse(repaired)
-      // Ré-injecter les blocs graphiques dans les statements
-      const reInject = (s: string) => s.replace(/__GRAPH_(\d+)__/g, (_m, i) => `[GRAPH: ${graphBlocks[Number(i)]}]`)
-      if (parsed?.exercises) {
-        parsed.exercises = parsed.exercises.map((ex: any) => ({
-          ...ex,
-          statement: ex.statement ? reInject(ex.statement) : ex.statement
-        }))
-      }
+      const parsed = JSON.parse(rep)
+      const ri = (s:string) => s.replace(/__G_(\d+)__/g, (_m:string,i:string)=>`[GRAPH: ${blocks[Number(i)]}]`)
+      if (parsed?.exercises) parsed.exercises = parsed.exercises.map((ex:any)=>({...ex, statement:ex.statement?ri(ex.statement):ex.statement}))
       return parsed as T
-    } catch {
-      return fallback
-    }
+    } catch { return fallback }
   }
 }
 
-// ── Génération examen ─────────────────────────────────────────────
-async function generateOneExam(
-  archives: Archive[], customText: string, idx: number
-): Promise<GeneratedExam> {
-  const contextLines = archives.map(a =>
-    `- ${a.section} ${a.year} Session ${a.session} | Thèmes: ${a.themes.join(', ')}`
-  ).join('\n')
 
-  const section = archives[0]?.section ?? 'Mathématiques'
-  const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
-
-  // Détecter la matière pour adapter le system prompt
-  const isPhysExam    = archives[0]?.sectionKey?.includes('phys') ?? false
-  const isAnglaisExam = archives[0]?.sectionKey?.includes('anglais') ?? false
-  const isEcoExam     = globalMatiere === 'economie'
-  const isGestionExam = globalMatiere === 'gestion'
-
-  const system = isAnglaisExam
-    ? `You are an expert author of official Tunisian Baccalaureate English exam papers (CNP official programme).
-You create ORIGINAL, authentic papers at official Bac level.
-RESPOND ONLY IN VALID JSON — no backticks, no comments.
-
-IMPORTANT LANGUAGE RULE: ALL content (statements, questions, passages, answer keys) MUST be written in ENGLISH.
-The correction and model answers MUST also be entirely in ENGLISH.`
-    : isEcoExam
-    ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
-Tu crées des sujets ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
-Tes documents sont RÉALISTES : vraies grandeurs (PIB, taux de croissance, solde commercial, taux de couverture, IDH, coefficient budgétaire…), sources et années citées (INS, Banque Mondiale, FMI).
-Notions et formules du programme tunisien.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-    : isGestionExam
-    ? `Tu es un auteur expert de sujets de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
-Tu crées des ÉTUDES DE CAS ORIGINALES d'une entreprise : comptabilité (bilan, compte de résultat), analyse financière (FDR, BFR, TN, ratios), gestion des stocks (CUMP, Wilson), coûts (coût complet, MCV, seuil de rentabilité), avec des données chiffrées COHÉRENTES.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-    : isPhysExam
-    ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques et des contextes scientifiques précis.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-    : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-
-  const physExtraRules = isAnglaisExam ? `
-ENGLISH EXAM RULES — MANDATORY :
-ALL text MUST be in ENGLISH — passages, questions, instructions, model answers.
-Structure officielle Bac Anglais Tunisie :
-- Exercise 1 — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions (Q1=1pt, Q2=2pts, Q3=2pts, Q4=2pts, Q5=1pt)
-- Exercise 2 — Writing (8 pts) : essay or article task with clear instructions, 180-200 words minimum
-- Exercise 3 — Language (4 pts) : grammar exercises (Exercise A 2pts + Exercise B 2pts)
-Total : 20 points — Duration : 2 hours
-NEVER use French in the exam — every word must be in English.
-The model correction must also be entirely in English.` : isEcoExam ? `
-RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
-- Structure : Ex1 Mobilisation de connaissances (questions de cours, 6 pts) · Ex2 Travail sur document statistique (lecture + calculs, 6 pts) · Ex3 Analyse de document(s) (4 pts) · Ex4 Synthèse argumentée (4 pts)
-- Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar" (données INS / Banque Mondiale / FMI réalistes, avec source et année)
-- Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture ((X+M)/2)/PIB×100, coefficient budgétaire, TCAM, IDH
-- Notions du programme : croissance (extensive/intensive), facteurs de croissance, développement durable, échanges extérieurs, mondialisation, FMN, coûts de la croissance
-- Toujours citer la source et l'année des documents` : isGestionExam ? `
-RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion) :
-- ÉTUDE DE CAS d'une entreprise (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices)
-- Documents comptables en tableaux : champ "graph" type "table" (extrait de bilan, compte de résultat, tableau de stocks, tableau de coûts)
-- Calculs OBLIGATOIRES selon les dossiers : Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · Taux de MCV=MCV/CA · Seuil de rentabilité=Charges fixes/Taux de MCV · CUMP · Rotation des stocks=Consommation/Stock moyen · Masse salariale
-- Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isPhysExam ? `
-RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
-- Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
-- Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
-- Notation : utiliser LaTeX pour formules chimiques et physiques
-- Unités SI obligatoires : mol·L⁻¹, V, Ω, m·s⁻², Hz, J
-- Structure : Chimie (exercices 1-2) + Physique (exercices 3-4)` : ''
-
-  const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
-${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
-
-Règles STRICTES :
-- NOUVEAU sujet ORIGINAL, jamais une copie. Change toujours fonctions, valeurs, contexte
-- Garde la structure et le niveau Bac Tunisien officiel
-- Chaque exercice a des sous-parties numérotées 1), 2), 3)…
-- Données numériques précises et réalistes
-- Totale : ${totalPts} points répartis sur 4 exercices
-- Niveau Bac : au moins 1 exercice avec une courbe ou figure géométrique à étudier
-${physExtraRules}
-
-GRAPHIQUES — UTILISER LE SYSTÈME UNIVERSEL :
-${UNIVERSAL_GRAPH_PROMPT}
-
-GRAPHIQUES DANS LES ÉNONCÉS — RÈGLES ABSOLUES :
-
-FORMAT 1 — COURBE DE FONCTION :
-[GRAPH: {"type":"function","expressions":["x*Math.exp(-x)+2"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
-
-FORMAT 2 — FIGURE GÉOMÉTRIQUE (triangle, cercle, vecteurs, angles) :
-[GRAPH: {"type":"geometry","title":"Triangle ABC","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}],"fill":"#6366f120"},{"type":"point","cx":0,"cy":0,"label":"A"},{"type":"point","cx":4,"cy":0,"label":"B"},{"type":"point","cx":1,"cy":3,"label":"C"}]}]
-
-FORMAT 3 — GÉOMÉTRIE DANS L'ESPACE (projection 2D, JAMAIS de formes 3D) :
-[GRAPH: {"type":"geometry","title":"Repère (O,i,j,k) — projection","shapes":[{"type":"axes","step":1},{"type":"vector","from":{"x":0,"y":0,"label":"O"},"to":{"x":3,"y":0},"label":"i","color":"#ef4444"},{"type":"vector","from":{"x":0,"y":0},"to":{"x":0,"y":3},"label":"j","color":"#10b981"},{"type":"vector","from":{"x":0,"y":0},"to":{"x":1.5,"y":1.5},"label":"k","color":"#f59e0b"},{"type":"segment","x1":0,"y1":0,"x2":2,"y2":1,"color":"#6366f1","label":"OA"},{"type":"point","cx":2,"cy":1,"label":"A(2,1,0)"}]}]
-
-FORMAT 4 — PLAN COMPLEXE :
-[GRAPH: {"type":"geometry","title":"Plan complexe","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"point","cx":2,"cy":3,"label":"M(z1)","color":"#6366f1"},{"type":"point","cx":-1,"cy":2,"label":"N(z2)","color":"#10b981"},{"type":"segment","x1":0,"y1":0,"x2":2,"y2":3,"color":"#6366f1","dashed":true}]}]
-
-FORMAT 5 — SCHÉMA PILE ÉLECTROCHIMIQUE (ASCII) :
-[GRAPH: {"type":"ascii","title":"Pile Zinc-Cuivre (Daniell)","content":"\n  (-)  Zn │ ZnSO₄  ║  CuSO₄ │ Cu  (+)\n       │              pont salin              │\n       │                                       │\n       └──────────── e⁻ ────────────────────┘\n  Anode: Zn → Zn²⁺ + 2e⁻    Cathode: Cu²⁺ + 2e⁻ → Cu","legend":["Anode (-): Zn se dissout","Cathode (+): Cu se dépose","Pont salin: transfert anions/cations","e⁻: courant électronique"]}]
-
-FORMAT 6 — SCHÉMA CIRCUIT ÉLECTRIQUE (ASCII) :
-[GRAPH: {"type":"ascii","title":"Circuit RC série","content":"\n  ┌───┤R├────┬───┐\n  │          │   │\n  E(t)      ═╪═ C  u_C\n  │          │   │\n  └──────────┴───┘","legend":["R: résistance (Ω)","C: condensateur (F)","E(t): générateur","u_C: tension condensateur"]}]
-
-RÈGLES ABSOLUES :
-- Le graphique va dans le champ "graph" SÉPARÉ — PAS dans "statement" — pour éviter les guillemets imbriqués
-- Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" OU null si pas de graphique
-- INTERDIT dans shapes : "line3d", "point3d", "segment3d" — utiliser "segment","point","vector","line"
-- Expressions JS : JAMAIS x^2 ou x^3 — TOUJOURS x*x ou x*x*x | JAMAIS 2x — TOUJOURS 2*x
-- Dans "graph", les guillemets du JSON interne DOIVENT être échappés : \"type\":\"function\"
-- Exercice fonction/analyse : champ "graph" OBLIGATOIRE avec la courbe
-- Exercice géométrie : champ "graph" OBLIGATOIRE avec la figure complète
-- Exercice complexes : champ "graph" avec le plan complexe et les affixes
-- Dans "statement", écrire : "Soit f la fonction représentée ci-dessous. [voir graphique] 1) ..."
-- Pile électrochimique / circuit RC/RL/RLC / montage optique → FORMAT 5 ou 6 (ascii)
-- JAMAIS essayer de dessiner une pile ou un circuit avec type "geometry" — utiliser "ascii"
-
-Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
-${isAnglaisExam ? `{
-  "title": "${section} — English Simulation Variant ${idx+1}",
-  "section": "${section}",
-  "duration": 120,
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Part I — Reading Comprehension",
-      "theme": "Reading",
-      "points": 8,
-      "graph": null,
-      "statement": "Read the following passage carefully.\n\n[AUTHENTIC ENGLISH TEXT — 280-320 words on a relevant topic]\n\nQUESTIONS:\nQ1 (1 pt) — [Global comprehension: What is the main idea of the text?]\nQ2 (2 pts) — Say whether these statements are True (T), False (F) or Not Mentioned (NM). Justify from the text:\n  a) [statement]  b) [statement]\nQ3 (2 pts) — [Inference question requiring evidence from the text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition]  b) [definition]\nQ5 (1 pt) — What does the underlined word in line X refer to?"
-    },
-    {
-      "num": 2,
-      "title": "Part II — Writing",
-      "theme": "Writing",
-      "points": 8,
-      "graph": null,
-      "statement": "WRITING TASK:\n[Clear essay or article task related to the reading theme — 180-200 words]\n\nYour writing should include:\n• A clear introduction with your position\n• Two or three well-developed arguments with examples\n• A conclusion\n\nMarking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)"
-    },
-    {
-      "num": 3,
-      "title": "Part III — Language",
-      "theme": "Grammar & Vocabulary",
-      "points": 4,
-      "graph": null,
-      "statement": "EXERCISE A (2 pts) — Fill in the blanks / Transform the sentences:\n1. [sentence]  2. [sentence]  3. [sentence]  4. [sentence]\n\nEXERCISE B (2 pts) — Rewrite / Vocabulary matching:\n1. [item]  2. [item]  3. [item]  4. [item]"
-    }
-  ]
-}` : isEcoExam ? `{
-  "title": "Économie — Simulation IA Variante ${idx+1}",
-  "section": "${section}",
-  "duration": 180,
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Exercice 1 — Mobilisation de connaissances",
-      "theme": "[Chapitre du programme]",
-      "points": 6,
-      "graph": null,
-      "statement": "Questions de cours numérotées 1), 2), 3) sur des notions précises (définitions, mécanismes, formules économiques). Minimum 120 mots."
-    },
-    {
-      "num": 2,
-      "title": "Exercice 2 — Travail sur document statistique",
-      "theme": "[Chapitre]",
-      "points": 6,
-      "graph": "[GRAPH: {JSON type table OU bar — OBLIGATOIRE}]",
-      "statement": "DOCUMENT — [Titre, Source : INS/Banque Mondiale/FMI, Année] [voir document ci-dessus]\\n\\nQuestions :\\n1) Lecture d'une donnée précise du document (1 pt)\\n2) Calcul (taux de variation / indice base 100 / taux de couverture / coefficient budgétaire) — écrire la formule puis le résultat (3 pts)\\n3) Interprétation à l'aide du document et de vos connaissances (2 pts). Minimum 120 mots."
-    },
-    {
-      "num": 3,
-      "title": "Exercice 3 — Analyse de document",
-      "theme": "[Chapitre]",
-      "points": 4,
-      "graph": null,
-      "statement": "DOCUMENT — [texte 4-6 lignes, source, année]\\n\\nQuestions d'analyse 1), 2). Minimum 90 mots."
-    },
-    {
-      "num": 4,
-      "title": "Exercice 4 — Synthèse argumentée",
-      "theme": "[Chapitre]",
-      "points": 4,
-      "graph": null,
-      "statement": "SUJET : [question de réflexion]. Réponse organisée (introduction, arguments appuyés sur le cours et les documents, conclusion). Minimum 100 mots."
-    }
-  ]
-}` : isGestionExam ? `{
-  "title": "Gestion — Simulation IA Variante ${idx+1}",
-  "section": "${section}",
-  "duration": 180,
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Dossier 1 — Comptabilité",
-      "theme": "Comptabilité",
-      "points": 6,
-      "graph": "[GRAPH: {JSON type table — extrait de compte de résultat ou de bilan}]",
-      "statement": "L'entreprise [Raison sociale], spécialisée dans [activité], vous communique ses données. [voir document ci-dessus]\\n\\nTravail à faire :\\n1) Calculer le résultat de l'exercice (Produits − Charges) (3 pts)\\n2) [TVA due / variation / commentaire] (3 pts). Données chiffrées cohérentes."
-    },
-    {
-      "num": 2,
-      "title": "Dossier 2 — Analyse financière",
-      "theme": "Analyse financière",
-      "points": 6,
-      "graph": "[GRAPH: {JSON type table — bilan fonctionnel condensé}]",
-      "statement": "À partir du bilan fonctionnel [voir document ci-dessus] :\\n1) Calculer le FDR = Capitaux permanents − Actif immobilisé (2 pts)\\n2) Calculer le BFR = Actif circulant − Passif circulant (2 pts)\\n3) Calculer la TN = FDR − BFR et interpréter la situation de trésorerie (2 pts)."
-    },
-    {
-      "num": 3,
-      "title": "Dossier 3 — Gestion des stocks / des coûts",
-      "theme": "Coûts & Stocks",
-      "points": 4,
-      "graph": "[GRAPH: {JSON type table — données de coûts ou de stocks}]",
-      "statement": "[voir document ci-dessus]\\n\\nTravail à faire :\\n1) [CUMP / rotation des stocks / MCV = CA − charges variables] (2 pts)\\n2) Calculer le seuil de rentabilité = Charges fixes / Taux de MCV et l'interpréter (2 pts)."
-    },
-    {
-      "num": 4,
-      "title": "Dossier 4 — Gestion (RH / commerciale / financière)",
-      "theme": "Gestion",
-      "points": 4,
-      "graph": null,
-      "statement": "Questions de gestion 1), 2) (masse salariale, part de marché, financement, budget). Minimum 90 mots."
-    }
-  ]
-}` : `{
-  "title": "${section} — Simulation IA Variante ${idx+1}",
-  "section": "${section}",
-  "duration": 180,
-  "totalPoints": ${totalPts},
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Exercice 1 — [Thème précis]",
-      "theme": "[Thème]",
-      "points": 6,
-      "graph": "[GRAPH: {JSON_GRAPHIQUE_ICI}] ou null si pas de graphique",
-      "statement": "Énoncé SANS le bloc [GRAPH]. Toutes les données, sous-parties 1), 2), 3). Minimum 140 mots. Écrire juste avant les questions : voir graphique ci-dessus."
-    },
-    {
-      "num": 2,
-      "title": "Exercice 2 — [Thème précis]",
-      "theme": "[Thème]",
-      "points": 6,
-      "graph": "[GRAPH: {JSON_GRAPHIQUE_ICI}] ou null si pas de graphique",
-      "statement": "Énoncé SANS le bloc [GRAPH]. Minimum 120 mots."
-    },
-    {
-      "num": 3,
-      "title": "Exercice 3 — [Thème précis]",
-      "theme": "[Thème]",
-      "points": 4,
-      "graph": null,
-      "statement": "Énoncé complet. Minimum 80 mots."
-    },
-    {
-      "num": 4,
-      "title": "Exercice 4 — [Thème précis]",
-      "theme": "[Thème]",
-      "points": 4,
-      "graph": null,
-      "statement": "Énoncé complet. Minimum 80 mots."
-    }
-  ]
-}`}`
-
-  const raw = await askClaude(prompt, system, 5000)
-  const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
-    title:`${section} — Simulation Variante ${idx+1}`,
-    section, duration:180, totalPoints:totalPts,
-    exercises:[{num:1,title:'Exercice 1',theme:'Analyse',points:20,statement:'Erreur de génération — veuillez réessayer.'}]
-  })
-  return { ...parsed, id:`exam-${idx}-${Date.now()}`, index:idx }
+// ── Programme Physique-Chimie par jour — rotation 31 jours ────────
+// Couvre TOUT le programme officiel PC Bac Tunisie
+// ex1 = Physique partie 1 (8pts) · ex2 = Physique partie 2 (6pts)
+// ex3 = Chimie partie 1 (3pts)   · ex4 = Chimie partie 2 (3pts)
+const PROGRAMME_JOUR_PHYSIQUE: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+  ex4: { theme: string; sousTh: string }
+}[]> = {
+  'scexp': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge du condensateur, τ=RC, énergie E=½Cu²"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — T=2π√(l/g), énergie mécanique, amortissement"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — établissement et rupture du courant, τ=L/R, énergie magnétique"}, ex2:{theme:"Mécanique",sousTh:"Ressort horizontal — T=2π√(m/k), énergie cinétique et potentielle"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, formule de Nernst"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC libre — oscillations amorties, pseudo-période, échanges Ec↔Em"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation, célérité v=λf, retard τ=d/v, déphasage"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion τ=xf/xmax, ordre de réaction, Arrhenius"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance, fréquence propre f₀=1/(2π√LC), facteur Q"}, ex2:{theme:"Optique",sousTh:"Lentilles minces, relation de conjugaison, grandissement, instruments optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Taux avancement final τf, déplacement équilibre, loi modération"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), applications industrielles"} },
+    { ex1:{theme:"Mécanique",sousTh:"2ème loi de Newton ΣF=ma — plan incliné, frottement, énergie cinétique Ec=½mv²"}, ex2:{theme:"Électricité",sousTh:"Oscillateurs LC libres — solution sinusoïdale, fréquence propre, énergie"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool ⇌ ester + eau, taux de conversion"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — spectrophotométrie, conductimétrie, pH-métrie"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, réseau nλ=d·sinθ"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"Acides et bases faibles, diagramme de prédominance, solutions tampons"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, τf"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie t₁/₂=ln2/λ, activité A=λN"}, ex2:{theme:"Électricité",sousTh:"Induction électromagnétique — loi de Faraday e=-dΦ/dt, loi de Lenz"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage iodométrique, permanganométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (polyéthylène) et polycondensation (nylon, polyester)"} },
+    { ex1:{theme:"Mécanique",sousTh:"Moment cinétique, pendule pesant, oscillations forcées, résonance mécanique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène et enzymatique — mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Énergie de liaison, défaut de masse E=Δm·c², fission et fusion nucléaires"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres RC et RL — fonction transfert H(f), fréquence de coupure fc=1/(2πRC)"}, ex2:{theme:"Mécanique",sousTh:"Projectile — équations horaires, portée, flèche, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"pH des solutions aqueuses — acides forts, acides faibles, calcul complet"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — Ks, condition de précipitation"} },
+    { ex1:{theme:"Optique",sousTh:"Spectres atomiques — photon E=hf=hc/λ, transitions, absorption et émission"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbes résonance, bande passante Δf=f₀/Q"}, ex3:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique Daniell — anode, cathode, f.e.m., sens courant"} },
+    { ex1:{theme:"Mécanique",sousTh:"Oscillateur masse-ressort vertical — position équilibre, T=2π√(m/k), énergie"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — conservation A et Z, énergie libérée, applications médicales"}, ex3:{theme:"Cinétique chimique",sousTh:"Loi de vitesse — ordre 0, ordre 1, ordre 2, détermination expérimentale"}, ex4:{theme:"Acide-base",sousTh:"Indicateurs colorés, zones de virage, choix de l'indicateur pour un dosage"} },
+    { ex1:{theme:"Électricité",sousTh:"Condensateur plan — capacité C=ε₀S/e, association série et parallèle"}, ex2:{theme:"Ondes lumineuses",sousTh:"Optique ondulatoire — cohérence, longueur de cohérence, applications laser"}, ex3:{theme:"Équilibres chimiques",sousTh:"Équilibre de solubilité — produit de solubilité Ks, pH et précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — synthèse, propriétés basiques, liaisons peptidiques"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc et impulsion — conservation quantité de mouvement, choc élastique/plastique"}, ex2:{theme:"Électricité",sousTh:"Circuit LC et analogie mécano-électrique — tableau de correspondance complet"}, ex3:{theme:"Oxydoréduction",sousTh:"Électrolyse de solutions aqueuses — produits obtenus, rendement faradique"}, ex4:{theme:"Cinétique chimique",sousTh:"Effet de la température — énergie d'activation, loi d'Arrhenius, diagramme"} },
+    { ex1:{theme:"Ondes mécaniques",sousTh:"Effet Doppler — Δf/f=v/c, applications (radar, échographie, astronomie)"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie, moment d'une force, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Bilan complet acide-base — réaction prépondérante, taux d'avancement"}, ex4:{theme:"Chimie organique",sousTh:"Médicaments et molécules organiques — structure, propriétés, isomérie"} },
+    { ex1:{theme:"Électricité",sousTh:"Bilan électricité — RC, RL, RLC, oscillations libres et forcées"}, ex2:{theme:"Mécanique",sousTh:"Bilan mécanique — Newton, pendule, ressort, énergie, satellites"}, ex3:{theme:"Chimie",sousTh:"Bilan chimie — cinétique, équilibres, acide-base"}, ex4:{theme:"Nucléaire",sousTh:"Bilan nucléaire — radioactivité, réactions, énergie"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — régime transitoire, constante de temps, comportement à t=0 et t→∞"}, ex2:{theme:"Optique",sousTh:"Réfraction — loi de Snell-Descartes n₁sinθ₁=n₂sinθ₂, réflexion totale, fibres optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique et équilibre, rendement, optimisation"}, ex4:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance complet"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RC — dipôle RC en régime transitoire, comportement condensateur à t=0 et t→∞"}, ex2:{theme:"Mécanique",sousTh:"Satellite — lois de Kepler T²/R³=cste, vitesse cosmique v=√(GM/R), énergie totale"}, ex3:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — produit de solubilité Ks, condition de précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions d'estérification"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RL — dipôle RL, énergie magnétique Em=½Li², comportement à t=0 et régime permanent"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — transitions énergétiques E=hf=hc/λ, spectre H, laser"}, ex3:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance, dosage"}, ex4:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique MnO₄⁻/Mn²⁺ — équilibrage, point équivalent"} },
+    { ex1:{theme:"Mécanique",sousTh:"Pendule pesant — moment d'inertie I, équation M=Iα, analogie avec pendule simple"}, ex2:{theme:"Électricité",sousTh:"Oscillations LC — échanges énergie condensateur↔bobine, charge et courant sinusoïdaux"}, ex3:{theme:"Cinétique chimique",sousTh:"Réactions d'ordre 2 — loi de vitesse v=k[A]², temps de demi-réaction t₁/₂=1/(k[A]₀)"}, ex4:{theme:"Équilibres chimiques",sousTh:"Acides aminés — propriétés acido-basiques, pH isoélectrique, peptides"} },
+    { ex1:{theme:"Optique",sousTh:"Lentilles convergentes — foyers conjugués, relation de conjugaison, construction d'image"}, ex2:{theme:"Mécanique",sousTh:"Poussée d'Archimède — conditions flottaison, équilibre d'un solide dans un fluide"}, ex3:{theme:"Acide-base",sousTh:"Solutions tampons — Henderson-Hasselbalch pH=pKa+log([A⁻]/[AH]), rôle biologique"}, ex4:{theme:"Chimie organique",sousTh:"Polymères industriels — PET, PVC, polystyrène, propriétés et recyclage"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Fission U-235 — bilan A et Z, neutrons produits, énergie libérée, centrale nucléaire"}, ex2:{theme:"Électricité",sousTh:"Induction — coefficient mutuelle d'induction M, transformateur parfait k=n₁/n₂"}, ex3:{theme:"Oxydoréduction",sousTh:"Corrosion des métaux — pile de corrosion, protection cathodique, galvanisation"}, ex4:{theme:"Acide-base",sousTh:"Titrages en retour — dosage de mélanges, calcul de concentration inconnue"} },
+    { ex1:{theme:"Mécanique",sousTh:"Oscillations forcées mécaniques — résonance en amplitude, bande passante, facteur Q"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes sinusoïdales — retard τ=d/v, déphasage φ=2πd/λ, figure de battements"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape cinétiquement déterminante, intermédiaire réactionnel"}, ex4:{theme:"Équilibres chimiques",sousTh:"Hydrolyse des sels — pH d'une solution de sel, prévision par pKa"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres RC passifs — filtre passe-bas fc=1/(2πRC), passe-haut, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Trajectoire parabolique — équations horaires, portée, flèche, vitesse d'impact"}, ex3:{theme:"Acide-base",sousTh:"Médicaments et pH — aspirine, paracétamol, antiacides, solubilité pH-dépendante"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — basicité, formation, liaison peptidique, protéines"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement p=mv, choc élastique Ec conservée, coefficient e"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC — résistance critique Rc=2√(L/C), régimes amortis et pseudo-périodique"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse enzymatique — cinétique Michaelis-Menten, Km et Vmax, inhibiteurs"}, ex4:{theme:"Nucléaire",sousTh:"Fusion nucléaire — réaction D+T→He+n, énergie libérée, applications thermonucléaires"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Réseau de diffraction — nλ=d·sinθ, spectre d'ordre 1, mesure de longueur d'onde"}, ex2:{theme:"Mécanique",sousTh:"Rotation d'un solide — moment cinétique L=Iω, conservation L, gyroscope"}, ex3:{theme:"Équilibres chimiques",sousTh:"Complexes métalliques — constante de formation β, EDTA, dosage complexométrique"}, ex4:{theme:"Oxydoréduction",sousTh:"Électrolyse de l'eau — bilan redox, gaz produits, loi de Faraday appliquée"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — énergie dissipée par effet Joule et énergie stockée dans le condensateur"}, ex2:{theme:"Optique",sousTh:"Interférences de Young — interfrange i=λD/a, conditions de cohérence, lumière blanche"}, ex3:{theme:"Chimie organique",sousTh:"Savons et détergents — saponification, micelles, tensioactifs, HLB"}, ex4:{theme:"Acide-base",sousTh:"Dosage par conductimétrie — courbe σ=f(V), point équivalent, calcul de concentration"} },
+    { ex1:{theme:"Mécanique",sousTh:"Énergie potentielle élastique Ep=½kx² — oscillateur amorti, dissipation par frottement"}, ex2:{theme:"Nucléaire",sousTh:"Radioactivité artificielle — activation neutronique, radio-isotopes médicaux (TEP, scintigraphie)"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi par manométrie — gaz produits, pression totale, dégagement gazeux"}, ex4:{theme:"Équilibres chimiques",sousTh:"Estérification-hydrolyse — équilibre et cinétique, optimisation du rendement"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — énergie lors de la rupture, surtension, arc électrique, protection circuits"}, ex2:{theme:"Mécanique",sousTh:"Oscillateur non linéaire — pendule à grande amplitude, méthode de Runge-Kutta simplifié"}, ex3:{theme:"Acide-base",sousTh:"Bilan acide-base complet — mélange d'acides, calcul pH par approximations successives"}, ex4:{theme:"Oxydoréduction",sousTh:"Piles à combustible — H₂/O₂, rendement, comparaison pile galvanique"} },
+    { ex1:{theme:"Mécanique",sousTh:"Bilan des forces — systèmes de plusieurs solides, contraintes, réactions au liaison"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbe résonance en tension, largeur bande, sélectivité"}, ex3:{theme:"Chimie organique",sousTh:"Chiralité — carbone asymétrique, énantiomères, diastéréoisomères, activité optique"}, ex4:{theme:"Cinétique chimique",sousTh:"Photochimie — réaction induite par lumière, quantum de photochimie, loi de Beer"} },
+    { ex1:{theme:"Ondes mécaniques",sousTh:"Ultrasons — célérité dans différents milieux, écho, sonar, contrôle non destructif"}, ex2:{theme:"Mécanique",sousTh:"Satellite géostationnaire — altitude, période T=24h, puissance transmise"}, ex3:{theme:"Équilibres chimiques",sousTh:"Indicateurs de fin de réaction — indicateurs colorés, pH-métrie, conductimétrie choix"}, ex4:{theme:"Acide-base",sousTh:"Eau de Javel — hypochlorite, propriétés oxydantes, dosage, concentration active"} },
+    { ex1:{theme:"Électricité",sousTh:"Révision électricité — RC, RL, RLC, induction, filtres — sujet de synthèse complet"}, ex2:{theme:"Mécanique",sousTh:"Révision mécanique — Newton, pendule, ressort, ondes, satellites — sujet de synthèse"}, ex3:{theme:"Chimie",sousTh:"Révision chimie — cinétique, équilibres, acide-base, redox — sujet de synthèse"}, ex4:{theme:"Nucléaire",sousTh:"Révision nucléaire — radioactivité, réactions, énergie — sujet de synthèse final"} },
+  ],
+  'sctech': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante de temps τ=RC, courbes"}, ex2:{theme:"Mécanique",sousTh:"2ème loi de Newton — translation, plan incliné, frottement, bilan forces"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante de temps τ=L/R, établissement du courant, énergie"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple et pesant — T=2π√(l/g), analogie LC, amortissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, f.e.m., formule de Nernst"} },
+    { ex1:{theme:"Électricité",sousTh:"Circuit RLC — oscillations libres amorties, régimes, résistance critique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — célérité v=λf, retard τ=d/v, ultrasons, Doppler"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion, ordre de réaction, Arrhenius, énergie activation"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert A=εlc"} },
+    { ex1:{theme:"Mécanique",sousTh:"Ressort — oscillateur horizontal, T=2π√(m/k), énergie, amortissement"}, ex2:{theme:"Optique",sousTh:"Lentilles minces convergentes — foyers, relation conjugaison, grandissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux conversion τ, distillation, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), galvanoplastie, aluminium"} },
+    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, couleurs"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance en courant, fréquence f₀=1/(2π√LC), Q"}, ex3:{theme:"Chimie organique",sousTh:"Fonctions organiques — alcool, acide, ester, amine, aldéhyde, cétone"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, pH-métrie"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie, activité A=λN"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique v=√(GM/R)"}, ex3:{theme:"Acide-base",sousTh:"Acides faibles — Ka, diagramme prédominance, solutions tampons, pH"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, sens réaction"} },
+    { ex1:{theme:"Électricité",sousTh:"Induction — loi Faraday e=-dΦ/dt, loi de Lenz, transformateur"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage rédox — permanganométrie, iodométrie, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (éthylène) et polycondensation (nylon, polyester)"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement, choc élastique, impulsion"}, ex2:{theme:"Électricité",sousTh:"Filtres RC — passe-bas, passe-haut, fonction transfert, fréquence coupure"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène, enzymatique — activation, mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, énergie de liaison E=Δm·c²"} },
+  ],
+  'maths': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, équation différentielle complète"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — équation différentielle, T=2π√(l/g), énergie mécanique Em"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, ordre, Arrhenius, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique complet avec dérivée"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — équation différentielle, τ=L/R, énergie Em=½Li², rupture"}, ex2:{theme:"Mécanique",sousTh:"Ressort — T=2π√(m/k), oscillations libres, analogie électromécanique"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, taux τf"}, ex4:{theme:"Oxydoréduction",sousTh:"Couple rédox, pile Daniell, Nernst E=E°+(0.06/n)log([Ox]/[Red])"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période T≈T₀=2π√(LC), décrément δ"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — v=λf, déphasage φ=2πd/λ, ondes stationnaires, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Ordre de réaction 0, 1, 2 — détermination, intégration, t₁/₂"}, ex4:{theme:"Acide-base",sousTh:"Spectrophotométrie Beer-Lambert A=εlc, dosage colorimétrique"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance en courant et tension, facteur Q=L/(R√LC)"}, ex2:{theme:"Optique",sousTh:"Diffraction fente θ≈λ/a, Young i=λD/a, réseau nλ=d·sinθ, spectre"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique, équilibre, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse — loi de Faraday m=MIt/(nF), rendement Q=It"} },
+    { ex1:{theme:"Mécanique",sousTh:"Newton ΣF=ma — satellite, vitesse cosmique, énergie mécanique, orbites circulaires"}, ex2:{theme:"Électricité",sousTh:"Induction — Faraday e=-dΦ/dt, Lenz, auto-induction, transformateur parfait"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool, τ, distillation, polymères"}, ex4:{theme:"Cinétique chimique",sousTh:"Catalyse, énergie d'activation Ea, diagramme énergétique"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, activité A=λN, E=Δmc²"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie I, moment de force M, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Polyacides, solutions tampons — Henderson-Hasselbalch, applications biologiques"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, condition précipitation, pH et solubilité"} },
+    { ex1:{theme:"Mécanique",sousTh:"Choc — impulsion F·Δt, conservation quantité de mouvement p=mv, choc élastique"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — E=hf, niveaux d'énergie, transitions, laser"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique, iodométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Amides et polypeptides — liaison peptidique, propriétés, hydrolyse"} },
+    { ex1:{theme:"Électricité",sousTh:"Filtres actifs et passifs — RC, RL, passe-bande, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Oscillations forcées — résonance en amplitude et en énergie, bande passante"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape lente, intermédiaire, loi de vitesse"}, ex4:{theme:"Nucléaire",sousTh:"Fission U-235 et fusion H — bilan énergétique, centrale nucléaire"} },
+  ],
+  'info': [
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, courbes"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation v=λf, retard τ=d/v, ultrasons applications numériques"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, taux de conversion, facteurs cinétiques"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique"} },
+    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante τ=L/R, énergie magnétique Em=½Li², écrêtage"}, ex2:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences Young i=λD/a, holographie"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, Kéq, Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique, f.e.m., sens courant, anode et cathode"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période, régimes amortis"}, ex2:{theme:"Mécanique",sousTh:"Newton ΣF=ma — plan incliné, frein, énergie cinétique Ec=½mv²"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, Beer-Lambert"}, ex4:{theme:"Acide-base",sousTh:"Dosage conductimétrique, spectrophotométrique, point équivalent"} },
+    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, applications médicales"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes, tuyaux sonores, ultrason médical"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux τ, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday, dépôts galvaniques"} },
+    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance f₀=1/(2π√LC), facteur Q, bande passante"}, ex2:{theme:"Optique",sousTh:"Lentilles minces — foyers, relation de conjugaison, instruments optiques"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse — homogène, hétérogène, enzymatique"}, ex4:{theme:"Chimie organique",sousTh:"Fonctions organiques — ester, amide, polymères polyaddition"} },
+    { ex1:{theme:"Mécanique",sousTh:"Pendule simple — équation, T=2π√(l/g), analogie LC, amortissement"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, E=Δm·c², fission et fusion"}, ex3:{theme:"Acide-base",sousTh:"Dosage acido-basique — indicateurs colorés, choix indicateur"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, pH et solubilité, condition précipitation"} },
+  ],
 }
 
-// ── Génération correction ─────────────────────────────────────────
-async function correctOneExercise(
-  exercise: GeneratedExam['exercises'][number],
-  totalPoints: number,
-  studentWork: string,
-  examTitle: string,
-  onDelta?: (full: string) => void
-): Promise<string> {
-  // Détecter Anglais depuis le titre de l'exercice ou l'examTitle
-  const isAnglaisCorrection = examTitle.toLowerCase().includes('english') ||
+function getProgrammeJourPhysique(sectionKey: string, dayNum: number) {
+  // Mapping sectionKey → programme physique-chimie officiel Bac Tunisie
+  // maths et eco ont le même programme PC que scexp
+  const physKey =
+    sectionKey === 'maths' ? 'scexp' :
+    sectionKey === 'eco'   ? 'scexp' :
+    sectionKey  // scexp, sctech, info → programme propre
+  const prog = PROGRAMME_JOUR_PHYSIQUE[physKey]
+  if (!prog || prog.length === 0) return null
+  // % prog.length pour la rotation sur les 61 jours (mai-juin)
+  return prog[(dayNum - 1) % prog.length]
+}
+
+// ── Génération examen Bac Blanc Physique-Chimie ────────────────────
+async function generateBacBlancPhysique(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_PHYSIQUE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
+EXPOSANTS : e^(-t/τ)  N₀·e^(-λt)  ½mv²  ½Cu²  — TOUJOURS parenthèses autour de l'exposant
+INDICES UNICODE : u_C → uC  i(t)  N₀  T₁/₂  ω₀  τ — utiliser symboles Unicode
+VECTEURS : F⃗  a⃗  v⃗  P⃗  — avec U+20D7
+UNITÉS : toujours préciser l'unité (V, A, Ω, F, H, m/s², N, J, mol/L, mol, s)
+FORMULES CLÉS :
+- RC : τ=RC · uC(t)=E(1-e^(-t/τ)) · i(t)=(E/R)e^(-t/τ) · E=½Cu²
+- RL : τ=L/R · i(t)=(E/R)(1-e^(-t/τ)) · eL=-L·di/dt · Em=½Li²
+- RLC : ω₀=1/√(LC) · T₀=2π√(LC) · Q=L/(R√LC)
+- Pendule : T=2π√(l/g) · Ressort : T=2π√(m/k)
+- Newton : ΣF=ma · Ec=½mv² · W=F·d·cosθ
+- Ondes : v=λ·f · τ=d/v · i=λD/a · nλ=d·sinθ
+- Nucléaire : N(t)=N₀·e^(-λt) · t₁/₂=ln2/λ · E=Δm·c²
+- Chimie : v=dx/dt · Ka=[A⁻][H₃O⁺]/[AH] · pH=-log[H₃O⁺] · m=MIt/(nF)`
+
+  const prog = getProgrammeJourPhysique(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Dipôle RC — charge et décharge'
+  const ex2Theme = prog?.ex2.sousTh || 'Mécanique — 2ème loi de Newton'
+  const ex3Theme = prog?.ex3.sousTh || 'Cinétique chimique'
+  const ex4Theme = prog?.ex4.sousTh || 'Acide-base — pH et dosage'
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
+
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+
+═══ STRUCTURE OFFICIELLE DU SUJET PHYSIQUE-CHIMIE BAC TUNISIE ═══
+Durée : 3h · Total : 20 points · Format officiel MEN Tunisie
+
+Exercice 1 — PHYSIQUE PARTIE 1 (8 points) — ${ex1Theme}
+Exercice 2 — PHYSIQUE PARTIE 2 (6 points) — ${ex2Theme}
+Exercice 3 — CHIMIE PARTIE 1 (3 points) — ${ex3Theme}
+Exercice 4 — CHIMIE PARTIE 2 (3 points) — ${ex4Theme}
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Niveau exactement équivalent aux vrais examens officiels Bac Tunisie
+- Données numériques réalistes et cohérentes (R en kΩ, C en μF, L en mH...)
+- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
+- Minimum 120 mots par exercice
+- Inclure figures et schémas décrits textuellement (circuit, montage, courbe)
+
+PRÉSENTATION OFFICIELLE :
+Exercice 1 : "On réalise le montage représenté par la figure ci-contre..."
+Exercice 2 : "Un pendule simple de longueur l=..." ou "Un solide (S) de masse m=..."
+Exercice 3 : "On étudie la cinétique de la réaction entre..."
+Exercice 4 : "On réalise un dosage pH-métrique de..."
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "id": "bb-physique-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Physique-Chimie — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    {
+      "num": 1,
+      "theme": "${prog?.ex1.theme || 'Physique'}",
+      "title": "Titre exercice 1 (ex: Dipôle RC — condensateur)",
+      "points": 8,
+      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous.\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale...",
+      "graph": "[GRAPH: {\"type\":\"ascii\",\"title\":\"Montage expérimental\",\"content\":\"  ┌──┤R├──┤L├──┬──┐\\n  │             ═╪═C\\n  E(t)           │\\n  └─────────────┘\",\"legend\":[\"R: résistance\",\"L: bobine\",\"C: condensateur\"]}]"
+    },
+    {
+      "num": 2,
+      "theme": "${prog?.ex2.theme || 'Physique'}",
+      "title": "Titre exercice 2 (ex: Pendule simple — oscillations)",
+      "points": 6,
+      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ...",
+      "graph": null
+    },
+    {
+      "num": 3,
+      "theme": "${prog?.ex3.theme || 'Chimie'}",
+      "title": "Titre exercice 3 (ex: Cinétique chimique)",
+      "points": 3,
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
+      "graph": null
+    },
+    {
+      "num": 4,
+      "theme": "${prog?.ex4.theme || 'Chimie'}",
+      "title": "Titre exercice 4 (ex: Dosage acide-base)",
+      "points": 3,
+      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
+      "graph": null
+    }
+  ]
+}
+
+RÈGLE GRAPHIQUE ABSOLUE : JAMAIS écrire [FIGURE : ...] dans statement — TOUJOURS générer le champ \"graph\" avec [GRAPH: {"type":"ascii",...}] pour les circuits et montages.`
+
+// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: 'Bac Blanc Physique-Chimie',
+    section: candidat.section,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 180,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  // Forcer les champs manquants que l'IA n'inclut pas toujours
+  return {
+    ...parsed,
+    id: parsed.id || `bb-physique-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 180,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC INFORMATIQUE
+// ════════════════════════════════════════════════════════════════
+async function generateBacBlancInfo(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en Informatique (programme CNP officiel).
+Tu crées des sujets BAC BLANC INFORMATIQUE originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION INFORMATIQUE OBLIGATOIRE :
+- Algorithmes : utiliser la notation Pascal/Python officielle tunisienne
+- SQL : majuscules pour les mots-clés (SELECT, FROM, WHERE, JOIN, GROUP BY, HAVING)
+- Bases de données : schéma relationnel avec clés primaires (#) et étrangères (*)
+- TIC : utiliser les termes techniques officiels du programme CNP
+
+STRUCTURE DU SUJET INFORMATIQUE BAC TUNISIE :
+- Exercice 1 : Algorithmique & Programmation (7 pts) — Pascal ou Python
+- Exercice 2 : Bases de données (6 pts) — SQL + Modélisation
+- Exercice 3 : TIC & Réseaux (7 pts) — Internet, Web, Sécurité
+Total : 20 points`
+
+  const prompt = `Graine de variation : ${seed}
+Date : ${dateStr}
+Section : ${candidat.section}
+Candidat : ${candidat.prenom} ${candidat.nom}
+
+Crée un sujet BAC BLANC INFORMATIQUE ORIGINAL variante jour ${dayNum}.
+
+EXERCICE 1 — ALGORITHMIQUE (7 pts) :
+Crée un exercice complet sur un algorithme de tri OU récursivité OU structures de données.
+- Partie A (3 pts) : Analyse et trace d'exécution
+- Partie B (4 pts) : Écriture de l'algorithme complet en Pascal ou Python
+
+EXERCICE 2 — BASES DE DONNÉES (6 pts) :
+Crée un exercice sur une base de données réaliste (bibliothèque, hôpital, école, commerce...).
+- Partie A (2 pts) : Modèle relationnel — clés primaires/étrangères
+- Partie B (4 pts) : 4 requêtes SQL progressives (SELECT, JOIN, GROUP BY, sous-requête)
+
+EXERCICE 3 — TIC & RÉSEAUX (7 pts) :
+Crée un exercice sur Internet, Web (HTML/CSS/JS/PHP) ou Sécurité informatique.
+- Questions progressives couvrant les notions théoriques et pratiques du programme
+
+Réponds EXACTEMENT avec ce JSON :
+{
+  "title": "Bac Blanc Informatique — Variante Jour ${dayNum}",
+  "section": "${candidat.section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — Algorithmique & Programmation",
+      "theme": "Algorithmique",
+      "points": 7,
+      "graph": null,
+      "statement": "Énoncé complet exercice algorithmique. Minimum 200 mots. Sous-parties numérotées 1), 2), 3)..."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — Bases de données",
+      "theme": "Bases de données",
+      "points": 6,
+      "graph": null,
+      "statement": "Présenter le schéma relationnel puis les requêtes SQL. Minimum 150 mots."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — TIC & Réseaux",
+      "theme": "TIC",
+      "points": 7,
+      "graph": null,
+      "statement": "Énoncé complet TIC. Minimum 150 mots. Sous-parties numérotées."
+    }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 6000, 'informatique')
+  const fallback: Omit<BacExam,'id'|'index'> = {
+    title:`Bac Blanc Informatique — Variante Jour ${dayNum}`,
+    section: candidat.section,
+    sectionKey: candidat.sectionKey,
+    day: dayNum,
+    date: new Date().toLocaleDateString('fr-TN'),
+    duration:180, totalPoints:20,
+    exercises:[
+      {num:1,title:'Exercice 1 — Algorithmique & Programmation',theme:'Algorithmique',points:7,graph:undefined,statement:'Exercice algorithmique en cours de génération…'},
+      {num:2,title:'Exercice 2 — Bases de données',theme:'Bases de données',points:6,graph:undefined,statement:'Exercice bases de données en cours de génération…'},
+      {num:3,title:'Exercice 3 — TIC & Réseaux',theme:'TIC',points:7,graph:undefined,statement:'Exercice TIC en cours de génération…'},
+    ]
+  }
+  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
+  return { ...parsed, id:`bb-info-${dayNum}-${Date.now()}`, index:0 }
+}
+
+// ── sanitizeExpr (identique simulation) ──────────────────────────
+// ══ SANITIZER UNIVERSEL — Maths · Physique · SVT · Info · Français ══
+function sanitizeExpr(expr: string): string {
+  if (!expr || typeof expr !== 'string') return '0'
+  let e = expr.trim()
+  if (e.startsWith('\\') && !e.includes('(')) return '0'
+  if (e.length > 300) e = e.slice(0, 300)
+  e = e.replace(/−/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/·/g,'*')
+       .replace(/²/g,'*x').replace(/³/g,'*x*x')
+       .replace(/\u00b2/g,'*x').replace(/\u00b3/g,'*x*x')
+       .replace(/\u221e/g,'1e15').replace(/\u03c0/g,'Math.PI')
+       .replace(/\u03c4/g,'6.2832').replace(/\u03bb/g,'0.693')
+  e = e.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1)/($2)')
+       .replace(/\\sqrt\{([^{}]+)\}/g,'Math.sqrt($1)')
+       .replace(/\\sqrt/g,'Math.sqrt')
+       .replace(/\\left\(/g,'(').replace(/\\right\)/g,')')
+       .replace(/\\cdot/g,'*').replace(/\\times/g,'*')
+       .replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10')
+       .replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos')
+       .replace(/\\tan\b/g,'Math.tan').replace(/\\exp\b/g,'Math.exp')
+       .replace(/\\pi\b/gi,'Math.PI').replace(/\{/g,'(').replace(/\}/g,')')
+  e = e.replace(/x\*\*(\d+)/g,(_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(\d+)/g,  (_,n)=>'x*'.repeat(Number(n)-1)+'x')
+       .replace(/x\^(-\d+)/g, (_,n)=>`Math.pow(x,${n})`)
+       .replace(/\(([^()]+)\)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+       .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
+  e = e.replace(/(\d)([a-zA-Z(])/g,'$1*$2').replace(/\)([a-zA-Z0-9(])/g,')*$1')
+  const fns:[RegExp,string][]=[
+    [/(?<![a-zA-Z0-9_.])ln\s*\(/g,'Math.log('],
+    [/(?<![a-zA-Z0-9_.])log10\s*\(/g,'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])log\s*\(/g,'Math.log10('],
+    [/(?<![a-zA-Z0-9_.])sin\s*\(/g,'Math.sin('],
+    [/(?<![a-zA-Z0-9_.])cos\s*\(/g,'Math.cos('],
+    [/(?<![a-zA-Z0-9_.])tan\s*\(/g,'Math.tan('],
+    [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g,'Math.sqrt('],
+    [/(?<![a-zA-Z0-9_.])abs\s*\(/g,'Math.abs('],
+    [/(?<![a-zA-Z0-9_.])exp\s*\(/g,'Math.exp('],
+    [/(?<![a-zA-Z0-9_.])sinh\s*\(/g,'Math.sinh('],
+    [/(?<![a-zA-Z0-9_.])cosh\s*\(/g,'Math.cosh('],
+    [/(?<![a-zA-Z0-9_.])tanh\s*\(/g,'Math.tanh('],
+    [/(?<![a-zA-Z0-9_.])asin\s*\(/g,'Math.asin('],
+    [/(?<![a-zA-Z0-9_.])acos\s*\(/g,'Math.acos('],
+    [/(?<![a-zA-Z0-9_.])atan\s*\(/g,'Math.atan('],
+    [/(?<![a-zA-Z0-9_.])floor\s*\(/g,'Math.floor('],
+    [/(?<![a-zA-Z0-9_.])ceil\s*\(/g,'Math.ceil('],
+    [/(?<![a-zA-Z0-9_.])round\s*\(/g,'Math.round('],
+    [/(?<![a-zA-Z0-9_.])max\s*\(/g,'Math.max('],
+    [/(?<![a-zA-Z0-9_.])min\s*\(/g,'Math.min('],
+    [/(?<![a-zA-Z0-9_.])pow\s*\(/g,'Math.pow('],
+  ]
+  for(const [re,repl] of fns) e=e.replace(re,repl)
+  e = e.replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+       .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
+       .replace(/\s+/g,'')
+  return e || '0'
+}
+function autoDetectGraphType(spec: any): string {
+  if (!spec) return 'function'
+  if (spec.type && ['function','geometry','ascii','table','bar','points','parametric'].includes(spec.type)) return spec.type
+  if (spec.content && typeof spec.content === 'string') return 'ascii'
+  if (spec.shapes && Array.isArray(spec.shapes)) return 'geometry'
+  if (spec.rows && Array.isArray(spec.rows)) return 'table'
+  if (spec.bars || spec.categories) return 'bar'
+  if (spec.expressions && Array.isArray(spec.expressions)) return 'function'
+  return 'function'
+}
+
+// ── graphToSvg (identique simulation) ─────────────────────────────
+function graphToSvg(jsonStr: string): string {
+  try {
+    const sp = JSON.parse(jsonStr)
+    const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
+    const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const proj3 = (p: any) => ({ x:(p.x||0)+((p.z)||0)*0.4, y:(p.y||0)+((p.z)||0)*0.3 })
+
+    if (sp.type === 'function') {
+      const FW=520,FH=260,FP=46
+      const fxMin:number=sp.xMin??-5, fxMax:number=sp.xMax??5, FN=300
+      const allFY:number[]=[]
+      const fnData:(number[])[] = (sp.expressions as string[]||[]).map((expr:string)=>{
+        const row:number[]=[]
+        for(let i=0;i<=FN;i++){
+          const x=fxMin+(i/FN)*(fxMax-fxMin)
+          try{ const fn2=new Function('x','Math',`try{return(${sanitizeExpr(expr)})}catch(e){return null}`)
+            const y:number|null=fn2(x,Math); if(y!==null&&isFinite(y)&&Math.abs(y)<1e5){row.push(y);allFY.push(y)}else row.push(NaN)
+          }catch{row.push(NaN)}
+        }; return row
+      })
+      const fyMin=(allFY.length?Math.min(...allFY.filter(isFinite)):-3)-0.5
+      const fyMax=(allFY.length?Math.max(...allFY.filter(isFinite)):5)+0.5
+      const ftx=(x:number)=>FP+((x-fxMin)/(fxMax-fxMin))*(FW-2*FP)
+      const fty=(y:number)=>FH-FP-((y-fyMin)/(fyMax-fyMin))*(FH-2*FP)
+      let fpaths='',fleg=''
+      fnData.forEach((row,fi)=>{
+        const fc=GC[fi%GC.length]; let fd=''
+        for(let i=0;i<=FN;i++){const y=row[i],x=fxMin+(i/FN)*(fxMax-fxMin); if(!isNaN(y)&&isFinite(y))fd+=(fd===''?'M':'L')+ftx(x).toFixed(1)+','+fty(y).toFixed(1)+' '; else fd+=' '}
+        fpaths+='<path d="'+fd+'" fill="none" stroke="'+fc+'" stroke-width="2.5"/>'
+        const lbl=(sp.labels as string[])?.[fi]||(sp.expressions as string[])[fi]
+        fleg+='<text x="'+(FP+fi*140)+'" y="15" fill="'+fc+'" font-size="11" font-family="monospace">'+esc2(lbl)+'</text>'
+      })
+      const fox=ftx(0).toFixed(1),foy=fty(0).toFixed(1)
+      const fax='<line x1="'+FP+'" y1="'+foy+'" x2="'+(FW-FP)+'" y2="'+foy+'" stroke="#555" stroke-width="1.2"/>'
+        +'<line x1="'+fox+'" y1="'+FP+'" x2="'+fox+'" y2="'+(FH-FP)+'" stroke="#555" stroke-width="1.2"/>'
+        +'<text x="'+(FW-FP+6)+'" y="'+(Number(foy)+4)+'" fill="#888" font-size="12" font-style="italic">x</text>'
+        +'<text x="'+(Number(fox)+5)+'" y="'+(FP-4)+'" fill="#888" font-size="12" font-style="italic">y</text>'
+      const fttl=sp.title?'<text x="'+(FW/2)+'" y="'+(FH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+      return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
+        +(fleg?'<svg width="'+FW+'" height="20" style="background:#0a0a18;display:block">'+fleg+'</svg>':'')
+        +'<svg width="'+FW+'" height="'+FH+'" viewBox="0 0 '+FW+' '+FH+'" style="background:#0f0f1e;display:block">'+fax+fpaths+fttl+'</svg></div>'
+    }
+
+    if (sp.type === 'geometry') {
+      const GW:number=sp.width||440, GH:number=sp.height||340, GP=44
+      const gsh:any[]=sp.shapes||[]
+      const allGX:number[]=[], allGY:number[]=[]
+      const addPt=(p:any)=>{if(!p)return;const pp=proj3(p);allGX.push(pp.x);allGY.push(pp.y)}
+      gsh.forEach((s:any)=>{
+        if(s.points)(s.points as any[]).forEach(addPt)
+        if(s.from)addPt(s.from); if(s.to)addPt(s.to)
+        if(s.cx!==undefined){allGX.push(s.cx+(s.r||0));allGY.push(s.cy+(s.r||0));allGX.push(s.cx-(s.r||0));allGY.push(s.cy-(s.r||0))}
+        if(s.x1!==undefined){allGX.push(s.x1,s.x2||0);allGY.push(s.y1||0,s.y2||0)}
+        if(s.x!==undefined)addPt(s)
+      })
+      const gMg=1.5
+      const gxMin=allGX.length?Math.min(...allGX)-gMg:-1, gxMax=allGX.length?Math.max(...allGX)+gMg:6
+      const gyMin=allGY.length?Math.min(...allGY)-gMg:-1, gyMax=allGY.length?Math.max(...allGY)+gMg:5
+      const gtx=(x:number)=>GP+((x-gxMin)/(gxMax-gxMin))*(GW-2*GP)
+      const gty=(y:number)=>GH-GP-((y-gyMin)/(gyMax-gyMin))*(GH-2*GP)
+      let gsvg=''; let gci=0
+      for(const gs of gsh){
+        const gc:string=gs.color||GC[gci++%GC.length]
+        const gf:string=gs.fill||'none'
+        if(gs.type==='grid'){
+          for(let gx=Math.ceil(gxMin);gx<=gxMax;gx++)gsvg+='<line x1="'+gtx(gx).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(gx).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#ffffff12" stroke-width="1"/>'
+          for(let gy=Math.ceil(gyMin);gy<=gyMax;gy++)gsvg+='<line x1="'+GP+'" y1="'+gty(gy).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(gy).toFixed(1)+'" stroke="#ffffff12" stroke-width="1"/>'
+        }else if(gs.type==='axes'){
+          gsvg+='<line x1="'+GP+'" y1="'+gty(0).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(0).toFixed(1)+'" stroke="#ffffff55" stroke-width="1.5"/>'
+            +'<line x1="'+gtx(0).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(0).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#ffffff55" stroke-width="1.5"/>'
+            +'<text x="'+(GW-GP+8)+'" y="'+(gty(0)+4).toFixed(1)+'" fill="#888" font-size="12" font-style="italic">x</text>'
+            +'<text x="'+(gtx(0)+5).toFixed(1)+'" y="'+(GP-4)+'" fill="#888" font-size="12" font-style="italic">y</text>'
+        }else if(gs.type==='triangle'&&gs.points){
+          const gpts=(gs.points as any[]).map((p:any)=>gtx(p.x).toFixed(1)+','+gty(p.y).toFixed(1)).join(' ')
+          gsvg+='<polygon points="'+gpts+'" fill="'+gf+'" stroke="'+gc+'" stroke-width="2"/>'
+          for(const gp of gs.points as any[]){if(gp.label)gsvg+='<text x="'+(gtx(gp.x)+7).toFixed(1)+'" y="'+(gty(gp.y)-7).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gp.label)+'</text>'}
+        }else if(gs.type==='circle'&&gs.cx!==undefined){
+          const gr:number=gs.r||1
+          const gpr=Math.abs((gr/(gxMax-gxMin))*(GW-2*GP))
+          gsvg+='<circle cx="'+gtx(gs.cx).toFixed(1)+'" cy="'+gty(gs.cy).toFixed(1)+'" r="'+gpr.toFixed(1)+'" fill="'+gf+'" stroke="'+gc+'" stroke-width="2"/>'
+          if(gs.label)gsvg+='<text x="'+(gtx(gs.cx)+gpr+5).toFixed(1)+'" y="'+(gty(gs.cy)+4).toFixed(1)+'" fill="'+gc+'" font-size="11">'+esc2(gs.label)+'</text>'
+        }else if((gs.type==='segment'||gs.type==='line')&&gs.x1!==undefined){
+          const gd=(gs.dashed)?' stroke-dasharray="5,4"':''
+          gsvg+='<line x1="'+gtx(gs.x1).toFixed(1)+'" y1="'+gty(gs.y1).toFixed(1)+'" x2="'+gtx(gs.x2).toFixed(1)+'" y2="'+gty(gs.y2).toFixed(1)+'" stroke="'+gc+'" stroke-width="2"'+gd+'/>'
+          if(gs.label){const gmx=(gtx(gs.x1)+gtx(gs.x2))/2,gmy=(gty(gs.y1)+gty(gs.y2))/2;gsvg+='<text x="'+(gmx+5).toFixed(1)+'" y="'+(gmy-5).toFixed(1)+'" fill="'+gc+'" font-size="11">'+esc2(gs.label)+'</text>'}
+        }else if(gs.type==='vector'&&gs.from&&gs.to){
+          const gvx1=gtx(gs.from.x),gvy1=gty(gs.from.y),gvx2=gtx(gs.to.x),gvy2=gty(gs.to.y)
+          const gang=Math.atan2(gvy2-gvy1,gvx2-gvx1),ga=9,gb2=0.5
+          gsvg+='<line x1="'+gvx1.toFixed(1)+'" y1="'+gvy1.toFixed(1)+'" x2="'+gvx2.toFixed(1)+'" y2="'+gvy2.toFixed(1)+'" stroke="'+gc+'" stroke-width="2"/>'
+            +'<polygon points="'+gvx2.toFixed(1)+','+gvy2.toFixed(1)+' '+(gvx2-ga*Math.cos(gang-gb2)).toFixed(1)+','+(gvy2-ga*Math.sin(gang-gb2)).toFixed(1)+' '+(gvx2-ga*Math.cos(gang+gb2)).toFixed(1)+','+(gvy2-ga*Math.sin(gang+gb2)).toFixed(1)+'" fill="'+gc+'"/>'
+          if(gs.label)gsvg+='<text x="'+((gvx1+gvx2)/2+7).toFixed(1)+'" y="'+((gvy1+gvy2)/2-7).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gs.label)+'</text>'
+        }else if(gs.type==='point'||gs.type==='point3d'){
+          const gpp=gs.type==='point3d'?proj3({x:gs.x||0,y:gs.y||0,z:gs.z||0}):{x:gs.cx||gs.x||0,y:gs.cy||gs.y||0}
+          gsvg+='<circle cx="'+gtx(gpp.x).toFixed(1)+'" cy="'+gty(gpp.y).toFixed(1)+'" r="5" fill="'+gc+'"/>'
+          if(gs.label)gsvg+='<text x="'+(gtx(gpp.x)+8).toFixed(1)+'" y="'+(gty(gpp.y)-8).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gs.label)+'</text>'
+        }
+      }
+      const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+      return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
+        +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" style="background:#0f0f1e;display:block">'+gsvg+gttl+'</svg></div>'
+    }
+  }catch(_e){return ''}
+  return ''
+}
+
+// ── textToHtml (identique simulation) ─────────────────────────────
+function textToHtml(rawText: string): string {
+  const esc = (s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const inline = (s:string)=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>')
+  const line2html = (raw:string):string=>{
+    const t=raw.trim()
+    if(!t)return '<div class="spacer"></div>'
+    if(t.startsWith('## '))return `<div class="ex-hdr">${inline(t.slice(3))}</div>`
+    if(t.startsWith('### '))return `<div class="q-hdr">${inline(t.slice(4))}</div>`
+    if(t.startsWith('> ')){const inner=t.replace(/^>\s*/,'');return inner.startsWith('**')?`<div class="result-box">${inline(inner)}</div>`:`<div class="tip-box">${inline(inner)}</div>`}
+    if(t==='---')return '<hr>'
+    if(/^\*\*(Concept|M.thode|Th.or.me|Rappel|D.finition)/i.test(t))return `<div class="concept">${inline(t)}</div>`
+    if(/^\*\*(R.sultat|Conclusion)/i.test(t))return `<div class="result-inline">${inline(t)}</div>`
+    if(/^\*\*(Bar.me|Bilan|Note)/i.test(t))return `<div class="bareme">${inline(t)}</div>`
+    if(/^\*\*(Erreur|Pi.ge|Attention)/i.test(t))return `<div class="err">${inline(t)}</div>`
+    if(/^\*\*(Point|Astuce|. retenir|Key)/i.test(t))return `<div class="tip-line">${inline(t)}</div>`
+    if(/[✅❌💡]/.test(t))return `<div class="analysis">${inline(t)}</div>`
+    if(/^[-•]\s*[Éé]tape\s*\d/i.test(t)||/^[Éé]tape\s*\d/i.test(t))return `<div class="step">${inline(t)}</div>`
+    if(t.startsWith('- ')||t.startsWith('• '))return `<div class="bullet">${inline(t.slice(2))}</div>`
+    return `<p>${inline(t)}</p>`
+  }
+  const GTAG='[GRAPH:'
+  const parts:string[]=[]
+  let gp=0
+  while(gp<rawText.length){
+    const gi=rawText.indexOf(GTAG,gp)
+    if(gi===-1){parts.push(rawText.slice(gp).split('\n').map(line2html).join('\n'));break}
+    if(gi>gp)parts.push(rawText.slice(gp,gi).split('\n').map(line2html).join('\n'))
+    const jgs=rawText.indexOf('{',gi+GTAG.length)
+    if(jgs===-1){parts.push(rawText.slice(gi).split('\n').map(line2html).join('\n'));break}
+    let gd=0,gjj=jgs
+    while(gjj<rawText.length){if(rawText[gjj]==='{')gd++;else if(rawText[gjj]==='}'){gd--;if(gd===0)break};gjj++}
+    const gcb=rawText.indexOf(']',gjj)
+    const svg=graphToSvg(rawText.slice(jgs,gjj+1))
+    parts.push(svg||'<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:11px;color:#fcd34d;margin:8px 0">📊 Figure mathématique</div>')
+    gp=(gcb!==-1?gcb:gjj)+1
+  }
+  return parts.join('\n')
+}
+
+// ── buildCorrectionHtml (identique simulation) ────────────────────
+function buildCorrectionHtml(exam: BacExam, correctionText: string, studentAnswers: string, candidat?: Candidat): string {
+  const C = { ex:['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'], exBg:['#1e1b4b','#052e16','#431407','#2e1065','#082f49'], exTx:['#a5b4fc','#6ee7b7','#fcd34d','#c4b5fd','#67e8f9'] }
+  let exIdx = -1
+  const esc = (s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const bodyHtml = textToHtml(correctionText)
+  const answersHtml = studentAnswers.trim().length > 10
+    ? `<details class="answers-block" open><summary>Réponses de l\'élève</summary><pre>${esc(studentAnswers)}</pre></details>` : ''
+  const css = `
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0} html{background:#0c0c1a}
+    body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0c1a;color:#e2e8f0;font-size:13.5px;line-height:1.8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px}
+    .print-bar{position:sticky;top:0;z-index:99;background:#0c0c1a;border-bottom:1px solid rgba(255,255,255,.1);padding:10px 0 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+    .print-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+    .print-hint{font-size:11.5px;color:rgba(255,255,255,.4);max-width:500px;line-height:1.5}
+    .doc-title{background:linear-gradient(135deg,#1e1b4b,#2e1065);border:1px solid #6366f1;border-radius:12px;padding:22px 28px;margin-bottom:28px;text-align:center}
+    .doc-title h1{font-size:20px;font-weight:900;color:#fff;margin-bottom:6px}
+    .doc-title .sub{color:#a5b4fc;font-size:12px}
+    .ex-hdr{border-radius:8px;padding:14px 20px;margin:32px 0 16px;font-size:16px;font-weight:800;background:#1e1b4b;border-left:5px solid #6366f1;color:#a5b4fc;page-break-before:always}
+    .ex-hdr:first-of-type{page-break-before:avoid}
+    .q-hdr{border-radius:0 6px 6px 0;padding:8px 14px;margin:14px 0 8px;font-size:13px;font-weight:700;border-left:3px solid #6366f1;background:#1e1b4b88;color:#a5b4fc}
+    .concept{background:#1e3254;border-left:3px solid #60a5fa;border-radius:0 6px 6px 0;padding:10px 14px;color:#bfdbfe;font-size:12.5px;margin:8px 0}
+    .step{padding:5px 12px 5px 26px;margin:3px 0;color:#e2e8f0;font-size:12.5px;position:relative}
+    .step::before{content:'→';position:absolute;left:8px;color:#6366f1;font-weight:900}
+    .result-box{border:2px solid #10b981;background:#052e16;border-radius:8px;padding:12px 18px;margin:14px 0;color:#6ee7b7;font-weight:700;font-size:13.5px}
+    .result-inline{background:#052e16;border:1px solid #10b981;border-radius:6px;padding:8px 14px;color:#6ee7b7;font-weight:700;margin:8px 0}
+    .bareme{background:#2e1065;border-radius:6px;padding:7px 14px;color:#c4b5fd;font-size:12px;margin:6px 0}
+    .err{background:#450a0a;border-left:3px solid #ef4444;border-radius:0 6px 6px 0;padding:8px 14px;color:#fca5a5;font-size:12px;margin:6px 0}
+    .tip-line,.tip-box{background:#0c2340;border-left:3px solid #0ea5e9;border-radius:0 6px 6px 0;padding:8px 14px;color:#7dd3fc;font-size:12px;margin:6px 0}
+    .analysis{background:rgba(255,255,255,.04);border-radius:5px;padding:5px 12px;margin:3px 0;font-size:12.5px}
+    .bullet{padding:3px 0 3px 20px;color:#cbd5e1;font-size:12.5px;position:relative}
+    .bullet::before{content:'›';position:absolute;left:6px;color:#6366f1;font-weight:700}
+    p{color:#cbd5e1;font-size:12.5px;margin:4px 0} hr{border:0;border-top:1px solid rgba(255,255,255,.1);margin:14px 0}
+    strong{color:#f1f5f9;font-weight:700} code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.9em}
+    .spacer{height:6px}
+    .answers-block{background:#1e3a5f;border:1px solid #3b82f6;border-radius:10px;padding:14px 18px;margin-bottom:24px}
+    .answers-block summary{font-weight:700;color:#93c5fd;cursor:pointer;font-size:13px;margin-bottom:8px}
+    .answers-block pre{white-space:pre-wrap;font-family:inherit;font-size:12px;color:#cbd5e1;line-height:1.7}
+    .footer{margin-top:48px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.25);font-size:10.5px}
+    .enonce{background:#1a1a35;border:1px solid rgba(255,255,255,.1);border-left:4px solid #f59e0b;border-radius:8px;padding:16px 18px;margin-bottom:8px;font-size:13px;color:#e2e8f0;line-height:1.8}
+    .enonce-text{background:#1a1a35;border:1px solid rgba(255,255,255,.1);border-left:4px solid #f59e0b;border-radius:8px;padding:12px 18px;margin-bottom:20px;white-space:pre-wrap;font-size:13px;color:#e2e8f0;line-height:1.8}
+    .candidat-bar{background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(251,191,36,0.08));border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:14px 20px;margin-bottom:20px;font-size:13px;color:#fcd34d}
+    @media print{.print-bar{display:none!important}.wrap{padding:12px 20px}div[style*="border-radius:10px"][style*="inline-block"]{page-break-inside:avoid}svg{max-width:100%!important}}
+  `
+  const candidatBar = candidat
+    ? `<div class="candidat-bar">🏆 <strong>${esc(candidat.prenom+' '+candidat.nom)}</strong> · ${esc(candidat.lycee)} · ${esc(candidat.gouvernorat)} · ${esc(candidat.section)} · Bac Blanc Jour ${exam.day}</div>`
+    : ''
+  const enoncesHtml = exam.exercises.map(ex =>
+    `<h3 style="color:#fbbf24;font-size:14px;margin:20px 0 8px">${esc(ex.title)} — ${ex.points} pts</h3>`
+    +(ex.graph&&ex.graph!=='null' ? '<div class="enonce">'+graphToSvg(ex.graph.replace(/^\[GRAPH:\s*/,'').replace(/\]$/,''))+'</div>' : '')
+    +'<div class="enonce-text">'+textToHtml(ex.statement)+'</div>'
+  ).join('')
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Bac Blanc — ${esc(exam.title)}</title><style>${css}</style></head>
+<body><div class="wrap">
+<div class="print-bar"><button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<span class="print-hint">Boîte d'impression → <strong style="color:rgba(255,255,255,.6)">Enregistrer en PDF</strong> · Activez <strong style="color:rgba(255,255,255,.6)">Couleurs de fond</strong></span></div>
+<div class="doc-title"><h1>🏆 Bac Blanc — ${esc(exam.section)} — Jour ${exam.day}</h1>
+<div class="sub">Correction IA détaillée · ${exam.totalPoints} points · ${new Date().toLocaleDateString('fr-FR')}</div></div>
+${candidatBar}
+<details style="margin-bottom:20px"><summary style="cursor:pointer;color:#a5b4fc;font-weight:700;font-size:13px;padding:10px 0">📋 Voir les énoncés du sujet</summary><div style="margin-top:12px">${enoncesHtml}</div></details>
+${answersHtml}${bodyHtml}
+<div class="footer">MathBac.AI — Bac Blanc ${esc(exam.section)} Jour ${exam.day} — ${new Date().toLocaleDateString('fr-FR')}</div>
+</div></body></html>`
+}
+
+function openCorrectionPdf(exam: BacExam, correctionText: string, studentAnswers: string, candidat?: Candidat) {
+  const html = buildCorrectionHtml(exam, correctionText, studentAnswers, candidat)
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const win = window.open(url, '_blank')
+  if (!win) { const a=document.createElement('a');a.href=url;a.download=`BacBlanc-J${exam.day}-${exam.sectionKey}.html`;a.click() }
+  setTimeout(()=>URL.revokeObjectURL(url), 10000)
+}
+
+// ── extractFirstGraph ─────────────────────────────────────────────
+function extractFirstGraph(text: string): string|null {
+  const tag='[GRAPH:'; const idx=text.indexOf(tag); if(idx===-1)return null
+  const jsonStart=text.indexOf('{',idx+tag.length); if(jsonStart===-1)return null
+  let depth=0,j=jsonStart
+  while(j<text.length){if(text[j]==='{')depth++;else if(text[j]==='}'){depth--;if(depth===0)break};j++}
+  const cb=text.indexOf(']',j); if(cb===-1)return null
+  return text.slice(idx,cb+1)
+}
+
+// ── parseGraphSegments ────────────────────────────────────────────
+function parseGraphSegments(text:string):Array<{type:'text'|'graph';content:string}>{
+  const result:Array<{type:'text'|'graph';content:string}>=[]
+  let i=0; const tag='[GRAPH:'
+  while(i<text.length){
+    const idx=text.indexOf(tag,i)
+    if(idx===-1){result.push({type:'text',content:text.slice(i)});break}
+    if(idx>i)result.push({type:'text',content:text.slice(i,idx)})
+    const jsonStart=text.indexOf('{',idx+tag.length); if(jsonStart===-1){result.push({type:'text',content:text.slice(idx)});break}
+    let depth=0,j=jsonStart
+    while(j<text.length){if(text[j]==='{')depth++;else if(text[j]==='}'){depth--;if(depth===0)break};j++}
+    const closeBracket=text.indexOf(']',j)
+    if(closeBracket===-1){result.push({type:'text',content:text.slice(idx)});break}
+    result.push({type:'graph',content:text.slice(jsonStart,j+1)})
+    i=closeBracket+1
+  }
+  return result
+}
+
+function useScript(src:string){
+  const[loaded,setLoaded]=useState(false)
+  useEffect(()=>{
+    if(document.querySelector(`script[src="${src}"]`)){setLoaded(true);return}
+    const s=document.createElement('script');s.src=src;s.async=true;s.onload=()=>setLoaded(true);document.head.appendChild(s)
+  },[src])
+  return loaded
+}
+
+// ── MathGraph (identique simulation) ─────────────────────────────
+function MathGraph({spec}:{spec:any}){
+  const ref=useRef<HTMLDivElement>(null)
+  const plotlyLoaded=useScript('https://cdn.plot.ly/plotly-2.27.0.min.js')
+  const[err,setErr]=useState('')
+  useEffect(()=>{
+    if(!plotlyLoaded||!ref.current)return
+    const exprs=Array.isArray(spec?.expressions)?spec.expressions.filter((e:string)=>e&&e.trim()!==''):[]
+    if(exprs.length===0){setErr('Aucune expression à tracer');return}
+    try{
+      const xMin=spec.xMin??-5,xMax=spec.xMax??5
+      const colors=['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
+      const traces:any[]=[]
+      exprs.forEach((expr:string,i:number)=>{
+        const safe=sanitizeExpr(expr)
+        let fn:Function
+        try{fn=new Function('x','Math',`"use strict";try{const _r=(${safe});return(_r===undefined||_r===null)?null:_r;}catch(e){return null;}`)}
+        catch{return}
+        const hasHF=safe.includes('440')||safe.includes('880')||safe.includes('1000')||safe.includes('2000')
+        const N=hasHF?2000:600,dx=(xMax-xMin)/N
+        let yMax=0,hasValid=false
+        for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);if(y!==null&&isFinite(y)){yMax=Math.max(yMax,Math.abs(y));hasValid=true}}
+        if(!hasValid)return
+        const threshold=Math.max(yMax*100,1e10)
+        const xs:number[]=[],ys:number[]=[]
+        for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);xs.push(x);ys.push((y!==null&&isFinite(y)&&Math.abs(y)<=threshold)?y:NaN)}
+        traces.push({x:xs,y:ys,type:'scatter',mode:'lines',name:spec.labels?.[i]??`f${i+1}(x)`,line:{color:colors[i%colors.length],width:2.5},connectgaps:false})
+      })
+      if(traces.length===0){setErr('Tracé impossible');return}
+      const W=ref.current.clientWidth||340,H=220
+      const layout={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(255,255,255,0.04)',font:{color:'#e2e8f0',size:11,family:'system-ui'},title:{text:spec.title||'',font:{size:12,color:'#a5b4fc'},x:0.5},xaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.xLabel||'x',color:'#94a3b8'},yaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.yLabel||'y',color:'#94a3b8'},margin:{l:42,r:12,t:spec.title?36:12,b:36},legend:{font:{size:10,color:'#94a3b8'},bgcolor:'rgba(0,0,0,0)'},width:W,height:H}
+      ;(window as any).Plotly.newPlot(ref.current,traces,layout,{displayModeBar:false,responsive:true})
+      setErr('')
+    }catch(e:any){setErr('Tracé impossible — '+String(e).slice(0,60))}
+  },[plotlyLoaded,spec])
+  if(err)return <div style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'8px 12px',fontSize:12,color:'#fca5a5',margin:'8px 0'}}>{err}</div>
+  return <div ref={ref} style={{width:'100%',borderRadius:8,overflow:'hidden',margin:'8px 0'}}/>
+}
+
+// ── GeoGraph (identique simulation) ──────────────────────────────
+function GeoGraph({spec}:{spec:any}){
+  const vbSize=220,scale=28,cx=50,cy=160
+  const tx=(x:number)=>cx+x*scale, ty=(y:number)=>cy-y*scale
+  const shapes=spec.shapes||[]
+  const proj3=(p:{x:number,y:number,z?:number})=>({x:p.x+(p.z||0)*0.4,y:p.y+(p.z||0)*0.3})
+  const els:any[]=[]
+  shapes.forEach((s:any,si:number)=>{
+    switch(s.type){
+      case 'axes':
+        els.push(<line key={`ax${si}`} x1={tx(-1.5)} y1={ty(0)} x2={tx(8)} y2={ty(0)} stroke="rgba(255,255,255,0.3)" strokeWidth={1}/>)
+        els.push(<line key={`ay${si}`} x1={tx(0)} y1={ty(-1.5)} x2={tx(0)} y2={ty(7)} stroke="rgba(255,255,255,0.3)" strokeWidth={1}/>)
+        els.push(<text key={`axl${si}`} x={tx(8)+4} y={ty(0)+4} fill="rgba(255,255,255,0.5)" fontSize={10}>x</text>)
+        els.push(<text key={`ayl${si}`} x={tx(0)+4} y={ty(7)-4} fill="rgba(255,255,255,0.5)" fontSize={10}>y</text>)
+        break
+      case 'grid':{
+        const st=s.step||1
+        for(let gx=-1;gx<=8;gx+=st)els.push(<line key={`gx${si}_${gx}`} x1={tx(gx)} y1={ty(-1.5)} x2={tx(gx)} y2={ty(7)} stroke="rgba(255,255,255,0.05)" strokeWidth={0.5}/>)
+        for(let gy=-1;gy<=7;gy+=st)els.push(<line key={`gy${si}_${gy}`} x1={tx(-1.5)} y1={ty(gy)} x2={tx(8)} y2={ty(gy)} stroke="rgba(255,255,255,0.05)" strokeWidth={0.5}/>)
+        break}
+      case 'triangle':{
+        const pts=s.points||[]
+        if(pts.length>=3){
+          const d=pts.map((p:any,i:number)=>`${i===0?'M':'L'}${tx(p.x)},${ty(p.y)}`).join(' ')+'Z'
+          els.push(<path key={`tri${si}`} d={d} fill={s.fill||'rgba(99,102,241,0.15)'} stroke={s.color||'#6366f1'} strokeWidth={1.5}/>)
+          pts.forEach((p:any,i:number)=>{if(p.label)els.push(<text key={`trl${si}_${i}`} x={tx(p.x)+(p.x<1?-14:8)} y={ty(p.y)+(p.y<1?12:-6)} fill="#a5b4fc" fontSize={11} fontWeight={700}>{p.label}</text>)})
+        }
+        break}
+      case 'circle':
+        els.push(<circle key={`ci${si}`} cx={tx(s.cx||0)} cy={ty(s.cy||0)} r={(s.r||1)*scale} fill={s.fill||'rgba(99,102,241,0.1)'} stroke={s.color||'#6366f1'} strokeWidth={1.5}/>)
+        if(s.label)els.push(<text key={`cil${si}`} x={tx(s.cx||0)+6} y={ty(s.cy||0)-6} fill="#a5b4fc" fontSize={11}>{s.label}</text>)
+        break
+      case 'segment':case 'line':
+        els.push(<line key={`seg${si}`} x1={tx(s.x1||0)} y1={ty(s.y1||0)} x2={tx(s.x2||0)} y2={ty(s.y2||0)} stroke={s.color||'#6366f1'} strokeWidth={1.5} strokeDasharray={s.dashed?'4,3':undefined}/>)
+        if(s.label){const mx=(tx(s.x1||0)+tx(s.x2||0))/2,my=(ty(s.y1||0)+ty(s.y2||0))/2;els.push(<text key={`segl${si}`} x={mx+4} y={my-4} fill="#94a3b8" fontSize={10}>{s.label}</text>)}
+        break
+      case 'vector':{
+        const fx=tx(s.from?.x||0),fy=ty(s.from?.y||0),ttx2=tx(s.to?.x||0),tty2=ty(s.to?.y||0)
+        const ang=Math.atan2(tty2-fy,ttx2-fx),aLen=8
+        const ax1=ttx2-aLen*Math.cos(ang-0.4),ay1=tty2-aLen*Math.sin(ang-0.4)
+        const ax2=ttx2-aLen*Math.cos(ang+0.4),ay2=tty2-aLen*Math.sin(ang+0.4)
+        els.push(<line key={`vec${si}`} x1={fx} y1={fy} x2={ttx2} y2={tty2} stroke={s.color||'#10b981'} strokeWidth={2}/>)
+        els.push(<polygon key={`veca${si}`} points={`${ttx2},${tty2} ${ax1},${ay1} ${ax2},${ay2}`} fill={s.color||'#10b981'}/>)
+        if(s.label)els.push(<text key={`vecl${si}`} x={ttx2+6} y={tty2-6} fill={s.color||'#10b981'} fontSize={11} fontWeight={700}>{s.label}</text>)
+        break}
+      case 'point':{
+        const px=tx(s.cx??s.x??0),py=ty(s.cy??s.y??0)
+        els.push(<circle key={`pt${si}`} cx={px} cy={py} r={4} fill={s.color||'#f59e0b'}/>)
+        if(s.label)els.push(<text key={`ptl${si}`} x={px+6} y={py-6} fill="#fbbf24" fontSize={11} fontWeight={700}>{s.label}</text>)
+        break}
+      default: break
+    }
+  })
+  return(
+    <div style={{margin:'8px 0',background:'rgba(255,255,255,0.03)',borderRadius:8,padding:6,textAlign:'center'}}>
+      {spec.title&&<div style={{fontSize:11,color:'#a5b4fc',marginBottom:4,fontWeight:600}}>{spec.title}</div>}
+      <svg viewBox={`0 0 ${vbSize} ${vbSize}`} style={{width:'100%',maxWidth:280,height:'auto'}}>{els}</svg>
+    </div>
+  )
+}
+
+function AsciiGraph({spec}:{spec:any}){
+  const legend=Array.isArray(spec.legend)?spec.legend:[]
+  return(<div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(6,182,212,0.3)',margin:'10px 0',background:'rgba(6,182,212,0.04)'}}>
+    {spec.title&&<div style={{padding:'7px 16px',borderBottom:'1px solid rgba(6,182,212,0.15)',fontSize:12,fontWeight:700,color:'#06b6d4'}}>📐 {spec.title}</div>}
+    <div style={{padding:'14px 18px'}}>
+      <pre style={{fontFamily:"'Courier New',Consolas,monospace",fontSize:12,lineHeight:1.7,color:'rgba(255,255,255,0.85)',background:'rgba(0,0,0,0.35)',borderRadius:8,padding:'12px 16px',margin:'0 0 12px',overflowX:'auto',whiteSpace:'pre',border:'1px solid rgba(6,182,212,0.15)'}}>{spec.content}</pre>
+      {legend.length>0&&<div style={{display:'flex',flexWrap:'wrap',gap:6}}>{legend.map((item:string,i:number)=><span key={i} style={{fontSize:11,padding:'3px 10px',background:'rgba(6,182,212,0.1)',color:'#67e8f9',border:'1px solid rgba(6,182,212,0.2)',borderRadius:20,fontWeight:600}}>{item}</span>)}</div>}
+    </div>
+  </div>)
+}
+function TableGraph({spec}:{spec:any}){
+  const h=spec.headers||[],r=spec.rows||[],hl=spec.highlight||[]
+  return(<div style={{borderRadius:10,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'10px 0'}}>
+    {spec.title&&<div style={{padding:'7px 14px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>📋 {spec.title}</div>}
+    <div style={{overflowX:'auto'}}><table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
+      {h.length>0&&<thead><tr>{h.map((c:string,i:number)=><th key={i} style={{padding:'7px 10px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>{c}</th>)}</tr></thead>}
+      <tbody>{r.map((row:string[],i:number)=><tr key={i} style={{background:hl.includes(i)?'rgba(99,102,241,0.1)':i%2===0?'rgba(255,255,255,0.02)':'transparent'}}>{row.map((cell:string,j:number)=><td key={j} style={{padding:'5px 10px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>{cell}</td>)}</tr>)}</tbody>
+    </table></div>
+  </div>)
+}
+function BarGraph({spec}:{spec:any}){
+  const cats=spec.categories||[],vals=spec.values||[],colors=spec.colors||['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4'],mx=Math.max(...vals,1)
+  return(<div style={{borderRadius:10,border:'1px solid rgba(99,102,241,0.25)',margin:'10px 0',background:'rgba(8,8,23,0.95)',padding:'14px'}}>
+    {spec.title&&<div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:12,textAlign:'center'}}>{spec.title}</div>}
+    <div style={{display:'flex',alignItems:'flex-end',gap:6,height:140,paddingBottom:20,position:'relative'}}>
+      {[0,25,50,75,100].map(p=><div key={p} style={{position:'absolute',left:0,right:0,bottom:`${p/100*110+20}px`,borderTop:'1px solid rgba(255,255,255,0.06)',fontSize:9,color:'rgba(255,255,255,0.2)'}}>{Math.round(mx*p/100)}</div>)}
+      {cats.map((cat:string,i:number)=>{const h=Math.max(4,(vals[i]/mx)*110);const c=colors[i%colors.length];return(<div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}><div style={{fontSize:10,color:c,fontWeight:700}}>{vals[i]}</div><div style={{width:'100%',height:`${h}px`,background:c,borderRadius:'3px 3px 0 0',opacity:0.85}}/><div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2}}>{cat}</div></div>)})}
+    </div>
+  </div>)
+}
+function SmartGraph({spec}:{spec:any}){
+  if(!spec)return null
+  const t=autoDetectGraphType(spec),s=t!==spec.type?{...spec,type:t}:spec
+  if(s.type==='ascii')    return <AsciiGraph spec={s}/>
+  if(s.type==='table')    return <TableGraph spec={s}/>
+  if(s.type==='bar')      return <BarGraph   spec={s}/>
+  if(s.type==='geometry') return <GeoGraph   spec={s}/>
+  return <MathGraph spec={s}/>
+}
+
+function figureToAscii(figureText: string): string {
+  const title = figureText.replace(/^\[FIGURE\s*:\s*/i,'').replace(/\]$/,'').trim()
+  const isRLC  = /RLC/i.test(title)
+  const isRC   = /RC\b/i.test(title) && !isRLC
+  const isRL   = /RL\b/i.test(title) && !isRLC
+  const isPile = /pile|galvani|électrochim/i.test(title)
+  const isOpt  = /optique|lentille|prisme/i.test(title)
+  const isPend = /pendule/i.test(title)
+  let schemaContent = '  [Schéma : ' + title + ']'
+  let legend: string[] = ['Voir énoncé pour les valeurs numériques']
+  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)','C: condensateur (F)','E: générateur'] }
+  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  │        ═╪═C│\n  E(t)     │   │\n  └────────┴───┘'; legend = ['R: résistance (Ω)','C: condensateur (F)','E: générateur'] }
+  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)'] }
+  else if (isPile) { schemaContent = '  (-) Zn │ ZnSO₄  ║  CuSO₄ │ Cu (+)\n       │              pont salin          │\n       └──────────── e⁻ ───────────────┘'; legend = ['Anode (-): Zn→Zn²⁺+2e⁻','Cathode (+): Cu²⁺+2e⁻→Cu','Pont salin: transfert ions'] }
+  else if (isOpt)  { schemaContent = '  →→→  ║  →→→  ║  →→→\n  lumière [L1]  image [L2]  image finale'; legend = ['L1, L2: lentilles convergentes'] }
+  else if (isPend) { schemaContent = '       ●  (pivot)\n       │\n       │  L\n       │\n       ○  (masse m)'; legend = ['L: longueur fil','m: masse','T=2π√(L/g)'] }
+  return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
+}
+function TextWithGraphs({text}:{text:string}){
+  if(!text)return null
+  const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
+  const segs=parseGraphSegments(processedText)
+  return(
+    <div>
+      {segs.map((s,i)=>{
+        if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{s.content}</span>
+        try{const spec=JSON.parse(s.content);return <SmartGraph key={i} spec={spec}/>}
+        catch{return <span key={i} style={{color:'#ef4444',fontSize:11}}>[Graphique invalide]</span>}
+      })}
+    </div>
+  )
+}
+
+// ── MD (identique simulation) ─────────────────────────────────────
+function MD({text}:{text:string}){return <TextWithGraphs text={text}/>}
+
+// ── PrimaryBtn (identique simulation) ────────────────────────────
+function PrimaryBtn({onClick,disabled=false,loading=false,children,fullWidth=false}:{onClick:()=>void;disabled?:boolean;loading?:boolean;children:React.ReactNode;fullWidth?:boolean}){
+  return(
+    <button onClick={onClick} disabled={disabled||loading}
+      style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:10,padding:'14px 28px',borderRadius:14,border:'none',cursor:disabled?'not-allowed':'pointer',fontSize:14,fontWeight:700,letterSpacing:'0.02em',background:disabled?'rgba(255,255,255,0.07)':'linear-gradient(135deg,#6366f1,#8b5cf6)',color:disabled?'rgba(255,255,255,0.3)':'white',boxShadow:disabled?'none':'0 8px 24px rgba(99,102,241,0.45)',width:fullWidth?'100%':'auto',transition:'all 0.2s'}}>
+      {loading&&<span style={{width:16,height:16,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'white',borderRadius:'50%',animation:'spin 0.7s linear infinite',flexShrink:0}}/>}
+      {children}
+    </button>
+  )
+}
+
+// ── correctOneExercise (identique simulation) ─────────────────────
+async function correctOneExercise(exercise: Exercise, totalPoints: number, studentWork: string, examTitle: string): Promise<string> {
+  // Détecter si c'est un examen Anglais
+  const isAnglaisCorrection =
     examTitle.toLowerCase().includes('anglais') ||
+    examTitle.toLowerCase().includes('english') ||
     exercise.theme.toLowerCase().includes('reading') ||
     exercise.theme.toLowerCase().includes('writing') ||
-    exercise.theme.toLowerCase().includes('grammar')
-  const isEcoCorrection = globalMatiere === 'economie' || globalMatiere === 'gestion'
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language')
 
   const system = isAnglaisCorrection
     ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
 You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
-IMPORTANT: ALL your correction must be written in ENGLISH — never use French.
+CRITICAL RULE: ALL your correction MUST be written in ENGLISH — never use French, even a single word.
 Use markdown: ### for sections, **bold** for key answers, > for important points.`
-    : isEcoCorrection
-    ? `Tu es un professeur correcteur du Baccalauréat tunisien, section Sciences Économiques et de Gestion (Économie & Gestion, programme CNP).
-Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
-Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
-
-NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
-- QUESTIONS DE COURS / MOBILISATION : définis chaque notion avec précision, explique le mécanisme économique, illustre par un exemple.
-- TRAVAIL SUR DOCUMENT (économie) : montre COMMENT lire le document (titre, source, unité, année), fais CHAQUE calcul en entier en rappelant la formule puis le résultat : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture, coefficient budgétaire, TCAM, IDH. Termine par une phrase d'interprétation chiffrée (« En 2023, selon l'INS, … »).
-- GESTION (étude de cas) : pose CHAQUE formule puis le calcul complet et l'interprétation : Résultat=Produits−Charges ; FDR=Capitaux permanents−Actif immobilisé ; BFR=Actif circulant−Passif circulant ; TN=FDR−BFR (et commentaire sur la trésorerie) ; MCV=CA−Charges variables ; taux de MCV=MCV/CA ; seuil de rentabilité=Charges fixes/taux de MCV (point mort) ; CUMP ; rotation des stocks ; masse salariale.
-- SYNTHÈSE / RÉFLEXION : propose une introduction (définitions, problématique), des arguments structurés appuyés sur le cours et les documents, une conclusion.
-- Termine chaque question par le barème détaillé.
-Vocabulaire économique et comptable rigoureux. Données toujours accompagnées de leur unité et de leur source.
-Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
     : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
-
-NIVEAU DE DETAIL EXIGE (correction modele notee 20/20) :
-- Pour CHAQUE etape : rappelle d'abord la propriete / theoreme / formule du cours utilise (avec ses conditions), PUIS montre le calcul INTEGRAL (aucun saut, chaque ligne de calcul visible), PUIS justifie pourquoi cette etape est valide.
-- Explique le RAISONNEMENT, pas seulement le calcul : pourquoi cette methode, comment on sait quoi faire ensuite.
-- Quand c'est pertinent, termine la question par une VERIFICATION du resultat (substitution, ordre de grandeur, cas particulier).
-- Donne les valeurs exactes ET, si utile, une valeur approchee.
-- Redige comme une copie de Bac modele : un eleve moyen doit pouvoir tout reproduire seul.
 Utilise markdown : ### pour les parties, **gras** pour les resultats, > pour les points importants.
 
 GRAPHIQUES MATHEMATIQUES — INSTRUCTIONS COMPLETES :
@@ -1280,340 +1162,144 @@ RÈGLES JS : JAMAIS x^2 → x*x | JAMAIS x^3 → x*x*x | JAMAIS 2x → 2*x | fra
 
 ═══ TYPE 2 : FIGURES GÉOMÉTRIQUES (SVG) ═══
 [GRAPH: {"type":"geometry","title":"Titre","shapes":[...]}]
-
-FORMES DISPONIBLES (shapes) — exemples :
-
-**Cercle** {"type":"circle","cx":0,"cy":0,"r":3,"label":"C","color":"#6366f1","fill":"#6366f120"}
-**Ellipse** {"type":"ellipse","cx":0,"cy":0,"rx":4,"ry":2,"label":"E"}
-**Demi-cercle** {"type":"semicircle","cx":0,"cy":0,"r":3,"startAngle":0,"endAngle":180}
-**Rectangle** {"type":"rect","x":0,"y":0,"w":4,"h":2,"label":"ABCD","fill":"#10b98120"}
-**Carré** {"type":"square","x":0,"y":0,"w":3,"label":"ABCD"}
-**Triangle** {"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":2,"y":3,"label":"C"}],"showRight":false,"fill":"#6366f120"}
-**Polygone** {"type":"polygon","points":[{"x":0,"y":0},{"x":3,"y":0},{"x":4,"y":2},{"x":1,"y":2}]}
-**Segment** {"type":"segment","x1":0,"y1":0,"x2":4,"y2":0,"label":"AB"}
-**Ligne droite** {"type":"line","x1":0,"y1":0,"x2":1,"y2":2,"label":"d","dashed":true}
-**Vecteur** {"type":"vector","from":{"x":0,"y":0,"label":"A"},"to":{"x":3,"y":2,"label":"B"},"label":"u⃗"}
-**Angle** {"type":"angle","vertex":{"x":1,"y":0,"label":"B"},"p1":{"x":0,"y":0,"label":"A"},"p2":{"x":1,"y":2,"label":"C"},"value":"60°"}
-**Angle droit** {"type":"angle","vertex":{"x":0,"y":0},"p1":{"x":1,"y":0},"p2":{"x":0,"y":1},"showRight":true}
-**Arc** {"type":"arc","cx":0,"cy":0,"r":2,"startAngle":0,"endAngle":120}
-**Point** {"type":"point","cx":2,"cy":3,"label":"M"}
-**Médiane** {"type":"median","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":2,"y":3,"label":"C"}],"targetVertex":2}
-**Hauteur** {"type":"altitude","points":[{"x":0,"y":0},{"x":4,"y":0},{"x":1,"y":3}],"targetVertex":2}
-**Bissectrice** {"type":"bisector","vertex":{"x":1,"y":0},"p1":{"x":0,"y":0},"p2":{"x":1,"y":2}}
-**Cote/dimension** {"type":"dimension","x1":0,"y1":0,"x2":4,"y2":0,"label":"4 cm","color":"#f59e0b"}
-**Axes** {"type":"axes","step":1}
-**Grille** {"type":"grid","step":1}
-**Fonction dans repère géo** {"type":"function_on_geo","expr":"x*x - 2","label":"y=x²-2"}
-
-COMBINAISON (plusieurs formes dans un seul graphique) :
-[GRAPH: {"type":"geometry","title":"Triangle rectangle ABC","shapes":[
-  {"type":"axes","step":1},
-  {"type":"grid","step":1},
-  {"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":0,"y":3,"label":"C"}],"fill":"#6366f120"},
-  {"type":"angle","vertex":{"x":0,"y":0},"p1":{"x":4,"y":0},"p2":{"x":0,"y":3},"showRight":true},
-  {"type":"altitude","points":[{"x":0,"y":0},{"x":4,"y":0},{"x":0,"y":3}],"targetVertex":2,"label":"h"},
-  {"type":"dimension","x1":0,"y1":0,"x2":4,"y2":0,"label":"4","color":"#f59e0b"},
-  {"type":"dimension","x1":0,"y1":0,"x2":0,"y2":3,"label":"3","color":"#10b981"}
-]}]
-
-FORMES DISPONIBLES dans shapes : circle, triangle, polygon, segment, line, vector, angle, arc, point, axes, grid, dimension, median, altitude, bisector, function_on_geo
-STRICTEMENT INTERDIT dans shapes : "line3d", "point3d", "segment3d" — toujours projeter en 2D
+FORMES DISPONIBLES : circle, triangle, polygon, segment, line, vector, angle, arc, point, axes, grid, dimension, median, altitude, bisector, function_on_geo
+STRICTEMENT INTERDIT : "line3d", "point3d", "segment3d"
 
 QUAND UTILISER (OBLIGATOIRE dans la correction) :
-- Étude de fonction (limites, variations, extrema, asymptotes) → [GRAPH: type "function"] courbe + points remarquables
-- Géométrie plane (triangle, cercle, quadrilatère) → [GRAPH: type "geometry"] figure complète avec labels
-- Géométrie espace → [GRAPH: type "geometry"] projection 2D oblique avec "segment","point","vector" uniquement
-- Complexes → [GRAPH: type "geometry"] plan complexe avec points affixes nommés
-- Suites → [GRAPH: type "function"] courbe u_n + droite horizontale de la limite
-- Probabilités (loi binomiale/normale) → [GRAPH: type "function"] courbe de densité ou diagramme
+- Étude de fonction → [GRAPH: type "function"] courbe + points remarquables
+- Géométrie plane → [GRAPH: type "geometry"] figure complète avec labels
+- Complexes → [GRAPH: type "geometry"] plan complexe avec affixes
+- Suites → [GRAPH: type "function"] courbe u_n + asymptote
 - Place le [GRAPH: ...] juste APRÈS l'explication théorique, AVANT les calculs
-- Exercice mixte → graphique "function" ET graphique "geometry" séparés
 
-RÈGLES ABSOLUES ANTI-GRAPHIQUE-VIDE :
-1. JAMAIS "expressions":[] ou "expressions":[""] → graphique blanc interdit
-2. JAMAIS LaTeX dans expressions : INTERDIT x^2, \frac → UTILISER x*x, (a/b)
-3. TOUJOURS valeurs numériques CALCULÉES dans les expressions :
-   - Si τ=RC=2s calculé → Math.exp(-x/2) PAS Math.exp(-x/tau)
-   - Si f(x)=2x³-3x²+1 → "2*x*x*x - 3*x*x + 1" PAS "2x^3-3x^2+1"
-   - Si f'(x)=6x²-6x → ajouter "6*x*x - 6*x" dans expressions[]
-4. INTERPRÉTATION GRAPHIQUE demandée → courbes tracées, JAMAIS repère vide
-5. FORMAT EXACT : [GRAPH: {"type":"function","expressions":["2*x*x*x - 3*x*x + 1","6*x*x - 6*x"],"xMin":-2,"xMax":3,"labels":["f(x)","f\'(x)"],"title":"f et sa dérivée","xLabel":"x","yLabel":"y"}]`
+NOTATION MATHEMATIQUE OBLIGATOIRE — REGLES ABSOLUES :
+Utilise UNIQUEMENT ces notations Unicode — JAMAIS de LaTeX brut ($, \\frac, \\sqrt, ^, _) :
+
+EXPOSANTS — RÈGLE ABSOLUE : toujours e^(expr) avec parenthèses :
+  e^(x/2)  e^(-x)  e^(2x+1)  e^(-0.5x)
+  JAMAIS : eˣ⁄²  e⁻ˣ  e^{x}  e^x/2
+  f(x) = (3x-2)·e^(x/2) ← forme correcte
+  Puissances de x : x²  x³  x⁴  xⁿ (Unicode superscript OK pour x seul)
+  (3x-2)e^(-0,5x) → écrire exactement ainsi, avec parenthèses
+
+INDICES (Unicode subscript uniquement) :
+  uₙ  uₙ₊₁  u₀  vₙ  xₙ  aₙ  JAMAIS u_n ni u_{n+1}
+
+DÉRIVÉES :
+  f'(x)  f''(x)  g'(x)  JAMAIS f\'(x) ni f prime
+
+FRACTIONS : écrire (a+b)/(c+d) ou notation en ligne — JAMAIS \\frac
+
+RACINES : √x  √(x²+1)  ∛x — JAMAIS \\sqrt
+
+VECTEURS : u⃗  v⃗  AB⃗  i⃗  j⃗  k⃗ — toujours avec ⃗ (U+20D7)
+  Repère : (O ; i⃗, j⃗)  ou  (O ; i⃗, j⃗, k⃗)
+
+COMPLEXES :
+  z₁  z₂  z₃  (subscript Unicode)
+  Module : |z|  Argument : arg(z)
+  Forme exponentielle : r·eⁱᶿ  ou  r·e^(iθ)  JAMAIS r*e^(i*theta)
+  z₁ = 2 + 2i√3  JAMAIS 2 + 2i*sqrt(3)
+
+LOIS DE PROBABILITE :
+  B(n ; p)  N(μ ; σ²)  JAMAIS N(mu,sigma^2)
+  Espérance : E(X) = np   Variance : V(X) = np(1-p)
+
+ENSEMBLES : ℝ  ℕ  ℤ  ℂ  ∈  ∉  ⊂  ∪  ∩  ∅  ∀  ∃
+
+LOGIQUE : ⟹  ⟺  ¬
+
+INEGALITES : ≤  ≥  ≠  ≈
+
+INFINI : +∞  -∞  →
+
+INTEGRALES : ∫ₐᵇ f(x)dx  ∫₀¹ xeˣdx
+
+SOMMES : ∑ (k=1 à n)  JAMAIS \\sum_{k=1}^{n}
+
+GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
 
   const withWork = studentWork.trim().length > 10
-
-  // Détecter si l'élève a soumis des images (photos de copie)
-  const hasImages = studentWork.includes('[Image jointe :')
-  const imageNote = hasImages
-    ? "\n\nNOTE : L'élève a soumis des photos de sa copie papier. Traite sa réponse comme si tu avais vu sa copie (tu ne peux pas réellement voir les images mais utilise le contexte disponible pour une correction personnalisée)."
-    : ''
-
   const prompt = isAnglaisCorrection
     ? (withWork
-      ? `EXAM: ${examTitle}
-EXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
-
-FULL STATEMENT:
-${exercise.statement}
-
-STUDENT'S ANSWER:
-${studentWork}${imageNote}
-
-Write the COMPLETE correction of this exercise ONLY. ALL text must be in ENGLISH. Mandatory structure:
-
-## ${exercise.title} — Detailed Correction (${exercise.points} pts)
-
-[For EACH numbered question in the statement:]
-
-### Question X —
-**Concept and method:** [Rule / approach — WHY this method applies here specifically]
-
-**Step-by-step answer:**
-- Step 1: [Precise action] → [Intermediate result]
-- Step 2: [Precise action] → [Intermediate result]
-- Step 3: [Precise action] → [Final answer]
-
-> **Answer:** [Final answer clearly stated]
-
-**Marking scheme — Question X:** [X] pts
-- [X] pt: [for what exactly]
-
-**Student's answer analysis:**
-✅ Correct: [what the student did well]
-❌ Incorrect: [what is wrong or missing, with explanation]
-💡 Tip: [how to correct this specific error]
-
-**Common mistake:** [Most frequent error on this type of question and why it is wrong]
-
----
-
-> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
-      : `EXAM: ${examTitle}
-EXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
-
-FULL STATEMENT:
-${exercise.statement}
-
-Write the COMPLETE and EXHAUSTIVE correction of this exercise ONLY. ALL text MUST be in ENGLISH. Mandatory structure:
-
-## ${exercise.title} — Complete Correction (${exercise.points} pts)
-
-[For EACH numbered question:]
-
-### Question X —
-**Concept and method:** [Rule or approach — explain WHY this method is chosen. State the exact rule with its conditions.]
-
-**Complete answer:**
-- Step 1: [Action + theoretical justification] → [Full working] = [Result]
-- Step 2: [Action + justification] → [Working] = [Result]
-- Step 3: ... (continue to the final result, NO step skipped)
-
-> **Answer:** [Final answer]
-
-**Marking scheme:** [X] pts — [Detail: X pt for approach, X pt for language, X pt for conclusion]
-
-**Important pedagogical note:** [Key grammar rule, writing tip, or vocabulary point]
-
-**Common mistake:** [Frequent error on THIS type of question — detailed explanation of why it is wrong]
-
----
-
-> **Key takeaway for ${exercise.title}:** [2-3 grammar rules, vocabulary items or writing strategies to remember]`)
+      ? `EXAM: ${examTitle}\nEXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nSTUDENT'S ANSWER:\n${studentWork}\n\nWrite the COMPLETE correction of this exercise. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Detailed Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule / approach — WHY this method applies here]\n**Step-by-step answer:**\n- Step 1: [Action] → [Result]\n> **Answer:** [Final answer clearly stated]\n**Marking scheme — Question X:** [X] pts\n**Student's answer analysis:**\n✅ Correct: [what the student did well]\n❌ Incorrect: [what is wrong or missing]\n💡 Tip: [how to correct this error]\n---\n> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
+      : `EXAM: ${examTitle}\nEXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nWrite the COMPLETE and EXHAUSTIVE correction. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Complete Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule — explain WHY this approach is chosen]\n**Complete answer:**\n- Step 1: [Action + justification] → [Working] = [Result]\n> **Answer:** [Final answer]\n**Marking scheme:** [X] pts\n**Pedagogical note:** [Key grammar rule or writing tip]\n**Common mistake:** [Frequent error on this type of question and why it is wrong]\n---\n> **Key takeaway:** [2-3 rules or strategies to remember]`)
     : (withWork
-    ? `EXAMEN : ${examTitle}
-EXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
+      ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
+      : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`)
 
-ENONCE COMPLET :
-${exercise.statement}
-
-REPONSE DE L'ELEVE :
-${studentWork}${imageNote}
-
-Redige la correction COMPLETE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
-
-## ${exercise.title} — Correction detaillee (${exercise.points} pts)
-
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
-
-### Question X —
-**Concept utilise :** [Theoreme / formule / methode — et POURQUOI on l'applique ici specifiquement]
-
-**Resolution etape par etape :**
-- Etape 1 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 2 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 3 : [Action precise] → [Resultat final]
-
-> **Resultat :** [Reponse finale encadree]
-
-**Verification :** [Controle du resultat quand c'est pertinent : substitution dans l'equation, coherence/ordre de grandeur, cas limite]
-
-**Bareme question X :** [X] pts
-- [X] pt : [pour quoi exactement]
-- [X] pt : [pour quoi exactement]
-
-**Analyse reponse eleve :**
-✅ Correct : [ce que l'eleve a bien fait]
-❌ Incorrect : [ce qui est faux ou manquant, avec explication du pourquoi]
-💡 Conseil : [comment corriger cette erreur specifique]
-
-**Piege classique :** [L'erreur la plus frequente sur ce type de question et pourquoi elle est fausse]
-
----
-
-> **Bilan ${exercise.title} :** [X]/${exercise.points} pts — [commentaire pedagogique global]`
-    : `EXAMEN : ${examTitle}
-EXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
-
-ENONCE COMPLET :
-${exercise.statement}
-
-Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
-
-## ${exercise.title} — Correction complete (${exercise.points} pts)
-
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
-
-### Question X —
-**Concept et methode :** [Theoreme / formule appliquee — expliquer POURQUOI on choisit cette methode et pas une autre. Donner le theoreme exact avec ses conditions d'application.]
-
-**Demonstration complete :**
-- Etape 1 : [Action + justification theorique] → [Calcul complet visible] = [Resultat]
-- Etape 2 : [Action + justification] → [Calcul] = [Resultat]
-- Etape 3 : ... (continuer jusqu'au resultat final, AUCUNE etape sautee)
-
-> **Resultat :** [Reponse finale]
-
-**Verification :** [Controle du resultat quand c'est pertinent : substitution, coherence/ordre de grandeur, cas limite]
-
-**Bareme :** [X] pts — [Detail : X pt pour la demarche, X pt pour le calcul, X pt pour la conclusion]
-
-**Point pedagogique important :** [Generalisation, remarque de methode, variante possible]
-
-**Erreur classique :** [Piege frequent sur CE TYPE PRECIS de question — explication detaillee de pourquoi c'est faux]
-
----
-
-> **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`)
-
-  return askClaude(prompt, system, 12000, undefined, onDelta)
+  return askClaude(prompt, system, 8000)
 }
 
-// Genere la correction exercice par exercice et appelle onProgress a chaque etape
-// Corrige UN SEUL exercice (appelé à la demande depuis PhaseCorrection)
-async function correctSingleExercise(
-  exam: GeneratedExam,
-  exerciseIndex: number,
-  studentWork: string,
-  onDelta?: (full: string) => void
-): Promise<string> {
+async function correctSingleExercise(exam: BacExam, exerciseIndex: number, studentWork: string): Promise<string> {
   const ex = exam.exercises[exerciseIndex]
   if (!ex) return ''
-
-  // Extraire images depuis le statement (correction directe avec PDF/photo)
-  const { images: examImages, cleanText: cleanStatement } = extractImagesFromText(ex.statement || '')
-  const { images: copyImages, cleanText: cleanWork } = extractImagesFromText(studentWork || '')
-  const allImages = [...examImages, ...copyImages]
-
-  // S'il y a des images → utiliser askClaudeWithImages
-  if (allImages.length > 0) {
-    const isPhysique = exam.title.toLowerCase().includes('physique')
-    const isAnglais  = exam.title.toLowerCase().includes('anglais') || exam.title.toLowerCase().includes('english')
-
-    const system = isAnglais
-      ? `You are an expert English teacher for the Baccalaureate. Write an EXHAUSTIVE correction ENTIRELY IN ENGLISH based on the exam image(s) provided. Use markdown.`
-      : `Tu es un professeur correcteur expert du Baccalauréat tunisien${isPhysique ? ' en Physique-Chimie' : (globalMatiere==='economie' ? ' en Économie (Sciences Éco & Gestion)' : globalMatiere==='gestion' ? ' en Gestion (Sciences Éco & Gestion)' : '')}.
-Tu analyses l'image de l'examen fournie et rédiges une CORRECTION COMPLÈTE, EXHAUSTIVE et PÉDAGOGIQUE.
-Identifie tous les exercices et questions visibles dans l'image.
-Pour chaque question : énoncé reconstitué → concept → résolution étape par étape → résultat.${globalMatiere==='economie'||globalMatiere==='gestion' ? ' Économie : lecture de documents et calculs (taux de variation, indices, taux de couverture, IDH). Gestion : formules posées et appliquées (FDR, BFR, TN, MCV, seuil de rentabilité, CUMP) avec interprétation.' : ''}
-Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
-
-    const prompt = cleanWork && cleanWork !== '(Aucune copie — fournir la correction complète)'
-      ? `Voici l'examen (image) et la copie de l'élève :
-
-Copie élève :
-${cleanWork}
-
-Rédige la correction complète exercice par exercice avec analyse de la copie.`
-      : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
-
-    return askClaudeWithImages(prompt, allImages, system, 12000, undefined, onDelta)
-  }
-
-  // Pas d'images → correction texte normale
-  const cleanEx = { ...ex, statement: cleanStatement }
-  return correctOneExercise(cleanEx, exam.totalPoints, cleanWork || studentWork, exam.title, onDelta)
+  return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
 }
 
-// ── Analyse UN exercice immédiatement après correction ───────────
-async function analyzeOneExerciseSim(
-  exercise: { title:string; theme:string; points:number; statement:string },
+// ── analyzeStudentWork (identique simulation) ─────────────────────
+// Analyse UN exercice immédiatement après correction
+async function analyzeOneExercise(
+  exercise: Exercise,
   studentAnswer: string,
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const system = (globalMatiere==='economie'||globalMatiere==='gestion')
-    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie CNP, Sciences Éco & Gestion).
-Analyse précisément le travail de l'élève (notions, lecture de documents, calculs économiques, formules de gestion : FDR, BFR, TN, MCV, seuil de rentabilité) et propose une remédiation ciblée et progressive.
-RÉPONDS UNIQUEMENT EN JSON VALIDE.`
-    : `Tu es un expert en pédagogie mathématique et remédiation scolaire, spécialiste Bac Tunisie CNP.
-Analyse précisément le travail de l'élève et propose une remédiation ciblée et progressive.
+  const isAnglaisTheme =
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language') ||
+    exercise.title.toLowerCase().includes('part i') ||
+    exercise.title.toLowerCase().includes('part ii') ||
+    exercise.title.toLowerCase().includes('part iii')
+
+  const system = isAnglaisTheme
+    ? `You are an expert English language teacher and Bac examiner. Analyse ONE English Bac Blanc exercise.
+RESPOND ONLY IN VALID JSON. ALL text fields (description, advice, statements, corrections) MUST be in ENGLISH.`
+    : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
 
-  const prompt = `Analyse cet exercice de simulation Bac Tunisie et génère une remédiation précise.
+  const prompt = isAnglaisTheme
+    ? `Analyse this English Bac Blanc exercise and generate targeted remediation.
+
+EXERCISE ${exIdx+1}: ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
+${exercise.statement.substring(0,250)}
+
+STUDENT ANSWER: ${studentAnswer||'(No answer provided)'}
+CORRECTION: ${correction.substring(0,800)}
+
+Required JSON (ALL text in ENGLISH):
+{
+  "estimatedScore": [0 to ${exercise.points}],
+  "maxScore": ${exercise.points},
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Precise analysis in English]","priority":1}],
+
+  "globalAdvice": ["[Targeted advice on ${exercise.theme} in English]","[Strategy to remember]"],
+  "remediationExercises": [
+    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolidate the weakness]","statement":"Short English practice exercise on ${exercise.theme}. 2-3 sub-questions. Minimum 60 words. Written in ENGLISH.","hint":"[Methodological hint in English]","officialCorrection":"[Complete correction in ENGLISH]"},
+    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Deepen understanding]","statement":"Standard English exercise on ${exercise.theme}. Minimum 60 words. Written in ENGLISH.","hint":"[Method hint in English]","officialCorrection":"[Correction in ENGLISH]"}
+  ]
+}`
+    : `Analyse cet exercice de Bac et génère une remédiation ciblée.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
-Énoncé : ${exercise.statement.substring(0,300)}
+${exercise.statement.substring(0,250)}
 
-RÉPONSE ÉLÈVE : ${studentAnswer||('(Aucune réponse — considérer comme non traité)')}
-CORRECTION OFFICIELLE : ${correction.substring(0,1000)}
+RÉPONSE ÉLÈVE : ${studentAnswer||('(Aucune réponse)')}
+CORRECTION : ${correction.substring(0,800)}
 
-JSON requis (COMPLET) :
+JSON requis :
 {
-  "estimatedScore": [entier 0 à ${exercise.points} — estimation réaliste basée sur la réponse],
+  "estimatedScore": [0 à ${exercise.points}],
   "maxScore": ${exercise.points},
-  "weakAreas": [
-    {
-      "theme": "${exercise.theme}",
-      "severity": "critical|moderate|good",
-      "description": "[Erreur précise observée ou lacune identifiée — pas générique]",
-      "priority": 1,
-      "chapter": "[Chapitre CNP concerné]",
-      "targetScore": "[ex: +${Math.round(exercise.points * 0.6)} pts si maîtrisé]"
-    }
-  ],
-  
-  "globalAdvice": [
-    "[Conseil CONCRET : ex: Retravailler la définition de la dérivée + 5 exercices]",
-    "[Méthode à retenir pour ce type d'exercice]",
-    "[Erreur classique à éviter au Bac sur ce thème]"
-  ],
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Lacune précise observée]","priority":1,"chapter":"[Chapitre]","targetScore":"[+pts]"}],
+
+  "globalAdvice": ["[Conseil ciblé sur ${exercise.theme}]","[Méthode à retenir]"],
   "remediationExercises": [
-    {
-      "id":"remSim${exIdx}-1",
-      "theme":"${exercise.theme}",
-      "difficulty":"introductory",
-      "objective":"[Consolider la notion de base manquante]",
-      "statement":"Mini-exercice ORIGINAL avec données numériques. 2-3 sous-questions. Minimum 80 mots. Ne pas copier l'énoncé du sujet.",
-      "hint":"[Quelle formule ou méthode appliquer — sans donner la réponse]",
-      "officialCorrection":"[Correction étape par étape avec calculs développés. Minimum 60 mots.]"
-    },
-    {
-      "id":"remSim${exIdx}-2",
-      "theme":"${exercise.theme}",
-      "difficulty":"standard",
-      "objective":"[Appliquer la notion au niveau Bac]",
-      "statement":"Exercice niveau Bac sur le même thème. 3 sous-questions. Minimum 90 mots.",
-      "hint":"[Stratégie de résolution globale]",
-      "officialCorrection":"[Correction complète. Minimum 70 mots.]"
-    },
-    {
-      "id":"remSim${exIdx}-3",
-      "theme":"${exercise.theme}",
-      "difficulty":"advanced",
-      "objective":"[Maîtriser le thème en conditions Bac]",
-      "statement":"Exercice avancé type Bac Tunisie sur ce thème. 4 sous-parties. Minimum 100 mots.",
-      "hint":"[Conseil méthodologique niveau Bac]",
-      "officialCorrection":"[Correction officielle niveau Bac. Minimum 80 mots.]"
-    }
+    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolider notion]","statement":"Exercice ORIGINAL. 2-3 questions. Min 80 mots.","hint":"[Formule]","officialCorrection":"[Correction étape par étape. Min 60 mots.]"},
+    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Niveau Bac]","statement":"Exercice Bac. 3 questions. Min 90 mots.","hint":"[Stratégie]","officialCorrection":"[Correction. Min 70 mots.]"},
+    {"id":"rem${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtrise Bac]","statement":"Exercice avancé. 4 parties. Min 100 mots.","hint":"[Conseil Bac]","officialCorrection":"[Correction Bac. Min 80 mots.]"}
   ]
 }`
   const raw = await askClaude(prompt, system, 3000)
@@ -1625,106 +1311,19 @@ JSON requis (COMPLET) :
   })
 }
 
-// ── Analyse faiblesses ────────────────────────────────────────────
-async function analyzeStudentWork(
-  exam: GeneratedExam, studentWork: string, correction: string
-): Promise<AnalysisResult> {
-  const system = (globalMatiere==='economie'||globalMatiere==='gestion')
-    ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie) et en remédiation scolaire.
-Tu analyses finement les travaux d'élèves (mobilisation de connaissances, travail sur documents, calculs économiques et de gestion) et construis un plan d'amélioration PERSONNALISÉ et ACTIONNABLE.
-Ton analyse doit être précise, bienveillante et orienter l'élève vers des actions concrètes.
-RÉPONDS UNIQUEMENT EN JSON VALIDE.`
-    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.
-Tu analyses finement les travaux d'élèves et construis un plan d'amélioration PERSONNALISÉ et ACTIONNABLE.
-Ton analyse doit être précise, bienveillante et orienter l'élève vers des actions concrètes.
-RÉPONDS UNIQUEMENT EN JSON VALIDE.`
+async function analyzeStudentWork(exam: BacExam, studentWork: string, correction: string): Promise<AnalysisResult> {
+  const isAnglaisExam =
+    exam.title.toLowerCase().includes('anglais') ||
+    exam.title.toLowerCase().includes('english') ||
+    (exam.exercises?.[0]?.theme?.toLowerCase().includes('reading') ?? false)
 
-  const prompt = `Analyse ce travail d'élève BAC TUNISIE et génère un rapport de remédiation complet et personnalisé.
-
-SUJET BAC :
-${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}
-
-TRAVAIL ÉLÈVE :
-${studentWork || '(Aucune réponse fournie — élève non préparé ou absent)'}
-
-CORRECTION OFFICIELLE :
-${correction.substring(0,1500)}
-
-INSTRUCTIONS ANALYSE :
-- Évalue CHAQUE exercice séparément (points forts ET lacunes précises)
-- Identifie les thèmes NON MAÎTRISÉS avec description détaillée de l'erreur type
-- Génère 4 exercices de remédiation PROGRESSIFS (introductory→standard→advanced→bac)
-- Chaque exercice de remédiation doit cibler UNE lacune précise identifiée
-- Les exercices de remédiation doivent être COMPLETS avec vraies données numériques
-
-Génère ce JSON COMPLET :
-{
-  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste basée sur le travail fourni],
-  "maxScore": ${exam.totalPoints},
-  "scoreByExercise": [
-    {"exerciseTitle": "[titre]", "estimated": [pts estimés], "max": [pts max], "comment": "[commentaire précis 1 phrase]"}
-  ],
-  "weakAreas": [
-    {
-      "theme": "[Thème PRÉCIS ex: Dérivation — règle du quotient]",
-      "severity": "critical|moderate|good",
-      "description": "[Erreur type observée + pourquoi c'est bloquant pour le bac]",
-      "priority": [1=bloquant bac, 2=important, 3=secondaire],
-      "chapter": "[Chapitre programme CNP]",
-      "targetScore": "[Score visé si maîtrisé: ex +3 points]"
-    }
-  ],
-
-  "globalAdvice": [
-    "[Conseil ACTIONNABLE précis — ex: Refaire 10 exercices de dérivation avant vendredi]",
-    "[Méthode mnémotechnique ou astuce concrète]",
-    "[Priorité de révision sur les 2 semaines à venir]"
-  ],
-  "studyPlan": {
-    "week1": ["[Action jour 1-2]", "[Action jour 3-4]", "[Action jour 5-7]"],
-    "week2": ["[Action semaine 2 — approfondissement]"],
-    "dailyGoal": "[Objectif quotidien réaliste en minutes]"
-  },
-  "remediationExercises": [
-    {
-      "id": "rem-1",
-      "theme": "[Thème lacune prioritaire]",
-      "difficulty": "introductory",
-      "objective": "[Ce que l'élève va consolider — formule précise attendue]",
-      "statement": "Exercice ORIGINAL avec données numériques précises. 3 sous-questions progressives. Minimum 100 mots. Ne pas reprendre l'énoncé du sujet.",
-      "hint": "[Méthode de démarrage SANS donner la réponse — quelle formule appliquer ?]",
-      "officialCorrection": "[Correction COMPLÈTE étape par étape avec LaTeX : $formule$. Minimum 80 mots.]"
-    },
-    {
-      "id": "rem-2",
-      "theme": "[2ème thème faible]",
-      "difficulty": "standard",
-      "objective": "[Approfondissement ciblé]",
-      "statement": "Exercice standard niveau Bac. 3-4 sous-questions. Minimum 100 mots.",
-      "hint": "[Indice méthodologique]",
-      "officialCorrection": "[Correction complète. Minimum 80 mots.]"
-    },
-    {
-      "id": "rem-3",
-      "theme": "[3ème thème à travailler]",
-      "difficulty": "standard",
-      "objective": "[Maîtrise du thème]",
-      "statement": "Exercice de consolidation avec contexte réaliste. Minimum 90 mots.",
-      "hint": "[Conseil de démarrage]",
-      "officialCorrection": "[Correction détaillée. Minimum 70 mots.]"
-    },
-    {
-      "id": "rem-4",
-      "theme": "[Thème le plus critique]",
-      "difficulty": "advanced",
-      "objective": "[Préparation niveau Bac sur ce thème]",
-      "statement": "Exercice niveau Bac complet sur le thème le plus faible. 4 sous-parties. Minimum 120 mots.",
-      "hint": "[Stratégie de résolution globale]",
-      "officialCorrection": "[Correction officielle niveau Bac. Minimum 100 mots.]"
-    }
-  ]
-}`
-
+  const system = isAnglaisExam
+    ? `You are an expert English language teacher and educational coach for the Tunisian Baccalaureate.\nYou analyse student work and build a personalised improvement plan.\nCRITICAL: ALL text in your JSON (descriptions, advice, statements, corrections) MUST be written in ENGLISH.\nRESPOND ONLY IN VALID JSON.`
+    : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
+  const prompt = isAnglaisExam
+    ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
+    : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
+  "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
   const raw = await askClaude(prompt, system, 5000)
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
@@ -1734,2872 +1333,1771 @@ Génère ce JSON COMPLET :
   })
 }
 
-// ── Correction exercice de remédiation ────────────────────────────
-async function correctRemediationExercise(
-  exercise: AnalysisResult['remediationExercises'][number],
-  studentAnswer: string
-): Promise<string> {
-  const system = `Tu es un tuteur ${(globalMatiere==='economie'||globalMatiere==='gestion') ? "d'Économie & Gestion (Bac Tunisie) — tu corriges notions, lecture de documents et calculs (taux de variation, indices, IDH ; FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), en identifiant la notion/donnée/étape/formule manquante," : "mathématiques, spécialiste Bac Tunisie,"} bienveillant mais exigeant.
-Tu corriges les réponses d'élèves sur des exercices de remédiation avec précision pédagogique.
-Utilise LaTeX pour les formules : $formule$ inline, $$formule$$ centré.
-Pour les vecteurs, écris toujours \\overrightarrow{AB} (flèche au-dessus), jamais une flèche après les lettres.
-Sois encourageant, précis, et guide l'élève vers la maîtrise complète.`
+// ── correctRemediationExercise (identique simulation) ─────────────
+async function correctRemediationExercise(exercise: AnalysisResult['remediationExercises'][number], studentAnswer: string): Promise<string> {
+  const isAnglaisRem =
+    exercise.theme.toLowerCase().includes('reading') ||
+    exercise.theme.toLowerCase().includes('writing') ||
+    exercise.theme.toLowerCase().includes('grammar') ||
+    exercise.theme.toLowerCase().includes('language') ||
+    exercise.theme.toLowerCase().includes('vocabulary') ||
+    exercise.statement.toLowerCase().startsWith('read') ||
+    exercise.statement.toLowerCase().startsWith('write') ||
+    exercise.statement.toLowerCase().startsWith('complete')
 
-  return askClaude(
-    `EXERCICE DE REMÉDIATION — ${exercise.theme}
-Objectif : ${exercise.objective}
+  const system = isAnglaisRem
+    ? `You are a supportive but demanding English language tutor for the Tunisian Baccalaureate.
+You correct student answers on remediation exercises.
+CRITICAL RULE: ALL your feedback MUST be written in ENGLISH — never use French.
+Be precise, encouraging, and identify exactly what is missing.`
+    : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
 
-Énoncé :
-${exercise.statement}
+  const prompt = isAnglaisRem
+    ? `REMEDIATION EXERCISE — ${exercise.theme}\nObjective: ${exercise.objective}\n\nStatement:\n${exercise.statement}\n\nStudent's answer:\n${studentAnswer || '(No answer provided)'}\n\nModel correction:\n${exercise.officialCorrection}\n\nProvide (ALL IN ENGLISH):\n## Assessment of the answer\n[What is correct, incomplete, or wrong]\n\n## Commented correction\n[Step-by-step correction with explanations]\n\n## Key points to remember\n[Grammar rule, vocabulary or writing strategy — max 3 essential points]\n\n## Next step\n[One concrete action to keep improving on this skill]`
+    : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse fournie)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\n## ✅ Évaluation de ta réponse\n[Ce qui est juste ✅, incomplet ⚠️, faux ❌ — score estimé]\n\n## 📝 Correction commentée étape par étape\n[Pour chaque sous-question : méthode → calcul $LaTeX$ → > **Résultat :** $valeur$]\n\n## 🔑 Ce qu'il faut absolument retenir\n[Max 3 règles/formules + erreur classique à éviter]\n\n## 🎯 Exercice flash pour consolider\n[1-2 questions sur le même concept — avec la réponse]\n\n## 📈 Prochain pas\n[Action concrète pour maîtriser ce thème avant le Bac]`
 
-Réponse de l'élève :
-${studentAnswer || '(Aucune réponse fournie)'}
-
-Correction officielle de référence :
-${exercise.officialCorrection}
-
-Rédige une correction personnalisée avec cette structure OBLIGATOIRE :
-
-## ✅ Évaluation de ta réponse
-[Notation claire : ce qui est juste ✅, ce qui est incomplet ⚠️, ce qui est faux ❌]
-[Score estimé sur les points de l'exercice]
-
-## 📝 Correction commentée étape par étape
-[Pour CHAQUE sous-question : méthode → calcul LaTeX → résultat encadré]
-[> **Résultat :** $valeur$ pour les résultats clés]
-
-## 🔑 Ce qu'il faut absolument retenir
-[Max 3 règles ou formules ESSENTIELLES avec leur application directe]
-[Erreur classique à éviter sur ce type d'exercice]
-
-## 🎯 Exercice flash pour consolider
-[UN petit exercice de 1-2 questions sur le même concept — avec la réponse]
-
-## 📈 Prochain pas
-[Action concrète et spécifique pour maîtriser ce thème avant le Bac]`,
-    system, 2500
-  )
+  return askClaude(prompt, system, 2000)
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// COMPOSANTS VISUELS
-// ═══════════════════════════════════════════════════════════════════
 
-// ── Estimation rapide de la note avant correction ────────────────
-async function estimateGrade(exam: GeneratedExam, studentWork: string): Promise<{
-  score: number; maxScore: number; comment: string
-  breakdown: {title:string;pts:number;max:number;reason:string}[]
-}> {
-  const hasWork = studentWork.trim().length > 10
-  const system = `Tu es un correcteur du Baccalaureat tunisien${globalMatiere==='economie' ? ' en Économie' : globalMatiere==='gestion' ? ' en Gestion' : ''}. Tu donnes une note RAPIDE et JUSTE.
-Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC ANGLAIS
+// Structure officielle Bac Tunisie :
+//   Part I   — Reading Comprehension (8 pts)
+//   Part II  — Writing               (8 pts)
+//   Part III — Language              (4 pts)
+//   Total : 20 pts · Durée : 2h
+// Sections : lettres / toutes (sauf lettres)
+// ════════════════════════════════════════════════════════════════
 
-  const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${e.statement.slice(0,180)}`).join(' | ')
-  const prompt = hasWork
-    ? `Estime la note de cet eleve sur ${exam.totalPoints} points. SUJET: ${exList} REPONSE: ${studentWork.slice(0,1200)} JSON: {"score":[entier 0-${exam.totalPoints}],"maxScore":${exam.totalPoints},"comment":"[phrase encourageante 1-2 phrases]","breakdown":[{"title":"[ex]","pts":[accordes],"max":[max],"reason":"[raison]"}]}`
-    : `{"score":0,"maxScore":${exam.totalPoints},"comment":"Aucune reponse soumise. La correction complete va tout vous apprendre !","breakdown":${JSON.stringify(exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:'Non repondu'})))}}`
-
-  const raw = await askClaude(prompt, system, 800)
-  try {
-    return JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,'').trim())
-  } catch {
-    return {
-      score: Math.round(exam.totalPoints * 0.5),
-      maxScore: exam.totalPoints,
-      comment: 'Estimation calculee automatiquement.',
-      breakdown: exam.exercises.map(e=>({title:e.title,pts:Math.round(e.points*0.5),max:e.points,reason:'Evaluation automatique'}))
-    }
-  }
-}
-
-// ── Timeline de phases ────────────────────────────────────────────
-const PHASES_META: {key:Phase; label:string; icon:string}[] = [
-  {key:'select',      label:'Source',     icon:'📂'},
-  {key:'generating',  label:'Génération', icon:'🧠'},
-  {key:'choose-exam', label:'Sélection',  icon:'📋'},
-  {key:'exam',        label:'Examen',     icon:'✍️'},
-  {key:'correction',  label:'Correction', icon:'✅'},
-  {key:'analysis',    label:'Analyse',    icon:'📊'},
+const PROGRAMME_JOUR_ANGLAIS = [
+  { theme:'Art Shows & Museums',    writing:'Opinion essay — role of art in modern society',           grammar:'Present/Past · Expressing opinion' },
+  { theme:'Space Tourism',          writing:'For & Against — space tourism: dream or danger?',         grammar:'Future forms · Comparatives' },
+  { theme:'A Package Tour',         writing:'Article — advantages of travelling independently',         grammar:'Past Simple/Continuous · Linking words' },
+  { theme:'Education for All',      writing:'Essay — education: a right or a privilege?',              grammar:'Modals · Passive voice' },
+  { theme:'Higher Education',       writing:'Opinion essay — should university be free?',              grammar:'Conditionals type 1 & 2' },
+  { theme:'Online Learning',        writing:'Article — e-learning: the future of education?',          grammar:'Relative clauses · Gerund/Infinitive' },
+  { theme:'Lifelong Learning',      writing:'Essay — why learning never stops',                        grammar:'Reported speech · Complex sentences' },
+  { theme:'Comparing Systems',      writing:'Compare & Contrast — two educational systems',            grammar:'Comparatives · Superlatives' },
+  { theme:'Creativity',             writing:'Essay — is creativity dying in the digital age?',         grammar:'Gerund/Infinitive · Relative clauses' },
+  { theme:'Innovation',             writing:'Article — how innovation changes our world',              grammar:'Passive voice · Future forms' },
+  { theme:'Inventions & Inventors', writing:'Essay — the invention that changed humanity',             grammar:'Past Simple · Relative clauses' },
+  { theme:'Modern Technology & AI', writing:'Essay — AI: threat or opportunity for humanity?',        grammar:'Modals · Conditionals type 2' },
+  { theme:'Environmental Issues',   writing:'Problem/Solution essay — fighting climate change',        grammar:'Future forms · Complex sentences' },
+  { theme:'Social Issues',          writing:'Essay — poverty and inequality in modern society',        grammar:'Reported speech · Passive voice' },
+  { theme:'Health & Lifestyle',     writing:'Article — healthy living in a stressful world',           grammar:'Comparatives · Linking words' },
+  { theme:'Teen Issues & Society',  writing:'Essay — social media: connecting or isolating us?',      grammar:'Modals · Conditionals' },
+  { theme:'Cultural Heritage',      writing:'Opinion essay — preserving our cultural identity',        grammar:'Relative clauses · Present/Past' },
+  { theme:'Science & Discovery',    writing:'Article — a scientific breakthrough that amazed the world',grammar:'Past Simple · Passive voice' },
+  { theme:'Globalization',          writing:'Essay — globalization: benefits and drawbacks',           grammar:'Comparatives · Linking words' },
+  { theme:'Media & Journalism',     writing:'Opinion essay — fake news in the digital age',           grammar:'Reported speech · Future forms' },
+  { theme:'Sports & Achievement',   writing:'Article — the role of sport in personal development',    grammar:'Present/Past · Comparatives' },
+  { theme:'Volunteering & Charity', writing:'Essay — why volunteering matters for society',           grammar:'Modals · Gerund/Infinitive' },
+  { theme:'Urban Life & Migration', writing:'Essay — city vs countryside: where should we live?',     grammar:'Comparatives · Conditionals' },
+  { theme:'Youth & Activism',       writing:'Essay — can young people really change the world?',      grammar:'Modals · Complex sentences' },
+  { theme:'Work & Career',          writing:'Article — the jobs of the future',                       grammar:'Future forms · Passive voice' },
+  { theme:'Technology & Privacy',   writing:'Essay — are we losing our privacy in the digital world?',grammar:'Relative clauses · Reported speech' },
+  { theme:'Food & Nutrition',       writing:'Article — why healthy eating habits matter',             grammar:'Comparatives · Gerund/Infinitive' },
+  { theme:'Tourism & Culture',      writing:'Essay — the impact of tourism on local cultures',        grammar:'Present/Past · Linking words' },
+  { theme:'Gender Equality',        writing:'Essay — gender equality: progress and challenges',        grammar:'Passive voice · Reported speech' },
+  { theme:'The Digital Revolution', writing:'Essay — how technology has transformed daily life',      grammar:'Present Perfect · Comparatives' },
 ]
-const DISPLAY_PHASES = ['select','choose-exam','exam','correction','analysis'] as Phase[]
 
-function PhaseTimeline({ phase }: { phase: Phase }) {
-  const current = DISPLAY_PHASES.indexOf(phase === 'generating' ? 'choose-exam' :
-    phase === 'correcting' ? 'correction' : phase === 'analysing' ? 'analysis' : phase)
-  return (
-    <div style={{display:'flex',alignItems:'center',marginBottom:32,gap:0}}>
-      {DISPLAY_PHASES.map((p,i)=>{
-        const meta = PHASES_META.find(m=>m.key===p)!
-        const done = i < current, active = i === current
-        return (
-          <div key={p} style={{display:'flex',alignItems:'center',flex:i<DISPLAY_PHASES.length-1?1:'none'}}>
-            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:5,flexShrink:0}}>
-              <div style={{
-                width:40,height:40,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
-                background: active ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : done ? '#10b981' : 'rgba(255,255,255,0.06)',
-                border: active ? '2px solid #8b5cf6' : done ? '2px solid #10b981' : '2px solid rgba(255,255,255,0.12)',
-                fontSize:16, fontWeight:700, color:'white',
-                boxShadow: active ? '0 0 20px rgba(99,102,241,0.6)' : 'none',
-                transition:'all 0.4s',
-              }}>{done ? '✓' : meta.icon}</div>
-              <span style={{fontSize:10,fontWeight:600,color:active?'#a5b4fc':done?'#6ee7b7':'rgba(255,255,255,0.35)',letterSpacing:'0.04em',whiteSpace:'nowrap'}}>{meta.label}</span>
-            </div>
-            {i < DISPLAY_PHASES.length-1 && (
-              <div style={{flex:1,height:1,background:done?'#10b981':'rgba(255,255,255,0.1)',margin:'0 6px',marginBottom:22,transition:'background 0.4s'}}/>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
+function getProgrammeJourAnglais(dayNum: number) {
+  return PROGRAMME_JOUR_ANGLAIS[(dayNum - 1) % PROGRAMME_JOUR_ANGLAIS.length]
 }
 
-// ── Chargement dynamique de scripts externes ─────────────────────
-function useScript(src: string) {
-  const [loaded, setLoaded] = useState(false)
-  useEffect(() => {
-    if (document.querySelector(`script[src="${src}"]`)) { setLoaded(true); return }
-    const s = document.createElement('script')
-    s.src = src; s.async = true
-    s.onload = () => setLoaded(true)
-    document.head.appendChild(s)
-  }, [src])
-  return loaded
-}
-
-// ── Sanitize expression : corrige les erreurs courantes de l'IA ──────
-
-// ══════════════════════════════════════════════════════════════════════
-// SANITIZER UNIVERSEL — Gère TOUTES les matières sans cas particuliers
-// Maths · Physique · SVT · Informatique · Français
-// Entrée : expression IA brute (peut contenir LaTeX, Unicode, erreurs)
-// Sortie : expression JS valide pour new Function('x', 'Math', ...)
-// ══════════════════════════════════════════════════════════════════════
-function sanitizeExpr(expr: string): string {
-  if (!expr || typeof expr !== 'string') return '0'
-  let e = expr.trim()
-
-  // ── 0. Détecter et rejeter les non-expressions ─────────────────────
-  // Si l'expression ressemble à du texte ou LaTeX complexe → retourner '0'
-  if (e.startsWith('\\') && !e.includes('(')) return '0'
-  if (e.length > 300) e = e.slice(0, 300)
-
-  // ── 1. Unicode math → ASCII ─────────────────────────────────────────
-  e = e
-    .replace(/−/g, '-')           // tiret moins unicode U+2212
-    .replace(/×/g, '*')           // × multiplication
-    .replace(/÷/g, '/')           // ÷ division
-    .replace(/·/g, '*')           // · point centré
-    .replace(/²/g, '*x')          // ² exposant (contexte x²)
-    .replace(/³/g, '*x*x')        // ³ exposant
-    .replace(/\u00b2/g, '*x')
-    .replace(/\u00b3/g, '*x*x')
-    .replace(/\u221e/g, '1e15')   // ∞ → grande valeur
-    .replace(/\u03c0/g, 'Math.PI')// π
-    .replace(/\u03c4/g, '6.2832') // τ (tau = 2π, souvent constante RC)
-    .replace(/\u03bb/g, '0.693')  // λ (lambda, constante désintégration)
-    .replace(/\u03c9/g, 'x')      // ω souvent = variable fréquence
-
-  // ── 2. LaTeX → JS ──────────────────────────────────────────────────
-  e = e
-    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
-    .replace(/\\sqrt\{([^{}]+)\}/g, 'Math.sqrt($1)')
-    .replace(/\\sqrt/g, 'Math.sqrt')
-    .replace(/\\left\(/g, '(').replace(/\\right\)/g, ')')
-    .replace(/\\left\[/g, '(').replace(/\\right\]/g, ')')
-    .replace(/\\left\|/g, 'Math.abs(').replace(/\\right\|/g, ')')
-    .replace(/\\cdot/g, '*')
-    .replace(/\\times/g, '*')
-    .replace(/\\pm/g, '+')
-    .replace(/\\ln\b/g, 'Math.log')
-    .replace(/\\log\b/g, 'Math.log10')
-    .replace(/\\sin\b/g, 'Math.sin')
-    .replace(/\\cos\b/g, 'Math.cos')
-    .replace(/\\tan\b/g, 'Math.tan')
-    .replace(/\\exp\b/g, 'Math.exp')
-    .replace(/\\pi\b/gi, 'Math.PI')
-    .replace(/\\[a-zA-Z]+\*/g, '')
-    .replace(/\\\\/g, '')
-    .replace(/\{/g, '(').replace(/\}/g, ')')
-
-  // ── 3. Puissances → Math.pow ────────────────────────────────────────
-  // Ordre important : du plus spécifique au plus général
-  e = e
-    .replace(/x\*\*(\d+)/g, (_, n) => 'x*'.repeat(Number(n)-1) + 'x') // x**n → x*x*...
-    .replace(/x\^(\d+)/g,   (_, n) => 'x*'.repeat(Number(n)-1) + 'x') // x^n
-    .replace(/x\^(-\d+)/g,  (_, n) => `Math.pow(x,${n})`)             // x^-n
-    .replace(/\(([^()]+)\)\^(\d+)/g, (_, b, n) => `Math.pow(${b},${n})`) // (expr)^n
-    .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g, (_, b, n) => `Math.pow(${b},${n})`) // base^n
-
-  // ── 4. Multiplication implicite ──────────────────────────────────────
-  e = e
-    .replace(/(\d)([a-zA-Z(])/g, '$1*$2')   // 2x → 2*x | 2( → 2*(
-    .replace(/\)([a-zA-Z0-9(])/g, ')*$1')   // )x → )*x | )( → )*(
-    .replace(/([0-9])\s+([a-zA-Z])/g,'$1*$2')// "2 x" → "2*x"
-
-  // ── 5. Fonctions math (lookbehind pour ne pas doubler Math.) ─────────
-  const mathFns: [RegExp, string][] = [
-    [/(?<![a-zA-Z0-9_.])ln\s*\(/g,      'Math.log('],
-    [/(?<![a-zA-Z0-9_.])log10\s*\(/g,   'Math.log10('],
-    [/(?<![a-zA-Z0-9_.])log\s*\(/g,     'Math.log10('],
-    [/(?<![a-zA-Z0-9_.])sin\s*\(/g,     'Math.sin('],
-    [/(?<![a-zA-Z0-9_.])cos\s*\(/g,     'Math.cos('],
-    [/(?<![a-zA-Z0-9_.])tan\s*\(/g,     'Math.tan('],
-    [/(?<![a-zA-Z0-9_.])sqrt\s*\(/g,    'Math.sqrt('],
-    [/(?<![a-zA-Z0-9_.])abs\s*\(/g,     'Math.abs('],
-    [/(?<![a-zA-Z0-9_.])exp\s*\(/g,     'Math.exp('],
-    [/(?<![a-zA-Z0-9_.])asin\s*\(/g,    'Math.asin('],
-    [/(?<![a-zA-Z0-9_.])acos\s*\(/g,    'Math.acos('],
-    [/(?<![a-zA-Z0-9_.])atan\s*\(/g,    'Math.atan('],
-    [/(?<![a-zA-Z0-9_.])atan2\s*\(/g,   'Math.atan2('],
-    [/(?<![a-zA-Z0-9_.])floor\s*\(/g,   'Math.floor('],
-    [/(?<![a-zA-Z0-9_.])ceil\s*\(/g,    'Math.ceil('],
-    [/(?<![a-zA-Z0-9_.])round\s*\(/g,   'Math.round('],
-    [/(?<![a-zA-Z0-9_.])max\s*\(/g,     'Math.max('],
-    [/(?<![a-zA-Z0-9_.])min\s*\(/g,     'Math.min('],
-    [/(?<![a-zA-Z0-9_.])pow\s*\(/g,     'Math.pow('],
-    [/(?<![a-zA-Z0-9_.])sign\s*\(/g,    'Math.sign('],
-    [/(?<![a-zA-Z0-9_.])sinh\s*\(/g,    'Math.sinh('],
-    [/(?<![a-zA-Z0-9_.])cosh\s*\(/g,    'Math.cosh('],
-    [/(?<![a-zA-Z0-9_.])tanh\s*\(/g,    'Math.tanh('],
-    [/(?<![a-zA-Z0-9_.])log2\s*\(/g,    'Math.log2('],
-  ]
-  for (const [re2, repl] of mathFns) { e = e.replace(re2, repl) }
-
-  // ── 6. Constantes ───────────────────────────────────────────────────
-  e = e
-    .replace(/\bpi\b/gi, 'Math.PI')
-    .replace(/π/g, 'Math.PI')
-    .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g, 'Math.E')
-    .replace(/\bInfinity\b/g, '1e15')
-    .replace(/\bNaN\b/g, '0')
-
-  // ── 7. Nettoyage final ──────────────────────────────────────────────
-  e = e
-    .replace(/\*{2,}/g, '*')      // ** → * (déjà géré mais sécurité)
-    .replace(/\s+/g, '')          // supprimer espaces
-    .replace(/,,/g, ',')          // virgules doubles
-
-  return e || '0'
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// AUTO-DÉTECTEUR DE TYPE — Analyse le contexte pour choisir le bon format
-// Permet à l'IA de générer des graphiques sans connaître le type exact
-// ══════════════════════════════════════════════════════════════════════
-function autoDetectGraphType(spec: any): 'function' | 'geometry' | 'ascii' | 'table' | 'bar' {
-  if (!spec) return 'function'
-  if (spec.type && ['function','geometry','ascii','table','bar','points','parametric','probability'].includes(spec.type)) {
-    return spec.type as any
-  }
-  // Auto-détection depuis le contenu
-  if (spec.content && typeof spec.content === 'string') return 'ascii'
-  if (spec.shapes && Array.isArray(spec.shapes)) return 'geometry'
-  if (spec.rows && Array.isArray(spec.rows)) return 'table'
-  if (spec.bars || spec.categories) return 'bar'
-  if (spec.expressions && Array.isArray(spec.expressions)) return 'function'
-  return 'function'
-}
-
-
-// ── Composant graphique mathématique (Plotly) ─────────────────────
-interface GraphSpec {
-  type: 'function' | 'parametric' | 'points' | 'probability'
-  expressions: string[]   // ex: ["Math.sin(x)", "x*x - 2"]
-  xMin?: number; xMax?: number
-  labels?: string[]
-  title?: string
-  xLabel?: string; yLabel?: string
-  points?: {x:number;y:number;label?:string}[]
-}
-
-function MathGraph({ spec }: { spec: GraphSpec; [key: string]: any }) {
-  const divRef = useRef<HTMLDivElement>(null)
-  const plotlyLoaded = useScript('https://cdn.plot.ly/plotly-2.27.0.min.js')
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    if (!plotlyLoaded || !divRef.current) return
-    let traces: any[] = []
-    let layout: any = {}
-    let config: any = { responsive: true, displayModeBar: false }
-    try {
-      const xMin = spec.xMin ?? -5
-      const xMax = spec.xMax ?? 5
-      const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
-
-      if (spec.type === 'function' || spec.type === 'parametric') {
-        // Vérifier que expressions est valide
-        const exprs = Array.isArray(spec.expressions)
-          ? spec.expressions.filter((e: string) => e && e.trim() !== '')
-          : []
-        if (exprs.length === 0) {
-          setError('Aucune expression à tracer')
-          return
-        }
-
-        exprs.forEach((expr: string, i: number) => {
-          // ── Pré-compiler UNE SEULE FOIS hors de la boucle ───────────
-          const safeExpr = sanitizeExpr(expr)
-          let safeFn: Function
-          try {
-            safeFn = new Function('x', 'Math',
-              `"use strict"; try { const _r=(${safeExpr}); return (_r===undefined||_r===null)?null:_r; } catch(e){ return null; }`)
-          } catch(compileErr) {
-            console.warn('Expr compile error:', expr, compileErr)
-            return
-          }
-
-          // ── Adapter la résolution selon la plage ─────────────────────
-          // Haute fréquence (ex: sin(440*x)) → plus de points
-          const hasHighFreq = safeExpr.includes('440') || safeExpr.includes('880') ||
-                              safeExpr.includes('1000') || safeExpr.includes('2000')
-          const N = hasHighFreq ? 2000 : 600
-          const dx = (xMax - xMin) / N
-
-          const xs: number[] = [], ys: number[] = []
-          let hasValid = false
-          let yMax = 0
-
-          // Passe 1 : trouver la plage de valeurs réelles
-          for (let j = 0; j <= N; j++) {
-            const x = xMin + j * dx
-            const y = safeFn(x, Math)
-            if (y !== null && isFinite(y)) {
-              yMax = Math.max(yMax, Math.abs(y))
-              hasValid = true
-            }
-          }
-
-          if (!hasValid) {
-            console.warn('Aucun point valide pour:', expr)
-            return
-          }
-
-          // Seuil dynamique : 100x la valeur max observée (pas un seuil fixe 1e6)
-          const threshold = Math.max(yMax * 100, 1e10)
-
-          // Passe 2 : tracer avec le bon seuil
-          for (let j = 0; j <= N; j++) {
-            const x = xMin + j * dx
-            const y = safeFn(x, Math)
-            xs.push(x)
-            ys.push((y !== null && isFinite(y) && Math.abs(y) <= threshold) ? y : NaN)
-          }
-
-          traces.push({
-            x: xs, y: ys, mode: 'lines', type: 'scatter',
-            name: spec.labels?.[i] || expr,
-            line: { color: colors[i % colors.length], width: 2.5 },
-            connectgaps: false,
-          })
-        })
-
-        if (traces.length === 0) {
-          setError('Tracé impossible — aucune valeur calculable pour : ' + spec.expressions?.[0]?.slice(0,60))
-          return
-        }
-      }
-
-      if (spec.points && spec.points.length > 0) {
-        traces.push({
-          x: spec.points.map(p=>p.x),
-          y: spec.points.map(p=>p.y),
-          mode: 'markers+text',
-          type: 'scatter',
-          text: spec.points.map(p=>p.label||''),
-          textposition: 'top center',
-          marker: { color: '#f59e0b', size: 8, symbol: 'circle' },
-          name: 'Points remarquables'
-        })
-      }
-
-      // Axes
-      layout = {
-        title: { text: spec.title || '', font: { color: '#e2e8f0', size: 13 } },
-        paper_bgcolor: 'rgba(15,15,30,0.9)',
-        plot_bgcolor: 'rgba(20,20,40,0.8)',
-        font: { color: '#a0aec0', size: 11 },
-        xaxis: {
-          title: spec.xLabel || 'x',
-          gridcolor: 'rgba(255,255,255,0.08)',
-          zerolinecolor: 'rgba(255,255,255,0.25)',
-          zerolinewidth: 1.5,
-          tickcolor: 'rgba(255,255,255,0.3)',
-          range: [xMin, xMax],
-        },
-        yaxis: {
-          title: spec.yLabel || 'y',
-          gridcolor: 'rgba(255,255,255,0.08)',
-          zerolinecolor: 'rgba(255,255,255,0.25)',
-          zerolinewidth: 1.5,
-          tickcolor: 'rgba(255,255,255,0.3)',
-        },
-        legend: { bgcolor: 'rgba(0,0,0,0.4)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth:1 },
-        margin: { t:40, b:50, l:55, r:20 },
-        height: 300,
-      }
-
-      ;(window as any).Plotly.newPlot(divRef.current, traces, layout, config)
-    } catch(e: any) {
-      console.error('MathGraph error:', e, 'spec:', spec)
-      // Afficher l'erreur Plotly réelle (pas juste l'expression)
-      const errMsg = e?.message || String(e) || 'Erreur inconnue'
-      // Si Plotly n'est pas chargé → message spécifique
-      if (errMsg.includes('Plotly') || errMsg.includes('newPlot')) {
-        setError('Graphique — Plotly non chargé, rechargez la page')
-      } else if (errMsg.includes('SyntaxError') || errMsg.includes('ReferenceError')) {
-        setError('Expression invalide : ' + (spec.expressions?.[0]?.slice(0,50) || '?'))
-      } else {
-        // Erreur de rendu Plotly (ex: données mal formées) — réessayer sans les NaN
-        try {
-          const safeTraces = (traces as any[]).map(tr => ({
-            ...tr,
-            y: (tr.y || []).map((v: any) => (v !== null && isFinite(v) ? v : null)),
-            connectgaps: true
-          }))
-          if (divRef.current && safeTraces.length > 0) {
-            ;(window as any).Plotly.newPlot(divRef.current, safeTraces, layout, config)
-          }
-        } catch {
-          setError('Tracé impossible — ' + errMsg.slice(0, 60))
-        }
-      }
-    }
-  }, [plotlyLoaded, spec])
-
-  if (!plotlyLoaded) return (
-    <div style={{height:80,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:'rgba(255,255,255,0.3)'}}>
-      Chargement du graphique...
-    </div>
-  )
-
-  return (
-    <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.2)',marginTop:12,marginBottom:12}}>
-      {error ? (
-        <div style={{padding:16,fontSize:12,color:'#fca5a5'}}>{error}</div>
-      ) : (
-        <div ref={divRef}/>
-      )}
-    </div>
-  )
-}
-
-// ── Extraction et rendu des graphiques depuis le texte IA ──────────
-// L'IA peut insérer des specs de graphique sous la forme:
-// [GRAPH: {"type":"function","expressions":["Math.sin(x)"],"title":"..."}]
-
-
-// ══════════════════════════════════════════════════════════════════════
-// MOTEUR GÉOMÉTRIQUE SVG COMPLET
-// Formes : circle, ellipse, rect, square, triangle, polygon, line, segment,
-//          vector, angle, arc, semicircle, point, axes, grid,
-//          dimension (cote), median, altitude, bisector, function_on_geo
-// ══════════════════════════════════════════════════════════════════════
-interface GeoPoint { x: number; y: number; label?: string; color?: string }
-interface GeoShape {
-  type: 'circle' | 'ellipse' | 'rect' | 'square' | 'triangle' | 'line' | 'segment'
-       | 'angle' | 'polygon' | 'vector' | 'arc' | 'semicircle'
-       | 'point' | 'axes' | 'grid' | 'dimension' | 'median' | 'altitude'
-       | 'bisector' | 'function_on_geo'
-  // Cercle / Ellipse / Arc / Demi-cercle
-  cx?: number; cy?: number; r?: number; rx?: number; ry?: number
-  startAngle?: number; endAngle?: number
-  // Rect / Carré
-  x?: number; y?: number; w?: number; h?: number
-  // Ligne / Segment / Vecteur
-  x1?: number; y1?: number; x2?: number; y2?: number
-  from?: GeoPoint; to?: GeoPoint
-  // Polygone / Triangle
-  points?: GeoPoint[]
-  // Angle
-  vertex?: GeoPoint; p1?: GeoPoint; p2?: GeoPoint
-  showRight?: boolean; value?: string
-  // Dimension (cote)
-  offset?: number   // distance perpendiculaire de la cote en unités coord
-  // Médiane / Hauteur / Bissectrice — triangle via points[]
-  targetVertex?: number  // index du sommet cible (0,1,2)
-  // Fonction tracée sur repère géo
-  expr?: string
-  // Grille / Axes
-  step?: number; xMin?: number; xMax?: number; yMin?: number; yMax?: number
-  // Styles
-  label?: string; color?: string; dashed?: boolean; fill?: string
-  strokeWidth?: number; fontSize?: number
-}
-interface GeoSpec {
-  type: 'geometry'
-  title?: string
-  width?: number; height?: number
-  xMin?: number; xMax?: number; yMin?: number; yMax?: number
-  shapes: GeoShape[]
-  labels?: { x: number; y: number; text: string; color?: string; size?: number }[]
-}
-
-function makeTx(xMin: number, xMax: number, yMin: number, yMax: number, W: number, H: number) {
-  const pad = 44
-  const uw = W - 2*pad; const uh = H - 2*pad
-  const tx = (x: number) => pad + ((x - xMin) / (xMax - xMin)) * uw
-  const ty = (y: number) => H - pad - ((y - yMin) / (yMax - yMin)) * uh
-  const scaleX = (d: number) => (d / (xMax - xMin)) * uw
-  const scaleY = (d: number) => (d / (yMax - yMin)) * uh
-  return { tx, ty, scaleX, scaleY, pad, uw, uh }
-}
-
-function RightAngleMark({ vertex, p1, p2, tx, ty, color }: {
-  vertex: GeoPoint; p1: GeoPoint; p2: GeoPoint
-  tx: (x:number)=>number; ty: (y:number)=>number; color: string
-}) {
-  const s = 10
-  const vx=tx(vertex.x); const vy=ty(vertex.y)
-  const d1x=tx(p1.x)-vx; const d1y=ty(p1.y)-vy; const l1=Math.sqrt(d1x*d1x+d1y*d1y)||1
-  const d2x=tx(p2.x)-vx; const d2y=ty(p2.y)-vy; const l2=Math.sqrt(d2x*d2x+d2y*d2y)||1
-  const q1x=vx+(d1x/l1)*s; const q1y=vy+(d1y/l1)*s
-  const q2x=vx+(d2x/l2)*s; const q2y=vy+(d2y/l2)*s
-  const px=q1x+(d2x/l2)*s; const py=q1y+(d2y/l2)*s
-  return <path d={`M${q1x},${q1y} L${px},${py} L${q2x},${q2y}`} stroke={color} strokeWidth="1.5" fill="none"/>
-}
-
-function AngleArc({ vertex, p1, p2, tx, ty, color, value }: {
-  vertex: GeoPoint; p1: GeoPoint; p2: GeoPoint
-  tx: (x:number)=>number; ty: (y:number)=>number; color: string; value?: string
-}) {
-  const vx=tx(vertex.x); const vy=ty(vertex.y)
-  const a1=Math.atan2(ty(p1.y)-vy, tx(p1.x)-vx)
-  const a2=Math.atan2(ty(p2.y)-vy, tx(p2.x)-vx)
-  const R=22
-  const x1=vx+R*Math.cos(a1); const y1=vy+R*Math.sin(a1)
-  const x2=vx+R*Math.cos(a2); const y2=vy+R*Math.sin(a2)
-  let da=a2-a1; if(da<0) da+=2*Math.PI
-  const laf=da>Math.PI?1:0
-  const ma=(a1+a2)/2; const mx=vx+(R+12)*Math.cos(ma); const my=vy+(R+12)*Math.sin(ma)
-  return <>
-    <path d={`M${x1},${y1} A${R},${R} 0 ${laf},1 ${x2},${y2}`} stroke={color} strokeWidth="1.5" fill="none"/>
-    {value&&<text x={mx} y={my} fontSize="11" fill={color} textAnchor="middle" dominantBaseline="middle">{value}</text>}
-  </>
-}
-
-function GeoArrow({ x1, y1, x2, y2, color, sw=2 }: { x1:number;y1:number;x2:number;y2:number;color:string;sw?:number }) {
-  const angle=Math.atan2(y2-y1, x2-x1)
-  const a=9; const b=Math.PI/6
-  return <>
-    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={sw}/>
-    <polygon points={`${x2},${y2} ${x2-a*Math.cos(angle-b)},${y2-a*Math.sin(angle-b)} ${x2-a*Math.cos(angle+b)},${y2-a*Math.sin(angle+b)}`} fill={color}/>
-  </>
-}
-
-function DimensionLine({ x1,y1,x2,y2,label,color,offset=16 }: {
-  x1:number;y1:number;x2:number;y2:number;label?:string;color:string;offset?:number
-}) {
-  const dx=x2-x1; const dy=y2-y1; const len=Math.sqrt(dx*dx+dy*dy)||1
-  const nx=-dy/len*offset; const ny=dx/len*offset
-  const ax=x1+nx; const ay=y1+ny; const bx=x2+nx; const by=y2+ny
-  const tick=6
-  return <>
-    <line x1={x1+nx*0.3} y1={y1+ny*0.3} x2={ax} y2={ay} stroke={color} strokeWidth="1" strokeDasharray="3,3"/>
-    <line x1={x2+nx*0.3} y1={y2+ny*0.3} x2={bx} y2={by} stroke={color} strokeWidth="1" strokeDasharray="3,3"/>
-    <line x1={ax-dy/len*tick} y1={ay+dx/len*tick} x2={ax+dy/len*tick} y2={ay-dx/len*tick} stroke={color} strokeWidth="1.5"/>
-    <line x1={bx-dy/len*tick} y1={by+dx/len*tick} x2={bx+dy/len*tick} y2={by-dx/len*tick} stroke={color} strokeWidth="1.5"/>
-    <line x1={ax} y1={ay} x2={bx} y2={by} stroke={color} strokeWidth="1.5"/>
-    {label&&<text x={(ax+bx)/2+ny*0.6} y={(ay+by)/2-nx*0.6} textAnchor="middle" dominantBaseline="middle" fontSize="11" fill={color} fontWeight="600">{label}</text>}
-  </>
-}
-
-function GeoGraph({ spec }: { spec: GeoSpec }) {
-  const W=spec.width||500; const H=spec.height||360
-  const COLORS=['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4','#a78bfa','#34d399','#fb923c']
-  let ci=0
-  const nc=(ov?: string)=>ov||COLORS[ci++%COLORS.length]
-
-  // Auto-bornes à partir des formes
-  const ax: number[]=[]; const ay: number[]=[]
-  spec.shapes.forEach(s=>{
-    if(s.cx!==undefined){ax.push(s.cx-(s.rx||s.r||0),s.cx+(s.rx||s.r||0));ay.push((s.cy||0)-(s.ry||s.r||0),(s.cy||0)+(s.ry||s.r||0))}
-    if(s.x!==undefined&&s.w!==undefined){ax.push(s.x,s.x+s.w);ay.push(s.y||0,(s.y||0)+(s.h||s.w))}
-    if(s.x1!==undefined){ax.push(s.x1,s.x2||0);ay.push(s.y1||0,s.y2||0)}
-    if(s.points)s.points.forEach(p=>{ax.push(p.x);ay.push(p.y)})
-    if(s.from){ax.push(s.from.x);ay.push(s.from.y)}
-    if(s.to){ax.push(s.to.x);ay.push(s.to.y)}
-    if(s.vertex){ax.push(s.vertex.x);ay.push(s.vertex.y)}
-    if(s.p1){ax.push(s.p1.x);ay.push(s.p1.y)}
-    if(s.p2){ax.push(s.p2.x);ay.push(s.p2.y)}
-  })
-  ;(spec.labels||[]).forEach(l=>{ax.push(l.x);ay.push(l.y)})
-  const mg=1.5
-  const rxMin=spec.xMin??(ax.length?Math.min(...ax)-mg:-6)
-  const rxMax=spec.xMax??(ax.length?Math.max(...ax)+mg:6)
-  const ryMin=spec.yMin??(ay.length?Math.min(...ay)-mg:-6)
-  const ryMax=spec.yMax??(ay.length?Math.max(...ay)+mg:6)
-  const {tx,ty,scaleX,scaleY}=makeTx(rxMin,rxMax,ryMin,ryMax,W,H)
-
-  const renderShape=(s: GeoShape, i: number): React.ReactNode=>{
-    const c=nc(s.color)
-    const fill=s.fill||'none'
-    const filla=fill==='none'?`${c}14`:fill
-    const sw=s.strokeWidth||2
-    const dash=s.dashed?'8,5':''
-
-    switch(s.type){
-      case 'circle':{
-        if(s.cx===undefined||s.r===undefined) return null
-        const pr=Math.abs(scaleX(s.r))
-        return <g key={i}>
-          <circle cx={tx(s.cx)} cy={ty(s.cy!)} r={pr} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          <circle cx={tx(s.cx)} cy={ty(s.cy!)} r="3.5" fill={c}/>
-          {s.label&&<text x={tx(s.cx)} y={ty(s.cy!)-pr-8} textAnchor="middle" fontSize={s.fontSize||12} fontWeight="700" fill={c}>{s.label}</text>}
-          {s.r&&<text x={tx(s.cx)+4} y={ty(s.cy!)-pr/2} fontSize="10" fill={`${c}bb`} fontStyle="italic">r={s.r}</text>}
-        </g>
-      }
-      case 'ellipse':{
-        if(s.cx===undefined) return null
-        const prx=Math.abs(scaleX(s.rx||s.r||1)); const pry=Math.abs(scaleY(s.ry||s.r||1))
-        return <g key={i}>
-          <ellipse cx={tx(s.cx)} cy={ty(s.cy!)} rx={prx} ry={pry} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          <circle cx={tx(s.cx)} cy={ty(s.cy!)} r="3" fill={c}/>
-          {s.label&&<text x={tx(s.cx)} y={ty(s.cy!)-pry-8} textAnchor="middle" fontSize={s.fontSize||12} fontWeight="700" fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'semicircle':{
-        if(s.cx===undefined||s.r===undefined) return null
-        const pr=Math.abs(scaleX(s.r))
-        const sa=((s.startAngle??0)*Math.PI)/180
-        const ea=((s.endAngle??180)*Math.PI)/180
-        // Arc path + fermeture diamètre
-        const x1=tx(s.cx)+pr*Math.cos(sa); const y1=ty(s.cy!)-pr*Math.sin(sa)
-        const x2=tx(s.cx)+pr*Math.cos(ea); const y2=ty(s.cy!)-pr*Math.sin(ea)
-        return <g key={i}>
-          <path d={`M${x1},${y1} A${pr},${pr} 0 1,0 ${x2},${y2} Z`} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          <circle cx={tx(s.cx)} cy={ty(s.cy!)} r="3" fill={c}/>
-          {s.label&&<text x={tx(s.cx)} y={ty(s.cy!)-pr-8} textAnchor="middle" fontSize={s.fontSize||12} fontWeight="700" fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'rect':case 'square':{
-        if(s.x===undefined||s.w===undefined) return null
-        const ht=s.type==='square'?s.w:s.h!
-        const px=tx(s.x); const py=ty((s.y||0)+ht)
-        const pw=Math.abs(tx(s.x+s.w)-tx(s.x)); const ph=Math.abs(ty(s.y||0)-ty((s.y||0)+ht))
-        return <g key={i}>
-          <rect x={px} y={py} width={pw} height={ph} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          {s.type==='square'&&<>
-            <line x1={px+pw/2-5} y1={py-4} x2={px+pw/2+5} y2={py-4} stroke={c} strokeWidth="1.5"/>
-            <line x1={px+pw+4} y1={py+ph/2-5} x2={px+pw+4} y2={py+ph/2+5} stroke={c} strokeWidth="1.5"/>
-          </>}
-          {s.label&&<text x={px+pw/2} y={py+ph/2} textAnchor="middle" dominantBaseline="middle" fontSize={s.fontSize||12} fill={c}>{s.label}</text>}
-          {s.w&&<text x={px+pw/2} y={py-9} textAnchor="middle" fontSize="11" fill={`${c}cc`}>{s.w}</text>}
-          {s.h&&<text x={px+pw+11} y={py+ph/2+4} fontSize="11" fill={`${c}cc`}>{s.h}</text>}
-        </g>
-      }
-      case 'triangle':{
-        if(!s.points||s.points.length<3) return null
-        const pts=s.points.map(p=>`${tx(p.x)},${ty(p.y)}`).join(' ')
-        const cxc=(tx(s.points[0].x)+tx(s.points[1].x)+tx(s.points[2].x))/3
-        const cyc=(ty(s.points[0].y)+ty(s.points[1].y)+ty(s.points[2].y))/3
-        return <g key={i}>
-          <polygon points={pts} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          {s.points.map((p,j)=>p.label&&<text key={j} x={tx(p.x)+(tx(p.x)<cxc?-15:10)} y={ty(p.y)+(ty(p.y)>cyc?15:-9)} fontSize={s.fontSize||13} fontWeight="700" fill={p.color||c}>{p.label}</text>)}
-          {s.showRight&&<RightAngleMark vertex={s.points[0]} p1={s.points[1]} p2={s.points[2]} tx={tx} ty={ty} color={c}/>}
-          {s.label&&<text x={cxc} y={cyc} textAnchor="middle" dominantBaseline="middle" fontSize={s.fontSize||12} fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'polygon':{
-        if(!s.points||s.points.length<2) return null
-        const pts=s.points.map(p=>`${tx(p.x)},${ty(p.y)}`).join(' ')
-        const cxc=s.points.reduce((a,p)=>a+tx(p.x),0)/s.points.length
-        const cyc=s.points.reduce((a,p)=>a+ty(p.y),0)/s.points.length
-        return <g key={i}>
-          <polygon points={pts} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          {s.points.map((p,j)=>p.label&&<text key={j} x={tx(p.x)+(tx(p.x)<cxc?-14:9)} y={ty(p.y)+(ty(p.y)>cyc?13:-8)} fontSize={s.fontSize||12} fontWeight="700" fill={p.color||c}>{p.label}</text>)}
-          {s.label&&<text x={cxc} y={cyc} textAnchor="middle" dominantBaseline="middle" fontSize={s.fontSize||12} fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'line':{
-        if(s.x1===undefined) return null
-        const dxl=(s.x2||0)-s.x1; const dyl=(s.y2||0)-(s.y1||0); const big=300
-        return <g key={i}>
-          <line x1={tx(s.x1-dxl*big)} y1={ty((s.y1||0)-dyl*big)} x2={tx(s.x1+dxl*big)} y2={ty((s.y1||0)+dyl*big)} stroke={c} strokeWidth={sw} strokeDasharray={dash||'9,5'}/>
-          {s.label&&<text x={tx(s.x2||0)+9} y={ty(s.y2||0)-7} fontSize={s.fontSize||12} fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'segment':{
-        if(s.x1===undefined) return null
-        const mx=(tx(s.x1)+tx(s.x2!))/2; const my=(ty(s.y1!)+ty(s.y2!))/2
-        return <g key={i}>
-          <line x1={tx(s.x1)} y1={ty(s.y1!)} x2={tx(s.x2!)} y2={ty(s.y2!)} stroke={c} strokeWidth={sw} strokeDasharray={dash}/>
-          <circle cx={tx(s.x1)} cy={ty(s.y1!)} r="3.5" fill={c}/>
-          <circle cx={tx(s.x2!)} cy={ty(s.y2!)} r="3.5" fill={c}/>
-          {s.label&&<text x={mx+8} y={my-7} textAnchor="middle" fontSize={s.fontSize||11} fill={c} fontWeight="600">{s.label}</text>}
-        </g>
-      }
-      case 'vector':{
-        if(!s.from||!s.to) return null
-        return <g key={i}>
-          <GeoArrow x1={tx(s.from.x)} y1={ty(s.from.y)} x2={tx(s.to.x)} y2={ty(s.to.y)} color={c} sw={sw}/>
-          {s.from.label&&<text x={tx(s.from.x)-12} y={ty(s.from.y)+5} fontSize={s.fontSize||13} fontWeight="700" fill={s.from.color||c}>{s.from.label}</text>}
-          {s.to.label&&<text x={tx(s.to.x)+10} y={ty(s.to.y)-6} fontSize={s.fontSize||13} fontWeight="700" fill={s.to.color||c}>{s.to.label}</text>}
-          {s.label&&<text x={(tx(s.from.x)+tx(s.to.x))/2+10} y={(ty(s.from.y)+ty(s.to.y))/2-8} fontSize={s.fontSize||12} fill={c} fontStyle="italic">{s.label}</text>}
-        </g>
-      }
-      case 'angle':{
-        if(!s.vertex||!s.p1||!s.p2) return null
-        return <g key={i}>
-          <line x1={tx(s.vertex.x)} y1={ty(s.vertex.y)} x2={tx(s.p1.x)} y2={ty(s.p1.y)} stroke={c} strokeWidth={sw}/>
-          <line x1={tx(s.vertex.x)} y1={ty(s.vertex.y)} x2={tx(s.p2.x)} y2={ty(s.p2.y)} stroke={c} strokeWidth={sw}/>
-          {s.showRight
-            ?<RightAngleMark vertex={s.vertex} p1={s.p1} p2={s.p2} tx={tx} ty={ty} color={c}/>
-            :<AngleArc vertex={s.vertex} p1={s.p1} p2={s.p2} tx={tx} ty={ty} color={c} value={s.value}/>
-          }
-          {s.vertex.label&&<text x={tx(s.vertex.x)-14} y={ty(s.vertex.y)+5} fontSize={s.fontSize||13} fontWeight="700" fill={c}>{s.vertex.label}</text>}
-          {s.p1.label&&<text x={tx(s.p1.x)+8} y={ty(s.p1.y)-6} fontSize={s.fontSize||13} fontWeight="700" fill={c}>{s.p1.label}</text>}
-          {s.p2.label&&<text x={tx(s.p2.x)+8} y={ty(s.p2.y)+13} fontSize={s.fontSize||13} fontWeight="700" fill={c}>{s.p2.label}</text>}
-        </g>
-      }
-      case 'arc':{
-        if(s.cx===undefined||s.r===undefined) return null
-        const pr=Math.abs(scaleX(s.r))
-        const sa=((s.startAngle??0)*Math.PI)/180
-        const ea=((s.endAngle??180)*Math.PI)/180
-        const da=(s.endAngle??180)-(s.startAngle??0)
-        const ax1=tx(s.cx)+pr*Math.cos(-sa); const ay1=ty(s.cy!)+pr*Math.sin(-sa)
-        const ax2=tx(s.cx)+pr*Math.cos(-ea); const ay2=ty(s.cy!)+pr*Math.sin(-ea)
-        return <g key={i}>
-          <path d={`M${ax1},${ay1} A${pr},${pr} 0 ${da>180?1:0},1 ${ax2},${ay2}`} stroke={c} strokeWidth={sw} fill={filla} strokeDasharray={dash}/>
-          {s.label&&<text x={tx(s.cx)} y={ty(s.cy!)-pr-9} textAnchor="middle" fontSize={s.fontSize||12} fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'point':{
-        if(s.cx===undefined) return null
-        return <g key={i}>
-          <circle cx={tx(s.cx)} cy={ty(s.cy!)} r="5.5" fill={c} stroke="#08081a" strokeWidth="2"/>
-          {s.label&&<text x={tx(s.cx)+11} y={ty(s.cy!)-8} fontSize={s.fontSize||13} fontWeight="700" fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'dimension':{
-        // Cote entre deux points avec étiquette de mesure
-        if(s.x1===undefined) return null
-        const offPx=(s.offset??20) // déjà en pixels pour simplifier
-        return <DimensionLine
-          x1={tx(s.x1)} y1={ty(s.y1!)} x2={tx(s.x2!)} y2={ty(s.y2!)}
-          label={s.label} color={c} offset={offPx}
-        />
-      }
-      case 'median':{
-        // Médiane d'un triangle : de s.points[targetVertex] vers milieu du côté opposé
-        if(!s.points||s.points.length<3) return null
-        const tv=s.targetVertex??0
-        const opp=s.points.filter((_,j)=>j!==tv)
-        const mx2=(opp[0].x+opp[1].x)/2; const my2=(opp[0].y+opp[1].y)/2
-        const from=s.points[tv]
-        return <g key={i}>
-          <line x1={tx(from.x)} y1={ty(from.y)} x2={tx(mx2)} y2={ty(my2)} stroke={c} strokeWidth={sw} strokeDasharray="6,3"/>
-          <circle cx={tx(mx2)} cy={ty(my2)} r="4" fill={c}/>
-          {s.label&&<text x={(tx(from.x)+tx(mx2))/2+9} y={(ty(from.y)+ty(my2))/2} fontSize={s.fontSize||11} fill={c} fontStyle="italic">{s.label}</text>}
-        </g>
-      }
-      case 'altitude':{
-        // Hauteur depuis s.points[targetVertex] vers le côté opposé (pied perpendiculaire)
-        if(!s.points||s.points.length<3) return null
-        const tv=s.targetVertex??0
-        const opp=s.points.filter((_,j)=>j!==tv)
-        const [A,B]=[opp[0],opp[1]]; const P=s.points[tv]
-        const abx=B.x-A.x; const aby=B.y-A.y; const len2=abx*abx+aby*aby||1
-        const t=((P.x-A.x)*abx+(P.y-A.y)*aby)/len2
-        const Hx=A.x+t*abx; const Hy=A.y+t*aby
-        return <g key={i}>
-          <line x1={tx(P.x)} y1={ty(P.y)} x2={tx(Hx)} y2={ty(Hy)} stroke={c} strokeWidth={sw} strokeDasharray="6,3"/>
-          <RightAngleMark vertex={{x:Hx,y:Hy}} p1={P} p2={B} tx={tx} ty={ty} color={c}/>
-          <circle cx={tx(Hx)} cy={ty(Hy)} r="3.5" fill={c}/>
-          {s.label&&<text x={(tx(P.x)+tx(Hx))/2+9} y={(ty(P.y)+ty(Hy))/2} fontSize={s.fontSize||11} fill={c} fontStyle="italic">{s.label}</text>}
-        </g>
-      }
-      case 'bisector':{
-        // Bissectrice de l'angle en s.vertex entre s.p1 et s.p2
-        if(!s.vertex||!s.p1||!s.p2) return null
-        const d1x=s.p1.x-s.vertex.x; const d1y=s.p1.y-s.vertex.y; const l1=Math.sqrt(d1x*d1x+d1y*d1y)||1
-        const d2x=s.p2.x-s.vertex.x; const d2y=s.p2.y-s.vertex.y; const l2=Math.sqrt(d2x*d2x+d2y*d2y)||1
-        const bx=s.vertex.x+(d1x/l1+d2x/l2)*3; const by=s.vertex.y+(d1y/l1+d2y/l2)*3
-        return <g key={i}>
-          <line x1={tx(s.vertex.x)} y1={ty(s.vertex.y)} x2={tx(bx)} y2={ty(by)} stroke={c} strokeWidth={sw} strokeDasharray="7,4"/>
-          {s.label&&<text x={tx(bx)+9} y={ty(by)} fontSize={s.fontSize||11} fill={c} fontStyle="italic">{s.label}</text>}
-        </g>
-      }
-      case 'function_on_geo':{
-        // Trace une fonction mathématique dans le repère géométrique
-        if(!s.expr) return null
-        const safeE=sanitizeExpr(s.expr)
-        const N=300; const pts: string[]=[]
-        for(let j=0;j<=N;j++){
-          const x=rxMin+(rxMax-rxMin)*j/N
-          try{
-            const fn=new Function('x','Math',`"use strict";try{return (${safeE});}catch{return null;}`)
-            const y=fn(x,Math)
-            if(y!==null&&isFinite(y)&&Math.abs(y)<1e6) pts.push(`${tx(x)},${ty(y)}`)
-          }catch{/*skip*/}
-        }
-        return <g key={i}>
-          <polyline points={pts.join(' ')} stroke={c} strokeWidth={sw} fill="none" strokeDasharray={dash}/>
-          {s.label&&<text x={tx(rxMax)-5} y={ty(new Function('x','Math',`return (${safeE})`)(rxMax,Math))-9} fontSize={s.fontSize||12} fill={c} textAnchor="end" fontStyle="italic">{s.label}</text>}
-        </g>
-      }
-      case 'axes':{
-        const x0=tx(0); const y0=ty(0); const step=s.step||1
-        const ticks: React.ReactNode[]=[]
-        for(let v=Math.ceil(rxMin);v<=Math.floor(rxMax);v+=step){if(v===0)continue;ticks.push(<g key={`tx${v}`}><line x1={tx(v)} y1={y0-5} x2={tx(v)} y2={y0+5} stroke="rgba(255,255,255,0.35)" strokeWidth="1"/><text x={tx(v)} y={y0+17} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.45)">{v}</text></g>)}
-        for(let v=Math.ceil(ryMin);v<=Math.floor(ryMax);v+=step){if(v===0)continue;ticks.push(<g key={`ty${v}`}><line x1={x0-5} y1={ty(v)} x2={x0+5} y2={ty(v)} stroke="rgba(255,255,255,0.35)" strokeWidth="1"/><text x={x0-9} y={ty(v)+4} textAnchor="end" fontSize="10" fill="rgba(255,255,255,0.45)">{v}</text></g>)}
-        return <g key={i}>
-          <GeoArrow x1={42} y1={y0} x2={W-22} y2={y0} color="rgba(255,255,255,0.5)"/>
-          <GeoArrow x1={x0} y1={H-42} x2={x0} y2={22} color="rgba(255,255,255,0.5)"/>
-          <text x={W-16} y={y0+5} fontSize="13" fill="rgba(255,255,255,0.6)" fontStyle="italic">x</text>
-          <text x={x0-5} y={17} fontSize="13" fill="rgba(255,255,255,0.6)" fontStyle="italic">y</text>
-          <text x={x0-10} y={y0+17} textAnchor="end" fontSize="10" fill="rgba(255,255,255,0.4)">O</text>
-          {ticks}
-        </g>
-      }
-      case 'grid':{
-        const step=s.step||1; const lines: React.ReactNode[]=[]
-        for(let v=Math.ceil(rxMin);v<=Math.floor(rxMax);v+=step) lines.push(<line key={`gx${v}`} x1={tx(v)} y1={44} x2={tx(v)} y2={H-44} stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>)
-        for(let v=Math.ceil(ryMin);v<=Math.floor(ryMax);v+=step) lines.push(<line key={`gy${v}`} x1={44} y1={ty(v)} x2={W-44} y2={ty(v)} stroke="rgba(255,255,255,0.06)" strokeWidth="1"/>)
-        return <g key={i}>{lines}</g>
-      }
-      // ── Formes 3D projetées en 2D (vue de dessus / projection oblique) ──
-      case 'line3d' as any:case 'segment3d' as any: {
-        // Projection oblique simple : (x,y,z) → (x + z*0.4, y + z*0.3)
-        const proj = (p: {x:number;y:number;z?:number}) => ({ x: p.x + (p.z||0)*0.4, y: p.y + (p.z||0)*0.3 })
-        const from3 = s.from || (s as any).start || {x:s.x1||0, y:s.y1||0, z:0}
-        const to3   = s.to   || (s as any).end   || {x:s.x2||0, y:s.y2||0, z:0}
-        const pf = proj(from3), pt = proj(to3)
-        return <g key={i}>
-          <line x1={tx(pf.x)} y1={ty(pf.y)} x2={tx(pt.x)} y2={ty(pt.y)} stroke={c} strokeWidth={sw} strokeDasharray={dash}/>
-          {s.label && <text x={(tx(pf.x)+tx(pt.x))/2+9} y={(ty(pf.y)+ty(pt.y))/2-8} fontSize={s.fontSize||12} fontWeight="700" fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'point3d' as any: {
-        const proj3 = (p: {x:number;y:number;z?:number}) => ({ x: p.x + (p.z||0)*0.4, y: p.y + (p.z||0)*0.3 })
-        const pp = proj3({ x: s.x||s.cx||0, y: s.y||s.cy||0, z: (s as any).z||0 })
-        return <g key={i}>
-          <circle cx={tx(pp.x)} cy={ty(pp.y)} r="5.5" fill={c} stroke="#08081a" strokeWidth="2"/>
-          {s.label && <text x={tx(pp.x)+11} y={ty(pp.y)-8} fontSize={s.fontSize||13} fontWeight="700" fill={c}>{s.label}</text>}
-        </g>
-      }
-      case 'label' as any: {
-        return <text key={i} x={tx(s.x||0)} y={ty(s.y||0)} fontSize={s.fontSize||13} fontWeight="700" fill={c} textAnchor="middle">{s.label}</text>
-      }
-      default: return null
-    }
-  }
-
-  return (
-    <div style={{borderRadius:14,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0',background:'rgba(8,8,23,0.97)'}}>
-      {spec.title&&<div style={{padding:'8px 18px',borderBottom:'1px solid rgba(255,255,255,0.07)',fontSize:12,fontWeight:700,color:'#818cf8',letterSpacing:'0.08em'}}>📐 {spec.title}</div>}
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{display:'block'}}>
-        <rect width={W} height={H} fill="rgba(8,8,23,0.97)"/>
-        {spec.shapes.map((s,i)=>renderShape(s,i))}
-        {(spec.labels||[]).map((l,i)=><text key={i} x={tx(l.x)} y={ty(l.y)} fontSize={l.size||13} fill={l.color||'#e2e8f0'} fontWeight="700" textAnchor="middle">{l.text}</text>)}
-      </svg>
-    </div>
-  )
-}
-
-
-// ══════════════════════════════════════════════════════════════════════
-// TABLE GRAPH — Tableau de données (loi proba, algo, SVT)
-// ══════════════════════════════════════════════════════════════════════
-function TableGraph({ spec }: { spec: any }) {
-  const headers  = spec.headers  || []
-  const rows     = spec.rows     || []
-  const highlight = spec.highlight || []
-  return (
-    <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0'}}>
-      {spec.title && (
-        <div style={{padding:'8px 16px',background:'rgba(99,102,241,0.1)',borderBottom:'1px solid rgba(99,102,241,0.2)',fontSize:12,fontWeight:700,color:'#818cf8'}}>
-          📋 {spec.title}
-        </div>
-      )}
-      <div style={{overflowX:'auto'}}>
-        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'monospace'}}>
-          {headers.length > 0 && (
-            <thead>
-              <tr>
-                {headers.map((h: string, i: number) => (
-                  <th key={i} style={{padding:'8px 12px',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',fontWeight:700,borderBottom:'1px solid rgba(99,102,241,0.2)',textAlign:'center',whiteSpace:'nowrap'}}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-          )}
-          <tbody>
-            {rows.map((row: string[], i: number) => (
-              <tr key={i} style={{background: highlight.includes(i) ? 'rgba(99,102,241,0.1)' : i%2===0 ? 'rgba(255,255,255,0.02)' : 'transparent'}}>
-                {row.map((cell: string, j: number) => (
-                  <td key={j} style={{padding:'6px 12px',color:j===0?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.85)',borderBottom:'1px solid rgba(255,255,255,0.05)',textAlign:'center',whiteSpace:'nowrap'}}>
-                    {cell}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// BAR GRAPH — Histogramme / Diagramme en barres
-// ══════════════════════════════════════════════════════════════════════
-function BarGraph({ spec }: { spec: any }) {
-  const categories = spec.categories || []
-  const values     = spec.values     || []
-  const colors     = spec.colors     || ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
-  const maxVal     = Math.max(...values, 1)
-  return (
-    <div style={{borderRadius:12,overflow:'hidden',border:'1px solid rgba(99,102,241,0.25)',margin:'14px 0',background:'rgba(8,8,23,0.95)',padding:'16px'}}>
-      {spec.title && (
-        <div style={{fontSize:12,fontWeight:700,color:'#818cf8',marginBottom:14,textAlign:'center'}}>{spec.title}</div>
-      )}
-      <div style={{display:'flex',alignItems:'flex-end',gap:8,height:160,paddingBottom:24,position:'relative'}}>
-        {/* Axes Y */}
-        {[0,25,50,75,100].map(p => (
-          <div key={p} style={{position:'absolute',left:0,right:0,bottom:`${p/100*130+24}px`,borderTop:'1px solid rgba(255,255,255,0.06)',fontSize:9,color:'rgba(255,255,255,0.25)',paddingLeft:2}}>
-            {Math.round(maxVal*p/100)}
-          </div>
-        ))}
-        {categories.map((cat: string, i: number) => {
-          const h = Math.max(4, (values[i]/maxVal)*130)
-          const color = colors[i % colors.length]
-          return (
-            <div key={i} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
-              <div style={{fontSize:10,color:color,fontWeight:700}}>{values[i]}</div>
-              <div style={{width:'100%',height:`${h}px`,background:color,borderRadius:'4px 4px 0 0',opacity:0.85,transition:'height 0.3s'}}/>
-              <div style={{fontSize:10,color:'rgba(255,255,255,0.5)',textAlign:'center',lineHeight:1.2,marginTop:2}}>{cat}</div>
-            </div>
-          )
-        })}
-      </div>
-      {spec.xLabel && <div style={{textAlign:'center',fontSize:11,color:'rgba(255,255,255,0.3)',marginTop:4}}>{spec.xLabel}</div>}
-    </div>
-  )
-}
-
-
-// ══════════════════════════════════════════════════════════════════════
-// RENDERER ASCII — Schémas pile, circuit, montage physique/chimie
-// ══════════════════════════════════════════════════════════════════════
-function AsciiGraph({ spec }: { spec: any }) {
-  const title   = spec.title   || ''
-  const content = spec.content || ''
-  const legend  = Array.isArray(spec.legend) ? spec.legend : []
-  return (
-    <div style={{
-      borderRadius: 14, overflow: 'hidden',
-      border: '1px solid rgba(6,182,212,0.3)',
-      margin: '14px 0',
-      background: 'rgba(6,182,212,0.04)',
-    }}>
-      {title && (
-        <div style={{
-          padding: '8px 18px',
-          borderBottom: '1px solid rgba(6,182,212,0.15)',
-          fontSize: 12, fontWeight: 700, color: '#06b6d4',
-          letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          📐 {title}
-        </div>
-      )}
-      <div style={{ padding: '16px 20px' }}>
-        {/* Schéma ASCII */}
-        <pre style={{
-          fontFamily: "'Courier New', Consolas, monospace",
-          fontSize: 13,
-          lineHeight: 1.7,
-          color: 'rgba(255,255,255,0.85)',
-          background: 'rgba(0,0,0,0.35)',
-          borderRadius: 10,
-          padding: '14px 18px',
-          margin: '0 0 14px',
-          overflowX: 'auto',
-          whiteSpace: 'pre',
-          border: '1px solid rgba(6,182,212,0.15)',
-        }}>
-          {content}
-        </pre>
-        {/* Légende */}
-        {legend.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {legend.map((item: string, i: number) => (
-              <span key={i} style={{
-                fontSize: 11, padding: '3px 10px',
-                background: 'rgba(6,182,212,0.1)',
-                color: '#67e8f9',
-                border: '1px solid rgba(6,182,212,0.2)',
-                borderRadius: 20, fontWeight: 600,
-              }}>
-                {item}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-
-// ── Dispatch : function/points → Plotly, geometry → SVG ──────────
-function SmartGraph({ spec }: { spec: any }) {
-  // Auto-détecter le type si absent ou inconnu
-  const detectedType = autoDetectGraphType(spec)
-  const effectiveSpec = detectedType !== spec?.type ? {...spec, type: detectedType} : spec
-
-  if (effectiveSpec?.type === 'ascii')    return <AsciiGraph spec={effectiveSpec}/>
-  if (effectiveSpec?.type === 'table')    return <TableGraph spec={effectiveSpec}/>
-  if (effectiveSpec?.type === 'bar')      return <BarGraph   spec={effectiveSpec}/>
-  if (effectiveSpec?.type === 'geometry') return <GeoGraph   spec={effectiveSpec as GeoSpec}/>
-  return <MathGraph spec={effectiveSpec as GraphSpec}/>
-}
-
-// Extrait le premier [GRAPH: {...}] d'un texte (ex: correction IA)
-function extractFirstGraph(text: string): string | null {
-  const tag = '[GRAPH:'
-  const idx = text.indexOf(tag)
-  if (idx === -1) return null
-  const jsonStart = text.indexOf('{', idx + tag.length)
-  if (jsonStart === -1) return null
-  let depth = 0, j = jsonStart
-  while (j < text.length) {
-    if (text[j] === '{') depth++
-    else if (text[j] === '}') { depth--; if (depth === 0) break }
-    j++
-  }
-  const closeBracket = text.indexOf(']', j)
-  if (closeBracket === -1) return null
-  return text.slice(idx, closeBracket + 1)
-}
-
-// Extrait les segments [GRAPH: {...}] en gérant les JSON imbriqués
-function parseGraphSegments(text: string): Array<{type:'text'|'graph'; content:string}> {
-  const result: Array<{type:'text'|'graph'; content:string}> = []
-  let i = 0
-  const tag = '[GRAPH:'
-  while (i < text.length) {
-    const idx = text.indexOf(tag, i)
-    if (idx === -1) {
-      if (i < text.length) result.push({ type:'text', content: text.slice(i) })
-      break
-    }
-    if (idx > i) result.push({ type:'text', content: text.slice(i, idx) })
-    // Trouver le { qui ouvre le JSON
-    const jsonStart = text.indexOf('{', idx + tag.length)
-    if (jsonStart === -1) { result.push({ type:'text', content: text.slice(idx) }); break }
-    // Trouver la accolade fermante équilibrée
-    let depth = 0, j = jsonStart
-    while (j < text.length) {
-      if (text[j] === '{') depth++
-      else if (text[j] === '}') { depth--; if (depth === 0) break }
-      j++
-    }
-    const jsonEnd = j // position du } fermant
-    // Chercher le ] de fermeture
-    const closeBracket = text.indexOf(']', jsonEnd)
-    if (closeBracket === -1) { result.push({ type:'text', content: text.slice(idx) }); break }
-    const jsonStr = text.slice(jsonStart, jsonEnd + 1)
-    result.push({ type:'graph', content: jsonStr })
-    i = closeBracket + 1
-  }
-  return result
-}
-
-// ── Vecteurs : flèche AU-DESSUS (comme le solveur), via un span CSS ──
-function escVecHtml(s: string): string {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-}
-function vecToHtml(s: string): string {
-  return s
-    .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '<span class="mb-vec">$1</span>')
-    .replace(/\\vec\s*\{([^}]*)\}/g, '<span class="mb-vec">$1</span>')
-    // héritage : lettres/parenthèses suivies de la flèche combinante U+20D7 → flèche au-dessus
-    .replace(/([A-Za-zΑ-Ωα-ω()]{1,14})\u20d7/g, '<span class="mb-vec">$1</span>')
-}
-const MB_VEC_CSS = '.mb-vec{position:relative;display:inline-block;white-space:nowrap;padding-top:.22em}'
-  + '.mb-vec::before{content:"";position:absolute;left:0;right:.16em;top:.04em;border-top:1.5px solid currentColor}'
-  + '.mb-vec::after{content:"";position:absolute;right:-.05em;top:-.12em;border-left:.36em solid currentColor;border-top:.2em solid transparent;border-bottom:.2em solid transparent}'
-if (typeof document !== 'undefined' && !document.getElementById('mb-vec-style')) {
-  const _st = document.createElement('style'); _st.id = 'mb-vec-style'; _st.textContent = MB_VEC_CSS
-  document.head.appendChild(_st)
-}
-
-function TextWithGraphs({ text }: { text: string }) {
-  const segments = parseGraphSegments(text)
-  return (
-    <div>
-      {segments.map((seg, i) => {
-        if (seg.type === 'text') {
-          return seg.content ? <MDLines key={i} text={seg.content} /> : null
-        } else {
-          try {
-            const spec: GraphSpec = JSON.parse(seg.content)
-            return <SmartGraph key={i} spec={spec} />
-          } catch {
-            // Si JSON invalide, afficher quand même proprement
-            return <div key={i} style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
-          }
-        }
-      })}
-    </div>
-  )
-}
-
-// ── PDF coloré : génération HTML + print navigateur ──────────────
-
-// ── PDF coloré : génération HTML + print navigateur ──────────────
-// Approche : HTML stylé ouvert dans un onglet → Ctrl+P → Enregistrer en PDF
-// Résultat : polices parfaites, symboles mathématiques, couleurs fidèles
-
-function buildCorrectionHtml(
-  exam: GeneratedExam,
-  correctionText: string,
-  studentAnswers: string,
-  autoDownload = false,
-  graphImages: string[] = []
-): string {
-
-  const C = {
-    ex:  ['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'],
-    exBg:['#1e1b4b','#052e16','#431407','#2e1065','#082f49'],
-    exTx:['#a5b4fc','#6ee7b7','#fcd34d','#c4b5fd','#67e8f9'],
-  }
-
-  let exIdx = -1
-
-  /* ── escape HTML basique ── */
-  const esc = (s: string) => s
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-
-  /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
-  const inline = (s: string) => vecToHtml(esc(s))
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/`(.+?)`/g,'<code>$1</code>')
-
-  /* ── convertit une ligne Markdown en HTML ── */
-  const line2html = (raw: string): string => {
-    const t = raw.trim()
-    if (!t) return '<div class="spacer"></div>'
-
-    // ## Exercice N
-    if (t.startsWith('## ')) {
-      exIdx = Math.min(exIdx + 1, C.ex.length - 1)
-      return (
-        `<div class="ex-hdr" style="background:${C.exBg[exIdx]};` +
-        `border-left:5px solid ${C.ex[exIdx]};color:${C.exTx[exIdx]}">` +
-        `${inline(t.slice(3))}</div>`
-      )
-    }
-
-    // ### Partie / Question
-    if (t.startsWith('### ')) {
-      const col = C.ex[Math.max(exIdx,0)]
-      const bg  = C.exBg[Math.max(exIdx,0)]
-      return (
-        `<div class="q-hdr" style="border-left:3px solid ${col};` +
-        `background:${col}14;color:${col}">${inline(t.slice(4))}</div>`
-      )
-    }
-
-    // > **Résultat / Bilan**
-    if (t.startsWith('>')) {
-      const inner = t.replace(/^>\s*/,'')
-      if (inner.startsWith('**')) {
-        return `<div class="result-box">${inline(inner)}</div>`
-      }
-      return `<div class="tip-box">${inline(inner)}</div>`
-    }
-
-    // --- séparateur
-    if (t === '---') return '<hr>'
-
-    // Ligne **Concept / Méthode
-    if (/^\*\*(Concept|M.thode|Th.or.me|Rappel|D.finition)/i.test(t))
-      return `<div class="concept">${inline(t)}</div>`
-
-    // **Résultat :**
-    if (/^\*\*(R.sultat|Conclusion)/i.test(t))
-      return `<div class="result-inline">${inline(t)}</div>`
-
-    // **Barème / Bilan Exercice
-    if (/^\*\*(Bar.me|Bilan|Note)/i.test(t))
-      return `<div class="bareme">${inline(t)}</div>`
-
-    // **Erreur / Piège
-    if (/^\*\*(Erreur|Pi.ge|Attention)/i.test(t))
-      return `<div class="err">${inline(t)}</div>`
-
-    // **Point pédago / À retenir
-    if (/^\*\*(Point|Astuce|. retenir|Key)/i.test(t))
-      return `<div class="tip-line">${inline(t)}</div>`
-
-    // Analyse élève ✅ ❌ 💡
-    if (/[✅❌💡]/.test(t))
-      return `<div class="analysis">${inline(t)}</div>`
-
-    // Étapes : - Étape N ou • Étape
-    if (/^[-•]\s*[Éé]tape\s*\d/i.test(t) || /^[Éé]tape\s*\d/i.test(t))
-      return `<div class="step">${inline(t)}</div>`
-
-    // Bullet générique
-    if (t.startsWith('- ') || t.startsWith('• '))
-      return `<div class="bullet">${inline(t.slice(2))}</div>`
-
-    // Texte normal
-    return `<p>${inline(t)}</p>`
-  }
-
-  // ── Convertit [GRAPH:{...}] en SVG inline pour l'impression ─────
-  const graphToSvg = (jsonStr: string): string => {
-    try {
-      const sp = JSON.parse(jsonStr)
-      const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
-      const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      const proj3 = (p: {x:number;y?:number;z?:number}) => ({ x:(p.x||0)+(((p as any).z)||0)*0.4, y:(p.y||0)+(((p as any).z)||0)*0.3 })
-
-      if (sp.type === 'function') {
-        const FW=520,FH=260,FP=46
-        const fxMin:number=sp.xMin??-5, fxMax:number=sp.xMax??5, FN=300
-        const allFY:number[]=[]
-        const fnData:(number[])[] = (sp.expressions as string[]||[]).map(expr=>{
-          const row:number[]=[]
-          for(let i=0;i<=FN;i++){
-            const x=fxMin+(i/FN)*(fxMax-fxMin)
-            try{ const fn2=new Function('x','Math',`try{return(${sanitizeExpr(expr)})}catch(e){return null}`)
-              const y:number|null=fn2(x,Math); if(y!==null&&isFinite(y)&&Math.abs(y)<1e5){row.push(y);allFY.push(y)}else row.push(NaN)
-            }catch{row.push(NaN)}
-          }; return row
-        })
-        const fyMin=(allFY.length?Math.min(...allFY.filter(isFinite)):-3)-0.5
-        const fyMax=(allFY.length?Math.max(...allFY.filter(isFinite)):5)+0.5
-        const ftx=(x:number)=>FP+((x-fxMin)/(fxMax-fxMin))*(FW-2*FP)
-        const fty=(y:number)=>FH-FP-((y-fyMin)/(fyMax-fyMin))*(FH-2*FP)
-        let fpaths='', fleg=''
-        fnData.forEach((row,fi)=>{
-          const fc=GC[fi%GC.length]; let fd=''
-          for(let i=0;i<=FN;i++){const y=row[i],x=fxMin+(i/FN)*(fxMax-fxMin); if(!isNaN(y)&&isFinite(y))fd+=(fd===''?'M':'L')+ftx(x).toFixed(1)+','+fty(y).toFixed(1)+' '; else fd+=' '}
-          fpaths+='<path d="'+fd+'" fill="none" stroke="'+fc+'" stroke-width="2.5"/>'
-          const lbl=(sp.labels as string[])?.[fi]||(sp.expressions as string[])[fi]
-          fleg+='<text x="'+(FP+fi*140)+'" y="15" fill="'+fc+'" font-size="11" font-family="monospace">'+esc2(lbl)+'</text>'
-        })
-        const fox=ftx(0).toFixed(1),foy=fty(0).toFixed(1)
-        const fax='<line x1="'+FP+'" y1="'+foy+'" x2="'+(FW-FP)+'" y2="'+foy+'" stroke="#475569" stroke-width="1.2"/>'
-          +'<line x1="'+fox+'" y1="'+FP+'" x2="'+fox+'" y2="'+(FH-FP)+'" stroke="#475569" stroke-width="1.2"/>'
-          +'<text x="'+(FW-FP+6)+'" y="'+(Number(foy)+4)+'" fill="#475569" font-size="12" font-style="italic">x</text>'
-          +'<text x="'+(Number(fox)+5)+'" y="'+(FP-4)+'" fill="#475569" font-size="12" font-style="italic">y</text>'
-        const fttl=sp.title?'<text x="'+(FW/2)+'" y="'+(FH-4)+'" fill="#64748b" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
-        return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
-          +(fleg?'<svg width="'+FW+'" height="20" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+fleg+'</svg>':'')
-          +'<svg width="'+FW+'" height="'+FH+'" viewBox="0 0 '+FW+' '+FH+'" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+fax+fpaths+fttl+'</svg></div>'
-      }
-
-      if (sp.type === 'geometry') {
-        const GW:number=sp.width||440, GH:number=sp.height||340, GP=44
-        const gsh:any[]=sp.shapes||[]
-        // Calcul auto des bornes à partir de tous les points
-        const allGX:number[]=[], allGY:number[]=[]
-        const addPt=(p:any)=>{if(!p)return;const pp=proj3(p);allGX.push(pp.x);allGY.push(pp.y)}
-        gsh.forEach((s:any)=>{
-          if(s.points)(s.points as any[]).forEach(addPt)
-          if(s.from)addPt(s.from); if(s.to)addPt(s.to); if(s.start)addPt(s.start); if(s.end)addPt(s.end)
-          if(s.cx!==undefined){allGX.push(s.cx+(s.r||0));allGY.push(s.cy+(s.r||0));allGX.push(s.cx-(s.r||0));allGY.push(s.cy-(s.r||0))}
-          if(s.x1!==undefined){allGX.push(s.x1,s.x2||0);allGY.push(s.y1||0,s.y2||0)}
-          if(s.x!==undefined)addPt(s)
-          // points 3D
-          if(s.type==='point3d'||s.type==='line3d'||s.type==='segment3d'){
-            if(s.x!==undefined)addPt({x:s.x,y:s.y||0,z:s.z||0})
-          }
-        })
-        const gMg=1.5
-        const gxMin=allGX.length?Math.min(...allGX)-gMg:-1, gxMax=allGX.length?Math.max(...allGX)+gMg:6
-        const gyMin=allGY.length?Math.min(...allGY)-gMg:-1, gyMax=allGY.length?Math.max(...allGY)+gMg:5
-        const gtx=(x:number)=>GP+((x-gxMin)/(gxMax-gxMin))*(GW-2*GP)
-        const gty=(y:number)=>GH-GP-((y-gyMin)/(gyMax-gyMin))*(GH-2*GP)
-        let gsvg=''; let gci=0
-        for(const gs of gsh){
-          const gc:string=gs.color||GC[gci++%GC.length]
-          const gf:string=gs.fill||'none'
-          if(gs.type==='grid'){
-            for(let gx=Math.ceil(gxMin);gx<=gxMax;gx++)gsvg+='<line x1="'+gtx(gx).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(gx).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#1e293b14" stroke-width="1"/>'
-            for(let gy=Math.ceil(gyMin);gy<=gyMax;gy++)gsvg+='<line x1="'+GP+'" y1="'+gty(gy).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(gy).toFixed(1)+'" stroke="#1e293b14" stroke-width="1"/>'
-          }else if(gs.type==='axes'){
-            gsvg+='<line x1="'+GP+'" y1="'+gty(0).toFixed(1)+'" x2="'+(GW-GP)+'" y2="'+gty(0).toFixed(1)+'" stroke="#475569" stroke-width="1.5"/>'
-              +'<line x1="'+gtx(0).toFixed(1)+'" y1="'+GP+'" x2="'+gtx(0).toFixed(1)+'" y2="'+(GH-GP)+'" stroke="#475569" stroke-width="1.5"/>'
-              +'<text x="'+(GW-GP+8)+'" y="'+(gty(0)+4).toFixed(1)+'" fill="#475569" font-size="12" font-style="italic">x</text>'
-              +'<text x="'+(gtx(0)+5).toFixed(1)+'" y="'+(GP-4)+'" fill="#475569" font-size="12" font-style="italic">y</text>'
-          }else if(gs.type==='triangle'&&gs.points){
-            const gpts=(gs.points as any[]).map((p:any)=>gtx(p.x).toFixed(1)+','+gty(p.y).toFixed(1)).join(' ')
-            gsvg+='<polygon points="'+gpts+'" fill="'+gf+'" stroke="'+gc+'" stroke-width="2"/>'
-            for(const gp of gs.points as any[]){if(gp.label)gsvg+='<text x="'+(gtx(gp.x)+7).toFixed(1)+'" y="'+(gty(gp.y)-7).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gp.label)+'</text>'}
-          }else if(gs.type==='circle'&&gs.cx!==undefined){
-            const gr:number=gs.r||1
-            const gpr=Math.abs((gr/(gxMax-gxMin))*(GW-2*GP))
-            gsvg+='<circle cx="'+gtx(gs.cx).toFixed(1)+'" cy="'+gty(gs.cy).toFixed(1)+'" r="'+gpr.toFixed(1)+'" fill="'+gf+'" stroke="'+gc+'" stroke-width="2"/>'
-            if(gs.label)gsvg+='<text x="'+(gtx(gs.cx)+gpr+5).toFixed(1)+'" y="'+(gty(gs.cy)+4).toFixed(1)+'" fill="'+gc+'" font-size="11">'+esc2(gs.label)+'</text>'
-          }else if((gs.type==='segment'||gs.type==='line')&&gs.x1!==undefined){
-            const gd=(gs.dashed)?' stroke-dasharray="5,4"':''
-            gsvg+='<line x1="'+gtx(gs.x1).toFixed(1)+'" y1="'+gty(gs.y1).toFixed(1)+'" x2="'+gtx(gs.x2).toFixed(1)+'" y2="'+gty(gs.y2).toFixed(1)+'" stroke="'+gc+'" stroke-width="2"'+gd+'/>'
-            if(gs.label){const gmx=(gtx(gs.x1)+gtx(gs.x2))/2,gmy=(gty(gs.y1)+gty(gs.y2))/2;gsvg+='<text x="'+(gmx+5).toFixed(1)+'" y="'+(gmy-5).toFixed(1)+'" fill="'+gc+'" font-size="11">'+esc2(gs.label)+'</text>'}
-          }else if(gs.type==='vector'&&gs.from&&gs.to){
-            const gvx1=gtx(gs.from.x),gvy1=gty(gs.from.y),gvx2=gtx(gs.to.x),gvy2=gty(gs.to.y)
-            const gang=Math.atan2(gvy2-gvy1,gvx2-gvx1),ga=9,gb2=0.5
-            gsvg+='<line x1="'+gvx1.toFixed(1)+'" y1="'+gvy1.toFixed(1)+'" x2="'+gvx2.toFixed(1)+'" y2="'+gvy2.toFixed(1)+'" stroke="'+gc+'" stroke-width="2"/>'
-              +'<polygon points="'+gvx2.toFixed(1)+','+gvy2.toFixed(1)+' '+(gvx2-ga*Math.cos(gang-gb2)).toFixed(1)+','+(gvy2-ga*Math.sin(gang-gb2)).toFixed(1)+' '+(gvx2-ga*Math.cos(gang+gb2)).toFixed(1)+','+(gvy2-ga*Math.sin(gang+gb2)).toFixed(1)+'" fill="'+gc+'"/>'
-            if(gs.label)gsvg+='<text x="'+((gvx1+gvx2)/2+7).toFixed(1)+'" y="'+((gvy1+gvy2)/2-7).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gs.label)+'</text>'
-          }else if(gs.type==='point'||gs.type==='point3d'){
-            const gpp=gs.type==='point3d'?proj3({x:gs.x||0,y:gs.y||0,z:gs.z||0}):{x:gs.cx||gs.x||0,y:gs.cy||gs.y||0}
-            gsvg+='<circle cx="'+gtx(gpp.x).toFixed(1)+'" cy="'+gty(gpp.y).toFixed(1)+'" r="5" fill="'+gc+'"/>'
-            if(gs.label)gsvg+='<text x="'+(gtx(gpp.x)+8).toFixed(1)+'" y="'+(gty(gpp.y)-8).toFixed(1)+'" fill="'+gc+'" font-size="12" font-weight="bold">'+esc2(gs.label)+'</text>'
-          }else if(gs.type==='line3d'||gs.type==='segment3d'){
-            const gsf=proj3(gs.from||gs.start||{x:0,y:0,z:0}),gst=proj3(gs.to||gs.end||{x:1,y:0,z:0})
-            gsvg+='<line x1="'+gtx(gsf.x).toFixed(1)+'" y1="'+gty(gsf.y).toFixed(1)+'" x2="'+gtx(gst.x).toFixed(1)+'" y2="'+gty(gst.y).toFixed(1)+'" stroke="'+gc+'" stroke-width="2"/>'
-            if(gs.label){const gmx2=(gtx(gsf.x)+gtx(gst.x))/2,gmy2=(gty(gsf.y)+gty(gst.y))/2;gsvg+='<text x="'+(gmx2+6).toFixed(1)+'" y="'+(gmy2-6).toFixed(1)+'" fill="'+gc+'" font-size="11" font-weight="bold">'+esc2(gs.label)+'</text>'}
-          }
-        }
-        const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#64748b" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
-        return '<div class="mb-graph" style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
-          +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" xmlns="http://www.w3.org/2000/svg" style="background:#fff;display:block">'+gsvg+gttl+'</svg></div>'
-      }
-    }catch(_e){return ''}
-    return ''
-  }
-
-  // ── Convertit texte + [GRAPH:] en HTML ──────────────────────────
-  const textToHtml = (rawText: string): string => {
-    const GTAG='[GRAPH:'
-    const parts:string[]=[]
-    let gp=0
-    let gIdx=0
-    while(gp<rawText.length){
-      const gi=rawText.indexOf(GTAG,gp)
-      if(gi===-1){parts.push(rawText.slice(gp).split('\n').map(line2html).join('\n'));break}
-      if(gi>gp)parts.push(rawText.slice(gp,gi).split('\n').map(line2html).join('\n'))
-      const jgs=rawText.indexOf('{',gi+GTAG.length)
-      if(jgs===-1){parts.push(rawText.slice(gi).split('\n').map(line2html).join('\n'));break}
-      let gd=0,gjj=jgs
-      while(gjj<rawText.length){if(rawText[gjj]==='{')gd++;else if(rawText[gjj]==='}'){gd--;if(gd===0)break};gjj++}
-      const gcb=rawText.indexOf(']',gjj)
-      const captured=graphImages[gIdx]
-      gIdx++
-      if(captured){
-        // Image capturée à l'écran (rendu identique : Plotly / géométrie)
-        parts.push('<div class="mb-graph" style="margin:12px 0;text-align:center"><img src="'+captured+'" style="max-width:100%;display:block;margin:0 auto;border-radius:10px;border:1px solid #e5e7eb"/></div>')
-      } else {
-        const svg=graphToSvg(rawText.slice(jgs,gjj+1))
-        parts.push(svg||'<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:11px;color:#fcd34d;margin:8px 0">📊 Figure mathématique</div>')
-      }
-      gp=(gcb!==-1?gcb:gjj)+1
-    }
-    return parts.join('\n')
-  }
-
-  const bodyHtml = textToHtml(correctionText)
-
-  const answersHtml = studentAnswers.trim().length > 10
-    ? `<details class="answers-block" open>
-        <summary>Réponses soumises par l'élève</summary>
-        <pre>${esc(studentAnswers)}</pre>
-       </details>`
-    : ''
-
-  /* ── CSS de base ── */
-  const css = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-    *{box-sizing:border-box;margin:0;padding:0}
-    html{background:#ffffff}
-    body{
-      font-family:'Inter','Segoe UI',system-ui,sans-serif;
-      background:#ffffff;color:#1f2937;
-      font-size:13.5px;line-height:1.8;
-      -webkit-print-color-adjust:exact;
-      print-color-adjust:exact;
-    }
-    .wrap{max-width:860px;margin:0 auto;padding:32px 40px 80px;background:#ffffff}
-    .mb-graph{break-inside:avoid;page-break-inside:avoid}
-    .mb-graph svg{max-width:100%;height:auto}
-
-    /* BARRE D'IMPRESSION */
-    .print-bar{
-      position:sticky;top:0;z-index:99;
-      background:#ffffff;border-bottom:1px solid #e5e7eb;
-      padding:10px 0 14px;margin-bottom:20px;
-      display:flex;align-items:center;gap:12px;
-    }
-    .print-btn{
-      background:linear-gradient(135deg,#6366f1,#8b5cf6);
-      color:white;border:none;border-radius:8px;
-      padding:10px 24px;font-size:14px;font-weight:700;
-      cursor:pointer;font-family:inherit;
-    }
-    .print-hint{font-size:11.5px;color:#94a3b8;max-width:500px;line-height:1.5}
-
-    /* TITRE */
-    .doc-title{
-      background:linear-gradient(135deg,#312e81,#5b21b6);
-      border-radius:12px;
-      padding:22px 28px;margin-bottom:28px;text-align:center;
-    }
-    .doc-title h1{font-size:20px;font-weight:900;color:#fff;margin-bottom:6px}
-    .doc-title .sub{color:#c7d2fe;font-size:12px}
-
-    /* EN-TÊTE EXERCICE */
-    .ex-hdr{
-      border-radius:8px;padding:14px 20px;
-      margin:32px 0 16px;font-size:16px;font-weight:800;
-      page-break-before:always;
-    }
-    .ex-hdr:first-of-type{page-break-before:avoid}
-
-    /* EN-TÊTE QUESTION */
-    .q-hdr{
-      border-radius:0 6px 6px 0;padding:8px 14px;
-      margin:14px 0 8px;font-size:13px;font-weight:700;
-    }
-
-    /* CONCEPT */
-    .concept{
-      background:#eff6ff;border-left:3px solid #3b82f6;
-      border-radius:0 6px 6px 0;padding:10px 14px;
-      color:#1e3a8a;font-size:12.5px;margin:8px 0;
-    }
-
-    /* ÉTAPES */
-    .step{
-      padding:5px 12px 5px 26px;margin:3px 0;
-      color:#1f2937;font-size:12.5px;position:relative;
-    }
-    .step::before{content:'→';position:absolute;left:8px;color:#6366f1;font-weight:900}
-
-    /* RÉSULTAT */
-    .result-box{
-      border:2px solid #10b981;background:#ecfdf5;
-      border-radius:8px;padding:12px 18px;margin:14px 0;
-      color:#065f46;font-weight:700;font-size:13.5px;
-    }
-    .result-inline{
-      background:#ecfdf5;border:1px solid #10b981;
-      border-radius:6px;padding:8px 14px;
-      color:#065f46;font-weight:700;margin:8px 0;
-    }
-
-    /* BARÈME */
-    .bareme{
-      background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;
-      padding:7px 14px;color:#5b21b6;font-size:12px;margin:6px 0;
-    }
-
-    /* ERREUR */
-    .err{
-      background:#fef2f2;border-left:3px solid #ef4444;
-      border-radius:0 6px 6px 0;padding:8px 14px;
-      color:#991b1b;font-size:12px;margin:6px 0;
-    }
-
-    /* ASTUCE / TIP */
-    .tip-line,.tip-box{
-      background:#ecfeff;border-left:3px solid #06b6d4;
-      border-radius:0 6px 6px 0;padding:8px 14px;
-      color:#155e75;font-size:12px;margin:6px 0;
-    }
-
-    /* ANALYSE */
-    .analysis{
-      background:#f8fafc;border:1px solid #eef2f7;border-radius:5px;
-      padding:5px 12px;margin:3px 0;font-size:12.5px;color:#334155;
-    }
-
-    /* BULLET / LISTE */
-    .bullet{
-      padding:3px 0 3px 20px;color:#374151;
-      font-size:12.5px;position:relative;
-    }
-    .bullet::before{content:'›';position:absolute;left:6px;color:#6366f1;font-weight:700}
-
-    p{color:#1f2937;font-size:12.5px;margin:4px 0}
-    hr{border:0;border-top:1px solid #e5e7eb;margin:14px 0}
-    strong{color:#0f172a;font-weight:700}
-    code{background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.9em;color:#334155}
-    .spacer{height:6px}
-
-    /* RÉPONSES ÉLÈVE */
-    .answers-block{
-      background:#eff6ff;border:1px solid #bfdbfe;
-      border-radius:10px;padding:14px 18px;margin-bottom:24px;
-    }
-    .answers-block summary{
-      font-weight:700;color:#1d4ed8;cursor:pointer;
-      font-size:13px;margin-bottom:8px;
-    }
-    .answers-block pre{
-      white-space:pre-wrap;font-family:inherit;
-      font-size:12px;color:#334155;line-height:1.7;
-    }
-
-    /* FOOTER */
-    .footer{
-      margin-top:48px;padding-top:12px;
-      border-top:1px solid #e5e7eb;
-      text-align:center;color:#94a3b8;font-size:10.5px;
-    }
-
-    @media print{
-      .print-bar{display:none!important}
-      .wrap{padding:12px 20px}
-      .mb-graph{page-break-inside:avoid}
-      svg{max-width:100%!important}
-    }
-  `
-
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>Correction — ${esc(exam.title)}</title>
-<style>${css}
-${MB_VEC_CSS}</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-</head>
-<body>
-<div class="wrap">
-
-  <div class="print-bar">
-    <button class="print-btn" onclick="telechargerPDF()">⬇ Télécharger PDF couleur</button>
-    <button class="print-btn" onclick="window.print()" style="background:rgba(255,255,255,.08);color:#cbd5e1">🖨 Imprimer</button>
-    <span class="print-hint">PDF couleur (graphiques inclus) ou impression. En impression → activez <strong style="color:rgba(255,255,255,.6)">« Couleurs de fond »</strong></span>
-  </div>
-
-  <div class="doc-title">
-    <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBAC.AI</div>
-    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://app.mathsbac.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
-    <h1>${esc(exam.title)}</h1>
-    <div class="sub">Correction IA détaillée · ${exam.totalPoints}/20 pts · ${new Date().toLocaleDateString('fr-FR')}</div>
-  </div>
-
-  ${answersHtml}
-
-  ${bodyHtml}
-
-  <div class="footer">MATHBAC.AI · http://app.mathsbac.com — Correction générée par IA</div>
-</div>
-<script>
-  function telechargerPDF(){
-    var bar=document.querySelector('.print-bar'); if(bar)bar.style.display='none';
-    var el=document.querySelector('.wrap');
-    var opt={margin:[6,6,6,6],filename:'MathBac-correction.pdf',image:{type:'jpeg',quality:0.95},
-      html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:'.mb-graph'}};
-    if(typeof html2pdf==='undefined'){ alert('Chargement en cours, réessayez dans 1 seconde.'); if(bar)bar.style.display=''; return; }
-    html2pdf().set(opt).from(el).save().then(function(){ if(bar)bar.style.display=''; });
-  }
-  ${autoDownload ? "window.addEventListener('load',function(){setTimeout(telechargerPDF,700)});" : ''}
-</script>
-</body>
-</html>`
-}
-
-// ── Capture des graphiques AFFICHÉS à l'écran → images PNG (rendu identique à l'écran) ──
-function svgToPng(svg: SVGElement): Promise<string> {
-  return new Promise((resolve) => {
-    try {
-      const rect = svg.getBoundingClientRect()
-      const w = Math.max(Math.round(rect.width), 320), h = Math.max(Math.round(rect.height), 240)
-      const clone = svg.cloneNode(true) as SVGElement
-      clone.setAttribute('width', String(w))
-      clone.setAttribute('height', String(h))
-      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-      const xml = new XMLSerializer().serializeToString(clone)
-      const svg64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)))
-      const img = new Image()
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas')
-          canvas.width = w * 2; canvas.height = h * 2
-          const ctx = canvas.getContext('2d')!
-          ctx.scale(2, 2)
-          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h)
-          ctx.drawImage(img, 0, 0, w, h)
-          resolve(canvas.toDataURL('image/png'))
-        } catch { resolve('') }
-      }
-      img.onerror = () => resolve('')
-      img.src = svg64
-    } catch { resolve('') }
-  })
-}
-
-async function captureGraphsInOrder(container: HTMLElement | null): Promise<string[]> {
-  if (!container || typeof document === 'undefined') return []
-  const out: string[] = []
-  const nodes = Array.from(container.querySelectorAll('.js-plotly-plot, svg')) as HTMLElement[]
-  for (const node of nodes) {
-    // Ignore les <svg> internes à un graphique Plotly (déjà capturé via Plotly.toImage)
-    if (node.tagName.toLowerCase() === 'svg' && node.closest('.js-plotly-plot')) continue
-    try {
-      const P = (window as any).Plotly
-      if (node.classList.contains('js-plotly-plot') && P && typeof P.toImage === 'function') {
-        const w = (node as HTMLElement).offsetWidth || 700, h = (node as HTMLElement).offsetHeight || 400
-        out.push(await P.toImage(node, { format: 'png', width: w, height: h, scale: 2 }))
-      } else if (node.tagName.toLowerCase() === 'svg') {
-        out.push(await svgToPng(node as unknown as SVGElement))
-      }
-    } catch {
-      out.push('')
-    }
-  }
-  return out
-}
-
-function openCorrectionPdf(
-  exam: GeneratedExam,
-  correctionText: string,
-  studentAnswers: string,
-  autoDownload = false,
-  graphImages: string[] = []
-) {
-  const html = buildCorrectionHtml(exam, correctionText, studentAnswers, autoDownload, graphImages)
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-  const url  = URL.createObjectURL(blob)
-  const win  = window.open(url, '_blank')
-  if (!win) {
-    // Popup bloqué → télécharger le fichier HTML
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Correction-${exam.title.replace(/[^\w-]/g,'-')}.html`
-    a.click()
-  }
-  setTimeout(() => URL.revokeObjectURL(url), 10000)
-}
-
-
-
-// ── Rendu Markdown minimaliste (sans graphiques) ──────────────────
-function MDLines({ text }: { text: string; [key: string]: any }) {
-  const inl = (s: string) => vecToHtml(escVecHtml(s)).replace(/\*\*(.+?)\*\*/g,'<strong style="color:#e2e8f0;font-weight:700">$1</strong>')
-  return (
-    <div style={{lineHeight:1.85,color:'rgba(255,255,255,0.8)',fontSize:14}}>
-      {text.split('\n').map((ln,i)=>{
-        if(!ln.trim()) return <div key={i} style={{height:6}}/>
-        if(ln.startsWith('## ')) return <h3 key={i} style={{fontSize:15,fontWeight:700,color:'#a5b4fc',marginTop:20,marginBottom:8,borderBottom:'1px solid rgba(99,102,241,0.2)',paddingBottom:6}} dangerouslySetInnerHTML={{__html:inl(ln.slice(3))}}/>
-        if(ln.startsWith('### ')) return <h4 key={i} style={{fontSize:14,fontWeight:700,color:'#e2e8f0',marginTop:14,marginBottom:6}} dangerouslySetInnerHTML={{__html:inl(ln.slice(4))}}/>
-        if(ln.startsWith('- ')) return <p key={i} style={{margin:'3px 0',paddingLeft:16,position:'relative',fontSize:13,color:'rgba(255,255,255,0.75)'}}>
-          <span style={{position:'absolute',left:0,color:'#6366f1'}}>›</span><span dangerouslySetInnerHTML={{__html:inl(ln.slice(2))}}/>
-        </p>
-        if(ln.match(/^\d+\.\s/)) return <p key={i} style={{margin:'4px 0',paddingLeft:22,fontSize:13,position:'relative'}}>
-          <strong style={{position:'absolute',left:0,color:'#6366f1'}}>{ln.split(/\.\s/)[0]}.</strong>
-          <span dangerouslySetInnerHTML={{__html:inl(ln.replace(/^\d+\.\s/,''))}}/>
-        </p>
-        return <p key={i} style={{margin:'2px 0',fontSize:13}} dangerouslySetInnerHTML={{__html:inl(ln)}}/>
-      })}
-    </div>
-  )
-}
-
-// ── Bouton principal ──────────────────────────────────────────────
-function MD({ text }: { text: string }) {
-  return <TextWithGraphs text={text} />
-}
-
-
-function PrimaryBtn({ onClick, disabled=false, loading=false, children, fullWidth=false, style: extraStyle }: {
-  onClick:()=>void; disabled?:boolean; loading?:boolean; children:React.ReactNode; fullWidth?:boolean; style?:React.CSSProperties
-}) {
-  return (
-    <button onClick={onClick} disabled={disabled||loading}
-      style={{
-        display:'inline-flex',alignItems:'center',justifyContent:'center',gap:10,
-        padding:'14px 28px',borderRadius:14,border:'none',cursor:disabled?'not-allowed':'pointer',
-        fontSize:14,fontWeight:700,letterSpacing:'0.02em',
-        background:disabled?'rgba(255,255,255,0.07)':'linear-gradient(135deg,#6366f1,#8b5cf6)',
-        color:disabled?'rgba(255,255,255,0.3)':'white',
-        boxShadow:disabled?'none':'0 8px 24px rgba(99,102,241,0.45)',
-        width:fullWidth?'100%':'auto',
-        transition:'all 0.2s',
-        transform:'translateY(0)',
-        ...(!disabled && extraStyle ? extraStyle : {}),
-      }}
-      onMouseEnter={e=>{if(!disabled)e.currentTarget.style.transform='translateY(-2px)'}}
-      onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'}}>
-      {loading && <span style={{width:16,height:16,border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'white',borderRadius:'50%',animation:'spin 0.7s linear infinite',flexShrink:0}}/>}
-      {children}
-    </button>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// CHAPITRES PAR SECTION — Programme officiel CNP Tunisie
-// Source : pages bac/maths, bac/sciences-exp, bac/sciences-tech,
-//          bac/informatique, bac/eco-gestion
-// ═══════════════════════════════════════════════════════════════════
-const CHAPITRES_PAR_SECTION: Record<string, {
-  key: string; label: string; color: string; icon: string
-  chapitres: { slug: string; titre: string; badge: string; desc: string }[]
-}> = {
-  maths: {
-    key:'maths', label:'Bac-Mathematiques', color:'#6366f1', icon:'\u2211',
-    chapitres: [
-      { slug:'complexes',              titre:'Nombres Complexes',                badge:'Algebre',      desc:'Formes algebrique, trigonometrique, exponentielle, Moivre, Euler, racines n-iemes, applications geometriques dans C.' },
-      { slug:'arithmetique',           titre:'Arithmetique dans Z',              badge:'Algebre',      desc:'Divisibilite, PGCD, algorithme Euclide, identite de Bezout au+bv=PGCD, theoreme de Gauss, congruences, equations diophantiennes.' },
-      { slug:'suites',                 titre:'Suites Numeriques',                badge:'Analyse',      desc:'Suites arithmetiques, geometriques, recurrentes u(n+1)=f(u(n)), suites adjacentes, monotonie, bornitude, convergence.' },
-      { slug:'limites-continuite',     titre:'Limites et Continuite',            badge:'Analyse',      desc:'Limites en un point et a l infini, formes indeterminees, TVI, prolongement par continuite, asymptotes H V O.' },
-      { slug:'derivation',             titre:'Derivabilite et Etude de Fonctions', badge:'Analyse',    desc:'Derivabilite, Rolle, accroissements finis, L Hopital, derivees usuelles, tangente, concavite, inflexion, etude complete.' },
-      { slug:'fonctions-reciproques',  titre:'Fonctions Reciproques',            badge:'Analyse',      desc:'Bijection, arcsin [-1,1] vers [-pi/2,pi/2], arccos, arctan, derivees, proprietes, compositions.' },
-      { slug:'logarithme',             titre:'Logarithme Neperien',              badge:'Analyse',      desc:'Definition integrale ln x = integrale de 1 a x de 1/t dt. Proprietes. Derivee (ln u) prime = u prime/u. Croissances comparees.' },
-      { slug:'exponentielle',          titre:'Fonction Exponentielle',           badge:'Analyse',      desc:'Reciproque de ln. Derivee (e^u) prime = u prime e^u. Proprietes. Croissances comparees e^x/x^n. Fonctions a^x.' },
-      { slug:'calcul-integral',        titre:'Calcul Integral',                  badge:'Analyse',      desc:'Primitives usuelles. Integrale de Riemann. Theoreme fondamental. IPP. Changement de variable. Aires planes et volumes de revolution.' },
-      { slug:'equations-differentielles', titre:'Equations Differentielles',    badge:'Analyse',      desc:"y prime=ay, y prime=ay+b, y seconde+ay prime+by=0, equation caracteristique r2+ar+b=0, delta>0, delta=0, delta<0 racines complexes." },
-      { slug:'geometrie-espace',       titre:'Geometrie dans Espace',            badge:'Geometrie',    desc:'Produit scalaire et vectoriel u^v. Equations de plan et droite dans espace. Sphere. Distances point-plan, point-droite, entre droites.' },
-      { slug:'isometries-similitudes', titre:'Isometries et Similitudes',        badge:'Geometrie',    desc:'Isometries directes et indirectes. Similitudes directes et indirectes. Expression complexe f(z)=az+b ou f(z)=az barre+b. Classification, point fixe.' },
-      { slug:'coniques',               titre:'Coniques',                         badge:'Geometrie',    desc:'Parabole y2=2px (foyer, directrice). Ellipse x2/a2+y2/b2=1, e<1. Hyperbole x2/a2-y2/b2=1, asymptotes y=+-(b/a)x, e>1.' },
-      { slug:'probabilites-discretes', titre:'Probabilites Discretes',          badge:'Probabilites', desc:'Probabilite conditionnelle P(A|B). Independence. Probabilites totales. Bayes. Variables aleatoires discretes. Loi binomiale B(n,p). Loi de Poisson P(lambda).' },
-      { slug:'probabilites-continues', titre:'Probabilites Continues et Loi Normale', badge:'Probabilites', desc:'Variable aleatoire continue, densite. Loi uniforme U([a,b]). Loi exponentielle. Loi normale N(mu,sigma2), courbe de Gauss, standardisation.' },
-      { slug:'graphes',                titre:'Graphes et Algorithmique',         badge:'Info',         desc:'Sommets, aretes, degres, theoreme Euler, algorithme de Dijkstra, matrice adjacence, graphe oriente, graphe probabiliste, matrice de transition.' },
-    ],
-  },
-
-  scexp: {
-    key:'scexp', label:'Sciences-Experimentales', color:'#06d6a0', icon:'\u26cf',
-    chapitres: [
-      { slug:'fonctions-generalites',  titre:'Fonctions — Generalites',         badge:'Analyse',      desc:'Ensemble de definition, parite, periodicite, operations, fonction racine de f, fonctions bornees.' },
-      { slug:'limites-continuite',     titre:'Limites et Continuite',           badge:'Analyse',      desc:'Limites finies et infinies, formes indeterminees, TVI, asymptotes H V O, prolongement.' },
-      { slug:'derivation',             titre:'Derivation',                      badge:'Analyse',      desc:'Nombre derive, interpretation geometrique, approximation affine, derivees usuelles, variations, extrema.' },
-      { slug:'etude-fonctions',        titre:'Etude de Fonctions',              badge:'Analyse',      desc:'Polynomes, rationnelles, irrationnelles, circulaires, etude complete.' },
-      { slug:'suites',                 titre:'Suites Numeriques',               badge:'Analyse',      desc:'Suites arithmetiques, geometriques, recurrentes, monotonie, convergence, recurrence.' },
-      { slug:'fonctions-reciproques',  titre:'Fonctions Reciproques',           badge:'Analyse',      desc:'Bijection, reciproque f inverse, derivee (f inverse) prime, etude de fonctions reciproques.' },
-      { slug:'logarithme',             titre:'Logarithme Neperien',             badge:'Analyse',      desc:'ln x, proprietes, derivee (ln u) prime=u prime/u, limites, equations logarithmiques.' },
-      { slug:'exponentielle',          titre:'Fonction Exponentielle',          badge:'Analyse',      desc:'Reciproque de ln, proprietes, derivee (e^u) prime=u prime e^u, croissances comparees.' },
-      { slug:'primitives-integrales',  titre:'Primitives et Integrales',        badge:'Analyse',      desc:'Primitives usuelles, integrale definie, theoreme fondamental, aire sous une courbe.' },
-      { slug:'equations-differentielles', titre:'Equations Differentielles',   badge:'Analyse',      desc:"y prime=ay+b, solution generale, condition initiale, applications loi de refroidissement, RC." },
-      { slug:'complexes',              titre:'Nombres Complexes',               badge:'Algebre',      desc:'Forme algebrique, module, argument, forme trigonometrique, exponentielle, Moivre, equations dans C.' },
-      { slug:'geometrie-espace',       titre:'Geometrie dans Espace',           badge:'Geometrie',    desc:'Vecteurs, bases, produit scalaire, produit vectoriel, plan, droite, sphere, distances.' },
-      { slug:'denombrement',           titre:'Denombrement',                    badge:'Probabilites', desc:'Arrangements A(n,p)=n!/(n-p)!, permutations n!, combinaisons C(n,p), formule du binome.' },
-      { slug:'probabilites',           titre:'Probabilites',                    badge:'Probabilites', desc:'P(A|B)=P(A inter B)/P(B), independance, probabilites totales, theoreme de Bayes, arbre pondere.' },
-      { slug:'variables-aleatoires',   titre:'Variables Aleatoires et Loi Binomiale', badge:'Probabilites', desc:'Variable aleatoire discrete, esperance E(X), variance V(X), loi binomiale B(n,p).' },
-      { slug:'statistiques',           titre:'Statistiques',                    badge:'Statistiques', desc:'Moyenne, variance, ecart-type, series simples et groupees, histogrammes, diagrammes.' },
-      { slug:'droites-plans',          titre:'Droites et Plans dans Espace',    badge:'Geometrie',    desc:'Droites (parametrique, cartesienne), plans (equation), positions relatives, distances.' },
-    ],
-  },
-  sctech: {
-    key:'sctech', label:'Sciences-Techniques', color:'#f59e0b', icon:'\u2699',
-    chapitres: [
-      { slug:'fonctions-generalites',  titre:'Fonctions — Generalites',         badge:'Analyse',      desc:'Ensemble de definition, parite, periodicite, operations, fonction racine de f, valeur absolue.' },
-      { slug:'limites-continuite',     titre:'Limites et Continuite',           badge:'Analyse',      desc:'Limites finies et infinies, formes indeterminees, TVI, theoreme de la bijection, asymptotes.' },
-      { slug:'derivation',             titre:'Derivation',                      badge:'Analyse',      desc:'Nombre derive, interpretation geometrique, derivees usuelles, tangente, variations, extrema.' },
-      { slug:'etude-fonctions',        titre:'Etude de Fonctions',              badge:'Analyse',      desc:'Polynomes, rationnelles, irrationnelles, circulaires, bicarrees, etude complete.' },
-      { slug:'logarithme',             titre:'Logarithme Neperien',             badge:'Analyse',      desc:'ln x, proprietes, derivee, etude complete, fonctions x vers ln(u(x)).' },
-      { slug:'exponentielle',          titre:'Fonction Exponentielle',          badge:'Analyse',      desc:'Reciproque de ln, proprietes, derivee, etude complete, fonctions x vers e^(u(x)).' },
-      { slug:'suites',                 titre:'Suites Numeriques',               badge:'Analyse',      desc:'Suites arithmetiques, geometriques, recurrentes, limite, theoreme des gendarmes, recurrence.' },
-      { slug:'geometrie-plane',        titre:'Geometrie Plane — Coniques',      badge:'Geometrie',    desc:'Vecteurs, droites, cercles, ellipse x2/a2+y2/b2=1, hyperbole, parabole y2=2px.' },
-      { slug:'geometrie-espace',       titre:'Geometrie dans Espace',           badge:'Geometrie',    desc:'Vecteurs, produit scalaire, produit vectoriel, droites, plans, distances point-plan.' },
-      { slug:'equations-differentielles', titre:'Equations Differentielles',   badge:'Algebre',      desc:"y prime=ay+b, solution generale, condition initiale, applications techniques RC, refroidissement." },
-      { slug:'complexes',              titre:'Nombres Complexes',               badge:'Algebre',      desc:'Forme algebrique, module, argument, trigonometrique, exponentielle, Moivre, equations dans C.' },
-      { slug:'statistiques',           titre:'Statistiques — Series a deux variables', badge:'Statistiques', desc:'Nuage de points, point moyen G, droite de regression, coefficient de correlation r.' },
-      { slug:'denombrement',           titre:'Denombrement',                    badge:'Probabilites', desc:'Arrangements A(n,p), permutations n!, combinaisons C(n,p), formule du binome.' },
-      { slug:'probabilites',           titre:'Probabilites',                    badge:'Probabilites', desc:'P(A|B), independance, probabilites totales, arbre pondere, equiprobabilite.' },
-      { slug:'variables-aleatoires',   titre:'Variables Aleatoires et Loi Binomiale', badge:'Probabilites', desc:'Variable aleatoire discrete, E(X)=np, V(X)=np(1-p), loi binomiale B(n,p).' },
-    ],
-  },
-  eco: {
-    key:'eco', label:'Eco-Gestion', color:'#10b981', icon:'\u20ac',
-    chapitres: [
-      { slug:'fonctions-generalites',     titre:'Fonctions — Generalites',        badge:'Analyse',    desc:'Ensemble de definition, parite, operations, fonction racine de f, valeur absolue.' },
-      { slug:'limites-continuite',        titre:'Limites et Continuite',          badge:'Analyse',    desc:'Limites finies et infinies, TVI, theoreme de la bijection, asymptotes.' },
-      { slug:'derivation',                titre:'Derivation',                     badge:'Analyse',    desc:'Nombre derive, tangente, derivees usuelles, variations, extrema, optimisation economique.' },
-      { slug:'etude-fonctions',           titre:'Etude de Fonctions',             badge:'Analyse',    desc:'Polynomes, rationnelles, irrationnelles, circulaires, etude complete de fonctions.' },
-      { slug:'logarithme',                titre:'Logarithme Neperien',            badge:'Analyse',    desc:'ln x, proprietes, derivee, etude complete, applications finance et economie.' },
-      { slug:'exponentielle',             titre:'Fonction Exponentielle',         badge:'Analyse',    desc:'Reciproque de ln, proprietes, derivee, interets composes, croissance exponentielle.' },
-      { slug:'suites-numeriques',         titre:'Suites Numeriques',              badge:'Analyse',    desc:'Suites arithmetiques, geometriques, recurrentes, applications financieres.' },
-      { slug:'mathematiques-financieres', titre:'Mathematiques Financieres',      badge:'Finance',    desc:'Interets simples I=C0*i*n, composes Cn=C0(1+i)^n, annuites, valeur acquise, amortissement.' },
-      { slug:'matrices-systemes',         titre:'Matrices et Systemes Lineaires', badge:'Algebre',    desc:'Matrices, determinants, inverse A^(-1), systemes AX=b, methode matricielle, applications eco.' },
-      { slug:'geometrie-espace',          titre:'Geometrie dans Espace',          badge:'Geometrie',  desc:'Vecteurs, produit scalaire, droites et plans, positions relatives, distances.' },
-      { slug:'statistiques',              titre:'Statistiques — Series a deux variables', badge:'Statistiques', desc:'Nuage de points, point moyen G, droite de regression, coefficient r, previsions.' },
-      { slug:'denombrement',              titre:'Denombrement',                   badge:'Probabilites', desc:'Arrangements A(n,p), permutations n!, combinaisons C(n,p), formule du binome.' },
-      { slug:'probabilites',              titre:'Probabilites',                   badge:'Probabilites', desc:'P(A|B), independance, probabilites totales, Bayes, arbre pondere.' },
-      { slug:'variables-aleatoires',      titre:'Variables Aleatoires et Loi Binomiale', badge:'Probabilites', desc:'E(X)=np, V(X)=np(1-p), loi binomiale B(n,p), applications economiques.' },
-    ],
-  },
-  info: {
-    key:'info', label:'Informatique', color:'#8b5cf6', icon:'\u2328',
-    chapitres: [
-      { slug:'fonctions-generalites',     titre:'Fonctions — Generalites',        badge:'Maths',     desc:'Ensemble de definition, parite, operations, fonction racine de f, conditions existence.' },
-      { slug:'limites-continuite',        titre:'Limites et Continuite',          badge:'Maths',     desc:'Limites finies et infinies, formes indeterminees, TVI, asymptotes H V O.' },
-      { slug:'derivation',                titre:'Derivation',                     badge:'Maths',     desc:'Nombre derive, derivees usuelles, tangente, variations, extrema.' },
-      { slug:'etude-fonctions',           titre:'Etude de Fonctions',             badge:'Maths',     desc:'Polynomes, rationnelles, irrationnelles, circulaires, etude complete.' },
-      { slug:'logarithme',                titre:'Logarithme Neperien',            badge:'Maths',     desc:'ln x, proprietes, derivee (ln u) prime=u prime/u, etude complete.' },
-      { slug:'exponentielle',             titre:'Fonction Exponentielle',         badge:'Maths',     desc:'Reciproque de ln, proprietes, derivee (e^u) prime=u prime e^u, etude complete.' },
-      { slug:'suites',                    titre:'Suites Numeriques',              badge:'Maths',     desc:'Suites arithmetiques, geometriques, recurrentes, convergence, principe de recurrence.' },
-      { slug:'primitives-integrales',     titre:'Primitives et Integrales',       badge:'Maths',     desc:'Primitives usuelles, integrale definie, theoreme fondamental, aire sous une courbe.' },
-      { slug:'equations-differentielles', titre:'Equations Differentielles',      badge:'Maths',     desc:"y prime=ay+b, solution generale, condition initiale, applications modelisation informatique." },
-      { slug:'complexes',                 titre:'Nombres Complexes',              badge:'Maths',     desc:'Forme algebrique, module, argument, trigonometrique, exponentielle, Moivre, equations dans C.' },
-      { slug:'systemes-lineaires',        titre:'Systemes Lineaires',             badge:'Maths',     desc:'Systemes 2 et 3 equations, methode de Gauss, pivot, modelisation informatique.' },
-      { slug:'arithmetique',              titre:'Arithmetique dans Z',            badge:'Maths',     desc:'Divisibilite, PGCD, Euclide, congruences, applications cryptographiques RSA.' },
-      { slug:'geometrie-espace',          titre:'Geometrie dans Espace',          badge:'Maths',     desc:'Vecteurs, produit scalaire, droites et plans, positions relatives, distances.' },
-      { slug:'denombrement',              titre:'Denombrement',                   badge:'Maths',     desc:'Arrangements A(n,p), permutations n!, combinaisons C(n,p), formule du binome.' },
-      { slug:'probabilites',              titre:'Probabilites',                   badge:'Maths',     desc:'P(A|B), independance, probabilites totales, Bayes, arbre pondere.' },
-      { slug:'variables-aleatoires',      titre:'Variables Aleatoires et Loi Binomiale', badge:'Maths', desc:'Variable aleatoire discrete, E(X)=np, V(X)=np(1-p), loi binomiale B(n,p).' },
-      { slug:'statistiques',              titre:'Statistiques',                   badge:'Maths',     desc:'Moyenne, variance, ecart-type, series simples et groupees, histogrammes.' },
-    ],
-  },
-}
-
-// ── Fonction génération examen par chapitres ──────────────────────
-async function generateChapterExam(
-  chapitres: { titre: string; badge: string; desc: string }[],
-  sectionKey: string,
-  sectionLabel: string,
-  idx: number
-): Promise<GeneratedExam> {
-  const chapList = chapitres.map((c, i) => `Exercice ${i+1} — ${c.titre} (${c.badge}) : ${c.desc}`).join('\n')
-  const totalPts = 20
-  const nEx = Math.max(chapitres.length, 3)
-
-  const isEcoGes = globalMatiere === 'economie' || globalMatiere === 'gestion'
-  const system = isEcoGes
-    ? `Tu es un auteur expert de sujets d'ÉCONOMIE et de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
-Tu crées des sujets ORIGINAUX : questions de cours, travail sur documents statistiques (tableaux, graphiques), calculs (économie : taux de variation, indices, taux de couverture, IDH ; gestion : FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), études de cas d'entreprise.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-    : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
-
-  const prompt = `Crée un sujet de Bac ORIGINAL variante ${idx+1} centré sur CES CHAPITRES PRÉCIS :
-${chapList}
-
-Section : ${sectionLabel}
-Total : ${totalPts} points répartis sur ${nEx} exercices (un exercice par chapitre sélectionné).
-
-Règles STRICTES :
-- Chaque exercice DOIT porter EXCLUSIVEMENT sur le chapitre assigné ci-dessus
-- Niveau Bac Tunisien officiel — vraies données numériques précises
-- Chaque exercice a des sous-parties 1), 2), 3)...
-- Pour tout exercice sur une fonction : graphique OBLIGATOIRE
-${isEcoGes ? `- ÉCONOMIE/GESTION : pour les documents statistiques et tableaux comptables, utiliser le champ "graph" type "table" ou "bar". ÉCONOMIE → calculs (taux de variation, indice base 100, taux de couverture (X/M)×100, coefficient budgétaire, IDH) avec source et année. GESTION → tableaux comptables (bilan, résultat, coûts) et calculs FDR=Cap. permanents−Actif immobilisé, BFR=Actif circ.−Passif circ., TN=FDR−BFR, MCV=CA−charges variables, seuil de rentabilité=CF/taux de MCV, CUMP. Interprétation exigée.
-${UNIVERSAL_GRAPH_PROMPT}` : ''}
-
-GRAPHIQUES — FORMATS :
-FORMAT 1 — COURBE : [GRAPH: {"type":"function","expressions":["2*x*Math.exp(-x)"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
-FORMAT 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}]}]}]
-FORMAT 3 — PILE/CIRCUIT (ASCII) : [GRAPH: {"type":"ascii","title":"Pile Zn-Cu","content":"\n  Zn (-)  ||  Cu (+)\n  ZnSO₄  ||  CuSO₄\n  └───── e⁻ ─────┘","legend":["Anode: Zn→Zn²⁺+2e⁻","Cathode: Cu²⁺+2e⁻→Cu"]}]
-RÈGLES : champ "graph" SÉPARÉ du "statement" · JAMAIS x^2 → x*x · JAMAIS 2x → 2*x · pile/circuit → FORMAT 3 ascii · JAMAIS "geometry" pour une pile
-
-Réponds EXACTEMENT avec ce JSON :
+async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_ANGLAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const isLettres = candidat.sectionKey === 'lettres'
+  const sectionLabel = isLettres ? 'Section Lettres' : 'Toutes sections (sauf Lettres)'
+  const sectionFocus = isLettres
+    ? 'literary and cultural texts · expressive and narrative writing · personal voice and description'
+    : 'scientific and technical texts · argumentative essay · logical analysis and structured reasoning'
+
+  const prog = getProgrammeJourAnglais(dayNum)
+
+  const system = `You are an expert author of official Tunisian Baccalaureate English papers (CNP official programme).
+You create original BAC BLANC ANGLAIS papers of official level.
+RESPOND ONLY IN VALID JSON — no backticks, no comments.
+
+OFFICIAL STRUCTURE — BAC ANGLAIS TUNISIE :
+Part I   — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions
+Part II  — Writing (8 pts) : structured essay or article, 180-200 words minimum
+Part III — Language (4 pts) : grammar + vocabulary exercises (4+4 items)
+
+REQUIREMENTS :
+- Text must be authentic and engaging at B2 level
+- Questions progress from literal to inferential to evaluative
+- Writing task must have clear instructions including word count
+- Grammar exercises must be varied and clearly labeled
+- The paper must match the difficulty level of official Bac Tunisie exams`
+
+  const prompt = `Create an official BAC BLANC ANGLAIS paper — National Contest — DAY ${dayNum} — ${sectionLabel}.
+
+SEED (all students same day = same paper): ${seed}
+DATE: ${dateStr}
+THEME: ${prog.theme}
+WRITING TASK: ${prog.writing}
+GRAMMAR FOCUS: ${prog.grammar}
+SECTION FOCUS: ${sectionFocus}
+
+PART I — READING COMPREHENSION (8 pts):
+Write an authentic text of 280-320 words about "${prog.theme}".
+${isLettres
+  ? 'Style: literary/journalistic — descriptive, personal voice, cultural references, emotional engagement.'
+  : 'Style: informative/scientific — logical structure, facts, examples, objective analysis.'}
+Then write 5 questions:
+  Q1 (1 pt): Global comprehension — What is the main idea of the text?
+  Q2 (2 pts): True/False/Not Mentioned — 2 statements with justification from the text
+  Q3 (2 pts): Open question — Find evidence and infer the author's point of view
+  Q4 (2 pts): Vocabulary — define or find synonyms for 2 words from context
+  Q5 (1 pt): Referent or cohesion — What does "it/they/this" refer to in line X?
+
+PART II — WRITING (8 pts):
+Task: ${prog.writing}
+Instructions: Write a well-structured essay/article of 180-200 words.
+Include: clear introduction · 2-3 well-developed arguments with examples · conclusion
+Marking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)
+
+PART III — LANGUAGE (4 pts):
+Focus: ${prog.grammar}
+Exercise A (2 pts): 4 fill-in-the-blank or sentence transformation items
+Exercise B (2 pts): 4 rewriting or vocabulary matching items
+
+RESPOND WITH THIS EXACT JSON:
 {
-  "title": "${sectionLabel} — Simulation Chapitres Variante ${idx+1}",
+  "id": "bb-anglais-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Anglais — ${sectionLabel} — Day ${dayNum}",
   "section": "${sectionLabel}",
-  "duration": 180,
-  "totalPoints": ${totalPts},
+  "sectionKey": "${candidat.sectionKey}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 120,
   "exercises": [
-${chapitres.map((c,i)=>`    {
-      "num": ${i+1},
-      "title": "Exercice ${i+1} — ${c.titre}",
-      "theme": "${c.titre}",
-      "points": ${Math.round(totalPts/chapitres.length)},
-      "graph": ${isEcoGes ? '"[GRAPH: {JSON type table ou bar si document statistique/comptable, sinon null}]"' : 'null'},
-      "statement": "Énoncé complet sur ${c.titre}. Minimum 120 mots. Sous-parties numérotées 1), 2), 3).${isEcoGes ? ' Inclure les calculs avec formule puis résultat, et une interprétation.' : ''}"
-    }`).join(',\n')}
+    {
+      "num": 1,
+      "theme": "${prog.theme}",
+      "title": "Part I — Reading Comprehension",
+      "points": 8,
+      "graph": null,
+      "statement": "TEXT:\n[Full authentic text 280-320 words about ${prog.theme} — ${sectionFocus}]\n\nQUESTIONS:\nQ1 (1 pt) — [global comprehension question]\nQ2 (2 pts) — Say whether the following statements are True (T), False (F) or Not Mentioned (NM). Justify with a quote from the text:\n  a) [statement 1]\n  b) [statement 2]\nQ3 (2 pts) — [open inference question requiring evidence from text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition 1]\n  b) [definition 2]\nQ5 (1 pt) — What does the underlined word \'[word]\' in paragraph X refer to?"
+    },
+    {
+      "num": 2,
+      "theme": "Writing — ${prog.theme}",
+      "title": "Part II — Writing",
+      "points": 8,
+      "graph": null,
+      "statement": "TASK: ${prog.writing}\n\nWrite a well-structured essay or article (180-200 words).\nYour writing should include:\n• A clear introduction presenting your topic or position\n• Two or three well-developed paragraphs with arguments and examples\n• A conclusion summarising your point of view\n\nMARKING SCHEME:\n• Content and Ideas: 4 pts\n• Language, Grammar and Vocabulary: 2 pts\n• Organisation and Cohesion: 2 pts"
+    },
+    {
+      "num": 3,
+      "theme": "Language — ${prog.grammar}",
+      "title": "Part III — Language",
+      "points": 4,
+      "graph": null,
+      "statement": "GRAMMAR FOCUS: ${prog.grammar}\n\nEXERCISE A (2 pts) — Fill in the blanks or transform the sentences:\n1. [sentence 1 — item requiring ${prog.grammar.split('·')[0].trim()}]\n2. [sentence 2]\n3. [sentence 3]\n4. [sentence 4]\n\nEXERCISE B (2 pts) — Rewrite the sentences without changing the meaning / Match the words:\n1. [sentence or matching item 1]\n2. [sentence or matching item 2]\n3. [sentence or matching item 3]\n4. [sentence or matching item 4]"
+    }
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 6000)
-  const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
-    title:`${sectionLabel} — Chapitres Variante ${idx+1}`,
-    section:sectionLabel, duration:180, totalPoints:totalPts,
-    exercises: chapitres.map((c,i)=>({num:i+1,title:`Exercice ${i+1} — ${c.titre}`,theme:c.titre,points:Math.round(totalPts/chapitres.length),statement:'Erreur de génération — réessayez.'}))
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-anglais-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: `Bac Blanc Anglais — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 120,
+    exercises: []
   })
-  return { ...parsed, id:`ch-exam-${idx}-${Date.now()}`, index:idx }
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || `bb-anglais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 120,
+  }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
-// ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
-  onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
-  archives?: Archive[]
-  chapitresParSection?: typeof CHAPITRES_PAR_SECTION
-  sectionConfigs?: typeof SECTION_CONFIGS
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'
-}) {
-  // Utiliser les props passés ou les valeurs par défaut (maths)
-  const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
-  const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
-  const SEC_CONFIGS_ACTIVE = scProp       ?? SECTION_CONFIGS
-  const [tab, setTab] = useState<'archive'|'chapitre'|'import'|'correction-directe'>('archive')
-  const searchParams = useSearchParams()
+// ── Génération examen Bac Blanc (distinct de simulation) ──────────
+// ════════════════════════════════════════════════════════════════
+// PROGRAMME SVT PAR JOUR — 31 jours · 2 sections
+// scexp-svt : Sciences Expérimentales (coef. 5) — 4 parties
+// maths-svt : Section Mathématiques (coef. 2) — 5 parties (+ Géologie)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_SVT: Record<string, {
+  p1: { theme: string; sousTh: string }
+  p2: { theme: string; sousTh: string }
+  p3: { theme: string; sousTh: string }
+  p4: { theme: string; sousTh: string }
+  p5?: { theme: string; sousTh: string } // uniquement section Maths
+}[]> = {
+  'scexp-svt': [
+    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — Méiose Anaphase I · 2ⁿ gamètes · diversité"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète type 1 et 2 · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — structure spermatozoïde · cellules de Leydig et Sertoli · régulation hormonale"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — photolyse de l'eau · cycle de Calvin · facteurs limitants"} },
+    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme 3:1 · dihybridisme 9:3:3:1 · gènes indépendants"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel de repos (-70mV) · dépolarisation Na⁺ · repolarisation K⁺ · loi du tout ou rien"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — follicule primordial à De Graaf · ovulation · corps jaune"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption intestinale · villosités"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · immunité humorale (LB · anticorps) · immunité cellulaire (LT)"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — FSH · LH · œstrogènes · progestérone · pic LH → ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau · sels minéraux N·P·K·Mg·Fe · transpiration"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over Prophase I · gamètes recombinants · fréquence recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Synapse chimique — neurotransmetteur · fente synaptique · PPSE · PPSI · intégration"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration · réaction corticale · fusion pronuclei → zygote"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · cycle de Krebs · chaîne respiratoire → 38 ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations géniques — substitution · délétion · faux-sens · non-sens · agents mutagènes"}, p2:{theme:"Milieu intérieur",sousTh:"Rôle du foie — glycogénogenèse · glycogénolyse · néoglucogenèse · compartiments liquidiens"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — contraception (pilule · préservatif) · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — chlorophylle · phase lumineuse · phase obscure · équation bilan"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique des populations — Hardy-Weinberg p²+2pq+q²=1 · fréquences alléliques · applications médicales"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · gaine de myéline · réflexe myotatique · muscles antagonistes"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale masculine — GnRH · LH · FSH · testostérone · rétrocontrôle négatif"}, p4:{theme:"Nutrition",sousTh:"Digestion — amylase (glucides) · pepsine (protides) · lipase · conditions enzymatiques"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — trisomie 21 · non-disjonction méiose · délétion · translocation"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination — mémoire immunitaire · anticorps · plasmocytes vs sérothérapie (passif)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · blocage méiose II jusqu'à fécondation"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse anaérobie vs aérobie · mitochondrie · bilan ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · cocaïne (blocage recapture dopamine) · dépendance · stress · cortisol"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phase menstruelle · proliférative · sécrétoire · action œstrogènes et progestérone"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — photosynthèse · intensité photosynthétique · facteurs limitants · CO₂ · lumière"} },
+    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · choriocentèse · caryotype · sonde moléculaire"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — glycémie 0,8-1,2 g/L · pH 7,35-7,45 · température 37°C · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Régulation hypothalamo-hypophysaire féminine — GnRH · FSH · LH · rétrocontrôle positif (pic LH)"}, p4:{theme:"Nutrition",sousTh:"Absorption végétale — osmose · poils absorbants · xylème · sève brute · carences"} },
+    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — maladies récessives · généalogie · calcul probabilité"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité non spécifique — phagocytose (chimiotactisme · adhérence · ingestion · digestion) · inflammation"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde (tête·pièce intermédiaire·flagelle) · ovocyte II (noyau·zone pellucide)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase photochimique : photolyse eau → O₂ libre · production ATP et NADPH"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique classique — monohybridisme avec dominance incomplète · codominance"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 vs type 2 — mécanismes · traitement · insuline · rétrocontrôle"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — mécanisme (blocage GnRH · FSH · LH) · pas d'ovulation · pilule combinée"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs — pyruvate → acétyl-CoA · CO₂ · NADH · FADH₂ · ATP (2 par cycle)"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage génétique complet — croisement test · gamètes · fréquences alléliques"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action ionique — rôle Na⁺/K⁺ · pompe Na⁺/K⁺ · période réfractaire · propagation axone"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction ovocytes · fécondation in vitro · transfert embryon"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — absorption sanguine (glucose · AA) et lymphatique (AG · glycérol) · villosités"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique des populations — dérive génétique · sélection naturelle · évolution fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — clone lymphocytaire · mémoire immunologique · réponse primaire vs secondaire"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication (mitoses) · accroissement · maturation (méiose) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · eau · loi de Liebig"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité gonosomique — gènes liés à X · notation XᴬXᵃ · conductrice · test-cross"}, p2:{theme:"Neurophysiologie",sousTh:"Intégration postsynaptique — sommation temporelle et spatiale · seuil de déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Follicule de De Graaf — structure · antrum · granulosa · thèque · ovocyte II · ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — rôle sels minéraux : N (protéines) · Mg (chlorophylle) · Fe (chlorophylle)"} },
+    { p1:{theme:"Génétique",sousTh:"Dihybridisme — gènes liés vs indépendants · ratio 9:3:3:1 vs autres ratios · linkage"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · hormones pancréatiques"}, p3:{theme:"Reproduction",sousTh:"Hygiène procréation — IST · prévention · comportements protection · suivi de grossesse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — bilan global C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 38 ATP"} },
+    { p1:{theme:"Génétique",sousTh:"Crossing-over et recombinaison — carte génétique · fréquence cM · distance génétique"}, p2:{theme:"Neurophysiologie",sousTh:"Structure neurone — corps cellulaire · dendrites · axone · gaine myéline · nœuds Ranvier"}, p3:{theme:"Reproduction",sousTh:"Corps jaune — progestérone · maintien endomètre · dégénérescence si pas fécondation"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — cycle de Calvin : fixation CO₂ · réduction C3 → glucose · régénération RuBP"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations et conséquences — cancer · maladies génétiques · bénéfiques (évolution)"}, p2:{theme:"Milieu intérieur",sousTh:"Compartiments liquidiens — plasma · liquide interstitiel · intracellulaire · échanges capillaires"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel coordonné — ovaire + utérus + hormones · schéma général sur 28 jours"}, p4:{theme:"Nutrition",sousTh:"Digestion enzymes — pH optimal · température · dénaturation · spécificité substrat-enzyme"} },
+    { p1:{theme:"Génétique",sousTh:"Test-cross et back-cross — révélation génotype · applications en génétique humaine"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues et SN — amphétamines · alcool · THC · effets sur synapses · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — blocage en prophase I (naissance) puis méiose I (puberté) puis méiose II (fécondation)"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — transpiration · force aspiration · cohésion colonne eau · stomates"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique formelle — arbre généalogique · mode de transmission · hérédité autosomique récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination et sérothérapie — comparaison · protection active (vaccin) vs passive (sérum)"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale féminine — rétrocontrôle négatif et positif · axe hypothalamo-hypophysaire"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂ · schéma chloroplaste"} },
+    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — application médicale · mucoviscidose · porteurs sains · fréquence allélique"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — récepteur → centre → effecteur · motoneurone · muscle antagoniste"}, p3:{theme:"Reproduction",sousTh:"Fécondation — zones de rencontre · capacitation · acrosome · polyspermie bloquée"}, p4:{theme:"Nutrition",sousTh:"Respiration anaérobie — fermentation lactique · fermentation alcoolique · 2 ATP seulement"} },
+    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique — all notions · brassages · transmission · mutations · populations"}, p2:{theme:"Milieu intérieur",sousTh:"Récapitulatif milieu intérieur — glycémie · immunité · neurophysiologie · hygiène SN"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · procréation"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — animale · végétale · photosynthèse · respiration"} },
+    { p1:{theme:"Génétique",sousTh:"Sujet type bac — génétique complexe · crossing-over + transmission liée sexe"}, p2:{theme:"Neurophysiologie",sousTh:"Sujet type bac — neurophysiologie complète · potentiel d'action · synapse · intégration"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac — reproduction complète · spermatogenèse · ovogenèse · fécondation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac — nutrition complète · photosynthèse + respiration cellulaire"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique quantitative — polygénie · expressivité · pénétrance · phénotype continu"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · CRH · ACTH · cortisol · adrénaline · effets physiologiques"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine complète — axe hypothalamo-hypophyso-testiculaire · feedback négatif"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — échanges gazeux · point de compensation · compensation lumineuse"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations et cancer — oncogènes · gènes suppresseurs · mécanismes · réparation ADN"}, p2:{theme:"Neurophysiologie",sousTh:"CMH — complexe majeur histocompatibilité · reconnaissance Ag · greffes · autoimmunité"}, p3:{theme:"Reproduction",sousTh:"Infertilité et PMA — causes · solutions · IAD vs FIVETE · aspects éthiques"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — amélioration production · engrais · risques pollution nitrates"} },
+    { p1:{theme:"Génétique",sousTh:"Génétique moléculaire — ADN · gène · allèle · expression · transcription · traduction"}, p2:{theme:"Milieu intérieur",sousTh:"Immunodéficiences — SIDA · VIH · LT CD4 · traitement antirétroviral · prévention"}, p3:{theme:"Reproduction",sousTh:"Gamétogenèse comparée — spermatogenèse continue vs ovogenèse cyclique · méiose"}, p4:{theme:"Nutrition",sousTh:"Nutrition cellulaire — ATP utilisé pour travail mécanique · chimique · électrique · osmotique"} },
+    { p1:{theme:"Génétique",sousTh:"Révision type sujet officiel bac SC.EXP — 6 points génétique · gènes liés + lié sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Révision type sujet officiel bac — 7 points milieu intérieur · complet"}, p3:{theme:"Reproduction",sousTh:"Révision type sujet officiel bac — 4 points reproduction · régulation"}, p4:{theme:"Nutrition",sousTh:"Révision type sujet officiel bac — 3 points nutrition · photosynthèse"} },
+    { p1:{theme:"Génétique",sousTh:"Concours final — génétique avancée · croisements complexes · génétique populations"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie et immunité · interrelations"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction et régulation hormonale complète"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale et végétale · bilan métabolique"} },
+    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — révision croisée · méiose · diversité · notions clés"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — révision croisée · homéostasie · rétrocontrôles · constantes"}, p3:{theme:"Reproduction",sousTh:"Reproduction — révision croisée · cycles · hormones · fécondation"}, p4:{theme:"Nutrition",sousTh:"Nutrition — révision croisée · photosynthèse · respiration · échanges"} },
+    { p1:{theme:"Génétique",sousTh:"Session principale simulée — sujet complet 6 pts · génétique + brassages + populations"}, p2:{theme:"Milieu intérieur",sousTh:"Session principale simulée — sujet complet 7 pts · milieu intérieur + neurophysiologie"}, p3:{theme:"Reproduction",sousTh:"Session principale simulée — sujet complet 4 pts · reproduction humaine"}, p4:{theme:"Nutrition",sousTh:"Session principale simulée — sujet complet 3 pts · nutrition et environnement"} },
+    { p1:{theme:"Génétique",sousTh:"Session contrôle simulée — génétique difficultés · gènes liés + sexe + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Session contrôle simulée — neurophysiologie · potentiel d'action · synapse complexe"}, p3:{theme:"Reproduction",sousTh:"Session contrôle simulée — reproduction · cycles · régulation complète"}, p4:{theme:"Nutrition",sousTh:"Session contrôle simulée — nutrition · photosynthèse difficultés · facteurs"} },
+    { p1:{theme:"Génétique",sousTh:"Bilan général génétique — tout le programme · vrai niveau bac"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan général milieu intérieur — tout le programme · vrai niveau bac"}, p3:{theme:"Reproduction",sousTh:"Bilan général reproduction — tout le programme · vrai niveau bac"}, p4:{theme:"Nutrition",sousTh:"Bilan général nutrition — tout le programme · vrai niveau bac"} },
+  ],
+  'maths-svt': [
+    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — méiose · 2ⁿ gamètes · diversité génétique section Maths"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — étapes · méiose signalée · structure spermatozoïde · GnRH · LH · FSH"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan · chlorophylle · photolyse eau · facteurs limitants"}, p5:{theme:"Géologie",sousTh:"Tectonique des plaques — dorsales · expansion océanique · subduction · séismes"} },
+    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme · dihybridisme · loi ségrégation · loi assortiment"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action — dépolarisation Na⁺ · repolarisation K⁺ · synapse · PPSE · PPSI"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — ovarien · utérin · hormonal · FSH · LH · œstrogènes · progestérone"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · Krebs · chaîne respiratoire · 38 ATP"}, p5:{theme:"Évolution",sousTh:"Théories évolution — Darwin · sélection naturelle · preuves fossiles · anatomie comparée"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · LB anticorps · LT cytotoxiques · mémoire · vaccination"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration acrosomiale · réaction corticale · zygote 2n"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau et sels minéraux · osmose · transpiration · xylème"}, p5:{theme:"Géologie",sousTh:"Structure globe — croûte · manteau · noyau · lithosphère · asthénosphère"} },
+    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over · gamètes recombinants · fréquence de recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · réflexe myotatique · drogues · cocaïne · dopamine · stress"}, p3:{theme:"Reproduction",sousTh:"Régulation féminine — GnRH pulsatile · pic LH → ovulation · rétrocontrôle positif"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption · villosités intestinales"}, p5:{theme:"Évolution",sousTh:"Spéciation — isolement reproducteur · spéciation allopatrique · dérive génétique"} },
+    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · caryotype · sonde moléculaire · risque consanguinité"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — rôle foie · pancréas endocrine · insuline vs glucagon · diabète"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — pilule (bloque GnRH/FSH/LH) · préservatif · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase lumineuse (photolyse eau → O₂) · phase obscure (Calvin → glucose)"}, p5:{theme:"Géologie",sousTh:"Séismes — foyer · épicentre · ondes P et S · magnitude · risque sismique"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations — géniques (substitution · délétion) · chromosomiques (trisomie 21) · conséquences"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité — non spécifique (phagocytose) · spécifique (LB · LT) · vaccination vs sérothérapie"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication · accroissement · maturation méiose (signalée) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire vs fermentation — aérobie (38 ATP) vs anaérobie (2 ATP)"}, p5:{theme:"Évolution",sousTh:"Preuves évolution — fossiles · anatomie comparée · organes vestigiaux · ADN universel"} },
+    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — compartiments liquidiens · constantes biologiques · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · structure · méiose signalée"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · loi du minimum"}, p5:{theme:"Géologie",sousTh:"Volcanisme — types volcans · magma basaltique vs siliceux · dorsales vs subduction"} },
+    { p1:{theme:"Génétique",sousTh:"Test-cross — révéler génotype · hétérozygote · calcul probabilité · arbre généalogique"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · mécanismes synaptiques · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine — axe hypothalamo-hypophyso-testiculaire · testostérone · rétrocontrôle"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — sels minéraux · carence azote (chlorose) · engrais chimiques · pollution"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — adaptation · variation · survie sélective · exemple peppered moth"} },
+    { p1:{theme:"Génétique",sousTh:"Généalogie — arbre · mode transmission · probabilité enfant malade · hérédité récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · cortisol · adrénaline · effets chroniques · mesures protection"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phases menstruelle · proliférative · sécrétoire · synchronisation avec ovarien"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse bilan · chloroplaste — thylakoïdes (phase lumineuse) · stroma (Calvin)"}, p5:{theme:"Géologie",sousTh:"Tectonique plaques — dérive continents · Wegener · preuves magnétiques · expansion"} },
+    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique section Maths — brassages + transmission + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Récapitulatif neurophysiologie — potentiel action · synapse · réflexe · drogues"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — photosynthèse · respiration · comparaison autotrophe/hétérotrophe"}, p5:{theme:"Géologie & Évolution",sousTh:"Récapitulatif géologie + évolution — tectonique · théories · preuves · spéciation"} },
+    { p1:{theme:"Génétique",sousTh:"Sujet type bac Section Maths — 5 points génétique · croisements + lié au sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Sujet type bac Section Maths — 6 points milieu intérieur · glycémie + SN + immunité"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac Section Maths — 4 points reproduction · spermatogenèse + régulation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac Section Maths — 3 points nutrition · photosynthèse"}, p5:{theme:"Géologie",sousTh:"Sujet type bac Section Maths — 2 points géologie · tectonique des plaques"} },
+    { p1:{theme:"Génétique",sousTh:"Concours final — génétique section Maths · dihybridisme + lié sexe + diagnostic"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie + immunité complète"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction homme + femme + régulation"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale + végétale + photosynthèse"}, p5:{theme:"Géologie & Évolution",sousTh:"Concours final — géologie + évolution complète"} },
+    // Jours 13-31 : rotation sur les thèmes avec variantes
+    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — Prophase I vs Anaphase I · comparaison brassages"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 — destruction autoimmune cellules β · absence insuline · traitement"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — de primordial à De Graaf · antrum · granulosa · thèque"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — rôle mitochondrie · glycolyse cytoplasme · bilan énergétique"}, p5:{theme:"Géologie",sousTh:"Subduction — plaque océanique sous continentale · fosse · volcans · arcs insulaires"} },
+    { p1:{theme:"Génétique",sousTh:"Monohybridisme — dominance · récessivité · F1 · F2 · back-cross · génotypes"}, p2:{theme:"Neurophysiologie",sousTh:"PPSE et PPSI — sommation spatiale et temporelle · seuil déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — pilule inhibe GnRH/FSH/LH → pas d'ovulation · mécanisme"}, p4:{theme:"Nutrition",sousTh:"Absorption eau plante — osmose · poils absorbants · pression de turgescence"}, p5:{theme:"Évolution",sousTh:"Code génétique universel — preuve évolution · ADN universel · phylogénie moléculaire"} },
+    { p1:{theme:"Génétique",sousTh:"Hérédité liée chromosome X — notation · conductrice · transmission croisée"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie après repas vs jeûne — rôle foie · insuline glycogénogenèse · glucagon glycogénolyse"}, p3:{theme:"Reproduction",sousTh:"Pic LH — cause (rétrocontrôle positif œstrogènes) · conséquences (ovulation · corps jaune)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase obscure de Calvin · fixation CO₂ · réduction · régénération RuBP"}, p5:{theme:"Géologie",sousTh:"Formation chaînes montagnes — collision continentale · Himalaya · Alpes · orogénèse"} },
+    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — non-disjonction méiose → trisomie · âge maternel · caryotype"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — arc réflexe · fuseau neuromusculaire · synapse monosynaptique"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction · FIV · culture · transfert · grossesse"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — enzymes digestives · pH optimal · dénaturation à 50°C · spécificité"}, p5:{theme:"Évolution",sousTh:"Isolement reproducteur — mécanismes · barrières géographiques · spéciation allopatrique"} },
+    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — conditions équilibre · panmixie · applications calcul fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — LB (plasmocytes · anticorps) · LT (cytotoxiques · auxiliaires)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse comparée à spermatogenèse — différences · similitudes · méiose"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs simplifié — pyruvate → CO₂ + NADH + FADH₂ · matrice mitochondriale"}, p5:{theme:"Géologie",sousTh:"Dorsales océaniques — rift · remontée magma · expansion · anomalies magnétiques"} },
+    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — calcul probabilité · maladies récessives rares · généalogie"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues système nerveux — types agoniste/antagoniste · cocaïne · dépendance · sevrage"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde haploïde · acrosome · mitochondries · ovocyte II"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — autotrophe producteur vs hétérotrophe consommateur"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — directionnelle · stabilisatrice · diversifiante · exemples réels"} },
+    { p1:{theme:"Génétique",sousTh:"Bilan génétique section Maths — révision complète tous les thèmes"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan milieu intérieur — glycémie · neurophysiologie · immunité · stress · drogues"}, p3:{theme:"Reproduction",sousTh:"Bilan reproduction — homme · femme · cycle complet · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Bilan nutrition — photosynthèse + respiration · échanges · bilan ATP"}, p5:{theme:"Géologie & Évolution",sousTh:"Bilan géologie + évolution — tectonique · preuves · spéciation"} },
+  ],
+}
 
-  // ── Onglet Archives ──
-  const [filterSection, setFilterSection] = useState(() => {
-    const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco','sc-exp-phys':'scexp-phys','sc-tech-phys':'sctech-phys','math-phys':'maths-phys','info-phys':'info-phys' }
-    return sec && map[sec] ? map[sec] : 'all'
-  })
-  const [filterYear, setFilterYear]       = useState('all')
-  const [filterSession, setFilterSession] = useState('all')
-  const [selected, setSelected]           = useState<Archive[]>([])
-  const [customText, setCustomText]       = useState('')
-  const [fileName, setFileName]           = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
+async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const isMaths = candidat.sectionKey === 'maths-svt'
+  const sectionLabel = isMaths ? 'SVT — Section Mathématiques' : 'SVT — Sciences Expérimentales'
+  const seed = `BAC_BLANC_SVT_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
 
-  // ── Onglet Par Chapitre ──
-  const [chapSection, setChapSection] = useState<string>(() => {
-    const sec = searchParams.get('section')
-    const map: Record<string,string> = { 'maths':'maths','sc-exp':'scexp','sc-tech':'sctech','info':'info','eco':'eco','sc-exp-phys':'scexp-phys','sc-tech-phys':'sctech-phys','math-phys':'maths-phys','info-phys':'info-phys' }
-    return sec && map[sec] ? map[sec] : 'maths'
-  })
-  const [selectedChaps, setSelectedChaps] = useState<{slug:string;titre:string;badge:string;desc:string}[]>([])
+  const progKey = isMaths ? 'maths-svt' : 'scexp-svt'
+  const progList = PROGRAMME_JOUR_SVT[progKey]
+  const prog = progList[(dayNum - 1) % progList.length]
 
-  const filtered = ARCHIVES_ACTIVE.filter(a=>
-    (filterSection==='all'||a.sectionKey===filterSection) &&
-    (filterYear==='all'||a.year===Number(filterYear)) &&
-    (filterSession==='all'||a.session===filterSession)
-  )
+  const p1Theme = prog.p1.sousTh
+  const p2Theme = prog.p2.sousTh
+  const p3Theme = prog.p3.sousTh
+  const p4Theme = prog.p4.sousTh
+  const p5Theme = isMaths && prog.p5 ? prog.p5.sousTh : null
 
-  const toggle = (a:Archive) => {
-    if(selected.find(s=>s.id===a.id)) setSelected(p=>p.filter(s=>s.id!==a.id))
-    else if(selected.length<3) setSelected(p=>[...p,a])
+  const nExercices = isMaths ? 5 : 4
+  const pts = isMaths ? [5, 6, 4, 3, 2] : [6, 7, 4, 3]
+  const duration = isMaths ? 120 : 180
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en SVT (programme CNP officiel).
+Tu crées des sujets BAC BLANC SVT originaux, rigoureux et de niveau officiel.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+RÈGLES SVT OBLIGATOIRES :
+- Vocabulaire biologique précis : noms latins si nécessaire (ex: Homo sapiens)
+- Questions progressives avec sous-parties numérotées : 1) a) b) 2) a) b) c)
+- Données numériques réalistes (pH, températures, concentrations, périodes)
+- Schémas décrits textuellement : "D'après le document ci-dessous..."
+- Documents fournis : tableaux de données, graphiques décrits, résultats d'expériences
+- Structure officielle CNP Tunisie : "DOCUMENT 1 : ...", "DOCUMENT 2 : ..."
+- Relier les notions biologiques à des applications médicales, environnementales ou sociales
+
+NOTATION SVT :
+- Termes techniques précis : ADN, ARN, méiose, crossing-over, osmose, etc.
+- Formules biologiques : 2ⁿ gamètes, pH = -log[H₃O⁺], n = 23 chromosomes
+- Schémas fonctionnels décrits avec précision`
+
+  const exercicesPrompt = [
+    `EXERCICE 1 — ${prog.p1.theme} (${pts[0]} points) : ${p1Theme}`,
+    `EXERCICE 2 — ${prog.p2.theme} (${pts[1]} points) : ${p2Theme}`,
+    `EXERCICE 3 — ${prog.p3.theme} (${pts[2]} points) : ${p3Theme}`,
+    `EXERCICE 4 — ${prog.p4.theme} (${pts[3]} points) : ${p4Theme}`,
+    isMaths && p5Theme ? `EXERCICE 5 — ${prog.p5!.theme} (${pts[4]} points) : ${p5Theme}` : null,
+  ].filter(Boolean).join('\n')
+
+  const prompt = `Graine déterministe : ${seed}
+Date : ${dateStr}
+Section : ${sectionLabel}
+
+Crée un sujet BAC BLANC SVT ORIGINAL · Jour ${dayNum}.
+
+STRUCTURE OFFICIELLE :
+Durée : ${duration} min · Total : 20 points
+
+${exercicesPrompt}
+
+RÈGLES ABSOLUES :
+- Chaque exercice commence par 1 ou 2 documents (données expérimentales, tableaux, graphiques décrits)
+- Minimum 150 mots par exercice
+- Questions progressives du plus simple au plus complexe
+- Toujours un lien entre les documents et les questions
+- Données numériques précises et réalistes
+${isMaths ? '- Exercice 5 (Géologie/Évolution) : courte question théorique ou schéma à analyser (2 pts)' : ''}
+
+Réponds EXACTEMENT avec ce JSON :
+{
+  "title": "Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}",
+  "section": "${sectionLabel}",
+  "duration": ${duration},
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — ${prog.p1.theme}",
+      "theme": "${prog.p1.theme}",
+      "points": ${pts[0]},
+      "graph": null,
+      "statement": "DOCUMENT 1 : [description données/tableau/schéma]\\n\\nDOCUMENT 2 : [données complémentaires]\\n\\n1) a) Question complète avec référence aux documents...\\n1) b) Question...\\n2) a) Question...\\n2) b) Question...\\n3) Question de synthèse..."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — ${prog.p2.theme}",
+      "theme": "${prog.p2.theme}",
+      "points": ${pts[1]},
+      "graph": null,
+      "statement": "DOCUMENT 1 : [description]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ...\\n2) c) ...\\n3) ..."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — ${prog.p3.theme}",
+      "theme": "${prog.p3.theme}",
+      "points": ${pts[2]},
+      "graph": null,
+      "statement": "DOCUMENT : [données]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ..."
+    },
+    {
+      "num": 4,
+      "title": "Exercice 4 — ${prog.p4.theme}",
+      "theme": "${prog.p4.theme}",
+      "points": ${pts[3]},
+      "graph": null,
+      "statement": "DONNÉES : [données]\\n\\n1) ...\\n2) ...\\n3) ..."
+    }${isMaths && p5Theme ? `,
+    {
+      "num": 5,
+      "title": "Exercice 5 — ${prog.p5?.theme || 'Géologie & Évolution'}",
+      "theme": "${prog.p5?.theme || 'Géologie & Évolution'}",
+      "points": 2,
+      "graph": null,
+      "statement": "DOCUMENT : [schéma ou données géologiques/évolution]\\n\\n1) Question théorique...\\n2) Question application..."
+    }` : ''}
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 6000, 'svt' as any)
+
+  const fallback: Omit<BacExam,'id'|'index'> = {
+    title: `Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    day: dayNum,
+    date: dateStr,
+    duration,
+    totalPoints: 20,
+    exercises: [
+      {num:1,title:`Exercice 1 — ${prog.p1.theme}`,theme:prog.p1.theme,points:pts[0],statement:'Exercice en cours de génération…'},
+      {num:2,title:`Exercice 2 — ${prog.p2.theme}`,theme:prog.p2.theme,points:pts[1],statement:'Exercice en cours de génération…'},
+      {num:3,title:`Exercice 3 — ${prog.p3.theme}`,theme:prog.p3.theme,points:pts[2],statement:'Exercice en cours de génération…'},
+      {num:4,title:`Exercice 4 — ${prog.p4.theme}`,theme:prog.p4.theme,points:pts[3],statement:'Exercice en cours de génération…'},
+      ...(isMaths && p5Theme ? [{num:5,title:`Exercice 5 — Géologie & Évolution`,theme:'Géologie & Évolution',points:2,statement:'Exercice en cours de génération…'}] : []),
+    ]
   }
 
-  const toggleChap = (ch:{slug:string;titre:string;badge:string;desc:string}) => {
-    if(selectedChaps.find(c=>c.slug===ch.slug)) setSelectedChaps(p=>p.filter(c=>c.slug!==ch.slug))
-    else if(selectedChaps.length<3) setSelectedChaps(p=>[...p,ch])
-  }
+  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
 
-  const handleFile = (e:React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if(!f) return
-    setFileName(f.name)
-    if(f.type==='text/plain') {
-      const r=new FileReader()
-      r.onload=ev=>setCustomText(ev.target?.result as string||'')
-      r.readAsText(f)
-    } else {
-      setCustomText(`[Fichier importé : ${f.name} — ${(f.size/1024).toFixed(0)} Ko]`)
+  return {
+    ...parsed,
+    id: `bb-svt-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || duration,
+    index: 0,
+  }
+}
+
+// ── Génération examen Bac Blanc (distinct de simulation) ──────────
+async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_CONCOURS_NATIONAL_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets CONCOURS BAC BLANC originaux et officiels.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION MATHÉMATIQUE OBLIGATOIRE DANS LES ÉNONCÉS :
+
+EXPOSANTS — écrire TOUJOURS avec e^(...) entre parenthèses :
+  e^(x/2) et NON eˣ⁄² ni e^{x/2} ni e^x/2
+  e^(-x) et NON e⁻ˣ
+  e^(2x+1) et NON e²ˣ⁺¹
+  f(x) = (3x-2)·e^(x/2) + 4 ← EXEMPLE CORRECT
+  RÈGLE : toujours e^(expr) avec parenthèses autour de l'exposant entier
+
+DÉRIVÉES :
+  f'(x)  f''(x)  g'(x) — avec apostrophe droite
+
+INDICES — écrire avec subscript Unicode :
+  uₙ  uₙ₊₁  u₀  vₙ  xₙ — JAMAIS u_n ni u_{n+1}
+  z₁  z₂  z₃ — JAMAIS z_1
+
+VECTEURS — avec ⃗ Unicode (U+20D7) :
+  u⃗  v⃗  w⃗  AB⃗  AC⃗  AD⃗ ← CORRECT
+  Repère plan : (O ; i⃗, j⃗) ← CORRECT
+  Repère espace : (O ; i⃗, j⃗, k⃗) ← CORRECT
+  "Calculer les coordonnées des vecteurs AB⃗, AC⃗" ← CORRECT
+
+RACINES : √x  √(2x+1)  ∛x — JAMAIS sqrt(x)
+FRACTIONS : (a+b)/(c+d) — JAMAIS \frac
+ENSEMBLES : ℝ  ℕ  ℤ  ℂ  ∈  ∉  ∪  ∩
+GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  ε  μ
+LOIS : B(n ; p)  N(μ ; σ²) — avec point-virgule
+INTÉGRALE : ∫  SOMME : ∑  INFINI : +∞  -∞`
+
+  // Récupérer le programme du jour
+  const prog = getProgrammeJour(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || sec.themes[0]
+  const ex2Theme = prog?.ex2.sousTh || sec.themes[1]
+  const ex3Theme = prog?.ex3.sousTh || sec.themes[2]||sec.themes[0]
+  const ex4Theme = prog?.ex4.sousTh || sec.themes[3]||sec.themes[1]
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL — Concours National — JOUR ${dayNum} — Section ${sec.label}.
+
+SEED DÉTERMINISTE (pour que tous les élèves du même jour aient le même sujet) : ${seed}
+DATE : ${dateStr}
+
+═══ THÈMES OBLIGATOIRES DU JOUR ${dayNum} ═══
+Exercice 1 (6 pts) — ${ex1Theme}
+Exercice 2 (6 pts) — ${ex2Theme}
+Exercice 3 (4 pts) — ${ex3Theme}
+Exercice 4 (4 pts) — ${ex4Theme}
+
+RÈGLES ABSOLUES :
+- Sujet NOUVEAU et ORIGINAL — jamais une copie des annales
+- Niveau exactement équivalent aux vrais examens Bac Tunisien officiel
+- Données numériques précises et réalistes
+- Durée 3h, Total 20 points
+- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
+- Minimum 120 mots par exercice
+
+PRÉSENTATION DES ÉNONCÉS (format officiel Bac Tunisie) :
+- Commencer par "Soit f la fonction définie sur..." ou "Dans le plan complexe..." ou "On considère..."
+- Donner TOUTES les données avant les questions
+- Numéroter : 1) a) b) 2) a) b) c) 3) a) b)
+- Précision des hypothèses comme dans un vrai sujet officiel
+
+GRAPHIQUES — CHAMP "graph" SÉPARÉ du "statement" :
+FORMAT COURBE : [GRAPH: {"type":"function","expressions":["(2*x+1)*Math.exp(-x)+1"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
+FORMAT GÉO : [GRAPH: {"type":"geometry","title":"Figure","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}],"fill":"#6366f120"}]}]
+- INTERDIT dans shapes : "line3d","point3d","segment3d"
+- Expressions JS : Math.exp déjà présent → NE PAS re-préfixer | JAMAIS x^2 → x*x | JAMAIS 2x → 2*x
+
+Réponds avec CE JSON EXACT (aucun texte avant ou après) :
+{
+  "title": "Bac Blanc — ${sec.label} — Concours Jour ${dayNum}",
+  "section": "${sec.label}",
+  "duration": ${sec.duration},
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num":1,
+      "title":"Exercice 1 — [Thème précis selon ${ex1Theme}]",
+      "theme":"${prog?.ex1.theme||sec.themes[0]}",
+      "points":6,
+      "graph":"[GRAPH: {JSON_VALIDE_ICI}]",
+      "statement":"Énoncé COMPLET et OFFICIEL. Commencer par définir la fonction/l'objet mathématique. Toutes les données avant les questions. Sous-parties 1) a) b) c) 2) a) b) c) 3) a) b). Minimum 200 mots. NE PAS inclure le [GRAPH] ici."
+    },
+    {
+      "num":2,
+      "title":"Exercice 2 — [Thème précis selon ${ex2Theme}]",
+      "theme":"${prog?.ex2.theme||sec.themes[1]}",
+      "points":6,
+      "graph":"[GRAPH: {JSON_VALIDE_ICI}] ou null si pas de graphique",
+      "statement":"Énoncé COMPLET. Minimum 150 mots."
+    },
+    {
+      "num":3,
+      "title":"Exercice 3 — [Thème précis selon ${ex3Theme}]",
+      "theme":"${prog?.ex3.theme||sec.themes[2]||sec.themes[0]}",
+      "points":4,
+      "graph":null,
+      "statement":"Énoncé complet. Minimum 80 mots."
+    },
+    {
+      "num":4,
+      "title":"Exercice 4 — [Thème précis selon ${ex4Theme}]",
+      "theme":"${prog?.ex4.theme||sec.themes[3]||sec.themes[1]}",
+      "points":4,
+      "graph":null,
+      "statement":"Énoncé complet. Minimum 80 mots."
     }
-  }
+  ]
+}`
 
-  const canStartArchive = selected.length>0 || customText.trim().length>20
-  const canStartChap    = selectedChaps.length>=1 && selectedChaps.length<=3
-  const currentSecData  = CHAPITRES_ACTIVE[chapSection]
+  const raw = await askClaude(prompt, system, 5000)
+  const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
+    title:`Bac Blanc — ${sec?.label||candidat.section} — Jour ${dayNum}`,
+    section:sec?.label||candidat.section, duration:sec?.duration||180, totalPoints:20,
+    exercises:[{num:1,title:'Exercice 1',theme:'Analyse',points:20,statement:'Erreur de génération — réessayez.'}]
+  })
+  return { ...parsed, id:`bb-j${dayNum}-${candidat.sectionKey}-${Date.now()}`, day:dayNum, date:dateStr, sectionKey:candidat.sectionKey }
+}
 
-  const BADGE_COLORS: Record<string,string> = {
-    'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
-    'Intégration':'#10b981','Probabilités':'#f59e0b','Statistiques':'#f97316',
-    'Finance':'#ec4899','Fondements':'#a78bfa','Maths':'#6366f1',
-    'Génétique':'#4f6ef7','Milieu intérieur':'#10b981','Neurophysiologie':'#06b6d4',
-    'Immunité':'#8b5cf6','Reproduction':'#ec4899','Nutrition':'#22c55e',
-    'Géologie & Évolution':'#f97316',
-  }
+// ════════════════════════════════════════════════════════════════════
+// PAGE CLASSEMENT — 100 premiers
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// PAGE STATISTIQUES — Classement + Insights + Admin
+// Accès : bouton "📊 Statistiques & Classement"
+// ════════════════════════════════════════════════════════════════════
+function PageStatistiques({onBack}:{onBack:()=>void}){
+  const [tab, setTab] = useState<'classement'|'insights'|'admin'>('classement')
+  const [filterSection, setFilterSection] = useState('')
+  const [filterDay, setFilterDay] = useState(0)
+  const { isAdmin, checkMatiereAccess, matiereActive} = useAuth()
+  // Panel admin dans PageStatistiques — garde le state local pour la saisie email
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminOk, setAdminOk] = useState(isAdmin)  // admin Supabase = accès direct
+  const [adminErr, setAdminErr] = useState('')
 
-  return (
-    <div>
-      {/* Info banner */}
-      <div style={{padding:'16px 20px',background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.25)',borderRadius:14,marginBottom:24,display:'flex',gap:14,alignItems:'flex-start'}}>
-        <span style={{fontSize:22,flexShrink:0}}>💡</span>
-        <div>
-          <p style={{margin:'0 0 4px',fontWeight:700,fontSize:14,color:'#e2e8f0'}}>Deux modes de simulation</p>
-          <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.6)',lineHeight:1.7}}>
-            <strong style={{color:'#a5b4fc'}}>Archives</strong> — basé sur les vrais examens Bac 2015–2025 ·
-            <strong style={{color:'#6ee7b7'}}> Par Chapitre</strong> — cible jusqu'à 3 chapitres de ton choix selon la section
-          </p>
+  const ranking = getRanking()
+  const stats = getStats()
+  const today = new Date()
+  const todayDay = today.getDate()
+
+  let filtered = [...ranking]
+  if (filterSection) filtered = filtered.filter(r=>r.sectionKey===filterSection)
+  if (filterDay) filtered = filtered.filter(r=>r.day===filterDay)
+  const top100 = filtered.sort((a,b)=>b.score-a.score).slice(0,100)
+  const days = Array.from(new Set(ranking.map(r=>r.day))).sort()
+
+  const avgScore = stats.ranking.length ? Math.round(stats.ranking.reduce((s,r)=>s+r.score/r.maxScore*100,0)/stats.ranking.length) : 0
+  const topGov = Object.entries(stats.byGov).sort((a,b)=>b[1]-a[1]).slice(0,6)
+  const topDay = Object.entries(stats.byDay).sort((a,b)=>b[1].length-a[1].length)[0]
+  const todayEntries = stats.byDay[todayDay] || []
+  const bestToday = [...todayEntries].sort((a,b)=>b.score-a.score)[0]
+
+  const distrib = [0,0,0,0,0]
+  stats.ranking.forEach(r=>{
+    const p=Math.round(r.score/r.maxScore*100)
+    if(p<40) distrib[0]++; else if(p<60) distrib[1]++; else if(p<75) distrib[2]++; else if(p<90) distrib[3]++; else distrib[4]++
+  })
+
+  const TABS = [
+    {id:'classement' as const, label:'🏆 Classement'},
+    {id:'insights'   as const, label:'📈 Insights'},
+    {id:'admin'      as const, label:'🔐 Admin'},
+  ]
+
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      <Navbar/>
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'80px 20px 60px'}}>
+
+        {/* Header */}
+        <div style={{marginBottom:28}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.3)',borderRadius:50,padding:'6px 18px',marginBottom:14}}>
+            <span>📊</span><span style={{color:'#a5b4fc',fontWeight:700,fontSize:13}}>Bac Blanc — Statistiques Nationales</span>
+          </div>
+          <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 6px'}}>Tableau de bord</h1>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:14}}>Session Mai–Juin {today.getFullYear()} · {stats.totalParticipants} participants</p>
         </div>
-      </div>
 
-      {/* Tabs — 3 onglets */}
-      <div style={{display:'flex',gap:4,marginBottom:24,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,padding:4,width:'fit-content'}}>
-        {([
-          ['archive','🗂️ Archives officielles'],
-          ['chapitre','📚 Par Chapitre'],
-          ['import','📁 Importer'],
-          ['correction-directe','✔️ Correction Directe'],
-        ] as const).map(([k,lbl])=>(
-          <button key={k} onClick={()=>setTab(k)}
-            style={{padding:'10px 20px',borderRadius:9,border:'none',cursor:'pointer',fontWeight:600,fontSize:13,transition:'all 0.2s',fontFamily:'inherit',
-              background:tab===k
-                ? k==='chapitre'
-                  ? 'linear-gradient(135deg,#06d6a0,#059669)'
-                  : k==='correction-directe'
-                    ? 'linear-gradient(135deg,#f59e0b,#f97316)'
-                    : 'linear-gradient(135deg,#6366f1,#8b5cf6)'
-                : 'transparent',
-              color:tab===k?'white':'rgba(255,255,255,0.45)',
-              boxShadow:tab===k?'0 4px 14px rgba(99,102,241,0.45)':'none'}}>
-            {lbl}
-          </button>
-        ))}
-      </div>
-
-      {/* ── ONGLET ARCHIVES ── */}
-      {tab==='archive' && (
-        <div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,flexWrap:'wrap',gap:12}}>
-            <div style={{display:'flex',gap:10,alignItems:'center'}}>
-              <span style={{fontSize:13,color:'rgba(255,255,255,0.55)'}}>
-                <strong style={{color:'#a5b4fc',fontSize:16}}>{selected.length}</strong>/3 sélectionné{selected.length>1?'s':''}
-              </span>
-              {selected.length>0&&<button onClick={()=>setSelected([])} style={{fontSize:11,padding:'3px 10px',borderRadius:6,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',cursor:'pointer'}}>Effacer</button>}
+        {/* KPIs */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:14,marginBottom:26}}>
+          {[
+            {label:'Participants',   value:stats.totalParticipants, color:'#10b981', icon:'🎓'},
+            {label:'Visites',        value:stats.visits,            color:'#6366f1', icon:'👀'},
+            {label:'Score moyen',    value:`${avgScore}%`,          color:'#f59e0b', icon:'📊'},
+            {label:'Jours actifs',   value:Object.keys(stats.byDay).length, color:'#8b5cf6', icon:'📅'},
+            {label:'Meilleur aujourd\'hui', value:bestToday?`${bestToday.score}/${bestToday.maxScore}`:'—', color:'#fbbf24', icon:'🥇'},
+          ].map(kpi=>(
+            <div key={kpi.label} style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${kpi.color}25`,borderRadius:14,padding:'18px 20px'}}>
+              <div style={{fontSize:24,marginBottom:6}}>{kpi.icon}</div>
+              <div style={{fontSize:28,fontWeight:900,color:kpi.color,lineHeight:1}}>{kpi.value}</div>
+              <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:6}}>{kpi.label}</div>
             </div>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {([
-                ['filterSection','Section',['all',...SEC_CONFIGS_ACTIVE.map(s=>s.key)],['Toutes',...SEC_CONFIGS_ACTIVE.map(s=>s.label.split(' ')[0])]],
-                ['filterYear','Année',['all',...YEARS.map(String)],['Toutes',...YEARS.map(String)]],
-                ['filterSession','Session',['all','Principale','Contrôle'],['Les 2','Principale','Contrôle']],
-              ] as [string,string,string[],string[]][]).map(([id,,vals,labels])=>(
-                <select key={id}
-                  value={id==='filterSection'?filterSection:id==='filterYear'?filterYear:filterSession}
-                  onChange={e=>{ if(id==='filterSection')setFilterSection(e.target.value); else if(id==='filterYear')setFilterYear(e.target.value); else setFilterSession(e.target.value); }}
-                  style={{fontSize:12,padding:'7px 12px',borderRadius:9,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.07)',color:'rgba(255,255,255,0.8)',cursor:'pointer',outline:'none'}}>
-                  {vals.map((v,i)=><option key={v} value={v} style={{background:'#1a1a2e'}}>{labels[i]}</option>)}
-                </select>
-              ))}
+          ))}
+        </div>
+
+        {/* Onglets */}
+        <div style={{display:'flex',gap:4,marginBottom:26,background:'rgba(255,255,255,0.04)',padding:6,borderRadius:12,border:'1px solid rgba(255,255,255,0.08)'}}>
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)}
+              style={{flex:1,padding:'10px 12px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'inherit',
+                background:tab===t.id?'rgba(99,102,241,0.25)':' transparent',
+                color:tab===t.id?'#a5b4fc':'rgba(255,255,255,0.45)',fontWeight:tab===t.id?700:400,fontSize:13}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* CLASSEMENT */}
+        {tab==='classement'&&(
+          <div>
+            <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',alignItems:'center'}}>
+              <select value={filterSection} onChange={e=>setFilterSection(e.target.value)}
+                style={{background:'#1a1a35',border:'1px solid rgba(255,255,255,0.15)',borderRadius:8,padding:'8px 14px',color:'white',fontSize:13,outline:'none'}}>
+                <option value="">Toutes les sections</option>
+                {SECTIONS.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+              <select value={filterDay} onChange={e=>setFilterDay(Number(e.target.value))}
+                style={{background:'#1a1a35',border:'1px solid rgba(255,255,255,0.15)',borderRadius:8,padding:'8px 14px',color:'white',fontSize:13,outline:'none'}}>
+                <option value={0}>Tous les jours</option>
+                {days.map(d=><option key={d} value={d}>Jour {d}</option>)}
+              </select>
+              <span style={{fontSize:12,color:'rgba(255,255,255,0.3)'}}>{top100.length} candidats</span>
+            </div>
+
+            {top100.length>=3&&(
+              <div style={{display:'flex',justifyContent:'center',gap:16,marginBottom:26,alignItems:'flex-end'}}>
+                {[top100[1],top100[0],top100[2]].map((r,i)=>{
+                  const medals=['🥈','🥇','🥉']; const heights=[118,142,108]; const colors=['#94a3b8','#fbbf24','#cd7c3a']; const rank=i===0?2:i===1?1:3
+                  return(
+                    <div key={i} style={{textAlign:'center',flex:1,maxWidth:200}}>
+                      <div style={{fontSize:i===1?40:30,marginBottom:4}}>{medals[i]}</div>
+                      <div style={{background:`${colors[i]}18`,border:`2px solid ${colors[i]}`,borderRadius:12,padding:'12px 10px',height:heights[i],display:'flex',flexDirection:'column',justifyContent:'center',gap:4}}>
+                        <div style={{fontWeight:800,fontSize:13,color:'white'}}>{r.prenom} {r.nom}</div>
+                        <div style={{fontSize:11,color:'rgba(255,255,255,0.5)'}}>{r.lycee}</div>
+                        <div style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>{r.gouvernorat}</div>
+                        <div style={{fontSize:20,fontWeight:900,color:colors[i],marginTop:4}}>{r.score}/{r.maxScore}</div>
+                      </div>
+                      <div style={{fontSize:12,color:colors[i],fontWeight:700,marginTop:5}}>#{rank}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {top100.length>0?(
+              <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,overflow:'hidden'}}>
+                <div style={{display:'grid',gridTemplateColumns:'50px 1fr 1fr 120px 80px 70px',background:'rgba(255,255,255,0.05)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'10px 16px',gap:0}}>
+                  {['#','Candidat','Lycée','Section','Score','Jour'].map(h=>(
+                    <div key={h} style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.06em'}}>{h}</div>
+                  ))}
+                </div>
+                {top100.map((r,i)=>{
+                  const sec=SECTIONS.find(s=>s.key===r.sectionKey)
+                  const pct=Math.round((r.score/r.maxScore)*100)
+                  const rowBg=i<3?['rgba(251,191,36,0.07)','rgba(148,163,184,0.05)','rgba(205,124,58,0.05)'][i]:'transparent'
+                  return(
+                    <div key={i} style={{display:'grid',gridTemplateColumns:'50px 1fr 1fr 120px 80px 70px',padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',background:rowBg,alignItems:'center',gap:0}}>
+                      <div style={{fontWeight:800,color:i<3?['#fbbf24','#94a3b8','#cd7c3a'][i]:'rgba(255,255,255,0.35)',fontSize:i<3?18:14}}>{i<3?['🥇','🥈','🥉'][i]:`#${i+1}`}</div>
+                      <div><div style={{fontWeight:700,fontSize:13,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{r.gouvernorat}</div></div>
+                      <div style={{fontSize:12,color:'rgba(255,255,255,0.6)'}}>{r.lycee}</div>
+                      <div>{sec&&<span style={{fontSize:11,padding:'3px 8px',borderRadius:50,background:`${sec.color}20`,color:sec.color,fontWeight:600}}>{sec.icon} {sec.label.split(' ')[0]}</span>}</div>
+                      <div><div style={{fontWeight:800,fontSize:15,color:pct>=70?'#10b981':pct>=50?'#f59e0b':'#ef4444'}}>{r.score}/{r.maxScore}</div><div style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>{pct}%</div></div>
+                      <div style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}> J.{r.day}</div>
+                    </div>
+                  )
+                })}
+              </div>
+            ):(
+              <div style={{textAlign:'center',padding:'60px 20px',color:'rgba(255,255,255,0.3)'}}><div style={{fontSize:48,marginBottom:16}}>🏆</div><div>Aucun résultat — soyez le premier !</div></div>
+            )}
+          </div>
+        )}
+
+        {/* INSIGHTS */}
+        {tab==='insights'&&(
+          <div style={{display:'flex',flexDirection:'column',gap:20}}>
+            {/* Distribution */}
+            <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
+              <h3 style={{fontSize:15,fontWeight:700,marginBottom:18,color:'rgba(255,255,255,0.8)'}}>📊 Distribution des scores</h3>
+              {[{label:'< 40%',val:distrib[0],color:'#ef4444'},{label:'40–59%',val:distrib[1],color:'#f59e0b'},{label:'60–74%',val:distrib[2],color:'#eab308'},{label:'75–89%',val:distrib[3],color:'#10b981'},{label:'≥ 90%',val:distrib[4],color:'#06b6d4'}].map(d=>{
+                const total=stats.ranking.length||1; const pct=Math.round((d.val/total)*100)
+                return(
+                  <div key={d.label} style={{marginBottom:12}}>
+                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}><span style={{color:'rgba(255,255,255,0.7)'}}>{d.label}</span><span style={{color:d.color,fontWeight:700}}>{d.val} candidats ({pct}%)</span></div>
+                    <div style={{height:10,background:'rgba(255,255,255,0.06)',borderRadius:6,overflow:'hidden'}}><div style={{height:'100%',width:`${pct}%`,background:d.color,borderRadius:6}}/></div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+              <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
+                <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>🗺️ Top gouvernorats</h3>
+                {topGov.length>0?topGov.map(([gov,count])=>{
+                  const max=topGov[0][1]
+                  return(<div key={gov} style={{marginBottom:12}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:13}}><span style={{color:'rgba(255,255,255,0.7)'}}>{gov}</span><span style={{color:'#6366f1',fontWeight:700}}>{count}</span></div><div style={{height:4,background:'rgba(255,255,255,0.08)',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:`${(count/max)*100}%`,background:'linear-gradient(90deg,#6366f1,#8b5cf6)',borderRadius:4}}/></div></div>)
+                }):<p style={{color:'rgba(255,255,255,0.3)',fontSize:13}}>Aucun participant encore</p>}
+              </div>
+              <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
+                <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>📚 Par section</h3>
+                {SECTIONS.map(sec=>{
+                  const cnt=stats.ranking.filter(r=>r.sectionKey===sec.key).length
+                  const avg=cnt?Math.round(stats.ranking.filter(r=>r.sectionKey===sec.key).reduce((s,r)=>s+r.score/r.maxScore*100,0)/cnt):0
+                  return(<div key={sec.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:13}}><span style={{color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span><span style={{color:'rgba(255,255,255,0.6)'}}>{cnt}</span><span style={{color:'#fbbf24',fontWeight:700}}>moy. {avg}%</span></div>)
+                })}
+              </div>
+            </div>
+
+            {/* Evolution par jour */}
+            <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
+              <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>📅 Évolution par jour</h3>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                {Object.entries(stats.byDay).sort((a,b)=>Number(a[0])-Number(b[0])).map(([day,entries])=>{
+                  const avgDay=Math.round(entries.reduce((s,r)=>s+r.score/r.maxScore*100,0)/entries.length)
+                  const isToday=Number(day)===todayDay
+                  return(<div key={day} style={{background:isToday?'rgba(245,158,11,0.12)':'rgba(255,255,255,0.04)',border:`1px solid ${isToday?'rgba(245,158,11,0.4)':'rgba(255,255,255,0.08)'}`,borderRadius:10,padding:'12px 16px',minWidth:90,textAlign:'center'}}><div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginBottom:4}}>Jour {day}{isToday?' ★':''}</div><div style={{fontSize:22,fontWeight:900,color:isToday?'#fbbf24':'white'}}>{entries.length}</div><div style={{fontSize:10,color:'rgba(255,255,255,0.35)'}}>candidats</div><div style={{fontSize:12,color:'#10b981',marginTop:4,fontWeight:700}}>moy. {avgDay}%</div></div>)
+                })}
+                {!Object.keys(stats.byDay).length&&<p style={{color:'rgba(255,255,255,0.3)',fontSize:13}}>Aucun jour actif encore</p>}
+              </div>
+            </div>
+
+            {/* Insights auto */}
+            <div style={{background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.2)',borderRadius:14,padding:24}}>
+              <h3 style={{fontSize:15,fontWeight:700,marginBottom:14,color:'#a5b4fc'}}>🤖 Insights automatiques</h3>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {[
+                  topDay?`📅 Jour le plus actif : Jour ${topDay[0]} avec ${topDay[1].length} participants`:null,
+                  topGov[0]?`🗺️ Gouvernorat leader : ${topGov[0][0]} (${topGov[0][1]} candidats)`:null,
+                  avgScore>=70?`✅ Bon niveau général — score moyen de ${avgScore}%`:avgScore>0?`📚 Niveau à améliorer — score moyen de ${avgScore}%`:null,
+                  distrib[4]>0?`🌟 ${distrib[4]} candidat${distrib[4]>1?'s':''} ont atteint ≥ 90%`:null,
+                  distrib[0]>distrib[3]+distrib[4]?`⚠️ Majorité en-dessous de 40% — renforcement nécessaire`:null,
+                ].filter(Boolean).map((insight,i)=>(
+                  <div key={i} style={{fontSize:13,color:'rgba(255,255,255,0.7)',padding:'8px 12px',background:'rgba(255,255,255,0.04)',borderRadius:8,borderLeft:'3px solid rgba(99,102,241,0.5)'}}>{insight}</div>
+                ))}
+                {stats.ranking.length===0&&<div style={{fontSize:13,color:'rgba(255,255,255,0.4)',fontStyle:'italic'}}>Les insights apparaîtront dès les premiers participants.</div>}
+              </div>
             </div>
           </div>
-          {selected.length>0&&(
-            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16,padding:'12px 14px',background:'rgba(99,102,241,0.08)',borderRadius:12,border:'1px solid rgba(99,102,241,0.2)'}}>
-              {selected.map(a=>(
-                <span key={a.id} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,fontWeight:600,padding:'5px 12px',borderRadius:20,background:`${a.color}22`,color:a.color,border:`1px solid ${a.color}40`}}>
-                  {a.icon} {a.section.split(' ')[0]} {a.year} · {a.session}
-                  <button onClick={()=>toggle(a)} style={{background:'transparent',border:'none',cursor:'pointer',color:a.color,fontSize:15,lineHeight:1,padding:'0 0 0 2px',opacity:.8}}>×</button>
-                </span>
-              ))}
-            </div>
-          )}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(172px,1fr))',gap:10,maxHeight:440,overflowY:'auto',paddingRight:2}}>
-            {filtered.map(a=>{
-              const sel = !!selected.find(s=>s.id===a.id)
-              const blocked = !sel && selected.length>=3
-              return (
-                <div key={a.id} onClick={()=>!blocked&&toggle(a)}
-                  style={{padding:'14px 15px',borderRadius:12,cursor:blocked?'not-allowed':'pointer',
-                    background:sel?`${a.color}18`:'rgba(255,255,255,0.04)',
-                    border:sel?`2px solid ${a.color}`:'1px solid rgba(255,255,255,0.08)',
-                    opacity:blocked?0.4:1,transition:'all 0.18s',position:'relative',
-                    boxShadow:sel?`0 4px 20px ${a.color}35`:'none'}}
-                  onMouseEnter={e=>{if(!blocked&&!sel)e.currentTarget.style.borderColor='rgba(255,255,255,0.22)'}}
-                  onMouseLeave={e=>{if(!sel)e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'}}>
-                  {sel&&<div style={{position:'absolute',top:8,right:8,width:20,height:20,borderRadius:'50%',background:a.color,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'white',fontWeight:800}}>✓</div>}
-                  <div style={{fontSize:22,marginBottom:6,opacity:0.9}}>{a.icon}</div>
-                  <div style={{fontSize:11,fontWeight:700,color:a.color,marginBottom:3,lineHeight:1.3}}>{a.section.replace('Bac ','').replace('Sciences ','Sc.')}</div>
-                  <div style={{fontWeight:800,fontSize:20,color:'rgba(255,255,255,0.9)',fontVariantNumeric:'tabular-nums'}}>{a.year}</div>
-                  <div style={{fontSize:10,marginTop:4,color:'rgba(255,255,255,0.35)',display:'flex',alignItems:'center',gap:4}}>
-                    <span>{a.session==='Principale'?'📌':'🔄'}</span>{a.session}
+        )}
+
+        {/* ADMIN */}
+        {tab==='admin'&&(
+          <div>
+            {!adminOk?(
+              <div style={{maxWidth:380,margin:'0 auto'}}>
+                <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:16,padding:36,textAlign:'center'}}>
+                  <div style={{fontSize:40,marginBottom:14}}>🔐</div>
+                  <h2 style={{color:'white',fontWeight:800,fontSize:18,margin:'0 0 8px'}}>Espace Admin</h2>
+                  <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,marginBottom:24}}>Réservé au fondateur MathBac.AI</p>
+                  <input value={adminEmail} onChange={e=>setAdminEmail(e.target.value)} placeholder="Email admin"
+                    onKeyDown={e=>{if(e.key==='Enter'){if(adminEmail.trim().toLowerCase()===ADMIN_EMAIL){setAdminOk(true);setAdminErr('')}else setAdminErr('Email non autorisé.')}}}
+                    style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any,marginBottom:12}}/>
+                  {adminErr&&<p style={{color:'#fca5a5',fontSize:13,marginBottom:12}}>{adminErr}</p>}
+                  <button onClick={()=>{if(adminEmail.trim().toLowerCase()===ADMIN_EMAIL){setAdminOk(true);setAdminErr('')}else setAdminErr('Email non autorisé.')}}
+                    style={{width:'100%',padding:'12px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'white',fontSize:14,fontWeight:700,cursor:'pointer'}}>
+                    Accéder au tableau de bord
+                  </button>
+                </div>
+              </div>
+            ):(
+              <div>
+                <div style={{display:'inline-flex',alignItems:'center',gap:8,background:'rgba(16,185,129,0.1)',border:'1px solid rgba(16,185,129,0.3)',borderRadius:50,padding:'6px 16px',marginBottom:24}}>
+                  <span style={{fontSize:12}}>✅</span><span style={{color:'#6ee7b7',fontWeight:700,fontSize:12}}>Connecté : {ADMIN_EMAIL}</span>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
+                  <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:20}}>
+                    <h4 style={{fontSize:14,fontWeight:700,marginBottom:12,color:'rgba(255,255,255,0.8)'}}>📥 Export CSV</h4>
+                    <button onClick={()=>{
+                      const csv=['Nom,Prénom,Lycée,Gouvernorat,Section,Score,Max,Jour,Date',...stats.ranking.map(r=>`${r.nom},${r.prenom},${r.lycee},${r.gouvernorat},${r.section},${r.score},${r.maxScore},${r.day},${r.date}`)].join('\n')
+                      const blob=new Blob([csv],{type:'text/csv'})
+                      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bac-blanc-resultats.csv';a.click()
+                    }} style={{width:'100%',padding:'10px',borderRadius:8,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.08)',color:'#6ee7b7',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                      ⬇ Télécharger CSV
+                    </button>
+                  </div>
+                  <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:20}}>
+                    <h4 style={{fontSize:14,fontWeight:700,marginBottom:12,color:'rgba(255,255,255,0.8)'}}>🗑️ Gestion données</h4>
+                    <button onClick={()=>{if(window.confirm('Effacer toutes les données ?')){localStorage.removeItem('bb_ranking');localStorage.removeItem('bb_visits');window.location.reload()}}}
+                      style={{width:'100%',padding:'10px',borderRadius:8,border:'1px solid rgba(239,68,68,0.3)',background:'rgba(239,68,68,0.06)',color:'#fca5a5',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                      🗑 Effacer tout
+                    </button>
                   </div>
                 </div>
+                <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
+                  <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>🏆 Top 10 — tous jours</h3>
+                  {stats.ranking.sort((a,b)=>b.score-a.score).slice(0,10).map((r,i)=>{
+                    const sec=SECTIONS.find(s=>s.key===r.sectionKey)
+                    return(<div key={i} style={{display:'grid',gridTemplateColumns:'40px 1fr 140px 80px 60px',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',alignItems:'center',fontSize:13,gap:0}}><span style={{fontWeight:800,color:i<3?['#fbbf24','#94a3b8','#cd7c3a'][i]:'rgba(255,255,255,0.4)'}}>{i<3?['🥇','🥈','🥉'][i]:`#${i+1}`}</span><div><div style={{fontWeight:700,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{r.lycee} · {r.gouvernorat}</div></div>{sec&&<span style={{fontSize:11,padding:'2px 8px',borderRadius:50,background:`${sec.color}20`,color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span>}<span style={{fontWeight:800,color:r.score/r.maxScore>=0.7?'#10b981':r.score/r.maxScore>=0.5?'#f59e0b':'#ef4444'}}>{r.score}/{r.maxScore}</span><span style={{color:'rgba(255,255,255,0.4)',fontSize:11}}>J.{r.day}</span></div>)
+                  })}
+                  {!stats.ranking.length&&<p style={{color:'rgba(255,255,255,0.3)',fontSize:13}}>Aucun résultat encore</p>}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{textAlign:'center',marginTop:36}}>
+          <button onClick={onBack} style={{padding:'10px 28px',borderRadius:9,border:'1px solid rgba(255,255,255,0.15)',background:'transparent',color:'rgba(255,255,255,0.6)',fontSize:13,cursor:'pointer',fontWeight:600}}>← Retour à l&apos;accueil</button>
+        </div>
+      </div>
+      <Footer/>
+    </div>
+  )
+}
+
+
+
+// ════════════════════════════════════════════════════════════════════
+// PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
+// ════════════════════════════════════════════════════════════════════
+
+// Sous-sections autorisées par matière
+
+const PROGRAMME_JOUR_FRANCAIS = [
+  { theme:'Le Partage',                  texte:'Texte argumentatif sur la solidarite et le dialogue interculturel (Camus, Maalouf, Ben Jelloun)',  production:'Dissertation — le partage est-il fondement de toute societe harmonieuse',       langue:'Connecteurs logiques · Subordination causale' },
+  { theme:"Engagement en Litterature",   texte:'Discours engage — role de l\'ecrivain face a l\'injustice sociale (Zola J\'accuse, Hugo)',       production:'Essai — l\'ecrivain doit-il s\'engager dans les affaires de son temps',          langue:'Modalisation · Discours rapporte' },
+  { theme:"Appel de la Modernite",       texte:'Texte explicatif — technologie et valeurs humaines (Jacquard, Diderot, Rousseau)',                  production:'Dissertation — faut-il choisir entre tradition et progres',                       langue:'Connecteurs logiques · Types de phrases' },
+  { theme:'Raison et Lumieres',          texte:'Texte philosophique — Voltaire et la liberte de pensee contre l\'obscurantisme religieux',         production:'Essai — la raison peut-elle combattre l\'obscurantisme',                          langue:'Subordination · Champ lexical de la raison' },
+  { theme:'Science et Progres',          texte:'Article scientifique — impact du developpement technologique sur la societe (Albert Jacquard)',     production:'Sujet de reflexion — le progres scientifique garantit-il le bonheur humain',      langue:'Connecteurs consecutifs · Modalisation' },
+  { theme:"Homme et Nature",             texte:'Texte ecologique — pollution et relation homme-nature (Jean Giono, Nicolas Hulot, Camus)',          production:'Dissertation — l\'homme est-il responsable de la destruction de la planete',     langue:'Champ lexical · Figures de style' },
+  { theme:'Communication et Medias',     texte:'Article de presse — medias, internet et manipulation de l\'information (Umberto Eco, McLuhan)',   production:'Essai — les reseaux sociaux menacent-ils la verite et la democratie',            langue:'Discours rapporte · Reformulation' },
+  { theme:'Tolerance et Humanisme',      texte:'Essai humaniste — tolerance et dialogue des cultures (Voltaire Traite, Amin Maalouf)',             production:'Dissertation — la tolerance est-elle suffisante contre le racisme',               langue:'Connecteurs adversatifs · Modalisation' },
+  { theme:'Litterature Engagee',         texte:'Extrait — Victor Hugo, Les Miserables, defense des opprimes et des pauvres',                      production:'Essai — la litterature peut-elle vraiment changer les mentalites',                langue:'Subordination relative · Lexique litteraire' },
+  { theme:'La Poesie',                   texte:'Poeme engage — Paul Eluard, Liberte, analyse des figures et du message resistant',               production:'Commentaire — analyser les figures de style et le message du poeme',              langue:'Figures de style · Versification et musicalite' },
+  { theme:'Vivre Ensemble',              texte:'Texte argumentatif — coexistence pacifique et respect des differences culturelles (Ben Jelloun)', production:'Dissertation — comment favoriser le vivre ensemble dans nos societes plurielles', langue:'Connecteurs logiques · Types de raisonnement' },
+  { theme:'Culture Litteraire',          texte:'Texte critique — mouvements litteraires du Romantisme au Symbolisme (Baudelaire, Rimbaud)',        production:'Essai — qu\'est-ce qui definit un grand ecrivain pour la posterite',            langue:'Champ lexical de la litterature · Epithetes' },
+  { theme:'Liberte de Pensee',           texte:'Texte philosophique — Denis Diderot, l\'Encyclopedie et le savoir contre l\'ignorance',         production:'Dissertation — la liberte d\'expression a-t-elle des limites legitimes',        langue:'Subordination concessive · Modalisation' },
+  { theme:'Progres et Ethique',          texte:'Article — biotechnologies et questions ethiques en science (Hubert Reeves, biologie)',             production:'Sujet de reflexion — la science peut-elle et doit-elle tout resoudre',            langue:'Connecteurs causaux · Argumentation rationnelle' },
+  { theme:'Art et Societe',              texte:'Texte argumentatif — role de l\'art dans la societe moderne et son engagement',                  production:'Essai — l\'art doit-il necessairement servir une cause politique ou sociale',   langue:'Champ lexical de l\'art · Figures rhetoriques' },
+  { theme:'Education et Egalite',        texte:'Article de presse — education comme outil d\'emancipation et ascension sociale',                production:'Dissertation — l\'education garantit-elle l\'egalite des chances dans la societe', langue:'Connecteurs logiques · Subordination causale' },
+  { theme:'Mondialisation et Identite',  texte:'Texte argumentatif — mondialisation et preservation des cultures locales (Maalouf, Eco)',         production:'Essai — la mondialisation est-elle une chance ou une menace pour nos cultures',  langue:'Discours rapporte · Reformulation' },
+  { theme:'Environnement et Avenir',     texte:'Texte de presse — developpement durable et responsabilite collective envers la planete',          production:'Dissertation — quel monde allons-nous laisser aux generations futures',           langue:'Futur · Modalisation de l\'obligation et du devoir' },
+  { theme:'Memoire et Histoire',         texte:'Texte narratif — importance du devoir de memoire dans les societes contemporaines',               production:'Essai — peut-on construire l\'avenir en oubliant le passe et ses traumatismes', langue:'Temps du passe · Connecteurs temporels' },
+  { theme:'Inegalites et Justice',       texte:'Texte engage — Emile Zola, Germinal, denonciation des inegalites sociales et de l\'injustice', production:'Dissertation — la litterature peut-elle vraiment combattre les inegalites',      langue:'Champ lexical de la justice · Connecteurs' },
+  { theme:'Technologie et Humanite',     texte:'Article — intelligence artificielle et transformation du travail humain et de la societe',        production:'Sujet de reflexion — l\'IA est-elle une opportunite ou un danger pour l\'humain', langue:'Vocabulaire scientifique · Argumentation logique' },
+  { theme:'Paix et Dialogue',            texte:'Discours humaniste — dialogue et reconciliation plutot que violence (Nelson Mandela, ONU)',       production:'Essai — le dialogue pacifique peut-il vraiment remplacer la guerre',             langue:'Subordination · Connecteurs adversatifs et concessifs' },
+  { theme:'Langue et Identite',          texte:'Texte reflexif — la langue maternelle comme patrimoine culturel et identitaire de l\'humanite', production:'Dissertation — peut-on perdre son identite en perdant sa langue maternelle',     langue:'Champ lexical de la langue · Figures identitaires' },
+  { theme:'Presse et Democratie',        texte:'Article de presse — liberte de la presse et fonctionnement democratique des societes',           production:'Essai — la presse libre est-elle un pilier indispensable de la democratie',     langue:'Modalisation · Discours rapporte journalistique' },
+  { theme:'Jeunesse et Engagement',      texte:'Texte argumentatif — jeunesse et responsabilite citoyenne dans un monde en crise',               production:'Dissertation — la jeunesse peut-elle vraiment changer le monde contemporain',    langue:'Connecteurs logiques · Argumentation et exemples' },
+  { theme:'Creativite et Innovation',    texte:'Texte explicatif — la creativite humaine comme moteur de progres et d\'innovation',             production:'Essai — la creativite s\'apprend-elle ou est-elle un don inne chez l\'homme',  langue:'Champ lexical · Comparaison et analogie' },
+  { theme:'Sport et Valeurs',            texte:'Texte argumentatif — le sport comme vecteur de valeurs universelles et de fraternite',           production:'Dissertation — le sport peut-il vraiment unir les peuples et transcender les differences', langue:'Champ lexical du sport · Figures de style' },
+  { theme:'Voyage et Decouverte',        texte:'Texte litteraire — le voyage comme source d\'enrichissement personnel, culturel et humain',    production:'Essai — voyager forme-t-il vraiment la jeunesse et developpe-t-il la tolerance', langue:'Subjonctif · Connecteurs concessifs' },
+  { theme:'Famille et Societe',          texte:'Texte sociologique — evolution de la structure familiale dans la societe contemporaine',          production:'Dissertation — la famille est-elle toujours le fondement irrempkacable de la societe', langue:'Connecteurs temporels · Argumentation sociologique' },
+  { theme:'Resistance et Courage',       texte:'Texte historique — resistance face a l\'oppression et courage individuel (Camus, Sartre)',      production:'Essai — qu\'est-ce que le courage dans la vie quotidienne et la societe',       langue:'Champ lexical du courage · Modalisation' },
+  { theme:'Diversite Culturelle',        texte:'Texte humaniste — richesse de la diversite culturelle et dialogue des civilisations (Maalouf)', production:'Dissertation — la diversite culturelle est-elle une richesse pour l\'humanite',  langue:'Connecteurs logiques · Champ lexical de la culture' },
+]
+
+function getProgrammeJourFrancais(dayNum: number) {
+  return PROGRAMME_JOUR_FRANCAIS[(dayNum - 1) % PROGRAMME_JOUR_FRANCAIS.length]
+}
+
+async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_FRANCAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+
+  const isLettres = candidat.sectionKey === 'fr-lettres'
+  const sectionLabel = isLettres ? 'Section Lettres' : 'Sections Scientifiques'
+  const prog = getProgrammeJourFrancais(dayNum)
+
+  const sectionFocus = isLettres
+    ? 'textes litteraires engages · analyse poetique · dissertation et commentaire · auteurs (Hugo, Zola, Voltaire, Baudelaire, Eluard, Camus, Sartre)'
+    : 'textes scientifiques et argumentatifs · sujet de reflexion · essai structure · auteurs (Jacquard, Reeves, Giono, Maalouf, McLuhan, Eco)'
+
+  const system = `Tu es un expert en creation de sujets du Baccalaureat Francais Tunisie (programme officiel CNP/MEN).
+Tu crees des sujets BAC BLANC FRANCAIS de niveau officiel, entierement en francais.
+REPONDS UNIQUEMENT EN JSON VALIDE sans backticks ni commentaires.
+
+STRUCTURE OFFICIELLE BAC FRANCAIS TUNISIE :
+Partie I  — Comprehension de texte (7 pts) : texte 200-250 mots + 5 questions progressives
+Partie II — Langue et Expression (5 pts) : connecteurs, grammaire, vocabulaire, figures de style
+Partie III — Production Ecrite (8 pts) : dissertation ou essai argumente 25-30 lignes
+
+EXIGENCES :
+- Texte authentique niveau Bac Tunisie, 200-250 mots, en rapport avec le theme du jour
+- Questions progressives : comprehension globale → inference → vocabulaire → coherence textuelle
+- Production ecrite avec consigne claire et bareme detaille
+- Langue : exercices varies (connecteurs, modalisation, figures de style, reformulation)
+- Difficulte conforme aux vrais sujets officiels du Bac Tunisie`
+
+  const prompt = `Cree un sujet BAC BLANC FRANCAIS officiel — Concours National — JOUR ${dayNum} — ${sectionLabel}.
+
+GRAINE UNIQUE (tous les eleves du meme jour ont le meme sujet) : ${seed}
+DATE : ${dateStr}
+THEME : ${prog.theme}
+BASE DU TEXTE : ${prog.texte}
+SUJET DE PRODUCTION : ${prog.production}
+FOCUS LANGUE : ${prog.langue}
+FOCUS SECTION : ${sectionFocus}
+
+PARTIE I — COMPREHENSION DE TEXTE (7 pts) :
+Redige un texte ${isLettres ? 'litteraire ou argumentatif engage' : 'scientifique ou argumentatif'} de 200-250 mots sur le theme "${prog.theme}".
+Style : ${isLettres ? 'engage et litteraire, avec des references a des auteurs ou oeuvres, dimension humaine et culturelle forte' : 'informatif, logique et structure, avec des donnees et exemples concrets, dimension scientifique'}
+Puis redige ces 5 questions :
+  Q1 (1 pt) : Comprehension globale — quel est le message principal du texte ?
+  Q2 (2 pts) : Vrai (V) / Faux (F) / Non Mentionne (NM) — 2 affirmations avec justification par citation
+  Q3 (2 pts) : Question d\'inference ouverte — quel est le point de vue de l\'auteur ? justifiez
+  Q4 (1 pt) : Vocabulaire en contexte — expliquez l\'expression [choisie dans le texte]
+  Q5 (1 pt) : Referent ou coherence — a quoi renvoie le mot souligne dans le texte ?
+
+PARTIE II — LANGUE ET EXPRESSION (5 pts) :
+Focus : ${prog.langue}
+  Exercice A (2 pts) : 4 phrases a completer ou transformer selon le focus langue
+  Exercice B (1 pt) : 2 reformulations de phrases sans en changer le sens (avec mot impose)
+  Exercice C (2 pts) : 4 questions sur vocabulaire ou figures de style en contexte textuel
+
+PARTIE III — PRODUCTION ECRITE (8 pts) :
+Sujet : ${prog.production}
+Consigne complete : Redigez un texte argumente de 25 a 30 lignes comportant :
+  • Une introduction : presentez le sujet, posez la problematique, annoncez votre plan
+  • Un developpement : au moins 2 arguments solides illustres par des exemples precis ou des references
+  • Une conclusion : repondez a la problematique et ouvrez sur une reflexion plus large
+Bareme : Contenu et argumentation (4 pts) · Langue et richesse lexicale (2 pts) · Structure et coherence (2 pts)
+
+REPONDS AVEC CE JSON EXACT :
+{
+  "id": "bb-francais-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}",
+  "section": "${sectionLabel}",
+  "sectionKey": "${candidat.sectionKey}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 120,
+  "exercises": [
+    {
+      "num": 1,
+      "theme": "${prog.theme}",
+      "title": "Partie I — Comprehension de texte",
+      "points": 7,
+      "graph": null,
+      "statement": "TEXTE :\n[Texte complet 200-250 mots sur ${prog.theme} — style ${isLettres ? 'litteraire engage' : 'scientifique argumentatif'}]\n\nQUESTIONS :\nQ1 (1 pt) — [question comprehension globale du message principal]\nQ2 (2 pts) — Dites si les affirmations suivantes sont Vraies (V), Fausses (F) ou Non Mentionnees (NM). Justifiez par une citation du texte :\n  a) [affirmation 1]\n  b) [affirmation 2]\nQ3 (2 pts) — [question d\'inference ouverte sur le point de vue de l\'auteur avec justification]\nQ4 (1 pt) — Expliquez l\'expression \'[expression du texte]\' telle qu\'elle est utilisee dans le contexte.\nQ5 (1 pt) — A quoi renvoie le mot \'[mot souligne]\' dans le paragraphe [X] ?"
+    },
+    {
+      "num": 2,
+      "theme": "Langue — ${prog.langue}",
+      "title": "Partie II — Langue et Expression",
+      "points": 5,
+      "graph": null,
+      "statement": "EXERCICE A (2 pts) — Completez les phrases avec le connecteur logique qui convient :\n1. [phrase 1 incomplète]\n2. [phrase 2 incomplète]\n3. [phrase 3 incomplète]\n4. [phrase 4 incomplète]\n\nEXERCICE B (1 pt) — Reformulez les phrases sans en changer le sens en utilisant le mot entre parentheses :\n1. [phrase 1] (mot impose 1)\n2. [phrase 2] (mot impose 2)\n\nEXERCICE C (2 pts) — Vocabulaire et style :\n1. [question figure de style ou vocabulaire 1]\n2. [question 2]\n3. [question 3]\n4. [question 4]"
+    },
+    {
+      "num": 3,
+      "theme": "${prog.production}",
+      "title": "Partie III — Production Ecrite",
+      "points": 8,
+      "graph": null,
+      "statement": "SUJET : ${prog.production}\n\nRedigez un texte argumente de 25 a 30 lignes.\nVotre devoir doit obligatoirement comporter :\n• Une introduction : presentez le sujet, formulez la problematique et annoncez votre plan\n• Un developpement argumente : au moins 2 arguments solides, chacun illustre par un exemple precis ou une reference litteraire/scientifique\n• Une conclusion : repondez clairement a la problematique et ouvrez sur une reflexion plus large\n\nBAREME DE NOTATION :\n• Contenu et qualite de l\'argumentation : 4 pts\n• Langue, style et richesse lexicale : 2 pts\n• Structure, coherence et organisation : 2 pts"
+    }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-francais-${dayNum}-${candidat.sectionKey}`,
+    day: dayNum,
+    title: `Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}`,
+    section: sectionLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: 120,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Reponse IA invalide — reessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || `bb-francais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || sectionLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || 120,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC ÉCONOMIE (Sc. Éco & Gestion) — programme CNP
+// Épreuve coeff 3 · 3h · 20 pts · 3 parties (connaissances / document / réflexion)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_ECO = [
+  { theme:'La croissance économique',                       reflexion:"La croissance économique est-elle toujours souhaitable ?" },
+  { theme:'Les facteurs de la croissance',                  reflexion:"Le progrès technique est-il le principal moteur de la croissance ?" },
+  { theme:'Les mutations de la structure de production',    reflexion:"La tertiarisation traduit-elle un affaiblissement de l'industrie ?" },
+  { theme:'Les transformations des modes de vie',           reflexion:"La hausse du niveau de vie suffit-elle à améliorer le bien-être ?" },
+  { theme:'Les coûts de la croissance',                     reflexion:"La croissance économique n'a-t-elle que des effets positifs ?" },
+  { theme:'Le développement durable',                       reflexion:"Croissance économique et développement durable sont-ils conciliables ?" },
+  { theme:'Les échanges internationaux',                    reflexion:"Le libre-échange profite-t-il à tous les pays ?" },
+  { theme:'Les mutations du commerce international',         reflexion:"La spécialisation internationale est-elle un facteur de développement ?" },
+  { theme:'Les firmes multinationales',                     reflexion:"Les firmes multinationales favorisent-elles le développement des pays d'accueil ?" },
+]
+function getProgrammeJourEco(dayNum: number) {
+  return PROGRAMME_JOUR_ECO[(dayNum - 1) % PROGRAMME_JOUR_ECO.length]
+}
+
+async function generateBacBlancEconomie(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_ECONOMIE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const prog = getProgrammeJourEco(dayNum)
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
+Tu crées des sujets BAC BLANC ÉCONOMIE originaux, rigoureux et de niveau officiel (épreuve coefficient 3, durée 3h, 20 points).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+INDICATEURS À MOBILISER selon le thème : taux de croissance t=(Vn-Vn-1)/Vn-1, TCAM, indices base 100, PIB réel/nominal, coefficient budgétaire, IDH, taux de couverture (X/M)x100, taux d'ouverture, termes de l'échange.`
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL ÉCONOMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+THÈME DOMINANT DU JOUR : ${prog.theme}
+
+═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE D'ÉCONOMIE (Bac Tunisie) ═══
+Durée : 3h · Total : 20 points
+Partie 1 — MOBILISATION DES CONNAISSANCES (6 points) : 2 à 3 questions de cours (définitions, mécanismes, distinctions) portant sur « ${prog.theme} ».
+Partie 2 — ÉTUDE D'UN DOCUMENT (6 points) : un document chiffré (tableau de données réalistes présenté dans le statement) + questions de lecture, de CALCUL d'indicateurs (taux, indices, coefficients) et d'interprétation.
+Partie 3 — SUJET DE RÉFLEXION (8 points) : une dissertation argumentée. Sujet : « ${prog.reflexion} »
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Données chiffrées réalistes et cohérentes (tableau dans le statement, valeurs plausibles pour la Tunisie)
+- Questions numérotées 1) 2) 3)
+- Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "id": "bb-economie-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Économie — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    { "num": 1, "theme": "Mobilisation des connaissances", "title": "Partie 1 — ${prog.theme}", "points": 6, "statement": "1) ...\n2) ...\n3) ...", "graph": null },
+    { "num": 2, "theme": "Étude de document", "title": "Partie 2 — Étude de document", "points": 6, "statement": "Document : [tableau de données chiffrées]\n\n1) ...\n2) Calculer ...\n3) Interpréter ...", "graph": null },
+    { "num": 3, "theme": "Sujet de réflexion", "title": "Partie 3 — Dissertation", "points": 8, "statement": "Sujet : « ${prog.reflexion} »\n\nConsignes : introduction (accroche, problématique, annonce du plan), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).", "graph": null }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-economie-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Économie',
+    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
+  })
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
+  return {
+    ...parsed,
+    id: parsed.id || `bb-economie-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel, date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// GÉNÉRATION BAC BLANC GESTION (Sc. Éco & Gestion) — programme CNP
+// Épreuve coeff 4 · 3h · 20 pts · 3 dossiers (compta-finance / coûts / domaine du jour)
+// ════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_GES = [
+  { theme:'Évaluation & Consolidation', detail:'comptabilité, bilan, FDR/BFR/TN, résultat, TVA' },
+  { theme:"Gestion de l'approvisionnement", detail:'CUMP, stock moyen, rotation, durée de stockage, quantité économique de Wilson' },
+  { theme:'Gestion de la production', detail:'coûts complets, coût de revient, MCV, seuil de rentabilité, écarts' },
+  { theme:'Gestion commerciale', detail:'étude de marché, marketing-mix, part de marché, suivi des ventes' },
+  { theme:'Gestion des ressources humaines', detail:'effectifs, recrutement, formation, masse salariale' },
+  { theme:'Gestion financière', detail:'autofinancement, équilibre financier, ratios, gestion budgétaire' },
+]
+function getProgrammeJourGes(dayNum: number) {
+  return PROGRAMME_JOUR_GES[(dayNum - 1) % PROGRAMME_JOUR_GES.length]
+}
+
+async function generateBacBlancGestion(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BAC_BLANC_GESTION_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const prog = getProgrammeJourGes(dayNum)
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
+Tu crées des sujets BAC BLANC GESTION originaux, rigoureux et de niveau officiel (épreuve coefficient 4, durée 3h, 20 points).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+FORMULES À MOBILISER : FDR=Capitaux permanents-Actif immobilisé · BFR=Actif circulant(HT)-Passif circulant(HT) · TN=FDR-BFR · CUMP · rotation=Consommation/stock moyen · MCV=CA-charges variables · Seuil de rentabilité=CF/taux de MCV · masse salariale=Σ(salaires bruts+charges patronales).`
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL GESTION — Concours National — JOUR ${dayNum} — Section ${secLabel}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+DOMAINE DOMINANT DU JOUR : ${prog.theme} (${prog.detail})
+
+═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE DE GESTION (Bac Tunisie) ═══
+Durée : 3h · Total : 20 points · Sujet organisé en DOSSIERS indépendants avec données chiffrées.
+Dossier 1 — COMPTABILITÉ & ANALYSE FINANCIÈRE (7 points) : bilan, FDR, BFR, TN, résultat — données chiffrées + calculs + interprétation.
+Dossier 2 — CALCUL ET ANALYSE DES COÛTS / APPROVISIONNEMENT (7 points) : coût de revient ou gestion des stocks (CUMP, Wilson) ou seuil de rentabilité — tableau de charges + calculs.
+Dossier 3 — ${prog.theme.toUpperCase()} (6 points) : application sur ${prog.detail} — données chiffrées + questions de calcul et d'analyse.
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie des annales
+- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
+- Calculs explicites attendus (montrer les formules)
+
+RÉPONSE JSON OBLIGATOIRE :
+{
+  "id": "bb-gestion-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Gestion — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": 180,
+  "exercises": [
+    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 — Analyse financière", "points": 7, "statement": "Données : [extrait de bilan]\n\n1) Calculer le FDR ...\n2) Calculer le BFR ...\n3) En déduire la TN et interpréter ...", "graph": null },
+    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 — Coûts", "points": 7, "statement": "Données : [tableau de charges]\n\n1) ...\n2) Calculer le seuil de rentabilité ...\n3) Interpréter ...", "graph": null },
+    { "num": 3, "theme": "${prog.theme}", "title": "Dossier 3 — ${prog.theme}", "points": 6, "statement": "Données : [tableau]\n\n1) ...\n2) ...\n3) ...", "graph": null }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 5000)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bb-gestion-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Gestion',
+    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
+  })
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
+  return {
+    ...parsed,
+    id: parsed.id || `bb-gestion-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel, date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
+  }
+}
+
+const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: string; color: string }[]> = {
+  maths: [
+    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
+    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
+    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
+    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
+    { key:'eco',    label:'Éco-Gestion',             icon:'💹', color:'#10b981' },
+  ],
+  physique: [
+    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
+    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
+    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
+    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
+  ],
+  informatique: [
+    { key:'info',   label:'Section Informatique',   icon:'⌨',  color:'#8b5cf6' },
+    { key:'autres', label:'Autres sections (TIC)',   icon:'🌐', color:'#06b6d4' },
+  ],
+  anglais: [
+    { key:'lettres', label:'Section Lettres',                icon:'📚', color:'#ec4899' },
+    { key:'toutes',  label:'Toutes sections (sauf Lettres)', icon:'🔬', color:'#6366f1' },
+  ],
+  svt: [
+    { key:'scexp-svt', label:'Sciences Expérimentales',  icon:'🔬', color:'#22c55e' },
+    { key:'maths-svt', label:'Section Mathématiques',    icon:'📐', color:'#a78bfa' },
+  ],
+  francais: [
+    { key:'fr-lettres',      label:'Section Lettres',        icon:'📚', color:'#ec4899' },
+    { key:'fr-scientifique', label:'Sections Scientifiques', icon:'🔬', color:'#8b5cf6' },
+  ],
+  economie: [
+    { key:'economie', label:'Sc. Éco & Gestion', icon:'📈', color:'#06b6d4' },
+  ],
+  gestion: [
+    { key:'gestion', label:'Sc. Éco & Gestion', icon:'💼', color:'#f43f5e' },
+  ],
+}
+
+function PhaseChoixMatiere({
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onEconomie, onGestion, onRetour,
+  hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin, weeklyLimit = 5
+}: {
+  candidat: Candidat
+  dayNum: number
+  onMaths: () => void
+  onPhysique: () => void
+  onInfo: () => void
+  onAnglais: () => void
+  onSvt: () => void
+  onFrancais: () => void
+  onEconomie: () => void
+  onGestion: () => void
+  onRetour: () => void
+  hasActiveSubscription?: boolean
+  checkMatiereAccess?: (m: any) => boolean
+  matiereActive?: string
+  isAdmin?: boolean
+  weeklyLimit?: number
+}) {
+  const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
+
+  // État : matière sélectionnée (null = pas encore choisi)
+  const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null)
+
+  // Sous-section sélectionnée pour la matière choisie
+  const [selectedSousSection, setSelectedSousSection] = useState<string>('')
+
+  // Définition des matières
+  const MATIERES = [
+    {
+      key: 'maths',
+      icon: '🧮',
+      label: 'Mathématiques',
+      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses',
+      color: '#6366f1',
+      gradient: 'linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,92,246,0.08))',
+      border: 'rgba(99,102,241,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'physique',
+      icon: '⚗️',
+      label: 'Physique-Chimie',
+      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses · Programme PC officiel',
+      color: '#06d6a0',
+      gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(6,214,160,0.35)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'informatique',
+      icon: '💻',
+      label: 'Informatique',
+      desc: 'Algorithmique · Bases de données · TIC & Réseaux · Correction IA · Analyse des faiblesses',
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(109,40,217,0.06))',
+      border: 'rgba(139,92,246,0.35)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'anglais',
+      icon: '🇬🇧',
+      label: 'Anglais',
+      desc: 'Reading Comprehension · Essay Writing · Language · 2 sections · Programme officiel CNP',
+      color: '#f59e0b',
+      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.15),rgba(236,72,153,0.06))',
+      border: 'rgba(245,158,11,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'svt',
+      icon: '🌱',
+      label: 'SVT',
+      desc: 'Génétique · Milieu intérieur · Neurophysiologie · Reproduction · Nutrition · Géologie & Évolution',
+      color: '#22c55e',
+      gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(34,197,94,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'francais',
+      icon: '📚',
+      label: 'Français',
+      desc: 'Compréhension de texte · Langue et expression · Production écrite · 2 sections · Programme officiel CNP',
+      color: '#ec4899',
+      gradient: 'linear-gradient(135deg,rgba(236,72,153,0.15),rgba(219,39,119,0.06))',
+      border: 'rgba(236,72,153,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'economie',
+      icon: '📈',
+      label: 'Économie',
+      desc: 'Mobilisation des connaissances · Étude de document · Sujet de réflexion · Programme Sc. Éco & Gestion',
+      color: '#06b6d4',
+      gradient: 'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(34,211,238,0.06))',
+      border: 'rgba(6,182,212,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+    {
+      key: 'gestion',
+      icon: '💼',
+      label: 'Gestion',
+      desc: 'Comptabilité & finance · Coûts · Approvisionnement · Marketing · RH · Programme Sc. Éco & Gestion',
+      color: '#f43f5e',
+      gradient: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(251,113,133,0.06))',
+      border: 'rgba(244,63,94,0.38)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
+  ]
+
+  // Quand une matière disponible est cliquée → afficher ses sous-sections
+  const handleMatiereClick = (key: string, available: boolean) => {
+    if (!available) return
+    setSelectedMatiere(key)
+    // Pré-sélectionner la première sous-section de la matière
+    const sousSecs = SECTIONS_PAR_MATIERE[key] || []
+    setSelectedSousSection(sousSecs[0]?.key || '')
+  }
+
+  // Lancer l'examen avec la sous-section choisie
+  const handleLancer = () => {
+    if (!selectedMatiere || !selectedSousSection) return
+    // Mettre à jour sectionKey ET section label dans le candidat
+    const ss = (SECTIONS_PAR_MATIERE[selectedMatiere] || []).find(x => x.key === selectedSousSection)
+    candidat.sectionKey = selectedSousSection
+    candidat.section = ss?.label || selectedSousSection
+    if (selectedMatiere === 'maths') { onMaths(); return }
+    if (selectedMatiere === 'physique') { onPhysique(); return }
+    if (selectedMatiere === 'informatique') { onInfo(); return }
+    if (selectedMatiere === 'anglais') { onAnglais(); return }
+    if (selectedMatiere === 'svt') { onSvt(); return }
+    if (selectedMatiere === 'francais') { onFrancais(); return }
+    if (selectedMatiere === 'economie') { onEconomie(); return }
+    if (selectedMatiere === 'gestion') { onGestion(); return }
+  }
+
+  const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      <Navbar/>
+      <div style={{maxWidth:720,margin:'0 auto',padding:'80px 20px 60px'}}>
+
+        {/* Header */}
+        <div style={{textAlign:'center',marginBottom:36}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.1))',border:'1px solid rgba(245,158,11,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:18}}>
+            <span style={{fontSize:20}}>🏆</span>
+            <span style={{fontSize:13,fontWeight:800,color:'#fbbf24',letterSpacing:'0.1em',textTransform:'uppercase'}}>Concours National — Bac Blanc · Jour {dayNum}</span>
+          </div>
+          <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#fbbf24,#f59e0b)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+            Choisissez votre matière
+          </h1>
+          {/* Candidat info */}
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 20px',marginTop:10,flexWrap:'wrap',justifyContent:'center'}}>
+            <span style={{fontSize:20}}>🎓</span>
+            <span style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>
+              {candidat.prenom} {candidat.nom}
+            </span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
+            <span style={{fontSize:12,color:sec?.color||'#fbbf24',fontWeight:700}}>{sec?.icon} {candidat.section}</span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
+            <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.lycee}</span>
+          </div>
+        </div>
+
+        {/* ─── ÉTAPE 1 : Choisir la matière ─── */}
+        {!selectedMatiere ? (
+          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:28}}>
+            {MATIERES.map(m => {
+              const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
+              const isLk = !isAdmin && m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
+              return (
+                <button
+                  key={m.key}
+                  disabled={isLk}
+                  onClick={() => handleMatiereClick(m.key, m.available)}
+                  style={{
+                    width:'100%',
+                    background: m.available ? m.gradient : 'rgba(255,255,255,0.02)',
+                    border:`1.5px solid ${m.available ? m.border : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius:16, padding:'20px 24px', display:'flex', alignItems:'center',
+                    gap:20, cursor: m.available ? 'pointer' : 'default',
+                    opacity: m.available ? 1 : 0.45,
+                    transition:'transform 0.15s, box-shadow 0.15s',
+                    textAlign:'left', fontFamily:'inherit',
+                  }}
+                  onMouseEnter={e=>{ if(m.available){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
+                  onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
+                >
+                  <div style={{width:52,height:52,borderRadius:13,background:`${m.color}${m.available?'20':'10'}`,border:`1.5px solid ${m.color}${m.available?'40':'20'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0}}>
+                    {isLk ? '🔒' : m.available ? m.icon : '🔒'}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4,flexWrap:'wrap'}}>
+                      <span style={{fontSize:16,fontWeight:800,color: m.available ? 'white' : 'rgba(255,255,255,0.35)'}}>{m.label}</span>
+                      <span style={{fontSize:10,fontWeight:700,
+                        color: isLk ? '#f59e0b' : m.available ? m.badgeColor : '#64748b',
+                        background: isLk ? 'rgba(245,158,11,0.15)' : m.available ? `${m.badgeColor}18` : 'rgba(100,116,139,0.12)',
+                        border:`1px solid ${isLk ? 'rgba(245,158,11,0.3)' : m.available ? m.badgeColor+'30' : 'rgba(100,116,139,0.2)'}`,
+                        borderRadius:20, padding:'2px 10px'}}>
+                        {isLk ? '🔒 Abonnement requis' : m.badge}
+                      </span>
+                    </div>
+                    <div style={{fontSize:12,color: m.available ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',lineHeight:1.5}}>
+                      {isLk
+                        ? <span>S'abonner à <strong style={{color:m.color}}>{m.label}</strong> → <a href={`/abonnement?matiere=${matiereKey}`} style={{color:m.color,textDecoration:'underline'}}>Voir les plans</a></span>
+                        : m.available
+                          ? <>{m.desc} · <span style={{color:m.color,fontWeight:600}}>{(SECTIONS_PAR_MATIERE[m.key]||[]).length} sections disponibles</span></>
+                          : m.desc
+                      }
+                    </div>
+                  </div>
+                  {m.available && !isLk && <span style={{fontSize:20,color:m.color,flexShrink:0}}>›</span>}
+                </button>
               )
             })}
           </div>
-          <div style={{marginTop:28,display:'flex',justifyContent:'flex-end',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-            {canStartArchive&&<p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>
-              L'IA va créer <strong style={{color:'#a5b4fc'}}>10 examens originaux</strong> en quelques secondes
-            </p>}
-            <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected,customText)} disabled={!canStartArchive}>
-              🧠 Générer mes examens →
-            </PrimaryBtn>
-          </div>
-        </div>
-      )}
+        ) : (
+          /* ─── ÉTAPE 2 : Choisir la sous-section ─── */
+          <div style={{marginBottom:28}}>
 
-      {/* ── ONGLET PAR CHAPITRE ── */}
-      {tab==='chapitre' && (
-        <div>
-          {/* Sélecteur de section */}
-          <div style={{marginBottom:20}}>
-            <p style={{fontSize:12,color:'rgba(255,255,255,0.5)',marginBottom:10,textTransform:'uppercase',letterSpacing:'0.06em',fontWeight:600}}>
-              1 — Choisir la section
-            </p>
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {Object.values(CHAPITRES_ACTIVE).map(sec=>(
-                <button key={sec.key} onClick={()=>{setChapSection(sec.key);setSelectedChaps([])}}
-                  style={{display:'inline-flex',alignItems:'center',gap:8,padding:'10px 16px',borderRadius:10,cursor:'pointer',fontWeight:600,fontSize:13,transition:'all 0.2s',fontFamily:'inherit',
-                    background:chapSection===sec.key?`${sec.color}25`:'rgba(255,255,255,0.04)',
-                    border:`1px solid ${chapSection===sec.key?sec.color:'rgba(255,255,255,0.1)'}`,
-                    color:chapSection===sec.key?sec.color:'rgba(255,255,255,0.55)',
-                    boxShadow:chapSection===sec.key?`0 0 20px ${sec.color}30`:'none'}}>
-                  <span style={{fontSize:16}}>{sec.icon}</span>
-                  {sec.label.replace('Bac-','').replace('Sciences-','Sc.')}
-                </button>
-              ))}
-            </div>
-          </div>
+            {/* Breadcrumb retour */}
+            <button onClick={()=>setSelectedMatiere(null)}
+              style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'none',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',marginBottom:20,padding:0}}>
+              ← Changer de matière
+            </button>
 
-          {/* Compteur chapitres sélectionnés */}
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-            <p style={{fontSize:12,color:'rgba(255,255,255,0.5)',margin:0,textTransform:'uppercase',letterSpacing:'0.06em',fontWeight:600}}>
-              2 — Sélectionner jusqu'à 3 chapitres
-            </p>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              <span style={{fontSize:13,color:'rgba(255,255,255,0.55)'}}>
-                <strong style={{color:currentSecData?.color,fontSize:16}}>{selectedChaps.length}</strong>/3 chapitre{selectedChaps.length>1?'s':''}
-              </span>
-              {selectedChaps.length>0&&(
-                <button onClick={()=>setSelectedChaps([])} style={{fontSize:11,padding:'3px 10px',borderRadius:6,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',cursor:'pointer'}}>
-                  Effacer
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Tags sélectionnés */}
-          {selectedChaps.length>0&&(
-            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16,padding:'12px 14px',background:`${currentSecData?.color}10`,borderRadius:12,border:`1px solid ${currentSecData?.color}30`}}>
-              {selectedChaps.map(c=>{
-                const col = BADGE_COLORS[c.badge]||currentSecData?.color||'#6366f1'
-                return (
-                  <span key={c.slug} style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,fontWeight:600,padding:'5px 12px',borderRadius:20,background:`${col}22`,color:col,border:`1px solid ${col}40`}}>
-                    📚 {c.titre}
-                    <button onClick={()=>toggleChap(c)} style={{background:'transparent',border:'none',cursor:'pointer',color:col,fontSize:15,lineHeight:1,padding:'0 0 0 2px',opacity:.8}}>×</button>
-                  </span>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Grille chapitres */}
-          {currentSecData && (
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10,maxHeight:480,overflowY:'auto',paddingRight:2}}>
-              {currentSecData.chapitres.map(ch=>{
-                const sel = !!selectedChaps.find(c=>c.slug===ch.slug)
-                const blocked = !sel && selectedChaps.length>=3
-                const col = BADGE_COLORS[ch.badge]||currentSecData.color
-                return (
-                  <div key={ch.slug} onClick={()=>!blocked&&toggleChap(ch)}
-                    style={{padding:'16px',borderRadius:12,cursor:blocked?'not-allowed':'pointer',
-                      background:sel?`${col}18`:'rgba(255,255,255,0.04)',
-                      border:sel?`2px solid ${col}`:'1px solid rgba(255,255,255,0.08)',
-                      opacity:blocked?0.4:1,transition:'all 0.18s',position:'relative',
-                      boxShadow:sel?`0 4px 20px ${col}35`:'none'}}
-                    onMouseEnter={e=>{if(!blocked&&!sel){e.currentTarget.style.borderColor='rgba(255,255,255,0.22)';e.currentTarget.style.background='rgba(255,255,255,0.06)'}}}
-                    onMouseLeave={e=>{if(!sel){e.currentTarget.style.borderColor='rgba(255,255,255,0.08)';e.currentTarget.style.background='rgba(255,255,255,0.04)'}}}>
-                    {sel&&<div style={{position:'absolute',top:8,right:8,width:20,height:20,borderRadius:'50%',background:col,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'white',fontWeight:800}}>✓</div>}
-                    <div style={{display:'flex',gap:6,alignItems:'center',marginBottom:8}}>
-                      <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:6,background:`${col}20`,color:col,border:`1px solid ${col}40`}}>{ch.badge}</span>
-                    </div>
-                    <div style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.9)',marginBottom:6,lineHeight:1.35}}>{ch.titre}</div>
-                    <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',lineHeight:1.5}}>{ch.desc}</div>
+            {/* Titre matière sélectionnée */}
+            {(() => {
+              const m = MATIERES.find(x => x.key === selectedMatiere)!
+              return (
+                <div style={{background:m.gradient,border:`1.5px solid ${m.border}`,borderRadius:14,padding:'16px 20px',marginBottom:22,display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{width:44,height:44,borderRadius:11,background:`${m.color}25`,border:`1.5px solid ${m.color}50`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{m.icon}</div>
+                  <div>
+                    <div style={{fontSize:16,fontWeight:800,color:'white',marginBottom:2}}>{m.label}</div>
+                    <div style={{fontSize:12,color:'rgba(255,255,255,0.45)'}}>Choisissez votre section pour personnaliser le sujet</div>
                   </div>
+                </div>
+              )
+            })()}
+
+            {/* Label section */}
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>
+              Votre section
+            </div>
+
+            {/* Grille sous-sections */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:24}}>
+              {sousSectionsDisponibles.map(ss => {
+                const isSelected = selectedSousSection === ss.key
+                return (
+                  <button key={ss.key} onClick={()=>setSelectedSousSection(ss.key)}
+                    style={{
+                      padding:'12px 16px', borderRadius:11,
+                      border:`2px solid ${isSelected ? ss.color : 'rgba(255,255,255,0.1)'}`,
+                      background: isSelected ? `${ss.color}18` : 'rgba(255,255,255,0.03)',
+                      color: isSelected ? ss.color : 'rgba(255,255,255,0.55)',
+                      fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'left',
+                      display:'flex', alignItems:'center', gap:10,
+                      transition:'all 0.15s', fontFamily:'inherit',
+                    }}>
+                    <span style={{fontSize:18}}>{ss.icon}</span>
+                    <span style={{lineHeight:1.3}}>{ss.label}</span>
+                    {isSelected && <span style={{marginLeft:'auto',fontSize:16}}>✓</span>}
+                  </button>
                 )
               })}
             </div>
-          )}
 
-          {/* CTA chapitre */}
-          <div style={{marginTop:24,display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',paddingTop:16,borderTop:'1px solid rgba(255,255,255,0.07)'}}>
-            {canStartChap ? (
-              <p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>
-                Examen centré sur : <strong style={{color:currentSecData?.color}}>
-                  {selectedChaps.map(c=>c.titre).join(' · ')}
-                </strong>
-              </p>
-            ) : (
-              <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',margin:0}}>Sélectionne entre 1 et 3 chapitres</p>
-            )}
-            <PrimaryBtn
-              onClick={()=>canStartChap&&onStart([],`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
-              disabled={!canStartChap}>
-              📚 Générer l'examen par chapitre →
-            </PrimaryBtn>
-          </div>
-        </div>
-      )}
-
-      {/* ── ONGLET IMPORTER ── */}
-      {tab==='import' && (
-        <div style={{display:'flex',flexDirection:'column',gap:16}}>
-          <div onClick={()=>fileRef.current?.click()}
-            style={{border:'2px dashed rgba(99,102,241,0.4)',borderRadius:16,padding:'40px 30px',textAlign:'center',cursor:'pointer',background:fileName?'rgba(16,185,129,0.06)':'rgba(99,102,241,0.04)',transition:'all 0.2s'}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.7)';e.currentTarget.style.background='rgba(99,102,241,0.08)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.4)';e.currentTarget.style.background=fileName?'rgba(16,185,129,0.06)':'rgba(99,102,241,0.04)'}}>
-            <input ref={fileRef} type="file" accept=".txt,.pdf,.png,.jpg" onChange={handleFile} style={{display:'none'}}/>
-            {fileName ? (
-              <><div style={{fontSize:38,marginBottom:10}}>✅</div>
-              <p style={{fontWeight:700,color:'#6ee7b7',fontSize:15,margin:'0 0 4px'}}>{fileName}</p>
-              <p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>Cliquez pour changer de fichier</p></>
-            ) : (
-              <><div style={{fontSize:42,marginBottom:10}}>📁</div>
-              <p style={{fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.8)',margin:'0 0 6px'}}>Déposez votre fichier</p>
-              <p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>PDF, image (JPG/PNG) ou texte — exercice ou examen complet</p></>
-            )}
-          </div>
-          <div style={{position:'relative'}}>
-            <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',textAlign:'center',margin:'0 0 10px',textTransform:'uppercase',letterSpacing:'0.08em'}}>ou collez votre texte</p>
-            <textarea value={customText} onChange={e=>setCustomText(e.target.value)}
-              placeholder="Copiez-collez ici votre exercice, énoncé de cours, ou examen..."
-              style={{width:'100%',height:160,padding:'14px 16px',borderRadius:12,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box',transition:'border 0.2s'}}
-              onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.5)'}
-              onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
-          </div>
-          <div style={{display:'flex',justifyContent:'flex-end'}}>
-            <PrimaryBtn onClick={()=>(customText.trim().length>20||fileName)&&onStart([],customText)} disabled={customText.trim().length<=20&&!fileName}>
-              🧠 Générer mes examens →
-            </PrimaryBtn>
-          </div>
-        </div>
-      )}
-
-      {/* ── ONGLET CORRECTION DIRECTE ── */}
-      {tab==='correction-directe' && (
-        <CorrectionDirectePanel onStart={onStart} matiere={matiere}/>
-      )}
-    </div>
-  )
-}
-
-
-// ═══════════════════════════════════════════════════════════════════
-// CORRECTION DIRECTE — Panel complet
-// L'élève importe son examen + sa copie → correction + remédiation IA
-// Sans génération d'examen, sans quota simulation
-// ═══════════════════════════════════════════════════════════════════
-// ── Compresser une image base64 avant envoi à l'API ─────────────
-// Redimensionne à max 1200px et qualité 75% pour éviter erreur 400
-async function compressImageBase64(dataUrl: string, maxSize = 1200, quality = 0.75): Promise<string> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      let { width, height } = img
-      // Redimensionner si trop grand
-      if (width > maxSize || height > maxSize) {
-        if (width > height) {
-          height = Math.round(height * maxSize / width)
-          width = maxSize
-        } else {
-          width = Math.round(width * maxSize / height)
-          height = maxSize
-        }
-      }
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')!
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, width, height)
-      ctx.drawImage(img, 0, 0, width, height)
-      resolve(canvas.toDataURL('image/jpeg', quality))
-    }
-    img.onerror = () => resolve(dataUrl) // fallback si erreur
-    img.src = dataUrl
-  })
-}
-
-function CorrectionDirectePanel({ onStart, matiere }: {
-  onStart:(archives:Archive[], customText:string, chapitres?:any, sectionLabel?:string)=>void
-  matiere?: string
-}) {
-  const [examFile, setExamFile] = useState('')
-  const [examFileName, setExamFileName] = useState('')
-  const [examImages, setExamImages] = useState<{name:string;data:string}[]>([])
-  const [examReady, setExamReady] = useState(false)
-  const [copyText, setCopyText] = useState('')
-  const [copyFiles, setCopyFiles] = useState<{name:string;type:string;data:string}[]>([])
-  const [step, setStep] = useState<'examen'|'copie'>('examen')
-  const examRef = useRef<HTMLInputElement>(null)
-  const copyRef = useRef<HTMLInputElement>(null)
-
-  // Charger mammoth.js pour lire les fichiers Word
-  useEffect(() => {
-    if (!(window as any).mammoth) {
-      const s = document.createElement('script')
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js'
-      s.async = true
-      document.head.appendChild(s)
-    }
-  }, [])
-
-  const handleExamFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files||[]) as File[]
-    if (!files.length) return
-    const imgs: {name:string;data:string}[] = []
-    for (const f of files) {
-      if (f.type === 'application/pdf') {
-        setExamFileName(f.name + ' ⚠️ PDF non supporté directement')
-        setExamFile('')
-        // Afficher le message PDF dans la zone texte
-        setTimeout(() => {
-          setExamFile("PDF detecte\n\n1 - Capture ecran : photo de chaque page en JPG/PNG\n2 - Word : convertir en .docx via smallpdf.com puis importer\n3 - Copier-coller : ouvrir le PDF, Ctrl+A puis Ctrl+C et coller ici")
-        }, 100)
-      } else if (f.type.startsWith('image/')) {
-        const r = new FileReader()
-        const rawData = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
-        const data = await compressImageBase64(rawData)
-        imgs.push({ name:f.name, data })
-      } else if (f.name.endsWith('.docx') || f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        // Lire le fichier Word avec mammoth.js
-        const arrayBuffer = await f.arrayBuffer()
-        const mammoth = (window as any).mammoth
-        if (mammoth) {
-          try {
-            const result = await mammoth.extractRawText({ arrayBuffer })
-            setExamFile(result.value)
-            setExamFileName(f.name + ' ✅ Word importé')
-            setExamReady(true)
-          } catch {
-            setExamFile(`[Erreur lecture Word : ${f.name}]\nEssayez de copier-coller le texte directement.`)
-            setExamFileName(f.name + ' ⚠️ Erreur')
-          }
-        } else {
-          // mammoth pas encore chargé — attendre et réessayer
-          await new Promise(r => setTimeout(r, 1500))
-          const m2 = (window as any).mammoth
-          if (m2) {
-            try {
-              const result = await m2.extractRawText({ arrayBuffer })
-              setExamFile(result.value)
-              setExamFileName(f.name + ' ✅ Word importé')
-            } catch {
-              setExamFile(`[Fichier Word : ${f.name}]\nContenu non lisible — copiez-collez le texte ci-dessous.`)
-            }
-          } else {
-            setExamFile(`[Fichier Word : ${f.name}]\nBibliothèque en cours de chargement — réessayez dans 2 secondes.`)
-            setExamFileName(f.name + ' ⏳ Chargement...')
-          }
-        }
-      } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
-        const text = await f.text()
-        setExamFile(text)
-        setExamFileName(f.name)
-        setExamReady(true)
-      }
-    }
-    if (imgs.length) { setExamImages(prev=>[...prev,...imgs]); setExamFileName(imgs.map(i=>i.name).join(', ')); setExamReady(true) }
-    if (examRef.current) examRef.current.value = ''
-  }
-
-  const handleCopyFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files||[]) as File[]
-    if (!files.length) return
-    for (const f of files) {
-      if (f.type.startsWith('image/')) {
-        const r = new FileReader()
-        const data = await new Promise<string>(res => { r.onload = ()=>res(r.result as string); r.readAsDataURL(f) })
-        setCopyFiles(prev=>[...prev,{name:f.name,type:'image',data}])
-      } else if (f.type.startsWith('text/') || f.name.endsWith('.txt')) {
-        const text = await f.text()
-        setCopyText(prev=>prev ? prev+'\n\n--- '+f.name+' ---\n'+text : text)
-      }
-    }
-    if (copyRef.current) copyRef.current.value = ''
-  }
-
-  const canGoToCopie = examReady || examFile.trim().length > 20 || examImages.length > 0
-  const canCorrect   = canGoToCopie && (copyText.trim().length > 0 || copyFiles.length > 0 || true) // correction même sans copie
-
-  const handleCorrect = () => {
-    // Construire le texte examen pour l'IA
-    const examContent = [
-      examImages.length > 0 ? `[Examen importé : ${examImages.map(i=>i.name).join(', ')} — ${examImages.length} page(s)]` : '',
-      examFile || '',
-    ].filter(Boolean).join('\n\n')
-
-    const copyContent = [
-      copyText.trim(),
-      copyFiles.filter(f=>f.type==='image').map(f=>`[Copie élève : ${f.name}]`).join('\n'),
-    ].filter(Boolean).join('\n\n')
-
-    // Passer via onStart avec un texte spécial qui déclenche la correction directe
-    // Injecter les images en base64 dans le fullText
-    // Stocker directement dans le ref global (évite parsing regex)
-    correctionDirecteData.examContent = examContent
-    correctionDirecteData.copyContent = copyContent
-    correctionDirecteData.examImages = examImages
-      .filter(img => img.data.startsWith('data:image/'))
-      .map(img => {
-        const match = img.data.match(/data:([^;]+);base64,(.+)/)
-        return match ? { mediaType: match[1], data: match[2] } : null
-      })
-      .filter(Boolean) as {data:string;mediaType:string}[]
-
-    onStart([], '[CORRECTION_DIRECTE]')
-  }
-
-  return (
-    <div style={{display:'flex',flexDirection:'column',gap:0}}>
-
-      {/* Info banner */}
-      <div style={{padding:'14px 18px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:14,marginBottom:24,display:'flex',gap:12,alignItems:'flex-start'}}>
-        <span style={{fontSize:20,flexShrink:0}}>⚡</span>
-        <div>
-          <p style={{margin:'0 0 3px',fontWeight:700,fontSize:14,color:'#e2e8f0'}}>Correction Directe — sans simulation</p>
-          <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.6}}>
-            Importe ton examen (sujet) + ta copie (réponses) → l'IA te génère la <strong style={{color:'#fbbf24'}}>correction complète</strong> + <strong style={{color:'#6ee7b7'}}>remédiation personnalisée</strong>.
-          </p>
-        </div>
-      </div>
-
-      {/* Stepper examen / copie */}
-      <div style={{display:'flex',gap:0,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,overflow:'hidden'}}>
-        {([
-          {key:'examen',label:'1 — Importer le sujet',icon:'📄'},
-          {key:'copie', label:'2 — Ajouter ta copie', icon:'✍️'},
-        ] as const).map((s,i)=>(
-          <button key={s.key}
-            onClick={()=>{if(s.key==='copie'&&!canGoToCopie)return;setStep(s.key)}}
-            style={{
-              flex:1,padding:'14px 20px',border:'none',cursor:s.key==='copie'&&!canGoToCopie?'not-allowed':'pointer',
-              fontFamily:'inherit',fontWeight:700,fontSize:13,
-              display:'flex',alignItems:'center',justifyContent:'center',gap:8,
-              background:step===s.key?s.key==='examen'?'linear-gradient(135deg,#6366f1,#8b5cf6)':'linear-gradient(135deg,#06d6a0,#059669)':'transparent',
-              color:step===s.key?'white':s.key==='copie'&&!canGoToCopie?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.5)',
-              borderRight:i===0?'1px solid rgba(255,255,255,0.08)':'none',
-              transition:'all 0.2s',
-            }}>
-            <span>{s.icon}</span> {s.label}
-            {s.key==='examen'&&canGoToCopie&&<span style={{fontSize:14,color:'#6ee7b7'}}>✓</span>}
-          </button>
-        ))}
-      </div>
-
-      {/* ═══ STEP 1 — Importer le sujet ═══ */}
-      {step==='examen' && (
-        <div style={{display:'flex',flexDirection:'column',gap:16}}>
-
-          {/* Zone upload examen */}
-          <div
-            onClick={()=>examRef.current?.click()}
-            onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor='rgba(245,158,11,0.6)'}}
-            onDragLeave={e=>{e.currentTarget.style.borderColor='rgba(245,158,11,0.3)'}}
-            onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor='rgba(245,158,11,0.3)';const dt=e.dataTransfer;if(dt.files.length)handleExamFile({target:{files:dt.files}} as any)}}
-            style={{
-              border:'2px dashed rgba(245,158,11,0.3)',borderRadius:16,
-              padding:'36px 28px',textAlign:'center',cursor:'pointer',
-              background:examFileName?'rgba(245,158,11,0.06)':'rgba(245,158,11,0.03)',
-              transition:'all 0.2s',
-            }}>
-            <input ref={examRef} type="file" accept=".txt,.docx,.png,.jpg,.jpeg,.webp" multiple onChange={handleExamFile} style={{display:'none'}}/>
-            {examFileName ? (
-              <>
-                <div style={{fontSize:36,marginBottom:10}}>📄</div>
-                <p style={{fontWeight:700,color:'#fbbf24',fontSize:14,margin:'0 0 4px'}}>{examFileName}</p>
-                <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',margin:0}}>Cliquez pour ajouter d'autres pages</p>
-              </>
-            ) : (
-              <>
-                <div style={{fontSize:40,marginBottom:12}}>📥</div>
-                <p style={{fontWeight:700,fontSize:15,color:'rgba(255,255,255,0.85)',margin:'0 0 6px'}}>Importer le sujet de l'examen</p>
-                <p style={{fontSize:12,color:'rgba(255,255,255,0.35)',margin:'0 0 14px'}}>Photos (JPG/PNG/WebP) ou texte — glissez ou cliquez</p>
-                <div style={{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
-                  {[{icon:'📸',l:'Photo/Scan'},{icon:'📸',l:'JPG/PNG/WebP'},{icon:'📝',l:'Texte / Word'}].map(f=>(
-                    <span key={f.l} style={{fontSize:11,padding:'4px 12px',background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,color:'rgba(255,255,255,0.5)'}}>
-                      {f.icon} {f.l}
-                    </span>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Ou coller texte */}
-          <div>
-            <p style={{fontSize:11,color:'rgba(255,255,255,0.3)',textAlign:'center',margin:'0 0 8px',textTransform:'uppercase',letterSpacing:'0.08em'}}>ou coller le texte du sujet</p>
-            <textarea value={examFile} onChange={e=>setExamFile(e.target.value)}
-              placeholder="Copiez-collez ici l'énoncé de l'examen complet (exercices, questions...)..."
-              style={{width:'100%',height:140,padding:'13px 15px',borderRadius:12,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box',transition:'border 0.2s'}}
-              onFocus={e=>e.target.style.borderColor='rgba(245,158,11,0.4)'}
-              onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
-          </div>
-
-          {examImages.length > 0 && (
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {examImages.map((img,i)=>(
-                <div key={i} style={{position:'relative'}}>
-                  <img src={img.data} alt={img.name} style={{width:80,height:80,objectFit:'cover',borderRadius:10,border:'1px solid rgba(245,158,11,0.3)'}}/>
-                  <button onClick={()=>setExamImages(p=>{const n=p.filter((_,j)=>j!==i);if(n.length===0&&!examFile.trim())setExamReady(false);return n})}
-                    style={{position:'absolute',top:-6,right:-6,width:20,height:20,borderRadius:'50%',background:'#ef4444',border:'none',color:'white',cursor:'pointer',fontSize:11,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            {/* Bouton lancer */}
             <button
-              onClick={()=>canGoToCopie&&setStep('copie')}
-              disabled={!canGoToCopie}
+              onClick={handleLancer}
+              disabled={!selectedSousSection}
               style={{
-                padding:'12px 28px',borderRadius:12,border:'none',
-                background:canGoToCopie?'linear-gradient(135deg,#f59e0b,#f97316)':'rgba(255,255,255,0.07)',
-                color:canGoToCopie?'white':'rgba(255,255,255,0.25)',
-                fontWeight:700,fontSize:14,cursor:canGoToCopie?'pointer':'not-allowed',
-                fontFamily:'inherit',transition:'all 0.2s',
+                width:'100%', padding:'15px', borderRadius:12, border:'none',
+                background: selectedSousSection
+                  ? 'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)'
+                  : 'rgba(255,255,255,0.08)',
+                color: selectedSousSection ? '#0a0a1a' : 'rgba(255,255,255,0.3)',
+                fontSize:15, fontWeight:900, cursor: selectedSousSection ? 'pointer' : 'not-allowed',
+                boxShadow: selectedSousSection ? '0 4px 24px rgba(245,158,11,0.45)' : 'none',
+                letterSpacing:'0.03em', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+                fontFamily:'inherit', transition:'all 0.2s',
               }}>
-              Suivant — Ajouter ma copie →
+              <span style={{fontSize:18}}>🏆</span>
+              {weeklyLimit === -1
+                ? 'Lancer le concours · Accès illimité'
+                : bbWeekCount() >= weeklyLimit
+                  ? `Quota atteint · ${weeklyLimit}/${weeklyLimit} cette semaine`
+                  : `Lancer le concours · ${bbWeekCount() + 1}/${weeklyLimit} cette semaine`}
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* ═══ STEP 2 — Ajouter la copie ═══ */}
-      {step==='copie' && (
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
-
-          {/* Récap sujet importé */}
-          <div style={{padding:'10px 16px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.25)',borderRadius:10,display:'flex',alignItems:'center',gap:10,fontSize:12,color:'#fbbf24'}}>
-            <span>📄</span>
-            <span style={{fontWeight:600}}>Sujet importé :</span>
-            <span style={{color:'rgba(255,255,255,0.5)'}}>{examFileName || `${examFile.length} caractères de texte`}</span>
-            <button onClick={()=>setStep('examen')} style={{marginLeft:'auto',fontSize:11,padding:'2px 8px',borderRadius:6,border:'1px solid rgba(245,158,11,0.3)',background:'transparent',color:'rgba(245,158,11,0.7)',cursor:'pointer',fontFamily:'inherit'}}>Modifier</button>
-          </div>
-
-          {/* Zone copie élève */}
-          <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.4)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'4px 0'}}>
-            Ta copie (tes réponses)
-          </p>
-
-          {/* Upload copie */}
-          <div
-            onClick={()=>copyRef.current?.click()}
-            style={{border:'2px dashed rgba(99,102,241,0.3)',borderRadius:14,padding:'24px 20px',textAlign:'center',cursor:'pointer',background:'rgba(99,102,241,0.03)',transition:'all 0.2s'}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.5)';e.currentTarget.style.background='rgba(99,102,241,0.07)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.3)';e.currentTarget.style.background='rgba(99,102,241,0.03)'}}>
-            <input ref={copyRef} type="file" accept=".txt,.jpg,.jpeg,.png,.webp" multiple onChange={handleCopyFile} style={{display:'none'}}/>
-            <p style={{margin:0,fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.6)'}}>📎 Importer ma copie (photos, scan ou .txt)</p>
-            <p style={{margin:'4px 0 0',fontSize:11,color:'rgba(255,255,255,0.3)'}}>Photos de ta copie papier ou fichier texte</p>
-          </div>
-
-          {/* Fichiers copie */}
-          {copyFiles.length > 0 && (
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {copyFiles.map((f,i)=>(
-                <div key={i} style={{position:'relative'}}>
-                  {f.type==='image'
-                    ? <img src={f.data} alt={f.name} style={{width:72,height:72,objectFit:'cover',borderRadius:8,border:'1px solid rgba(99,102,241,0.3)'}}/>
-                    : <div style={{width:72,height:72,borderRadius:8,background:'rgba(99,102,241,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>📄</div>
-                  }
-                  <button onClick={()=>setCopyFiles(p=>p.filter((_,j)=>j!==i))}
-                    style={{position:'absolute',top:-6,right:-6,width:18,height:18,borderRadius:'50%',background:'#ef4444',border:'none',color:'white',cursor:'pointer',fontSize:10,display:'flex',alignItems:'center',justifyContent:'center'}}>×</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Texte copie */}
-          <textarea value={copyText} onChange={e=>setCopyText(e.target.value)}
-            placeholder={"Tape tes réponses ici ou laisse vide pour recevoir la correction complète du sujet...\n\nExercice 1 :\n1) ...\n2) ..."}
-            style={{width:'100%',height:180,padding:'13px 15px',borderRadius:12,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box',transition:'border 0.2s'}}
-            onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
-            onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
-
-          <p style={{fontSize:11,color:'rgba(255,255,255,0.25)',margin:0,fontStyle:'italic'}}>
-            💡 Si tu laisses vide → correction complète du sujet sans analyse de ta copie. Avec ta copie → correction personnalisée + remédiation ciblée.
-          </p>
-
-          {/* Bouton lancer correction */}
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:8,borderTop:'1px solid rgba(255,255,255,0.06)',flexWrap:'wrap',gap:12}}>
-            <button onClick={()=>setStep('examen')}
-              style={{padding:'10px 18px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.4)',cursor:'pointer',fontFamily:'inherit',fontSize:13,fontWeight:600}}>
-              ← Retour
-            </button>
-            <button onClick={handleCorrect}
-              style={{
-                padding:'14px 32px',borderRadius:13,border:'none',
-                background:'linear-gradient(135deg,#f59e0b,#059669)',
-                color:'white',fontWeight:800,fontSize:14,
-                cursor:'pointer',fontFamily:'inherit',
-                boxShadow:'0 6px 24px rgba(6,214,160,0.3)',
-                display:'flex',alignItems:'center',gap:10,
-              }}>
-              <span>⚡</span>
-              {copyText.trim().length > 0 || copyFiles.length > 0
-                ? 'Corriger ma copie + Remédiation →'
-                : 'Obtenir la correction complète →'
-              }
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 2 — GÉNÉRATION EN COURS
-// ═══════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 2 — GÉNÉRATION EN COURS (quota via Supabase AuthContext)
-// ═══════════════════════════════════════════════════════════════════
-function PhaseGenerating({ archives, customText, onDone, matiere }: {
-  archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void; matiere?:string
-}) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
-  // Utiliser matiere (UI) en priorité sur matiereActive (abonnement AuthContext)
-  const matiereMap: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
-  }
-  globalMatiere = ((matiere ? matiereMap[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
-
-  const [exams, setExams] = useState<GeneratedExam[]>([])
-  const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState('')
-  const [currentIdx, setCurrentIdx] = useState(0)
-  const started = useRef(false)
-
-  // Quota depuis Supabase
-  const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // Quota cumulé tous abonnements
-  const simUsed  = totalQuota.simulations_used || 0
-  const simLimit = quotaLimits.simulations_per_week
-  const isUnlimited  = isAdmin || simLimit === -1
-  const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
-  const limitReached = !isUnlimited && simUsed >= simLimit
-  const maxExams     = isUnlimited ? 10 : simRemaining  // max examens générables cette session
-  const canStart     = exams.length > 0
-
-  const generateNext = useCallback(async (idx: number) => {
-    setGenerating(true)
-    setError('')
-    try {
-      const exam = await generateOneExam(archives, customText, idx)
-      setExams(prev => [...prev, exam])
-      setCurrentIdx(idx + 1)
-      // Incrémenter quota dans Supabase
-      await incrementQuota('simulations')
-    } catch(e) {
-      setError('Erreur lors de la generation. Verifiez votre connexion.')
-    }
-    setGenerating(false)
-  }, [archives, customText, incrementQuota])
-
-  // Générer le premier automatiquement au montage
-  useEffect(() => {
-    if (started.current) return
-    started.current = true
-    if (!isAdmin && !checkQuota('simulations')) return
-    generateNext(0)
-  }, [])
-
-  return (
-    <div>
-      <div style={{marginBottom:28}}>
-        <h3 style={{margin:'0 0 6px',fontSize:20,color:'#e2e8f0'}}>Generation de vos examens IA</h3>
-        <p style={{margin:0,color:'rgba(255,255,255,0.45)',fontSize:14}}>
-          Chaque examen est unique et original. Commencez des le premier ou generez-en plusieurs.
-        </p>
-      </div>
-
-      {/* Grille des examens generes */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:14,marginBottom:24,minHeight:100}}>
-        {exams.map((ex, i) => {
-          const colors = ['#6366f1','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#a855f7','#0ea5e9']
-          const c = colors[i % colors.length]
-          return (
-            <div key={ex.id}
-              style={{padding:'18px 20px',background:'rgba(255,255,255,0.05)',border:`1px solid ${c}40`,borderRadius:14,animation:'fadeSlideIn 0.4s ease forwards',opacity:0,animationDelay:`${i*0.05}s`}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-                <div style={{width:32,height:32,borderRadius:8,background:`${c}20`,border:`1px solid ${c}50`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:c}}>#{i+1}</div>
-                <span style={{fontSize:11,color:c,background:`${c}15`,padding:'3px 10px',borderRadius:8,fontWeight:700}}>{ex.totalPoints}/20</span>
-              </div>
-              <p style={{margin:'0 0 8px',fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)',lineHeight:1.3}}>{ex.title.split('—')[1]?.trim()||ex.title}</p>
-              <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                {ex.exercises.map((e,j)=>(
-                  <span key={j} style={{fontSize:10,padding:'2px 7px',borderRadius:5,background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.4)'}}>{e.theme}</span>
-                ))}
-              </div>
-              <div style={{marginTop:10,fontSize:11,color:'#6ee7b7',fontWeight:600}}>✓ Pret</div>
-            </div>
-          )
-        })}
-
-        {/* Carte "en cours" */}
-        {generating && (
-          <div style={{padding:'18px 20px',background:'rgba(99,102,241,0.06)',border:'1px dashed rgba(99,102,241,0.3)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,minHeight:130}}>
-            <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid rgba(99,102,241,0.2)',borderTopColor:'#6366f1',animation:'spin 0.8s linear infinite'}}/>
-            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>Generation de l&apos;examen {currentIdx+1}...</p>
           </div>
         )}
 
-        {/* Badge quota Supabase */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:8,flexWrap:'wrap'}}>
-          {!isAdmin && (
-            <div style={{fontSize:12,color:limitReached?'rgba(239,68,68,0.8)':simRemaining<=1?'rgba(245,158,11,0.8)':'rgba(255,255,255,0.4)'}}>
-              {limitReached
-                ? <span>🔒 Quota atteint · <a href="/abonnement" style={{color:'#f59e0b',textDecoration:'none',fontWeight:700}}>🇹🇳 60 DT · 90 DT · 600 DT →</a></span>
-                : isSprint
-                  ? `🔥 Sprint Bac — ${simRemaining} simulation${simRemaining>1?'s':''} restante${simRemaining>1?'s':''}`
-                  : `${simRemaining} simulation${simRemaining>1?'s':''} restante${simRemaining>1?'s':''} cette semaine`
-              }
-            </div>
-          )}
-          {isAdmin && <div style={{fontSize:12,color:'#6ee7b7'}}>✓ Admin — illimité</div>}
-        </div>
-
-        {/* Carte "générer suivant" */}
-        {!generating && exams.length < maxExams && exams.length > 0 && !limitReached && (
-          <div
-            onClick={() => generateNext(currentIdx)}
-            style={{padding:'18px 20px',background:'rgba(255,255,255,0.02)',border:'1px dashed rgba(255,255,255,0.12)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,cursor:'pointer',minHeight:130,transition:'all 0.2s'}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(99,102,241,0.4)';e.currentTarget.style.background='rgba(99,102,241,0.06)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.12)';e.currentTarget.style.background='rgba(255,255,255,0.02)'}}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(99,102,241,0.15)',border:'1px solid rgba(99,102,241,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:'#a5b4fc'}}>+</div>
-            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.5}}>
-              Generer examen #{exams.length+1}<br/>
-              <span style={{fontSize:10,color:'rgba(255,255,255,0.25)'}}>{maxExams - exams.length} restant{maxExams-exams.length>1?'s':''}</span>
-            </p>
-          </div>
-        )}
-
-        {/* Limite atteinte */}
-        {!generating && (exams.length >= maxExams || limitReached) && (
-          <div style={{padding:'18px 20px',background:'rgba(16,185,129,0.06)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:8,minHeight:130}}>
-            <div style={{fontSize:28}}>✅</div>
-            <p style={{margin:0,fontSize:12,color:'#6ee7b7',textAlign:'center',fontWeight:600}}>
-              {limitReached ? `Quota atteint — ${simLimit} simulations/semaine` : `${exams.length} simulation${exams.length>1?'s':''} générée${exams.length>1?'s':''}`}
-            </p>
-            <p style={{margin:0,fontSize:10,color:'rgba(255,255,255,0.3)',textAlign:'center'}}>
-              Renouvellement lundi prochain
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Erreur */}
-      {error && (
-        <div style={{marginBottom:16,padding:'12px 16px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
-          <span style={{fontSize:13,color:'#fca5a5'}}>⚠️ {error}</span>
-          <button onClick={()=>generateNext(currentIdx)}
-            style={{fontSize:12,padding:'5px 12px',borderRadius:7,border:'1px solid rgba(239,68,68,0.4)',background:'transparent',color:'#fca5a5',cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>
-            Reessayer
+        {/* Retour fiche */}
+        <div style={{textAlign:'center'}}>
+          <button onClick={onRetour}
+            style={{padding:'10px 24px',borderRadius:10,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>
+            ← Modifier ma fiche
           </button>
         </div>
-      )}
 
-      {/* Boutons action */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12,paddingTop:4,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.35)'}}>
-          {exams.length} simulation{exams.length>1?'s':''} prête{exams.length>1?'s':''}
-          {!limitReached && simRemaining>0 && ` · ${simRemaining} restante${simRemaining>1?'s':''} cette semaine`}
-          {limitReached && ' · Quota hebdomadaire atteint — renouvellement lundi'}
+        <p style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,marginTop:24}}>
+          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
         </p>
-        <PrimaryBtn onClick={()=>onDone(exams)} disabled={!canStart}>
-          {canStart ? `Choisir parmi ${exams.length} examen${exams.length>1?'s':''} →` : 'En attente...'}
-        </PrimaryBtn>
       </div>
-
-      <style>{`
-        @keyframes fadeSlideIn {
-          from { opacity:0; transform:translateY(10px); }
-          to { opacity:1; transform:translateY(0); }
-        }
-      `}</style>
+      <Footer/>
     </div>
   )
 }
 
+// ════════════════════════════════════════════════════════════════════
+// PHASE 1 — INSCRIPTION
+// ════════════════════════════════════════════════════════════════════
+function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void;onStatistiques:()=>void}){
+  const { isAdmin } = useAuth()
+  const [nom,setNom]=useState('')
+  const [prenom,setPrenom]=useState('')
+  const [lycee,setLycee]=useState('')
+  const [gouvernorat,setGouvernorat]=useState('')
+  const [sectionKey,setSectionKey]=useState('')
+  const [err,setErr]=useState('')
+  const today=new Date()
+  const periodeStart=new Date(today.getFullYear(),4,1)
+  const periodeEnd  =new Date(today.getFullYear(),5,30)
+  const isInPeriode =today>=periodeStart&&today<=periodeEnd
+  const isActive    =isInPeriode  // TODO prod: changer en isInPeriode seulement
+  const dayNum=Math.max(1,Math.floor((today.getTime()-periodeStart.getTime())/(1000*60*60*24))+1)
+  const monthNum=today.getMonth()+1
+  const isMay=monthNum===5||monthNum===6
+  const sec=SECTIONS.find(s=>s.key===sectionKey)
 
+  const handleSubmit=()=>{
+    if(!nom.trim()||!prenom.trim()||!lycee.trim()||!gouvernorat){setErr('Veuillez remplir tous les champs.');return}
+    setErr('')
+    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),gouvernorat,section:'',sectionKey:'maths'})
+  }
 
-function PhaseChooseExam({ exams, onChoose }: {
-  exams:GeneratedExam[]; onChoose:(exam:GeneratedExam)=>void
-}) {
-  const [hoveredIdx, setHoveredIdx] = useState<number|null>(null)
-  const [expandedIdx, setExpandedIdx] = useState<number|null>(null)
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      <Navbar/>
+      <div style={{maxWidth:660,margin:'0 auto',padding:'80px 20px 40px'}}>
 
-  return (
-    <div>
-      <div style={{marginBottom:24}}>
-        <h3 style={{margin:'0 0 8px',fontSize:20,color:'#e2e8f0'}}>10 examens originaux générés pour vous</h3>
-        <p style={{margin:0,color:'rgba(255,255,255,0.45)',fontSize:14}}>
-          Chacun est unique. Survolez pour voir le contenu, puis cliquez pour démarrer l'examen.
-        </p>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>
-        {exams.map((ex,i)=>{
-          const hov = hoveredIdx===i
-          const exp = expandedIdx===i
-          const colorDot = ['#6366f1','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316','#84cc16','#a855f7','#0ea5e9'][i]
-          return (
-            <div key={ex.id}
-              onMouseEnter={()=>setHoveredIdx(i)}
-              onMouseLeave={()=>setHoveredIdx(null)}
-              style={{
-                background:hov?'rgba(255,255,255,0.08)':'rgba(255,255,255,0.04)',
-                border:hov?`1px solid ${colorDot}60`:'1px solid rgba(255,255,255,0.07)',
-                borderRadius:16,overflow:'hidden',
-                transition:'all 0.22s',
-                boxShadow:hov?`0 8px 28px ${colorDot}25`:'none',
-              }}>
-              {/* Header carte */}
-              <div style={{padding:'16px 18px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <div style={{width:32,height:32,borderRadius:8,background:`${colorDot}20`,border:`1px solid ${colorDot}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:colorDot}}>#{i+1}</div>
-                    <span style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.6)'}}>{ex.title.split('—')[1]?.trim()||ex.title}</span>
-                  </div>
-                  <span style={{fontSize:11,fontWeight:700,color:colorDot,background:`${colorDot}15`,padding:'3px 10px',borderRadius:8}}>{ex.totalPoints}/20</span>
-                </div>
-                <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-                  {ex.exercises.map((e,j)=>(
-                    <span key={j} style={{fontSize:10,padding:'2px 8px',borderRadius:6,background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.45)'}}>{e.theme}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Aperçu exercices */}
-              {exp&&(
-                <div style={{padding:'12px 18px 8px',maxHeight:200,overflowY:'auto'}}>
-                  {ex.exercises.map((e,j)=>(
-                    <div key={j} style={{marginBottom:10}}>
-                      <p style={{fontSize:12,fontWeight:700,color:colorDot,margin:'0 0 3px'}}>{e.title} ({e.points} pts)</p>
-                      <p style={{fontSize:11,color:'rgba(255,255,255,0.45)',margin:0,lineHeight:1.6}}>{e.statement.substring(0,120)}...</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Actions */}
-              <div style={{padding:'12px 18px',display:'flex',gap:8}}>
-                <button onClick={()=>setExpandedIdx(exp?null:i)}
-                  style={{flex:1,padding:'8px 12px',borderRadius:9,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontSize:12,fontWeight:600,transition:'all 0.15s',fontFamily:'inherit'}}
-                  onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.background='transparent'}}>
-                  {exp?'▲ Masquer':'👁 Aperçu'}
-                </button>
-                <button onClick={()=>onChoose(ex)}
-                  style={{flex:2,padding:'8px 12px',borderRadius:9,border:'none',background:`linear-gradient(135deg,${colorDot},${colorDot}cc)`,color:'white',cursor:'pointer',fontSize:12,fontWeight:700,transition:'all 0.15s',fontFamily:'inherit',boxShadow:`0 4px 14px ${colorDot}40`}}
-                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)'}}
-                  onMouseLeave={e=>{e.currentTarget.style.transform='none'}}>
-                  ✍️ Passer cet examen
-                </button>
-              </div>
+        {/* Hero */}
+        <div style={{textAlign:'center',marginBottom:40}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.1))',border:'1px solid rgba(245,158,11,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:20}}>
+            <span style={{fontSize:22}}>🏆</span>
+            <span style={{fontSize:13,fontWeight:800,color:'#fbbf24',letterSpacing:'0.1em',textTransform:'uppercase'}}>Concours National — Bac Blanc</span>
+          </div>
+          <h1 style={{fontSize:34,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#fbbf24,#f59e0b,#fbbf24)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+            Bac Blanc IA
+          </h1>
+          <p style={{color:'rgba(255,255,255,0.5)',fontSize:15,margin:'0 0 6px'}}>
+            {isMay
+              ? <span>Période 1 Mai – 30 Juin — 5 nouveaux sujets chaque semaine</span>
+              : <span>Préparation au Bac — Concours actif <strong style={{color:'#f59e0b',fontWeight:700}}>en mai</strong> uniquement</span>
+            }
+          </p>
+          {!isMay&&(
+            <div style={{display:'inline-flex',alignItems:'center',gap:8,marginTop:4,
+              background:'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08))',
+              border:'1px solid rgba(245,158,11,0.35)',borderRadius:50,
+              padding:'6px 16px'}}>
+              <span style={{fontSize:14}}>📅</span>
+              <span style={{fontSize:13,fontWeight:700,
+                background:'linear-gradient(135deg,#fbbf24,#f59e0b)',
+                WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+                Disponible du 1er mai au 30 juin
+              </span>
+              <span style={{fontSize:12,color:'rgba(255,255,255,0.4)'}}>61 jours · chaque année</span>
             </div>
-          )
-        })}
+          )}
+        </div>
+
+        {/* Carte inscription */}
+        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:18,padding:32,marginBottom:20}}>
+          <h2 style={{fontSize:18,fontWeight:700,marginBottom:24,color:'#fbbf24',display:'flex',alignItems:'center',gap:8}}>
+            <span>📝</span> Fiche d'inscription
+          </h2>
+
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div>
+                <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Nom</label>
+                <input value={nom} onChange={(e)=>setNom(e.target.value)} placeholder="BEN ALI"
+                  style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
+              </div>
+              <div>
+                <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Prénom</label>
+                <input value={prenom} onChange={(e)=>setPrenom(e.target.value)} placeholder="Mohamed"
+                  style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
+              </div>
+          </div>
+
+          <div style={{marginBottom:16}}>
+            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Lycée</label>
+            <input value={lycee} onChange={e=>setLycee(e.target.value)} placeholder="Lycée Sadiki"
+              style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
+          </div>
+
+          <div style={{marginBottom:24}}>
+            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Gouvernorat</label>
+            <select value={gouvernorat} onChange={e=>setGouvernorat(e.target.value)}
+              style={{width:'100%',background:'#1a1a35',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:gouvernorat?'white':'rgba(255,255,255,0.4)',fontSize:14,outline:'none'}}>
+              <option value="">— Choisir votre gouvernorat —</option>
+              {GOUVERNORATS.map(g=><option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+
+          {err&&<div style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#fca5a5',marginBottom:16}}>{err}</div>}
+
+          <button onClick={handleSubmit}
+            style={{width:'100%',padding:'15px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)',color:'#0a0a1a',fontSize:15,fontWeight:900,cursor:'pointer',boxShadow:'0 4px 24px rgba(245,158,11,0.5)',letterSpacing:'0.03em',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+            <span style={{fontSize:20}}>🏆</span> Commencer le Concours · Période 1 Mai – 30 Juin
+          </button>
+        </div>
+
+        {/* Actions secondaires */}
+        {isAdmin && (
+        <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+          <button onClick={onStatistiques}
+            style={{padding:'10px 22px',borderRadius:9,border:'1px solid rgba(99,102,241,0.3)',background:'rgba(99,102,241,0.08)',color:'#a5b4fc',fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+            📊 Statistiques & Classement
+          </button>
+        </div>
+        )}
+
+        <p style={{textAlign:'center',color:'rgba(255,255,255,0.25)',fontSize:11,marginTop:20}}>
+          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
+        </p>
       </div>
+      <Footer/>
     </div>
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 4 — PASSAGE DE L'EXAMEN
-// ═══════════════════════════════════════════════════════════════════
-function PhaseExam({ exam, onSubmit }: {
-  exam: GeneratedExam
-  onSubmit: (answers: string) => void
-}) {
+// ════════════════════════════════════════════════════════════════════
+// PHASE 2 — GÉNÉRATION
+// ════════════════════════════════════════════════════════════════════
+function PhaseGenerating({candidat}:{candidat:Candidat}){
+  const sec=SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#06d6a0'
+  const secIcon  = sec?.icon  || '⚗️'
+  const secLabel = sec?.label || candidat.section
+  const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
+  const [msgIdx,setMsgIdx]=useState(0)
+  useEffect(()=>{const t=setInterval(()=>setMsgIdx(m=>(m+1)%msgs.length),2200);return()=>clearInterval(t)},[])
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:28,color:'white',fontFamily:'system-ui'}}>
+      <div style={{position:'relative',width:80,height:80}}>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}20`}}/>
+        <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
+        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30}}>{secIcon}</div>
+      </div>
+      <div style={{textAlign:'center',maxWidth:360}}>
+        <div style={{fontSize:20,fontWeight:800,color:secColor,marginBottom:10}}>Génération du Concours</div>
+        <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
+        <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
+      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PHASE 3 — EXAMEN (identique à simulation avec timer)
+// ════════════════════════════════════════════════════════════════════
+function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSubmit:(a:string)=>void}){
   const [answers, setAnswers] = useState('')
-  const [timeLeft, setTimeLeft] = useState(exam.duration * 60)
+  const [timeLeft, setTimeLeft] = useState(exam.duration*60)
   const [timerOn, setTimerOn] = useState(false)
   const [panel, setPanel] = useState<'both'|'subject'|'answer'>('both')
   const [savedMsg, setSavedMsg] = useState('')
   const [uploadMode, setUploadMode] = useState<'type'|'upload'>('type')
-  const [uploadedFiles, setUploadedFiles] = useState<{name:string; content:string; type:string}[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<{name:string;content:string;type:string}[]>([])
   const [uploadError, setUploadError] = useState('')
+  const [submitted, setSubmitted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const sec = SECTIONS.find(s=>s.key===exam.sectionKey) || SECTIONS.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#06d6a0'
+  const secCoeff = sec?.coeff || 3
 
-  useEffect(() => {
-    if (!timerOn) return
-    const id = setInterval(() => setTimeLeft(t => t <= 0 ? (setTimerOn(false), 0) : t - 1), 1000)
-    return () => clearInterval(id)
-  }, [timerOn])
+  useEffect(()=>{
+    if(!timerOn)return
+    const id=setInterval(()=>setTimeLeft(t=>{
+      if(t<=0){setTimerOn(false);if(!submitted)doSubmit();return 0}
+      return t-1
+    }),1000)
+    return()=>clearInterval(id)
+  },[timerOn,submitted])
 
-  const fmt = (s: number) =>
-    `${Math.floor(s/3600)}h ${String(Math.floor((s%3600)/60)).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`
-  const pct = (timeLeft / (exam.duration * 60)) * 100
-  const timerColor = pct > 40 ? '#10b981' : pct > 15 ? '#f59e0b' : '#ef4444'
+  const fmt=(s:number)=>`${String(Math.floor(s/3600)).padStart(2,'0')}h ${String(Math.floor((s%3600)/60)).padStart(2,'0')}m ${String(s%60).padStart(2,'0')}s`
+  const pctTime=(timeLeft/(exam.duration*60))*100
+  const timerColor=pctTime>40?'#10b981':pctTime>15?'#f59e0b':'#ef4444'
 
-  /* ── Télécharger sujet ── */
-  const openSubjectPdf = () => {
-    const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  const doSubmit=()=>{
+    if(submitted)return
+    setSubmitted(true)
+    const imageDesc=uploadedFiles.filter(f=>f.type==='image').map(f=>`[Image jointe : ${f.name} — photo de copie élève]`).join('\n')
+    const final=[answers.trim(),imageDesc].filter(Boolean).join('\n\n')
+    onSubmit(final||'')
+  }
+
+  const handleFileUpload=async(e:React.ChangeEvent<HTMLInputElement>)=>{
+    const files=Array.from(e.target.files||[]) as File[]
+    if(!files.length)return
+    setUploadError('')
+    const results:{name:string;content:string;type:string}[]=[]
+    for(const file of files){
+      const ext=file.name.split('.').pop()?.toLowerCase()||''
+      if(['txt','md','tex'].includes(ext)||file.type.startsWith('text/')){
+        const text=await file.text()
+        results.push({name:file.name,content:text,type:'text'})
+      }else if(file.type.startsWith('image/')){
+        const dataUrl=await new Promise<string>(res=>{const r=new FileReader();r.onload=()=>res(r.result as string);r.readAsDataURL(file)})
+        results.push({name:file.name,content:dataUrl,type:'image'})
+      }else if(ext==='pdf'||file.type==='application/pdf'){
+        results.push({name:file.name,content:'',type:'pdf'})
+        setUploadError('PDF : convertissez en images ou copiez le texte.')
+      }else{
+        setUploadError(`Format non supporté : ${file.name}. Utilisez .txt, .jpg, .png.`)
+      }
+    }
+    if(results.length){
+      setUploadedFiles(prev=>[...prev,...results])
+      const textFiles=results.filter(r=>r.type==='text')
+      if(textFiles.length){
+        const combined=textFiles.map(f=>`--- ${f.name} ---\n${f.content}`).join('\n\n')
+        setAnswers(prev=>prev?prev+'\n\n'+combined:combined)
+      }
+    }
+    if(fileInputRef.current)fileInputRef.current.value=''
+  }
+
+  // ── Sujet officiel PDF ────────────────────────────────────────────
+  const openSubjectPdf=()=>{
+    const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const secForPdf=SECTIONS.find(s=>s.key===exam.sectionKey)||{duration:180,coeff:3,icon:'📚'}
     const css=`
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
       *{box-sizing:border-box;margin:0;padding:0}
@@ -4616,585 +3114,269 @@ function PhaseExam({ exam, onSubmit }: {
       .header-center .subtitle{font-size:12px;color:#555;font-style:italic}
       .header-right{font-size:12px;line-height:1.8;color:#333;text-align:right}
       .header-bottom{background:#1a1a2e;padding:10px 20px;display:flex;justify-content:space-between;align-items:center}
-      .header-bottom .section-badge{color:#fff;font-size:15px;font-weight:800;letter-spacing:0.04em}
+      .header-bottom .section-badge{color:#fff;font-size:15px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase}
       .header-bottom .meta{color:rgba(255,255,255,0.8);font-size:12px;display:flex;gap:24px}
-      .instructions{background:#f0f4ff;border:1px solid #c7d4f5;border-left:4px solid #1a1a2e;border-radius:0 4px 4px 0;padding:10px 14px;margin-bottom:20px;font-size:11.5px;color:#2c2c5e}
+      .candidat-box{border:1px solid #ddd;border-radius:4px;padding:10px 16px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;background:#fafafa}
+      .candidat-field .label{color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;font-size:11px;margin-bottom:2px}
+      .candidat-field .value{font-weight:700;color:#1a1a2e;font-size:13px;border-bottom:1px solid #ddd;padding-bottom:2px}
+      .instructions{background:#f0f4ff;border:1px solid #c7d4f5;border-left:4px solid #1a1a2e;border-radius:0 4px 4px 0;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#2c2c5e}
       .instructions ul{margin:6px 0 0 18px}.instructions li{margin:3px 0}
       .exercice{margin-bottom:24px;border:1px solid #1a1a2e;border-radius:4px;overflow:hidden;page-break-inside:avoid}
       .exercice-header{background:#1a1a2e;padding:10px 18px;display:flex;justify-content:space-between;align-items:center}
-      .exercice-title{color:#fff;font-size:14px;font-weight:800}
+      .exercice-title{color:#fff;font-size:14px;font-weight:800;letter-spacing:0.02em}
       .exercice-pts{background:rgba(255,255,255,0.2);color:#fff;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px}
       .exercice-body{padding:16px 20px;background:#fff;font-size:13px;line-height:1.9;text-align:justify}
-      .footer{margin-top:32px;padding-top:12px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#666}
-      .footer-center{text-align:center;font-weight:700;color:#1a1a2e;font-size:11px}
+      .footer{margin-top:32px;padding-top:12px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#555}
+      .footer-center{text-align:center;font-weight:700;color:#1a1a2e;font-size:12px}
       @media print{.print-bar{display:none!important}.wrap{padding:8px 16px}.exercice{page-break-inside:avoid}}
     `
-    const exHtml=exam.exercises.map(ex=>{
-      const hasG=!!((ex as any).graph&&(ex as any).graph!=='null')
+    const exercicesHtml=exam.exercises.map(ex=>{
+      const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      const hasG=!!(ex.graph&&ex.graph!=='null')
       return `<div class="exercice">
         <div class="exercice-header">
-          <span class="exercice-title">📐 ${esc2(ex.title)}</span>
+          <span class="exercice-title">📐 ${esc(ex.title)}</span>
           <span class="exercice-pts">${ex.points} points</span>
         </div>
         <div class="exercice-body">
-          ${hasG?'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>':''}
-          <p style="white-space:pre-wrap">${esc2(ex.statement)}</p>
+          ${hasG?'<p style="color:#6366f1;font-size:12px">📊 Voir graphique dans l&#39;interface MathBac.AI</p>':''}
+          <p style="white-space:pre-wrap">${esc(ex.statement)}</p>
         </div>
       </div>`
     }).join('\n')
     const html=`<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><title>${esc2(exam.title)}</title><style>${css}</style></head>
+<html lang="fr"><head><meta charset="UTF-8"><title>Bac Blanc — ${esc(exam.section)} — Jour ${exam.day}</title><style>${css}</style></head>
 <body><div class="wrap">
 <div class="print-bar">
   <button class="print-btn" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>
-  <span style="font-size:11px;color:#666">Boîte d'impression → <strong>Enregistrer en PDF</strong> · Cochez <strong>Couleurs de fond</strong></span>
+  <span style="font-size:12px;color:#666">Boîte d'impression → <strong>Enregistrer en PDF</strong> · Cochez <strong>Couleurs de fond</strong></span>
 </div>
 <div class="header-official">
   <div class="header-top">
     <div class="header-left">
       <strong>MathBac.AI</strong><br>
-      Simulation IA — Préparation Bac<br>
-      <strong>Variante n°${exam.index+1}</strong>
+      Bac Blanc — Concours National IA<br>
+      <strong>Session : Mai ${new Date().getFullYear()}</strong><br>
+      <span style="font-size:11px;color:#888">Sujet généré par intelligence artificielle</span>
     </div>
     <div class="header-center">
       <div class="logo">🎓</div>
-      <h1>Simulation IA — Sujet ${exam.index+1}</h1>
-      <div class="subtitle">${esc2(exam.section)}</div>
+      <h1>Bac Blanc — Sujet du Jour ${exam.day}</h1>
+      <div class="subtitle">${esc(exam.section)}</div>
     </div>
     <div class="header-right">
-      <strong>Date :</strong> ${new Date().toLocaleDateString('fr-FR')}<br>
-      <strong>Durée :</strong> ${exam.duration} min<br>
-      <strong>Total :</strong> ${exam.totalPoints} points
+      <strong>Date :</strong> ${esc(exam.date)}<br>
+      <strong>Durée :</strong> ${secForPdf.duration/60}h<br>
+      <strong>Coefficient :</strong> ${secForPdf.coeff}<br>
+      <strong>Total :</strong> 20 points
     </div>
   </div>
   <div class="header-bottom">
-    <span class="section-badge">📋 ${esc2(exam.section)}</span>
+    <span class="section-badge">${secForPdf.icon} ${esc(exam.section)}</span>
     <div class="meta">
-      <span>⏱ ${exam.duration} min</span>
-      <span>📊 ${exam.totalPoints} points</span>
-      <span>🤖 Généré par IA</span>
+      <span>🗓 Concours Jour ${exam.day}</span>
+      <span>⏱ ${secForPdf.duration/60}h · Coeff ${secForPdf.coeff}</span>
+      <span>📊 20 points</span>
     </div>
   </div>
 </div>
+<div class="candidat-box">
+  <div class="candidat-field"><div class="label">Nom &amp; Prénom</div><div class="value">${esc(candidat.prenom+' '+candidat.nom)}</div></div>
+  <div class="candidat-field"><div class="label">Lycée</div><div class="value">${esc(candidat.lycee)}</div></div>
+  <div class="candidat-field"><div class="label">Gouvernorat</div><div class="value">${esc(candidat.gouvernorat)}</div></div>
+</div>
 <div class="instructions">
-  <strong>Instructions :</strong>
+  <strong>Instructions générales :</strong>
   <ul>
-    <li>La présentation, la lisibilité et la rigueur du raisonnement sont prises en compte.</li>
-    <li>Les exercices sont indépendants et peuvent être traités dans n'importe quel ordre.</li>
-    <li>Toute réponse non justifiée sera considérée comme incomplète.</li>
+    <li>La présentation, la lisibilité et la rigueur du raisonnement seront prises en compte.</li>
+    <li>Les quatre exercices sont indépendants et peuvent être traités dans un ordre quelconque.</li>
+    <li>Toute réponse non justifiée sera considérée comme nulle.</li>
   </ul>
 </div>
-${exHtml}
+${exercicesHtml}
 <div class="footer">
-  <span>MathBac.AI — Simulation IA</span>
-  <span class="footer-center">${esc2(exam.title)}</span>
-  <span>${new Date().toLocaleDateString('fr-FR')}</span>
+  <span>MathBac.AI — Bac Blanc ${esc(exam.section)}</span>
+  <span class="footer-center">Concours National — Jour ${exam.day} — ${new Date().getFullYear()}</span>
+  <span>Page 1/1</span>
 </div>
 </div></body></html>`
     const blob=new Blob([html],{type:'text/html;charset=utf-8'})
     const url=URL.createObjectURL(blob)
     const win=window.open(url,'_blank')
-    if(!win){const a=document.createElement('a');a.href=url;a.download=`Sujet-${exam.title.replace(/[^\w-]/g,'-')}.html`;a.click()}
+    if(!win){const a=document.createElement('a');a.href=url;a.download=`BacBlanc_J${exam.day}_${exam.sectionKey}.html`;a.click()}
     setTimeout(()=>URL.revokeObjectURL(url),12000)
   }
 
-  /* ── Télécharger les réponses tapées ── */
-  const downloadAnswers = () => {
-    if (!answers.trim()) return
-    const blob = new Blob([
-      `MES RÉPONSES — ${exam.title}\nDate : ${new Date().toLocaleString('fr-FR')}\n${'='.repeat(60)}\n\n${answers}`
-    ], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `Reponses-${exam.title.replace(/[^\w-]/g,'-')}.txt`
-    a.click(); URL.revokeObjectURL(url)
-    setSavedMsg('Réponses téléchargées !'); setTimeout(() => setSavedMsg(''), 2500)
-  }
+  const hasContent=answers.trim().length>0||uploadedFiles.length>0
 
-  const copyAnswers = () => {
-    if (!answers.trim()) return
-    navigator.clipboard.writeText(answers).then(() => {
-      setSavedMsg('Copié !'); setTimeout(() => setSavedMsg(''), 2000)
-    })
-  }
-
-  /* ── Lecture fichier uploadé ── */
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []) as File[]
-    if (!files.length) return
-    setUploadError('')
-    const results: {name:string; content:string; type:string}[] = []
-    for (const file of files) {
-      const ext = file.name.split('.').pop()?.toLowerCase() || ''
-      // Fichier texte
-      if (['txt','md','tex'].includes(ext) || file.type.startsWith('text/')) {
-        const text = await file.text()
-        results.push({ name: file.name, content: text, type: 'text' })
-      }
-      // Image (photo de copie)
-      else if (file.type.startsWith('image/')) {
-        const dataUrl = await new Promise<string>(res => {
-          const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(file)
-        })
-        results.push({ name: file.name, content: dataUrl, type: 'image' })
-      }
-      // PDF
-      else if (ext === 'pdf' || file.type === 'application/pdf') {
-        results.push({ name: file.name, content: '', type: 'pdf' })
-        setUploadError('PDF détecté — pour l\'instant, convertissez votre PDF en images ou copiez le texte.')
-      }
-      else {
-        setUploadError(`Format non supporté : ${file.name}. Utilisez .txt, .jpg, .png.`)
-      }
-    }
-    if (results.length) {
-      setUploadedFiles(prev => [...prev, ...results])
-      // Si texte, l'injecter dans la zone réponse
-      const textFiles = results.filter(r => r.type === 'text')
-      if (textFiles.length) {
-        const combined = textFiles.map(f => `--- ${f.name} ---\n${f.content}`).join('\n\n')
-        setAnswers(prev => prev ? prev + '\n\n' + combined : combined)
-      }
-    }
-    // Reset input pour permettre re-upload du même fichier
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const removeFile = (idx: number) => {
-    setUploadedFiles(prev => prev.filter((_,i) => i !== idx))
-  }
-
-  /* ── Soumission : texte + images ── */
-  const handleSubmit = () => {
-    // Construire le texte final pour l'IA
-    const imageDescriptions = uploadedFiles
-      .filter(f => f.type === 'image')
-      .map(f => `[Image jointe : ${f.name} — L'élève a soumis une photo de sa copie]`)
-      .join('\n')
-    const finalText = [answers.trim(), imageDescriptions].filter(Boolean).join('\n\n')
-    onSubmit(finalText || '')
-  }
-
-  const hasContent = answers.trim().length > 0 || uploadedFiles.length > 0
-
-  return (
-    <div>
-      {/* Barre contrôles */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,padding:'14px 20px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,flexWrap:'wrap',gap:12}}>
-        <div>
-          <p style={{margin:'0 0 2px',fontWeight:700,fontSize:15,color:'#e2e8f0'}}>{exam.title}</p>
-          <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.35)'}}>Durée : {exam.duration} min · {exam.totalPoints}/20 pts · {exam.exercises.length} exercices</p>
-        </div>
-        <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
-          {/* Chrono */}
-          <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 14px',background:'rgba(0,0,0,0.3)',borderRadius:10,border:`1px solid ${timerColor}40`}}>
-            <div style={{width:28,height:28,position:'relative',flexShrink:0}}>
-              <svg width="28" height="28" style={{transform:'rotate(-90deg)'}}>
-                <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5"/>
-                <circle cx="14" cy="14" r="11" fill="none" stroke={timerColor} strokeWidth="2.5"
-                  strokeDasharray={`${(pct/100)*69.1} 69.1`} strokeLinecap="round" style={{transition:'stroke-dasharray 1s linear'}}/>
-              </svg>
-            </div>
-            <span style={{fontFamily:'monospace',fontSize:16,fontWeight:800,color:timerColor}}>{fmt(timeLeft)}</span>
-            <button onClick={() => setTimerOn(!timerOn)}
-              style={{padding:'3px 10px',borderRadius:6,border:`1px solid ${timerColor}40`,background:'transparent',color:timerColor,cursor:'pointer',fontSize:11,fontWeight:700,fontFamily:'inherit'}}>
-              {timerOn ? '⏸' : '▶'}
-            </button>
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      {/* Header fixe */}
+      <div style={{position:'sticky',top:0,zIndex:100,background:'rgba(10,10,26,0.97)',backdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.08)',padding:'10px 20px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+        <div style={{display:'flex',alignItems:'center',gap:12}}>
+          <span style={{fontSize:22}}>🏆</span>
+          <div>
+            <div style={{fontWeight:800,fontSize:14,color:'#fbbf24'}}>Bac Blanc — Concours Jour {exam.day}</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {candidat.section} · {exam.duration/60}h</div>
           </div>
-          {/* Vue */}
-          <div style={{display:'flex',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:9,overflow:'hidden'}}>
-            {(['both','subject','answer'] as const).map(v => (
-              <button key={v} onClick={() => setPanel(v)}
-                style={{padding:'7px 13px',border:'none',background:panel===v?'rgba(99,102,241,0.3)':'transparent',
-                  color:panel===v?'#a5b4fc':'rgba(255,255,255,0.4)',cursor:'pointer',fontSize:12,fontFamily:'inherit'}}
-                title={v==='both'?'Vue partagée':v==='subject'?'Sujet':''}>
-                {v==='both'?'↔':v==='subject'?'📋':'✍️'}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+          {/* Switcher vue */}
+          <div style={{display:'flex',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',overflow:'hidden'}}>
+            {(['both','subject','answer'] as const).map(p=>(
+              <button key={p} onClick={()=>setPanel(p)}
+                style={{padding:'5px 10px',border:'none',background:panel===p?'rgba(255,255,255,0.12)':'transparent',color:panel===p?'white':'rgba(255,255,255,0.4)',fontSize:11,cursor:'pointer',fontWeight:panel===p?700:400}}>
+                {p==='both'?'⊟ Les deux':p==='subject'?'📋 Sujet':'✍️ Réponse'}
               </button>
             ))}
           </div>
-          <button onClick={openSubjectPdf}
-            style={{padding:'8px 14px',borderRadius:9,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.8)',cursor:'pointer',fontSize:12,fontWeight:700,fontFamily:'inherit',display:'flex',alignItems:'center',gap:6}}>
+          {/* Timer */}
+          {!timerOn&&!submitted&&(
+            <button onClick={()=>setTimerOn(true)}
+              style={{padding:'5px 12px',borderRadius:7,border:'1px solid rgba(16,185,129,0.4)',background:'rgba(16,185,129,0.1)',color:'#6ee7b7',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+              ▶ Démarrer chrono
+            </button>
+          )}
+          {(timerOn||submitted)&&(
+            <div style={{background:`${timerColor}18`,border:`1px solid ${timerColor}40`,borderRadius:8,padding:'5px 12px',display:'flex',alignItems:'center',gap:6}}>
+              <span style={{fontSize:12}}>⏱</span>
+              <span style={{fontFamily:'monospace',fontSize:18,fontWeight:800,color:timerColor}}>{fmt(timeLeft)}</span>
+            </div>
+          )}
+          <button onClick={openSubjectPdf} style={{padding:'6px 12px',borderRadius:7,border:'1px solid rgba(255,255,255,0.15)',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.8)',fontSize:11,cursor:'pointer',fontWeight:700}}>
             📄 Sujet PDF
+          </button>
+          <button onClick={doSubmit} disabled={submitted}
+            style={{padding:'8px 18px',borderRadius:9,border:'none',background:submitted?'rgba(16,185,129,0.3)':'linear-gradient(135deg,#f59e0b,#fbbf24)',color:submitted?'#6ee7b7':'#0a0a1a',fontSize:13,fontWeight:800,cursor:submitted?'default':'pointer'}}>
+            {submitted?'✓ Copie remise':'🏁 Remettre la copie'}
           </button>
         </div>
       </div>
 
-      {/* Contenu */}
-      <div style={{display:'grid',gridTemplateColumns:panel==='both'?'1fr 1fr':panel==='subject'?'1fr 0':'0 1fr',gap:20}}>
+      {/* Contenu 2 colonnes */}
+      <div style={{display:'grid',gridTemplateColumns:panel==='both'?'1fr 1fr':panel==='subject'?'1fr 0':'0 1fr',minHeight:'calc(100vh - 60px)'}}>
 
-        {/* Sujet */}
-        {panel !== 'answer' && (
-          <div>
-            <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:12,fontWeight:600}}>📋 Sujet</p>
+        {/* Colonne Sujet */}
+        {panel!=='answer'&&(
+          <div style={{padding:'20px',borderRight:'1px solid rgba(255,255,255,0.07)',overflowY:'auto',maxHeight:'calc(100vh - 60px)'}}>
+            <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:14,fontWeight:700}}>📋 Sujet officiel</p>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {exam.exercises.map(ex => (
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                    <span style={{fontWeight:700,fontSize:13,color:'#a5b4fc'}}>{ex.title}</span>
+              {exam.exercises.map(ex=>(
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${secColor}`,borderRadius:12,padding:'16px 18px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center'}}>
+                    <span style={{fontWeight:700,fontSize:13,color:secColor}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
                   </div>
-                  {(ex as any).graph && (ex as any).graph !== 'null' && <TextWithGraphs text={(ex as any).graph} />}
-                  <TextWithGraphs text={ex.statement} />
+                  {ex.graph&&ex.graph!=='null'&&<TextWithGraphs text={ex.graph}/>}
+                  <TextWithGraphs text={ex.statement}/>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Zone réponse */}
-        {panel !== 'subject' && (
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
-
-            {/* Header zone réponse */}
+        {/* Colonne Réponse */}
+        {panel!=='subject'&&(
+          <div style={{padding:'20px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto',maxHeight:'calc(100vh - 60px)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
-              <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',margin:0,fontWeight:600}}>✍️ Votre feuille de réponse</p>
-              <div style={{display:'flex',gap:7,alignItems:'center'}}>
-                {savedMsg && (
-                  <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'3px 10px',background:'rgba(16,185,129,0.1)',borderRadius:6}}>✓ {savedMsg}</span>
-                )}
-                <button onClick={copyAnswers} disabled={!answers.trim()}
-                  style={{padding:'5px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:answers.trim()?'rgba(255,255,255,0.5)':'rgba(255,255,255,0.2)',cursor:answers.trim()?'pointer':'not-allowed',fontSize:11,fontWeight:600,fontFamily:'inherit'}}>
-                  📋 Copier
-                </button>
-                <button onClick={downloadAnswers} disabled={!answers.trim()}
-                  style={{padding:'5px 10px',borderRadius:7,border:'1px solid rgba(99,102,241,0.3)',background:answers.trim()?'rgba(99,102,241,0.1)':'transparent',color:answers.trim()?'#a5b4fc':'rgba(255,255,255,0.2)',cursor:answers.trim()?'pointer':'not-allowed',fontSize:11,fontWeight:600,fontFamily:'inherit'}}>
-                  ⬇ Sauvegarder
-                </button>
+              <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',fontWeight:700,margin:0}}>✍️ Votre réponse</p>
+              {/* Toggle tape / import */}
+              <div style={{display:'flex',gap:4,background:'rgba(255,255,255,0.05)',borderRadius:8,padding:3}}>
+                {(['type','upload'] as const).map(m=>(
+                  <button key={m} onClick={()=>setUploadMode(m)}
+                    style={{padding:'4px 12px',borderRadius:6,border:'none',background:uploadMode===m?'rgba(99,102,241,0.35)':'transparent',color:uploadMode===m?'#a5b4fc':'rgba(255,255,255,0.4)',fontSize:11,fontWeight:uploadMode===m?700:400,cursor:'pointer',fontFamily:'inherit'}}>
+                    {m==='type'?'⌨️ Saisir':'📎 Importer'}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Toggle : Taper / Uploader */}
-            <div style={{display:'flex',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,overflow:'hidden'}}>
-              {(['type','upload'] as const).map(m => (
-                <button key={m} onClick={() => setUploadMode(m)}
-                  style={{flex:1,padding:'9px',border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:600,fontSize:12,transition:'all 0.2s',
-                    background:uploadMode===m?'rgba(99,102,241,0.25)':'transparent',
-                    color:uploadMode===m?'#a5b4fc':'rgba(255,255,255,0.4)'}}>
-                  {m==='type' ? '⌨️ Taper mes réponses' : '📁 Importer un fichier'}
-                </button>
-              ))}
-            </div>
-
-            {/* MODE TAPER */}
-            {uploadMode === 'type' && (
-              <>
-                <div style={{padding:'9px 13px',background:'rgba(251,191,36,0.06)',border:'1px solid rgba(251,191,36,0.15)',borderRadius:9,fontSize:11,color:'rgba(255,255,255,0.45)',lineHeight:1.6}}>
-                  💡 Faites l&apos;examen sur papier puis recopiez ici, ou tapez directement.
-                </div>
-                <textarea value={answers} onChange={e => setAnswers(e.target.value)}
-                  placeholder={`Exercice 1 :\n1) ...\n2) ...\n\nExercice 2 :\n1) ...\n\n(Laissez vide pour la correction complète directe)`}
-                  style={{flex:1,minHeight:panel==='answer'?500:400,width:'100%',padding:'14px 16px',borderRadius:11,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(0,0,0,0.25)',color:'rgba(255,255,255,0.85)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.85,boxSizing:'border-box',transition:'border 0.2s'}}
-                  onFocus={e => e.target.style.borderColor='rgba(99,102,241,0.5)'}
-                  onBlur={e => e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:11,color:'rgba(255,255,255,0.22)'}}>
-                  <span>{answers.length} caractères</span>
-                </div>
-              </>
+            {/* Mode saisie — 4 exercices ensemble */}
+            {uploadMode==='type'&&(
+              <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                {exam.exercises.map(ex=>(
+                  <div key={ex.num}>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginBottom:5,fontWeight:600,display:'flex',justifyContent:'space-between'}}>
+                      <span>{ex.title}</span>
+                      <span style={{color:'#fbbf24'}}>{ex.points} pts</span>
+                    </div>
+                    <textarea
+                      value={answers.split(/=== Exercice \d+ ===/)?.[ex.num]||''}
+                      onChange={e=>{
+                        // Stocker par exercice dans answers séparés par marqueurs
+                        const parts=Array.from({length:exam.exercises.length},(_,i)=>{
+                          const marker=`=== Exercice ${i+1} ===`
+                          const allParts=answers.split(/=== Exercice \d+ ===/g)
+                          return allParts[i+1]||''
+                        })
+                        parts[ex.num-1]=e.target.value
+                        setAnswers(exam.exercises.map((_,i)=>`=== Exercice ${i+1} ===\n${parts[i]}`).join('\n\n'))
+                      }}
+                      placeholder={`Rédigez ici votre réponse à l'exercice ${ex.num}…`}
+                      disabled={submitted}
+                      style={{width:'100%',minHeight:110,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:10,padding:'11px 13px',color:'white',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',boxSizing:'border-box' as any,opacity:submitted?0.6:1}}
+                    />
+                  </div>
+                ))}
+              </div>
             )}
 
-            {/* MODE UPLOAD */}
-            {uploadMode === 'upload' && (
-              <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                {/* Zone de dépôt */}
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor='rgba(99,102,241,0.6)'; e.currentTarget.style.background='rgba(99,102,241,0.08)' }}
-                  onDragLeave={e => { e.currentTarget.style.borderColor='rgba(99,102,241,0.25)'; e.currentTarget.style.background='rgba(99,102,241,0.04)' }}
-                  onDrop={e => {
-                    e.preventDefault()
-                    e.currentTarget.style.borderColor='rgba(99,102,241,0.25)'
-                    e.currentTarget.style.background='rgba(99,102,241,0.04)'
-                    const dt = e.dataTransfer
-                    if (dt.files.length) {
-                      const synth = { target: { files: dt.files } } as any
-                      handleFileUpload(synth)
-                    }
-                  }}
-                  style={{border:'2px dashed rgba(99,102,241,0.25)',borderRadius:14,padding:'32px 20px',textAlign:'center',cursor:'pointer',background:'rgba(99,102,241,0.04)',transition:'all 0.2s'}}>
-                  <div style={{fontSize:40,marginBottom:12}}>📎</div>
-                  <p style={{margin:'0 0 6px',fontWeight:700,fontSize:14,color:'rgba(255,255,255,0.75)'}}>Glissez vos fichiers ici</p>
-                  <p style={{margin:'0 0 14px',fontSize:12,color:'rgba(255,255,255,0.35)'}}>ou cliquez pour parcourir</p>
-                  <div style={{display:'flex',justifyContent:'center',gap:8,flexWrap:'wrap'}}>
-                    {[
-                      {icon:'📄',label:'Texte (.txt)',desc:'Réponses tapées'},
-                      {icon:'🖼️',label:'Photo (.jpg/.png)',desc:'Photo de copie'},
-                      {icon:'📸',label:'Scan',desc:'Copie scannée'},
-                    ].map((f,i) => (
-                      <div key={i} style={{padding:'6px 12px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,fontSize:11,color:'rgba(255,255,255,0.5)',textAlign:'center'}}>
-                        <div style={{fontSize:16,marginBottom:2}}>{f.icon}</div>
-                        <div style={{fontWeight:600,color:'rgba(255,255,255,0.7)'}}>{f.label}</div>
-                        <div style={{color:'rgba(255,255,255,0.35)'}}>{f.desc}</div>
-                      </div>
-                    ))}
-                  </div>
+            {/* Mode import */}
+            {uploadMode==='upload'&&(
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                <div style={{border:'2px dashed rgba(99,102,241,0.3)',borderRadius:12,padding:'28px 20px',textAlign:'center',background:'rgba(99,102,241,0.04)'}}>
+                  <div style={{fontSize:32,marginBottom:10}}>📎</div>
+                  <div style={{fontSize:13,color:'rgba(255,255,255,0.7)',marginBottom:6}}>Importez votre copie</div>
+                  <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginBottom:14}}>Photo (.jpg, .png) · Texte (.txt) · Fichier scanné</div>
+                  <button onClick={()=>fileInputRef.current?.click()}
+                    style={{padding:'9px 22px',borderRadius:9,border:'1px solid rgba(99,102,241,0.4)',background:'rgba(99,102,241,0.15)',color:'#a5b4fc',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                    Choisir un fichier
+                  </button>
+                  <input ref={fileInputRef} type="file" multiple accept=".txt,.md,.jpg,.jpeg,.png,.gif,.webp,.pdf"
+                    style={{display:'none'}} onChange={handleFileUpload}/>
                 </div>
-
-                <input ref={fileInputRef} type="file" multiple accept=".txt,.md,.jpg,.jpeg,.png,.webp,.bmp"
-                  onChange={handleFileUpload} style={{display:'none'}}/>
-
-                {/* Erreur */}
-                {uploadError && (
-                  <div style={{padding:'10px 14px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.25)',borderRadius:9,fontSize:12,color:'#fca5a5'}}>
-                    ⚠️ {uploadError}
+                {uploadError&&<div style={{padding:'9px 14px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,fontSize:12,color:'#fca5a5'}}>{uploadError}</div>}
+                {uploadedFiles.map((f,i)=>(
+                  <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,padding:'10px 14px'}}>
+                    <span style={{fontSize:20,flexShrink:0}}>{f.type==='image'?'🖼️':'📄'}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.8)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</div>
+                      {f.type==='image'&&<img src={f.content} alt={f.name} style={{maxWidth:'100%',maxHeight:200,borderRadius:6,marginTop:8,objectFit:'contain'}}/>}
+                      {f.type==='text'&&<pre style={{fontSize:11,color:'rgba(255,255,255,0.5)',marginTop:4,maxHeight:80,overflow:'hidden',fontFamily:'inherit'}}>{f.content.slice(0,200)}{f.content.length>200?'…':''}</pre>}
+                    </div>
+                    <button onClick={()=>setUploadedFiles(p=>p.filter((_,j)=>j!==i))} style={{background:'transparent',border:'none',color:'rgba(255,255,255,0.4)',cursor:'pointer',fontSize:16,padding:4,flexShrink:0}}>✕</button>
                   </div>
-                )}
-
-                {/* Fichiers uploadés */}
-                {uploadedFiles.length > 0 && (
-                  <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                    <p style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.4)',margin:0,textTransform:'uppercase',letterSpacing:'0.06em'}}>
-                      {uploadedFiles.length} fichier{uploadedFiles.length>1?'s':''} importé{uploadedFiles.length>1?'s':''}
-                    </p>
-                    {uploadedFiles.map((f, idx) => (
-                      <div key={idx} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:10}}>
-                        <span style={{fontSize:20,flexShrink:0}}>{f.type==='image'?'🖼️':'📄'}</span>
-                        <div style={{flex:1,minWidth:0}}>
-                          <p style={{margin:0,fontSize:12,fontWeight:600,color:'#6ee7b7',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{f.name}</p>
-                          <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.35)'}}>
-                            {f.type==='image' ? 'Photo — l\'IA analysera l\'image' : `Texte importé (${f.content.length} car.)`}
-                          </p>
-                        </div>
-                        {/* Aperçu image */}
-                        {f.type==='image' && (
-                          <img src={f.content} alt={f.name}
-                            style={{width:52,height:52,objectFit:'cover',borderRadius:7,border:'1px solid rgba(255,255,255,0.1)',flexShrink:0}}/>
-                        )}
-                        <button onClick={() => removeFile(idx)}
-                          style={{padding:'4px 8px',borderRadius:6,border:'1px solid rgba(239,68,68,0.3)',background:'transparent',color:'#fca5a5',cursor:'pointer',fontSize:12,flexShrink:0,fontFamily:'inherit'}}>
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Zone texte complémentaire en mode upload */}
+                ))}
+                {/* Zone texte complémentaire */}
                 <div>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.3)',margin:'4px 0 6px',fontWeight:600}}>
-                    COMMENTAIRES COMPLÉMENTAIRES (optionnel)
-                  </p>
-                  <textarea value={answers} onChange={e => setAnswers(e.target.value)}
-                    placeholder="Ajoutez des précisions ou réponses supplémentaires ici..."
-                    style={{width:'100%',height:90,padding:'10px 13px',borderRadius:9,border:'1px solid rgba(255,255,255,0.08)',background:'rgba(0,0,0,0.2)',color:'rgba(255,255,255,0.7)',fontSize:12,resize:'none',outline:'none',fontFamily:'inherit',lineHeight:1.7,boxSizing:'border-box'}}
-                    onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
-                    onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.08)'}/>
+                  <div style={{fontSize:11,color:'rgba(255,255,255,0.35)',marginBottom:6}}>Complément textuel (optionnel)</div>
+                  <textarea value={answers} onChange={e=>setAnswers(e.target.value)}
+                    placeholder="Ajoutez des explications ou notes complémentaires…"
+                    style={{width:'100%',minHeight:80,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,padding:'10px 12px',color:'white',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',boxSizing:'border-box' as any}}/>
                 </div>
               </div>
             )}
 
             {/* Bouton soumettre */}
-            <button onClick={handleSubmit}
-              style={{padding:'14px 24px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'white',borderRadius:12,border:'none',cursor:'pointer',fontSize:14,fontWeight:700,boxShadow:'0 8px 24px rgba(99,102,241,0.45)',display:'flex',alignItems:'center',justifyContent:'center',gap:10,transition:'all 0.2s',fontFamily:'inherit',marginTop:4}}
-              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'}}
-              onMouseLeave={e=>{e.currentTarget.style.transform='none'}}>
-              {uploadedFiles.filter(f=>f.type==='image').length > 0
-                ? `📤 Soumettre ${uploadedFiles.length} fichier${uploadedFiles.length>1?'s':''} + obtenir correction →`
-                : hasContent
-                  ? '📤 Soumettre mes réponses et obtenir la correction →'
-                  : '📤 Obtenir la correction complète directement →'
-              }
+            <button onClick={doSubmit} disabled={submitted}
+              style={{padding:'13px',borderRadius:10,border:'none',background:submitted?'rgba(16,185,129,0.3)':'linear-gradient(135deg,#f59e0b,#fbbf24)',color:submitted?'#6ee7b7':'#0a0a1a',fontSize:14,fontWeight:900,cursor:submitted?'default':'pointer',marginTop:4}}>
+              {submitted?'✓ Copie remise — correction en cours…':'🏁 Remettre la copie'}
             </button>
+            {savedMsg&&<div style={{textAlign:'center',fontSize:12,color:'#6ee7b7'}}>{savedMsg}</div>}
           </div>
         )}
       </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
 
 
-// ═══════════════════════════════════════════════════════════════════
-// PHASE INTERMÉDIAIRE — NOTE AVANT CORRECTION
-// ═══════════════════════════════════════════════════════════════════
-function PhaseGrade({ exam, grade, correctionReady, correctionProgress, onSeeCorrection }: {
-  exam: GeneratedExam
-  grade: {score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null
-  correctionReady: boolean
-  correctionProgress: number
-  onSeeCorrection: ()=>void
-}) {
-  const [revealed, setRevealed] = useState(false)
-
-  useEffect(() => {
-    if (grade) setTimeout(() => setRevealed(true), 300)
-  }, [grade])
-
-  if (!grade) {
-    return (
-      <div style={{textAlign:'center',padding:'60px 20px'}}>
-        <div style={{fontSize:52,marginBottom:16,animation:'float 2s ease-in-out infinite'}}>⚖️</div>
-        <h3 style={{color:'#e2e8f0',marginBottom:8}}>Évaluation en cours...</h3>
-        <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>L&apos;IA analyse votre copie et calcule votre note</p>
-        <div style={{width:260,height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',margin:'24px auto 0',overflow:'hidden'}}>
-          <div style={{height:'100%',background:'linear-gradient(90deg,#6366f1,#f59e0b)',borderRadius:4,animation:'slideBar 1.8s ease-in-out infinite'}}/>
-        </div>
-      </div>
-    )
-  }
-
-  const pct = Math.round((grade.score / grade.maxScore) * 100)
-  const scoreColor = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : pct >= 30 ? '#f97316' : '#ef4444'
-  const scoreGrad  = pct >= 70
-    ? 'linear-gradient(135deg,#10b981,#059669)'
-    : pct >= 50
-    ? 'linear-gradient(135deg,#f59e0b,#d97706)'
-    : 'linear-gradient(135deg,#ef4444,#dc2626)'
-  const mention = pct >= 80 ? 'Très Bien 🏆' : pct >= 70 ? 'Bien 👏' : pct >= 60 ? 'Assez Bien 👍' : pct >= 50 ? 'Passable 🎯' : pct >= 30 ? 'Insuffisant 💪' : 'À retravailler 📚'
-  const circumference = 2 * Math.PI * 54
-  const dashOffset = circumference - (pct / 100) * circumference
-
-  return (
-    <div style={{maxWidth:680,margin:'0 auto'}}>
-
-      {/* Titre */}
-      <div style={{textAlign:'center',marginBottom:32}}>
-        <h3 style={{margin:'0 0 6px',fontSize:20,color:'#e2e8f0'}}>Résultat de votre simulation</h3>
-        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.4)'}}>{exam.title}</p>
-      </div>
-
-      {/* Score principal animé */}
-      <div style={{
-        display:'flex',flexDirection:'column',alignItems:'center',
-        padding:'40px 32px',marginBottom:24,
-        background:'rgba(255,255,255,0.03)',
-        border:`1px solid ${scoreColor}30`,
-        borderRadius:24,
-        opacity: revealed ? 1 : 0,
-        transform: revealed ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
-        transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)',
-      }}>
-        {/* Donut SVG animé */}
-        <div style={{position:'relative',marginBottom:20}}>
-          <svg width="140" height="140" style={{transform:'rotate(-90deg)'}}>
-            <circle cx="70" cy="70" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
-            <circle cx="70" cy="70" r="54" fill="none" stroke={scoreColor} strokeWidth="10"
-              strokeDasharray={circumference}
-              strokeDashoffset={revealed ? dashOffset : circumference}
-              strokeLinecap="round"
-              style={{transition:'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1) 0.3s',filter:`drop-shadow(0 0 10px ${scoreColor}80)`}}/>
-          </svg>
-          <div style={{
-            position:'absolute',inset:0,display:'flex',flexDirection:'column',
-            alignItems:'center',justifyContent:'center',
-          }}>
-            <span style={{
-              fontSize:42,fontWeight:900,color:scoreColor,lineHeight:1,
-              opacity: revealed ? 1 : 0,
-              transition:'opacity 0.5s ease 0.8s',
-            }}>{grade.score}</span>
-            <span style={{fontSize:15,color:'rgba(255,255,255,0.35)',fontWeight:600}}>/{grade.maxScore}</span>
-          </div>
-        </div>
-
-        {/* Mention */}
-        <div style={{
-          padding:'8px 24px',borderRadius:20,
-          background:`${scoreColor}20`,border:`1px solid ${scoreColor}40`,
-          fontSize:16,fontWeight:800,color:scoreColor,marginBottom:14,
-          opacity: revealed ? 1 : 0,
-          transition:'opacity 0.4s ease 1s',
-        }}>
-          {mention}
-        </div>
-
-        {/* Commentaire IA */}
-        <p style={{
-          textAlign:'center',fontSize:14,color:'rgba(255,255,255,0.65)',
-          lineHeight:1.75,maxWidth:420,margin:0,
-          opacity: revealed ? 1 : 0,
-          transition:'opacity 0.4s ease 1.2s',
-        }}>
-          {grade.comment}
-        </p>
-      </div>
-
-      {/* Détail par exercice */}
-      {grade.breakdown.length > 0 && (
-        <div style={{
-          marginBottom:24,
-          opacity: revealed ? 1 : 0,
-          transform: revealed ? 'translateY(0)' : 'translateY(16px)',
-          transition:'all 0.5s ease 0.9s',
-        }}>
-          <h4 style={{margin:'0 0 12px',fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
-            Détail par exercice
-          </h4>
-          <div style={{display:'flex',flexDirection:'column',gap:8}}>
-            {grade.breakdown.map((b, i) => {
-              const exPct = b.max > 0 ? (b.pts / b.max) * 100 : 0
-              const exCol = exPct >= 70 ? '#10b981' : exPct >= 50 ? '#f59e0b' : '#ef4444'
-              return (
-                <div key={i} style={{
-                  padding:'12px 16px',
-                  background:'rgba(255,255,255,0.03)',
-                  border:'1px solid rgba(255,255,255,0.07)',
-                  borderRadius:12,
-                }}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7,gap:8,flexWrap:'wrap'}}>
-                    <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{b.title}</span>
-                    <span style={{fontSize:13,fontWeight:800,color:exCol,flexShrink:0}}>{b.pts}/{b.max} pts</span>
-                  </div>
-                  {/* Barre de progression */}
-                  <div style={{height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',marginBottom:6,overflow:'hidden'}}>
-                    <div style={{
-                      height:'100%',borderRadius:4,background:exCol,
-                      width: revealed ? `${exPct}%` : '0%',
-                      transition:`width 1s ease ${0.9 + i * 0.15}s`,
-                    }}/>
-                  </div>
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',margin:0}}>{b.reason}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Bouton voir correction */}
-      <div style={{
-        textAlign:'center',
-        opacity: revealed ? 1 : 0,
-        transition:'opacity 0.4s ease 1.4s',
-      }}>
-        <button onClick={onSeeCorrection}
-          style={{
-            padding:'16px 36px',
-            background: scoreGrad,
-            color:'white',borderRadius:14,border:'none',
-            cursor:'pointer',fontSize:15,fontWeight:800,
-            boxShadow:`0 8px 28px ${scoreColor}50`,
-            display:'inline-flex',alignItems:'center',gap:12,
-            transition:'all 0.2s',fontFamily:'inherit',
-          }}
-          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)';e.currentTarget.style.boxShadow=`0 14px 36px ${scoreColor}60`}}
-          onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow=`0 8px 28px ${scoreColor}50`}}>
-          <span style={{fontSize:20}}>📝</span>
-          Voir la correction détaillée
-          <span style={{fontSize:18,opacity:0.8}}>→</span>
-        </button>
-        {/* Info correction en cours si pas encore prête */}
-        {!correctionReady && (
-          <p style={{marginTop:12,fontSize:12,color:'rgba(255,255,255,0.3)',display:'flex',alignItems:'center',justifyContent:'center',gap:7}}>
-            <span style={{width:10,height:10,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.15)',borderTopColor:'rgba(255,255,255,0.4)',animation:'spin 0.8s linear infinite',display:'inline-block'}}/>
-            Correction en préparation ({correctionProgress}/{exam.exercises.length} exercices)...
-          </p>
-        )}
-        {correctionReady && (
-          <p style={{marginTop:10,fontSize:12,color:'#6ee7b7'}}>
-            ✓ Correction prête
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 5 — CORRECTION EXERCICE PAR EXERCICE
-// Chaque exercice est corrigé séparément : l'élève peut imprimer avant de continuer
-// ═══════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════
-// PAGE ANALYSE EXERCICE — Pleine page avec bouton Retour (Simulation)
+// PHASE 4 — CORRECTION (IDENTIQUE SIMULATION — copie exacte)
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// PAGE ANALYSE EXERCICE — Pleine page avec bouton Retour
 // ════════════════════════════════════════════════════════════════════
 function PageAnalyseExercice({
   analysis, exercise, exerciseNum, onBack
@@ -5352,56 +3534,45 @@ function PageAnalyseExercice({
 
         {/* Plan d'étude personnalisé */}
         {(analysis as any).studyPlan && (
-          <div style={{marginBottom:24,padding:'20px 24px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:16}}>
-            <h3 style={{margin:'0 0 16px',fontSize:15,fontWeight:800,color:'#10b981',display:'flex',alignItems:'center',gap:8}}>
-              📅 Plan de travail personnalisé
-            </h3>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-              <div style={{padding:'12px 16px',background:'rgba(16,185,129,0.08)',borderRadius:12,border:'1px solid rgba(16,185,129,0.2)'}}>
-                <div style={{fontSize:11,fontWeight:700,color:'#10b981',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 1</div>
+          <div style={{marginBottom:20,padding:'16px 20px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:14}}>
+            <div style={{fontSize:13,fontWeight:800,color:'#10b981',marginBottom:12}}>📅 Plan de travail personnalisé</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:12}}>
+              <div style={{padding:'10px 14px',background:'rgba(16,185,129,0.08)',borderRadius:10,border:'1px solid rgba(16,185,129,0.2)'}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#10b981',textTransform:'uppercase',marginBottom:6}}>📆 Semaine 1</div>
                 {((analysis as any).studyPlan?.week1||[]).map((a:string,i:number)=>(
-                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(16,185,129,0.4)'}}>• {a}</div>
+                  <div key={i} style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginBottom:4,paddingLeft:10,borderLeft:'2px solid rgba(16,185,129,0.4)'}}>• {a}</div>
                 ))}
               </div>
-              <div style={{padding:'12px 16px',background:'rgba(79,110,247,0.07)',borderRadius:12,border:'1px solid rgba(79,110,247,0.2)'}}>
-                <div style={{fontSize:11,fontWeight:700,color:'#818cf8',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:8}}>📆 Semaine 2</div>
+              <div style={{padding:'10px 14px',background:'rgba(79,110,247,0.07)',borderRadius:10,border:'1px solid rgba(79,110,247,0.2)'}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#818cf8',textTransform:'uppercase',marginBottom:6}}>📆 Semaine 2</div>
                 {((analysis as any).studyPlan?.week2||[]).map((a:string,i:number)=>(
-                  <div key={i} style={{fontSize:12,color:'rgba(255,255,255,0.7)',marginBottom:5,paddingLeft:12,borderLeft:'2px solid rgba(79,110,247,0.4)'}}>• {a}</div>
+                  <div key={i} style={{fontSize:11,color:'rgba(255,255,255,0.7)',marginBottom:4,paddingLeft:10,borderLeft:'2px solid rgba(79,110,247,0.4)'}}>• {a}</div>
                 ))}
               </div>
             </div>
-            {(analysis as any).studyPlan?.dailyGoal && (
-              <div style={{padding:'10px 14px',background:'rgba(245,158,11,0.09)',borderRadius:10,border:'1px solid rgba(245,158,11,0.25)',fontSize:13,color:'#fcd34d',fontWeight:600}}>
-                ⏱ Objectif quotidien : {(analysis as any).studyPlan.dailyGoal}
+            {(analysis as any).studyPlan?.dailyGoal&&(
+              <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.09)',borderRadius:8,fontSize:12,color:'#fcd34d',fontWeight:600}}>
+                ⏱ Objectif : {(analysis as any).studyPlan.dailyGoal}
               </div>
             )}
           </div>
         )}
-
-        {/* Score par exercice */}
-        {(analysis as any).scoreByExercise?.length > 0 && (
-          <div style={{marginBottom:24,padding:'18px 22px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:16}}>
-            <h3 style={{margin:'0 0 14px',fontSize:14,fontWeight:700,color:'rgba(255,255,255,0.6)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
-              📊 Détail par exercice
-            </h3>
-            <div style={{display:'flex',flexDirection:'column',gap:8}}>
-              {((analysis as any).scoreByExercise as {exerciseTitle:string;estimated:number;max:number;comment:string}[]).map((ex,i)=>{
-                const pct=Math.round((ex.estimated/ex.max)*100)
-                const barColor=pct>=70?'#10b981':pct>=40?'#f59e0b':'#ef4444'
-                return (
-                  <div key={i} style={{padding:'10px 14px',background:'rgba(255,255,255,0.03)',borderRadius:10,border:'1px solid rgba(255,255,255,0.07)'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-                      <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{ex.exerciseTitle}</span>
-                      <span style={{fontSize:13,fontWeight:700,color:barColor}}>{ex.estimated}/{ex.max} pts ({pct}%)</span>
-                    </div>
-                    <div style={{height:5,background:'rgba(255,255,255,0.07)',borderRadius:3,marginBottom:6,overflow:'hidden'}}>
-                      <div style={{height:'100%',width:`${pct}%`,background:barColor,borderRadius:3}}/>
-                    </div>
-                    <div style={{fontSize:11,color:'rgba(255,255,255,0.45)'}}>{ex.comment}</div>
-                  </div>
-                )
-              })}
-            </div>
+        {(analysis as any).scoreByExercise?.length>0&&(
+          <div style={{marginBottom:20,padding:'14px 18px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14}}>
+            <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.5)',textTransform:'uppercase',marginBottom:12}}>📊 Détail par exercice</div>
+            {((analysis as any).scoreByExercise as {exerciseTitle:string;estimated:number;max:number;comment:string}[]).map((ex,i)=>{
+              const pct=Math.round((ex.estimated/ex.max)*100),bc=pct>=70?'#10b981':pct>=40?'#f59e0b':'#ef4444'
+              return(<div key={i} style={{marginBottom:8,padding:'8px 12px',background:'rgba(255,255,255,0.03)',borderRadius:8,border:'1px solid rgba(255,255,255,0.07)'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                  <span style={{fontSize:12,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{ex.exerciseTitle}</span>
+                  <span style={{fontSize:12,fontWeight:700,color:bc}}>{ex.estimated}/{ex.max} ({pct}%)</span>
+                </div>
+                <div style={{height:4,background:'rgba(255,255,255,0.07)',borderRadius:2,overflow:'hidden'}}>
+                  <div style={{height:'100%',width:`${pct}%`,background:bc,borderRadius:2}}/>
+                </div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:3}}>{ex.comment}</div>
+              </div>)
+            })}
           </div>
         )}
 
@@ -5547,1246 +3718,983 @@ function PageAnalyseExercice({
   )
 }
 
+function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
+  exam:BacExam;candidat:Candidat;answers:string
+  onFinish:(corrections:Record<number,string>)=>void
+  onGraphExtracted?:(idx:number,graph:string)=>void
+}){
+  const totalEx=exam.exercises.length
+  const colors=['#6366f1','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4']
+  const [currentIdx,setCurrentIdx]=useState(0)
+  const [corrections,setCorrections]=useState<Record<number,string>>({})
+  const [generating,setGenerating]=useState(false)
+  const [pdfMsg,setPdfMsg]=useState<Record<number,string>>({})
+  // Analyse par exercice — déclenchée après chaque correction
+  const [perExAnalysis,setPerExAnalysis]=useState<Record<number,AnalysisResult>>({})
+  const [analyzingEx,setAnalyzingEx]=useState<number|null>(null)
+  const [showAnalysisIdx,setShowAnalysisIdx]=useState<number|null>(null)
+  // Page analyse pleine — index exercice affiché (-1 = caché)
+  const [analysePageIdx,setAnalysePageIdx]=useState<number>(-1)
+  const currentEx=exam.exercises[currentIdx]
+  const currentCorrection=corrections[currentIdx]||''
+  const allDone=Object.keys(corrections).length>=totalEx
 
-function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAnalyse }: {
-  exam: GeneratedExam
-  answers: string
-  onAnalyse: (fullCorrection: string) => void
-  onGraphExtracted?: (exerciseIdx: number, graph: string) => void
-  onOpenAnalyse?: (idx: number, analysis: AnalysisResult, exercise: GeneratedExam['exercises'][number]) => void
-}) {
-  const totalEx = exam.exercises.length
-  const colors = ['#6366f1','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4']
-
-  // Index de l'exercice en cours (0-based)
-  const [currentIdx, setCurrentIdx] = useState(0)
-  // Correction de chaque exercice stockée séparément
-  const [corrections, setCorrections] = useState<Record<number, string>>({})
-  const correctionRenderRef = useRef<HTMLDivElement>(null)
-  // Est-ce qu'on génère en ce moment ?
-  const [generating, setGenerating] = useState(false)
-  // Message PDF
-  const [pdfMsg, setPdfMsg] = useState<Record<number,string>>({})
-  // Analyse par exercice
-  const [perExAnalysis, setPerExAnalysis] = useState<Record<number,AnalysisResult>>({})
-  const [analyzingEx, setAnalyzingEx] = useState<number|null>(null)
-  const [showAnalysisIdx, setShowAnalysisIdx] = useState<number|null>(null)
-
-  const currentEx = exam.exercises[currentIdx]
-  const currentCorrection = corrections[currentIdx] || ''
-  const allDone = Object.keys(corrections).length >= totalEx
-
-  // Génère la correction de l'exercice courant (utilisé pour l'ex 0 et pour retry)
-  const generateCurrent = useCallback(async () => {
-    if (generating || corrections[currentIdx]) return
+  const generateCurrent=useCallback(async()=>{
+    if(generating||corrections[currentIdx])return
     setGenerating(true)
-    try {
-      const text = await correctSingleExercise(exam, currentIdx, answers, (partial) => {
-        setCorrections(prev => ({ ...prev, [currentIdx]: stripIncompleteGraph(partial) }))
-      })
-      setCorrections(prev => ({ ...prev, [currentIdx]: text }))
-      // Extraire le graphique de la correction → injecter dans l'énoncé du sujet
-      if (onGraphExtracted) {
-        const extracted = extractFirstGraph(text)
-        if (extracted) onGraphExtracted(currentIdx, extracted)
-      }
+    try{
+      const text=await correctSingleExercise(exam,currentIdx,answers)
+      setCorrections(prev=>({...prev,[currentIdx]:text}))
+      if(onGraphExtracted){const g=extractFirstGraph(text);if(g)onGraphExtracted(currentIdx,g)}
       // Lancer l'analyse de cet exercice en arrière-plan
-      const exAnswerPart = answers.split('=== ').find((p:string)=>p.startsWith(`Exercice ${currentIdx+1}`)) || answers
+      const exAnswerPart = answers.split('=== ').find(p=>p.startsWith(`Exercice ${currentIdx+1}`)) || ''
       setAnalyzingEx(currentIdx)
-      analyzeOneExerciseSim(exam.exercises[currentIdx], exAnswerPart, text, currentIdx)
+      analyzeOneExercise(exam.exercises[currentIdx], exAnswerPart, text, currentIdx)
         .then(r=>{setPerExAnalysis(prev=>({...prev,[currentIdx]:r}));setAnalyzingEx(null)})
         .catch(()=>setAnalyzingEx(null))
-    } catch(e) {
-      setCorrections(prev => ({ ...prev, [currentIdx]: '⚠️ Erreur de génération — réessayez.' }))
+    }catch(e){
+      setCorrections(prev=>({...prev,[currentIdx]:'⚠️ Erreur de génération — réessayez.'}))
     }
     setGenerating(false)
-  }, [currentIdx, generating, corrections, exam, answers, onGraphExtracted])
+  },[currentIdx,generating,corrections,exam,answers,onGraphExtracted])
 
-  // Auto-lancer uniquement au premier montage (exercice 0)
-  const didMount = useRef(false)
-  useEffect(() => {
-    if (!didMount.current) {
-      didMount.current = true
-      if (!corrections[0] && !generating) generateCurrent()
-    }
-  }, [])
+  const didMount=useRef(false)
+  useEffect(()=>{if(!didMount.current){didMount.current=true;if(!corrections[0]&&!generating)generateCurrent()}},[])
 
-  // Ouvrir le PDF d'un exercice spécifique
-  const openExercisePdf = async (idx: number, download = false) => {
-    const ex = exam.exercises[idx]
-    const corrText = corrections[idx] || ''
-    const singleExam: GeneratedExam = {
-      ...exam,
-      title: `${exam.title} — Exercice ${idx + 1}`,
-      exercises: [ex]
-    }
-    // Capture les graphiques affichés (rendu identique à l'écran) — seulement pour l'exercice visible
-    let graphImgs: string[] = []
-    if (idx === currentIdx && correctionRenderRef.current) {
-      setPdfMsg(prev => ({ ...prev, [idx]: 'Préparation…' }))
-      try { graphImgs = await captureGraphsInOrder(correctionRenderRef.current) } catch { graphImgs = [] }
-    }
-    try {
-      openCorrectionPdf(singleExam, corrText, answers, download, graphImgs)
-      setPdfMsg(prev => ({ ...prev, [idx]: download ? 'Téléchargement…' : 'Ouvert !' }))
-      setTimeout(() => setPdfMsg(prev => ({ ...prev, [idx]: '' })), 3000)
-    } catch {
-      setPdfMsg(prev => ({ ...prev, [idx]: 'Autorisez les popups' }))
-    }
+  const openExercisePdf=(idx:number)=>{
+    const ex=exam.exercises[idx]
+    const corrText=corrections[idx]||''
+    const singleExam:BacExam={...exam,title:`${exam.title} — Exercice ${idx+1}`,exercises:[ex]}
+    try{openCorrectionPdf(singleExam,corrText,answers,candidat);setPdfMsg(p=>({...p,[idx]:'Ouvert !'})
+    );setTimeout(()=>setPdfMsg(p=>({...p,[idx]:''})),3000)}
+    catch{setPdfMsg(p=>({...p,[idx]:'Autorisez les popups'}))}
   }
 
-  // Passer à l'exercice suivant et lancer sa correction automatiquement
-  const goNext = useCallback(async () => {
-    if (currentIdx >= totalEx - 1) return
-    const nextIdx = currentIdx + 1
+  const goNext=useCallback(async()=>{
+    if(currentIdx>=totalEx-1)return
+    const nextIdx=currentIdx+1
     setCurrentIdx(nextIdx)
-    // Si pas encore corrigé, lancer la correction
-    if (!corrections[nextIdx]) {
+    if(!corrections[nextIdx]){
       setGenerating(true)
-      try {
-        const text = await correctSingleExercise(exam, nextIdx, answers)
-        setCorrections(prev => ({ ...prev, [nextIdx]: text }))
-        if (onGraphExtracted) {
-          const extracted = extractFirstGraph(text)
-          if (extracted) onGraphExtracted(nextIdx, extracted)
-        }
-        const exAP = answers.split('=== ').find((p:string)=>p.startsWith(`Exercice ${nextIdx+1}`)) || answers
+      try{
+        const text=await correctSingleExercise(exam,nextIdx,answers)
+        setCorrections(prev=>({...prev,[nextIdx]:text}))
+        if(onGraphExtracted){const g=extractFirstGraph(text);if(g)onGraphExtracted(nextIdx,g)}
+        const exAPart=answers.split('=== ').find(p=>p.startsWith(`Exercice ${nextIdx+1}`)) || ''
         setAnalyzingEx(nextIdx)
-        analyzeOneExerciseSim(exam.exercises[nextIdx], exAP, text, nextIdx)
+        analyzeOneExercise(exam.exercises[nextIdx],exAPart,text,nextIdx)
           .then(r=>{setPerExAnalysis(prev=>({...prev,[nextIdx]:r}));setAnalyzingEx(null)})
           .catch(()=>setAnalyzingEx(null))
-      } catch {
-        setCorrections(prev => ({ ...prev, [nextIdx]: '⚠️ Erreur de génération — réessayez.' }))
-      }
+      }catch{setCorrections(prev=>({...prev,[nextIdx]:'⚠️ Erreur de génération — réessayez.'}))}
       setGenerating(false)
     }
-  }, [currentIdx, totalEx, corrections, exam, answers, generating])
+  },[currentIdx,totalEx,corrections,exam,answers,generating])
 
-  // Terminer — passer à l'analyse avec tout le texte agrégé
-  const handleFinish = () => {
-    const fullText = exam.exercises.map((_, i) => corrections[i] || '').join('\n\n---\n\n')
-    onAnalyse(fullText)
+  const handleFinish=()=>{onFinish(corrections)}
+
+  // Page analyse pleine — rendu direct avant le return principal
+  if (analysePageIdx >= 0 && perExAnalysis[analysePageIdx]) {
+    return (
+      <PageAnalyseExercice
+        analysis={perExAnalysis[analysePageIdx]}
+        exercise={exam.exercises[analysePageIdx]}
+        exerciseNum={analysePageIdx + 1}
+        onBack={() => setAnalysePageIdx(-1)}
+      />
+    )
   }
 
-  return (
-    <div>
-      {/* Header global */}
-      <div style={{marginBottom:24}}>
-        <h3 style={{margin:'0 0 4px',fontSize:18,color:'#e2e8f0'}}>Correction exercice par exercice</h3>
-        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.4)'}}>{exam.title}</p>
-      </div>
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui',padding:'24px 20px'}}>
+      <div style={{maxWidth:900,margin:'0 auto'}}>
 
-      {/* Stepper des exercices — lecture seule, navigation libre seulement sur exercices déjà corrigés */}
-      <div style={{display:'flex',gap:8,marginBottom:28,flexWrap:'wrap',alignItems:'center'}}>
-        {exam.exercises.map((ex, i) => {
-          const done = !!corrections[i]
-          const active = i === currentIdx
-          const locked = !done && i !== currentIdx
-          const c = colors[i % colors.length]
-          return (
-            <button key={i}
-              onClick={() => { if (done && !active) setCurrentIdx(i) }}
-              disabled={locked}
-              title={locked ? 'Corrigez les exercices précédents en ordre' : done ? 'Revoir cet exercice' : ''}
-              style={{
-                display:'flex',alignItems:'center',gap:8,
-                padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:700,
-                cursor: locked ? 'not-allowed' : done ? 'pointer' : 'default',
-                border: active ? `2px solid ${c}` : done ? `1px solid ${c}60` : '1px solid rgba(255,255,255,0.08)',
-                background: active ? `${c}18` : done ? `${c}0a` : 'rgba(255,255,255,0.02)',
-                color: active ? c : done ? `${c}cc` : 'rgba(255,255,255,0.2)',
-                boxShadow: active ? `0 4px 16px ${c}30` : 'none',
-                opacity: locked ? 0.4 : 1,
-                transition:'all 0.2s',
-              }}>
-              {done
-                ? <span style={{width:18,height:18,borderRadius:'50%',background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'white',fontWeight:900,flexShrink:0}}>✓</span>
-                : active && generating
-                  ? <span style={{width:14,height:14,borderRadius:'50%',border:`2px solid ${c}40`,borderTopColor:c,animation:'spin 0.7s linear infinite',display:'inline-block',flexShrink:0}}/>
-                  : <span style={{width:18,height:18,borderRadius:'50%',border:`2px solid ${active?c:'rgba(255,255,255,0.15)'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:active?c:'rgba(255,255,255,0.2)',fontWeight:900,flexShrink:0}}>{i+1}</span>
-              }
-              <span>Ex.{i+1}</span>
-              <span style={{opacity:0.5,fontSize:10}}>({ex.points}pts)</span>
-              {locked && <span style={{fontSize:9,opacity:0.5}}>🔒</span>}
+        <div style={{marginBottom:24}}>
+          <h3 style={{margin:'0 0 4px',fontSize:18,color:'#e2e8f0',display:'flex',alignItems:'center',gap:10}}>
+            <span>📝</span> Correction — Bac Blanc Jour {exam.day}
+          </h3>
+          <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {exam.section}</p>
+        </div>
+
+        {/* Stepper exercices */}
+        <div style={{display:'flex',gap:8,marginBottom:28,flexWrap:'wrap',alignItems:'center'}}>
+          {exam.exercises.map((ex,i)=>{
+            const done=!!corrections[i],active=i===currentIdx,locked=!done&&i!==currentIdx
+            const c=colors[i%colors.length]
+            return(
+              <button key={i} onClick={()=>{if(done&&!active)setCurrentIdx(i)}} disabled={locked}
+                style={{display:'flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:10,fontSize:12,fontWeight:700,cursor:locked?'not-allowed':'pointer',border:active?`2px solid ${c}`:done?`1px solid ${c}60`:'1px solid rgba(255,255,255,0.08)',background:active?`${c}18`:done?`${c}0a`:'rgba(255,255,255,0.02)',color:active?c:done?`${c}cc`:'rgba(255,255,255,0.2)',opacity:locked?0.4:1,boxShadow:active?`0 4px 16px ${c}30`:'none',transition:'all 0.2s'}}>
+                {done?<span style={{width:18,height:18,borderRadius:'50%',background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'white',fontWeight:900,flexShrink:0}}>✓</span>
+                :active&&generating?<span style={{width:14,height:14,borderRadius:'50%',border:`2px solid ${c}40`,borderTopColor:c,animation:'spin 0.7s linear infinite',display:'inline-block',flexShrink:0}}/>
+                :<span style={{width:18,height:18,borderRadius:'50%',border:`2px solid ${active?c:'rgba(255,255,255,0.15)'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:active?c:'rgba(255,255,255,0.2)',fontWeight:900,flexShrink:0}}>{i+1}</span>}
+                <span>Ex.{i+1}</span>
+                <span style={{opacity:0.5,fontSize:10}}>({ex.points}pts)</span>
+                {locked&&<span style={{fontSize:9,opacity:0.5}}>🔒</span>}
+              </button>
+            )
+          })}
+          {/* Bouton exercice suivant dans le stepper */}
+          {!allDone&&currentIdx<totalEx-1&&corrections[currentIdx]&&(
+            <button onClick={goNext}
+              style={{marginLeft:8,padding:'8px 16px',borderRadius:10,background:'linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.25))',border:'1px solid rgba(99,102,241,0.4)',color:'#a5b4fc',fontWeight:700,fontSize:12,cursor:'pointer',display:'flex',alignItems:'center',gap:6}}>
+              Ex.{currentIdx+2} →
             </button>
-          )
-        })}
-        {allDone && (
-          <button onClick={handleFinish}
-            style={{marginLeft:'auto',padding:'9px 20px',borderRadius:10,background:'linear-gradient(135deg,#10b981,#059669)',border:'none',color:'white',fontWeight:700,fontSize:12,cursor:'pointer',boxShadow:'0 4px 16px rgba(16,185,129,0.35)',display:'flex',alignItems:'center',gap:8}}>
-            📊 Analyser mes points faibles →
-          </button>
-        )}
-      </div>
-
-      {/* Carte exercice courant */}
-      <div style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${colors[currentIdx%colors.length]}30`,borderRadius:20,overflow:'hidden'}}>
-
-        {/* Header exercice */}
-        <div style={{padding:'16px 24px',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12,background:`${colors[currentIdx%colors.length]}08`}}>
-          <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <div style={{width:36,height:36,borderRadius:10,background:`${colors[currentIdx%colors.length]}20`,border:`2px solid ${colors[currentIdx%colors.length]}50`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:16,color:colors[currentIdx%colors.length]}}>
-              {currentIdx+1}
-            </div>
-            <div>
-              <p style={{margin:0,fontWeight:700,fontSize:14,color:'rgba(255,255,255,0.9)'}}>{currentEx?.title}</p>
-              <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.4)'}}>{currentEx?.theme} · {currentEx?.points} pts</p>
-            </div>
-          </div>
-          <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-            {pdfMsg[currentIdx] && (
-              <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'3px 10px',background:'rgba(16,185,129,0.1)',borderRadius:6}}>✓ {pdfMsg[currentIdx]}</span>
-            )}
-            {currentCorrection && (
-              <>
-                <button onClick={() => openExercisePdf(currentIdx)}
-                  style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
-                    background:'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(139,92,246,0.2))',
-                    border:'1px solid rgba(99,102,241,0.35)',borderRadius:9,cursor:'pointer',
-                    fontSize:12,fontWeight:700,color:'#a5b4fc',fontFamily:'inherit'}}>
-                  🎨 Imprimer
-                </button>
-                <button onClick={() => openExercisePdf(currentIdx, true)}
-                  style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
-                    background:'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                    border:'none',borderRadius:9,cursor:'pointer',
-                    fontSize:12,fontWeight:700,color:'#fff',fontFamily:'inherit'}}>
-                  ⬇ Télécharger PDF
-                </button>
-                <button onClick={()=>{ if(perExAnalysis[currentIdx] && onOpenAnalyse) onOpenAnalyse(currentIdx, perExAnalysis[currentIdx], exam.exercises[currentIdx]) }}
-                  style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
-                    background:perExAnalysis[currentIdx]?'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(6,214,160,0.15))':'rgba(255,255,255,0.04)',
-                    border:perExAnalysis[currentIdx]?'1px solid rgba(16,185,129,0.5)':'1px solid rgba(255,255,255,0.1)',
-                    borderRadius:9,cursor:perExAnalysis[currentIdx]?'pointer':'not-allowed',fontSize:12,fontWeight:700,
-                    color:perExAnalysis[currentIdx]?'#6ee7b7':'rgba(255,255,255,0.3)',fontFamily:'inherit',
-                    boxShadow:perExAnalysis[currentIdx]?'0 0 12px rgba(16,185,129,0.25)':'none'}}>
-                  {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]
-                    ?<><span style={{width:10,height:10,border:'2px solid rgba(16,185,129,0.3)',borderTopColor:'#10b981',borderRadius:'50%',animation:'spin 0.8s linear infinite',display:'inline-block',marginRight:4}}/><span>Analyse…</span></>
-                    :<>📊 Voir l&apos;analyse</>
-                  }
-                </button>
-                {currentIdx<totalEx-1&&(
-                  <button onClick={goNext}
-                    style={{display:'flex',alignItems:'center',gap:5,padding:'7px 13px',
-                      background:'linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.25))',
-                      border:'1px solid rgba(99,102,241,0.45)',
-                      borderRadius:9,cursor:'pointer',fontSize:12,fontWeight:700,color:'#c4b5fd',fontFamily:'inherit'}}>
-                    Ex.{currentIdx+2} →
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+          )}
+          {allDone&&(
+            <button onClick={handleFinish}
+              style={{marginLeft:'auto',padding:'9px 20px',borderRadius:10,background:'linear-gradient(135deg,#10b981,#059669)',border:'none',color:'white',fontWeight:700,fontSize:12,cursor:'pointer',boxShadow:'0 4px 16px rgba(16,185,129,0.35)',display:'flex',alignItems:'center',gap:8}}>
+              📊 Analyser mes points faibles →
+            </button>
+          )}
         </div>
 
-        {/* Énoncé */}
-        <div style={{padding:'16px 24px',borderBottom:'1px solid rgba(255,255,255,0.06)',background:'rgba(0,0,0,0.2)'}}>
-          <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Énoncé</p>
-          {currentEx?.graph && currentEx.graph !== 'null' && <TextWithGraphs text={currentEx.graph} />}
-          <TextWithGraphs text={currentEx?.statement || ''} />
-        </div>
-
-        {/* Correction */}
-        <div style={{padding:'20px 24px'}}>
-          {generating && !currentCorrection ? (
-            <div style={{textAlign:'center',padding:'40px 20px'}}>
-              <div style={{fontSize:44,marginBottom:14,animation:'float 2s ease-in-out infinite'}}>⚡</div>
-              <h4 style={{color:'#e2e8f0',marginBottom:8,fontSize:16}}>Correction de l&apos;exercice {currentIdx+1}...</h4>
-              <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,marginBottom:20}}>L&apos;IA rédige la correction complète et détaillée</p>
-              <div style={{width:240,height:3,borderRadius:3,background:'rgba(255,255,255,0.06)',margin:'0 auto',overflow:'hidden'}}>
-                <div style={{height:'100%',background:`linear-gradient(90deg,${colors[currentIdx%colors.length]},#10b981)`,borderRadius:3,animation:'slideBar 1.8s ease-in-out infinite'}}/>
+        {/* Carte exercice courant */}
+        <div style={{background:'rgba(255,255,255,0.03)',border:`1px solid ${colors[currentIdx%colors.length]}30`,borderRadius:20,overflow:'hidden'}}>
+          {/* Header */}
+          <div style={{padding:'16px 24px',borderBottom:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12,background:`${colors[currentIdx%colors.length]}08`}}>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:`${colors[currentIdx%colors.length]}20`,border:`2px solid ${colors[currentIdx%colors.length]}50`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:16,color:colors[currentIdx%colors.length]}}>{currentIdx+1}</div>
+              <div>
+                <p style={{margin:0,fontWeight:700,fontSize:14,color:'rgba(255,255,255,0.9)'}}>{currentEx?.title}</p>
+                <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.4)'}}>{currentEx?.theme} · {currentEx?.points} pts</p>
               </div>
             </div>
-          ) : currentCorrection ? (
-            <div>
-              <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>
-                {generating ? '✍️ Rédaction en cours…' : '✅ Correction complète'}
-              </p>
-              <div ref={correctionRenderRef}>
+            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              {pdfMsg[currentIdx]&&<span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'3px 10px',background:'rgba(16,185,129,0.1)',borderRadius:6}}>✓ {pdfMsg[currentIdx]}</span>}
+              {currentCorrection&&(
+                <>
+                  <button onClick={()=>openExercisePdf(currentIdx)}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',background:'linear-gradient(135deg,rgba(99,102,241,0.25),rgba(139,92,246,0.2))',border:'1px solid rgba(99,102,241,0.35)',borderRadius:9,cursor:'pointer',fontSize:12,fontWeight:700,color:'#a5b4fc',fontFamily:'inherit'}}>
+                    🎨 Imprimer
+                  </button>
+                  <button onClick={()=>{ if(perExAnalysis[currentIdx]) setAnalysePageIdx(currentIdx) }}
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
+                      background:perExAnalysis[currentIdx]?'linear-gradient(135deg,rgba(16,185,129,0.25),rgba(6,214,160,0.15))':'rgba(255,255,255,0.04)',
+                      border:perExAnalysis[currentIdx]?'1px solid rgba(16,185,129,0.5)':'1px solid rgba(255,255,255,0.1)',
+                      borderRadius:9,cursor:perExAnalysis[currentIdx]?'pointer':'not-allowed',fontSize:12,fontWeight:700,
+                      color:perExAnalysis[currentIdx]?'#6ee7b7':'rgba(255,255,255,0.3)',fontFamily:'inherit',
+                      boxShadow:perExAnalysis[currentIdx]?'0 0 12px rgba(16,185,129,0.25)':'none'}}>
+                    {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]
+                      ?<><span style={{width:10,height:10,border:'2px solid rgba(16,185,129,0.3)',borderTopColor:'#10b981',borderRadius:'50%',animation:'spin 0.8s linear infinite',display:'inline-block',marginRight:4}}/><span>Analyse…</span></>
+                      :<>📊 Voir l&apos;analyse</>
+                    }
+                  </button>
+                  {currentIdx<totalEx-1&&(
+                    <button onClick={goNext}
+                      style={{display:'flex',alignItems:'center',gap:5,padding:'7px 13px',
+                        background:'linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.25))',
+                        border:'1px solid rgba(99,102,241,0.45)',
+                        borderRadius:9,cursor:'pointer',fontSize:12,fontWeight:700,color:'#c4b5fd',fontFamily:'inherit'}}>
+                      Ex.{currentIdx+2} →
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Énoncé */}
+          <div style={{padding:'16px 24px',borderBottom:'1px solid rgba(255,255,255,0.06)',background:'rgba(0,0,0,0.2)'}}>
+            <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Énoncé</p>
+            {currentEx?.graph&&currentEx.graph!=='null'&&<TextWithGraphs text={currentEx.graph}/>}
+            <TextWithGraphs text={currentEx?.statement||''}/>
+          </div>
+
+          {/* Correction */}
+          <div style={{padding:'20px 24px'}}>
+            {generating&&!currentCorrection?(
+              <div style={{textAlign:'center',padding:'40px 20px'}}>
+                <div style={{fontSize:44,marginBottom:14,animation:'float 2s ease-in-out infinite'}}>⚡</div>
+                <h4 style={{color:'#e2e8f0',marginBottom:8,fontSize:16}}>Correction de l&apos;exercice {currentIdx+1}…</h4>
+                <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,marginBottom:20}}>L&apos;IA rédige la correction complète et détaillée</p>
+                <div style={{width:240,height:3,borderRadius:3,background:'rgba(255,255,255,0.06)',margin:'0 auto',overflow:'hidden'}}>
+                  <div style={{height:'100%',background:`linear-gradient(90deg,${colors[currentIdx%colors.length]},#10b981)`,borderRadius:3,animation:'slideBar 1.8s ease-in-out infinite'}}/>
+                </div>
+              </div>
+            ):currentCorrection?(
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>✅ Correction complète</p>
                 <MD text={currentCorrection}/>
               </div>
+            ):(
+              <div style={{textAlign:'center',padding:'20px'}}>
+                <button onClick={generateCurrent}
+                  style={{padding:'12px 24px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',border:'none',borderRadius:12,color:'white',fontWeight:700,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>
+                  ⚡ Générer la correction
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Analyse par exercice — apparaît après correction */}
+          {/* Badge analyse — spinner ou prêt → clic ouvre la page pleine */}
+          {currentCorrection&&(
+            <div style={{margin:'8px 20px 12px',display:'flex',alignItems:'center',gap:10}}>
+              {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]&&(
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:8,background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.15)',fontSize:12,color:'rgba(255,255,255,0.5)'}}>
+                  <div style={{width:12,height:12,border:'2px solid rgba(99,102,241,0.3)',borderTopColor:'#6366f1',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+                  Analyse de l&apos;exercice {currentIdx+1} en cours…
+                </div>
+              )}
+              {perExAnalysis[currentIdx]&&(
+                <button onClick={()=>setAnalysePageIdx(currentIdx)}
+                  style={{display:'flex',alignItems:'center',gap:10,padding:'10px 20px',borderRadius:10,
+                    background:'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,214,160,0.1))',
+                    border:'1px solid rgba(16,185,129,0.4)',cursor:'pointer',fontFamily:'inherit',
+                    boxShadow:'0 0 16px rgba(16,185,129,0.2)',transition:'all 0.2s'}}>
+                  <span style={{fontSize:20,fontWeight:900,color:perExAnalysis[currentIdx].estimatedScore/perExAnalysis[currentIdx].maxScore>=0.6?'#10b981':'#f59e0b'}}>
+                    {perExAnalysis[currentIdx].estimatedScore}/{perExAnalysis[currentIdx].maxScore}
+                  </span>
+                  <div style={{textAlign:'left'}}>
+                    <div style={{fontSize:12,fontWeight:700,color:'#6ee7b7'}}>📊 Analyse disponible</div>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>Cliquez pour voir le détail et la remédiation →</div>
+                  </div>
+                </button>
+              )}
             </div>
-          ) : (
-            <div style={{textAlign:'center',padding:'20px'}}>
-              <button onClick={generateCurrent}
-                style={{padding:'12px 24px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',border:'none',borderRadius:12,color:'white',fontWeight:700,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>
-                ⚡ Générer la correction
-              </button>
+          )}
+
+          {/* Footer navigation */}
+          {currentCorrection&&(
+            <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
+              <div style={{fontSize:12,color:'rgba(255,255,255,0.35)'}}>Exercice {currentIdx+1} / {totalEx} corrigé ✓</div>
+              <div style={{display:'flex',gap:10}}>
+                {currentIdx<totalEx-1?(
+                  <button onClick={goNext}
+                    style={{padding:'10px 24px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',border:'none',borderRadius:11,color:'white',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 4px 16px rgba(99,102,241,0.4)',display:'flex',alignItems:'center',gap:8}}>
+                    Exercice {currentIdx+2} →
+                    {corrections[currentIdx+1]?<span style={{fontSize:11,opacity:0.7}}>déjà corrigé</span>:<span style={{fontSize:11,opacity:0.7}}>générer</span>}
+                  </button>
+                ):(
+                  <button onClick={handleFinish}
+                    style={{padding:'10px 24px',background:'linear-gradient(135deg,#10b981,#059669)',border:'none',borderRadius:11,color:'white',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 4px 16px rgba(16,185,129,0.4)',display:'flex',alignItems:'center',gap:8}}>
+                    📊 Analyser mes points faibles →
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Analyse par exercice — apparaît après correction */}
-        {/* Badge analyse → ouvre page pleine */}
-        {currentCorrection&&(
-          <div style={{margin:'8px 20px 12px',display:'flex',alignItems:'center',gap:10}}>
-            {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]&&(
-              <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:8,background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.15)',fontSize:12,color:'rgba(255,255,255,0.5)'}}>
-                <div style={{width:12,height:12,border:'2px solid rgba(99,102,241,0.3)',borderTopColor:'#6366f1',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
-                Analyse de l&apos;exercice {currentIdx+1} en cours…
-              </div>
-            )}
-            {perExAnalysis[currentIdx]&&(
-              <button onClick={()=>{ if(onOpenAnalyse) onOpenAnalyse(currentIdx, perExAnalysis[currentIdx], exam.exercises[currentIdx]) }}
-                style={{display:'flex',alignItems:'center',gap:10,padding:'10px 20px',borderRadius:10,
-                  background:'linear-gradient(135deg,rgba(16,185,129,0.15),rgba(6,214,160,0.1))',
-                  border:'1px solid rgba(16,185,129,0.4)',cursor:'pointer',fontFamily:'inherit',
-                  boxShadow:'0 0 16px rgba(16,185,129,0.2)'}}>
-                <span style={{fontSize:20,fontWeight:900,color:perExAnalysis[currentIdx].estimatedScore/perExAnalysis[currentIdx].maxScore>=0.6?'#10b981':'#f59e0b'}}>
-                  {perExAnalysis[currentIdx].estimatedScore}/{perExAnalysis[currentIdx].maxScore}
-                </span>
-                <div style={{textAlign:'left'}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#6ee7b7'}}>📊 Analyse disponible</div>
-                  <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>Cliquez pour voir le détail et la remédiation →</div>
-                </div>
-              </button>
-            )}
-          </div>
-        )}
-        {/* Footer navigation */}
-        {currentCorrection && (
-          <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
-            <div style={{fontSize:12,color:'rgba(255,255,255,0.35)'}}>
-              Exercice {currentIdx+1} / {totalEx} corrigé ✓
-            </div>
-            <div style={{display:'flex',gap:10}}>
-              {currentIdx < totalEx - 1 ? (
-                <button onClick={goNext}
-                  style={{padding:'10px 24px',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',border:'none',borderRadius:11,color:'white',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 4px 16px rgba(99,102,241,0.4)',display:'flex',alignItems:'center',gap:8}}>
-                  Exercice {currentIdx+2} →
-                  {corrections[currentIdx+1]
-                    ? <span style={{fontSize:11,opacity:0.7}}>déjà corrigé</span>
-                    : <span style={{fontSize:11,opacity:0.7}}>générer</span>
-                  }
-                </button>
-              ) : (
-                <button onClick={handleFinish}
-                  style={{padding:'10px 24px',background:'linear-gradient(135deg,#10b981,#059669)',border:'none',borderRadius:11,color:'white',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit',boxShadow:'0 4px 16px rgba(16,185,129,0.4)',display:'flex',alignItems:'center',gap:8}}>
-                  📊 Analyser mes points faibles →
-                </button>
-              )}
+        {/* Récap final */}
+        {allDone&&(
+          <div style={{marginTop:28,padding:'20px 24px',background:'linear-gradient(135deg,rgba(16,185,129,0.06),rgba(6,214,160,0.04))',border:'1px solid rgba(16,185,129,0.2)',borderRadius:18}}>
+            <p style={{fontSize:12,fontWeight:700,color:'#6ee7b7',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px',display:'flex',alignItems:'center',gap:8}}>✅ Toutes les corrections sont prêtes</p>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10}}>
+              {exam.exercises.map((ex,i)=>{
+                const c=colors[i%colors.length]
+                return(
+                  <div key={i} style={{padding:'14px 16px',background:'rgba(255,255,255,0.03)',border:`1px solid ${c}30`,borderRadius:12,display:'flex',flexDirection:'column',gap:10}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <span style={{width:28,height:28,borderRadius:'50%',background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'white',fontWeight:900,flexShrink:0}}>{i+1}</span>
+                      <div>
+                        <p style={{margin:0,fontWeight:700,fontSize:12,color:'rgba(255,255,255,0.85)'}}>{ex.title}</p>
+                        <p style={{margin:0,fontSize:10,color:'rgba(255,255,255,0.35)'}}>{ex.theme} · {ex.points} pts</p>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                      {pdfMsg[i]&&<span style={{fontSize:10,color:'#6ee7b7',fontWeight:600}}>✓ {pdfMsg[i]}</span>}
+                      <button onClick={()=>setCurrentIdx(i)} style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>👁 Revoir</button>
+                      <button onClick={()=>openExercisePdf(i)} style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:`1px solid ${c}50`,background:`${c}12`,color:c,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>🎨 Imprimer</button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}
       </div>
-
-      {/* Tableau récapitulatif final — visible quand tous les exercices sont corrigés */}
-      {allDone && (
-        <div style={{marginTop:28,padding:'20px 24px',background:'linear-gradient(135deg,rgba(16,185,129,0.06),rgba(6,214,160,0.04))',border:'1px solid rgba(16,185,129,0.2)',borderRadius:18}}>
-          <p style={{fontSize:12,fontWeight:700,color:'#6ee7b7',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px',display:'flex',alignItems:'center',gap:8}}>
-            ✅ Toutes les corrections sont prêtes — Téléchargez par exercice
-          </p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:10}}>
-            {exam.exercises.map((ex, i) => {
-              const c = colors[i % colors.length]
-              return (
-                <div key={i} style={{padding:'14px 16px',background:'rgba(255,255,255,0.03)',border:`1px solid ${c}30`,borderRadius:12,display:'flex',flexDirection:'column',gap:10}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <span style={{width:28,height:28,borderRadius:'50%',background:c,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:'white',fontWeight:900,flexShrink:0}}>{i+1}</span>
-                    <div>
-                      <p style={{margin:0,fontWeight:700,fontSize:12,color:'rgba(255,255,255,0.85)'}}>{ex.title}</p>
-                      <p style={{margin:0,fontSize:10,color:'rgba(255,255,255,0.35)'}}>{ex.theme} · {ex.points} pts</p>
-                    </div>
-                  </div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    {pdfMsg[i] && <span style={{fontSize:10,color:'#6ee7b7',fontWeight:600}}>✓ {pdfMsg[i]}</span>}
-                    <button onClick={() => setCurrentIdx(i)}
-                      style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>
-                      👁 Revoir
-                    </button>
-                    <button onClick={() => openExercisePdf(i)}
-                      style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:`1px solid ${c}50`,background:`${c}12`,color:c,cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
-                      🎨 Imprimer
-                    </button>
-                    <button onClick={() => openExercisePdf(i, true)}
-                      style={{flex:1,fontSize:11,padding:'6px 10px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',cursor:'pointer',fontFamily:'inherit',fontWeight:700}}>
-                      ⬇ Télécharger
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}@keyframes slideBar{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}`}</style>
     </div>
-
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PHASE 6 — ANALYSE + REMÉDIATION
-// ═══════════════════════════════════════════════════════════════════
-function PhaseAnalysis({ analysis, onRestart }: {
-  analysis:AnalysisResult|null; onRestart:()=>void
-}) {
-  const [remAnswers, setRemAnswers] = useState<Record<string,string>>({})
-  const [remFeedback, setRemFeedback] = useState<Record<string,string>>({})
-  const [remLoading, setRemLoading] = useState<Record<string,boolean>>({})
-  const [showHint, setShowHint] = useState<Record<string,boolean>>({})
-  const [showCorrection, setShowCorrection] = useState<Record<string,boolean>>({})
-  const [remSavedMsg, setRemSavedMsg] = useState<Record<string,string>>({})
-  const remFileRefs = useRef<Record<string,HTMLInputElement|null>>({})
+// ════════════════════════════════════════════════════════════════════
+// PHASE 5 — ANALYSE + REMÉDIATION (IDENTIQUE SIMULATION — copie exacte)
+// ════════════════════════════════════════════════════════════════════
+function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResult|null;exam:BacExam;candidat:Candidat;onRestart:()=>void}){
+  const { incrementQuota: incrementQuotaSub } = useAuth()
+  const [remAnswers,setRemAnswers]=useState<Record<string,string>>({})
+  const [remFeedback,setRemFeedback]=useState<Record<string,string>>({})
+  const [remLoading,setRemLoading]=useState<Record<string,boolean>>({})
+  const [showHint,setShowHint]=useState<Record<string,boolean>>({})
+  const [showCorrection,setShowCorrection]=useState<Record<string,boolean>>({})
+  const [remSavedMsg,setRemSavedMsg]=useState<Record<string,string>>({})
+  const remFileRefs=useRef<Record<string,HTMLInputElement|null>>({})
 
-  const showMsg = (id: string, msg: string) => {
-    setRemSavedMsg(p=>({...p,[id]:msg}))
-    setTimeout(()=>setRemSavedMsg(p=>({...p,[id]:''})), 2500)
+  const showMsg=(id:string,msg:string)=>{setRemSavedMsg(p=>({...p,[id]:msg}));setTimeout(()=>setRemSavedMsg(p=>({...p,[id]:''})),2500)}
+
+  const downloadRemAnswer=(ex:AnalysisResult['remediationExercises'][number])=>{
+    const ans=remAnswers[ex.id]||''; if(!ans.trim())return
+    const blob=new Blob([`REMÉDIATION — ${ex.theme}\nDate : ${new Date().toLocaleString('fr-FR')}\n${'='.repeat(50)}\n\nÉnoncé :\n${ex.statement}\n\n${'='.repeat(50)}\n\nMa réponse :\n${ans}`],{type:'text/plain;charset=utf-8'})
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Remediation-${ex.theme.replace(/[^\w-]/g,'-')}.txt`;a.click()
+    showMsg(ex.id,'Réponse téléchargée !')
   }
 
-  const downloadRemAnswer = (ex: AnalysisResult['remediationExercises'][number]) => {
-    const ans = remAnswers[ex.id] || ''
-    if (!ans.trim()) return
-    const blob = new Blob([
-      `REMÉDIATION — ${ex.theme}\nDate : ${new Date().toLocaleString('fr-FR')}\n${'='.repeat(50)}\n\nÉnoncé :\n${ex.statement}\n\n${'='.repeat(50)}\n\nMa réponse :\n${ans}`
-    ], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `Remediation-${ex.theme.replace(/[^\w-]/g,'-')}.txt`
-    a.click(); URL.revokeObjectURL(url)
-    showMsg(ex.id, 'Réponse téléchargée !')
+  const downloadRemFeedback=(ex:AnalysisResult['remediationExercises'][number])=>{
+    const feedback=remFeedback[ex.id]||''; if(!feedback.trim())return
+    const blob=new Blob([`CORRECTION IA — ${ex.theme}\nDate : ${new Date().toLocaleString('fr-FR')}\n${'='.repeat(50)}\n\nÉnoncé :\n${ex.statement}\n\nMa réponse :\n${remAnswers[ex.id]||''}\n\n${'='.repeat(50)}\n\nCorrection IA :\n${feedback}`],{type:'text/plain;charset=utf-8'})
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Correction-Rem-${ex.theme.replace(/[^\w-]/g,'-')}.txt`;a.click()
+    showMsg(ex.id,'Correction téléchargée !')
   }
 
-  const downloadRemFeedback = (ex: AnalysisResult['remediationExercises'][number]) => {
-    const feedback = remFeedback[ex.id] || ''
-    if (!feedback.trim()) return
-    const blob = new Blob([
-      `CORRECTION IA — ${ex.theme}\nDate : ${new Date().toLocaleString('fr-FR')}\n${'='.repeat(50)}\n\nÉnoncé :\n${ex.statement}\n\nMa réponse :\n${remAnswers[ex.id]||''}\n\n${'='.repeat(50)}\n\nCorrection IA :\n${feedback}`
-    ], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `Correction-Rem-${ex.theme.replace(/[^\w-]/g,'-')}.txt`
-    a.click(); URL.revokeObjectURL(url)
-    showMsg(ex.id, 'Correction téléchargée !')
-  }
-
-  const handleRemFile = async (e: React.ChangeEvent<HTMLInputElement>, exId: string) => {
-    const files = Array.from(e.target.files || []) as File[]
-    if (!files.length) return
-    for (const file of files) {
-      if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-        const text = await file.text()
-        setRemAnswers(p=>({...p,[exId]: p[exId] ? p[exId]+'\n\n--- '+file.name+' ---\n'+text : text}))
-        showMsg(exId, 'Fichier importé !')
-      } else if (file.type.startsWith('image/')) {
-        showMsg(exId, 'Image reçue — recopiez votre réponse en texte pour la correction IA')
-      }
+  const handleRemFile=async(e:React.ChangeEvent<HTMLInputElement>,exId:string)=>{
+    const files=Array.from(e.target.files||[]) as File[]
+    if(!files.length)return
+    for(const file of files){
+      if(file.type.startsWith('text/')||file.name.endsWith('.txt')||file.name.endsWith('.md')){
+        const text=await file.text()
+        setRemAnswers(p=>({...p,[exId]:p[exId]?p[exId]+'\n\n--- '+file.name+' ---\n'+text:text}))
+        showMsg(exId,'Fichier importé !')
+      }else if(file.type.startsWith('image/')){showMsg(exId,'Image reçue — recopiez votre réponse en texte')}
     }
-    if (remFileRefs.current[exId]) remFileRefs.current[exId]!.value = ''
+    if(remFileRefs.current[exId])remFileRefs.current[exId]!.value=''
   }
 
-  const openRemFeedbackPdf = (ex: AnalysisResult['remediationExercises'][number]) => {
-    const feedback = remFeedback[ex.id] || ''
-    const answer   = remAnswers[ex.id]  || ''
-    const diffLabel: Record<string,string> = {introductory:'Introductif',standard:'Standard',advanced:'Avancé'}
-    const css = `
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:'Inter','Segoe UI',system-ui,sans-serif;background:#0c0c1a;color:#e2e8f0;font-size:13.5px;line-height:1.8;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-      .wrap{max-width:820px;margin:0 auto;padding:28px 36px 60px}
-      .print-bar{position:sticky;top:0;z-index:99;background:#0c0c1a;border-bottom:1px solid rgba(255,255,255,.1);padding:10px 0 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
-      .print-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-      .print-hint{font-size:11.5px;color:rgba(255,255,255,.4);max-width:460px;line-height:1.5}
-      .doc-title{background:linear-gradient(135deg,#1e1b4b,#2e1065);border:1px solid #8b5cf6;border-radius:12px;padding:20px 24px;margin-bottom:24px;text-align:center}
-      .doc-title h1{font-size:17px;font-weight:900;color:#fff;margin-bottom:4px}
-      .doc-title .sub{color:#c4b5fd;font-size:12px}
-      .badge{display:inline-block;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:700;margin:0 4px}
-      .enonce{background:#1a1a35;border:1px solid rgba(255,255,255,.1);border-left:4px solid #8b5cf6;border-radius:8px;padding:16px 18px;margin-bottom:8px;font-size:13px;color:#e2e8f0;line-height:1.8}
-    .enonce-text{background:#1a1a35;border:1px solid rgba(255,255,255,.1);border-left:4px solid #8b5cf6;border-radius:8px;padding:12px 18px;margin-bottom:20px;white-space:pre-wrap;font-size:13px;color:#e2e8f0;line-height:1.8}
-      .section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;margin-top:20px}
-      .answer-block{background:#0f2040;border:1px solid #3b82f6;border-radius:10px;padding:14px 18px;white-space:pre-wrap;font-size:13px;color:#bfdbfe;line-height:1.8}
-      .correction-block{background:#0c1a10;border:1px solid #10b981;border-radius:10px;padding:16px 20px;margin-top:20px}
-      .correction-block h2{color:#34d399;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
-      .hint-block{background:#1c2a10;border-left:3px solid #84cc16;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;color:#bef264;font-size:12px}
-      p{color:#cbd5e1;font-size:12.5px;margin:5px 0}
-      strong{color:#f1f5f9;font-weight:700}
-      em{color:#94a3b8}
-      code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.9em}
-      hr{border:0;border-top:1px solid rgba(255,255,255,.08);margin:16px 0}
-      .footer{margin-top:40px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.25);font-size:10.5px}
-      @media print{.print-bar{display:none!important}.wrap{padding:12px 20px}}
-    `
-    const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    const md2html = (s: string) => esc(s)
-      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g,'<em>$1</em>')
-      .replace(/`(.+?)`/g,'<code>$1</code>')
-
-    const feedbackHtml = feedback.split('\n').map(line => {
-      const t = line.trim()
-      if (!t) return '<div style="height:5px"></div>'
-      if (t.startsWith('## ')) return '<h3 style="color:#a5b4fc;font-size:14px;font-weight:800;margin:18px 0 8px">'+md2html(t.slice(3))+'</h3>'
-      if (t.startsWith('### ')) return '<h4 style="color:#e2e8f0;font-size:13px;font-weight:700;margin:12px 0 6px">'+md2html(t.slice(4))+'</h4>'
-      if (t.startsWith('> ')) return '<div style="background:#052e16;border:2px solid #10b981;border-radius:7px;padding:10px 14px;color:#6ee7b7;font-weight:700;margin:10px 0">'+md2html(t.slice(2))+'</div>'
-      if (t.startsWith('- ')) return '<div style="padding:3px 0 3px 18px;position:relative;color:#cbd5e1"><span style="position:absolute;left:4px;color:#8b5cf6;font-weight:700">›</span>'+md2html(t.slice(2))+'</div>'
-      if (t === '---') return '<hr>'
-      if (/^\*\*(Concept|Resultat|Bareme|Erreur|Astuce|Point)/i.test(t)) {
-        const bg = /Resultat/i.test(t)?'#052e16':/Erreur/i.test(t)?'#450a0a':/Bareme/i.test(t)?'#2e1065':'#1e3254'
-        const col = /Resultat/i.test(t)?'#6ee7b7':/Erreur/i.test(t)?'#fca5a5':/Bareme/i.test(t)?'#c4b5fd':'#bfdbfe'
-        return '<div style="background:'+bg+';border-radius:6px;padding:8px 14px;color:'+col+';margin:6px 0">'+md2html(t)+'</div>'
-      }
-      return '<p>'+md2html(t)+'</p>'
+  const openRemFeedbackPdf=(ex:AnalysisResult['remediationExercises'][number])=>{
+    const feedback=remFeedback[ex.id]||'',answer=remAnswers[ex.id]||''
+    const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const md2html=(s:string)=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>')
+    const feedbackHtml=feedback.split('\n').map(line=>{
+      const t=line.trim();if(!t)return '<div style="height:5px"></div>'
+      if(t.startsWith('## '))return '<h3 style="color:#a5b4fc;font-size:14px;font-weight:800;margin:18px 0 8px">'+md2html(t.slice(3))+'</h3>'
+      if(t.startsWith('### '))return '<h4 style="color:#e2e8f0;font-size:13px;font-weight:700;margin:12px 0 6px">'+md2html(t.slice(4))+'</h4>'
+      if(t.startsWith('> '))return '<div style="background:#052e16;border:2px solid #10b981;border-radius:7px;padding:10px 14px;color:#6ee7b7;font-weight:700;margin:10px 0">'+md2html(t.slice(2))+'</div>'
+      if(t.startsWith('- '))return '<div style="padding:3px 0 3px 18px;position:relative;color:#cbd5e1"><span style="position:absolute;left:4px;color:#8b5cf6;font-weight:700">›</span>'+md2html(t.slice(2))+'</div>'
+      if(t==='---')return '<hr style="border:0;border-top:1px solid rgba(255,255,255,.08);margin:12px 0">'
+      return '<p style="margin:4px 0;color:#cbd5e1;font-size:12.5px">'+md2html(t)+'</p>'
     }).join('\n')
-
-    const hintHtml = ex.hint
-      ? '<div class="hint-block"><strong>💡 Indice :</strong> '+esc(ex.hint)+'</div>' : ''
-    const answerHtml = answer.trim()
-      ? '<div class="section-label" style="color:#93c5fd">Ma réponse soumise</div><div class="answer-block">'+esc(answer)+'</div>' : ''
-
-    const html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Correction Remédiation — '+esc(ex.theme)+'</title><style>'+css+'</style></head><body><div class="wrap">'
-      +'<div class="print-bar"><button class="print-btn" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button>'
-      +'<span class="print-hint">Boîte d\'impression → <strong style="color:rgba(255,255,255,.6)">Enregistrer en PDF</strong> · Activez <strong style="color:rgba(255,255,255,.6)">Couleurs de fond</strong></span></div>'
-      +'<div class="doc-title"><h1>Exercice de remédiation</h1>'
-      +'<div class="sub">'+esc(ex.theme)
-        +' · <span class="badge" style="background:rgba(139,92,246,.2);color:#c4b5fd">'+esc(diffLabel[ex.difficulty]||ex.difficulty)+'</span>'
-        +' · '+esc(ex.objective)+'</div></div>'
-      +'<div class="section-label" style="color:#94a3b8">Énoncé</div>'
-      +'<div class="enonce">'+''+'</div>'
-      +'<div class="enonce-text">'+ex.statement+'</div>'
-      +hintHtml
-      +answerHtml
+    const diffLabel:Record<string,string>={introductory:'Introductif',standard:'Standard',advanced:'Avancé'}
+    const html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Correction Remédiation — '+esc(ex.theme)+'</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Inter","Segoe UI",system-ui,sans-serif;background:#0c0c1a;color:#e2e8f0;font-size:13.5px;line-height:1.8;-webkit-print-color-adjust:exact;print-color-adjust:exact}.wrap{max-width:820px;margin:0 auto;padding:28px 36px 60px}.print-bar{position:sticky;top:0;z-index:99;background:#0c0c1a;border-bottom:1px solid rgba(255,255,255,.1);padding:10px 0 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px}.print-btn{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}.doc-title{background:linear-gradient(135deg,#1e1b4b,#2e1065);border:1px solid #8b5cf6;border-radius:12px;padding:20px 24px;margin-bottom:24px;text-align:center}.doc-title h1{font-size:17px;font-weight:900;color:#fff;margin-bottom:4px}.doc-title .sub{color:#c4b5fd;font-size:12px}.enonce{background:#1a1a35;border-left:4px solid #8b5cf6;border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:13px;white-space:pre-wrap}.answer-block{background:#0f2040;border:1px solid #3b82f6;border-radius:8px;padding:12px 16px;white-space:pre-wrap;font-size:13px;color:#bfdbfe;margin-bottom:16px}.correction-block{background:#0c1a10;border:1px solid #10b981;border-radius:10px;padding:16px 20px}.correction-block h2{color:#34d399;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}.footer{margin-top:40px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);text-align:center;color:rgba(255,255,255,.25);font-size:10.5px}@media print{.print-bar{display:none!important}}</style></head><body><div class="wrap">'
+      +'<div class="print-bar"><button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button></div>'
+      +'<div class="doc-title"><h1>Exercice de remédiation</h1><div class="sub">'+esc(ex.theme)+' · '+esc(diffLabel[ex.difficulty]||ex.difficulty)+' · '+esc(ex.objective)+'</div></div>'
+      +'<div class="enonce">'+esc(ex.statement)+'</div>'
+      +(ex.hint?'<div style="background:#1c2a10;border-left:3px solid #84cc16;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:14px;color:#bef264;font-size:12px">💡 Indice : '+esc(ex.hint)+'</div>':'')
+      +(answer?'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#93c5fd;margin-bottom:8px">Ma réponse</div><div class="answer-block">'+esc(answer)+'</div>':'')
       +'<div class="correction-block"><h2>🤖 Correction IA personnalisée</h2>'+feedbackHtml+'</div>'
-      +'<div class="footer">MathAI Coach — Remédiation · '+esc(ex.theme)+' · '+new Date().toLocaleDateString('fr-FR')+'</div>'
+      +'<div class="footer">MathBac.AI — Remédiation · '+esc(ex.theme)+' · '+new Date().toLocaleDateString('fr-FR')+'</div>'
       +'</div></body></html>'
-
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url  = URL.createObjectURL(blob)
-    const win  = window.open(url, '_blank')
-    if (!win) {
-      const a = document.createElement('a')
-      a.href = url; a.download = 'Remediation-'+ex.theme.replace(/[^\w-]/g,'-')+'.html'
-      a.click()
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 8000)
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'})
+    const url=URL.createObjectURL(blob)
+    const win=window.open(url,'_blank')
+    if(!win){const a=document.createElement('a');a.href=url;a.download='Remediation-'+ex.theme.replace(/[^\w-]/g,'-')+'.html';a.click()}
+    setTimeout(()=>URL.revokeObjectURL(url),8000)
   }
 
-  const checkRemediation = async(ex:AnalysisResult['remediationExercises'][number]) => {
+  const checkRemediation=async(ex:AnalysisResult['remediationExercises'][number])=>{
     setRemLoading(p=>({...p,[ex.id]:true}))
-    const feedback = await correctRemediationExercise(ex, remAnswers[ex.id]||'')
+    await incrementQuotaSub('remediation')
+    const feedback=await correctRemediationExercise(ex,remAnswers[ex.id]||'')
     setRemFeedback(p=>({...p,[ex.id]:feedback}))
     setRemLoading(p=>({...p,[ex.id]:false}))
   }
 
-  if (!analysis) {
-    return (
-      <div style={{textAlign:'center',padding:'60px 20px'}}>
+  if(!analysis){
+    return(
+      <div style={{textAlign:'center',padding:'60px 20px',color:'white',fontFamily:'system-ui'}}>
         <div style={{fontSize:52,marginBottom:16,animation:'float 2s ease-in-out infinite'}}>🔬</div>
-        <h3 style={{color:'#e2e8f0'}}>Analyse en cours...</h3>
-        <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>
-          L&apos;IA identifie vos points faibles et prepare vos exercices de remediation
-        </p>
+        <h3 style={{color:'#e2e8f0'}}>Analyse en cours…</h3>
+        <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>L&apos;IA identifie vos points faibles</p>
         <div style={{width:260,height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',margin:'24px auto 0',overflow:'hidden'}}>
           <div style={{height:'100%',background:'linear-gradient(90deg,#8b5cf6,#ec4899)',borderRadius:4,animation:'slideBar 1.8s ease-in-out infinite'}}/>
         </div>
+        <style>{`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}@keyframes slideBar{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}`}</style>
       </div>
     )
   }
 
-  const scoreColor = analysis.estimatedScore/analysis.maxScore >= 0.7 ? '#10b981'
-    : analysis.estimatedScore/analysis.maxScore >= 0.5 ? '#f59e0b' : '#ef4444'
-  const scorePct = Math.round((analysis.estimatedScore/analysis.maxScore)*100)
-  const sevColor: Record<string,string> = {critical:'#ef4444',moderate:'#f59e0b',good:'#10b981'}
-  const sevLabel: Record<string,string> = {critical:'Priorite haute',moderate:'A ameliorer',good:'Maitrise'}
-  const diffColor: Record<string,string> = {introductory:'#10b981',standard:'#f59e0b',advanced:'#ef4444'}
-  const diffLabel: Record<string,string> = {introductory:'Introductif',standard:'Standard',advanced:'Avance'}
+  const scoreColor=analysis.estimatedScore/analysis.maxScore>=0.7?'#10b981':analysis.estimatedScore/analysis.maxScore>=0.5?'#f59e0b':'#ef4444'
+  const scorePct=Math.round((analysis.estimatedScore/analysis.maxScore)*100)
+  const sevColor:Record<string,string>={critical:'#ef4444',moderate:'#f59e0b',good:'#10b981'}
+  const sevLabel:Record<string,string>={critical:'Priorité haute',moderate:'À améliorer',good:'Maîtrise'}
+  const diffColor:Record<string,string>={introductory:'#10b981',standard:'#f59e0b',advanced:'#ef4444'}
+  const diffLabel:Record<string,string>={introductory:'Introductif',standard:'Standard',advanced:'Avancé'}
 
-  return (
-    <div>
-      {/* Score + resume */}
-      <div style={{display:'grid',gridTemplateColumns:'160px 1fr',gap:24,marginBottom:32,padding:'24px 28px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,alignItems:'center'}}>
-        <div style={{textAlign:'center'}}>
-          <svg width="120" height="120" style={{transform:'rotate(-90deg)'}}>
-            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
-            <circle cx="60" cy="60" r="50" fill="none" stroke={scoreColor} strokeWidth="10"
-              strokeDasharray={`${(scorePct/100)*314} 314`} strokeLinecap="round"
-              style={{transition:'stroke-dasharray 1.2s ease'}}/>
-          </svg>
-          <div style={{marginTop:-60,marginBottom:40}}>
-            <div style={{fontSize:42,fontWeight:900,color:scoreColor}}>{analysis.estimatedScore}</div>
-            <div style={{fontSize:16,color:'rgba(255,255,255,0.35)'}}>/{analysis.maxScore}</div>
+  return(
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
+      <Navbar/>
+      <div style={{maxWidth:900,margin:'0 auto',padding:'80px 20px 60px'}}>
+
+        {/* Header bilan */}
+        <div style={{marginBottom:32,textAlign:'center'}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(245,158,11,0.1)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:50,padding:'8px 20px',marginBottom:16}}>
+            <span>🏆</span><span style={{color:'#fbbf24',fontWeight:700,fontSize:13}}>Bac Blanc Jour {exam.day} — {exam.section}</span>
           </div>
-          <div style={{fontSize:12,fontWeight:700,color:scoreColor}}>
-            {scorePct>=80?'Excellent ! 🏆':scorePct>=60?'Bien 👍':scorePct>=40?'En progres':'A travailler 💪'}
-          </div>
+          <h2 style={{fontSize:22,color:'white',margin:'0 0 4px'}}>{candidat.prenom} {candidat.nom}</h2>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,margin:0}}>{candidat.lycee} · {candidat.gouvernorat}</p>
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:14}}>
 
-          {analysis.globalAdvice.length>0&&(
-            <div>
-              <p style={{fontSize:11,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Recommandations personnalisees</p>
-              <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                {analysis.globalAdvice.map((a,i)=>(
-                  <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'7px 13px',background:'rgba(99,102,241,0.08)',borderRadius:9,fontSize:12,color:'rgba(255,255,255,0.7)'}}>
-                    <span style={{color:'#6366f1',fontWeight:700,flexShrink:0}}>{i+1}.</span>{a}
-                  </div>
-                ))}
-              </div>
+        {/* Score + résumé */}
+        <div style={{display:'grid',gridTemplateColumns:'160px 1fr',gap:24,marginBottom:32,padding:'24px 28px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,alignItems:'center'}}>
+          <div style={{textAlign:'center'}}>
+            <svg width="120" height="120" style={{transform:'rotate(-90deg)'}}>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke={scoreColor} strokeWidth="10"
+                strokeDasharray={`${(scorePct/100)*314} 314`} strokeLinecap="round" style={{transition:'stroke-dasharray 1.2s ease'}}/>
+            </svg>
+            <div style={{marginTop:-60,marginBottom:40}}>
+              <div style={{fontSize:42,fontWeight:900,color:scoreColor}}>{analysis.estimatedScore}</div>
+              <div style={{fontSize:16,color:'rgba(255,255,255,0.35)'}}>/{analysis.maxScore}</div>
             </div>
-          )}
-        </div>
-      </div>
+            <div style={{fontSize:12,fontWeight:700,color:scoreColor}}>
+              {scorePct>=80?'Excellent ! 🏆':scorePct>=60?'Bien 👍':scorePct>=40?'En progrès':'À travailler 💪'}
+            </div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:14}}>
 
-      {/* Analyse par theme */}
-      {analysis.weakAreas.length>0&&(
-        <div style={{marginBottom:32}}>
-          <h4 style={{margin:'0 0 14px',display:'flex',alignItems:'center',gap:8,color:'#e2e8f0'}}>
-            Analyse par theme
-          </h4>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:12}}>
-            {[...analysis.weakAreas].sort((a,b)=>a.priority-b.priority).map((w,i)=>{
-              const c = sevColor[w.severity]||'#10b981'
-              return (
-                <div key={i} style={{padding:'15px 18px',background:'rgba(255,255,255,0.03)',borderLeft:`3px solid ${c}`,border:`1px solid rgba(255,255,255,0.06)`,borderRadius:12}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:7,gap:8}}>
-                    <span style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.85)'}}>{w.theme}</span>
-                    <span style={{fontSize:9,background:`${c}20`,color:c,padding:'2px 8px',borderRadius:10,fontWeight:700,flexShrink:0}}>{sevLabel[w.severity]}</span>
-                  </div>
-                  <p style={{fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.65,margin:0}}>{w.description}</p>
+            {analysis.globalAdvice.length>0&&(
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 8px'}}>Recommandations personnalisées</p>
+                <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                  {analysis.globalAdvice.map((a,i)=>(
+                    <div key={i} style={{display:'flex',gap:10,alignItems:'flex-start',padding:'7px 13px',background:'rgba(99,102,241,0.08)',borderRadius:9,fontSize:12,color:'rgba(255,255,255,0.7)'}}>
+                      <span style={{color:'#6366f1',fontWeight:700,flexShrink:0}}>{i+1}.</span>{a}
+                    </div>
+                  ))}
                 </div>
-              )
-            })}
+              </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Exercices de remediation */}
-      {analysis.remediationExercises.length>0&&(
-        <div style={{marginBottom:32}}>
-          <h4 style={{margin:'0 0 6px',color:'#e2e8f0'}}>Exercices de remediation personnalises</h4>
-          <p style={{fontSize:13,color:'rgba(255,255,255,0.4)',marginBottom:20}}>
-            Exercices crees pour renforcer vos points faibles. Soumettez vos reponses pour une correction IA instantanee.
-          </p>
-          <div style={{display:'flex',flexDirection:'column',gap:20}}>
-            {analysis.remediationExercises.map((ex,i)=>{
-              const dc = diffColor[ex.difficulty]||'#f59e0b'
-              const hasFeedback = !!remFeedback[ex.id]
-              return (
-                <div key={ex.id} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:18,overflow:'hidden'}}>
-                  <div style={{padding:'14px 20px',background:'rgba(255,255,255,0.03)',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-                    <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                      <div style={{width:30,height:30,borderRadius:8,background:`${dc}20`,border:`1px solid ${dc}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:dc,flexShrink:0}}>{i+1}</div>
-                      <div>
-                        <p style={{margin:0,fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.85)'}}>{ex.theme}</p>
-                        <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.35)'}}>{ex.objective}</p>
-                      </div>
+        {/* Analyse par thème */}
+        {analysis.weakAreas.length>0&&(
+          <div style={{marginBottom:32}}>
+            <h4 style={{margin:'0 0 14px',display:'flex',alignItems:'center',gap:8,color:'#e2e8f0'}}>Analyse par thème</h4>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(270px,1fr))',gap:12}}>
+              {[...analysis.weakAreas].sort((a,b)=>a.priority-b.priority).map((w,i)=>{
+                const c=sevColor[w.severity]||'#10b981'
+                return(
+                  <div key={i} style={{padding:'15px 18px',background:'rgba(255,255,255,0.03)',borderLeft:`3px solid ${c}`,border:`1px solid rgba(255,255,255,0.06)`,borderRadius:12}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:7,gap:8}}>
+                      <span style={{fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.85)'}}>{w.theme}</span>
+                      <span style={{fontSize:9,background:`${c}20`,color:c,padding:'2px 8px',borderRadius:10,fontWeight:700,flexShrink:0}}>{sevLabel[w.severity]}</span>
                     </div>
-                    <span style={{fontSize:10,fontWeight:700,color:dc,background:`${dc}15`,padding:'3px 12px',borderRadius:10}}>{diffLabel[ex.difficulty]}</span>
+                    <p style={{fontSize:12,color:'rgba(255,255,255,0.5)',lineHeight:1.65,margin:0}}>{w.description}</p>
                   </div>
-                  <div style={{padding:'20px 20px 0'}}>
-                    <div style={{marginBottom:14,padding:'14px 16px',background:'rgba(0,0,0,0.2)',borderRadius:11}}>
-                      <p style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',margin:'0 0 8px'}}>Enonce</p>
-                      {(ex as any).graph && (ex as any).graph !== 'null' && <TextWithGraphs text={(ex as any).graph} />}
-                      <TextWithGraphs text={ex.statement} />
-                    </div>
-                    <div style={{marginBottom:14}}>
-                      <button onClick={()=>setShowHint(p=>({...p,[ex.id]:!p[ex.id]}))}
-                        style={{fontSize:12,fontWeight:600,color:'#fbbf24',background:'rgba(251,191,36,0.08)',border:'1px solid rgba(251,191,36,0.2)',borderRadius:9,padding:'7px 14px',cursor:'pointer',fontFamily:'inherit'}}>
-                        {showHint[ex.id]?'Masquer':'Voir'} indice
-                      </button>
-                      {showHint[ex.id]&&(
-                        <div style={{marginTop:8,padding:'11px 15px',background:'rgba(251,191,36,0.06)',border:'1px solid rgba(251,191,36,0.18)',borderRadius:9,fontSize:12,color:'rgba(255,255,255,0.65)'}}>
-                          {ex.hint}
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Exercices de remédiation */}
+        {analysis.remediationExercises.length>0&&(
+          <div style={{marginBottom:32}}>
+            <h4 style={{margin:'0 0 6px',color:'#e2e8f0'}}>Exercices de remédiation personnalisés</h4>
+            <p style={{fontSize:13,color:'rgba(255,255,255,0.4)',marginBottom:20}}>Exercices créés pour renforcer vos points faibles. Soumettez vos réponses pour une correction IA instantanée.</p>
+            <div style={{display:'flex',flexDirection:'column',gap:20}}>
+              {analysis.remediationExercises.map((ex,i)=>{
+                const dc=diffColor[ex.difficulty]||'#f59e0b'
+                const hasFeedback=!!remFeedback[ex.id]
+                return(
+                  <div key={ex.id} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:18,overflow:'hidden'}}>
+                    <div style={{padding:'14px 20px',background:'rgba(255,255,255,0.03)',borderBottom:'1px solid rgba(255,255,255,0.06)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
+                      <div style={{display:'flex',gap:10,alignItems:'center'}}>
+                        <div style={{width:30,height:30,borderRadius:8,background:`${dc}20`,border:`1px solid ${dc}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:dc,flexShrink:0}}>{i+1}</div>
+                        <div>
+                          <p style={{margin:0,fontWeight:700,fontSize:13,color:'rgba(255,255,255,0.85)'}}>{ex.theme}</p>
+                          <p style={{margin:0,fontSize:11,color:'rgba(255,255,255,0.35)'}}>{ex.objective}</p>
                         </div>
-                      )}
+                      </div>
+                      <span style={{fontSize:10,fontWeight:700,color:dc,background:`${dc}15`,padding:'3px 12px',borderRadius:10}}>{diffLabel[ex.difficulty]}</span>
                     </div>
-                    {!hasFeedback&&(
+                    <div style={{padding:'20px 20px 0'}}>
+                      <div style={{marginBottom:14,padding:'14px 16px',background:'rgba(0,0,0,0.2)',borderRadius:11}}>
+                        <p style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',margin:'0 0 8px'}}>Énoncé</p>
+                        {ex.graph&&ex.graph!=='null'&&<TextWithGraphs text={ex.graph}/>}
+                        <TextWithGraphs text={ex.statement}/>
+                      </div>
                       <div style={{marginBottom:14}}>
-                        {/* Barre outils réponse */}
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,flexWrap:'wrap',gap:6}}>
-                          <span style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Votre réponse</span>
-                          <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                            {remSavedMsg[ex.id] && (
-                              <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'2px 8px',background:'rgba(16,185,129,0.1)',borderRadius:5}}>
-                                ✓ {remSavedMsg[ex.id]}
-                              </span>
-                            )}
-                            {/* Import fichier */}
-                            <button
-                              onClick={()=>remFileRefs.current[ex.id]?.click()}
-                              style={{padding:'4px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',cursor:'pointer',fontSize:11,fontWeight:600,fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}
-                              title="Importer un fichier .txt ou une photo">
-                              📁 Importer
-                            </button>
-                            <input
-                              ref={el=>{ remFileRefs.current[ex.id]=el }}
-                              type="file" accept=".txt,.md,.jpg,.jpeg,.png,.webp"
-                              multiple onChange={e=>handleRemFile(e, ex.id)}
-                              style={{display:'none'}}/>
-                            {/* Télécharger réponse */}
-                            <button
-                              onClick={()=>downloadRemAnswer(ex)}
-                              disabled={!remAnswers[ex.id]?.trim()}
-                              style={{padding:'4px 10px',borderRadius:7,
-                                border:'1px solid rgba(99,102,241,0.3)',
-                                background:remAnswers[ex.id]?.trim()?'rgba(99,102,241,0.1)':'transparent',
-                                color:remAnswers[ex.id]?.trim()?'#a5b4fc':'rgba(255,255,255,0.2)',
-                                cursor:remAnswers[ex.id]?.trim()?'pointer':'not-allowed',
-                                fontSize:11,fontWeight:600,fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}
-                              title="Télécharger ma réponse en .txt">
-                              ⬇ Sauvegarder
-                            </button>
-                          </div>
-                        </div>
-                        <textarea
-                          value={remAnswers[ex.id]||''}
-                          onChange={e=>setRemAnswers(p=>({...p,[ex.id]:e.target.value}))}
-                          placeholder="Rédigez votre réponse ici, ou importez un fichier .txt..."
-                          style={{width:'100%',height:110,padding:'12px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(0,0,0,0.2)',color:'rgba(255,255,255,0.8)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.75,boxSizing:'border-box',transition:'border 0.2s'}}
-                          onFocus={e=>e.target.style.borderColor='rgba(99,102,241,0.4)'}
-                          onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.09)'}/>
-                        {remAnswers[ex.id] && (
-                          <p style={{fontSize:10,color:'rgba(255,255,255,0.2)',margin:'4px 0 0',textAlign:'right'}}>{remAnswers[ex.id].length} caractères</p>
+                        <button onClick={()=>setShowHint(p=>({...p,[ex.id]:!p[ex.id]}))}
+                          style={{fontSize:12,fontWeight:600,color:'#fbbf24',background:'rgba(251,191,36,0.08)',border:'1px solid rgba(251,191,36,0.2)',borderRadius:9,padding:'7px 14px',cursor:'pointer',fontFamily:'inherit'}}>
+                          {showHint[ex.id]?'Masquer':'Voir'} indice
+                        </button>
+                        {showHint[ex.id]&&(
+                          <div style={{marginTop:8,padding:'11px 15px',background:'rgba(251,191,36,0.06)',border:'1px solid rgba(251,191,36,0.18)',borderRadius:9,fontSize:12,color:'rgba(255,255,255,0.65)'}}>{ex.hint}</div>
                         )}
                       </div>
-                    )}
-                    <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}}>
                       {!hasFeedback&&(
-                        <PrimaryBtn onClick={()=>checkRemediation(ex)} loading={remLoading[ex.id]}>
-                          {remLoading[ex.id]?'Correction en cours...':'Corriger par IA →'}
-                        </PrimaryBtn>
-                      )}
-                      <button onClick={()=>setShowCorrection(p=>({...p,[ex.id]:!p[ex.id]}))}
-                        style={{padding:'9px 16px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.45)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
-                        {showCorrection[ex.id]?'Masquer':'Voir'} correction officielle
-                      </button>
-                    </div>
-                    {showCorrection[ex.id]&&(
-                      <div style={{marginBottom:16,padding:'14px 16px',background:'rgba(16,185,129,0.06)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:10}}>
-                        <MD text={ex.officialCorrection}/>
-                      </div>
-                    )}
-                    {hasFeedback&&(
-                      <div style={{marginBottom:20,padding:'16px 18px',background:'rgba(99,102,241,0.07)',border:'1px solid rgba(99,102,241,0.22)',borderRadius:12}}>
-                        {/* Header feedback */}
-                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,flexWrap:'wrap',gap:8}}>
-                          <p style={{fontSize:10,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',margin:0}}>🤖 Correction IA personnalisée</p>
-                          <div style={{display:'flex',gap:7,alignItems:'center',flexWrap:'wrap'}}>
-                            {remSavedMsg[ex.id] && (
-                              <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'2px 8px',background:'rgba(16,185,129,0.1)',borderRadius:5}}>
-                                ✓ {remSavedMsg[ex.id]}
-                              </span>
-                            )}
-                            {/* Télécharger .txt */}
-                            <button onClick={()=>downloadRemFeedback(ex)}
-                              style={{padding:'5px 10px',borderRadius:7,
-                                border:'1px solid rgba(255,255,255,0.12)',
-                                background:'rgba(255,255,255,0.05)',
-                                color:'rgba(255,255,255,0.55)',cursor:'pointer',
-                                fontSize:11,fontWeight:600,fontFamily:'inherit',
-                                display:'flex',alignItems:'center',gap:4}}
-                              title="Télécharger en .txt">
-                              📄 .txt
-                            </button>
-                            {/* Ouvrir PDF coloré */}
-                            <button onClick={()=>openRemFeedbackPdf(ex)}
-                              style={{padding:'5px 12px',borderRadius:7,
-                                border:'1px solid rgba(99,102,241,0.35)',
-                                background:'rgba(99,102,241,0.12)',
-                                color:'#a5b4fc',cursor:'pointer',
-                                fontSize:11,fontWeight:700,fontFamily:'inherit',
-                                display:'flex',alignItems:'center',gap:5}}
-                              title="Ouvrir correction colorée → Imprimer → PDF">
-                              🎨 PDF coloré
-                            </button>
+                        <div style={{marginBottom:14}}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6,flexWrap:'wrap',gap:6}}>
+                            <span style={{fontSize:11,fontWeight:600,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Votre réponse</span>
+                            <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                              {remSavedMsg[ex.id]&&<span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'2px 8px',background:'rgba(16,185,129,0.1)',borderRadius:5}}>✓ {remSavedMsg[ex.id]}</span>}
+                              <button onClick={()=>remFileRefs.current[ex.id]?.click()}
+                                style={{padding:'4px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.04)',color:'rgba(255,255,255,0.45)',cursor:'pointer',fontSize:11,fontWeight:600,fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}>
+                                📁 Importer
+                              </button>
+                              <input ref={el=>{remFileRefs.current[ex.id]=el}} type="file" accept=".txt,.md,.jpg,.jpeg,.png,.webp" multiple onChange={e=>handleRemFile(e,ex.id)} style={{display:'none'}}/>
+                              <button onClick={()=>downloadRemAnswer(ex)} disabled={!remAnswers[ex.id]?.trim()}
+                                style={{padding:'4px 10px',borderRadius:7,border:'1px solid rgba(99,102,241,0.3)',background:remAnswers[ex.id]?.trim()?'rgba(99,102,241,0.1)':'transparent',color:remAnswers[ex.id]?.trim()?'#a5b4fc':'rgba(255,255,255,0.2)',cursor:remAnswers[ex.id]?.trim()?'pointer':'not-allowed',fontSize:11,fontWeight:600,fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}>
+                                ⬇ Sauvegarder
+                              </button>
+                            </div>
                           </div>
+                          <textarea value={remAnswers[ex.id]||''} onChange={e=>setRemAnswers(p=>({...p,[ex.id]:e.target.value}))}
+                            placeholder="Rédigez votre réponse ici, ou importez un fichier .txt…"
+                            style={{width:'100%',height:110,padding:'12px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(0,0,0,0.2)',color:'rgba(255,255,255,0.8)',fontSize:13,resize:'vertical',outline:'none',fontFamily:'inherit',lineHeight:1.75,boxSizing:'border-box' as any}}/>
                         </div>
-                        <MD text={remFeedback[ex.id]}/>
-                        <button
-                          onClick={()=>{
-                            setRemFeedback(p=>{const n={...p};delete n[ex.id];return n})
-                            setRemAnswers(p=>({...p,[ex.id]:''}))
-                          }}
-                          style={{marginTop:14,fontSize:11,padding:'6px 14px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.35)',cursor:'pointer',fontFamily:'inherit'}}>
-                          ↩ Refaire cet exercice
+                      )}
+                      <div style={{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}}>
+                        {!hasFeedback&&(
+                          <PrimaryBtn onClick={()=>checkRemediation(ex)} loading={remLoading[ex.id]}>
+                            {remLoading[ex.id]?'Correction en cours…':'Corriger par IA →'}
+                          </PrimaryBtn>
+                        )}
+                        <button onClick={()=>setShowCorrection(p=>({...p,[ex.id]:!p[ex.id]}))}
+                          style={{padding:'9px 16px',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',background:'transparent',color:'rgba(255,255,255,0.45)',cursor:'pointer',fontSize:12,fontWeight:600,fontFamily:'inherit'}}>
+                          {showCorrection[ex.id]?'Masquer':'Voir'} correction officielle
                         </button>
                       </div>
-                    )}
+                      {showCorrection[ex.id]&&(
+                        <div style={{marginBottom:16,padding:'14px 16px',background:'rgba(16,185,129,0.06)',border:'1px solid rgba(16,185,129,0.2)',borderRadius:10}}>
+                          <MD text={ex.officialCorrection}/>
+                        </div>
+                      )}
+                      {hasFeedback&&(
+                        <div style={{marginBottom:20,padding:'16px 18px',background:'rgba(99,102,241,0.07)',border:'1px solid rgba(99,102,241,0.22)',borderRadius:12}}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12,flexWrap:'wrap',gap:8}}>
+                            <p style={{fontSize:10,fontWeight:700,color:'#a5b4fc',textTransform:'uppercase',margin:0}}>🤖 Correction IA personnalisée</p>
+                            <div style={{display:'flex',gap:7,alignItems:'center',flexWrap:'wrap'}}>
+                              {remSavedMsg[ex.id]&&<span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'2px 8px',background:'rgba(16,185,129,0.1)',borderRadius:5}}>✓ {remSavedMsg[ex.id]}</span>}
+                              <button onClick={()=>downloadRemFeedback(ex)}
+                                style={{padding:'5px 10px',borderRadius:7,border:'1px solid rgba(255,255,255,0.12)',background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.55)',cursor:'pointer',fontSize:11,fontWeight:600,fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}>📄 .txt</button>
+                              <button onClick={()=>openRemFeedbackPdf(ex)}
+                                style={{padding:'5px 12px',borderRadius:7,border:'1px solid rgba(99,102,241,0.35)',background:'rgba(99,102,241,0.12)',color:'#a5b4fc',cursor:'pointer',fontSize:11,fontWeight:700,fontFamily:'inherit',display:'flex',alignItems:'center',gap:5}}>🎨 PDF coloré</button>
+                            </div>
+                          </div>
+                          <MD text={remFeedback[ex.id]}/>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      <div style={{marginTop:20,padding:'28px 32px',background:'linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.06))',border:'1px solid rgba(99,102,241,0.2)',borderRadius:20,textAlign:'center'}}>
-        <p style={{fontSize:22,marginBottom:8}}>🚀</p>
-        <h4 style={{margin:'0 0 8px',color:'#e2e8f0',fontSize:17}}>Pret pour une nouvelle simulation ?</h4>
-        <p style={{fontSize:13,color:'rgba(255,255,255,0.4)',marginBottom:20}}>Chaque session renforce vos competences.</p>
-        <PrimaryBtn onClick={onRestart}>Nouvelle simulation →</PrimaryBtn>
-      </div>
-    </div>
-  )
-}
-
-
-
-// ═══════════════════════════════════════════════════════════════════
-// PHASE GÉNÉRATION — MODE CHAPITRE (1 seul examen ciblé)
-// ═══════════════════════════════════════════════════════════════════
-function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: {
-  chapitres: {titre:string;badge:string;desc:string}[]
-  sectionLabel: string
-  onDone: (exams: GeneratedExam[]) => void
-  matiere?: string
-}) {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
-  const matiereMapC: Record<string,string> = {
-    maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
-  }
-  globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
-  const [exams, setExams] = useState<GeneratedExam[]>([])
-  const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState('')
-  const started = useRef(false)
-
-  // Quota cumulé tous abonnements
-  const simUsed  = quotas ? sumQuotasAcrossMatiere(quotas)?.simulations_used || 0 : 0
-  const simLimit = quotaLimits.simulations_per_week
-  const isUnlimited  = isAdmin || simLimit === -1
-  const limitReached = !isUnlimited && simUsed >= simLimit
-
-  const generateNext = useCallback(async (idx: number) => {
-    setGenerating(true); setError('')
-    try {
-      const sectionKey = Object.values(CHAPITRES_PAR_SECTION).find(s=>s.label===sectionLabel)?.key || 'maths'
-      const exam = await generateChapterExam(chapitres, sectionKey, sectionLabel, idx)
-      setExams(prev => [...prev, exam])
-      await incrementQuotaSub('simulations')
-    } catch(e) {
-      setError('Erreur lors de la génération. Vérifiez votre connexion.')
-    }
-    setGenerating(false)
-  }, [chapitres, sectionLabel, incrementQuotaSub])
-
-  useEffect(() => {
-    if (started.current) return
-    started.current = true
-    if (!isAdmin && !checkQuota('simulations')) return
-    generateNext(0)
-  }, [])
-
-  const canStart = exams.length > 0
-
-  const BADGE_COLORS: Record<string,string> = {
-    'Analyse':'#6366f1','Algèbre':'#8b5cf6','Géométrie':'#06d6a0',
-    'Intégration':'#10b981','Probabilités':'#f59e0b','Statistiques':'#f97316',
-    'Finance':'#ec4899','Fondements':'#a78bfa','Maths':'#6366f1',
-    'Génétique':'#4f6ef7','Milieu intérieur':'#10b981','Neurophysiologie':'#06b6d4',
-    'Immunité':'#8b5cf6','Reproduction':'#ec4899','Nutrition':'#22c55e',
-    'Géologie & Évolution':'#f97316',
-  }
-
-  return (
-    <div>
-      <div style={{marginBottom:24}}>
-        <h3 style={{margin:'0 0 6px',fontSize:20,color:'#e2e8f0'}}>📚 Génération de votre examen ciblé</h3>
-        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:10}}>
-          {chapitres.map(c=>{
-            const col = BADGE_COLORS[c.badge]||'#6366f1'
-            return (
-              <span key={c.titre} style={{display:'inline-flex',alignItems:'center',gap:5,fontSize:12,fontWeight:600,padding:'5px 12px',borderRadius:20,background:`${col}20`,color:col,border:`1px solid ${col}40`}}>
-                📚 {c.titre}
-              </span>
-            )
-          })}
-        </div>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:14,marginBottom:24}}>
-        {exams.map((ex, i)=>{
-          const colors = ['#06d6a0','#6366f1','#f59e0b','#8b5cf6','#ec4899']
-          const c = colors[i % colors.length]
-          return (
-            <div key={ex.id} style={{padding:'18px 20px',background:'rgba(255,255,255,0.05)',border:`1px solid ${c}40`,borderRadius:14}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-                <div style={{width:32,height:32,borderRadius:8,background:`${c}20`,border:`1px solid ${c}50`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:c}}>#{i+1}</div>
-                <span style={{fontSize:11,color:c,background:`${c}15`,padding:'3px 10px',borderRadius:8,fontWeight:700}}>{ex.totalPoints}/20</span>
-              </div>
-              <p style={{margin:'0 0 8px',fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)',lineHeight:1.3}}>
-                {ex.exercises.map(e=>e.theme).join(' · ')}
-              </p>
-              <div style={{marginTop:10,fontSize:11,color:'#6ee7b7',fontWeight:600}}>✓ Prêt</div>
+                )
+              })}
             </div>
-          )
-        })}
-
-        {generating && (
-          <div style={{padding:'18px 20px',background:'rgba(6,214,160,0.06)',border:'1px dashed rgba(6,214,160,0.3)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,minHeight:130}}>
-            <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid rgba(6,214,160,0.2)',borderTopColor:'#06d6a0',animation:'spin 0.8s linear infinite'}}/>
-            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>
-              Génération de l'examen ciblé sur<br/>{chapitres.map(c=>c.titre).join(', ')}...
-            </p>
           </div>
         )}
 
-        {!generating && exams.length < 3 && exams.length > 0 && !limitReached && (
-          <div onClick={()=>generateNext(exams.length)}
-            style={{padding:'18px 20px',background:'rgba(255,255,255,0.02)',border:'1px dashed rgba(255,255,255,0.12)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,cursor:'pointer',minHeight:130,transition:'all 0.2s'}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(6,214,160,0.4)';e.currentTarget.style.background='rgba(6,214,160,0.06)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.12)';e.currentTarget.style.background='rgba(255,255,255,0.02)'}}>
-            <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(6,214,160,0.15)',border:'1px solid rgba(6,214,160,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:'#06d6a0'}}>+</div>
-            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center',lineHeight:1.5}}>
-              Générer variante #{exams.length+1}<br/>
-              <span style={{fontSize:10,color:'rgba(255,255,255,0.25)'}}>Même chapitres, énoncé différent</span>
-            </p>
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <div style={{marginBottom:16,padding:'12px 16px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:10,display:'flex',justifyContent:'space-between',alignItems:'center',gap:12}}>
-          <span style={{fontSize:13,color:'#fca5a5'}}>⚠️ {error}</span>
-          <button onClick={()=>generateNext(exams.length)}
-            style={{fontSize:12,padding:'5px 12px',borderRadius:7,border:'1px solid rgba(239,68,68,0.4)',background:'transparent',color:'#fca5a5',cursor:'pointer',fontFamily:'inherit',flexShrink:0}}>
-            Réessayer
+        {/* Actions finales */}
+        <div style={{textAlign:'center',paddingTop:28,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
+          <p style={{color:'rgba(255,255,255,0.35)',fontSize:13,marginBottom:16}}>Revenez demain pour le concours du jour suivant !</p>
+          <button onClick={onRestart}
+            style={{padding:'12px 28px',borderRadius:10,border:'2px solid rgba(245,158,11,0.4)',background:'transparent',color:'#fbbf24',fontSize:14,fontWeight:700,cursor:'pointer'}}>
+            🏆 Nouveau concours →
           </button>
         </div>
-      )}
-
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12,paddingTop:4,borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.35)'}}>
-          {exams.length} variante{exams.length>1?'s':''} générée{exams.length>1?'s':''}
-          {isAdmin && ' · 👑 Admin — illimité'}
-        </p>
-        <PrimaryBtn onClick={()=>onDone(exams)} disabled={!canStart}
-          style={{background:'linear-gradient(135deg,#06d6a0,#059669)'}}>
-          {canStart ? `Choisir parmi ${exams.length} variante${exams.length>1?'s':''} →` : 'En attente...'}
-        </PrimaryBtn>
       </div>
-
-      <style>{`@keyframes fadeSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}`}</style>
+      <Footer/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}@keyframes slideBar{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}`}</style>
     </div>
   )
 }
 
-function SimulationIAPageInner() {
-  const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin, checkQuota, incrementQuota } = useAuth()
+// ════════════════════════════════════════════════════════════════════
+// COMPOSANT PRINCIPAL
+// ════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// COMPOSANT PRINCIPAL — avec quotas Supabase
+// ════════════════════════════════════════════════════════════════════
+function BacBlancInner() {
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits } = useAuth()
+  globalMatiere = matiereActive
 
-  // ── Matière active : maths ou physique (lu depuis ?subject=) ──
-  const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'>(() => {
-    if (typeof window === 'undefined') return 'maths'
-    const s = new URLSearchParams(window.location.search).get('subject')
-    return s === 'physique' ? 'physique' : s === 'anglais' ? 'anglais' : s === 'informatique' ? 'informatique' : s === 'svt' ? 'svt' : s === 'francais' ? 'francais' : s === 'economie' ? 'economie' : s === 'gestion' ? 'gestion' : 'maths'
-  })
-  const [phase, setPhase] = useState<Phase>('select')
-  const [archives, setArchives] = useState<Archive[]>([])
-  const [customText, setCustomText] = useState('')
-  const [generatedExams, setGeneratedExams] = useState<GeneratedExam[]>([])
-  const [activeExam, setActiveExam] = useState<GeneratedExam|null>(null)
-  const [examGraphs, setExamGraphs] = useState<Record<number,string>>({})
-  const [studentAnswers, setStudentAnswers] = useState('')
-  const [correctionText, setCorrectionText] = useState('')
-  const [gradeResult, setGradeResult] = useState<{score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null>(null)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult|null>(null)
-  const [analysePageData, setAnalysePageData] = useState<{
-    analysis: AnalysisResult
-    exercise: { title:string; theme:string; points:number; statement:string; graph?:string }
-    exerciseNum: number
-  } | null>(null)
+  // ── Logique Bac Blanc : 1 examen par matière par jour ──────────────────
+  // Avec N abonnements actifs → N matières disponibles par jour
+  // checkQuota hebdo gardé comme filet de sécurité anti-abus
+  const totalQuota    = sumQuotasAcrossMatiere(quotas)
+  const simUsed       = totalQuota.simulations_used || 0
+  const simLimit      = quotaLimits.simulations_per_week
+  const nbMatieres    = activeMatieres.length || 1   // nb d'abonnements actifs
 
-  // ── Mode chapitre ──
-  const [chapitresMode, setChapitresMode] = useState(false)
-  const [selectedChapitres, setSelectedChapitres] = useState<{titre:string;badge:string;desc:string}[]>([])
-  const [chapSectionLabel, setChapSectionLabel] = useState('')
+  // Vérifier si l'élève a déjà passé un examen pour une matière aujourd'hui
+  const todayStr = new Date().toISOString().split('T')[0]
+  function hasPassedTodayForMatiere(_matiere: string): boolean {
+    // Modèle hebdomadaire (5/semaine) : plus de plafond quotidien (1/jour) — seul bbWeekCount fait foi
+    return false
+  }
+  function markPassedTodayForMatiere(matiere: string) {
+    if (typeof window === 'undefined') return
+    const key = `bb_today_${matiere}_${todayStr}`
+    localStorage.setItem(key, '1')
+  }
 
-  const handleStart = useCallback(async (
-    arcs: Archive[], txt: string,
-    chapitres?: {titre:string;badge:string;desc:string}[],
-    sectionLabel?: string
-  ) => {
-    // ── Mode Correction Directe ──────────────────────────────
-    if (txt.startsWith('[CORRECTION_DIRECTE]')) {
+  const [phase, setPhase] = useState<Phase>('inscription')
+  const [candidat, setCandidat] = useState<Candidat|null>(null)
+  const [exam, setExam] = useState<BacExam|null>(null)
+  const [answers, setAnswers] = useState('')
+  const [corrections, setCorrections] = useState<Record<number,string>>({})
+  const [analysis, setAnalysis] = useState<AnalysisResult|null>(null)
+  const today = new Date()
+  // Période concours: 1er mai – 15 juin · Jour 1=1mai, Jour 46=15juin
+  const periodeStart = new Date(today.getFullYear(), 4, 1)
+  const periodeEnd   = new Date(today.getFullYear(), 5, 15)
+  const isInPeriode  = today >= periodeStart && today <= periodeEnd
+  // En dev: toujours actif (calcul libre même hors période)
+  const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
-      // 1. Vérification quota (correction directe compte comme 1 simulation)
-      if (!isAdmin && !checkQuota('simulations')) return
+  // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
+  // Limite Bac Blanc / semaine : 1 abonnement → 5 · 2 abonnements ou plus → 7 (≈ 1/jour mai-juin)
+  // (plan illimité conservé à -1). nbMatieres = nombre d'abonnements actifs.
+  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+    ? -1
+    : (nbMatieres >= 2 ? 7 : 5)
 
-      // 2. Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
-      if (!isAdmin && hasActiveSubscription) {
-        const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion' }[activeMatiere] || activeMatiere
-        if (!checkMatiereAccess(matiereUIKey as any)) {
-          const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
-          alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
-          return
-        }
-      }
+  // Compteur de visite
+  useEffect(() => { saveVisit() }, [])
 
-      // 3. Lire depuis correctionDirecteData (stockage direct, pas de regex)
-      const examContent = correctionDirecteData.examContent
-      const copyContent = correctionDirecteData.copyContent
-      const examImgsFromRef = correctionDirecteData.examImages
-
-      if (!examContent && examImgsFromRef.length === 0) {
-        alert("⚠️ Veuillez importer un sujet d'examen avant de lancer la correction.")
-        return
-      }
-
-      // 4. Déduire le label matière — si abonnement Anglais → Anglais, sinon depuis activeMatiere
-      const matiereLabels: Record<string,string> = {
-        maths:'Mathématiques', physique:'Physique-Chimie',
-        informatique:'Informatique', anglais:'Anglais', svt:'SVT',
-        francais:'Français', economie:'Économie', gestion:'Gestion'
-      }
-      const matiereLabel = matiereActive === 'anglais'
-        ? 'Anglais'
-        : matiereLabels[activeMatiere] || 'Mathématiques'
-
-      // 5. Incrémenter le quota (NON bloquant : ne doit jamais empêcher l'affichage de la correction)
-      incrementQuota('simulations').catch(() => {})
-
-      // 6. Créer le fakeExam avec la bonne matière
-      // Injecter les images dans le statement si présentes
-      const stmtWithImages = examImgsFromRef.length > 0
-        ? examImgsFromRef.map(img => `[IMAGE_BASE64:data:${img.mediaType};base64,${img.data}]`).join('\n') + (examContent ? '\n' + examContent : '')
-        : examContent
-
-      const fakeExam: GeneratedExam = {
-        id: `direct-${Date.now()}`,
-        index: 0,
-        title: `Correction Directe — ${matiereLabel}`,
-        section: matiereLabel,
-        duration: 180,
-        totalPoints: 20,
-        exercises: [{
-          num: 1,
-          title: `Examen importé — ${matiereLabel}`,
-          theme: matiereLabel,
-          points: 20,
-          statement: stmtWithImages || examContent,
-        }],
-      }
-
-      setStudentAnswers(copyContent)
-      setActiveExam(fakeExam)
-      setCorrectionText('')
-      setGradeResult(null)
-      setPhase('correction')
+  const handleInscription = useCallback(async (c: Candidat) => {
+    // Vérifier quota simulation via Supabase (admin = illimité)
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    // Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
-    if (!isAdmin && hasActiveSubscription) {
-      const matiereMapCheck: Record<string,string> = {
-        maths:'mathematiques', physique:'physique', informatique:'informatique',
-        anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
-      }
-      const matiereUIKey = matiereMapCheck[activeMatiere] || activeMatiere
-      if (!checkMatiereAccess(matiereUIKey as any)) {
-        const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
-        alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
-        return
-      }
+    // Sauvegarder le candidat et montrer le choix de matière
+    setCandidat(c); setPhase('choix-matiere')
+  }, [isAdmin, checkQuota])
+
+  // Lancer le bac blanc maths (flux existant)
+  const handleStartMaths = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('mathematiques')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Mathématiques pour accéder au Bac Blanc Maths.\n→ mathsbac.com/abonnement?matiere=mathematiques')
+      return
     }
-    if (chapitres && chapitres.length > 0) {
-      setChapitresMode(true)
-      setSelectedChapitres(chapitres)
-      setChapSectionLabel(sectionLabel || 'Mathématiques')
-    } else {
-      setChapitresMode(false)
+    // Vérifier 1 examen par matière par jour
+    if (!isAdmin && hasPassedTodayForMatiere('mathematiques')) {
+      alert('✅ Vous avez déjà passé votre examen Mathématiques aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Physique-Chimie, vous pouvez passer cet examen.')
+      return
     }
-    setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[isAdmin, hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, activeMatiere, checkQuota, incrementQuota])
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlanc(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('mathematiques')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
-    setGeneratedExams(exams); setPhase('choose-exam')
-  },[])
+  // Lancer le bac blanc physique-chimie (même flux que maths)
+  const handleStartPhysique = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('physique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Physique-Chimie pour accéder au Bac Blanc Physique.\n→ mathsbac.com/abonnement?matiere=physique')
+      return
+    }
+    // Vérifier 1 examen par matière par jour
+    if (!isAdmin && hasPassedTodayForMatiere('physique')) {
+      alert('✅ Vous avez déjà passé votre examen Physique-Chimie aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Mathématiques, vous pouvez passer cet examen.')
+      return
+    }
+    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancPhysique(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('physique')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  const handleChooseExam = useCallback((exam: GeneratedExam) => {
-    setActiveExam(exam); setPhase('exam')
-  },[])
+  const handleStartInfo = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('informatique')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique pour accéder au Bac Blanc Info.\n→ mathsbac.com/abonnement?matiere=informatique')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('informatique')) {
+      alert('✅ Vous avez déjà passé votre examen Informatique aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancInfo(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('informatique')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  const handleGraphExtracted = useCallback((exIdx: number, graph: string) => {
-    setExamGraphs(prev => ({ ...prev, [exIdx]: graph }))
-    setActiveExam(prev => {
+
+  // ── Lancer le bac blanc Anglais ─────────────────────────────────────
+  const handleStartAnglais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('anglais')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('anglais')) {
+      alert("✅ Vous avez déjà passé votre examen Anglais aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancAnglais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('anglais')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
+  // ── Lancer le bac blanc SVT ─────────────────────────────────────────
+  const handleStartSVT = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à SVT pour accéder au Bac Blanc SVT.\n→ mathsbac.com/abonnement?matiere=svt')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('svt')) {
+      alert("✅ Vous avez déjà passé votre examen SVT aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancSVT(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('svt')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération SVT. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
+  // Lancer le bac blanc Français
+  const handleStartFrancais = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('francais' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français pour accéder au Bac Blanc Français.\n→ mathsbac.com/abonnement?matiere=francais')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('francais')) {
+      alert("✅ Vous avez déjà passé votre examen Français aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancFrancais(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('francais')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
+  // ── Lancer le bac blanc Économie ────────────────────────────────────
+  const handleStartEconomie = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('economie' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie pour accéder au Bac Blanc Économie.\n→ mathsbac.com/abonnement?matiere=economie')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('economie')) {
+      alert("✅ Vous avez déjà passé votre examen Économie aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancEconomie(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('economie')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
+  // ── Lancer le bac blanc Gestion ─────────────────────────────────────
+  const handleStartGestion = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('gestion' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Gestion pour accéder au Bac Blanc Gestion.\n→ mathsbac.com/abonnement?matiere=gestion')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('gestion')) {
+      alert("✅ Vous avez déjà passé votre examen Gestion aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancGestion(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('gestion')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+
+  const handleSubmitExam = useCallback((ans: string) => {
+    setAnswers(ans); setCorrections({}); setPhase('correction')
+  }, [])
+
+  const handleFinishCorrection = useCallback(async (corrs: Record<number,string>) => {
+    setCorrections(corrs); setPhase('analysing')
+    if (!exam || !candidat) return
+    try {
+      const fullCorr = Object.values(corrs).join('\n\n---\n\n')
+      const r = await analyzeStudentWork(exam, answers, fullCorr)
+      setAnalysis(r)
+      // Sauvegarder dans le classement
+      saveRanking({
+        nom: candidat.nom, prenom: candidat.prenom, lycee: candidat.lycee,
+        gouvernorat: candidat.gouvernorat, section: candidat.section, sectionKey: candidat.sectionKey,
+        score: r.estimatedScore, maxScore: r.maxScore,
+        day: dayNum, date: `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`,
+        ts: Date.now()
+      })
+      setPhase('analysis')
+    } catch {
+      setAnalysis({ estimatedScore:0, maxScore:exam.totalPoints, weakAreas:[], strengths:[], globalAdvice:[], remediationExercises:[] })
+      setPhase('analysis')
+    }
+  }, [exam, answers, candidat, dayNum, today])
+
+  const handleGraphExtracted = useCallback((idx: number, graph: string) => {
+    setExam(prev => {
       if (!prev) return prev
       const exs = [...prev.exercises]
-      if (exs[exIdx] && !exs[exIdx].graph) exs[exIdx] = { ...exs[exIdx], graph }
+      if (exs[idx] && !exs[idx].graph) exs[idx] = { ...exs[idx], graph }
       return { ...prev, exercises: exs }
     })
   }, [])
 
-  const handleSubmitExam = useCallback(async(ans: string) => {
-    if(!activeExam) return
-    setStudentAnswers(ans); setCorrectionText(''); setGradeResult(null); setPhase('grading')
-    const grade = await estimateGrade(activeExam, ans)
-    setGradeResult(grade); setPhase('graded')
-  },[activeExam])
+  const handleRestart = () => {
+    setPhase('inscription'); setExam(null); setCandidat(null)
+    setAnswers(''); setCorrections({}); setAnalysis(null)
+  }
 
-  const handleSeeCorrection = useCallback(() => { setPhase('correction') },[])
-
-  const handleGoAnalyse = useCallback(async(fullCorrection: string) => {
-    if(!activeExam) return
-    setCorrectionText(fullCorrection); setPhase('analysing')
-    const analysis = await analyzeStudentWork(activeExam, studentAnswers, fullCorrection)
-    setAnalysisResult(analysis); setPhase('analysis')
-  },[activeExam, studentAnswers])
-
-  const handleOpenAnalyse = useCallback((idx: number, analysis: AnalysisResult, exercise: any) => {
-    setAnalysePageData({ analysis, exercise, exerciseNum: idx + 1 })
-  }, [])
-
-  const handleRestart = useCallback(() => {
-    setPhase('select'); setArchives([]); setCustomText(''); setGeneratedExams([])
-    setActiveExam(null); setStudentAnswers(''); setCorrectionText(''); setGradeResult(null)
-    setAnalysisResult(null); setChapitresMode(false); setSelectedChapitres([])
-    // Ne pas réinitialiser activeMatiere — l'élève reste sur la même matière
-  },[])
-
-  return (
-    <>
-      <Navbar/>
-      <main style={{minHeight:'100vh',paddingTop:80,background:'#0c0c1a',position:'relative',overflow:'hidden'}}>
-        <div style={{position:'fixed',inset:0,pointerEvents:'none',overflow:'hidden',zIndex:0}}>
-          <div style={{position:'absolute',top:-200,left:-200,width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%)'}}/>
-          <div style={{position:'absolute',bottom:-200,right:-200,width:500,height:500,borderRadius:'50%',background:'radial-gradient(circle,rgba(139,92,246,0.1) 0%,transparent 70%)'}}/>
-          <div style={{position:'absolute',top:'40%',left:'50%',transform:'translate(-50%,-50%)',width:800,height:400,background:'radial-gradient(ellipse,rgba(16,185,129,0.04) 0%,transparent 60%)'}}/>
-        </div>
-
-        <div style={{position:'relative',zIndex:1,maxWidth:1100,margin:'0 auto',padding:'40px 24px 80px'}}>
-
-          {/* HEADER */}
-          <div style={{marginBottom:28}}>
-            <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 14px',background:activeMatiere==='physique'?'rgba(6,214,160,0.15)':activeMatiere==='svt'?'rgba(34,197,94,0.15)':activeMatiere==='francais'?'rgba(244,114,182,0.15)':'rgba(99,102,241,0.15)',border:`1px solid ${activeMatiere==='physique'?'rgba(6,214,160,0.3)':activeMatiere==='svt'?'rgba(34,197,94,0.3)':activeMatiere==='francais'?'rgba(244,114,182,0.3)':'rgba(99,102,241,0.3)'}`,borderRadius:20,marginBottom:14}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:activeMatiere==='physique'?'#06d6a0':activeMatiere==='svt'?'#22c55e':activeMatiere==='francais'?'#f472b6':'#6366f1',animation:'pulse 2s ease infinite'}}/>
-              <span style={{fontSize:11,fontWeight:700,color:activeMatiere==='physique'?'#6ee7b7':activeMatiere==='svt'?'#86efac':activeMatiere==='anglais'?'#f9a8d4':activeMatiere==='francais'?'#f9a8d4':'#a5b4fc',letterSpacing:'0.06em',textTransform:'uppercase'}}>
-                IA · {chapitresMode ? '📚 Simulation Par Chapitre' : activeMatiere==='physique' ? '⚗️ Simulation Physique-Chimie' : activeMatiere==='svt' ? '🌱 Simulation SVT' : activeMatiere==='anglais' ? '🇬🇧 Simulation Anglais' : activeMatiere==='francais' ? '📚 Simulation Français' : activeMatiere==='economie' ? '📈 Simulation Économie' : activeMatiere==='gestion' ? '💼 Simulation Gestion' : '🧮 Simulation Mathématiques'}
-              </span>
-            </div>
-            <h1 style={{fontSize:'clamp(26px,4vw,46px)',fontWeight:900,color:'#f1f5f9',marginBottom:12,lineHeight:1.15,letterSpacing:'-0.02em'}}>
-              Simulation Intelligente<br/>
-              <span style={{background: activeMatiere==='physique'
-                ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)'
-                : activeMatiere==='svt'
-                  ? 'linear-gradient(135deg,#22c55e,#16a34a,#4ade80)'
-                  : activeMatiere==='francais'
-                  ? 'linear-gradient(135deg,#ec4899,#db2777,#f472b6)'
-                  : chapitresMode ? 'linear-gradient(135deg,#06d6a0,#059669,#10b981)' : 'linear-gradient(135deg,#6366f1,#8b5cf6,#a78bfa)',
-                WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-                {chapitresMode ? 'Par Chapitre Ciblé' : activeMatiere==='physique' ? 'Physique-Chimie' : activeMatiere==='svt' ? 'SVT — Sciences de la Vie' : activeMatiere==='anglais' ? 'Anglais — Bac Tunisie' : activeMatiere==='francais' ? 'Français — Bac Tunisie' : activeMatiere==='economie' ? 'Économie — Bac Tunisie' : activeMatiere==='gestion' ? 'Gestion — Bac Tunisie' : 'Personnalisée par l\'IA'}
-              </span>
-            </h1>
-            <p style={{maxWidth:580,color:'rgba(255,255,255,0.5)',lineHeight:1.75,fontSize:14,margin:0}}>
-              {chapitresMode
-                ? <>Examen ciblé sur <strong style={{color:'rgba(255,255,255,0.75)'}}>{selectedChapitres.map(c=>c.titre).join(' · ')}</strong> · Correction + Analyse complète</>
-                : <>L'IA génère un <strong style={{color:'rgba(255,255,255,0.75)'}}>examen original</strong> · Correction détaillée · Analyse des faiblesses</>
-              }
-            </p>
-          </div>
-
-          {/* ── ONGLETS MATIÈRE : MATHS / PHYSIQUE-CHIMIE ── */}
-          {phase === 'select' && (
-            <div style={{display:'flex',gap:8,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
-              {([
-                { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
-                { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
-                { key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e', matiere:'svt' },
-                { key:'informatique' as const, icon:'💻', label:'Informatique',    color:'#6366f1', matiere:'informatique' },
-                { key:'anglais'      as const, icon:'🇬🇧', label:'Anglais',          color:'#ec4899', matiere:'anglais' },
-                { key:'francais'     as const, icon:'📚', label:'Français',         color:'#f472b6', matiere:'francais' },
-                { key:'economie'     as const, icon:'📈', label:'Économie',         color:'#06b6d4', matiere:'economie' },
-                { key:'gestion'      as const, icon:'💼', label:'Gestion',          color:'#f43f5e', matiere:'gestion' },
-              ]).map(m => {
-                return (
-                <div key={m.key} style={{position:'relative'}}>
-                  <button
-                    onClick={() => {
-                      setActiveMatiere(m.key); setChapitresMode(false); setSelectedChapitres([])
-                    }}
-                    title={m.label}
-                    style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',
-                      cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
-                      background: activeMatiere===m.key?m.color:'transparent',
-                      color: activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
-                      boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
-                    <span style={{fontSize:18}}>{m.icon}</span>
-                    <span>{m.label}</span>
-                  </button>
-                </div>
-                )
-              })}
-            </div>
-          )}
-
-          <PhaseTimeline phase={phase}/>
-
-          <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:24,padding:'30px 32px',backdropFilter:'blur(10px)'}}>
-
-            {phase==='select'&&(
-              <PhaseSelect
-                onStart={handleStart}
-                archives={activeMatiere==='physique' ? ARCHIVES_PHYS : activeMatiere==='informatique' ? ARCHIVES_INFO : activeMatiere==='anglais' ? ARCHIVES_ANGLAIS : activeMatiere==='svt' ? ARCHIVES_SVT : activeMatiere==='francais' ? ARCHIVES_FRANCAIS : activeMatiere==='economie' ? ARCHIVES_ECO : activeMatiere==='gestion' ? ARCHIVES_GES : ARCHIVES}
-                chapitresParSection={activeMatiere==='physique' ? CHAPITRES_PHYS : activeMatiere==='informatique' ? CHAPITRES_INFO : activeMatiere==='anglais' ? CHAPITRES_ANGLAIS : activeMatiere==='svt' ? CHAPITRES_SVT : activeMatiere==='francais' ? CHAPITRES_FRANCAIS : activeMatiere==='economie' ? CHAPITRES_ECO : activeMatiere==='gestion' ? CHAPITRES_GES : CHAPITRES_PAR_SECTION}
-                sectionConfigs={activeMatiere==='physique' ? SECTION_CONFIGS_PHYS : activeMatiere==='informatique' ? SECTION_CONFIGS_INFO : activeMatiere==='anglais' ? SECTION_CONFIGS_ANGLAIS : activeMatiere==='svt' ? SECTION_CONFIGS_SVT : activeMatiere==='francais' ? SECTION_CONFIGS_FRANCAIS : activeMatiere==='economie' ? SECTION_CONFIGS_ECO : activeMatiere==='gestion' ? SECTION_CONFIGS_GES : SECTION_CONFIGS}
-                matiere={activeMatiere}
-              />
-            )}
-
-            {phase==='generating'&&(
-              chapitresMode
-                ? <PhaseGeneratingChapitres
-                    chapitres={selectedChapitres}
-                    sectionLabel={chapSectionLabel}
-                    onDone={handleExamsReady}
-                    matiere={activeMatiere}/>
-                : <PhaseGenerating archives={archives} customText={customText} onDone={handleExamsReady} matiere={activeMatiere}/>
-            )}
-
-            {phase==='choose-exam'&&
-              <PhaseChooseExam exams={generatedExams} onChoose={handleChooseExam}/>}
-
-            {phase==='exam'&&activeExam&&
-              <PhaseExam exam={activeExam} onSubmit={handleSubmitExam}/>}
-
-            {(phase==='grading'||phase==='graded')&&activeExam&&
-              <PhaseGrade
-                exam={activeExam} grade={gradeResult}
-                correctionReady={true} correctionProgress={activeExam.exercises.length}
-                onSeeCorrection={handleSeeCorrection}/>}
-
-            {(phase==='correcting'||phase==='correction')&&activeExam&&
-              <PhaseCorrection
-                exam={activeExam} answers={studentAnswers}
-                onAnalyse={handleGoAnalyse} onGraphExtracted={handleGraphExtracted}
-                onOpenAnalyse={handleOpenAnalyse}/>}
-
-            {(phase==='analysing'||phase==='analysis')&&
-              <PhaseAnalysis analysis={analysisResult} onRestart={handleRestart}/>}
-
-          </div>
-        </div>
-      </main>
-      <Footer/>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.85)} }
-        @keyframes slideBar {
-          0%{transform:translateX(-100%);width:60%}
-          50%{transform:translateX(80%);width:60%}
-          100%{transform:translateX(200%);width:60%}
-        }
-        select option { background:#1a1a2e; color:white; }
-        ::-webkit-scrollbar { width:6px; height:6px; }
-        ::-webkit-scrollbar-track { background:rgba(255,255,255,0.03); }
-        ::-webkit-scrollbar-thumb { background:rgba(99,102,241,0.4); border-radius:3px; }
-        ::-webkit-scrollbar-thumb:hover { background:rgba(99,102,241,0.7); }
-      `}</style>
-
-      {analysePageData && (
-        <PageAnalyseExercice
-          analysis={analysePageData.analysis}
-          exercise={analysePageData.exercise}
-          exerciseNum={analysePageData.exerciseNum}
-          onBack={() => setAnalysePageData(null)}
-        />
-      )}
-    </>
+  if (phase === 'statistiques') return <PageStatistiques onBack={handleRestart}/>
+  
+  if (phase === 'inscription') return <PhaseInscription onSubmit={handleInscription} onStatistiques={()=>setPhase('statistiques')}/>
+  if (phase === 'choix-matiere' && candidat) return (
+    <PhaseChoixMatiere
+      candidat={candidat}
+      dayNum={dayNum}
+      onMaths={handleStartMaths}
+      onPhysique={handleStartPhysique}
+      onInfo={handleStartInfo}
+      onAnglais={handleStartAnglais}
+      onSvt={handleStartSVT}
+      onFrancais={handleStartFrancais}
+      onEconomie={handleStartEconomie}
+      onGestion={handleStartGestion}
+      onRetour={()=>setPhase('inscription')}
+      hasActiveSubscription={hasActiveSubscription}
+      checkMatiereAccess={checkMatiereAccess}
+      matiereActive={matiereActive}
+      isAdmin={isAdmin}
+      weeklyLimit={bbWeeklyLimit}
+    />
   )
+  if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
+  if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
+  if (phase === 'correction' && exam && candidat) return(
+    <PhaseCorrection exam={exam} candidat={candidat} answers={answers}
+      onFinish={handleFinishCorrection} onGraphExtracted={handleGraphExtracted}/>
+  )
+  if ((phase==='analysing'||phase==='analysis') && exam && candidat) return(
+    analysis
+      ? <PhaseAnalysis analysis={analysis} exam={exam} candidat={candidat} onRestart={handleRestart}/>
+      : <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontFamily:'system-ui',flexDirection:'column',gap:16}}>
+          <div style={{width:40,height:40,border:'3px solid rgba(245,158,11,0.3)',borderTopColor:'#f59e0b',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+          <span style={{fontSize:16,color:'rgba(255,255,255,0.6)'}}>Analyse de votre performance…</span>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+  )
+  return <PhaseInscription onSubmit={handleInscription} onStatistiques={()=>setPhase('statistiques')}/>
 }
 
-export default function SimulationIAPage() {
+export default function BacBlancPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'#0c0c1a',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontSize:14}}>Chargement...</div>}>
-      <SimulationIAPageInner />
+    <Suspense fallback={
+      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.5)',fontFamily:'system-ui'}}>
+        Chargement…
+      </div>
+    }>
+      <BacBlancInner/>
     </Suspense>
   )
 }
