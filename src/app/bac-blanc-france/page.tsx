@@ -187,7 +187,7 @@ const SECTIONS_NSI_FR = [
 interface Candidat {
   nom: string; prenom: string; lycee: string
   section: string; sectionKey: string
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'
 }
 
 interface Exercise {
@@ -977,7 +977,7 @@ Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour le
     const withWorkECO = studentWork.trim().length > 10
     const promptECO = `Corrige cet exercice de Bac Blanc SES/STMG de façon COMPLÈTE et DÉTAILLÉE.
 
-EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
+EXERCICE : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
 ${exercise.statement}
 ${withWorkECO ? `\nCOPIE DE L'ÉLÈVE :\n${studentWork}\n\nÉvalue la copie, attribue une note sur ${exercise.points}, puis donne la correction modèle.` : ''}
 
@@ -2500,7 +2500,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   // Si l'élève est abonné à une seule matière, sélectionner par défaut une matière accessible
   useEffect(() => {
     if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return
-    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'> = ['maths','physique','informatique','anglais','svt','francais']
+    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'> = ['maths','physique','informatique','anglais','svt','francais','eco-gestion']
     const accessible = (k: string) => checkMatiereAccess((k === 'maths' ? 'mathematiques' : k) as any)
     if (!accessible(activeMatiereFiche)) {
       const first = order.find(accessible)
