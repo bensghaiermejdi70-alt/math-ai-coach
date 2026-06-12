@@ -209,7 +209,7 @@ interface RankingEntry {
   day: number; date: string; ts: number
 }
 
-type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'correction'|'analysing'|'analysis'|'statistiques'
+type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'grading'|'graded'|'correction'|'analysing'|'analysis'|'statistiques'
 
 // ── LocalStorage helpers ──────────────────────────────────────────
 function saveRanking(entry: RankingEntry) {
@@ -1235,6 +1235,33 @@ async function correctSingleExercise(exam: BacExam, exerciseIndex: number, stude
   const ex = exam.exercises[exerciseIndex]
   if (!ex) return ''
   return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
+}
+
+// ── estimateGrade : note rapide AVANT la correction (comme simulation) ──
+async function estimateGrade(exam: BacExam, studentWork: string): Promise<{
+  score: number; maxScore: number; comment: string
+  breakdown: {title:string;pts:number;max:number;reason:string}[]
+}> {
+  const hasWork = studentWork.trim().length > 10
+  const system = `Tu es un correcteur du Baccalauréat tunisien${globalMatiere==='economie' ? ' en Économie' : globalMatiere==='gestion' ? ' en Gestion' : ''}. Tu donnes une note RAPIDE et JUSTE.
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
+
+  const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${(e.statement||'').slice(0,180)}`).join(' | ')
+  const prompt = hasWork
+    ? `Estime la note de cet élève sur ${exam.totalPoints} points. SUJET: ${exList} RÉPONSE: ${studentWork.slice(0,1200)} JSON: {"score":[entier 0-${exam.totalPoints}],"maxScore":${exam.totalPoints},"comment":"[phrase encourageante 1-2 phrases]","breakdown":[{"title":"[ex]","pts":[accordés],"max":[max],"reason":"[raison]"}]}`
+    : `{"score":0,"maxScore":${exam.totalPoints},"comment":"Aucune réponse soumise. La correction complète va tout vous apprendre !","breakdown":${JSON.stringify(exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:'Non répondu'})))}}`
+
+  const raw = await askClaude(prompt, system, 800)
+  try {
+    return JSON.parse(raw.replace(/```json|```/g,'').trim())
+  } catch {
+    return {
+      score: hasWork ? Math.round(exam.totalPoints * 0.4) : 0,
+      maxScore: exam.totalPoints,
+      comment: hasWork ? 'Estimation calculée automatiquement.' : 'Aucune réponse soumise.',
+      breakdown: exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:hasWork?'Évaluation automatique':'Non répondu'}))
+    }
+  }
 }
 
 // ── analyzeStudentWork (identique simulation) ─────────────────────
@@ -2398,6 +2425,11 @@ RÈGLES ABSOLUES :
 - Questions numérotées 1) 2) 3)
 - Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
 
+GRAPHIQUES — TABLEAU & DIAGRAMME (champ "graph" SÉPARÉ du statement, Partie 2 OBLIGATOIRE) :
+- TABLEAU de données : [GRAPH: {"type":"table","title":"Évolution du PIB tunisien (prix courants, MDT)","headers":["Année","PIB","Taux de croissance (%)"],"rows":[["2021","123450","4,3"],["2022","138900","2,6"],["2023","145200","1,2"]]}]
+- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Taux de chômage (%)","categories":["2021","2022","2023","2024"],"values":[16.2,15.3,16.1,15.8],"yLabel":"Taux (%)","xLabel":"Année"}]
+- Le document chiffré de la Partie 2 va dans le champ "graph" (type "table" ou "bar"), PAS en texte dans le statement. Les questions de lecture/calcul/interprétation exploitent ces données. Guillemets internes valides.
+
 RÉPONSE JSON OBLIGATOIRE :
 {
   "id": "bb-economie-${dayNum}-${candidat.sectionKey}",
@@ -2409,7 +2441,7 @@ RÉPONSE JSON OBLIGATOIRE :
   "duration": 180,
   "exercises": [
     { "num": 1, "theme": "Mobilisation des connaissances", "title": "Partie 1 — ${prog.theme}", "points": 6, "statement": "1) ...\n2) ...\n3) ...", "graph": null },
-    { "num": 2, "theme": "Étude de document", "title": "Partie 2 — Étude de document", "points": 6, "statement": "Document : [tableau de données chiffrées]\n\n1) ...\n2) Calculer ...\n3) Interpréter ...", "graph": null },
+    { "num": 2, "theme": "Étude de document", "title": "Partie 2 - Étude de document", "points": 6, "statement": "Document statistique ci-dessous (voir tableau/graphique).\n\n1) Lire la donnée de [annee]\n2) Calculer [indicateur : taux/indice/coefficient]\n3) Interpreter l'evolution observee", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table ou bar, donnees chiffrees tunisiennes realistes}]" },
     { "num": 3, "theme": "Sujet de réflexion", "title": "Partie 3 — Dissertation", "points": 8, "statement": "Sujet : « ${prog.reflexion} »\n\nConsignes : introduction (accroche, problématique, annonce du plan), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).", "graph": null }
   ]
 }`
@@ -2473,6 +2505,11 @@ RÈGLES ABSOLUES :
 - Chaque dossier contient des DONNÉES CHIFFRÉES réalistes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
 - Calculs explicites attendus (montrer les formules)
 
+GRAPHIQUES - TABLEAU & DIAGRAMME (champ "graph" SEPARE du statement) :
+- TABLEAU (bilan, charges, couts) : [GRAPH: {"type":"table","title":"Extrait du bilan (DT)","headers":["Poste","Montant"],"rows":[["Capitaux permanents","180000"],["Actif immobilise","120000"],["Actif circulant","95000"],["Passif circulant","60000"]]}]
+- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Evolution du chiffre d affaires (kDT)","categories":["2021","2022","2023"],"values":[420,468,510],"yLabel":"kDT","xLabel":"Annee"}]
+- Les donnees chiffrees des Dossiers 1 et 2 vont dans le champ "graph" (type "table" ou "bar"), exploitees par les questions de calcul. Guillemets internes valides.
+
 RÉPONSE JSON OBLIGATOIRE :
 {
   "id": "bb-gestion-${dayNum}-${candidat.sectionKey}",
@@ -2483,8 +2520,8 @@ RÉPONSE JSON OBLIGATOIRE :
   "totalPoints": 20,
   "duration": 180,
   "exercises": [
-    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 — Analyse financière", "points": 7, "statement": "Données : [extrait de bilan]\n\n1) Calculer le FDR ...\n2) Calculer le BFR ...\n3) En déduire la TN et interpréter ...", "graph": null },
-    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 — Coûts", "points": 7, "statement": "Données : [tableau de charges]\n\n1) ...\n2) Calculer le seuil de rentabilité ...\n3) Interpréter ...", "graph": null },
+    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 - Analyse financiere", "points": 7, "statement": "Donnees du bilan ci-dessous (voir tableau).\n\n1) Calculer le FDR\n2) Calculer le BFR\n3) En deduire la TN et interpreter", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table, extrait de bilan en DT}]" },
+    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 - Couts", "points": 7, "statement": "Tableau de charges ci-dessous (voir tableau).\n\n1) Determiner le cout\n2) Calculer le seuil de rentabilite\n3) Interpreter", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table, tableau de charges}]" },
     { "num": 3, "theme": "${prog.theme}", "title": "Dossier 3 — ${prog.theme}", "points": 6, "statement": "Données : [tableau]\n\n1) ...\n2) ...\n3) ...", "graph": null }
   ]
 }`
@@ -3718,6 +3755,99 @@ function PageAnalyseExercice({
   )
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// PHASE NOTE — Résultat /20 + détail par exercice (AVANT la correction)
+// ═══════════════════════════════════════════════════════════════════
+function PhaseGrade({ exam, grade, onSeeCorrection }: {
+  exam: BacExam
+  grade: {score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null
+  onSeeCorrection: ()=>void
+}) {
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => { if (grade) setTimeout(() => setRevealed(true), 300) }, [grade])
+
+  if (!grade) {
+    return (
+      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:'white',fontFamily:'system-ui',gap:8,padding:'60px 20px',textAlign:'center'}}>
+        <div style={{fontSize:52,marginBottom:16}}>⚖️</div>
+        <h3 style={{color:'#e2e8f0',marginBottom:8}}>Évaluation en cours…</h3>
+        <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>L&apos;IA analyse votre copie et calcule votre note</p>
+        <div style={{width:260,height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',margin:'24px auto 0',overflow:'hidden'}}>
+          <div style={{height:'100%',background:'linear-gradient(90deg,#6366f1,#f59e0b)',borderRadius:4,animation:'slideBar 1.8s ease-in-out infinite'}}/>
+        </div>
+        <style>{`@keyframes slideBar{0%{transform:translateX(-100%)}100%{transform:translateX(360%)}}`}</style>
+      </div>
+    )
+  }
+
+  const pct = Math.round((grade.score / grade.maxScore) * 100)
+  const scoreColor = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : pct >= 30 ? '#f97316' : '#ef4444'
+  const scoreGrad  = pct >= 70 ? 'linear-gradient(135deg,#10b981,#059669)' : pct >= 50 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#ef4444,#dc2626)'
+  const mention = pct >= 80 ? 'Très Bien 🏆' : pct >= 70 ? 'Bien 👏' : pct >= 60 ? 'Assez Bien 👍' : pct >= 50 ? 'Passable 🎯' : pct >= 30 ? 'Insuffisant 💪' : 'À retravailler 📚'
+  const circumference = 2 * Math.PI * 54
+  const dashOffset = circumference - (pct / 100) * circumference
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui',padding:'40px 20px'}}>
+    <div style={{maxWidth:680,margin:'0 auto'}}>
+      <div style={{textAlign:'center',marginBottom:32}}>
+        <h3 style={{margin:'0 0 6px',fontSize:20,color:'#e2e8f0'}}>Résultat de votre Bac Blanc</h3>
+        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.4)'}}>{exam.title}</p>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'40px 32px',marginBottom:24,background:'rgba(255,255,255,0.03)',border:`1px solid ${scoreColor}30`,borderRadius:24,opacity:revealed?1:0,transform:revealed?'translateY(0) scale(1)':'translateY(20px) scale(0.95)',transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)'}}>
+        <div style={{position:'relative',marginBottom:20}}>
+          <svg width="140" height="140" style={{transform:'rotate(-90deg)'}}>
+            <circle cx="70" cy="70" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+            <circle cx="70" cy="70" r="54" fill="none" stroke={scoreColor} strokeWidth="10" strokeDasharray={circumference} strokeDashoffset={revealed?dashOffset:circumference} strokeLinecap="round" style={{transition:'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1) 0.3s',filter:`drop-shadow(0 0 10px ${scoreColor}80)`}}/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <span style={{fontSize:42,fontWeight:900,color:scoreColor,lineHeight:1,opacity:revealed?1:0,transition:'opacity 0.5s ease 0.8s'}}>{grade.score}</span>
+            <span style={{fontSize:15,color:'rgba(255,255,255,0.35)',fontWeight:600}}>/{grade.maxScore}</span>
+          </div>
+        </div>
+        <div style={{padding:'8px 24px',borderRadius:20,background:`${scoreColor}20`,border:`1px solid ${scoreColor}40`,fontSize:16,fontWeight:800,color:scoreColor,marginBottom:14,opacity:revealed?1:0,transition:'opacity 0.4s ease 1s'}}>{mention}</div>
+        <p style={{textAlign:'center',fontSize:14,color:'rgba(255,255,255,0.65)',lineHeight:1.75,maxWidth:420,margin:0,opacity:revealed?1:0,transition:'opacity 0.4s ease 1.2s'}}>{grade.comment}</p>
+      </div>
+
+      {grade.breakdown.length > 0 && (
+        <div style={{marginBottom:24,opacity:revealed?1:0,transform:revealed?'translateY(0)':'translateY(16px)',transition:'all 0.5s ease 0.9s'}}>
+          <h4 style={{margin:'0 0 12px',fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Détail par exercice</h4>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {grade.breakdown.map((b, i) => {
+              const exPct = b.max > 0 ? (b.pts / b.max) * 100 : 0
+              const exCol = exPct >= 70 ? '#10b981' : exPct >= 50 ? '#f59e0b' : '#ef4444'
+              return (
+                <div key={i} style={{padding:'12px 16px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7,gap:8,flexWrap:'wrap'}}>
+                    <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{b.title}</span>
+                    <span style={{fontSize:13,fontWeight:800,color:exCol,flexShrink:0}}>{b.pts}/{b.max} pts</span>
+                  </div>
+                  <div style={{height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',marginBottom:6,overflow:'hidden'}}>
+                    <div style={{height:'100%',borderRadius:4,background:exCol,width:revealed?`${exPct}%`:'0%',transition:`width 1s ease ${0.9 + i * 0.15}s`}}/>
+                  </div>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',margin:0}}>{b.reason}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{textAlign:'center',opacity:revealed?1:0,transition:'opacity 0.4s ease 1.4s'}}>
+        <button onClick={onSeeCorrection} style={{padding:'16px 36px',background:scoreGrad,color:'white',borderRadius:14,border:'none',cursor:'pointer',fontSize:15,fontWeight:800,boxShadow:`0 8px 28px ${scoreColor}50`,display:'inline-flex',alignItems:'center',gap:12,transition:'all 0.2s',fontFamily:'inherit'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none'}}>
+          <span style={{fontSize:20}}>📝</span>
+          Voir la correction détaillée
+          <span style={{fontSize:18,opacity:0.8}}>→</span>
+        </button>
+      </div>
+    </div>
+    </div>
+  )
+}
+
 function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
   exam:BacExam;candidat:Candidat;answers:string
   onFinish:(corrections:Record<number,string>)=>void
@@ -4325,6 +4455,7 @@ function BacBlancInner() {
   const [answers, setAnswers] = useState('')
   const [corrections, setCorrections] = useState<Record<number,string>>({})
   const [analysis, setAnalysis] = useState<AnalysisResult|null>(null)
+  const [gradeResult, setGradeResult] = useState<{score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null>(null)
   const today = new Date()
   // Période concours: 1er mai – 15 juin · Jour 1=1mai, Jour 46=15juin
   const periodeStart = new Date(today.getFullYear(), 4, 1)
@@ -4336,7 +4467,9 @@ function BacBlancInner() {
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
   // Limite Bac Blanc / semaine : 1 abonnement → 5 · 2 abonnements ou plus → 7 (≈ 1/jour mai-juin)
   // (plan illimité conservé à -1). nbMatieres = nombre d'abonnements actifs.
-  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+  const bbWeeklyLimit = isAdmin
+    ? -1
+    : quotaLimits.bac_blanc_per_week === -1
     ? -1
     : (nbMatieres >= 2 ? 7 : 5)
 
@@ -4606,9 +4739,18 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
-  const handleSubmitExam = useCallback((ans: string) => {
-    setAnswers(ans); setCorrections({}); setPhase('correction')
-  }, [])
+  const handleSubmitExam = useCallback(async (ans: string) => {
+    setAnswers(ans); setCorrections({}); setGradeResult(null); setPhase('grading')
+    if (!exam) { setPhase('correction'); return }
+    try {
+      const g = await estimateGrade(exam, ans)
+      setGradeResult(g); setPhase('graded')
+    } catch {
+      setPhase('correction')
+    }
+  }, [exam])
+
+  const handleSeeCorrection = useCallback(() => { setPhase('correction') }, [])
 
   const handleFinishCorrection = useCallback(async (corrs: Record<number,string>) => {
     setCorrections(corrs); setPhase('analysing')
@@ -4643,7 +4785,7 @@ function BacBlancInner() {
 
   const handleRestart = () => {
     setPhase('inscription'); setExam(null); setCandidat(null)
-    setAnswers(''); setCorrections({}); setAnalysis(null)
+    setAnswers(''); setCorrections({}); setAnalysis(null); setGradeResult(null)
   }
 
   if (phase === 'statistiques') return <PageStatistiques onBack={handleRestart}/>
@@ -4671,6 +4813,9 @@ function BacBlancInner() {
   )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
+  if ((phase === 'grading' || phase === 'graded') && exam && candidat) return(
+    <PhaseGrade exam={exam} grade={gradeResult} onSeeCorrection={handleSeeCorrection}/>
+  )
   if (phase === 'correction' && exam && candidat) return(
     <PhaseCorrection exam={exam} candidat={candidat} answers={answers}
       onFinish={handleFinishCorrection} onGraphExtracted={handleGraphExtracted}/>
