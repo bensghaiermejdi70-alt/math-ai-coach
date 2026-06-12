@@ -33,12 +33,14 @@ function MatiereLockOverlay({ matiere, label, color, icon }: {
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
 // ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
+// ⚠️ Scopé PAR UTILISATEUR (bbUserId) : chaque élève a son propre compteur, indépendant du navigateur.
+let bbUserId: string = 'anon'
 function bbWeekKey(): string {
   const now = new Date()
   const day = now.getDay()
   const diff = now.getDate() - day + (day === 0 ? -6 : 1)
   const monday = new Date(now); monday.setDate(diff)
-  return 'bb_week_' + monday.toISOString().split('T')[0]
+  return 'bb_week_' + bbUserId + '_' + monday.toISOString().split('T')[0]
 }
 function bbWeekCount(): number {
   if (typeof window === 'undefined') return 0
@@ -4426,8 +4428,9 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits, activePlanTypes } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits, activePlanTypes, user } = useAuth()
   globalMatiere = matiereActive
+  bbUserId = user?.id || 'anon'
 
   // ── Logique Bac Blanc : 1 examen par matière par jour ──────────────────
   // Avec N abonnements actifs → N matières disponibles par jour
