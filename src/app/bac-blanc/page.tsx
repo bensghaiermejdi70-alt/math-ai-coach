@@ -52,7 +52,7 @@ import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { sumQuotasAcrossMatiere, extractMatiere } from '@/lib/types/monetisation'
 
 let globalMatiere: string = 'mathematiques'
 
@@ -4426,7 +4426,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits, activePlanTypes } = useAuth()
   globalMatiere = matiereActive
 
   // ── Logique Bac Blanc : 1 examen par matière par jour ──────────────────
@@ -4467,11 +4467,23 @@ function BacBlancInner() {
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
   // Limite Bac Blanc / semaine : 1 abonnement → 5 · 2 abonnements ou plus → 7 (≈ 1/jour mai-juin)
   // (plan illimité conservé à -1). nbMatieres = nombre d'abonnements actifs.
+  // ── Accès Bac Blanc : réservé aux formules Sprint Bac (90 DT) et Annuel (600 DT). Le Mensuel (60 DT) ne l'inclut pas. ──
+  // bbQualifyingMatieres = matières dont le plan actif inclut le Bac Blanc (sprint OU annuel)
+  const bbQualifyingMatieres = (() => {
+    const set = new Set<string>()
+    for (const pt of (activePlanTypes || [])) {
+      if (pt && (pt.includes('sprint') || pt.includes('annuel'))) set.add(extractMatiere(pt))
+    }
+    return set
+  })()
+  const bbQualifyingCount = bbQualifyingMatieres.size
+  const bbDenyMessage = (mat: string) => `🔒 Votre formule pour cette matière n'inclut pas le Bac Blanc.\n\nLe Bac Blanc est réservé aux formules Sprint Bac (90 DT/mois) et Annuel (600 DT).\n→ mathsbac.com/abonnement?matiere=${mat}`
+
   const bbWeeklyLimit = isAdmin
     ? -1
     : quotaLimits.bac_blanc_per_week === -1
     ? -1
-    : (nbMatieres >= 2 ? 7 : 5)
+    : (bbQualifyingCount >= 2 ? 7 : 5)
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
@@ -4495,6 +4507,10 @@ function BacBlancInner() {
       return
     }
     // Vérifier 1 examen par matière par jour
+    if (!isAdmin && !bbQualifyingMatieres.has('mathematiques')) {
+      alert(bbDenyMessage('mathematiques'))
+      return
+    }
     if (!isAdmin && hasPassedTodayForMatiere('mathematiques')) {
       alert('✅ Vous avez déjà passé votre examen Mathématiques aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Physique-Chimie, vous pouvez passer cet examen.')
       return
@@ -4528,6 +4544,10 @@ function BacBlancInner() {
       return
     }
     // Vérifier 1 examen par matière par jour
+    if (!isAdmin && !bbQualifyingMatieres.has('physique')) {
+      alert(bbDenyMessage('physique'))
+      return
+    }
     if (!isAdmin && hasPassedTodayForMatiere('physique')) {
       alert('✅ Vous avez déjà passé votre examen Physique-Chimie aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Mathématiques, vous pouvez passer cet examen.')
       return
@@ -4557,6 +4577,10 @@ function BacBlancInner() {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('informatique')) {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique pour accéder au Bac Blanc Info.\n→ mathsbac.com/abonnement?matiere=informatique')
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('informatique')) {
+      alert(bbDenyMessage('informatique'))
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('informatique')) {
@@ -4591,6 +4615,10 @@ function BacBlancInner() {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('anglais')) {
+      alert(bbDenyMessage('anglais'))
+      return
+    }
     if (!isAdmin && hasPassedTodayForMatiere('anglais')) {
       alert("✅ Vous avez déjà passé votre examen Anglais aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
       return
@@ -4620,6 +4648,10 @@ function BacBlancInner() {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt' as any)) {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à SVT pour accéder au Bac Blanc SVT.\n→ mathsbac.com/abonnement?matiere=svt')
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('svt')) {
+      alert(bbDenyMessage('svt'))
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('svt')) {
@@ -4653,6 +4685,10 @@ function BacBlancInner() {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français pour accéder au Bac Blanc Français.\n→ mathsbac.com/abonnement?matiere=francais')
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('francais')) {
+      alert(bbDenyMessage('francais'))
+      return
+    }
     if (!isAdmin && hasPassedTodayForMatiere('francais')) {
       alert("✅ Vous avez déjà passé votre examen Français aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
       return
@@ -4684,6 +4720,10 @@ function BacBlancInner() {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie pour accéder au Bac Blanc Économie.\n→ mathsbac.com/abonnement?matiere=economie')
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('economie')) {
+      alert(bbDenyMessage('economie'))
+      return
+    }
     if (!isAdmin && hasPassedTodayForMatiere('economie')) {
       alert("✅ Vous avez déjà passé votre examen Économie aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
       return
@@ -4713,6 +4753,10 @@ function BacBlancInner() {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('gestion' as any)) {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Gestion pour accéder au Bac Blanc Gestion.\n→ mathsbac.com/abonnement?matiere=gestion')
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('gestion')) {
+      alert(bbDenyMessage('gestion'))
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('gestion')) {
