@@ -2,12 +2,13 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
 // ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
+let bbUserId: string = 'anon'
 function bbWeekKey(): string {
   const now = new Date()
   const day = now.getDay()
   const diff = now.getDate() - day + (day === 0 ? -6 : 1)
   const monday = new Date(now); monday.setDate(diff)
-  return 'bb_week_' + monday.toISOString().split('T')[0]
+  return 'bb_week_' + bbUserId + '_' + monday.toISOString().split('T')[0]
 }
 function bbWeekCount(): number {
   if (typeof window === 'undefined') return 0
@@ -21,7 +22,7 @@ import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { sumQuotasAcrossMatiere, extractMatiere } from '@/lib/types/monetisation'
 
 let globalMatiere: string = 'mathematiques'
 
@@ -4083,8 +4084,9 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
 function BacBlancFranceInner() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits, activePlanTypes, user } = useAuth()
   globalMatiere = matiereActive
+  bbUserId = user?.id || 'anon'
 
   // ── Logique Bac Blanc : 1 examen par matière par jour ──────────────────
   // Avec N abonnements actifs → N matières disponibles par jour
@@ -4122,11 +4124,22 @@ function BacBlancFranceInner() {
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5, sinon la valeur du plan
+  // ── Accès Bac Blanc : réservé aux formules Sprint Bac (90 DT / 29 €) et Annuel (600 DT / 199 €). Le Mensuel (60 DT / 19 €) ne l'inclut pas. ──
+  const bbQualifyingMatieres = (() => {
+    const set = new Set<string>()
+    for (const pt of (activePlanTypes || [])) {
+      if (pt && (pt.includes('sprint') || pt.includes('annuel'))) set.add(extractMatiere(pt))
+    }
+    return set
+  })()
+  const bbQualifyingCount = bbQualifyingMatieres.size
+  const bbDenyMessage = (mat: string) => `🔒 Votre formule pour cette matière n'inclut pas le Bac Blanc.\n\nLe Bac Blanc est réservé aux formules Sprint Bac et Annuel.\n→ mathsbac.com/abonnement?matiere=${mat}`
+
   const bbWeeklyLimit = isAdmin
     ? -1
     : quotaLimits.bac_blanc_per_week === -1
     ? -1
-    : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
+    : (bbQualifyingCount >= 2 ? 7 : 5)
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
@@ -4143,6 +4156,10 @@ function BacBlancFranceInner() {
     // Vérif abonnement (admin exempté)
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess(matiereKey as any)) {
       alert(`🔒 Votre abonnement ne couvre pas cette matière.\n\n→ mathsbac.com/abonnement?matiere=${matiereKey}`)
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has(matiereKey)) {
+      alert(bbDenyMessage(matiereKey))
       return
     }
     // Vérif limite hebdomadaire (admin exempté)
@@ -4188,6 +4205,11 @@ function BacBlancFranceInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('mathematiques')) {
+      alert(bbDenyMessage('mathematiques'))
+      setPhase('choix-matiere')
+      return
+    }
     globalMatiere = 'mathematiques'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
@@ -4221,6 +4243,11 @@ function BacBlancFranceInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('physique')) {
+      alert(bbDenyMessage('physique'))
+      setPhase('choix-matiere')
+      return
+    }
     globalMatiere = 'physique'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
@@ -4250,6 +4277,11 @@ function BacBlancFranceInner() {
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
       alert('⚠️ Limite atteinte.')
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('informatique')) {
+      alert(bbDenyMessage('informatique'))
+      setPhase('choix-matiere')
       return
     }
     globalMatiere = 'informatique'
@@ -4283,6 +4315,11 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite atteinte.')
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('anglais')) {
+      alert(bbDenyMessage('anglais'))
+      setPhase('choix-matiere')
+      return
+    }
     globalMatiere = 'anglais'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
@@ -4312,6 +4349,11 @@ function BacBlancFranceInner() {
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('svt')) {
+      alert(bbDenyMessage('svt'))
+      setPhase('choix-matiere')
       return
     }
     globalMatiere = 'svt'
@@ -4347,6 +4389,11 @@ function BacBlancFranceInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    if (!isAdmin && !bbQualifyingMatieres.has('francais')) {
+      alert(bbDenyMessage('francais'))
+      setPhase('choix-matiere')
+      return
+    }
     globalMatiere = 'francais'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
@@ -4376,6 +4423,11 @@ function BacBlancFranceInner() {
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    if (!isAdmin && !bbQualifyingMatieres.has('eco-gestion')) {
+      alert(bbDenyMessage('eco-gestion'))
+      setPhase('choix-matiere')
       return
     }
     globalMatiere = 'eco-gestion'
