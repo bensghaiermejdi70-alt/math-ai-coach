@@ -187,7 +187,7 @@ const SECTIONS_NSI_FR = [
 interface Candidat {
   nom: string; prenom: string; lycee: string
   section: string; sectionKey: string
-  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'
 }
 
 interface Exercise {
@@ -221,7 +221,7 @@ interface RankingEntry {
   day: number; date: string; ts: number
 }
 
-type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'correction'|'analysing'|'analysis'|'statistiques'
+type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'grading'|'graded'|'correction'|'analysing'|'analysis'|'statistiques'
 
 // ── LocalStorage helpers ──────────────────────────────────────────
 function saveRanking(entry: RankingEntry) {
@@ -953,6 +953,39 @@ Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY.
     return askClaude(promptEN, systemEN, 8000, 'anglais')
   }
 
+  const isEcoCorrect = globalMatiere === 'eco-gestion'
+    || examTitle?.toLowerCase().includes('éco-gestion')
+    || examTitle?.toLowerCase().includes('eco-gestion')
+    || exercise.title?.toLowerCase().includes('ec1')
+    || exercise.title?.toLowerCase().includes('ec2')
+    || exercise.title?.toLowerCase().includes('ec3')
+    || exercise.title?.toLowerCase().includes('gestion-finance')
+
+  if (isEcoCorrect) {
+    const systemECO = `Tu es un professeur correcteur du Baccalauréat France, spécialiste de SES (Sciences Économiques et Sociales) et de la série STMG.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES. Ne résume JAMAIS une étape. Développe TOUT.
+- EC1 / Mobilisation : définis chaque notion, explique le mécanisme, cite les auteurs (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls).
+- EC2 / Étude de document : montre COMMENT lire le document (titre, source, unité), fais les CALCULS en entier (taux de variation, indices base 100, points de %, coefficient multiplicateur), interprétation chiffrée.
+- EC3 / Raisonnement / Dissertation : méthode, plan détaillé, introduction (accroche, définitions, problématique, annonce), développement AEI (Affirmation-Explicitation-Illustration), conclusion.
+- STMG Gestion-Finance : pose chaque formule (FDR = capitaux permanents − actif immobilisé · BFR · TN = FDR − BFR · MCV · taux de MCV · seuil = CF / taux de MCV), calcul complet, interprétation.
+Termine chaque question par le barème. Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points clés.`
+    const withWorkECO = studentWork.trim().length > 10
+    const promptECO = `Corrige cet exercice de Bac Blanc SES/STMG de façon COMPLÈTE et DÉTAILLÉE.
+
+EXERCICE : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
+${exercise.statement}
+${withWorkECO ? `\nCOPIE DE L'ÉLÈVE :\n${studentWork}\n\nÉvalue la copie, attribue une note sur ${exercise.points}, puis donne la correction modèle.` : ''}
+
+### Correction modèle détaillée
+[Méthodologie + réponse complète : définitions, lecture/calculs chiffrés, raisonnement AEI ou calculs de gestion posés et interprétés]
+
+### Barème détaillé
+[Répartition des ${exercise.points} points + pièges classiques]
+
+> **À retenir pour ${exercise.theme} :** [notions clés, formules, méthode]`
+    return askClaude(promptECO, systemECO, 8000, 'eco-gestion')
+  }
+
   const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1279,6 +1312,9 @@ async function analyzeOneExercise(
   const system = isAnglaisAnalyze
     ? `You are an expert LLCER English pedagogy specialist. Analyse ONE Bac Blanc exercise and generate targeted remediation.
 RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG (Bac France). Analyse UN exercice de Bac Blanc (EC1/EC2/EC3, étude de cas) et génère une remédiation ciblée : méthode (AEI, lecture de document statistique, calculs de taux de variation, FDR/BFR/seuil), notions et auteurs du programme.
+RÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse cet exercice de Bac et génère une remédiation ciblée.
@@ -1311,6 +1347,33 @@ JSON requis :
   })
 }
 
+// ── estimateGrade : note rapide AVANT la correction (comme simulation) ──
+async function estimateGrade(exam: BacExam, studentWork: string): Promise<{
+  score: number; maxScore: number; comment: string
+  breakdown: {title:string;pts:number;max:number;reason:string}[]
+}> {
+  const hasWork = studentWork.trim().length > 10
+  const system = `Tu es un correcteur du Baccalauréat France${globalMatiere==='eco-gestion' ? ' en Sciences Économiques et Sociales / STMG' : ''}. Tu donnes une note RAPIDE et JUSTE.
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
+
+  const exList = exam.exercises.map(e=>`${e.title} (${e.points} pts): ${(e.statement||'').slice(0,180)}`).join(' | ')
+  const prompt = hasWork
+    ? `Estime la note de cet élève sur ${exam.totalPoints} points. SUJET: ${exList} RÉPONSE: ${studentWork.slice(0,1200)} JSON: {"score":[entier 0-${exam.totalPoints}],"maxScore":${exam.totalPoints},"comment":"[phrase encourageante 1-2 phrases]","breakdown":[{"title":"[ex]","pts":[accordés],"max":[max],"reason":"[raison]"}]}`
+    : `{"score":0,"maxScore":${exam.totalPoints},"comment":"Aucune réponse soumise. La correction complète va tout vous apprendre !","breakdown":${JSON.stringify(exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:'Non répondu'})))}}`
+
+  const raw = await askClaude(prompt, system, 800)
+  try {
+    return JSON.parse(raw.replace(/```json|```/g,'').trim())
+  } catch {
+    return {
+      score: hasWork ? Math.round(exam.totalPoints * 0.4) : 0,
+      maxScore: exam.totalPoints,
+      comment: hasWork ? 'Estimation calculée automatiquement.' : 'Aucune réponse soumise.',
+      breakdown: exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:hasWork?'Évaluation automatique':'Non répondu'}))
+    }
+  }
+}
+
 async function analyzeStudentWork(exam: BacExam, studentWork: string, correction: string): Promise<AnalysisResult> {
   const isAnglaisStudentWork = globalMatiere === 'anglais'
     || exam.title?.toLowerCase().includes('llcer')
@@ -1321,6 +1384,8 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
     ? `You are an expert LLCER English pedagogy specialist and student work analyst.
 You analyse student work on LLCER English Bac Blanc papers and build a personalised improvement plan.
 RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un expert en pédagogie des SES et de l'éco-gestion STMG, et en remédiation scolaire.\nTu analyses les copies (épreuve composée EC1/EC2/EC3, étude de cas STMG) et construis un plan d'amélioration personnalisé : méthodologie (AEI, plan, lecture de documents statistiques, calculs, FDR/BFR/seuil), notions et auteurs du programme.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
   const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
   "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
@@ -1346,6 +1411,8 @@ async function correctRemediationExercise(exercise: AnalysisResult['remediationE
     ? `You are a supportive but demanding LLCER English tutor correcting student responses on remediation exercises.
 Be precise, encouraging, and identify exactly what is missing.
 ALL feedback MUST BE IN ENGLISH — evaluation, commentary, key points, next steps.`
+    : globalMatiere === 'eco-gestion'
+    ? `Tu es un tuteur SES / éco-gestion STMG bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation : définitions, mécanismes, calculs (taux de variation, FDR, BFR, seuil de rentabilité), lecture de documents, méthode AEI.\nSois précis, encourageant, et identifie exactement ce qui manque.`
     : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
   return askClaude(
     `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
@@ -1701,6 +1768,125 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
     duration: parsed.duration || secAnglais.duration,
   }
 }
+
+// ════════════════════════════════════════════════════════════════════
+//  BAC BLANC ÉCONOMIE & GESTION (SES + STMG) — France · 1 matière
+//  Sections : terminale-eco (Spé SES) · premiere-eco · seconde-eco · stmg-eco
+//  Épreuve composée EC1/EC2/EC3 · documents statistiques (tableaux & graphiques)
+// ════════════════════════════════════════════════════════════════════
+const PROGRAMME_JOUR_ECO_FR: Record<string, { ex1:{theme:string;sousTh:string}; ex2:{theme:string;sousTh:string}; ex3:{theme:string;sousTh:string} }[]> = {
+  'terminale-eco': [
+    {ex1:{theme:"Sources de la croissance",sousTh:"Facteurs de production, PGF, progrès technique, innovation (Schumpeter), croissance endogène, limites écologiques"},ex2:{theme:"Mobilité sociale",sousTh:"Tables de mobilité (lecture en %, destinée/recrutement), fluidité sociale, capital culturel (Bourdieu)"},ex3:{theme:"Commerce international",sousTh:"Avantages comparatifs (Ricardo), dotations factorielles, chaîne de valeur, compétitivité prix/hors-prix"}},
+    {ex1:{theme:"Chômage & emploi",sousTh:"Chômage structurel/conjoncturel, taux BIT, asymétries d'information, politiques de l'emploi"},ex2:{theme:"Structure sociale",sousTh:"Classes sociales (Marx, Weber), PCS, moyennisation, rapports de genre, intersection des inégalités"},ex3:{theme:"Engagement politique",sousTh:"Vote, militantisme, paradoxe de l'action collective (Olson), incitations sélectives"}},
+    {ex1:{theme:"Crises financières",sousTh:"1929 vs 2008, bulles spéculatives, mimétisme, panique bancaire, régulation prudentielle"},ex2:{theme:"École & mobilité",sousTh:"Massification vs démocratisation, capital culturel, fluidité, lecture de tables de mobilité"},ex3:{theme:"Justice sociale",sousTh:"Égalité droits/chances/situations (Rawls), redistribution, fiscalité, courbe de Lorenz, Gini"}},
+    {ex1:{theme:"Politiques européennes",sousTh:"Marché unique, euro, politique monétaire BCE (taux, inflation 2%), politique budgétaire, chocs asymétriques"},ex2:{theme:"Mutations du travail",sousTh:"Taylorisme/post-taylorisme, polarisation, numérique, précarisation, intégration par le travail"},ex3:{theme:"Mondialisation",sousTh:"FMN, DIT, gagnants et perdants de la mondialisation, protectionnisme"}},
+    {ex1:{theme:"Croissance & innovation",sousTh:"Destruction créatrice, PGF, brevets, droits de propriété, externalités, État stratège"},ex2:{theme:"Déviance & contrôle",sousTh:"Anomie (Durkheim), étiquetage (Becker), contrôle social, chiffre noir, statistiques de la délinquance"},ex3:{theme:"Action publique environnement",sousTh:"Externalités, taxe, marché de quotas, réglementation, coordination internationale, soutenabilité"}},
+  ],
+  'premiere-eco': [
+    {ex1:{theme:"Marché concurrentiel",sousTh:"CPP, offre/demande, prix d'équilibre, élasticité-prix, surplus, preneur de prix"},ex2:{theme:"Socialisation",sousTh:"Socialisation primaire/secondaire, instances, socialisation différentielle (genre, milieu)"},ex3:{theme:"Monnaie & financement",sousTh:"Création monétaire, banque centrale, taux directeurs, inflation (IPC), financement direct/indirect"}},
+    {ex1:{theme:"Défaillances du marché",sousTh:"Externalités, biens publics, asymétries d'information, antisélection, aléa moral, taxe pigouvienne"},ex2:{theme:"Liens sociaux",sousTh:"Types de liens (Paugam), solidarité mécanique/organique (Durkheim), intégration, désaffiliation"},ex3:{theme:"Opinion & vote",sousTh:"Sondages (échantillon, limites), participation/abstention, variables du vote, vote de classe"}},
+  ],
+  'seconde-eco': [
+    {ex1:{theme:"Création de richesses",sousTh:"Production marchande/non marchande, VA, PIB, taux de croissance, productivité, limites du PIB"},ex2:{theme:"Formation des prix",sousTh:"Loi de l'offre, loi de la demande, prix d'équilibre, excès d'offre/pénurie, recette"},ex3:{theme:"Diplôme & emploi",sousTh:"Population active, salaire brut/net, SMIC, taux de chômage et d'activité, diplôme et chômage"}},
+  ],
+  'stmg-eco': [
+    {ex1:{theme:"Management",sousTh:"Finalités, parties prenantes, performance (efficacité/efficience), styles de direction, RSE, SWOT"},ex2:{theme:"Droit & Économie",sousTh:"Contrat, responsabilité, contrat de travail (CDI/CDD), marché, chômage BIT, inflation (IPC)"},ex3:{theme:"Gestion-Finance",sousTh:"Compte de résultat, FDR=capitaux permanents-actif immobilisé, BFR, TN=FDR-BFR, MCV, seuil=CF/taux de MCV"}},
+  ],
+}
+
+function getProgrammeJourEcoFR(sectionKey: string, dayNum: number) {
+  const prog = PROGRAMME_JOUR_ECO_FR[sectionKey] || PROGRAMME_JOUR_ECO_FR['terminale-eco']
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
+async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secLabel = candidat.section || 'Terminale Spé SES'
+  const sk = candidat.sectionKey
+  const isStmg = sk === 'stmg-eco'
+  const isSeconde = sk === 'seconde-eco'
+  const isPremiere = sk === 'premiere-eco'
+  const secDuration = isSeconde ? 60 : 240
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const seed = `BBFR_ECO_${sk}_J${dayNum}_${today.getFullYear()}`
+  const prog = getProgrammeJourEcoFR(sk, dayNum)
+  const t1 = prog?.ex1.sousTh || 'Sources de la croissance'
+  const t2 = prog?.ex2.sousTh || 'Structure sociale et inégalités'
+  const t3 = prog?.ex3.sousTh || 'Commerce international'
+  const th1 = prog?.ex1.theme || 'Économie'
+  const th2 = prog?.ex2.theme || 'Sociologie'
+  const th3 = prog?.ex3.theme || 'Science politique'
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France en Sciences Économiques et Sociales (SES) et en série STMG (programme officiel Éducation Nationale).
+Tu crées des sujets BAC BLANC ÉCONOMIE & GESTION originaux, rigoureux, de niveau Bac France.
+Données statistiques RÉALISTES (PIB, chômage, indices base 100, parts en %, INSEE/Eurystat plausibles), sources et années citées.
+Vocabulaire SES précis, auteurs du programme (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+${UNIVERSAL_GRAPH_PROMPT}
+
+GRAPHIQUES SES — le document statistique va dans le champ "graph" SÉPARÉ :
+- TABLEAU : [GRAPH: {"type":"table","title":"Taux de chômage par diplôme (France, 2024, %)","headers":["Diplôme","Taux (%)","Part actifs (%)"],"rows":[["Sans diplôme","12,4","14"],["Bac","7,8","22"],["Bac+5","3,9","38"]]}]
+- DIAGRAMME BARRES : [GRAPH: {"type":"bar","title":"Croissance du PIB (%)","categories":["2021","2022","2023","2024"],"values":[6.4,2.6,1.1,0.9],"yLabel":"Taux (%)","xLabel":"Année"}]`
+
+  const structure = isStmg
+    ? `STRUCTURE STMG (étude de cas, 20 points) :\nDossier 1 - MANAGEMENT (7 pts) : ${t1}\nDossier 2 - DROIT & ÉCONOMIE (6 pts) : ${t2}\nDossier 3 - GESTION-FINANCE (7 pts, calculs FDR/BFR/TN/MCV/seuil, tableau OBLIGATOIRE) : ${t3}`
+    : isSeconde
+    ? `STRUCTURE SECONDE SES (20 points) :\nExercice 1 - Questions de cours (6 pts) : ${t1}\nExercice 2 - Calculs + document statistique (8 pts, graph table/bar OBLIGATOIRE) : ${t2}\nExercice 3 - Mini-raisonnement (6 pts) : ${t3}`
+    : isPremiere
+    ? `STRUCTURE PREMIÈRE SES (20 points) :\nExercice 1 - Mobilisation de connaissances (6 pts) : ${t1}\nExercice 2 - Étude d'un document statistique (6 pts, graph table/bar OBLIGATOIRE) : ${t2}\nExercice 3 - Raisonnement sur dossier (8 pts) : ${t3}`
+    : `STRUCTURE TERMINALE SES - ÉPREUVE COMPOSÉE (20 points) :\nExercice 1 - EC1 Mobilisation de connaissances (4 pts, 2 questions : ${th1} + ${th2})\nExercice 2 - EC2 Étude d'un document statistique (6 pts, graph table/bar OBLIGATOIRE) : ${t1}\nExercice 3 - EC3 Raisonnement sur dossier documentaire (10 pts) : ${t3}`
+
+  const ptsEx1 = isStmg ? 7 : (isSeconde ? 6 : (isPremiere ? 6 : 4))
+  const ptsEx2 = isStmg ? 6 : (isSeconde ? 8 : 6)
+  const ptsEx3 = isStmg ? 7 : (isSeconde ? 6 : (isPremiere ? 8 : 10))
+
+  const prompt = `Crée un sujet BAC BLANC ÉCONOMIE & GESTION France ORIGINAL pour ${secLabel}. Graine : ${seed}.
+
+${structure}
+
+Durée : ${secDuration/60}h · Total : 20 points
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL, jamais une copie des annales
+- Données statistiques réalistes, sources (INSEE, Eurostat, OCDE) et années citées
+- Calculs précis : taux de variation, indices base 100, points de %, Gini, FDR/BFR/TN, seuil (STMG)
+- Le document chiffré va dans le champ "graph" (type "table" ou "bar"), PAS en texte dans le statement
+- Questions numérotées 1) 2) 3) · Minimum 120 mots par exercice
+
+RÉPONSE JSON EXACTE :
+{
+  "id": "bbfr-eco-${dayNum}-${sk}",
+  "day": ${dayNum},
+  "title": "Bac Blanc Éco-Gestion - ${secLabel} - Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": ${secDuration},
+  "exercises": [
+    { "num": 1, "theme": "${th1}", "title": "Exercice 1", "points": ${ptsEx1}, "statement": "Questions numérotées avec notions SES précises (définitions, mécanismes, auteurs).", "graph": null },
+    { "num": 2, "theme": "${th2}", "title": "Exercice 2 - étude de document", "points": ${ptsEx2}, "statement": "Document statistique ci-dessous (voir tableau/graphique).\n\n1) Lecture/calcul d'une donnée précise\n2) À l'aide du document et de vos connaissances, analysez...", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table ou bar, données françaises réalistes}]" },
+    { "num": 3, "theme": "${th3}", "title": "Exercice 3", "points": ${ptsEx3}, "statement": "SUJET : [raisonnement]\n\nDOCUMENT 1 - [texte, source, année]\nDOCUMENT 2 - [...]\n\nConsigne : réponse organisée (introduction, arguments appuyés sur les documents et les connaissances, conclusion).", "graph": null }
+  ]
+}`
+
+  const raw = await askClaude(prompt, system, 6000)
+  const parsed = parseJSON<BacExam>(raw, {
+    id: `bbfr-eco-${dayNum}-${sk}-${Date.now()}`, day: dayNum,
+    title: `Bac Blanc Éco-Gestion - ${secLabel} - Jour ${dayNum}`,
+    section: secLabel, sectionKey: sk, date: dateStr, totalPoints: 20, duration: secDuration, exercises: []
+  })
+  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide - réessayez')
+  return {
+    ...parsed,
+    id: parsed.id || `bbfr-eco-${dayNum}-${sk}-${Date.now()}`,
+    day: parsed.day || dayNum, sectionKey: sk,
+    section: parsed.section || secLabel, date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || secDuration,
+  }
+}
+
 
 async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)!
@@ -2074,7 +2260,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 // PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
 function PhaseChoixMatiereFR({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onEco, onRetour
 }: {
   candidat: Candidat
   dayNum: number
@@ -2084,6 +2270,7 @@ function PhaseChoixMatiereFR({
   onAnglais: () => void
   onSvt: () => void
   onFrancais: () => void
+  onEco: () => void
   onRetour: () => void
 }) {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
@@ -2172,6 +2359,18 @@ function PhaseChoixMatiereFR({
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
+    {
+      key: 'eco-gestion',
+      icon: '📊',
+      label: 'Économie & Gestion',
+      desc: 'Spé SES (épreuve composée EC1/EC2/EC3, coef. 16) · STMG · Documents statistiques · Gestion-Finance (FDR/BFR/seuil) · Correction IA',
+      color: '#14b8a6',
+      gradient: 'linear-gradient(135deg,rgba(20,184,166,0.18),rgba(13,148,136,0.08))',
+      border: 'rgba(20,184,166,0.4)',
+      available: true,
+      badge: '✅ Disponible',
+      badgeColor: '#6ee7b7',
+    },
   ]
 
   return (
@@ -2221,6 +2420,7 @@ function PhaseChoixMatiereFR({
                 if (m.key === 'anglais') { onAnglais(); return }
                 if (m.key === 'svt') { onSvt(); return }
                 if (m.key === 'francais') { onFrancais(); return }
+                if (m.key === 'eco-gestion') { onEco(); return }
               }}
               style={{
                 width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
@@ -2276,12 +2476,12 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
   const [sectionKey,setSectionKey]=useState('')
-  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>('maths')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'>('maths')
   const [err,setErr]=useState('')
   // Si l'élève est abonné à une seule matière, sélectionner par défaut une matière accessible
   useEffect(() => {
     if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return
-    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'> = ['maths','physique','informatique','anglais','svt','francais']
+    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'> = ['maths','physique','informatique','anglais','svt','francais','eco-gestion']
     const accessible = (k: string) => checkMatiereAccess((k === 'maths' ? 'mathematiques' : k) as any)
     if (!accessible(activeMatiereFiche)) {
       const first = order.find(accessible)
@@ -2304,6 +2504,8 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
         ? {key:sectionKey,label:sectionKey==='terminale-francais'?'Terminale — Philosophie':sectionKey==='premiere-francais'?'Première — EAF (Écrit + Oral)':'Seconde — Français',icon:'📚',color:'#ec4899',duration:sectionKey==='terminale-francais'||sectionKey==='premiere-francais'?240:120,coeff:sectionKey==='terminale-francais'?8:sectionKey==='premiere-francais'?5:1,themes:[],programme:[]}
         : sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
         ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
+        : sectionKey.includes('-eco')
+        ? {key:sectionKey,label:sectionKey==='terminale-eco'?'Terminale Spé SES':sectionKey==='premiere-eco'?'Première Spé SES':sectionKey==='seconde-eco'?'Seconde SES':'Terminale STMG',icon:'📊',color:'#14b8a6',duration:sectionKey==='seconde-eco'?60:240,coeff:sectionKey==='seconde-eco'?1:sectionKey==='premiere-eco'?5:16,themes:[],programme:[]}
         : undefined)
 
   const handleSubmit=()=>{
@@ -2388,6 +2590,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
                 {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
                 {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
+                {key:'eco-gestion'  as const, icon:'📊', label:'Éco & Gestion',    color:'#14b8a6'},
               ].filter(m => {
                 // L'élève ne voit que les matières couvertes par son abonnement ; admin voit tout ; sans abonnement → tout
                 if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return true
@@ -2430,6 +2633,11 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'terminale-francais', label:'Terminale — Philosophie', icon:'🧠', color:'#ec4899', duration:240, coeff:8},
                 {key:'premiere-francais',  label:'Première — EAF',          icon:'📗', color:'#f472b6', duration:240, coeff:5},
                 {key:'seconde-francais',   label:'Seconde — Français',       icon:'📘', color:'#a78bfa', duration:120, coeff:1},
+              ] : activeMatiereFiche==='eco-gestion' ? [
+                {key:'terminale-eco', label:'Terminale Spé SES',         icon:'🎓', color:'#14b8a6', duration:240, coeff:16},
+                {key:'premiere-eco',  label:'Première Spé SES',          icon:'📗', color:'#4f6ef7', duration:240, coeff:5},
+                {key:'seconde-eco',   label:'Seconde SES',               icon:'📘', color:'#10b981', duration:60,  coeff:1},
+                {key:'stmg-eco',      label:'Terminale STMG',            icon:'🏢', color:'#8b5cf6', duration:240, coeff:16},
               ] : [
                 {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
                 {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
@@ -3204,6 +3412,99 @@ function PageAnalyseExercice({
   )
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// PHASE NOTE — Résultat /20 + détail par exercice (AVANT la correction)
+// ═══════════════════════════════════════════════════════════════════
+function PhaseGrade({ exam, grade, onSeeCorrection }: {
+  exam: BacExam
+  grade: {score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null
+  onSeeCorrection: ()=>void
+}) {
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => { if (grade) setTimeout(() => setRevealed(true), 300) }, [grade])
+
+  if (!grade) {
+    return (
+      <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',color:'white',fontFamily:'system-ui',gap:8,padding:'60px 20px',textAlign:'center'}}>
+        <div style={{fontSize:52,marginBottom:16}}>⚖️</div>
+        <h3 style={{color:'#e2e8f0',marginBottom:8}}>Évaluation en cours…</h3>
+        <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>L&apos;IA analyse votre copie et calcule votre note</p>
+        <div style={{width:260,height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',margin:'24px auto 0',overflow:'hidden'}}>
+          <div style={{height:'100%',background:'linear-gradient(90deg,#6366f1,#f59e0b)',borderRadius:4,animation:'slideBar 1.8s ease-in-out infinite'}}/>
+        </div>
+        <style>{`@keyframes slideBar{0%{transform:translateX(-100%)}100%{transform:translateX(360%)}}`}</style>
+      </div>
+    )
+  }
+
+  const pct = Math.round((grade.score / grade.maxScore) * 100)
+  const scoreColor = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : pct >= 30 ? '#f97316' : '#ef4444'
+  const scoreGrad  = pct >= 70 ? 'linear-gradient(135deg,#10b981,#059669)' : pct >= 50 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#ef4444,#dc2626)'
+  const mention = pct >= 80 ? 'Très Bien 🏆' : pct >= 70 ? 'Bien 👏' : pct >= 60 ? 'Assez Bien 👍' : pct >= 50 ? 'Passable 🎯' : pct >= 30 ? 'Insuffisant 💪' : 'À retravailler 📚'
+  const circumference = 2 * Math.PI * 54
+  const dashOffset = circumference - (pct / 100) * circumference
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui',padding:'40px 20px'}}>
+    <div style={{maxWidth:680,margin:'0 auto'}}>
+      <div style={{textAlign:'center',marginBottom:32}}>
+        <h3 style={{margin:'0 0 6px',fontSize:20,color:'#e2e8f0'}}>Résultat de votre Bac Blanc</h3>
+        <p style={{margin:0,fontSize:13,color:'rgba(255,255,255,0.4)'}}>{exam.title}</p>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'40px 32px',marginBottom:24,background:'rgba(255,255,255,0.03)',border:`1px solid ${scoreColor}30`,borderRadius:24,opacity:revealed?1:0,transform:revealed?'translateY(0) scale(1)':'translateY(20px) scale(0.95)',transition:'all 0.6s cubic-bezier(0.34,1.56,0.64,1)'}}>
+        <div style={{position:'relative',marginBottom:20}}>
+          <svg width="140" height="140" style={{transform:'rotate(-90deg)'}}>
+            <circle cx="70" cy="70" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="10"/>
+            <circle cx="70" cy="70" r="54" fill="none" stroke={scoreColor} strokeWidth="10" strokeDasharray={circumference} strokeDashoffset={revealed?dashOffset:circumference} strokeLinecap="round" style={{transition:'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1) 0.3s',filter:`drop-shadow(0 0 10px ${scoreColor}80)`}}/>
+          </svg>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+            <span style={{fontSize:42,fontWeight:900,color:scoreColor,lineHeight:1,opacity:revealed?1:0,transition:'opacity 0.5s ease 0.8s'}}>{grade.score}</span>
+            <span style={{fontSize:15,color:'rgba(255,255,255,0.35)',fontWeight:600}}>/{grade.maxScore}</span>
+          </div>
+        </div>
+        <div style={{padding:'8px 24px',borderRadius:20,background:`${scoreColor}20`,border:`1px solid ${scoreColor}40`,fontSize:16,fontWeight:800,color:scoreColor,marginBottom:14,opacity:revealed?1:0,transition:'opacity 0.4s ease 1s'}}>{mention}</div>
+        <p style={{textAlign:'center',fontSize:14,color:'rgba(255,255,255,0.65)',lineHeight:1.75,maxWidth:420,margin:0,opacity:revealed?1:0,transition:'opacity 0.4s ease 1.2s'}}>{grade.comment}</p>
+      </div>
+
+      {grade.breakdown.length > 0 && (
+        <div style={{marginBottom:24,opacity:revealed?1:0,transform:revealed?'translateY(0)':'translateY(16px)',transition:'all 0.5s ease 0.9s'}}>
+          <h4 style={{margin:'0 0 12px',fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.45)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Détail par exercice</h4>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {grade.breakdown.map((b, i) => {
+              const exPct = b.max > 0 ? (b.pts / b.max) * 100 : 0
+              const exCol = exPct >= 70 ? '#10b981' : exPct >= 50 ? '#f59e0b' : '#ef4444'
+              return (
+                <div key={i} style={{padding:'12px 16px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7,gap:8,flexWrap:'wrap'}}>
+                    <span style={{fontSize:13,fontWeight:600,color:'rgba(255,255,255,0.8)'}}>{b.title}</span>
+                    <span style={{fontSize:13,fontWeight:800,color:exCol,flexShrink:0}}>{b.pts}/{b.max} pts</span>
+                  </div>
+                  <div style={{height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',marginBottom:6,overflow:'hidden'}}>
+                    <div style={{height:'100%',borderRadius:4,background:exCol,width:revealed?`${exPct}%`:'0%',transition:`width 1s ease ${0.9 + i * 0.15}s`}}/>
+                  </div>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.35)',margin:0}}>{b.reason}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{textAlign:'center',opacity:revealed?1:0,transition:'opacity 0.4s ease 1.4s'}}>
+        <button onClick={onSeeCorrection} style={{padding:'16px 36px',background:scoreGrad,color:'white',borderRadius:14,border:'none',cursor:'pointer',fontSize:15,fontWeight:800,boxShadow:`0 8px 28px ${scoreColor}50`,display:'inline-flex',alignItems:'center',gap:12,transition:'all 0.2s',fontFamily:'inherit'}}
+          onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-3px)'}}
+          onMouseLeave={e=>{e.currentTarget.style.transform='none'}}>
+          <span style={{fontSize:20}}>📝</span>
+          Voir la correction détaillée
+          <span style={{fontSize:18,opacity:0.8}}>→</span>
+        </button>
+      </div>
+    </div>
+    </div>
+  )
+}
+
 function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
   exam:BacExam;candidat:Candidat;answers:string
   onFinish:(corrections:Record<number,string>)=>void
@@ -3811,6 +4112,7 @@ function BacBlancFranceInner() {
   const [answers, setAnswers] = useState('')
   const [corrections, setCorrections] = useState<Record<number,string>>({})
   const [analysis, setAnalysis] = useState<AnalysisResult|null>(null)
+  const [gradeResult, setGradeResult] = useState<{score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null>(null)
   const today = new Date()
   // Période concours: 1er mai – 30 juin · Jour 1=1mai, Jour 61=30juin
   const periodeStart = new Date(today.getFullYear(), 4, 1)
@@ -3820,7 +4122,9 @@ function BacBlancFranceInner() {
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
   // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5, sinon la valeur du plan
-  const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
+  const bbWeeklyLimit = isAdmin
+    ? -1
+    : quotaLimits.bac_blanc_per_week === -1
     ? -1
     : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
 
@@ -4059,9 +4363,49 @@ function BacBlancFranceInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  const handleSubmitExam = useCallback((ans: string) => {
-    setAnswers(ans); setCorrections({}); setPhase('correction')
-  }, [])
+  const handleStartEco = useCallback(async () => {
+    if (!candidat) return
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('eco-gestion' as any)) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie & Gestion pour accéder au Bac Blanc.\n→ mathsbac.com/abonnement?matiere=eco-gestion')
+      return
+    }
+    if (!isAdmin && hasPassedTodayForMatiere('eco-gestion')) {
+      alert('✅ Vous avez déjà passé votre examen Économie & Gestion aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
+      return
+    }
+    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      return
+    }
+    globalMatiere = 'eco-gestion'
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    setPhase('generating')
+    try {
+      const e = await generateBacBlancEcoFR(candidat, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      markPassedTodayForMatiere('eco-gestion')
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    }
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+
+  const handleSubmitExam = useCallback(async (ans: string) => {
+    setAnswers(ans); setCorrections({}); setGradeResult(null); setPhase('grading')
+    if (!exam) { setPhase('correction'); return }
+    try {
+      const g = await estimateGrade(exam, ans)
+      setGradeResult(g); setPhase('graded')
+    } catch {
+      setPhase('correction')
+    }
+  }, [exam])
+
+  const handleSeeCorrection = useCallback(() => { setPhase('correction') }, [])
 
   const handleFinishCorrection = useCallback(async (corrs: Record<number,string>) => {
     setCorrections(corrs); setPhase('analysing')
@@ -4096,7 +4440,7 @@ function BacBlancFranceInner() {
 
   const handleRestart = () => {
     setPhase('inscription'); setExam(null); setCandidat(null)
-    setAnswers(''); setCorrections({}); setAnalysis(null)
+    setAnswers(''); setCorrections({}); setAnalysis(null); setGradeResult(null)
   }
 
   if (phase === 'statistiques') return <PageStatistiques onBack={handleRestart}/>
@@ -4112,11 +4456,15 @@ function BacBlancFranceInner() {
       onAnglais={handleStartAnglais}
       onSvt={handleStartSvt}
       onFrancais={handleStartFrancais}
+      onEco={handleStartEco}
       onRetour={()=>setPhase('inscription')}
     />
   )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
+  if ((phase === 'grading' || phase === 'graded') && exam && candidat) return(
+    <PhaseGrade exam={exam} grade={gradeResult} onSeeCorrection={handleSeeCorrection}/>
+  )
   if (phase === 'correction' && exam && candidat) return(
     <PhaseCorrection exam={exam} candidat={candidat} answers={answers}
       onFinish={handleFinishCorrection} onGraphExtracted={handleGraphExtracted}/>
