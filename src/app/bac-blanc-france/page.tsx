@@ -1,35 +1,4 @@
 'use client'
-
-function MatiereLockOverlay({ matiere, label, color, icon }: {
-  matiere: string; label: string; color: string; icon: string
-}) {
-  return (
-    <div style={{
-      position:'absolute', inset:0, zIndex:20,
-      background:'rgba(10,10,26,0.88)', backdropFilter:'blur(4px)',
-      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-      borderRadius:'inherit', gap:12,
-    }}>
-      <div style={{ fontSize:36 }}>🔒</div>
-      <div style={{ textAlign:'center', maxWidth:260 }}>
-        <div style={{ fontSize:15, fontWeight:800, color:'white', marginBottom:6 }}>
-          {icon} {label}
-        </div>
-        <div style={{ fontSize:12, color:'rgba(255,255,255,0.5)', lineHeight:1.6, marginBottom:16 }}>
-          Accès réservé aux abonnés {label}.
-          Tes cours et examens restent gratuits.
-        </div>
-        <a href={`/abonnement?matiere=${matiere}`}
-          style={{ display:'inline-flex', alignItems:'center', gap:6,
-            background:`linear-gradient(135deg,${color},${color}cc)`,
-            color:'white', padding:'9px 20px', borderRadius:10,
-            fontWeight:700, fontSize:13, textDecoration:'none' }}>
-          S'abonner {icon} →
-        </a>
-      </div>
-    </div>
-  )
-}
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
 // ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
@@ -66,116 +35,159 @@ declare const Plotly: any
 
 import { ADMIN_EMAIL } from '@/lib/types/monetisation'
 
-const GOUVERNORATS = [
-  'Ariana','Béja','Ben Arous','Bizerte','Gabès','Gafsa','Jendouba',
-  'Kairouan','Kasserine','Kébili','Kef','Mahdia','Manouba','Médenine',
-  'Monastir','Nabeul','Sfax','Sidi Bouzid','Siliana','Sousse',
-  'Tataouine','Tozeur','Tunis','Zaghouan',
+
+const SECTIONS_FR = [
+  {key:'terminale',label:'Terminale Générale',icon:'🎓',color:'#f59e0b',duration:240,coeff:16,
+   themes:['Suites & Complexes','Logarithme & Intégration','Éq. différentielles','Géométrie espace','Probabilités'],
+   programme:[
+     {theme:'Analyse et Suites',   sousTh:'Suites récurrentes, limites, logarithme neperien ln(x), integration par parties'},
+     {theme:'Nombres complexes',   sousTh:'Formes trigonometrique et exponentielle, Moivre, racines n-iemes, geometrie complexe'},
+     {theme:'Probabilites',        sousTh:'Loi normale N(mu,sigma), Bienaymet-Tchebychev, loi binomiale, intervalle de fluctuation'},
+     {theme:'Geometrie espace',    sousTh:'Vecteurs 3D, droites et plans, equations cartesiennes, distance point-plan'},
+     {theme:'Eq differentielles',  sousTh:'y prime = ay+b, condition initiale, modeles RC, refroidissement Newton'},
+   ]},
+  {key:'premiere',label:'Première Spécialité',icon:'📗',color:'#4f6ef7',duration:120,coeff:2,
+   themes:['Second degre et Suites','Derivation et Variations','Probabilites conditionnelles','Trigonometrie'],
+   programme:[
+     {theme:'Second degre',         sousTh:'Discriminant delta, forme canonique, tableau de signes, relations de Viete'},
+     {theme:'Suites numeriques',    sousTh:'Suites arithmetiques et geometriques, recurentes, monotonie, convergence'},
+     {theme:'Derivation',           sousTh:'Derivees composees, extremums locaux, etude complete de fonctions'},
+     {theme:'Probabilites',         sousTh:'Probabilites conditionnelles P_A(B), loi binomiale, esperance, variance'},
+     {theme:'Trigonometrie',        sousTh:'Cercle trigonometrique, formules addition, equations cos x = a, sin x = a'},
+   ]},
+  {key:'techno',label:'Terminale STMG et STI2D',icon:'📊',color:'#10b981',duration:180,coeff:5,
+   themes:['Suites et Finances STMG','Statistiques 2 variables STMG','Exp et Integration STI2D'],
+   programme:[
+     {theme:'Suites STMG',          sousTh:'Suites arithmetiques et geometriques, interets composes, amortissements, seuil'},
+     {theme:'Probabilites STMG',    sousTh:'Loi binomiale B(n,p), probabilites conditionnelles, esperance, arbres'},
+     {theme:'Statistiques 2 var',   sousTh:'Regression lineaire moindres carres, coefficient de correlation r, previsions'},
+     {theme:'Exp et ln STI2D',      sousTh:'Decharge RC, refroidissement Newton, croissances comparees, eq differentielles'},
+     {theme:'Integration STI2D',    sousTh:'Primitives, valeur moyenne, calcul de travail, integrale definie'},
+   ]},
+  {key:'expertes',label:'Option Maths Expertes',icon:'★',color:'#8b5cf6',duration:180,coeff:3,
+   themes:['Arithmetique (PGCD, Bezout, Fermat)','Complexes (Moivre, racines n-iemes)','Matrices et Graphes','Chaines de Markov'],
+   programme:[
+     {theme:'Arithmetique',         sousTh:'PGCD Euclide, Bezout au+bv=d, Gauss, petit theoreme de Fermat, eq diophantiennes'},
+     {theme:'Complexes',            sousTh:'Forme exponentielle, Moivre, racines n-iemes, polynomes dans C, factorisation'},
+     {theme:'Matrices',             sousTh:'Calcul matriciel, matrice inverse, puissances M^n, suites vectorielles V(n+1)=M*V(n)'},
+     {theme:'Chaines de Markov',    sousTh:'Matrice de transition, evolution P(n)=P0*M^n, etat stable pi=pi*M, convergence'},
+   ]},
+  {key:'seconde',label:'Seconde Générale',icon:'📘',color:'#06b6d4',duration:60,coeff:1,
+   themes:['Fonctions & Variations','Second degré','Probabilités','Géométrie','Algorithmique Python'],
+   programme:[
+     {theme:'Fonctions et variations', sousTh:'Fonctions affines, carrées, valeur absolue, extremums, tableaux de variations, signe'},
+     {theme:'Second degre',            sousTh:'Trinome ax2+bx+c, discriminant, forme factorisée, tableau de signes, applications'},
+     {theme:'Probabilites',            sousTh:'Probabilité, événements, loi des grands nombres, fréquence relative'},
+     {theme:'Geometrie analytique',    sousTh:'Vecteurs, coordonnées, produit scalaire, équations de droite, distance'},
+     {theme:'Algorithmique Python',    sousTh:'Variables, boucles for/while, conditions if/else, fonctions, listes'},
+   ]},
+  {key:'terminale-st2s',label:'Terminale ST2S',icon:'🏥',color:'#ec4899',duration:120,coeff:3,
+   themes:['Statistiques & Probabilités ST2S','Fonctions & Modélisation ST2S','Suites & Finances ST2S'],
+   programme:[
+     {theme:'Statistiques ST2S',      sousTh:'Statistiques descriptives, moyenne, médiane, quartiles, écart-type, séries statistiques'},
+     {theme:'Probabilites ST2S',      sousTh:'Probabilités conditionnelles, loi binomiale, espérance, intervalle de confiance, loi normale'},
+     {theme:'Fonctions ST2S',         sousTh:'Fonctions affines et polynomiales, exponentielles, logarithme, applications médicales'},
+     {theme:'Suites et finances',     sousTh:'Suites arithmétiques et géométriques, intérêts composés, annuités, emprunts'},
+   ]},
+  // ── Sections SVT France ────────────────────────────────────────────
+  {key:'terminale-svt',label:'Terminale Spé SVT',icon:'🌱',color:'#22c55e',duration:210,coeff:16,
+   themes:['Genetique et Evolution','Corps humain et Sante','Plantes et Paleoclimats','Systeme nerveux','Tectonique'],
+   programme:[
+     {theme:'Genetique et Evolution', sousTh:'Meiose, brassages genetiques, frequences alleliques, Hardy-Weinberg, selection naturelle, speciation, phylogenie moleculaire'},
+     {theme:'Corps humain et Sante',  sousTh:'Immunite innee et adaptative, LB anticorps, LT CD4 CD8, glycemie insuline glucagon, contraction musculaire ATP'},
+     {theme:'Plantes et Paleoclimats',sousTh:'Photosynthese phase lumineuse et cycle de Calvin, paleoclimats delta18O, cycles biogeochimiques, domestication plantes'},
+     {theme:'Systeme nerveux',        sousTh:'Potentiel action, synapse chimique, neurotransmetteurs dopamine, plasticite synaptique, maladies neurodegeneratives'},
+     {theme:'Tectonique des plaques', sousTh:'Structure interne du globe, subduction, collision, formation chaines de montagnes, volcanism et seismes'},
+   ]},
+  {key:'premiere-svt',label:'Première Spé SVT',icon:'📗',color:'#4ade80',duration:120,coeff:2,
+   themes:['ADN et Expression genetique','Dynamique interne Terre','Ecosystemes et Services','Immunite','Ressources naturelles'],
+   programme:[
+     {theme:'ADN et Expression',      sousTh:'Structure ADN, replication, transcription ARNm, epissage introns, traduction code genetique, mutations'},
+     {theme:'Tectonique Premiere',    sousTh:'Structure interne du globe, ondes sismiques P et S, lithosphere, convection mantellique, frontieres de plaques'},
+     {theme:'Ecosystemes',            sousTh:'Reseaux trophiques, flux energie regle 10 pourcent, services ecosystemiques, biodiversite, corridors ecologiques'},
+     {theme:'Immunite Premiere',      sousTh:'Immunite innee phagocytose inflammation, immunite adaptative LB LT, memoire immunologique, vaccination'},
+     {theme:'Ressources naturelles',  sousTh:'Cycle de eau, empreinte ecologique, energies renouvelables, limites planetaires Rockstrom'},
+   ]},
+  {key:'seconde-svt',label:'Seconde SVT',icon:'📘',color:'#16a34a',duration:60,coeff:1,
+   themes:['La cellule unite du vivant','Metabolisme Respiration Photosynthese','Biodiversite et Evolution','Geosciences'],
+   programme:[
+     {theme:'La cellule',             sousTh:'Cellule animale vs vegetale, organites noyau mitochondrie chloroplaste, membrane plasmique, osmose, differenciation cellulaire'},
+     {theme:'Metabolisme',            sousTh:'Equations bilan respiration et photosynthese, ATP role energetique, autotrophes vs heterotrophes, fermentation, facteurs limitants'},
+     {theme:'Biodiversite',           sousTh:'3 niveaux de biodiversite, notion espece critere reproductif, selection naturelle Darwin, arbre phylogenetique, fossiles'},
+     {theme:'Geosciences',            sousTh:'Alteration mecanique et chimique des roches, transport et sedimentation, principe de superposition, types de roches'},
+   ]},
 ]
 
-const SECTIONS = [
-  { key:'maths',  label:'Mathématiques',          color:'#6366f1', icon:'∑', duration:240, coeff:4,
-    themes:['Analyse & Suites','Nombres complexes','Probabilités','Géométrie espace','Isométries'] },
-  { key:'scexp',  label:'Sciences Expérimentales', color:'#06d6a0', icon:'⚗', duration:180, coeff:3,
-    themes:['Analyse','Complexes','Probabilités','Géométrie','Intégrales'] },
-  { key:'sctech', label:'Sciences Techniques',     color:'#f59e0b', icon:'⚙', duration:180, coeff:3,
-    themes:['Analyse','Arithmétique','Probabilités','Complexes','Géométrie'] },
-  { key:'eco',    label:'Éco-Gestion',             color:'#10b981', icon:'💹', duration:120, coeff:2,
-    themes:['Analyse & Suites','Probabilités','Matrices','Maths Financières','Logarithme'] },
-  { key:'info',   label:'Informatique',            color:'#8b5cf6', icon:'⌨', duration:180, coeff:3,
-    themes:['Algorithmique','Bases de données','Mathématiques','STI Web'] },
+
+const SECTIONS_ANGLAIS_FR = [
+  {key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', icon:'🎓', color:'#f43f5e', duration:210, coeff:16,
+   themes:['Identities & Exchanges','Private & Public Sphere','Art & Power','Citizenship & Virtual Worlds','Fictions & Realities','Scientific Innovation','Diversity & Inclusion','Territory & Memory'],
+   programme:[
+     {theme:'Identities & Exchanges',      sousTh:'American Dream, multiculturalism, migration, brain drain, Brexit, globalization, cultural identity, glocalization'},
+     {theme:'Private & Public Sphere',     sousTh:'Filter bubble, surveillance capitalism, GDPR, fake news, social media addiction, echo chambers, attention economy'},
+     {theme:'Art & Power',                 sousTh:'Protest art, Banksy, propaganda, censorship, soft power, K-pop, Fahrenheit 451, 1984, cultural appropriation'},
+     {theme:'Citizenship & Virtual Worlds',sousTh:'Online activism, deepfakes, AI and democracy, cyberbullying, digital rights, e-democracy, fact-checking, MeToo'},
+     {theme:'Fictions & Realities',        sousTh:'Dystopia, 1984 Orwell, Lord of the Flies, narrative voice, science fiction, speculative fiction, Atwood'},
+     {theme:'Scientific Innovation',       sousTh:'AI ethics, algorithmic bias, CRISPR, green economy, autonomous weapons, EU AI Act, climate psychology, Snowden'},
+     {theme:'Diversity & Inclusion',       sousTh:'Gender pay gap, intersectionality, affirmative action, LGBTQ+ rights, systemic racism, social mobility, Popper'},
+     {theme:'Territory & Memory',          sousTh:'Colonial legacy, commemoration, postcolonial literature, TRC, collective memory, Halbwachs, memory laws'},
+   ]},
+  {key:'premiere-anglais', label:'Première — Anglais (Epreuve anticipee)', icon:'📗', color:'#8b5cf6', duration:120, coeff:3,
+   themes:['Communication & Oral Interaction','Reading Comprehension','Written Expression','Listening Comprehension','Grammar','Vocabulary & Culture'],
+   programme:[
+     {theme:'Communication & Interaction', sousTh:'Turn-taking, debate, presentations, opinions, indirect questions, question tags, signposting, comparatives'},
+     {theme:'Reading Comprehension',       sousTh:'Text types, inference, T/F/NM, vocabulary in context, author purpose, tone, literary analysis'},
+     {theme:'Written Expression',          sousTh:'Essays, formal emails, narratives, cohesive devices, for/against, descriptive writing, argumentation'},
+     {theme:'Listening Comprehension',     sousTh:'British vs American English, discourse markers, tone, predicting content, inferring attitude'},
+     {theme:'Grammar',                     sousTh:'Tenses, passive voice, reported speech, conditionals, relative clauses, modals, error correction'},
+     {theme:'Vocabulary & Culture',        sousTh:'English-speaking world, idioms, word formation, false friends, academic register, cultural knowledge'},
+   ]},
+  {key:'seconde-anglais', label:'Seconde — Anglais (Controle continu)', icon:'📘', color:'#06b6d4', duration:60, coeff:2,
+   themes:['Communication & Interaction','Reading & Grammar','Written Expression','Listening','Vocabulary'],
+   programme:[
+     {theme:'Communication & Interaction', sousTh:'Indirect questions, opinions, debate, comparatives, signposting, turn-taking, polite requests'},
+     {theme:'Reading & Grammar',           sousTh:'Tenses, passive, reported speech, conditionals, True/False/NM, inference, vocabulary in context'},
+     {theme:'Written Expression',          sousTh:'Cohesive devices, formal email, narrative, for/against essay, descriptive paragraph'},
+     {theme:'Listening Comprehension',     sousTh:'British vs American, discourse markers, identifying tone, numbers and data, inferring attitude'},
+     {theme:'Vocabulary & Culture',        sousTh:'English-speaking world, idioms, word formation, false friends, register, cultural knowledge'},
+   ]},
 ]
 
-// ── Programme complet par jour — rotation sur 31 jours ────────────
-// Chaque jour = thèmes précis différents pour chaque exercice
-// Couvre TOUT le programme officiel sur 31 jours
-const PROGRAMME_JOUR: Record<string, {
-  ex1: { theme: string; sousTh: string; typeFunc?: string }
-  ex2: { theme: string; sousTh: string }
-  ex3: { theme: string; sousTh: string }
-  ex4: { theme: string; sousTh: string }
-}[]> = {
-  maths: [
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction exponentielle f(x)=ae^(bx)+c",typeFunc:"exp"}, ex2:{theme:"Complexes",sousTh:"Module, argument, forme trigonométrique"}, ex3:{theme:"Probabilités",sousTh:"Loi binomiale"}, ex4:{theme:"Géométrie espace",sousTh:"Vecteurs et coplanéité"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction logarithme f(x)=a·ln(bx+c)+d",typeFunc:"ln"}, ex2:{theme:"Complexes",sousTh:"Puissances et formule de Moivre"}, ex3:{theme:"Probabilités",sousTh:"Loi géométrique et espérance"}, ex4:{theme:"Isométries",sousTh:"Rotation et translation dans le plan"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction trigonométrique f(x)=a·sin(bx+c)",typeFunc:"sin"}, ex2:{theme:"Complexes",sousTh:"Racines n-ièmes de l'unité"}, ex3:{theme:"Suites",sousTh:"Suite arithmétique et somme"}, ex4:{theme:"Géométrie espace",sousTh:"Plans et droites dans l'espace"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction rationnelle f(x)=(ax+b)/(cx+d)",typeFunc:"rat"}, ex2:{theme:"Complexes",sousTh:"Transformations du plan complexe"}, ex3:{theme:"Suites",sousTh:"Suite géométrique et somme"}, ex4:{theme:"Géométrie espace",sousTh:"Sphère et distance"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=(ax+b)e^(cx)",typeFunc:"poly_exp"}, ex2:{theme:"Complexes",sousTh:"Applications géométriques des complexes"}, ex3:{theme:"Probabilités",sousTh:"Probabilités conditionnelles et indépendance"}, ex4:{theme:"Isométries",sousTh:"Similitudes directes et indirectes"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=a·ln(x)/x+b",typeFunc:"ln_div"}, ex2:{theme:"Complexes",sousTh:"Résolution d'équations dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suite récurrente un+1=f(un)"}, ex4:{theme:"Géométrie espace",sousTh:"Angles dièdres et orthogonalité"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=x²·e^(-x)",typeFunc:"poly2_exp"}, ex2:{theme:"Complexes",sousTh:"Interprétation géométrique des complexes"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire et espérance"}, ex4:{theme:"Géométrie espace",sousTh:"Tétraèdre et pyramide"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de fonction f(x)=x-2·√x",typeFunc:"racine"}, ex2:{theme:"Complexes",sousTh:"Exponentielle complexe et forme algébrique"}, ex3:{theme:"Suites",sousTh:"Convergence et limite d'une suite"}, ex4:{theme:"Isométries",sousTh:"Composition d'isométries"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=a·cos(x)+b·sin(x)",typeFunc:"cos_sin"}, ex2:{theme:"Complexes",sousTh:"Polynômes à coefficients complexes"}, ex3:{theme:"Probabilités",sousTh:"Loi de Poisson et approximation"}, ex4:{theme:"Géométrie espace",sousTh:"Projections et distances dans l'espace"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x²+a)",typeFunc:"ln_comp"}, ex2:{theme:"Complexes",sousTh:"Argument et inégalité triangulaire"}, ex3:{theme:"Suites",sousTh:"Suites monotones et suites adjacentes"}, ex4:{theme:"Géométrie espace",sousTh:"Perpendiculaires et parallèles"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x²-1)·e^x",typeFunc:"poly_exp2"}, ex2:{theme:"Complexes",sousTh:"Lieu géométrique dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Dénombrement et combinatoire"}, ex4:{theme:"Isométries",sousTh:"Homothéties et similitudes"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=1/(1+x²) et sa primitive",typeFunc:"arctan"}, ex2:{theme:"Complexes",sousTh:"Nombres complexes et trigonométrie"}, ex3:{theme:"Suites",sousTh:"Suites définies par récurrence — convergence"}, ex4:{theme:"Géométrie espace",sousTh:"Vecteurs dans l'espace et produit scalaire"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=xe^(-x²)",typeFunc:"gauss"}, ex2:{theme:"Complexes",sousTh:"Applications : rotations et similitudes"}, ex3:{theme:"Probabilités",sousTh:"Schéma de Bernoulli"}, ex4:{theme:"Géométrie espace",sousTh:"Cylindre et cône"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x+√(1+x²))",typeFunc:"ln_comp2"}, ex2:{theme:"Complexes",sousTh:"Racines carrées d'un complexe"}, ex3:{theme:"Suites",sousTh:"Encadrement et comparaison de suites"}, ex4:{theme:"Isométries",sousTh:"Frises et pavages"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x+a)·e^(x/b)",typeFunc:"exp_gen"}, ex2:{theme:"Complexes",sousTh:"Triangle dans ℂ : équilatéral, rectangle"}, ex3:{theme:"Probabilités",sousTh:"Probabilité totale et Bayes"}, ex4:{theme:"Géométrie espace",sousTh:"Sections planes d'un solide"} },
-    { ex1:{theme:"Analyse",sousTh:"Intégration — calcul d'aire sous une courbe",typeFunc:"integrale"}, ex2:{theme:"Complexes",sousTh:"Résolution de systèmes dans ℂ"}, ex3:{theme:"Suites",sousTh:"Majoration et minoration"}, ex4:{theme:"Géométrie espace",sousTh:"Trièdre trirectangle"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x·ln(x)",typeFunc:"x_ln"}, ex2:{theme:"Complexes",sousTh:"Forme exponentielle et rotation"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire — variance et écart-type"}, ex4:{theme:"Isométries",sousTh:"Réflexions et glissements"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=e^x·sin(x)",typeFunc:"exp_sin"}, ex2:{theme:"Complexes",sousTh:"Inégalités dans ℂ — module"}, ex3:{theme:"Suites",sousTh:"Comparaison par récurrence"}, ex4:{theme:"Géométrie espace",sousTh:"Parallélépipède et cube"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=√(ax²+bx+c)",typeFunc:"racine_poly"}, ex2:{theme:"Complexes",sousTh:"Droites et cercles dans le plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Loi normale et loi de Laplace-Gauss"}, ex4:{theme:"Isométries",sousTh:"Symétries axiales et centrales"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(ax²+bx+c)·e^(-x)",typeFunc:"poly2_exp_neg"}, ex2:{theme:"Complexes",sousTh:"Équations du 2nd degré dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suites et inégalités — récurrence"}, ex4:{theme:"Géométrie espace",sousTh:"Angles et distances — méthode vectorielle"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=ln(x)/√x",typeFunc:"ln_racine"}, ex2:{theme:"Complexes",sousTh:"Groupe des isométries directes — complexes"}, ex3:{theme:"Probabilités",sousTh:"Espérance conditionnelle"}, ex4:{theme:"Isométries",sousTh:"Similitudes — point fixe"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(x-a)²·e^x",typeFunc:"poly_exp3"}, ex2:{theme:"Complexes",sousTh:"Applications : angles orientés dans ℂ"}, ex3:{theme:"Suites",sousTh:"Suite de Fibonacci et suites explicites"}, ex4:{theme:"Géométrie espace",sousTh:"Volume et aire de solides de révolution"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=a·tan(x)+b",typeFunc:"tan"}, ex2:{theme:"Complexes",sousTh:"Représentation géométrique — ensembles de points"}, ex3:{theme:"Probabilités",sousTh:"Simulations et fréquences"}, ex4:{theme:"Géométrie espace",sousTh:"Barycentres dans l'espace"} },
-    { ex1:{theme:"Analyse",sousTh:"Équation différentielle y'+ay=b",typeFunc:"eq_diff"}, ex2:{theme:"Complexes",sousTh:"Complexes et trigonométrie — formule d'Euler"}, ex3:{theme:"Suites",sousTh:"Suite et point fixe — stabilité"}, ex4:{theme:"Isométries",sousTh:"Droite invariante par une isométrie"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x/(x²+1)",typeFunc:"rat2"}, ex2:{theme:"Complexes",sousTh:"Image d'une droite ou cercle par f(z)=az+b"}, ex3:{theme:"Probabilités",sousTh:"Espérance et loi des grands nombres"}, ex4:{theme:"Géométrie espace",sousTh:"Repère dans l'espace — coordonnées"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=(ln x)²",typeFunc:"ln_carre"}, ex2:{theme:"Complexes",sousTh:"Décomposition — complexes"}, ex3:{theme:"Suites",sousTh:"Raisonnement par récurrence — applications"}, ex4:{theme:"Isométries",sousTh:"Composition de deux réflexions"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=e^x/(e^x+1)",typeFunc:"sigmoide"}, ex2:{theme:"Complexes",sousTh:"Résolution graphique dans le plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Inégalité de Bienaymé-Tchebychev"}, ex4:{theme:"Géométrie espace",sousTh:"Droite et plan — positions relatives"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=sin(x)/x pour x≠0",typeFunc:"sinc"}, ex2:{theme:"Complexes",sousTh:"Complexes et géométrie — orthocentre"}, ex3:{theme:"Suites",sousTh:"Suites et algorithmes — calcul numérique"}, ex4:{theme:"Isométries",sousTh:"Homothétie-rotation et similitude directe"} },
-    { ex1:{theme:"Analyse",sousTh:"Étude de f(x)=x·e^(1/x)",typeFunc:"exp_inv"}, ex2:{theme:"Complexes",sousTh:"Bilan complexes : module, argument, transformation"}, ex3:{theme:"Probabilités",sousTh:"Bilan probabilités : loi discrète et continue"}, ex4:{theme:"Géométrie espace",sousTh:"Bilan géométrie : droites, plans, distances"} },
-    { ex1:{theme:"Analyse",sousTh:"Révision complète — f(x)=(x²-x+1)e^x",typeFunc:"revision"}, ex2:{theme:"Complexes",sousTh:"Révision : applications géométriques des complexes"}, ex3:{theme:"Suites",sousTh:"Révision suites : récurrence, convergence, limite"}, ex4:{theme:"Isométries",sousTh:"Révision isométries et similitudes"} },
-    { ex1:{theme:"Analyse",sousTh:"Sujet final — f(x)=ln(1+e^x)",typeFunc:"softplus"}, ex2:{theme:"Complexes",sousTh:"Concours final complexes"}, ex3:{theme:"Probabilités",sousTh:"Concours final probabilités"}, ex4:{theme:"Géométrie espace",sousTh:"Concours final géométrie espace"} },
-  ],
-  scexp: [
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(2x-1)e^(-x)+1 — variation, limite, asymptote",typeFunc:"exp"}, ex2:{theme:"Complexes",sousTh:"Affixe, module, argument, forme trigonométrique"}, ex3:{theme:"Probabilités",sousTh:"Loi binomiale et espérance"}, ex4:{theme:"Géométrie",sousTh:"Vecteurs et produit scalaire"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x·ln(x)-x — étude complète",typeFunc:"ln"}, ex2:{theme:"Complexes",sousTh:"Forme algébrique et opérations"}, ex3:{theme:"Intégrales",sousTh:"Calcul d'intégrales et primitives"}, ex4:{theme:"Géométrie",sousTh:"Droites et cercles dans le plan"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=2sin(x)+cos(2x) — étude sur [0,2π]",typeFunc:"trig"}, ex2:{theme:"Complexes",sousTh:"Résolution d'équation dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Probabilité conditionnelle et indépendance"}, ex4:{theme:"Géométrie",sousTh:"Triangle et droites remarquables"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=√(x²+1) — dérivée, variations",typeFunc:"racine"}, ex2:{theme:"Complexes",sousTh:"Racines n-ièmes et applications"}, ex3:{theme:"Intégrales",sousTh:"Intégrale définie — aire entre courbes"}, ex4:{theme:"Géométrie",sousTh:"Cercle — propriétés et équation"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(x+1)e^(x-1) — tableau de variations complet",typeFunc:"poly_exp"}, ex2:{theme:"Complexes",sousTh:"Transformation du plan complexe"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire discrète — loi et espérance"}, ex4:{theme:"Géométrie",sousTh:"Vecteurs et repère orthonormé"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(x+1)/x — asymptotes, variations",typeFunc:"ln_rat"}, ex2:{theme:"Complexes",sousTh:"Applications géométriques : similitude"}, ex3:{theme:"Intégrales",sousTh:"Valeur moyenne d'une fonction"}, ex4:{theme:"Géométrie",sousTh:"Coniques — parabole et ellipse"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x²·e^(-x/2)",typeFunc:"poly2_exp"}, ex2:{theme:"Complexes",sousTh:"Argument et inégalité triangulaire"}, ex3:{theme:"Probabilités",sousTh:"Loi normale centrée réduite"}, ex4:{theme:"Géométrie",sousTh:"Droites perpendiculaires et parallèles"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=e^x·cos(x) sur [-π,π]",typeFunc:"exp_cos"}, ex2:{theme:"Complexes",sousTh:"Forme exponentielle et formule d'Euler"}, ex3:{theme:"Intégrales",sousTh:"Intégration par parties"}, ex4:{theme:"Géométrie",sousTh:"Lieu géométrique"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(3x-1)/(x²+1) — fonction rationnelle",typeFunc:"rat"}, ex2:{theme:"Complexes",sousTh:"Résolution graphique dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Dénombrement et arrangements"}, ex4:{theme:"Géométrie",sousTh:"Projection orthogonale"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(e^x+1) — étude et représentation",typeFunc:"ln_exp"}, ex2:{theme:"Complexes",sousTh:"Triangle dans ℂ et propriétés"}, ex3:{theme:"Intégrales",sousTh:"Calcul de volume par intégration"}, ex4:{theme:"Géométrie",sousTh:"Angles inscrits dans un cercle"} },
-    { ex1:{theme:"Analyse",sousTh:"Équation différentielle y'+y=e^x",typeFunc:"eq_diff"}, ex2:{theme:"Complexes",sousTh:"Image d'un cercle ou une droite"}, ex3:{theme:"Probabilités",sousTh:"Loi de Poisson"}, ex4:{theme:"Géométrie",sousTh:"Coordonnées polaires et cartésiennes"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=arcsin(x) ou arccos(x)",typeFunc:"arcsin"}, ex2:{theme:"Complexes",sousTh:"Conjugué et module — propriétés"}, ex3:{theme:"Intégrales",sousTh:"Sommes de Riemann et limite"}, ex4:{theme:"Géométrie",sousTh:"Parabole — propriété de la directrice"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x^n·e^(-x) — généralisation",typeFunc:"xn_exp"}, ex2:{theme:"Complexes",sousTh:"Corps des complexes — structure algébrique"}, ex3:{theme:"Probabilités",sousTh:"Variance et écart-type"}, ex4:{theme:"Géométrie",sousTh:"Transformation plane — homothétie"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(x-a)·ln(x)",typeFunc:"x_ln"}, ex2:{theme:"Complexes",sousTh:"Nombres complexes et trigonométrie"}, ex3:{theme:"Intégrales",sousTh:"Intégrale de fonctions trigonométriques"}, ex4:{theme:"Géométrie",sousTh:"Hexagone régulier et symétries"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(-x²) — courbe de Gauss",typeFunc:"gauss"}, ex2:{theme:"Complexes",sousTh:"Racines du polynôme z^n=a"}, ex3:{theme:"Probabilités",sousTh:"Loi exponentielle et durée de vie"}, ex4:{theme:"Géométrie",sousTh:"Médiatrice, bissectrice — constructions"} },
-    { ex1:{theme:"Analyse",sousTh:"Bilan analyse : f(x) mêlant exp et trig",typeFunc:"mix"}, ex2:{theme:"Complexes",sousTh:"Bilan complexes"}, ex3:{theme:"Intégrales",sousTh:"Bilan intégrales"}, ex4:{theme:"Géométrie",sousTh:"Bilan géométrie"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=sin(x)/(1+cos(x))",typeFunc:"trig2"}, ex2:{theme:"Complexes",sousTh:"Applications en physique — oscillations"}, ex3:{theme:"Probabilités",sousTh:"Statistiques — moyenne, médiane, mode"}, ex4:{theme:"Géométrie",sousTh:"Transformations isométriques"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x^(1/3) — fonction puissance fractionnaire",typeFunc:"puissance"}, ex2:{theme:"Complexes",sousTh:"Plan complexe — ensembles de points"}, ex3:{theme:"Intégrales",sousTh:"Intégrale impropre et convergence"}, ex4:{theme:"Géométrie",sousTh:"Ellipse et hyperbole"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(ax+b)/(cx²+d) — étude complète",typeFunc:"rat3"}, ex2:{theme:"Complexes",sousTh:"Complexes et géométrie analytique"}, ex3:{theme:"Probabilités",sousTh:"Bilan probabilités conditionnelles"}, ex4:{theme:"Géométrie",sousTh:"Droite et cercle — tangente"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=ln(x)·e^x — étude et représentation",typeFunc:"ln_exp2"}, ex2:{theme:"Complexes",sousTh:"Symétries dans ℂ"}, ex3:{theme:"Intégrales",sousTh:"Calcul d'intégrales définies"}, ex4:{theme:"Géométrie",sousTh:"Angle au centre et angle inscrit"} },
-    { ex1:{theme:"Analyse",sousTh:"Révision type bac session principale",typeFunc:"rev1"}, ex2:{theme:"Complexes",sousTh:"Révision type bac complexes"}, ex3:{theme:"Probabilités",sousTh:"Révision type bac probabilités"}, ex4:{theme:"Géométrie",sousTh:"Révision type bac géométrie"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=cos(x)·ln(1+x²)",typeFunc:"trig_ln"}, ex2:{theme:"Complexes",sousTh:"Équations de degré 3 dans ℂ"}, ex3:{theme:"Intégrales",sousTh:"Volume de révolution"}, ex4:{theme:"Géométrie",sousTh:"Barycentres et propriétés"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(sin x)",typeFunc:"exp_sin"}, ex2:{theme:"Complexes",sousTh:"Argument principal d'un complexe"}, ex3:{theme:"Probabilités",sousTh:"Loi hypergéométrique"}, ex4:{theme:"Géométrie",sousTh:"Construction à la règle et au compas"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x/(x-1) — branches infinies",typeFunc:"rat4"}, ex2:{theme:"Complexes",sousTh:"Complexes et vecteurs — parallélogramme"}, ex3:{theme:"Intégrales",sousTh:"Méthode des rectangles et trapèzes"}, ex4:{theme:"Géométrie",sousTh:"Similitudes et rapports"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(1+x)^α — étude générale",typeFunc:"puissance2"}, ex2:{theme:"Complexes",sousTh:"Résoudre |z-a|=|z-b| dans ℂ"}, ex3:{theme:"Probabilités",sousTh:"Variable aléatoire continue — densité"}, ex4:{theme:"Géométrie",sousTh:"Rotation — centre et angle"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=e^(-|x|) — valeur absolue",typeFunc:"exp_abs"}, ex2:{theme:"Complexes",sousTh:"Cercle de Moivre et applications"}, ex3:{theme:"Intégrales",sousTh:"Changement de variable"}, ex4:{theme:"Géométrie",sousTh:"Triangles semblables et rapport"} },
-    { ex1:{theme:"Analyse",sousTh:"Fonction implicite et dérivation",typeFunc:"implicite"}, ex2:{theme:"Complexes",sousTh:"Nombre complexe et matrice 2x2"}, ex3:{theme:"Probabilités",sousTh:"Simulation de Monte-Carlo"}, ex4:{theme:"Géométrie",sousTh:"Inversion dans le plan"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=(x²-4)e^(-x/2) — étude complète",typeFunc:"poly2_exp_half"}, ex2:{theme:"Complexes",sousTh:"Complexes — résoudre sur ℝ et ℂ"}, ex3:{theme:"Intégrales",sousTh:"Intégrale et équation différentielle"}, ex4:{theme:"Géométrie",sousTh:"Théorème de Thalès et applications"} },
-    { ex1:{theme:"Analyse",sousTh:"f(x)=x·arctan(x)-½·ln(1+x²)",typeFunc:"arctan_ln"}, ex2:{theme:"Complexes",sousTh:"Formulaire complexes — récapitulatif"}, ex3:{theme:"Probabilités",sousTh:"Convergence en probabilité"}, ex4:{theme:"Géométrie",sousTh:"Géométrie vectorielle — repère affine"} },
-    { ex1:{theme:"Analyse",sousTh:"Sujet de concours final — fonction avec paramètre",typeFunc:"final"}, ex2:{theme:"Complexes",sousTh:"Concours final — complexes"}, ex3:{theme:"Probabilités",sousTh:"Concours final — probabilités"}, ex4:{theme:"Géométrie",sousTh:"Concours final — géométrie"} },
-    { ex1:{theme:"Analyse",sousTh:"Révision générale toutes notions",typeFunc:"bilan"}, ex2:{theme:"Complexes",sousTh:"Révision générale complexes"}, ex3:{theme:"Intégrales",sousTh:"Révision générale intégrales"}, ex4:{theme:"Géométrie",sousTh:"Révision générale géométrie"} },
-  ],
-}
-
-
-function getProgrammeJour(sectionKey: string, dayNum: number) {
-  const prog = PROGRAMME_JOUR[sectionKey]
-  if (!prog) return null
-  const idx = (dayNum - 1) % prog.length  // 0-indexed, cyclique
-  return prog[idx]
-}
+const SECTIONS_NSI_FR = [
+  {key:'terminale-nsi', label:'Terminale NSI', icon:'🎓', color:'#8b5cf6', duration:210, coeff:16,
+   themes:['Structures de données','Algorithmes & Complexité','SQL','POO Python','Réseaux & OS'],
+   programme:[
+     {theme:'Structures de donnees',   sousTh:'Piles LIFO push/pop, Files FIFO, Arbres binaires racine/feuilles/hauteur/parcours, ABR, Graphes G=(V,E) oriente/non-oriente, DFS/BFS'},
+     {theme:'Algorithmes complexite',  sousTh:'Tri fusion O(n log n), Quicksort pivot, dichotomie O(log n), Dijkstra plus court chemin, Big-O, invariant de boucle, preuve terminaison'},
+     {theme:'Bases de donnees SQL',    sousTh:'Modele relationnel, cle primaire/etrangere, SELECT/WHERE/JOIN/GROUP BY/HAVING, sous-requetes, normalisation 3NF, integrite referentielle'},
+     {theme:'POO Python',              sousTh:'Classes __init__ self, encapsulation, heritage super(), polymorphisme, methodes speciales __str__ __len__, decorateurs @property'},
+     {theme:'Reseaux et OS',           sousTh:'Von Neumann UAL/UC/memoire/bus, cycle fetch-decode-execute, processus etats, TCP/IP, DNS, HTTP/HTTPS, securite XSS injection SQL'},
+   ]},
+  {key:'premiere-nsi', label:'Première NSI', icon:'📗', color:'#06b6d4', duration:120, coeff:2,
+   themes:['Types construits','Traitement données','Web & HTTP','Algorithmique','Python'],
+   programme:[
+     {theme:'Types construits Python', sousTh:'Listes mutables append/pop/slicing, tuples immuables, dictionnaires, ensembles set, comprehensions, copie vs reference'},
+     {theme:'Traitement donnees CSV',  sousTh:'Lecture CSV DictReader, selection filtre, projection colonnes, tri sorted(key=lambda), agregation, jointure tables, export DictWriter'},
+     {theme:'Web et HTTP',             sousTh:'HTML balises semantiques, CSS selecteurs flexbox, URL anatomie, HTTP GET/POST codes 200/404, DOM JavaScript, formulaires, cookies'},
+     {theme:'Algorithmique',           sousTh:'Recherche sequentielle O(n), dichotomie O(log n) sur liste triee, tri selection, tri insertion stable, Big-O, glouton'},
+     {theme:'Python fonctions',        sousTh:'Fonctions def/return, parametres par defaut *args **kwargs, recursivite cas-de-base, portee variables, modules, try/except'},
+   ]},
+  {key:'seconde-snt', label:'Seconde SNT', icon:'📘', color:'#10b981', duration:60, coeff:1,
+   themes:['Internet & Web','Éseaux sociaux','Données','Géolocalisation','Photo numérique'],
+   programme:[
+     {theme:'Internet et Web',         sousTh:'TCP/IP paquets routage, DNS nom vers IP, HTTP requete/reponse, HTML structure, CSS, PageRank, moteurs recherche crawl/index'},
+     {theme:'Reseaux sociaux graphes', sousTh:'Graphe G=(V,E) oriente/non-oriente, degre sommet, diametre, communautes, filtrage collaboratif, bulle de filtre, cyberharcelement'},
+     {theme:'Donnees et RGPD',         sousTh:'Donnee numerique, metadonnees, format CSV, cle primaire, selection/projection/tri, RGPD droits acces/rectification/effacement'},
+     {theme:'Geolocalisation GPS',     sousTh:'GPS satellites trilateralisation 3 spheres, distance d=v*t, coordonnees latitude/longitude, GLONASS/Galileo, vie privee traçage'},
+     {theme:'Image numerique',         sousTh:'Pixel RGB (0-255) synthese additive, resolution DPI, taille=largeur*hauteur*3 octets, PNG sans perte, JPEG avec perte artefacts'},
+   ]},
+]
 
 // ── Types ──────────────────────────────────────────────────────────
 interface Candidat {
   nom: string; prenom: string; lycee: string
-  gouvernorat: string; section: string; sectionKey: string
-  email?: string
+  section: string; sectionKey: string
+  matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'
 }
 
 interface Exercise {
@@ -204,7 +216,7 @@ interface AnalysisResult {
 }
 
 interface RankingEntry {
-  nom: string; prenom: string; lycee: string; gouvernorat: string
+  nom: string; prenom: string; lycee: string
   section: string; sectionKey: string; score: number; maxScore: number
   day: number; date: string; ts: number
 }
@@ -214,34 +226,34 @@ type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'correction'|'ana
 // ── LocalStorage helpers ──────────────────────────────────────────
 function saveRanking(entry: RankingEntry) {
   try {
-    const all: RankingEntry[] = JSON.parse(localStorage.getItem('bb_ranking')||'[]')
+    const all: RankingEntry[] = JSON.parse(localStorage.getItem('bb_france_ranking')||'[]')
     all.push(entry)
     // garder les 500 derniers
     if (all.length > 500) all.splice(0, all.length - 500)
-    localStorage.setItem('bb_ranking', JSON.stringify(all))
+    localStorage.setItem('bb_france_ranking', JSON.stringify(all))
   } catch {}
 }
 
 function getRanking(): RankingEntry[] {
-  try { return JSON.parse(localStorage.getItem('bb_ranking')||'[]') }
+  try { return JSON.parse(localStorage.getItem('bb_france_ranking')||'[]') }
   catch { return [] }
 }
 
 function saveVisit() {
   try {
-    const v = parseInt(localStorage.getItem('bb_visits')||'0') + 1
-    localStorage.setItem('bb_visits', String(v))
+    const v = parseInt(localStorage.getItem('bb_france_visits')||'0') + 1
+    localStorage.setItem('bb_france_visits', String(v))
   } catch {}
 }
 
 function getStats() {
   try {
     const ranking = getRanking()
-    const visits = parseInt(localStorage.getItem('bb_visits')||'0')
+    const visits = parseInt(localStorage.getItem('bb_france_visits')||'0')
     const byGov: Record<string,number> = {}
     const byDay: Record<number, RankingEntry[]> = {}
     ranking.forEach(r => {
-      byGov[r.gouvernorat] = (byGov[r.gouvernorat]||0) + 1
+      byGov["France"] = (byGov["France"]||0) + 1
       if (!byDay[r.day]) byDay[r.day] = []
       byDay[r.day].push(r)
     })
@@ -253,15 +265,20 @@ function getStats() {
 const UNIVERSAL_GRAPH_PROMPT = `
 GRAPHIQUES — 5 TYPES UNIVERSELS (copier le bon template) :
 TYPE 1 — COURBE : [GRAPH: {"type":"function","expressions":["EXPR_JS"],"xMin":A,"xMax":B,"labels":["nom"],"title":"Titre","xLabel":"x","yLabel":"y"}]
-RÈGLES : JAMAIS x^2→x*x | 2x→2*x | exp(-x)→Math.exp(-x)
-Exemples : RC(τ=2s)→["5*(1-Math.exp(-x/2))"] | pH(Véq=20)→["14/(1+Math.exp(-0.5*(x-20)))"] | Michaelis→["100*x/(x+5)"] | f(x)=2x³→["2*x*x*x"]
-TYPE 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},FORMES]}]
-TYPE 3 — ASCII (pile/circuit/synapse) : [GRAPH: {"type":"ascii","title":"Titre","content":"DESSIN","legend":["légende"]}]
-Pile: content:"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\\n  └──── e⁻ ────┘" | Circuit RC: content:"  ┌──┤R├──┬──┐\\n  E      ═╪═C\\n  └─────┘"
-TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]],"highlight":[0]}]
-TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8],"colors":["#6366f1","#10b981"]}]
-RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
-JAMAIS expressions:[] vide · JAMAIS geometry pour une pile`
+RÈGLES JS : JAMAIS x^2→x*x | 2x→2*x | exp(-x)→Math.exp(-x) | décimaux OK: 2.1+11.8/(1+Math.exp(-0.8*(x-12.5)))
+Exemples : RC(τ=2s)→["5*(1-Math.exp(-x/2))"] | RLC amorti→["Math.exp(-0.3*x)*Math.cos(2*x)"] | pH(Véq=20)→["14/(1+Math.exp(-0.5*(x-20)))"] | Michaelis→["100*x/(x+5)"]
+
+TYPE 2 — GÉOMÉTRIE : [GRAPH: {"type":"geometry","title":"Titre","shapes":[{"type":"axes","step":1},FORMES]}]
+
+TYPE 3 — ASCII OBLIGATOIRE pour : circuit RLC/RC/RL, pile électrochimique, montage optique, synapse :
+[GRAPH: {"type":"ascii","title":"Circuit RLC série","content":"  ┌──┤R├──┤L├──┬──┐\n  │            ═╪═C│\n  E(t)          │  │\n  └────────────┘","legend":["R=15Ω","L=8.5mH","C=25μF"]}]
+Pile: [GRAPH: {"type":"ascii","title":"Pile Zn-Cu","content":"  (-)Zn│ZnSO₄ ║ CuSO₄│Cu(+)\n  └──── e⁻ ────┘","legend":["Anode: Zn→Zn²⁺+2e⁻","Cathode: Cu²⁺+2e⁻→Cu"]}]
+
+TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]]}]
+TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8]}]
+
+RÈGLE ABSOLUE : JAMAIS écrire [FIGURE : ...] ou [SCHÉMA : ...] — TOUJOURS générer le vrai [GRAPH: ...]
+Circuit/pile → TYPE 3 ascii · Courbe → TYPE 1 · Géo → TYPE 2 · JAMAIS expressions:[] vide`
 
 
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
@@ -296,356 +313,45 @@ function parseJSON<T>(raw: string, fallback: T): T {
   }
 }
 
-
-// ── Programme Physique-Chimie par jour — rotation 31 jours ────────
-// Couvre TOUT le programme officiel PC Bac Tunisie
-// ex1 = Physique partie 1 (8pts) · ex2 = Physique partie 2 (6pts)
-// ex3 = Chimie partie 1 (3pts)   · ex4 = Chimie partie 2 (3pts)
-const PROGRAMME_JOUR_PHYSIQUE: Record<string, {
-  ex1: { theme: string; sousTh: string }
-  ex2: { theme: string; sousTh: string }
-  ex3: { theme: string; sousTh: string }
-  ex4: { theme: string; sousTh: string }
-}[]> = {
-  'scexp': [
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge du condensateur, τ=RC, énergie E=½Cu²"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — T=2π√(l/g), énergie mécanique, amortissement"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — établissement et rupture du courant, τ=L/R, énergie magnétique"}, ex2:{theme:"Mécanique",sousTh:"Ressort horizontal — T=2π√(m/k), énergie cinétique et potentielle"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, formule de Nernst"} },
-    { ex1:{theme:"Électricité",sousTh:"Circuit RLC libre — oscillations amorties, pseudo-période, échanges Ec↔Em"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation, célérité v=λf, retard τ=d/v, déphasage"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion τ=xf/xmax, ordre de réaction, Arrhenius"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert"} },
-    { ex1:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance, fréquence propre f₀=1/(2π√LC), facteur Q"}, ex2:{theme:"Optique",sousTh:"Lentilles minces, relation de conjugaison, grandissement, instruments optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Taux avancement final τf, déplacement équilibre, loi modération"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), applications industrielles"} },
-    { ex1:{theme:"Mécanique",sousTh:"2ème loi de Newton ΣF=ma — plan incliné, frottement, énergie cinétique Ec=½mv²"}, ex2:{theme:"Électricité",sousTh:"Oscillateurs LC libres — solution sinusoïdale, fréquence propre, énergie"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool ⇌ ester + eau, taux de conversion"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — spectrophotométrie, conductimétrie, pH-métrie"} },
-    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, réseau nλ=d·sinθ"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"Acides et bases faibles, diagramme de prédominance, solutions tampons"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, τf"} },
-    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie t₁/₂=ln2/λ, activité A=λN"}, ex2:{theme:"Électricité",sousTh:"Induction électromagnétique — loi de Faraday e=-dΦ/dt, loi de Lenz"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage iodométrique, permanganométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (polyéthylène) et polycondensation (nylon, polyester)"} },
-    { ex1:{theme:"Mécanique",sousTh:"Moment cinétique, pendule pesant, oscillations forcées, résonance mécanique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène et enzymatique — mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Énergie de liaison, défaut de masse E=Δm·c², fission et fusion nucléaires"} },
-    { ex1:{theme:"Électricité",sousTh:"Filtres RC et RL — fonction transfert H(f), fréquence de coupure fc=1/(2πRC)"}, ex2:{theme:"Mécanique",sousTh:"Projectile — équations horaires, portée, flèche, énergie mécanique"}, ex3:{theme:"Acide-base",sousTh:"pH des solutions aqueuses — acides forts, acides faibles, calcul complet"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — Ks, condition de précipitation"} },
-    { ex1:{theme:"Optique",sousTh:"Spectres atomiques — photon E=hf=hc/λ, transitions, absorption et émission"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbes résonance, bande passante Δf=f₀/Q"}, ex3:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique Daniell — anode, cathode, f.e.m., sens courant"} },
-    { ex1:{theme:"Mécanique",sousTh:"Oscillateur masse-ressort vertical — position équilibre, T=2π√(m/k), énergie"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — conservation A et Z, énergie libérée, applications médicales"}, ex3:{theme:"Cinétique chimique",sousTh:"Loi de vitesse — ordre 0, ordre 1, ordre 2, détermination expérimentale"}, ex4:{theme:"Acide-base",sousTh:"Indicateurs colorés, zones de virage, choix de l'indicateur pour un dosage"} },
-    { ex1:{theme:"Électricité",sousTh:"Condensateur plan — capacité C=ε₀S/e, association série et parallèle"}, ex2:{theme:"Ondes lumineuses",sousTh:"Optique ondulatoire — cohérence, longueur de cohérence, applications laser"}, ex3:{theme:"Équilibres chimiques",sousTh:"Équilibre de solubilité — produit de solubilité Ks, pH et précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — synthèse, propriétés basiques, liaisons peptidiques"} },
-    { ex1:{theme:"Mécanique",sousTh:"Choc et impulsion — conservation quantité de mouvement, choc élastique/plastique"}, ex2:{theme:"Électricité",sousTh:"Circuit LC et analogie mécano-électrique — tableau de correspondance complet"}, ex3:{theme:"Oxydoréduction",sousTh:"Électrolyse de solutions aqueuses — produits obtenus, rendement faradique"}, ex4:{theme:"Cinétique chimique",sousTh:"Effet de la température — énergie d'activation, loi d'Arrhenius, diagramme"} },
-    { ex1:{theme:"Ondes mécaniques",sousTh:"Effet Doppler — Δf/f=v/c, applications (radar, échographie, astronomie)"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie, moment d'une force, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Bilan complet acide-base — réaction prépondérante, taux d'avancement"}, ex4:{theme:"Chimie organique",sousTh:"Médicaments et molécules organiques — structure, propriétés, isomérie"} },
-    { ex1:{theme:"Électricité",sousTh:"Bilan électricité — RC, RL, RLC, oscillations libres et forcées"}, ex2:{theme:"Mécanique",sousTh:"Bilan mécanique — Newton, pendule, ressort, énergie, satellites"}, ex3:{theme:"Chimie",sousTh:"Bilan chimie — cinétique, équilibres, acide-base"}, ex4:{theme:"Nucléaire",sousTh:"Bilan nucléaire — radioactivité, réactions, énergie"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — régime transitoire, constante de temps, comportement à t=0 et t→∞"}, ex2:{theme:"Optique",sousTh:"Réfraction — loi de Snell-Descartes n₁sinθ₁=n₂sinθ₂, réflexion totale, fibres optiques"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique et équilibre, rendement, optimisation"}, ex4:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance complet"} },
-    { ex1:{theme:"Électricité",sousTh:"Circuit RC — dipôle RC en régime transitoire, comportement condensateur à t=0 et t→∞"}, ex2:{theme:"Mécanique",sousTh:"Satellite — lois de Kepler T²/R³=cste, vitesse cosmique v=√(GM/R), énergie totale"}, ex3:{theme:"Équilibres chimiques",sousTh:"Dissolution et précipitation — produit de solubilité Ks, condition de précipitation"}, ex4:{theme:"Chimie organique",sousTh:"Acides carboxyliques et esters — nomenclature, propriétés, réactions d'estérification"} },
-    { ex1:{theme:"Électricité",sousTh:"Circuit RL — dipôle RL, énergie magnétique Em=½Li², comportement à t=0 et régime permanent"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — transitions énergétiques E=hf=hc/λ, spectre H, laser"}, ex3:{theme:"Acide-base",sousTh:"Polyacides — acide phosphorique H₃PO₄, diagramme de prédominance, dosage"}, ex4:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique MnO₄⁻/Mn²⁺ — équilibrage, point équivalent"} },
-    { ex1:{theme:"Mécanique",sousTh:"Pendule pesant — moment d'inertie I, équation M=Iα, analogie avec pendule simple"}, ex2:{theme:"Électricité",sousTh:"Oscillations LC — échanges énergie condensateur↔bobine, charge et courant sinusoïdaux"}, ex3:{theme:"Cinétique chimique",sousTh:"Réactions d'ordre 2 — loi de vitesse v=k[A]², temps de demi-réaction t₁/₂=1/(k[A]₀)"}, ex4:{theme:"Équilibres chimiques",sousTh:"Acides aminés — propriétés acido-basiques, pH isoélectrique, peptides"} },
-    { ex1:{theme:"Optique",sousTh:"Lentilles convergentes — foyers conjugués, relation de conjugaison, construction d'image"}, ex2:{theme:"Mécanique",sousTh:"Poussée d'Archimède — conditions flottaison, équilibre d'un solide dans un fluide"}, ex3:{theme:"Acide-base",sousTh:"Solutions tampons — Henderson-Hasselbalch pH=pKa+log([A⁻]/[AH]), rôle biologique"}, ex4:{theme:"Chimie organique",sousTh:"Polymères industriels — PET, PVC, polystyrène, propriétés et recyclage"} },
-    { ex1:{theme:"Nucléaire",sousTh:"Fission U-235 — bilan A et Z, neutrons produits, énergie libérée, centrale nucléaire"}, ex2:{theme:"Électricité",sousTh:"Induction — coefficient mutuelle d'induction M, transformateur parfait k=n₁/n₂"}, ex3:{theme:"Oxydoréduction",sousTh:"Corrosion des métaux — pile de corrosion, protection cathodique, galvanisation"}, ex4:{theme:"Acide-base",sousTh:"Titrages en retour — dosage de mélanges, calcul de concentration inconnue"} },
-    { ex1:{theme:"Mécanique",sousTh:"Oscillations forcées mécaniques — résonance en amplitude, bande passante, facteur Q"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes sinusoïdales — retard τ=d/v, déphasage φ=2πd/λ, figure de battements"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape cinétiquement déterminante, intermédiaire réactionnel"}, ex4:{theme:"Équilibres chimiques",sousTh:"Hydrolyse des sels — pH d'une solution de sel, prévision par pKa"} },
-    { ex1:{theme:"Électricité",sousTh:"Filtres RC passifs — filtre passe-bas fc=1/(2πRC), passe-haut, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Trajectoire parabolique — équations horaires, portée, flèche, vitesse d'impact"}, ex3:{theme:"Acide-base",sousTh:"Médicaments et pH — aspirine, paracétamol, antiacides, solubilité pH-dépendante"}, ex4:{theme:"Chimie organique",sousTh:"Amines et amides — basicité, formation, liaison peptidique, protéines"} },
-    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement p=mv, choc élastique Ec conservée, coefficient e"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC — résistance critique Rc=2√(L/C), régimes amortis et pseudo-périodique"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse enzymatique — cinétique Michaelis-Menten, Km et Vmax, inhibiteurs"}, ex4:{theme:"Nucléaire",sousTh:"Fusion nucléaire — réaction D+T→He+n, énergie libérée, applications thermonucléaires"} },
-    { ex1:{theme:"Ondes lumineuses",sousTh:"Réseau de diffraction — nλ=d·sinθ, spectre d'ordre 1, mesure de longueur d'onde"}, ex2:{theme:"Mécanique",sousTh:"Rotation d'un solide — moment cinétique L=Iω, conservation L, gyroscope"}, ex3:{theme:"Équilibres chimiques",sousTh:"Complexes métalliques — constante de formation β, EDTA, dosage complexométrique"}, ex4:{theme:"Oxydoréduction",sousTh:"Électrolyse de l'eau — bilan redox, gaz produits, loi de Faraday appliquée"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — énergie dissipée par effet Joule et énergie stockée dans le condensateur"}, ex2:{theme:"Optique",sousTh:"Interférences de Young — interfrange i=λD/a, conditions de cohérence, lumière blanche"}, ex3:{theme:"Chimie organique",sousTh:"Savons et détergents — saponification, micelles, tensioactifs, HLB"}, ex4:{theme:"Acide-base",sousTh:"Dosage par conductimétrie — courbe σ=f(V), point équivalent, calcul de concentration"} },
-    { ex1:{theme:"Mécanique",sousTh:"Énergie potentielle élastique Ep=½kx² — oscillateur amorti, dissipation par frottement"}, ex2:{theme:"Nucléaire",sousTh:"Radioactivité artificielle — activation neutronique, radio-isotopes médicaux (TEP, scintigraphie)"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi par manométrie — gaz produits, pression totale, dégagement gazeux"}, ex4:{theme:"Équilibres chimiques",sousTh:"Estérification-hydrolyse — équilibre et cinétique, optimisation du rendement"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — énergie lors de la rupture, surtension, arc électrique, protection circuits"}, ex2:{theme:"Mécanique",sousTh:"Oscillateur non linéaire — pendule à grande amplitude, méthode de Runge-Kutta simplifié"}, ex3:{theme:"Acide-base",sousTh:"Bilan acide-base complet — mélange d'acides, calcul pH par approximations successives"}, ex4:{theme:"Oxydoréduction",sousTh:"Piles à combustible — H₂/O₂, rendement, comparaison pile galvanique"} },
-    { ex1:{theme:"Mécanique",sousTh:"Bilan des forces — systèmes de plusieurs solides, contraintes, réactions au liaison"}, ex2:{theme:"Électricité",sousTh:"Oscillations forcées RLC — courbe résonance en tension, largeur bande, sélectivité"}, ex3:{theme:"Chimie organique",sousTh:"Chiralité — carbone asymétrique, énantiomères, diastéréoisomères, activité optique"}, ex4:{theme:"Cinétique chimique",sousTh:"Photochimie — réaction induite par lumière, quantum de photochimie, loi de Beer"} },
-    { ex1:{theme:"Ondes mécaniques",sousTh:"Ultrasons — célérité dans différents milieux, écho, sonar, contrôle non destructif"}, ex2:{theme:"Mécanique",sousTh:"Satellite géostationnaire — altitude, période T=24h, puissance transmise"}, ex3:{theme:"Équilibres chimiques",sousTh:"Indicateurs de fin de réaction — indicateurs colorés, pH-métrie, conductimétrie choix"}, ex4:{theme:"Acide-base",sousTh:"Eau de Javel — hypochlorite, propriétés oxydantes, dosage, concentration active"} },
-    { ex1:{theme:"Électricité",sousTh:"Révision électricité — RC, RL, RLC, induction, filtres — sujet de synthèse complet"}, ex2:{theme:"Mécanique",sousTh:"Révision mécanique — Newton, pendule, ressort, ondes, satellites — sujet de synthèse"}, ex3:{theme:"Chimie",sousTh:"Révision chimie — cinétique, équilibres, acide-base, redox — sujet de synthèse"}, ex4:{theme:"Nucléaire",sousTh:"Révision nucléaire — radioactivité, réactions, énergie — sujet de synthèse final"} },
-  ],
-  'sctech': [
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante de temps τ=RC, courbes"}, ex2:{theme:"Mécanique",sousTh:"2ème loi de Newton — translation, plan incliné, frottement, bilan forces"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, facteurs cinétiques, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique, point équivalent"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante de temps τ=L/R, établissement du courant, énergie"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple et pesant — T=2π√(l/g), analogie LC, amortissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Couples rédox, pile électrochimique, f.e.m., formule de Nernst"} },
-    { ex1:{theme:"Électricité",sousTh:"Circuit RLC — oscillations libres amorties, régimes, résistance critique"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — célérité v=λf, retard τ=d/v, ultrasons, Doppler"}, ex3:{theme:"Cinétique chimique",sousTh:"Taux de conversion, ordre de réaction, Arrhenius, énergie activation"}, ex4:{theme:"Acide-base",sousTh:"Titrage conductimétrique, spectrophotométrie, Beer-Lambert A=εlc"} },
-    { ex1:{theme:"Mécanique",sousTh:"Ressort — oscillateur horizontal, T=2π√(m/k), énergie, amortissement"}, ex2:{theme:"Optique",sousTh:"Lentilles minces convergentes — foyers, relation conjugaison, grandissement"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux conversion τ, distillation, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday m=MIt/(nF), galvanoplastie, aluminium"} },
-    { ex1:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences de Young i=λD/a, couleurs"}, ex2:{theme:"Électricité",sousTh:"Circuit RLC forcé — résonance en courant, fréquence f₀=1/(2π√LC), Q"}, ex3:{theme:"Chimie organique",sousTh:"Fonctions organiques — alcool, acide, ester, amine, aldéhyde, cétone"}, ex4:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, pH-métrie"} },
-    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), demi-vie, activité A=λN"}, ex2:{theme:"Mécanique",sousTh:"Satellites — lois de Kepler, T²/R³=cste, vitesse cosmique v=√(GM/R)"}, ex3:{theme:"Acide-base",sousTh:"Acides faibles — Ka, diagramme prédominance, solutions tampons, pH"}, ex4:{theme:"Équilibres chimiques",sousTh:"Réactions en solution — Qr vs K, critère évolution, sens réaction"} },
-    { ex1:{theme:"Électricité",sousTh:"Induction — loi Faraday e=-dΦ/dt, loi de Lenz, transformateur"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes fn=nv/(2L), tuyaux sonores"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage rédox — permanganométrie, iodométrie, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (éthylène) et polycondensation (nylon, polyester)"} },
-    { ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité de mouvement, choc élastique, impulsion"}, ex2:{theme:"Électricité",sousTh:"Filtres RC — passe-bas, passe-haut, fonction transfert, fréquence coupure"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse homogène, hétérogène, enzymatique — activation, mécanismes"}, ex4:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, énergie de liaison E=Δm·c²"} },
-  ],
-  'maths': [
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, équation différentielle complète"}, ex2:{theme:"Mécanique",sousTh:"Pendule simple — équation différentielle, T=2π√(l/g), énergie mécanique Em"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, ordre, Arrhenius, tableau avancement"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique complet avec dérivée"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — équation différentielle, τ=L/R, énergie Em=½Li², rupture"}, ex2:{theme:"Mécanique",sousTh:"Ressort — T=2π√(m/k), oscillations libres, analogie électromécanique"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, constante Kéq, loi de Le Chatelier, taux τf"}, ex4:{theme:"Oxydoréduction",sousTh:"Couple rédox, pile Daniell, Nernst E=E°+(0.06/n)log([Ox]/[Red])"} },
-    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période T≈T₀=2π√(LC), décrément δ"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation — v=λf, déphasage φ=2πd/λ, ondes stationnaires, résonance"}, ex3:{theme:"Cinétique chimique",sousTh:"Ordre de réaction 0, 1, 2 — détermination, intégration, t₁/₂"}, ex4:{theme:"Acide-base",sousTh:"Spectrophotométrie Beer-Lambert A=εlc, dosage colorimétrique"} },
-    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance en courant et tension, facteur Q=L/(R√LC)"}, ex2:{theme:"Optique",sousTh:"Diffraction fente θ≈λ/a, Young i=λD/a, réseau nλ=d·sinθ, spectre"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification et hydrolyse — cinétique, équilibre, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse — loi de Faraday m=MIt/(nF), rendement Q=It"} },
-    { ex1:{theme:"Mécanique",sousTh:"Newton ΣF=ma — satellite, vitesse cosmique, énergie mécanique, orbites circulaires"}, ex2:{theme:"Électricité",sousTh:"Induction — Faraday e=-dΦ/dt, Lenz, auto-induction, transformateur parfait"}, ex3:{theme:"Chimie organique",sousTh:"Estérification — acide + alcool, τ, distillation, polymères"}, ex4:{theme:"Cinétique chimique",sousTh:"Catalyse, énergie d'activation Ea, diagramme énergétique"} },
-    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, activité A=λN, E=Δmc²"}, ex2:{theme:"Mécanique",sousTh:"Rotation — moment d'inertie I, moment de force M, équation M=Iα"}, ex3:{theme:"Acide-base",sousTh:"Polyacides, solutions tampons — Henderson-Hasselbalch, applications biologiques"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, condition précipitation, pH et solubilité"} },
-    { ex1:{theme:"Mécanique",sousTh:"Choc — impulsion F·Δt, conservation quantité de mouvement p=mv, choc élastique"}, ex2:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques — E=hf, niveaux d'énergie, transitions, laser"}, ex3:{theme:"Oxydoréduction",sousTh:"Dosage permanganométrique, iodométrique, équilibrage demi-équations"}, ex4:{theme:"Chimie organique",sousTh:"Amides et polypeptides — liaison peptidique, propriétés, hydrolyse"} },
-    { ex1:{theme:"Électricité",sousTh:"Filtres actifs et passifs — RC, RL, passe-bande, diagramme de Bode"}, ex2:{theme:"Mécanique",sousTh:"Oscillations forcées — résonance en amplitude et en énergie, bande passante"}, ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel — étape lente, intermédiaire, loi de vitesse"}, ex4:{theme:"Nucléaire",sousTh:"Fission U-235 et fusion H — bilan énergétique, centrale nucléaire"} },
-  ],
-  'info': [
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RC — charge et décharge, constante τ=RC, courbes"}, ex2:{theme:"Ondes mécaniques",sousTh:"Propagation v=λf, retard τ=d/v, ultrasons applications numériques"}, ex3:{theme:"Cinétique chimique",sousTh:"Vitesse de réaction, taux de conversion, facteurs cinétiques"}, ex4:{theme:"Acide-base",sousTh:"pH, Ka, pKa, dosage pH-métrique"} },
-    { ex1:{theme:"Électricité",sousTh:"Dipôle RL — constante τ=L/R, énergie magnétique Em=½Li², écrêtage"}, ex2:{theme:"Ondes lumineuses",sousTh:"Diffraction θ≈λ/a, interférences Young i=λD/a, holographie"}, ex3:{theme:"Équilibres chimiques",sousTh:"Quotient Qr, Kéq, Le Chatelier, déplacement"}, ex4:{theme:"Oxydoréduction",sousTh:"Pile galvanique, f.e.m., sens courant, anode et cathode"} },
-    { ex1:{theme:"Électricité",sousTh:"RLC libre — oscillations amorties, pseudo-période, régimes amortis"}, ex2:{theme:"Mécanique",sousTh:"Newton ΣF=ma — plan incliné, frein, énergie cinétique Ec=½mv²"}, ex3:{theme:"Cinétique chimique",sousTh:"Suivi temporel — conductimétrie, spectrophotométrie, Beer-Lambert"}, ex4:{theme:"Acide-base",sousTh:"Dosage conductimétrique, spectrophotométrique, point équivalent"} },
-    { ex1:{theme:"Nucléaire",sousTh:"Radioactivité — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, applications médicales"}, ex2:{theme:"Ondes mécaniques",sousTh:"Ondes stationnaires — cordes vibrantes, tuyaux sonores, ultrason médical"}, ex3:{theme:"Équilibres chimiques",sousTh:"Estérification acide+alcool, taux τ, optimisation"}, ex4:{theme:"Électrochimie",sousTh:"Électrolyse, loi de Faraday, dépôts galvaniques"} },
-    { ex1:{theme:"Électricité",sousTh:"RLC forcé — résonance f₀=1/(2π√LC), facteur Q, bande passante"}, ex2:{theme:"Optique",sousTh:"Lentilles minces — foyers, relation de conjugaison, instruments optiques"}, ex3:{theme:"Cinétique chimique",sousTh:"Catalyse — homogène, hétérogène, enzymatique"}, ex4:{theme:"Chimie organique",sousTh:"Fonctions organiques — ester, amide, polymères polyaddition"} },
-    { ex1:{theme:"Mécanique",sousTh:"Pendule simple — équation, T=2π√(l/g), analogie LC, amortissement"}, ex2:{theme:"Nucléaire",sousTh:"Réactions nucléaires — bilan A et Z, E=Δm·c², fission et fusion"}, ex3:{theme:"Acide-base",sousTh:"Dosage acido-basique — indicateurs colorés, choix indicateur"}, ex4:{theme:"Équilibres chimiques",sousTh:"Dissolution — Ks, pH et solubilité, condition précipitation"} },
-  ],
-}
-
-function getProgrammeJourPhysique(sectionKey: string, dayNum: number) {
-  // Mapping sectionKey → programme physique-chimie officiel Bac Tunisie
-  // maths et eco ont le même programme PC que scexp
-  const physKey =
-    sectionKey === 'maths' ? 'scexp' :
-    sectionKey === 'eco'   ? 'scexp' :
-    sectionKey  // scexp, sctech, info → programme propre
-  const prog = PROGRAMME_JOUR_PHYSIQUE[physKey]
-  if (!prog || prog.length === 0) return null
-  // % prog.length pour la rotation sur les 61 jours (mai-juin)
-  return prog[(dayNum - 1) % prog.length]
-}
-
-// ── Génération examen Bac Blanc Physique-Chimie ────────────────────
-async function generateBacBlancPhysique(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)
-  const secLabel = sec?.label || candidat.section
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_PHYSIQUE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux et de niveau officiel.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-
-NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
-EXPOSANTS : e^(-t/τ)  N₀·e^(-λt)  ½mv²  ½Cu²  — TOUJOURS parenthèses autour de l'exposant
-INDICES UNICODE : u_C → uC  i(t)  N₀  T₁/₂  ω₀  τ — utiliser symboles Unicode
-VECTEURS : F⃗  a⃗  v⃗  P⃗  — avec U+20D7
-UNITÉS : toujours préciser l'unité (V, A, Ω, F, H, m/s², N, J, mol/L, mol, s)
-FORMULES CLÉS :
-- RC : τ=RC · uC(t)=E(1-e^(-t/τ)) · i(t)=(E/R)e^(-t/τ) · E=½Cu²
-- RL : τ=L/R · i(t)=(E/R)(1-e^(-t/τ)) · eL=-L·di/dt · Em=½Li²
-- RLC : ω₀=1/√(LC) · T₀=2π√(LC) · Q=L/(R√LC)
-- Pendule : T=2π√(l/g) · Ressort : T=2π√(m/k)
-- Newton : ΣF=ma · Ec=½mv² · W=F·d·cosθ
-- Ondes : v=λ·f · τ=d/v · i=λD/a · nλ=d·sinθ
-- Nucléaire : N(t)=N₀·e^(-λt) · t₁/₂=ln2/λ · E=Δm·c²
-- Chimie : v=dx/dt · Ka=[A⁻][H₃O⁺]/[AH] · pH=-log[H₃O⁺] · m=MIt/(nF)`
-
-  const prog = getProgrammeJourPhysique(candidat.sectionKey, dayNum)
-  const ex1Theme = prog?.ex1.sousTh || 'Dipôle RC — charge et décharge'
-  const ex2Theme = prog?.ex2.sousTh || 'Mécanique — 2ème loi de Newton'
-  const ex3Theme = prog?.ex3.sousTh || 'Cinétique chimique'
-  const ex4Theme = prog?.ex4.sousTh || 'Acide-base — pH et dosage'
-
-  const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
-
-SEED DÉTERMINISTE : ${seed}
-DATE : ${dateStr}
-
-═══ STRUCTURE OFFICIELLE DU SUJET PHYSIQUE-CHIMIE BAC TUNISIE ═══
-Durée : 3h · Total : 20 points · Format officiel MEN Tunisie
-
-Exercice 1 — PHYSIQUE PARTIE 1 (8 points) — ${ex1Theme}
-Exercice 2 — PHYSIQUE PARTIE 2 (6 points) — ${ex2Theme}
-Exercice 3 — CHIMIE PARTIE 1 (3 points) — ${ex3Theme}
-Exercice 4 — CHIMIE PARTIE 2 (3 points) — ${ex4Theme}
-
-RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- Niveau exactement équivalent aux vrais examens officiels Bac Tunisie
-- Données numériques réalistes et cohérentes (R en kΩ, C en μF, L en mH...)
-- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
-- Minimum 120 mots par exercice
-- Inclure figures et schémas décrits textuellement (circuit, montage, courbe)
-
-PRÉSENTATION OFFICIELLE :
-Exercice 1 : "On réalise le montage représenté par la figure ci-contre..."
-Exercice 2 : "Un pendule simple de longueur l=..." ou "Un solide (S) de masse m=..."
-Exercice 3 : "On étudie la cinétique de la réaction entre..."
-Exercice 4 : "On réalise un dosage pH-métrique de..."
-
-RÉPONSE JSON OBLIGATOIRE :
-{
-  "id": "bb-physique-${dayNum}-${candidat.sectionKey}",
-  "day": ${dayNum},
-  "title": "Bac Blanc — Physique-Chimie — ${secLabel} — Jour ${dayNum}",
-  "section": "${secLabel}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
-  "duration": 180,
-  "exercises": [
-    {
-      "num": 1,
-      "theme": "${prog?.ex1.theme || 'Physique'}",
-      "title": "Titre exercice 1 (ex: Dipôle RC — condensateur)",
-      "points": 8,
-      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous.\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale...",
-      "graph": "[GRAPH: {\"type\":\"ascii\",\"title\":\"Montage expérimental\",\"content\":\"  ┌──┤R├──┤L├──┬──┐\\n  │             ═╪═C\\n  E(t)           │\\n  └─────────────┘\",\"legend\":[\"R: résistance\",\"L: bobine\",\"C: condensateur\"]}]"
-    },
-    {
-      "num": 2,
-      "theme": "${prog?.ex2.theme || 'Physique'}",
-      "title": "Titre exercice 2 (ex: Pendule simple — oscillations)",
-      "points": 6,
-      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ...",
-      "graph": null
-    },
-    {
-      "num": 3,
-      "theme": "${prog?.ex3.theme || 'Chimie'}",
-      "title": "Titre exercice 3 (ex: Cinétique chimique)",
-      "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
-      "graph": null
-    },
-    {
-      "num": 4,
-      "theme": "${prog?.ex4.theme || 'Chimie'}",
-      "title": "Titre exercice 4 (ex: Dosage acide-base)",
-      "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
-      "graph": null
-    }
-  ]
-}
-
-RÈGLE GRAPHIQUE ABSOLUE : JAMAIS écrire [FIGURE : ...] dans statement — TOUJOURS générer le champ \"graph\" avec [GRAPH: {"type":"ascii",...}] pour les circuits et montages.`
-
-// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
-  const raw = await askClaude(prompt, system, 5000)
-
-  const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-physique-${dayNum}-${candidat.sectionKey}`,
-    day: dayNum,
-    title: 'Bac Blanc Physique-Chimie',
-    section: candidat.section,
-    sectionKey: candidat.sectionKey,
-    date: dateStr,
-    totalPoints: 20,
-    duration: 180,
-    exercises: []
-  })
-
-  if (!parsed.exercises || parsed.exercises.length === 0) {
-    throw new Error('Réponse IA invalide — réessayez')
-  }
-
-  // Forcer les champs manquants que l'IA n'inclut pas toujours
-  return {
-    ...parsed,
-    id: parsed.id || `bb-physique-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum,
-    sectionKey: candidat.sectionKey,
-    section: parsed.section || secLabel,
-    date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20,
-    duration: parsed.duration || 180,
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// GÉNÉRATION BAC BLANC INFORMATIQUE
-// ════════════════════════════════════════════════════════════════
-async function generateBacBlancInfo(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en Informatique (programme CNP officiel).
-Tu crées des sujets BAC BLANC INFORMATIQUE originaux, rigoureux et de niveau officiel.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-
-NOTATION INFORMATIQUE OBLIGATOIRE :
-- Algorithmes : utiliser la notation Pascal/Python officielle tunisienne
-- SQL : majuscules pour les mots-clés (SELECT, FROM, WHERE, JOIN, GROUP BY, HAVING)
-- Bases de données : schéma relationnel avec clés primaires (#) et étrangères (*)
-- TIC : utiliser les termes techniques officiels du programme CNP
-
-STRUCTURE DU SUJET INFORMATIQUE BAC TUNISIE :
-- Exercice 1 : Algorithmique & Programmation (7 pts) — Pascal ou Python
-- Exercice 2 : Bases de données (6 pts) — SQL + Modélisation
-- Exercice 3 : TIC & Réseaux (7 pts) — Internet, Web, Sécurité
-Total : 20 points`
-
-  const prompt = `Graine de variation : ${seed}
-Date : ${dateStr}
-Section : ${candidat.section}
-Candidat : ${candidat.prenom} ${candidat.nom}
-
-Crée un sujet BAC BLANC INFORMATIQUE ORIGINAL variante jour ${dayNum}.
-
-EXERCICE 1 — ALGORITHMIQUE (7 pts) :
-Crée un exercice complet sur un algorithme de tri OU récursivité OU structures de données.
-- Partie A (3 pts) : Analyse et trace d'exécution
-- Partie B (4 pts) : Écriture de l'algorithme complet en Pascal ou Python
-
-EXERCICE 2 — BASES DE DONNÉES (6 pts) :
-Crée un exercice sur une base de données réaliste (bibliothèque, hôpital, école, commerce...).
-- Partie A (2 pts) : Modèle relationnel — clés primaires/étrangères
-- Partie B (4 pts) : 4 requêtes SQL progressives (SELECT, JOIN, GROUP BY, sous-requête)
-
-EXERCICE 3 — TIC & RÉSEAUX (7 pts) :
-Crée un exercice sur Internet, Web (HTML/CSS/JS/PHP) ou Sécurité informatique.
-- Questions progressives couvrant les notions théoriques et pratiques du programme
-
-Réponds EXACTEMENT avec ce JSON :
-{
-  "title": "Bac Blanc Informatique — Variante Jour ${dayNum}",
-  "section": "${candidat.section}",
-  "duration": 180,
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Exercice 1 — Algorithmique & Programmation",
-      "theme": "Algorithmique",
-      "points": 7,
-      "graph": null,
-      "statement": "Énoncé complet exercice algorithmique. Minimum 200 mots. Sous-parties numérotées 1), 2), 3)..."
-    },
-    {
-      "num": 2,
-      "title": "Exercice 2 — Bases de données",
-      "theme": "Bases de données",
-      "points": 6,
-      "graph": null,
-      "statement": "Présenter le schéma relationnel puis les requêtes SQL. Minimum 150 mots."
-    },
-    {
-      "num": 3,
-      "title": "Exercice 3 — TIC & Réseaux",
-      "theme": "TIC",
-      "points": 7,
-      "graph": null,
-      "statement": "Énoncé complet TIC. Minimum 150 mots. Sous-parties numérotées."
-    }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 6000, 'informatique')
-  const fallback: Omit<BacExam,'id'|'index'> = {
-    title:`Bac Blanc Informatique — Variante Jour ${dayNum}`,
-    section: candidat.section,
-    sectionKey: candidat.sectionKey,
-    day: dayNum,
-    date: new Date().toLocaleDateString('fr-TN'),
-    duration:180, totalPoints:20,
-    exercises:[
-      {num:1,title:'Exercice 1 — Algorithmique & Programmation',theme:'Algorithmique',points:7,graph:undefined,statement:'Exercice algorithmique en cours de génération…'},
-      {num:2,title:'Exercice 2 — Bases de données',theme:'Bases de données',points:6,graph:undefined,statement:'Exercice bases de données en cours de génération…'},
-      {num:3,title:'Exercice 3 — TIC & Réseaux',theme:'TIC',points:7,graph:undefined,statement:'Exercice TIC en cours de génération…'},
-    ]
-  }
-  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
-  return { ...parsed, id:`bb-info-${dayNum}-${Date.now()}`, index:0 }
-}
-
 // ── sanitizeExpr (identique simulation) ──────────────────────────
-// ══ SANITIZER UNIVERSEL — Maths · Physique · SVT · Info · Français ══
+// ══ SANITIZER UNIVERSEL — Maths · Physique · SVT · Info ══
 function sanitizeExpr(expr: string): string {
   if (!expr || typeof expr !== 'string') return '0'
   let e = expr.trim()
   if (e.startsWith('\\') && !e.includes('(')) return '0'
   if (e.length > 300) e = e.slice(0, 300)
+  // Notation f(x)=... → extraire partie droite
+  e = e.replace(/^[a-zA-Z_]\w*\s*\([^)]*\)\s*=\s*/, '')
+  e = e.replace(/u_n|v_n|w_n/g, 'x')
+  // Unicode math → ASCII
   e = e.replace(/−/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/·/g,'*')
        .replace(/²/g,'*x').replace(/³/g,'*x*x')
-       .replace(/\u00b2/g,'*x').replace(/\u00b3/g,'*x*x')
        .replace(/\u221e/g,'1e15').replace(/\u03c0/g,'Math.PI')
        .replace(/\u03c4/g,'6.2832').replace(/\u03bb/g,'0.693')
+  // LaTeX → JS
   e = e.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1)/($2)')
        .replace(/\\sqrt\{([^{}]+)\}/g,'Math.sqrt($1)')
-       .replace(/\\sqrt/g,'Math.sqrt')
        .replace(/\\left\(/g,'(').replace(/\\right\)/g,')')
        .replace(/\\cdot/g,'*').replace(/\\times/g,'*')
        .replace(/\\ln\b/g,'Math.log').replace(/\\log\b/g,'Math.log10')
        .replace(/\\sin\b/g,'Math.sin').replace(/\\cos\b/g,'Math.cos')
        .replace(/\\tan\b/g,'Math.tan').replace(/\\exp\b/g,'Math.exp')
        .replace(/\\pi\b/gi,'Math.PI').replace(/\{/g,'(').replace(/\}/g,')')
+  // e^(...) notation physique
+  e = e.replace(/e\^\(([^)]+)\)/g, (_,a) => 'Math.exp(' + a + ')')
+       .replace(/e\^(-?[a-zA-Z0-9.*/]+)/g, (_,a) => 'Math.exp(' + a + ')')
+  // Valeur absolue
+  e = e.replace(/\|([^|]+)\|/g,(_,a)=>'Math.abs('+a+')')
+  // Puissances
   e = e.replace(/x\*\*(\d+)/g,(_,n)=>'x*'.repeat(Number(n)-1)+'x')
        .replace(/x\^(\d+)/g,  (_,n)=>'x*'.repeat(Number(n)-1)+'x')
        .replace(/x\^(-\d+)/g, (_,n)=>`Math.pow(x,${n})`)
        .replace(/\(([^()]+)\)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
        .replace(/([a-zA-Z0-9_.]+)\^(\d+)/g,(_,b,n)=>`Math.pow(${b},${n})`)
-  e = e.replace(/(\d)([a-zA-Z(])/g,'$1*$2').replace(/\)([a-zA-Z0-9(])/g,')*$1')
+  // Multiplication implicite
+  e = e.replace(/(\d)([a-zA-Z(])/g,'$1*$2')
+       .replace(/\)([a-zA-Z0-9(])/g,')*$1')
+  // Fonctions (20+)
   const fns:[RegExp,string][]=[
     [/(?<![a-zA-Z0-9_.])ln\s*\(/g,'Math.log('],
     [/(?<![a-zA-Z0-9_.])log10\s*\(/g,'Math.log10('],
@@ -878,7 +584,7 @@ function buildCorrectionHtml(exam: BacExam, correctionText: string, studentAnswe
     @media print{.print-bar{display:none!important}.wrap{padding:12px 20px}div[style*="border-radius:10px"][style*="inline-block"]{page-break-inside:avoid}svg{max-width:100%!important}}
   `
   const candidatBar = candidat
-    ? `<div class="candidat-bar">🏆 <strong>${esc(candidat.prenom+' '+candidat.nom)}</strong> · ${esc(candidat.lycee)} · ${esc(candidat.gouvernorat)} · ${esc(candidat.section)} · Bac Blanc Jour ${exam.day}</div>`
+    ? `<div class="candidat-bar">🏆 <strong>${esc(candidat.prenom+' '+candidat.nom)}</strong> · ${esc(candidat.lycee)} · ${esc(candidat.section)} · Bac Blanc Jour ${exam.day}</div>`
     : ''
   const enoncesHtml = exam.exercises.map(ex =>
     `<h3 style="color:#fbbf24;font-size:14px;margin:20px 0 8px">${esc(ex.title)} — ${ex.points} pts</h3>`
@@ -963,17 +669,21 @@ function MathGraph({spec}:{spec:any}){
         let fn:Function
         try{fn=new Function('x','Math',`"use strict";try{const _r=(${safe});return(_r===undefined||_r===null)?null:_r;}catch(e){return null;}`)}
         catch{return}
+        // Haute fréquence → plus de points
         const hasHF=safe.includes('440')||safe.includes('880')||safe.includes('1000')||safe.includes('2000')
         const N=hasHF?2000:600,dx=(xMax-xMin)/N
         let yMax=0,hasValid=false
+        // Passe 1 : trouver la plage réelle (résout le bug sigmoid/exp croissante)
         for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);if(y!==null&&isFinite(y)){yMax=Math.max(yMax,Math.abs(y));hasValid=true}}
-        if(!hasValid)return
+        if(!hasValid){console.warn('Courbe vide:',expr);return}
+        // Seuil dynamique — 100x yMax observé (pas de seuil fixe 1e6 qui coupe les sigmoides)
         const threshold=Math.max(yMax*100,1e10)
         const xs:number[]=[],ys:number[]=[]
+        // Passe 2 : tracer avec le bon seuil
         for(let j=0;j<=N;j++){const x=xMin+j*dx;const y=fn(x,Math);xs.push(x);ys.push((y!==null&&isFinite(y)&&Math.abs(y)<=threshold)?y:NaN)}
         traces.push({x:xs,y:ys,type:'scatter',mode:'lines',name:spec.labels?.[i]??`f${i+1}(x)`,line:{color:colors[i%colors.length],width:2.5},connectgaps:false})
       })
-      if(traces.length===0){setErr('Tracé impossible');return}
+      if(traces.length===0){setErr('Tracé impossible — expression non calculable');return}
       const W=ref.current.clientWidth||340,H=220
       const layout={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(255,255,255,0.04)',font:{color:'#e2e8f0',size:11,family:'system-ui'},title:{text:spec.title||'',font:{size:12,color:'#a5b4fc'},x:0.5},xaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.xLabel||'x',color:'#94a3b8'},yaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.yLabel||'y',color:'#94a3b8'},margin:{l:42,r:12,t:spec.title?36:12,b:36},legend:{font:{size:10,color:'#94a3b8'},bgcolor:'rgba(0,0,0,0)'},width:W,height:H}
       ;(window as any).Plotly.newPlot(ref.current,traces,layout,{displayModeBar:false,responsive:true})
@@ -984,7 +694,6 @@ function MathGraph({spec}:{spec:any}){
   return <div ref={ref} style={{width:'100%',borderRadius:8,overflow:'hidden',margin:'8px 0'}}/>
 }
 
-// ── GeoGraph (identique simulation) ──────────────────────────────
 function GeoGraph({spec}:{spec:any}){
   const vbSize=220,scale=28,cx=50,cy=160
   const tx=(x:number)=>cx+x*scale, ty=(y:number)=>cy-y*scale
@@ -1090,19 +799,18 @@ function figureToAscii(figureText: string): string {
   const isRLC  = /RLC/i.test(title)
   const isRC   = /RC\b/i.test(title) && !isRLC
   const isRL   = /RL\b/i.test(title) && !isRLC
-  const isPile = /pile|galvani|électrochim/i.test(title)
+  const isPile = /pile|galvani/i.test(title)
   const isOpt  = /optique|lentille|prisme/i.test(title)
-  const isPend = /pendule/i.test(title)
   let schemaContent = '  [Schéma : ' + title + ']'
-  let legend: string[] = ['Voir énoncé pour les valeurs numériques']
-  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)','C: condensateur (F)','E: générateur'] }
-  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  │        ═╪═C│\n  E(t)     │   │\n  └────────┴───┘'; legend = ['R: résistance (Ω)','C: condensateur (F)','E: générateur'] }
-  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance (Ω)','L: bobine (H)'] }
-  else if (isPile) { schemaContent = '  (-) Zn │ ZnSO₄  ║  CuSO₄ │ Cu (+)\n       │              pont salin          │\n       └──────────── e⁻ ───────────────┘'; legend = ['Anode (-): Zn→Zn²⁺+2e⁻','Cathode (+): Cu²⁺+2e⁻→Cu','Pont salin: transfert ions'] }
-  else if (isOpt)  { schemaContent = '  →→→  ║  →→→  ║  →→→\n  lumière [L1]  image [L2]  image finale'; legend = ['L1, L2: lentilles convergentes'] }
-  else if (isPend) { schemaContent = '       ●  (pivot)\n       │\n       │  L\n       │\n       ○  (masse m)'; legend = ['L: longueur fil','m: masse','T=2π√(L/g)'] }
+  let legend: string[] = ['Voir énoncé pour les valeurs']
+  if (isRLC)       { schemaContent = '  ┌──┤R├──┤L├──┬──┐\n  │             ═╪═C\n  E(t)           │\n  └─────────────┘'; legend = ['R: résistance','L: bobine','C: condensateur'] }
+  else if (isRC)   { schemaContent = '  ┌──┤R├──┬──┐\n  E       ═╪═C\n  └────────┘'; legend = ['R: résistance','C: condensateur'] }
+  else if (isRL)   { schemaContent = '  ┌──┤R├──┤L├──┐\n  E              │\n  └─────────────┘'; legend = ['R: résistance','L: bobine'] }
+  else if (isPile) { schemaContent = '  (-) │électrolyte║électrolyte│ (+)\n  └──────── e⁻ ────────┘'; legend = ['Anode (-)','Cathode (+)','Pont salin'] }
+  else if (isOpt)  { schemaContent = '  →→→ [L1] →→→ [L2] →→→\n  lumière      lentilles'; legend = ['L1, L2: lentilles'] }
   return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
 }
+
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
   const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
@@ -1134,21 +842,118 @@ function PrimaryBtn({onClick,disabled=false,loading=false,children,fullWidth=fal
 
 // ── correctOneExercise (identique simulation) ─────────────────────
 async function correctOneExercise(exercise: Exercise, totalPoints: number, studentWork: string, examTitle: string): Promise<string> {
-  // Détecter si c'est un examen Anglais
-  const isAnglaisCorrection =
-    examTitle.toLowerCase().includes('anglais') ||
-    examTitle.toLowerCase().includes('english') ||
-    exercise.theme.toLowerCase().includes('reading') ||
-    exercise.theme.toLowerCase().includes('writing') ||
-    exercise.theme.toLowerCase().includes('grammar') ||
-    exercise.theme.toLowerCase().includes('language')
+  // Détecter Anglais via globalMatiere ou le titre/thème de l'exercice
+  const isAnglais = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('identit')
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('fiction')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || examTitle?.toLowerCase().includes('llcer')
+    || examTitle?.toLowerCase().includes('anglais')
 
-  const system = isAnglaisCorrection
-    ? `You are an expert English teacher and examiner for the Tunisian Baccalaureate (CNP official programme).
-You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections ENTIRELY IN ENGLISH.
-CRITICAL RULE: ALL your correction MUST be written in ENGLISH — never use French, even a single word.
-Use markdown: ### for sections, **bold** for key answers, > for important points.`
-    : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
+  if (isAnglais) {
+    const systemEN = `You are an expert LLCER English Baccalauréat examiner correcting a French Bac Blanc paper.
+You write EXHAUSTIVE, DETAILED and PEDAGOGICAL corrections entirely in ENGLISH.
+NEVER summarise a step. Develop EVERYTHING. The student must understand without any other resource.
+Use markdown: ### for parts, **bold** for results, > for important points.
+ALL correction text MUST BE IN ENGLISH — vocabulary, explanations, feedback, model answers, everything.`
+
+    const withWorkEN = studentWork.trim().length > 10
+    const promptEN = withWorkEN
+      ? `EXAM: ${examTitle}
+SUBJECT TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+STUDENT'S WORK:
+${studentWork}
+
+Write the COMPLETE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Detailed Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Synthesis approach and thematic axis:**
+[Introduce the axis and the synthesis question — explain what the student must demonstrate]
+
+**Model synthesis introduction:**
+[Write a complete model introduction: thematic statement + synthesis question + outline (3-4 sentences)]
+
+**Document analysis:**
+- Document A: [Key ideas, register, purpose, how it answers the synthesis question]
+- Document B: [Key ideas, how it develops or contrasts with A, register difference]
+- Document C: [Visual argument, how the image reinforces or illustrates the thematic axis]
+
+**Model synthesis (key paragraphs):**
+[Write 2-3 developed paragraphs demonstrating how the documents interact]
+
+**Assessment of student's synthesis:**
+✅ Correct: [What the student did well — structure, ideas, language]
+❌ To improve: [What is missing or inaccurate — with precise explanation]
+💡 Advice: [Specific methodological advice]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Precise, idiomatic French translation of the passage]
+
+**Translation commentary:**
+- [Key translation choices explained]
+- [Difficult phrases and how to handle them]
+- [Register and style considerations]
+
+**Student's translation assessment:**
+[Specific evaluation of student's choices]
+
+> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Pedagogical global comment]`
+      : `EXAM: ${examTitle}
+SUBJECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}
+
+FULL STATEMENT:
+${exercise.statement}
+
+Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY. Structure REQUIRED:
+
+## ${exercise.title} — Complete Correction (${exercise.points} pts)
+
+### PART 1 — Document Synthesis (16 pts)
+
+**Methodology for LLCER synthesis:**
+1. How to read and analyse the three documents
+2. How to identify the synthesis question and thematic axis
+3. Structure: introduction + 2-3 paragraphs + conclusion
+4. Key language for synthesis: linking ideas, cross-referencing documents
+
+**Complete model synthesis (~500 words):**
+[Write a full, structured synthesis responding precisely to the question, using all three documents with clear cross-references and thematic analysis]
+
+**Document-by-document analysis:**
+- Document A — [Author, Year]: [Main ideas, register, purpose, connection to synthesis question]
+- Document B — [Author, Year]: [Main ideas, how it develops/contrasts with A, different register]
+- Document C — [Image description]: [Visual argument, how it reinforces the thematic axis]
+
+**Key thematic vocabulary:**
+[10-15 vocabulary items essential for this axis, with usage examples]
+
+### PART 2 — Translation into French (4 pts)
+
+**Model translation:**
+[Complete, precise and idiomatic French translation of the passage]
+
+**Translation commentary:**
+- Syntactic and lexical choices explained
+- Difficult expressions handled with alternatives
+- Register maintained throughout
+
+> **Key points to remember for ${exercise.title}:** [Synthesis method + translation rules + axis vocabulary]`
+
+    return askClaude(promptEN, systemEN, 8000, 'anglais')
+  }
+
+  const system = `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
@@ -1220,13 +1025,9 @@ SOMMES : ∑ (k=1 à n)  JAMAIS \\sum_{k=1}^{n}
 GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
 
   const withWork = studentWork.trim().length > 10
-  const prompt = isAnglaisCorrection
-    ? (withWork
-      ? `EXAM: ${examTitle}\nEXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nSTUDENT'S ANSWER:\n${studentWork}\n\nWrite the COMPLETE correction of this exercise. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Detailed Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule / approach — WHY this method applies here]\n**Step-by-step answer:**\n- Step 1: [Action] → [Result]\n> **Answer:** [Final answer clearly stated]\n**Marking scheme — Question X:** [X] pts\n**Student's answer analysis:**\n✅ Correct: [what the student did well]\n❌ Incorrect: [what is wrong or missing]\n💡 Tip: [how to correct this error]\n---\n> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
-      : `EXAM: ${examTitle}\nEXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nWrite the COMPLETE and EXHAUSTIVE correction. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Complete Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule — explain WHY this approach is chosen]\n**Complete answer:**\n- Step 1: [Action + justification] → [Working] = [Result]\n> **Answer:** [Final answer]\n**Marking scheme:** [X] pts\n**Pedagogical note:** [Key grammar rule or writing tip]\n**Common mistake:** [Frequent error on this type of question and why it is wrong]\n---\n> **Key takeaway:** [2-3 rules or strategies to remember]`)
-    : (withWork
-      ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
-      : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`)
+  const prompt = withWork
+    ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
+    : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`
 
   return askClaude(prompt, system, 8000)
 }
@@ -1237,6 +1038,230 @@ async function correctSingleExercise(exam: BacExam, exerciseIndex: number, stude
   return correctOneExercise(ex, exam.totalPoints, studentWork, exam.title)
 }
 
+// ── Génération examen Bac Blanc Physique-Chimie France ────────────
+async function generateBacBlancPhysiqueFR(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
+  const secDuration = sec?.duration || 210
+  const today = new Date()
+  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy = today.getFullYear()
+  const seed = 'BBFR_PHYSIQUE_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  const prog = getProgrammeJourPhysiqueFR(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Mécanique — 2ème loi de Newton'
+  const ex2Theme = prog?.ex2.sousTh || 'Optique ondulatoire — interférences et diffraction'
+  const ex3Theme = prog?.ex3.sousTh || 'Chimie organique — familles et réactions'
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
+Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux, de niveau Bac France.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
+- Formules : écriture standard (pas LaTeX brut)
+- Exposants : e^(-t/τ), N₀·e^(-λt), ½mv², ½Cu²
+- Unités SI précises : V, A, Ω, F, H, m/s², N, J, mol/L, s, Hz
+- JAMAIS \frac — utiliser (a+b)/(c+d)
+- Vecteurs : F⃗, a⃗, v⃗, P⃗`
+
+  const prompt = 'Crée un sujet BAC BLANC PHYSIQUE-CHIMIE France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE PHYSIQUE-CHIMIE :\n'
+    + 'Durée : ' + (secDuration/60) + 'h · Total : 20 points\n'
+    + 'Exercice 1 — PHYSIQUE (8 points) : ' + ex1Theme + '\n'
+    + 'Exercice 2 — PHYSIQUE (6 points) : ' + ex2Theme + '\n'
+    + 'Exercice 3 — CHIMIE (6 points) : ' + ex3Theme + '\n\n'
+    + 'RÈGLES ABSOLUES :\n'
+    + '- Sujet ORIGINAL, jamais une copie des annales\n'
+    + '- Niveau exactement équivalent au vrai Bac France\n'
+    + '- Données numériques réalistes (R en kΩ, C en μF, L en mH...)\n'
+    + '- Chaque exercice avec sous-parties a) b) c) numérotées\n'
+    + '- Minimum 120 mots par exercice\n\n'
+    + 'RÉPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc PC — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + (prog?.ex1.theme || 'Physique') + '", "title": "Titre exercice 1", "points": 8, "statement": "DONNÉES :\n[données numériques réalistes]\n\n1) a) Question...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...", "graph": "[GRAPH: {\"type\":\"ascii\",\"title\":\"Circuit ou schéma\",\"content\":\"  [dessin ASCII du montage]\",\"legend\":[\"R=valeur\",\"L=valeur\"]}]" },\n'
+    + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Physique') + '", "title": "Titre exercice 2", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...", "graph": null },\n'
+    + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Chimie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) ...\n2) ...\n3) ...", "graph": null }\n'
+    + '  ]\n'
+    + '}\n\nRÈGLE GRAPHIQUE ABSOLUE : si un exercice mentionne un circuit (RC, RL, RLC, pile), générer OBLIGATOIREMENT le champ \"graph\" avec type \"ascii\". JAMAIS écrire [FIGURE : ...] dans le statement — TOUJOURS générer le vrai [GRAPH: {...}].'
+
+  const raw = await askClaude(prompt, system, 5500)
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc PC — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+//  BAC BLANC FRANÇAIS — Philosophie (Terminale) + EAF (Première)
+//  Structure officielle Bac France · Coef. 8 (Philo) · Coef. 5 (EAF)
+// ════════════════════════════════════════════════════════════════════
+async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
+  const secLabel  = sec?.label || candidat.section
+  const today     = new Date()
+  const dateStr   = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
+  const yyyy      = today.getFullYear()
+  const seed      = 'BBFR_FRANCAIS_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  // ── Sections Français
+  const isTerminale = candidat.sectionKey === 'terminale' || candidat.sectionKey === 'terminale-francais'
+  const isPremiere  = candidat.sectionKey === 'premiere'  || candidat.sectionKey === 'premiere-francais'
+  const isSeconde   = candidat.sectionKey === 'seconde'   || candidat.sectionKey === 'seconde-francais'
+
+  // ── Durée et structure selon section
+  const secDuration = isTerminale ? 240 : isPremiere ? 240 : 120 // minutes
+  const coeff       = isTerminale ? 8   : isPremiere ? 5   : 1
+
+  // ── Rotation des thèmes sur 61 jours
+  const THEMES_PHILO = [
+    { ex1:'La conscience et l\'inconscient', ex2:'Explication de texte (Descartes ou Freud)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La liberté et le déterminisme',   ex2:'Explication de texte (Spinoza ou Sartre)',   note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La justice et le droit',          ex2:'Explication de texte (Platon ou Rawls)',     note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'L\'art et la technique',          ex2:'Explication de texte (Hegel ou Heidegger)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'La vérité et la raison',          ex2:'Explication de texte (Kant ou Bachelard)',  note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'Le bonheur et la morale',         ex2:'Explication de texte (Épicure ou Kant)',     note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+    { ex1:'Le politique et la société',      ex2:'Explication de texte (Rousseau ou Hobbes)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
+  ]
+  const THEMES_EAF = [
+    { ex1:'Commentaire composé',           ex2:'Dissertation littéraire',  ex3:'Question sur corpus', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Analyse linéaire — Poésie',     ex2:'Dissertation EAF',         ex3:'Présentation Grand Oral', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Commentaire — Roman',           ex2:'Essai argumentatif',       ex3:'Texte du corpus', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Analyse linéaire — Théâtre',    ex2:'Dissertation EAF',         ex3:'Objet d\'étude — Théâtre', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Commentaire — Littérature d\'idées', ex2:'Dissertation EAF',   ex3:'Texte argumentatif', note:'EAF Écrit · 4h · Coef. 5' },
+  ]
+  const THEMES_SECONDE = [
+    { ex1:'Commentaire de texte',          ex2:'Écriture d\'invention',    ex3:'Question de grammaire', note:'Évaluation Seconde · 2h' },
+    { ex1:'Essai argumentatif',            ex2:'Analyse de poème',         ex3:'Figures de style', note:'Évaluation Seconde · 2h' },
+    { ex1:'Analyse d\'extrait romanesque', ex2:'Écriture d\'invention',    ex3:'Question de langue', note:'Évaluation Seconde · 2h' },
+  ]
+
+  const progIdx   = (dayNum - 1) % (isTerminale ? THEMES_PHILO.length : isPremiere ? THEMES_EAF.length : THEMES_SECONDE.length)
+  const prog      = isTerminale ? THEMES_PHILO[progIdx] : isPremiere ? THEMES_EAF[progIdx] : THEMES_SECONDE[progIdx]
+  const ex1Theme  = prog.ex1
+  const ex2Theme  = prog.ex2
+  const ex3Theme  = (prog as any).ex3 || ''
+
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
+Tu crées des sujets BAC BLANC FRANÇAIS originaux, rigoureux, de niveau Bac France.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+
+NOTATION FRANÇAIS OBLIGATOIRE :
+- Extraits : citation entre guillemets avec nom auteur et œuvre entre parenthèses
+- Figures de style : nommées avec leur effet
+- JAMAIS de LaTeX — texte courant uniquement
+- Exercices avec parties clairement numérotées I. II. III. ou 1. 2. 3.`
+
+  const isPhiloStr  = isTerminale ? 'PHILOSOPHIE — Terminale Générale' : isPremiere ? 'FRANÇAIS EAF — Première' : 'FRANÇAIS — Seconde'
+  const structure   = isTerminale
+    ? `Exercice 1 — DISSERTATION PHILOSOPHIQUE (10 points) : Sujet : "${ex1Theme}"\nExercice 2 — EXPLICATION DE TEXTE (10 points) : ${ex2Theme}`
+    : isPremiere
+    ? `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)${ex3Theme ? '\nExercice 3 — ' + ex3Theme + ' (bonus/aide)' : ''}`
+    : `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)`
+
+  const prompt = 'Crée un sujet BAC BLANC ' + isPhiloStr + ' ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE :\n'
+    + 'Durée : ' + (secDuration/60) + 'h · Total : 20 points · Coeff : ' + coeff + '\n'
+    + structure + '\n\n'
+    + (isTerminale
+      ? 'RÈGLES DISSERTATION :\n'
+        + '- Problématique clairement posée à partir du sujet\n'
+        + '- 3 parties : thèse / antithèse / synthèse\n'
+        + '- Références philosophiques : au moins 3 auteurs avec leurs concepts\n'
+        + '- Exemples concrets et contemporains bienvenus\n'
+        + '- Niveau exactement équivalent au vrai Bac France · Minimum 200 mots par exercice\n\n'
+        + 'RÈGLES EXPLICATION DE TEXTE :\n'
+        + '- Extrait de philosophe de 150-200 mots\n'
+        + '- Questions d\'analyse : thèse du texte, structure argumentative, portée\n'
+        + '- Minimum 150 mots de consignes\n\n'
+      : isPremiere
+      ? 'RÈGLES EAF :\n'
+        + '- Texte(s) du corpus de 200-300 mots (extrait littéraire adapté au niveau)\n'
+        + '- Questions progressives : identification, analyse, interprétation\n'
+        + '- Dissertation avec plan dialectique attendu\n'
+        + '- Minimum 200 mots par exercice\n\n'
+      : 'RÈGLES SECONDE :\n'
+        + '- Texte de 150-200 mots (extrait romanesque ou poétique)\n'
+        + '- Questions progressives de compréhension et d\'analyse\n'
+        + '- Écriture d\'invention avec contraintes précises\n'
+        + '- Minimum 150 mots par exercice\n\n'
+    )
+    + 'RÉPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc ' + (isTerminale ? 'Philosophie' : 'Français EAF') + ' — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + ex1Theme + '", "title": "' + (isTerminale ? 'Dissertation — ' + ex1Theme : ex1Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'SUJET : \\\"' + ex1Theme + '\\\"\\n\\nDéfinissez les termes du sujet, posez la problématique, proposez un plan en 3 parties avec arguments et exemples philosophiques.' : 'TEXTE DU CORPUS :\\n[Extrait littéraire 200 mots]\\n\\n1. Questions d\'analyse\\n2. Exercice principal') + '" },\n'
+    + '    { "num": 2, "theme": "' + ex2Theme + '", "title": "' + (isTerminale ? 'Explication de texte — ' + ex2Theme : ex2Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'TEXTE :\\n[Extrait philosophique 180 mots]\\n\\n1. Dégagez la thèse et la structure argumentative\\n2. Expliquez et discutez les arguments\\n3. Portée et actualité du texte' : 'SUJET DE DISSERTATION :\\n[Sujet EAF]\\n\\nProposez un plan détaillé puis rédigez l\'introduction et au moins une partie.') + '" }\n'
+    + '  ]\n'
+    + '}'
+
+  const raw = await askClaude(prompt, system, 5500, 'francais')
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc ' + (isTerminale ? 'Philosophie' : 'Français') + ' — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secDuration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('Réponse IA invalide — réessayez')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secDuration,
+  }
+}
+
 // ── analyzeStudentWork (identique simulation) ─────────────────────
 // Analyse UN exercice immédiatement après correction
 async function analyzeOneExercise(
@@ -1245,43 +1270,18 @@ async function analyzeOneExercise(
   correction: string,
   exIdx: number
 ): Promise<AnalysisResult> {
-  const isAnglaisTheme =
-    exercise.theme.toLowerCase().includes('reading') ||
-    exercise.theme.toLowerCase().includes('writing') ||
-    exercise.theme.toLowerCase().includes('grammar') ||
-    exercise.theme.toLowerCase().includes('language') ||
-    exercise.title.toLowerCase().includes('part i') ||
-    exercise.title.toLowerCase().includes('part ii') ||
-    exercise.title.toLowerCase().includes('part iii')
+  const isAnglaisAnalyze = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('subject')
+    || exercise.theme?.toLowerCase().includes('fiction')
 
-  const system = isAnglaisTheme
-    ? `You are an expert English language teacher and Bac examiner. Analyse ONE English Bac Blanc exercise.
-RESPOND ONLY IN VALID JSON. ALL text fields (description, advice, statements, corrections) MUST be in ENGLISH.`
+  const system = isAnglaisAnalyze
+    ? `You are an expert LLCER English pedagogy specialist. Analyse ONE Bac Blanc exercise and generate targeted remediation.
+RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
     : `Tu es un expert en remédiation mathématique. Analyse UN exercice de Bac Blanc.
 RÉPONDS UNIQUEMENT EN JSON VALIDE.`
-
-  const prompt = isAnglaisTheme
-    ? `Analyse this English Bac Blanc exercise and generate targeted remediation.
-
-EXERCISE ${exIdx+1}: ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
-${exercise.statement.substring(0,250)}
-
-STUDENT ANSWER: ${studentAnswer||'(No answer provided)'}
-CORRECTION: ${correction.substring(0,800)}
-
-Required JSON (ALL text in ENGLISH):
-{
-  "estimatedScore": [0 to ${exercise.points}],
-  "maxScore": ${exercise.points},
-  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Precise analysis in English]","priority":1}],
-
-  "globalAdvice": ["[Targeted advice on ${exercise.theme} in English]","[Strategy to remember]"],
-  "remediationExercises": [
-    {"id":"rem${exIdx}-1","theme":"${exercise.theme}","difficulty":"introductory","objective":"[Consolidate the weakness]","statement":"Short English practice exercise on ${exercise.theme}. 2-3 sub-questions. Minimum 60 words. Written in ENGLISH.","hint":"[Methodological hint in English]","officialCorrection":"[Complete correction in ENGLISH]"},
-    {"id":"rem${exIdx}-2","theme":"${exercise.theme}","difficulty":"standard","objective":"[Deepen understanding]","statement":"Standard English exercise on ${exercise.theme}. Minimum 60 words. Written in ENGLISH.","hint":"[Method hint in English]","officialCorrection":"[Correction in ENGLISH]"}
-  ]
-}`
-    : `Analyse cet exercice de Bac et génère une remédiation ciblée.
+  const prompt = `Analyse cet exercice de Bac et génère une remédiation ciblée.
 
 EXERCICE ${exIdx+1} : ${exercise.title} (${exercise.theme}, ${exercise.points} pts)
 ${exercise.statement.substring(0,250)}
@@ -1293,7 +1293,7 @@ JSON requis :
 {
   "estimatedScore": [0 à ${exercise.points}],
   "maxScore": ${exercise.points},
-  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Lacune précise observée]","priority":1,"chapter":"[Chapitre]","targetScore":"[+pts]"}],
+  "weakAreas": [{"theme":"${exercise.theme}","severity":"critical|moderate|good","description":"[Analyse précise]","priority":1}],
 
   "globalAdvice": ["[Conseil ciblé sur ${exercise.theme}]","[Méthode à retenir]"],
   "remediationExercises": [
@@ -1312,17 +1312,17 @@ JSON requis :
 }
 
 async function analyzeStudentWork(exam: BacExam, studentWork: string, correction: string): Promise<AnalysisResult> {
-  const isAnglaisExam =
-    exam.title.toLowerCase().includes('anglais') ||
-    exam.title.toLowerCase().includes('english') ||
-    (exam.exercises?.[0]?.theme?.toLowerCase().includes('reading') ?? false)
+  const isAnglaisStudentWork = globalMatiere === 'anglais'
+    || exam.title?.toLowerCase().includes('llcer')
+    || exam.title?.toLowerCase().includes('anglais')
+    || exam.section?.toLowerCase().includes('anglais')
 
-  const system = isAnglaisExam
-    ? `You are an expert English language teacher and educational coach for the Tunisian Baccalaureate.\nYou analyse student work and build a personalised improvement plan.\nCRITICAL: ALL text in your JSON (descriptions, advice, statements, corrections) MUST be written in ENGLISH.\nRESPOND ONLY IN VALID JSON.`
+  const system = isAnglaisStudentWork
+    ? `You are an expert LLCER English pedagogy specialist and student work analyst.
+You analyse student work on LLCER English Bac Blanc papers and build a personalised improvement plan.
+RESPOND ONLY IN VALID JSON. ALL text fields MUST BE IN ENGLISH.`
     : `Tu es un expert en pédagogie mathématique et remédiation scolaire.\nTu analyses les travaux d'élèves et construis un plan d'amélioration personnalisé.\nNOTATION dans les exercices de remédiation : f'(x), √x, ∫, ℝ, eˣ, uₙ, z₁, u⃗, B(n;p), N(μ;σ²). JAMAIS ^ ni _ bruts.\nRÉPONDS UNIQUEMENT EN JSON VALIDE.`
-  const prompt = isAnglaisExam
-    ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
-    : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
+  const prompt = `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
   "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
   const raw = await askClaude(prompt, system, 5000)
   return parseJSON<AnalysisResult>(raw, {
@@ -1335,569 +1335,469 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
 
 // ── correctRemediationExercise (identique simulation) ─────────────
 async function correctRemediationExercise(exercise: AnalysisResult['remediationExercises'][number], studentAnswer: string): Promise<string> {
-  const isAnglaisRem =
-    exercise.theme.toLowerCase().includes('reading') ||
-    exercise.theme.toLowerCase().includes('writing') ||
-    exercise.theme.toLowerCase().includes('grammar') ||
-    exercise.theme.toLowerCase().includes('language') ||
-    exercise.theme.toLowerCase().includes('vocabulary') ||
-    exercise.statement.toLowerCase().startsWith('read') ||
-    exercise.statement.toLowerCase().startsWith('write') ||
-    exercise.statement.toLowerCase().startsWith('complete')
+  const isAnglaisRem = globalMatiere === 'anglais'
+    || exercise.theme?.toLowerCase().includes('exchange')
+    || exercise.theme?.toLowerCase().includes('sphere')
+    || exercise.theme?.toLowerCase().includes('synthesis')
+    || exercise.statement?.toLowerCase().includes('document')
+    || exercise.statement?.toLowerCase().includes('thematic')
 
   const system = isAnglaisRem
-    ? `You are a supportive but demanding English language tutor for the Tunisian Baccalaureate.
-You correct student answers on remediation exercises.
-CRITICAL RULE: ALL your feedback MUST be written in ENGLISH — never use French.
-Be precise, encouraging, and identify exactly what is missing.`
+    ? `You are a supportive but demanding LLCER English tutor correcting student responses on remediation exercises.
+Be precise, encouraging, and identify exactly what is missing.
+ALL feedback MUST BE IN ENGLISH — evaluation, commentary, key points, next steps.`
     : `Tu es un tuteur mathématiques bienveillant mais exigeant.\nTu corriges les réponses d'élèves sur des exercices de remédiation.\nSois précis, encourageant, et identifie exactement ce qui manque.`
-
-  const prompt = isAnglaisRem
-    ? `REMEDIATION EXERCISE — ${exercise.theme}\nObjective: ${exercise.objective}\n\nStatement:\n${exercise.statement}\n\nStudent's answer:\n${studentAnswer || '(No answer provided)'}\n\nModel correction:\n${exercise.officialCorrection}\n\nProvide (ALL IN ENGLISH):\n## Assessment of the answer\n[What is correct, incomplete, or wrong]\n\n## Commented correction\n[Step-by-step correction with explanations]\n\n## Key points to remember\n[Grammar rule, vocabulary or writing strategy — max 3 essential points]\n\n## Next step\n[One concrete action to keep improving on this skill]`
-    : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse fournie)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\n## ✅ Évaluation de ta réponse\n[Ce qui est juste ✅, incomplet ⚠️, faux ❌ — score estimé]\n\n## 📝 Correction commentée étape par étape\n[Pour chaque sous-question : méthode → calcul $LaTeX$ → > **Résultat :** $valeur$]\n\n## 🔑 Ce qu'il faut absolument retenir\n[Max 3 règles/formules + erreur classique à éviter]\n\n## 🎯 Exercice flash pour consolider\n[1-2 questions sur le même concept — avec la réponse]\n\n## 📈 Prochain pas\n[Action concrète pour maîtriser ce thème avant le Bac]`
-
-  return askClaude(prompt, system, 2000)
+  return askClaude(
+    `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\nFournis :\n## Évaluation de la réponse\n[Ce qui est correct, ce qui est incomplet, ce qui est faux]\n\n## Correction commentée\n[Correction étape par étape avec explications]\n\n## Ce qu'il faut retenir\n[Règle, formule ou méthode clé — max 3 points essentiels]\n\n## Prochain pas\n[Une action concrète pour continuer à progresser sur ce thème]`,
+    system, 2000
+  )
 }
 
-
-// ════════════════════════════════════════════════════════════════
-// GÉNÉRATION BAC BLANC ANGLAIS
-// Structure officielle Bac Tunisie :
-//   Part I   — Reading Comprehension (8 pts)
-//   Part II  — Writing               (8 pts)
-//   Part III — Language              (4 pts)
-//   Total : 20 pts · Durée : 2h
-// Sections : lettres / toutes (sauf lettres)
-// ════════════════════════════════════════════════════════════════
-
-const PROGRAMME_JOUR_ANGLAIS = [
-  { theme:'Art Shows & Museums',    writing:'Opinion essay — role of art in modern society',           grammar:'Present/Past · Expressing opinion' },
-  { theme:'Space Tourism',          writing:'For & Against — space tourism: dream or danger?',         grammar:'Future forms · Comparatives' },
-  { theme:'A Package Tour',         writing:'Article — advantages of travelling independently',         grammar:'Past Simple/Continuous · Linking words' },
-  { theme:'Education for All',      writing:'Essay — education: a right or a privilege?',              grammar:'Modals · Passive voice' },
-  { theme:'Higher Education',       writing:'Opinion essay — should university be free?',              grammar:'Conditionals type 1 & 2' },
-  { theme:'Online Learning',        writing:'Article — e-learning: the future of education?',          grammar:'Relative clauses · Gerund/Infinitive' },
-  { theme:'Lifelong Learning',      writing:'Essay — why learning never stops',                        grammar:'Reported speech · Complex sentences' },
-  { theme:'Comparing Systems',      writing:'Compare & Contrast — two educational systems',            grammar:'Comparatives · Superlatives' },
-  { theme:'Creativity',             writing:'Essay — is creativity dying in the digital age?',         grammar:'Gerund/Infinitive · Relative clauses' },
-  { theme:'Innovation',             writing:'Article — how innovation changes our world',              grammar:'Passive voice · Future forms' },
-  { theme:'Inventions & Inventors', writing:'Essay — the invention that changed humanity',             grammar:'Past Simple · Relative clauses' },
-  { theme:'Modern Technology & AI', writing:'Essay — AI: threat or opportunity for humanity?',        grammar:'Modals · Conditionals type 2' },
-  { theme:'Environmental Issues',   writing:'Problem/Solution essay — fighting climate change',        grammar:'Future forms · Complex sentences' },
-  { theme:'Social Issues',          writing:'Essay — poverty and inequality in modern society',        grammar:'Reported speech · Passive voice' },
-  { theme:'Health & Lifestyle',     writing:'Article — healthy living in a stressful world',           grammar:'Comparatives · Linking words' },
-  { theme:'Teen Issues & Society',  writing:'Essay — social media: connecting or isolating us?',      grammar:'Modals · Conditionals' },
-  { theme:'Cultural Heritage',      writing:'Opinion essay — preserving our cultural identity',        grammar:'Relative clauses · Present/Past' },
-  { theme:'Science & Discovery',    writing:'Article — a scientific breakthrough that amazed the world',grammar:'Past Simple · Passive voice' },
-  { theme:'Globalization',          writing:'Essay — globalization: benefits and drawbacks',           grammar:'Comparatives · Linking words' },
-  { theme:'Media & Journalism',     writing:'Opinion essay — fake news in the digital age',           grammar:'Reported speech · Future forms' },
-  { theme:'Sports & Achievement',   writing:'Article — the role of sport in personal development',    grammar:'Present/Past · Comparatives' },
-  { theme:'Volunteering & Charity', writing:'Essay — why volunteering matters for society',           grammar:'Modals · Gerund/Infinitive' },
-  { theme:'Urban Life & Migration', writing:'Essay — city vs countryside: where should we live?',     grammar:'Comparatives · Conditionals' },
-  { theme:'Youth & Activism',       writing:'Essay — can young people really change the world?',      grammar:'Modals · Complex sentences' },
-  { theme:'Work & Career',          writing:'Article — the jobs of the future',                       grammar:'Future forms · Passive voice' },
-  { theme:'Technology & Privacy',   writing:'Essay — are we losing our privacy in the digital world?',grammar:'Relative clauses · Reported speech' },
-  { theme:'Food & Nutrition',       writing:'Article — why healthy eating habits matter',             grammar:'Comparatives · Gerund/Infinitive' },
-  { theme:'Tourism & Culture',      writing:'Essay — the impact of tourism on local cultures',        grammar:'Present/Past · Linking words' },
-  { theme:'Gender Equality',        writing:'Essay — gender equality: progress and challenges',        grammar:'Passive voice · Reported speech' },
-  { theme:'The Digital Revolution', writing:'Essay — how technology has transformed daily life',      grammar:'Present Perfect · Comparatives' },
-]
-
-function getProgrammeJourAnglais(dayNum: number) {
-  return PROGRAMME_JOUR_ANGLAIS[(dayNum - 1) % PROGRAMME_JOUR_ANGLAIS.length]
+// ── Génération examen Bac Blanc (distinct de simulation) ──────────
+// ── Programme Physique-Chimie Bac France — rotation 61 jours ─────────
+// Sections : terminale, premiere, techno (STI2D/STMG), expertes
+// ex1=Physique partie 1 · ex2=Physique partie 2 · ex3=Chimie
+const PROGRAMME_JOUR_PHYSIQUE_FR: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+}[]> = {
+  terminale: [
+    {ex1:{theme:"Mécanique",sousTh:"2ème loi Newton ΣF=ma, plan incliné, frottement, énergie cinétique Ec=½mv², travail W=F·d·cosθ"},ex2:{theme:"Physique quantique",sousTh:"Photon E=hf, effet photoélectrique, dualité onde-corpuscule, modèle de Bohr, niveaux énergie"},ex3:{theme:"Chimie organique",sousTh:"Familles fonctionnelles, isomérie, estérification-hydrolyse, mécanismes substitution et addition"}},
+    {ex1:{theme:"Gravitation",sousTh:"Loi de gravitation F=Gm₁m₂/r², champ gravitationnel g=GM/r², satellites Kepler T²/R³=cte, vitesse de libération"},ex2:{theme:"Optique ondulatoire",sousTh:"Interférences Young i=λD/a, diffraction θ≈λ/a, réseau nλ=d·sinθ, cohérence, polarisation"},ex3:{theme:"Cinétique chimique",sousTh:"Vitesse réaction, facteurs cinétiques (T, concentration, catalyseur), t₁/₂, suivi spectrophotométrique Beer-Lambert"}},
+    {ex1:{theme:"Énergie mécanique",sousTh:"Ec=½mv², Ep=mgh, Em=Ec+Ep, conservation, travail des forces non conservatives, puissance"},ex2:{theme:"Induction",sousTh:"Flux Φ=BS·cosθ, loi Faraday e=-dΦ/dt, loi Lenz, auto-induction e=-L·di/dt, transformateur"},ex3:{theme:"Acide-base",sousTh:"Ka, pKa, pH, acides faibles, titrage pH-métrique, point équivalence, solutions tampons, Henderson-Hasselbalch"}},
+    {ex1:{theme:"Oscillateurs",sousTh:"Pendule simple T=2π√(l/g), masse-ressort T=2π√(m/k), énergie, amortissement, analogie LC"},ex2:{theme:"Courants alternatifs",sousTh:"Valeurs efficaces, impédances ZR=R ZL=Lω ZC=1/(Cω), circuit RLC série, résonance f₀=1/(2π√LC), facteur Q"},ex3:{theme:"Équilibres chimiques",sousTh:"Constante K, quotient Qr, loi Le Chatelier, taux avancement, optimisation industrielle (Haber, Contact)"}},
+    {ex1:{theme:"Ondes progressives",sousTh:"Célérité v=λf, retard τ=d/v, déphasage, ondes transversales/longitudinales, effet Doppler Δf/f=v_s/v"},ex2:{theme:"Thermodynamique",sousTh:"Systèmes thermodynamiques, Q=mcΔT, échanges énergie, rendement thermique, diagramme énergie, bilan global"},ex3:{theme:"Oxydoréduction",sousTh:"Nombres oxydation, couples Ox/Red, électrochimie (pile, électrolyse), loi Faraday m=MIt/(nF), applications"}},
+    {ex1:{theme:"Mécanique quantique",sousTh:"Spectre H, séries Lyman/Balmer, transitions E=hf=hc/λ, longueur de de Broglie λ=h/(mv), principe incertitude"},ex2:{theme:"Mécanique",sousTh:"Moment cinétique L=Iω, conservation, satellite géostationnaire, orbites circulaires, vitesse cosmique"},ex3:{theme:"Chimie verte",sousTh:"12 principes chimie verte, économie atomes, solvants verts, biocarburants, bilan carbone, analyse cycle vie"}},
+    {ex1:{theme:"Ondes lumineuses",sousTh:"Spectres atomiques émission/absorption, identification éléments, laser, cohérence, applications astrophysique"},ex2:{theme:"Électricité",sousTh:"Circuit RC τ=RC, circuit RL τ=L/R, RLC libre oscillations amorties, régimes apériodique/critique/pseudo-périodique"},ex3:{theme:"Cinétique chimique",sousTh:"Ordre réaction 0/1/2, détermination expérimentale, temps demi-réaction, catalyse enzymatique Michaelis-Menten"}},
+    {ex1:{theme:"Mécanique",sousTh:"Projectile — équations horaires, portée maximale, flèche, angle optimal, frottement aérodynamique"},ex2:{theme:"Optique géométrique",sousTh:"Réfraction Snell-Descartes n₁sinθ₁=n₂sinθ₂, réflexion totale interne, lentilles minces, relation conjugaison 1/f'=1/OA'-1/OA"},ex3:{theme:"Acide-base",sousTh:"Polyacides H₃PO₄, diagramme prédominance, titrages en retour, pH sang (7,35-7,45), acidose/alcalose"}},
+    {ex1:{theme:"Énergie",sousTh:"Sources énergie (fossiles, nucléaire, renouvelables), bilan énergétique mondial, puissance installée, rendements"},ex2:{theme:"Induction",sousTh:"Conversion énergie mécanique↔électrique, alternateur, moteur électrique, force de Laplace F=BIl, loi Lenz applications"},ex3:{theme:"Chimie organique",sousTh:"Stéréochimie, chiralité, carbone asymétrique, énantiomères, activité optique, médicaments R/S"}},
+    {ex1:{theme:"Mécanique",sousTh:"Choc — conservation quantité mouvement p=mv, choc élastique/inélastique, impulsion F·Δt, centre de masse"},ex2:{theme:"Physique quantique",sousTh:"Radioactivité α,β,γ — loi N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc², fission U-235, fusion H, centrale nucléaire"},ex3:{theme:"Équilibres chimiques",sousTh:"Dissociation eau Ke=10^(-14), pH solutions aqueuses, solubilité et Ks, précipitation sélective"}},
+    {ex1:{theme:"Gravitation",sousTh:"Énergie potentielle gravitationnelle Ep=-GMm/r, énergie mécanique satellite, vitesses cosmiques, trajectoires"},ex2:{theme:"Courants alternatifs",sousTh:"Puissance active P=UIcosφ, puissance réactive Q, facteur puissance cosφ, redressement, filtrage RC"},ex3:{theme:"Acide-base",sousTh:"Spectrophotométrie Beer-Lambert A=εlc, dosage colorimétrique, indicateurs colorés, choix indicateur dosage"}},
+    {ex1:{theme:"Oscillateurs",sousTh:"Oscillations forcées mécaniques, résonance amplitude, bande passante, facteur qualité Q, amortissement critique"},ex2:{theme:"Thermodynamique",sousTh:"Loi Fourier conduction thermique, résistance thermique R=e/(λS), convection, rayonnement Stefan, isolation habitat"},ex3:{theme:"Cinétique chimique",sousTh:"Mécanisme réactionnel, étape cinétiquement déterminante, intermédiaire réactionnel, complexe activé, Ea"}},
+    {ex1:{theme:"Ondes",sousTh:"Ondes sonores — spectre audible, intensité sonore dB L=10log(I/I₀), ultrason (sonar, échographie médical)"},ex2:{theme:"Électricité",sousTh:"Filtres actifs et passifs — passe-bas, passe-haut, passe-bande, diagramme Bode, fréquence coupure fc"},ex3:{theme:"Chimie organique",sousTh:"Polymères — polyaddition (PE, PP, PVC), polycondensation (polyesters, polyamides nylon), propriétés, recyclage"}},
+    {ex1:{theme:"Mécanique quantique",sousTh:"Spectroscopie IR — absorptions groupes fonctionnels (C=O, O-H, N-H, C-H), nombre onde, identification molécule"},ex2:{theme:"Mécanique",sousTh:"Rotation solide — moment inertie I, moment force M=Iα, énergie rotation Erot=½Iω², gyroscope, conservation L"},ex3:{theme:"Oxydoréduction",sousTh:"Corrosion — pile galvanique corrosion, protection cathodique, galvanisation, anodisation aluminium"}},
+    {ex1:{theme:"Gravitation",sousTh:"Révision mécanique — Newton, gravitation, Kepler, énergie, satellites — sujet de synthèse complet"},ex2:{theme:"Physique quantique",sousTh:"Révision quantique — photons, spectres, radioactivité, E=Δmc², applications médicales — synthèse"},ex3:{theme:"Chimie",sousTh:"Révision chimie — cinétique, équilibres, acide-base, redox, organique — sujet de synthèse final"}},
+    {ex1:{theme:"Mécanique",sousTh:"Oscillateur harmonique — solution générale A·cos(ω₀t+φ), conditions initiales, énergie totale constante"},ex2:{theme:"Optique",sousTh:"RMN ¹H — déplacement chimique δ (ppm), multiplicité (n+1), intégration, identification structure moléculaire"},ex3:{theme:"Chimie organique",sousTh:"Synthèse organique multi-étapes — protection groupes fonctionnels, rendement global, chimie verte"}},
+  ],
+  premiere: [
+    {ex1:{theme:"Constitution matière",sousTh:"Atomes, ions, molécules, liaisons ionique/covalente, électronégativité, solides cristallins, modèle VSEPR géométrie"},ex2:{theme:"Optique",sousTh:"Réfraction n₁sinθ₁=n₂sinθ₂, réflexion totale interne nc=arcsin(n₂/n₁), lentilles minces, relation conjugaison"},ex3:{theme:"Chimie",sousTh:"pH, Ka, pKa, acides/bases faibles et forts, diagramme prédominance, dosage acide-base, Beer-Lambert"}},
+    {ex1:{theme:"Spectroscopie",sousTh:"IR — groupes fonctionnels (C=O 1700-1750 cm⁻¹, O-H 2500-3300, N-H 3300-3500), RMN ¹H — δ, multiplicité, intégration"},ex2:{theme:"Mécanique",sousTh:"Référentiel, trajectoire, vecteur vitesse v=dr/dt, vecteur accélération, mouvement uniformément accéléré"},ex3:{theme:"Chimie organique",sousTh:"Familles fonctionnelles (alcool, acide, amine, ester, aldéhyde, cétone), réactions substitution, addition, élimination"}},
+    {ex1:{theme:"Modèle quantique",sousTh:"Orbitales s,p,d, configuration électronique, tableau périodique, liaison de valence, polarité, moment dipolaire"},ex2:{theme:"Signaux",sousTh:"Formation images (lentilles, appareil photo, œil), persistance rétinienne, couleurs synthèse additive/soustractive, daltonisme"},ex3:{theme:"Acide-base",sousTh:"Titrages conductimétrique et pH-métrique, courbe dérivée, point équivalence, choix indicateur, calcul concentration"}},
+    {ex1:{theme:"Ondes",sousTh:"Propagation, période T, fréquence f, longueur onde λ=vT, ondes sonores spectre (20Hz-20kHz), ultrason Doppler médical"},ex2:{theme:"Électricité",sousTh:"Dipôles R, L, C, lois Kirchhoff, diviseur tension, associations série/parallèle, puissance P=UI, énergie W=Pt"},ex3:{theme:"Oxydoréduction",sousTh:"Nombre oxydation, couples rédox, équilibrage demi-équations, réactions spontanées, classement potentiels standard"}},
+    {ex1:{theme:"Constitution matière",sousTh:"Cristaux ioniques (NaCl), moléculaires, covalents (diamant), métalliques — propriétés mécaniques, électriques, thermiques"},ex2:{theme:"Mécanique",sousTh:"2ème loi Newton ΣF=ma, plan incliné, énergie cinétique Ec=½mv², travail W, puissance P, chute libre"},ex3:{theme:"Cinétique chimique",sousTh:"Vitesse réaction v=dx/dt, facteurs cinétiques, suivi conductimétrique, spectrophotométrique, pH-métrique, manométrique"}},
+    {ex1:{theme:"Spectroscopie",sousTh:"Spectre UV-Visible, chromophores, conjugaison, Beer-Lambert A=εlc, identification molécules organiques colorées"},ex2:{theme:"Optique",sousTh:"Microscope — grandissement G=G_obj×G_oc, loupe, lunette astronomique, profondeur de champ, résolution angulaire"},ex3:{theme:"Chimie organique",sousTh:"Nomenclature IUPAC, isomères de constitution, stéréoisomères (Z/E, R/S), propriétés physiques, point ébullition"}},
+  ],
+  techno: [
+    {ex1:{theme:"Mécanique STI2D",sousTh:"Newton (translation/rotation), moment force, machines (leviers, engrenages), travail, puissance, rendement η"},ex2:{theme:"Électricité STI2D",sousTh:"Dipôles R,L,C, régimes transitoires RC (τ=RC) et RL (τ=L/R), courant alternatif, valeurs efficaces, puissance active"},ex3:{theme:"Chimie matériaux",sousTh:"Métaux et alliages, polymères thermoplastiques/thermodurcissables, céramiques, composites, traitements surface"}},
+    {ex1:{theme:"Énergétique STI2D",sousTh:"Conversions énergie (électrique, mécanique, thermique, chimique), bilan E_utile/E_fournie, rendement η, stockage"},ex2:{theme:"Ondes STI2D",sousTh:"Ultrasons (contrôle non destructif, sonar, échographie), vibrations structure, résonance, décibels L=10log(I/I₀)"},ex3:{theme:"Chimie solutions STI2D",sousTh:"Acide-base (pH, Ka, dosages), oxydoréduction (piles, électrolyse), galvanoplastie, loi Faraday m=MIt/(nF)"}},
+    {ex1:{theme:"Thermique STI2D",sousTh:"Conduction Fourier φ=λS·ΔT/e, résistance thermique R=e/(λS), convection, rayonnement Stefan-Boltzmann, bilan habitat"},ex2:{theme:"Optique STI2D",sousTh:"Réfraction Snell-Descartes, fibre optique (réflexion totale interne), lentilles, instruments (loupe, microscope, endoscope)"},ex3:{theme:"Chimie corrosion STI2D",sousTh:"Oxydation métaux, corrosion électrochimique pile galvanique, protection cathodique, anodisation, galvanisation, peintures"}},
+    {ex1:{theme:"Nucléaire STI2D",sousTh:"Désintégrations α,β,γ — N(t)=N₀e^(-λt), t₁/₂=ln2/λ, E=Δmc², fission U-235, réacteur nucléaire, applications médicales"},ex2:{theme:"Électricité STI2D",sousTh:"Circuit RLC libre oscillations, résonance f₀=1/(2π√LC), filtres RC passe-bas/haut, diagramme Bode, fréquence coupure"},ex3:{theme:"Chimie matériaux STI2D",sousTh:"Polymères PET/PP/nylon, propriétés mécaniques, recyclage, matériaux biosourcés, analyse thermique DSC"}},
+  ],
+  expertes: [
+    {ex1:{theme:"Analyse avancée",sousTh:"Intégrales multiples, suites numériques complexes, développements limités, équations différentielles avec physique"},ex2:{theme:"Algèbre linéaire",sousTh:"Matrices 3×3, déterminants, systèmes linéaires (Cramer, Gauss), valeurs propres, vecteurs propres, diagonalisation"},ex3:{theme:"Probabilités avancées",sousTh:"Loi normale N(μ,σ²), loi exponentielle, intervalles confiance, tests d'hypothèse, statistiques inférentielles"}},
+    {ex1:{theme:"Arithmétique",sousTh:"PGCD (Euclide, Bézout), congruences, indicatrice Euler, théorème Fermat, cryptographie RSA, chiffrement"},ex2:{theme:"Analyse complexe",sousTh:"Nombres complexes — module, argument, forme exponentielle, polynômes ℂ, racines n-ièmes, géométrie plan complexe"},ex3:{theme:"Dénombrement",sousTh:"Arrangements, combinaisons, binôme Newton, principe inclusion-exclusion, permutations, génération aléatoire"}},
+  ],
 }
 
-async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+function getProgrammeJourPhysiqueFR(sectionKey: string, dayNum: number) {
+  // Terminale et expertes → même programme physique terminale
+  const physKey = (sectionKey === 'expertes') ? 'terminale' : sectionKey
+  const prog = PROGRAMME_JOUR_PHYSIQUE_FR[physKey]
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
+// ── Programme SVT Bac France — rotation 12 jours ─────────────────────
+// Sections : terminale, premiere, seconde
+// ex1=Génétique/Évolution · ex2=Corps humain/Santé · ex3=Plantes/Géologie
+const PROGRAMME_JOUR_SVT_FR: Record<string, {
+  ex1: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string }
+  ex3: { theme: string; sousTh: string }
+}[]> = {
+  terminale: [
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Meiose et brassages genetiques — crossing-over, recombinaison, frequences alleliques, Hardy-Weinberg, derive genetique"},ex2:{theme:"Corps humain et Sante",sousTh:"Immunite adaptative — LB anticorps, LT CD4 chef d orchestre, LT CD8 cytotoxiques, memoire immunologique, vaccination"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Photosynthese complete — phase lumineuse thylakoïdes (ATP+NADPH+O2), cycle de Calvin stroma (fixation CO2), facteurs limitants"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Transmission hereditaire — heredite autosomique dominante/recessive, heredite liee au sexe, arbres genealogiques, calculs probabilites"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme nerveux — potentiel action, synapse chimique, neurotransmetteurs (dopamine, serotonine), plasticite synaptique LTP, addictions"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Paleoclimats — delta18O foraminiferes, carottes de glace, cycles Milankovitch, variations temperature, changement climatique actuel"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Selection naturelle et derive genetique — mutations, pression selective, speciation, phylogenie moleculaire, endosymbiose mitochondries/chloroplastes"},ex2:{theme:"Corps humain et Sante",sousTh:"Regulation glycemie — insuline (cellules beta), glucagon (cellules alpha), diabete type 1 et 2, retrogulation hormonale, glycogenolyse"},ex3:{theme:"Plantes et Environnement",sousTh:"Nutrition plante — absorption eau et mineraux (racines, xylème), transpiration (stomates), domestication plantes, agriculture durable"}},
+    {ex1:{theme:"Expression genetique",sousTh:"ADN et proteines — transcription (ARNm, introns/exons, epissage), traduction (code genetique, ribosomes, ARNt), mutations et consequences"},ex2:{theme:"Corps humain et Sante",sousTh:"Contraction musculaire — sarcomere (actine/myosine), couplage excitation-contraction, ATP et voies energetiques, fatigue musculaire"},ex3:{theme:"Geologie et Tectonique",sousTh:"Tectonique des plaques — preuves (anomalies magnetiques, fossiles, GPS), subduction, collision, volcanism, seismes — risques geologiques"}},
+    {ex1:{theme:"Genetique des populations",sousTh:"Frequences alleliques — Hardy-Weinberg p2+2pq+q2=1, derive genetique (effet fondateur, goulot detranglement), selection selon environnement"},ex2:{theme:"Corps humain et Sante",sousTh:"Immunite innee et inflammation — phagocytose (macrophages, neutrophiles), interleukines, CRP, fievre, complement, reactions non specifiques"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Ecosystemes et biodiversite — reseaux trophiques, flux energie (regle 10%), services ecosystemiques, menaces, conservation, aires protegees"}},
+    {ex1:{theme:"Reproduction et Transmission",sousTh:"Cycle cellulaire et meiose — phases, synapsis, chiasmas, brassages intra/interchromosomique, diversite gametes, polyploidie, fecondation"},ex2:{theme:"Corps humain et Sante",sousTh:"Maladies genetiques — mucoviscidose (CFTR), drepanocytose (HbS), diagnostic prenatal, therapie genique, CRISPR-Cas9, medecine predictive"},ex3:{theme:"Geologie et Paleoclimats",sousTh:"Formation des roches — cycle petrogenetique, roches sedimentaires (stratigraphie, fossiles), metamorphisme, magmatisme, datation radiometrique"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Variation genetique — recombinaison, amplification par PCR, electrophorese, sequençage, base de donnees genomiques, comparaison especes"},ex2:{theme:"Corps humain et Sante",sousTh:"Axe hypothalamo-hypophysaire — GnRH, LH, FSH, estrogenes/testosterone, puberté, cycle menstruel, retrocontrole positif/negatif"},ex3:{theme:"Plantes et Environnement",sousTh:"Photosynthese et respiration — bilan carbone plante (jour/nuit), point de compensation, facteurs limitants, deforestation et CO2 atmospherique"}},
+    {ex1:{theme:"Expression genetique",sousTh:"Regulation expression genique — epigenetique (methylation ADN, histones), genes constitutifs, differenciation cellulaire, cellules souches, cancer"},ex2:{theme:"Corps humain et Sante",sousTh:"Reproduction humaine — gametes (spermatogenese, ovogenese), fecondation (trompe), nidation, placenta, hormones grossesse (HCG, progesterone)"},ex3:{theme:"Geologie et Risques",sousTh:"Volcanism et seismes — mecanismes, types volcanisme (effusif vs explosif), ondes sismiques (P et S), prevention risques, plans ORSEC"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Diversification du vivant — radiation adaptative (Darwin finches), convergence evolutive, coevolution, symbiose, endosymbiose, phylogenie"},ex2:{theme:"Corps humain et Sante",sousTh:"Maladies infectieuses — virus (VIH), bacteries, parasites, prevention (vaccins, antibiotiques, PrEP), antibioresistance, epidemiologie"},ex3:{theme:"Plantes et Ecosystemes",sousTh:"Ecosystemes terrestres — biomes, biomes/latitude/altitude, succession ecologique, niche ecologique, competition interspécifique, predation, mutualisme"}},
+    {ex1:{theme:"Genetique moleculaire",sousTh:"Replication ADN — semi-conservative (Meselson-Stahl), ADN polymerase, primase, ligase, correction erreurs, mutations induites par mutagenes"},ex2:{theme:"Corps humain et Sante",sousTh:"Nutrition et sante — metabolisme basal, nutrition equilibree, obésité, diabete type 2, cholesterol, maladies cardiovasculaires, prevention"},ex3:{theme:"Geologie et Formation paysages",sousTh:"Erosion et sedimentation — weathering mecanique et chimique, transport par eau/vent/glace, diagenese, fossiles, stratigraphy et datation relative"}},
+    {ex1:{theme:"Genetique et Evolution",sousTh:"Genome et evolution — transposons, duplications, pseudogenes, HGT (transfert horizontal genes chez bacteries), co-evolution hote-parasite"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme endocrinien — hormones (insuline, cortisol, adrenaline, thyroïde, parathormone), recepteurs, retrocontrôles, perturbateurs endocriniens"},ex3:{theme:"Plantes et Agriculture",sousTh:"Agrosystemes — bilan energie, intrants, rotation cultures, fixation biologique azote (Rhizobium), OGM, agroecologie, securite alimentaire mondiale"}},
+    {ex1:{theme:"Genetique et Sante",sousTh:"Mutations et cancer — oncogenes, genes suppresseurs tumeur (TP53, BRCA1), modele 2 coups Knudson, therapies ciblees, immunotherapie anti-cancer"},ex2:{theme:"Corps humain et Sante",sousTh:"Systeme nerveux avance — plasticite cerebrale, LTP/LTD, sommeil et memoire, maladies neurodegeneratives (Alzheimer, Parkinson), addictions dopamine"},ex3:{theme:"Plantes et Paleoclimats",sousTh:"Reconstitution paleoclimats — pollens fossiles, delta18O carottes glaciaires, coraux, speleothemes, modeles climatiques, predictionsIPCC"}},
+  ],
+  premiere: [
+    {ex1:{theme:"ADN et Expression genetique",sousTh:"Structure ADN double helice, replication semi-conservative, transcription ARNm, epissage introns/exons, traduction code genetique, mutations ponctuelles"},ex2:{theme:"Immunite",sousTh:"Immunite innee — phagocytose etapes, inflammation (rougeur, chaleur, oedeme, douleur), interleukines, interferon, cellules NK, barrières epitheliales"},ex3:{theme:"Ecosystemes et Services",sousTh:"Ecosystemes — reseaux trophiques (producteurs, consommateurs, decomposeurs), flux energie regle 10%, services ecosystemiques (provision, regulation, culture)"}},
+    {ex1:{theme:"ADN et Expression genetique",sousTh:"Mutations et agents mutagenes — UV (dimeres thymine), radiations ionisantes, agents chimiques (benzène), virus oncogènes, reparation ADN, consequences cellulaires"},ex2:{theme:"Immunite",sousTh:"Immunite adaptative — lymphocytes B (anticorps), lymphocytes T CD4 (auxiliaires), CD8 (cytotoxiques), selection clonale, memoire immunologique, hypersensibilites"},ex3:{theme:"Ecosystemes et Activite humaine",sousTh:"Pressions anthropiques (IPBES) — deforestation, surpeche, pollution, especes invasives, changement climatique, 6eme extinction de masse, conservation"}},
+    {ex1:{theme:"Tectonique des plaques",sousTh:"Structure interne Terre — enveloppes (croûte, manteau, noyau), ondes sismiques P et S, lithosphere et asthenosphere, convection mantellique"},ex2:{theme:"Ressources naturelles",sousTh:"Cycle de eau — evaporation, precipitation, infiltration, nappes phreatiques, irrigation 70% eau mondiale, salinisation, stress hydrique, gestion durable"},ex3:{theme:"Genetique et Sante",sousTh:"Heredite moleculaire — lois Mendel, tableau Punnett, maladies genetiques (PKU, drepanocytose, mucoviscidose), diagnostic prenatal, conseil genetique"}},
+    {ex1:{theme:"Tectonique des plaques",sousTh:"Frontieres de plaques — divergence (dorsales, volcanisme effusif), subduction (fosses, volcanisme explosif, seismes profonds), collision (chaines montagnes — Himalaya)"},ex2:{theme:"Immunite",sousTh:"Vaccination — principe immunologique (memoire, reponse primaire/secondaire), types vaccins (vivants attenues, inactives, ARNm), immunite collective, antivaccinaux"},ex3:{theme:"Ecosystemes et Biodiversite",sousTh:"Biodiversite — 3 niveaux (genetique, specifique, ecosystemique), indices Shannon, services ecosystemiques economiques, aires protegees, TVB (Trame Verte Bleue)"}},
+    {ex1:{theme:"ADN et Cancer",sousTh:"Cancer et mutations — cycle cellulaire (G1/S/G2/M), checkpoints, proto-oncogenes, genes suppresseurs tumeur, carcinogenese multi-etapes, therapies"},ex2:{theme:"Corps humain",sousTh:"Systeme nerveux Premiere — structure neurone (dendrites, axone, myeline), potentiel repos (-70mV), potentiel action, synapse chimique, neurotransmetteurs"},ex3:{theme:"Ressources naturelles",sousTh:"Ressources energetiques — energies fossiles (reserves, impacts CO2), renouvelables (solaire, eolien, hydraulique), empreinte ecologique, transition energetique"}},
+    {ex1:{theme:"Tectonique et Paleoclimats",sousTh:"Paleoclimats et Terre profonde — methodes dating (U/Pb, K/Ar), ophiolites, dorsales et anomalies magnetiques, reconstitution paleogeographique (Pangee)"},ex2:{theme:"Immunite et Sante",sousTh:"Maladies auto-immunes (SEP, polyarthrite, diabete type1), allergies (IgE, mastocytes, histamine), immunosuppresseurs, greffes et rejet, HLA"},ex3:{theme:"Ecosystemes et Agriculture",sousTh:"Agrosystemes — flux matiere/energie, intrants (engrais, pesticides), rotation cultures, fixation azote (Rhizobium), agroforesterie, securite alimentaire"}},
+  ],
+  seconde: [
+    {ex1:{theme:"La cellule unite du vivant",sousTh:"Cellule animale vs vegetale — organites (noyau, mitochondrie, chloroplaste, vacuole), membrane plasmique semi-permeable, osmose, differenciation cellulaire, microscopie"},ex2:{theme:"Corps humain",sousTh:"De la fecondation a la puberte — gametes, fecondation (trompe), developpement embryonnaire, nidation, puberte (caracteres secondaires), hormones sexuelles, contraception"},ex3:{theme:"Geosciences",sousTh:"Formation des paysages — alteration mecanique/chimique roches, transport, sedimentation, stratigraphie (principe superposition), types roches, sols et erosion humaine"}},
+    {ex1:{theme:"Metabolisme cellulaire",sousTh:"Photosynthese et respiration cellulaire — equations bilan, ATP role energetique, autotrophes vs heterotrophes, facteurs limitants photosynthese (lumiere, CO2, T), cycle Calvin"},ex2:{theme:"Biodiversite",sousTh:"Biodiversite et evolution — 3 niveaux biodiversite, selection naturelle Darwin (4 etapes), fossiles, phylogenie, derive genetique, fréquences alleliques, 6eme extinction"},ex3:{theme:"Corps humain",sousTh:"Sante et agents pathogenes — virus (VIH), bacteries, immunite innee (phagocytose, inflammation), microbiote intestinal, vaccination, perturbateurs endocriniens, antibiotiques"}},
+    {ex1:{theme:"La cellule",sousTh:"Cellules et differenciation — tissues (musculaire, nerveux, epithelial, conjonctif), organes, organisms pluricellulaires, cellules souches, totipotence, specialisation cellulaire"},ex2:{theme:"Geosciences",sousTh:"Erosion et activite humaine — deforestation (ruissellement), urbanisation (impermeabilisation), agriculture intensive (nitrates), desertification, Grande Muraille Verte, risques naturels"},ex3:{theme:"Communication animale",sousTh:"Communication et selection sexuelle — pheromones (bombycol), signaux sonores/visuels, selection sexuelle (intrasexuelle vs intersexuelle), dimorphisme, danse abeilles, empreinte"}},
+  ],
+}
+
+function getProgrammeJourSVTFR(sectionKey: string, dayNum: number) {
+  const svtKey = (sectionKey === 'expertes' || sectionKey === 'techno') ? 'terminale' : sectionKey
+  const prog = PROGRAMME_JOUR_SVT_FR[svtKey] || PROGRAMME_JOUR_SVT_FR['terminale']
+  if (!prog || prog.length === 0) return null
+  return prog[(dayNum - 1) % prog.length]
+}
+
+async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secLabel = sec?.label || candidat.section
+  const secDuration = sec?.duration || 210
   const today = new Date()
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_ANGLAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const yyyy = today.getFullYear()
+  const seed = 'BBFR_SVT_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
 
-  const isLettres = candidat.sectionKey === 'lettres'
-  const sectionLabel = isLettres ? 'Section Lettres' : 'Toutes sections (sauf Lettres)'
-  const sectionFocus = isLettres
-    ? 'literary and cultural texts · expressive and narrative writing · personal voice and description'
-    : 'scientific and technical texts · argumentative essay · logical analysis and structured reasoning'
+  const prog = getProgrammeJourSVTFR(candidat.sectionKey, dayNum)
+  const ex1Theme = prog?.ex1.sousTh || 'Genetique — meiose et brassages genetiques'
+  const ex2Theme = prog?.ex2.sousTh || 'Corps humain — immunite et sante'
+  const ex3Theme = prog?.ex3.sousTh || 'Plantes — photosynthese et paleoclimats'
 
-  const prog = getProgrammeJourAnglais(dayNum)
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France SVT (programme Education Nationale officiel).
+Tu crées des sujets BAC BLANC SVT originaux, rigoureux, de niveau Bac France.
+REPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
-  const system = `You are an expert author of official Tunisian Baccalaureate English papers (CNP official programme).
-You create original BAC BLANC ANGLAIS papers of official level.
-RESPOND ONLY IN VALID JSON — no backticks, no comments.
+NOTATION SVT OBLIGATOIRE :
+- Symboles : ADN, ARNm, ATP, CO2, O2, H2O, Na+, K+, Ca2+
+- Formules simples : pas de LaTeX — utiliser ecriture standard
+- Abreviations acceptees : LB, LT, NK, CMH, HLA, GnRH, LH, FSH
+- Chiffres realistes (pH 7.4, [glucose] 1 g/L, T 37 degres C)`
 
-OFFICIAL STRUCTURE — BAC ANGLAIS TUNISIE :
-Part I   — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions
-Part II  — Writing (8 pts) : structured essay or article, 180-200 words minimum
-Part III — Language (4 pts) : grammar + vocabulary exercises (4+4 items)
+  const prompt = 'Cree un sujet BAC BLANC SVT France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+    + 'STRUCTURE OFFICIELLE BAC FRANCE SVT :\n'
+    + 'Duree : ' + (secDuration/60) + 'h · Total : 20 points\n'
+    + 'Exercice 1 — GENETIQUE & EVOLUTION (8 points) : ' + ex1Theme + '\n'
+    + 'Exercice 2 — CORPS HUMAIN & SANTE (6 points) : ' + ex2Theme + '\n'
+    + 'Exercice 3 — PLANTES, ECOLOGIE & GEOLOGIE (6 points) : ' + ex3Theme + '\n\n'
+    + 'REGLES ABSOLUES :\n'
+    + '- Sujet ORIGINAL, jamais une copie des annales\n'
+    + '- Niveau exactement equivalent au vrai Bac France SVT\n'
+    + '- Donnees numeriques realistes (dates geologiques, concentrations, pressions)\n'
+    + '- Chaque exercice avec sous-parties 1) 2) 3) ou a) b) c)\n'
+    + '- Minimum 120 mots par exercice\n'
+    + '- Documents SVT : tableaux de donnees, schemas a legender, courbes a interpreter\n\n'
+    + 'REPONSE JSON EXACTE :\n'
+    + '{\n'
+    + '  "id": "bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '",\n'
+    + '  "day": ' + dayNum + ',\n'
+    + '  "title": "Bac Blanc SVT — ' + secLabel + ' — Jour ' + dayNum + '",\n'
+    + '  "section": "' + secLabel + '",\n'
+    + '  "date": "' + dateStr + '",\n'
+    + '  "totalPoints": 20,\n'
+    + '  "duration": ' + secDuration + ',\n'
+    + '  "exercises": [\n'
+    + '    { "num": 1, "theme": "' + (prog?.ex1.theme || 'Genetique et Evolution') + '", "title": "Titre exercice 1", "points": 8, "statement": "DOCUMENTS :\n[tableau de donnees ou schema]\n\n1) a) Question...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question..." },\n'
+    + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Corps humain et Sante') + '", "title": "Titre exercice 2", "points": 6, "statement": "DOCUMENTS :\n[donnees]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ..." },\n'
+    + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Plantes et Geologie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNEES :\n[donnees]\n\n1) ...\n2) ...\n3) ..." }\n'
+    + '  ]\n'
+    + '}'
 
-REQUIREMENTS :
-- Text must be authentic and engaging at B2 level
-- Questions progress from literal to inferential to evaluative
-- Writing task must have clear instructions including word count
-- Grammar exercises must be varied and clearly labeled
-- The paper must match the difficulty level of official Bac Tunisie exams`
-
-  const prompt = `Create an official BAC BLANC ANGLAIS paper — National Contest — DAY ${dayNum} — ${sectionLabel}.
-
-SEED (all students same day = same paper): ${seed}
-DATE: ${dateStr}
-THEME: ${prog.theme}
-WRITING TASK: ${prog.writing}
-GRAMMAR FOCUS: ${prog.grammar}
-SECTION FOCUS: ${sectionFocus}
-
-PART I — READING COMPREHENSION (8 pts):
-Write an authentic text of 280-320 words about "${prog.theme}".
-${isLettres
-  ? 'Style: literary/journalistic — descriptive, personal voice, cultural references, emotional engagement.'
-  : 'Style: informative/scientific — logical structure, facts, examples, objective analysis.'}
-Then write 5 questions:
-  Q1 (1 pt): Global comprehension — What is the main idea of the text?
-  Q2 (2 pts): True/False/Not Mentioned — 2 statements with justification from the text
-  Q3 (2 pts): Open question — Find evidence and infer the author's point of view
-  Q4 (2 pts): Vocabulary — define or find synonyms for 2 words from context
-  Q5 (1 pt): Referent or cohesion — What does "it/they/this" refer to in line X?
-
-PART II — WRITING (8 pts):
-Task: ${prog.writing}
-Instructions: Write a well-structured essay/article of 180-200 words.
-Include: clear introduction · 2-3 well-developed arguments with examples · conclusion
-Marking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)
-
-PART III — LANGUAGE (4 pts):
-Focus: ${prog.grammar}
-Exercise A (2 pts): 4 fill-in-the-blank or sentence transformation items
-Exercise B (2 pts): 4 rewriting or vocabulary matching items
-
-RESPOND WITH THIS EXACT JSON:
-{
-  "id": "bb-anglais-${dayNum}-${candidat.sectionKey}",
-  "day": ${dayNum},
-  "title": "Bac Blanc — Anglais — ${sectionLabel} — Day ${dayNum}",
-  "section": "${sectionLabel}",
-  "sectionKey": "${candidat.sectionKey}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
-  "duration": 120,
-  "exercises": [
-    {
-      "num": 1,
-      "theme": "${prog.theme}",
-      "title": "Part I — Reading Comprehension",
-      "points": 8,
-      "graph": null,
-      "statement": "TEXT:\n[Full authentic text 280-320 words about ${prog.theme} — ${sectionFocus}]\n\nQUESTIONS:\nQ1 (1 pt) — [global comprehension question]\nQ2 (2 pts) — Say whether the following statements are True (T), False (F) or Not Mentioned (NM). Justify with a quote from the text:\n  a) [statement 1]\n  b) [statement 2]\nQ3 (2 pts) — [open inference question requiring evidence from text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition 1]\n  b) [definition 2]\nQ5 (1 pt) — What does the underlined word \'[word]\' in paragraph X refer to?"
-    },
-    {
-      "num": 2,
-      "theme": "Writing — ${prog.theme}",
-      "title": "Part II — Writing",
-      "points": 8,
-      "graph": null,
-      "statement": "TASK: ${prog.writing}\n\nWrite a well-structured essay or article (180-200 words).\nYour writing should include:\n• A clear introduction presenting your topic or position\n• Two or three well-developed paragraphs with arguments and examples\n• A conclusion summarising your point of view\n\nMARKING SCHEME:\n• Content and Ideas: 4 pts\n• Language, Grammar and Vocabulary: 2 pts\n• Organisation and Cohesion: 2 pts"
-    },
-    {
-      "num": 3,
-      "theme": "Language — ${prog.grammar}",
-      "title": "Part III — Language",
-      "points": 4,
-      "graph": null,
-      "statement": "GRAMMAR FOCUS: ${prog.grammar}\n\nEXERCISE A (2 pts) — Fill in the blanks or transform the sentences:\n1. [sentence 1 — item requiring ${prog.grammar.split('·')[0].trim()}]\n2. [sentence 2]\n3. [sentence 3]\n4. [sentence 4]\n\nEXERCISE B (2 pts) — Rewrite the sentences without changing the meaning / Match the words:\n1. [sentence or matching item 1]\n2. [sentence or matching item 2]\n3. [sentence or matching item 3]\n4. [sentence or matching item 4]"
-    }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 5000)
+  const raw = await askClaude(prompt, system, 5500, 'svt')
 
   const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-anglais-${dayNum}-${candidat.sectionKey}`,
+    id: 'bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
     day: dayNum,
-    title: `Bac Blanc Anglais — ${sectionLabel} — Jour ${dayNum}`,
-    section: sectionLabel,
+    title: 'Bac Blanc SVT — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
     sectionKey: candidat.sectionKey,
     date: dateStr,
     totalPoints: 20,
-    duration: 120,
+    duration: secDuration,
     exercises: []
   })
 
   if (!parsed.exercises || parsed.exercises.length === 0) {
-    throw new Error('Réponse IA invalide — réessayez')
+    throw new Error('Reponse IA invalide — reessayez')
   }
 
   return {
     ...parsed,
-    id: parsed.id || `bb-anglais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
+    id: parsed.id || ('bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
     day: parsed.day || dayNum,
     sectionKey: candidat.sectionKey,
-    section: parsed.section || sectionLabel,
+    section: parsed.section || secLabel,
     date: parsed.date || dateStr,
     totalPoints: parsed.totalPoints || 20,
-    duration: parsed.duration || 120,
+    duration: parsed.duration || secDuration,
   }
 }
 
-// ── Génération examen Bac Blanc (distinct de simulation) ──────────
-// ════════════════════════════════════════════════════════════════
-// PROGRAMME SVT PAR JOUR — 31 jours · 2 sections
-// scexp-svt : Sciences Expérimentales (coef. 5) — 4 parties
-// maths-svt : Section Mathématiques (coef. 2) — 5 parties (+ Géologie)
-// ════════════════════════════════════════════════════════════════
-const PROGRAMME_JOUR_SVT: Record<string, {
-  p1: { theme: string; sousTh: string }
-  p2: { theme: string; sousTh: string }
-  p3: { theme: string; sousTh: string }
-  p4: { theme: string; sousTh: string }
-  p5?: { theme: string; sousTh: string } // uniquement section Maths
-}[]> = {
-  'scexp-svt': [
-    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — Méiose Anaphase I · 2ⁿ gamètes · diversité"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète type 1 et 2 · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — structure spermatozoïde · cellules de Leydig et Sertoli · régulation hormonale"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — photolyse de l'eau · cycle de Calvin · facteurs limitants"} },
-    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme 3:1 · dihybridisme 9:3:3:1 · gènes indépendants"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel de repos (-70mV) · dépolarisation Na⁺ · repolarisation K⁺ · loi du tout ou rien"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — follicule primordial à De Graaf · ovulation · corps jaune"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption intestinale · villosités"} },
-    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · immunité humorale (LB · anticorps) · immunité cellulaire (LT)"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — FSH · LH · œstrogènes · progestérone · pic LH → ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau · sels minéraux N·P·K·Mg·Fe · transpiration"} },
-    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over Prophase I · gamètes recombinants · fréquence recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Synapse chimique — neurotransmetteur · fente synaptique · PPSE · PPSI · intégration"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration · réaction corticale · fusion pronuclei → zygote"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · cycle de Krebs · chaîne respiratoire → 38 ATP"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations géniques — substitution · délétion · faux-sens · non-sens · agents mutagènes"}, p2:{theme:"Milieu intérieur",sousTh:"Rôle du foie — glycogénogenèse · glycogénolyse · néoglucogenèse · compartiments liquidiens"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — contraception (pilule · préservatif) · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — chlorophylle · phase lumineuse · phase obscure · équation bilan"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique des populations — Hardy-Weinberg p²+2pq+q²=1 · fréquences alléliques · applications médicales"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · gaine de myéline · réflexe myotatique · muscles antagonistes"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale masculine — GnRH · LH · FSH · testostérone · rétrocontrôle négatif"}, p4:{theme:"Nutrition",sousTh:"Digestion — amylase (glucides) · pepsine (protides) · lipase · conditions enzymatiques"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — trisomie 21 · non-disjonction méiose · délétion · translocation"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination — mémoire immunitaire · anticorps · plasmocytes vs sérothérapie (passif)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · blocage méiose II jusqu'à fécondation"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse anaérobie vs aérobie · mitochondrie · bilan ATP"} },
-    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · cocaïne (blocage recapture dopamine) · dépendance · stress · cortisol"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phase menstruelle · proliférative · sécrétoire · action œstrogènes et progestérone"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — photosynthèse · intensité photosynthétique · facteurs limitants · CO₂ · lumière"} },
-    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · choriocentèse · caryotype · sonde moléculaire"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — glycémie 0,8-1,2 g/L · pH 7,35-7,45 · température 37°C · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Régulation hypothalamo-hypophysaire féminine — GnRH · FSH · LH · rétrocontrôle positif (pic LH)"}, p4:{theme:"Nutrition",sousTh:"Absorption végétale — osmose · poils absorbants · xylème · sève brute · carences"} },
-    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — maladies récessives · généalogie · calcul probabilité"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité non spécifique — phagocytose (chimiotactisme · adhérence · ingestion · digestion) · inflammation"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde (tête·pièce intermédiaire·flagelle) · ovocyte II (noyau·zone pellucide)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase photochimique : photolyse eau → O₂ libre · production ATP et NADPH"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique classique — monohybridisme avec dominance incomplète · codominance"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 vs type 2 — mécanismes · traitement · insuline · rétrocontrôle"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — mécanisme (blocage GnRH · FSH · LH) · pas d'ovulation · pilule combinée"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs — pyruvate → acétyl-CoA · CO₂ · NADH · FADH₂ · ATP (2 par cycle)"} },
-    { p1:{theme:"Génétique",sousTh:"Brassage génétique complet — croisement test · gamètes · fréquences alléliques"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action ionique — rôle Na⁺/K⁺ · pompe Na⁺/K⁺ · période réfractaire · propagation axone"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction ovocytes · fécondation in vitro · transfert embryon"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — absorption sanguine (glucose · AA) et lymphatique (AG · glycérol) · villosités"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique des populations — dérive génétique · sélection naturelle · évolution fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — clone lymphocytaire · mémoire immunologique · réponse primaire vs secondaire"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication (mitoses) · accroissement · maturation (méiose) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · eau · loi de Liebig"} },
-    { p1:{theme:"Génétique",sousTh:"Hérédité gonosomique — gènes liés à X · notation XᴬXᵃ · conductrice · test-cross"}, p2:{theme:"Neurophysiologie",sousTh:"Intégration postsynaptique — sommation temporelle et spatiale · seuil de déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Follicule de De Graaf — structure · antrum · granulosa · thèque · ovocyte II · ovulation"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — rôle sels minéraux : N (protéines) · Mg (chlorophylle) · Fe (chlorophylle)"} },
-    { p1:{theme:"Génétique",sousTh:"Dihybridisme — gènes liés vs indépendants · ratio 9:3:3:1 vs autres ratios · linkage"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — foie (glycogénogenèse · glycogénolyse · néoglucogenèse) · hormones pancréatiques"}, p3:{theme:"Reproduction",sousTh:"Hygiène procréation — IST · prévention · comportements protection · suivi de grossesse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — bilan global C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 38 ATP"} },
-    { p1:{theme:"Génétique",sousTh:"Crossing-over et recombinaison — carte génétique · fréquence cM · distance génétique"}, p2:{theme:"Neurophysiologie",sousTh:"Structure neurone — corps cellulaire · dendrites · axone · gaine myéline · nœuds Ranvier"}, p3:{theme:"Reproduction",sousTh:"Corps jaune — progestérone · maintien endomètre · dégénérescence si pas fécondation"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — cycle de Calvin : fixation CO₂ · réduction C3 → glucose · régénération RuBP"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations et conséquences — cancer · maladies génétiques · bénéfiques (évolution)"}, p2:{theme:"Milieu intérieur",sousTh:"Compartiments liquidiens — plasma · liquide interstitiel · intracellulaire · échanges capillaires"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel coordonné — ovaire + utérus + hormones · schéma général sur 28 jours"}, p4:{theme:"Nutrition",sousTh:"Digestion enzymes — pH optimal · température · dénaturation · spécificité substrat-enzyme"} },
-    { p1:{theme:"Génétique",sousTh:"Test-cross et back-cross — révélation génotype · applications en génétique humaine"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues et SN — amphétamines · alcool · THC · effets sur synapses · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — blocage en prophase I (naissance) puis méiose I (puberté) puis méiose II (fécondation)"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — transpiration · force aspiration · cohésion colonne eau · stomates"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique formelle — arbre généalogique · mode de transmission · hérédité autosomique récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Vaccination et sérothérapie — comparaison · protection active (vaccin) vs passive (sérum)"}, p3:{theme:"Reproduction",sousTh:"Régulation hormonale féminine — rétrocontrôle négatif et positif · axe hypothalamo-hypophysaire"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂ · schéma chloroplaste"} },
-    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — application médicale · mucoviscidose · porteurs sains · fréquence allélique"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — récepteur → centre → effecteur · motoneurone · muscle antagoniste"}, p3:{theme:"Reproduction",sousTh:"Fécondation — zones de rencontre · capacitation · acrosome · polyspermie bloquée"}, p4:{theme:"Nutrition",sousTh:"Respiration anaérobie — fermentation lactique · fermentation alcoolique · 2 ATP seulement"} },
-    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique — all notions · brassages · transmission · mutations · populations"}, p2:{theme:"Milieu intérieur",sousTh:"Récapitulatif milieu intérieur — glycémie · immunité · neurophysiologie · hygiène SN"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · procréation"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — animale · végétale · photosynthèse · respiration"} },
-    { p1:{theme:"Génétique",sousTh:"Sujet type bac — génétique complexe · crossing-over + transmission liée sexe"}, p2:{theme:"Neurophysiologie",sousTh:"Sujet type bac — neurophysiologie complète · potentiel d'action · synapse · intégration"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac — reproduction complète · spermatogenèse · ovogenèse · fécondation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac — nutrition complète · photosynthèse + respiration cellulaire"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique quantitative — polygénie · expressivité · pénétrance · phénotype continu"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · CRH · ACTH · cortisol · adrénaline · effets physiologiques"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine complète — axe hypothalamo-hypophyso-testiculaire · feedback négatif"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — échanges gazeux · point de compensation · compensation lumineuse"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations et cancer — oncogènes · gènes suppresseurs · mécanismes · réparation ADN"}, p2:{theme:"Neurophysiologie",sousTh:"CMH — complexe majeur histocompatibilité · reconnaissance Ag · greffes · autoimmunité"}, p3:{theme:"Reproduction",sousTh:"Infertilité et PMA — causes · solutions · IAD vs FIVETE · aspects éthiques"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — amélioration production · engrais · risques pollution nitrates"} },
-    { p1:{theme:"Génétique",sousTh:"Génétique moléculaire — ADN · gène · allèle · expression · transcription · traduction"}, p2:{theme:"Milieu intérieur",sousTh:"Immunodéficiences — SIDA · VIH · LT CD4 · traitement antirétroviral · prévention"}, p3:{theme:"Reproduction",sousTh:"Gamétogenèse comparée — spermatogenèse continue vs ovogenèse cyclique · méiose"}, p4:{theme:"Nutrition",sousTh:"Nutrition cellulaire — ATP utilisé pour travail mécanique · chimique · électrique · osmotique"} },
-    { p1:{theme:"Génétique",sousTh:"Révision type sujet officiel bac SC.EXP — 6 points génétique · gènes liés + lié sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Révision type sujet officiel bac — 7 points milieu intérieur · complet"}, p3:{theme:"Reproduction",sousTh:"Révision type sujet officiel bac — 4 points reproduction · régulation"}, p4:{theme:"Nutrition",sousTh:"Révision type sujet officiel bac — 3 points nutrition · photosynthèse"} },
-    { p1:{theme:"Génétique",sousTh:"Concours final — génétique avancée · croisements complexes · génétique populations"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie et immunité · interrelations"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction et régulation hormonale complète"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale et végétale · bilan métabolique"} },
-    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — révision croisée · méiose · diversité · notions clés"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — révision croisée · homéostasie · rétrocontrôles · constantes"}, p3:{theme:"Reproduction",sousTh:"Reproduction — révision croisée · cycles · hormones · fécondation"}, p4:{theme:"Nutrition",sousTh:"Nutrition — révision croisée · photosynthèse · respiration · échanges"} },
-    { p1:{theme:"Génétique",sousTh:"Session principale simulée — sujet complet 6 pts · génétique + brassages + populations"}, p2:{theme:"Milieu intérieur",sousTh:"Session principale simulée — sujet complet 7 pts · milieu intérieur + neurophysiologie"}, p3:{theme:"Reproduction",sousTh:"Session principale simulée — sujet complet 4 pts · reproduction humaine"}, p4:{theme:"Nutrition",sousTh:"Session principale simulée — sujet complet 3 pts · nutrition et environnement"} },
-    { p1:{theme:"Génétique",sousTh:"Session contrôle simulée — génétique difficultés · gènes liés + sexe + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Session contrôle simulée — neurophysiologie · potentiel d'action · synapse complexe"}, p3:{theme:"Reproduction",sousTh:"Session contrôle simulée — reproduction · cycles · régulation complète"}, p4:{theme:"Nutrition",sousTh:"Session contrôle simulée — nutrition · photosynthèse difficultés · facteurs"} },
-    { p1:{theme:"Génétique",sousTh:"Bilan général génétique — tout le programme · vrai niveau bac"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan général milieu intérieur — tout le programme · vrai niveau bac"}, p3:{theme:"Reproduction",sousTh:"Bilan général reproduction — tout le programme · vrai niveau bac"}, p4:{theme:"Nutrition",sousTh:"Bilan général nutrition — tout le programme · vrai niveau bac"} },
-  ],
-  'maths-svt': [
-    { p1:{theme:"Génétique",sousTh:"Brassage interchromosomique — méiose · 2ⁿ gamètes · diversité génétique section Maths"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie — insuline · glucagon · diabète · rétrocontrôle négatif"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — étapes · méiose signalée · structure spermatozoïde · GnRH · LH · FSH"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — équation bilan · chlorophylle · photolyse eau · facteurs limitants"}, p5:{theme:"Géologie",sousTh:"Tectonique des plaques — dorsales · expansion océanique · subduction · séismes"} },
-    { p1:{theme:"Génétique",sousTh:"Lois de Mendel — monohybridisme · dihybridisme · loi ségrégation · loi assortiment"}, p2:{theme:"Neurophysiologie",sousTh:"Potentiel d'action — dépolarisation Na⁺ · repolarisation K⁺ · synapse · PPSE · PPSI"}, p3:{theme:"Reproduction",sousTh:"Cycle sexuel féminin — ovarien · utérin · hormonal · FSH · LH · œstrogènes · progestérone"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — glycolyse · Krebs · chaîne respiratoire · 38 ATP"}, p5:{theme:"Évolution",sousTh:"Théories évolution — Darwin · sélection naturelle · preuves fossiles · anatomie comparée"} },
-    { p1:{theme:"Génétique",sousTh:"Hérédité liée au sexe — daltonisme · hémophilie · transmission croisée père→fille→fils"}, p2:{theme:"Milieu intérieur",sousTh:"Défense immunitaire — phagocytose · LB anticorps · LT cytotoxiques · mémoire · vaccination"}, p3:{theme:"Reproduction",sousTh:"Fécondation — capacitation · pénétration acrosomiale · réaction corticale · zygote 2n"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — absorption eau et sels minéraux · osmose · transpiration · xylème"}, p5:{theme:"Géologie",sousTh:"Structure globe — croûte · manteau · noyau · lithosphère · asthénosphère"} },
-    { p1:{theme:"Génétique",sousTh:"Brassage intrachromosomique — crossing-over · gamètes recombinants · fréquence de recombinaison"}, p2:{theme:"Neurophysiologie",sousTh:"Système nerveux — neurone · réflexe myotatique · drogues · cocaïne · dopamine · stress"}, p3:{theme:"Reproduction",sousTh:"Régulation féminine — GnRH pulsatile · pic LH → ovulation · rétrocontrôle positif"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — digestion enzymatique · absorption · villosités intestinales"}, p5:{theme:"Évolution",sousTh:"Spéciation — isolement reproducteur · spéciation allopatrique · dérive génétique"} },
-    { p1:{theme:"Génétique",sousTh:"Diagnostic prénatal — amniocentèse · caryotype · sonde moléculaire · risque consanguinité"}, p2:{theme:"Milieu intérieur",sousTh:"Régulation glycémie — rôle foie · pancréas endocrine · insuline vs glucagon · diabète"}, p3:{theme:"Reproduction",sousTh:"Maîtrise procréation — pilule (bloque GnRH/FSH/LH) · préservatif · FIVETE · IAD"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase lumineuse (photolyse eau → O₂) · phase obscure (Calvin → glucose)"}, p5:{theme:"Géologie",sousTh:"Séismes — foyer · épicentre · ondes P et S · magnitude · risque sismique"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations — géniques (substitution · délétion) · chromosomiques (trisomie 21) · conséquences"}, p2:{theme:"Neurophysiologie",sousTh:"Immunité — non spécifique (phagocytose) · spécifique (LB · LT) · vaccination vs sérothérapie"}, p3:{theme:"Reproduction",sousTh:"Spermatogenèse — multiplication · accroissement · maturation méiose (signalée) · spermiogenèse"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire vs fermentation — aérobie (38 ATP) vs anaérobie (2 ATP)"}, p5:{theme:"Évolution",sousTh:"Preuves évolution — fossiles · anatomie comparée · organes vestigiaux · ADN universel"} },
-    { p1:{theme:"Génétique",sousTh:"Transmission héréditaire — dihybridisme gènes liés · classes parentales et recombinantes"}, p2:{theme:"Milieu intérieur",sousTh:"Milieu intérieur — compartiments liquidiens · constantes biologiques · homéostasie"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse — ovogonies → ovocyte I → ovocyte II · structure · méiose signalée"}, p4:{theme:"Nutrition",sousTh:"Facteurs limitants photosynthèse — lumière · CO₂ · température · loi du minimum"}, p5:{theme:"Géologie",sousTh:"Volcanisme — types volcans · magma basaltique vs siliceux · dorsales vs subduction"} },
-    { p1:{theme:"Génétique",sousTh:"Test-cross — révéler génotype · hétérozygote · calcul probabilité · arbre généalogique"}, p2:{theme:"Neurophysiologie",sousTh:"Hygiène SN — drogues · mécanismes synaptiques · dépendance physique et psychologique"}, p3:{theme:"Reproduction",sousTh:"Régulation masculine — axe hypothalamo-hypophyso-testiculaire · testostérone · rétrocontrôle"}, p4:{theme:"Nutrition",sousTh:"Nutrition végétale — sels minéraux · carence azote (chlorose) · engrais chimiques · pollution"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — adaptation · variation · survie sélective · exemple peppered moth"} },
-    { p1:{theme:"Génétique",sousTh:"Généalogie — arbre · mode transmission · probabilité enfant malade · hérédité récessive"}, p2:{theme:"Milieu intérieur",sousTh:"Stress — axe HHS · cortisol · adrénaline · effets chroniques · mesures protection"}, p3:{theme:"Reproduction",sousTh:"Cycle utérin — phases menstruelle · proliférative · sécrétoire · synchronisation avec ovarien"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse bilan · chloroplaste — thylakoïdes (phase lumineuse) · stroma (Calvin)"}, p5:{theme:"Géologie",sousTh:"Tectonique plaques — dérive continents · Wegener · preuves magnétiques · expansion"} },
-    { p1:{theme:"Génétique",sousTh:"Récapitulatif génétique section Maths — brassages + transmission + mutations"}, p2:{theme:"Neurophysiologie",sousTh:"Récapitulatif neurophysiologie — potentiel action · synapse · réflexe · drogues"}, p3:{theme:"Reproduction",sousTh:"Récapitulatif reproduction — homme · femme · cycle · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Récapitulatif nutrition — photosynthèse · respiration · comparaison autotrophe/hétérotrophe"}, p5:{theme:"Géologie & Évolution",sousTh:"Récapitulatif géologie + évolution — tectonique · théories · preuves · spéciation"} },
-    { p1:{theme:"Génétique",sousTh:"Sujet type bac Section Maths — 5 points génétique · croisements + lié au sexe"}, p2:{theme:"Milieu intérieur",sousTh:"Sujet type bac Section Maths — 6 points milieu intérieur · glycémie + SN + immunité"}, p3:{theme:"Reproduction",sousTh:"Sujet type bac Section Maths — 4 points reproduction · spermatogenèse + régulation"}, p4:{theme:"Nutrition",sousTh:"Sujet type bac Section Maths — 3 points nutrition · photosynthèse"}, p5:{theme:"Géologie",sousTh:"Sujet type bac Section Maths — 2 points géologie · tectonique des plaques"} },
-    { p1:{theme:"Génétique",sousTh:"Concours final — génétique section Maths · dihybridisme + lié sexe + diagnostic"}, p2:{theme:"Neurophysiologie",sousTh:"Concours final — neurophysiologie + immunité complète"}, p3:{theme:"Reproduction",sousTh:"Concours final — reproduction homme + femme + régulation"}, p4:{theme:"Nutrition",sousTh:"Concours final — nutrition animale + végétale + photosynthèse"}, p5:{theme:"Géologie & Évolution",sousTh:"Concours final — géologie + évolution complète"} },
-    // Jours 13-31 : rotation sur les thèmes avec variantes
-    { p1:{theme:"Génétique",sousTh:"Brassages génétiques — Prophase I vs Anaphase I · comparaison brassages"}, p2:{theme:"Milieu intérieur",sousTh:"Diabète type 1 — destruction autoimmune cellules β · absence insuline · traitement"}, p3:{theme:"Reproduction",sousTh:"Folliculogenèse — de primordial à De Graaf · antrum · granulosa · thèque"}, p4:{theme:"Nutrition",sousTh:"Respiration cellulaire — rôle mitochondrie · glycolyse cytoplasme · bilan énergétique"}, p5:{theme:"Géologie",sousTh:"Subduction — plaque océanique sous continentale · fosse · volcans · arcs insulaires"} },
-    { p1:{theme:"Génétique",sousTh:"Monohybridisme — dominance · récessivité · F1 · F2 · back-cross · génotypes"}, p2:{theme:"Neurophysiologie",sousTh:"PPSE et PPSI — sommation spatiale et temporelle · seuil déclenchement PA"}, p3:{theme:"Reproduction",sousTh:"Contraception orale — pilule inhibe GnRH/FSH/LH → pas d'ovulation · mécanisme"}, p4:{theme:"Nutrition",sousTh:"Absorption eau plante — osmose · poils absorbants · pression de turgescence"}, p5:{theme:"Évolution",sousTh:"Code génétique universel — preuve évolution · ADN universel · phylogénie moléculaire"} },
-    { p1:{theme:"Génétique",sousTh:"Hérédité liée chromosome X — notation · conductrice · transmission croisée"}, p2:{theme:"Milieu intérieur",sousTh:"Glycémie après repas vs jeûne — rôle foie · insuline glycogénogenèse · glucagon glycogénolyse"}, p3:{theme:"Reproduction",sousTh:"Pic LH — cause (rétrocontrôle positif œstrogènes) · conséquences (ovulation · corps jaune)"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse — phase obscure de Calvin · fixation CO₂ · réduction · régénération RuBP"}, p5:{theme:"Géologie",sousTh:"Formation chaînes montagnes — collision continentale · Himalaya · Alpes · orogénèse"} },
-    { p1:{theme:"Génétique",sousTh:"Mutations chromosomiques — non-disjonction méiose → trisomie · âge maternel · caryotype"}, p2:{theme:"Neurophysiologie",sousTh:"Réflexe myotatique — arc réflexe · fuseau neuromusculaire · synapse monosynaptique"}, p3:{theme:"Reproduction",sousTh:"FIVETE — stimulation ovarienne · ponction · FIV · culture · transfert · grossesse"}, p4:{theme:"Nutrition",sousTh:"Nutrition animale — enzymes digestives · pH optimal · dénaturation à 50°C · spécificité"}, p5:{theme:"Évolution",sousTh:"Isolement reproducteur — mécanismes · barrières géographiques · spéciation allopatrique"} },
-    { p1:{theme:"Génétique",sousTh:"Hardy-Weinberg — conditions équilibre · panmixie · applications calcul fréquences"}, p2:{theme:"Milieu intérieur",sousTh:"Immunité spécifique — LB (plasmocytes · anticorps) · LT (cytotoxiques · auxiliaires)"}, p3:{theme:"Reproduction",sousTh:"Ovogenèse comparée à spermatogenèse — différences · similitudes · méiose"}, p4:{theme:"Nutrition",sousTh:"Cycle de Krebs simplifié — pyruvate → CO₂ + NADH + FADH₂ · matrice mitochondriale"}, p5:{theme:"Géologie",sousTh:"Dorsales océaniques — rift · remontée magma · expansion · anomalies magnétiques"} },
-    { p1:{theme:"Génétique",sousTh:"Risque consanguinité — calcul probabilité · maladies récessives rares · généalogie"}, p2:{theme:"Neurophysiologie",sousTh:"Drogues système nerveux — types agoniste/antagoniste · cocaïne · dépendance · sevrage"}, p3:{theme:"Reproduction",sousTh:"Structure gamètes — spermatozoïde haploïde · acrosome · mitochondries · ovocyte II"}, p4:{theme:"Nutrition",sousTh:"Photosynthèse vs respiration — autotrophe producteur vs hétérotrophe consommateur"}, p5:{theme:"Évolution",sousTh:"Sélection naturelle — directionnelle · stabilisatrice · diversifiante · exemples réels"} },
-    { p1:{theme:"Génétique",sousTh:"Bilan génétique section Maths — révision complète tous les thèmes"}, p2:{theme:"Milieu intérieur",sousTh:"Bilan milieu intérieur — glycémie · neurophysiologie · immunité · stress · drogues"}, p3:{theme:"Reproduction",sousTh:"Bilan reproduction — homme · femme · cycle complet · fécondation · contraception"}, p4:{theme:"Nutrition",sousTh:"Bilan nutrition — photosynthèse + respiration · échanges · bilan ATP"}, p5:{theme:"Géologie & Évolution",sousTh:"Bilan géologie + évolution — tectonique · preuves · spéciation"} },
-  ],
-}
 
-async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<BacExam> {
+async function generateBacBlancInformatique(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secNSI = SECTIONS_NSI_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_NSI_FR[0]
+  const secLabel = secNSI.label
   const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const isMaths = candidat.sectionKey === 'maths-svt'
-  const sectionLabel = isMaths ? 'SVT — Section Mathématiques' : 'SVT — Sciences Expérimentales'
-  const seed = `BAC_BLANC_SVT_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const dd = String(today.getDate()).padStart(2,'0')
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const yyyy = today.getFullYear()
+  const dateStr = dd+'/'+mm+'/'+yyyy
+  const seed = 'BBFR_NSI_'+candidat.sectionKey+'_J'+dayNum+'_'+yyyy
 
-  const progKey = isMaths ? 'maths-svt' : 'scexp-svt'
-  const progList = PROGRAMME_JOUR_SVT[progKey]
-  const prog = progList[(dayNum - 1) % progList.length]
+  const nEx = candidat.sectionKey==='seconde-snt' ? 2 : 3
+  const ptsArr = nEx===2 ? [10,10] : [7,7,6]
+  const totalPts = ptsArr.reduce((a,b)=>a+b, 0)
+  const prog = secNSI.programme.slice(0, nEx)
 
-  const p1Theme = prog.p1.sousTh
-  const p2Theme = prog.p2.sousTh
-  const p3Theme = prog.p3.sousTh
-  const p4Theme = prog.p4.sousTh
-  const p5Theme = isMaths && prog.p5 ? prog.p5.sousTh : null
+  const progStr = prog.map((p,i)=>'- Exercice '+(i+1)+' ('+ptsArr[i]+'pts) : '+p.theme+' | '+p.sousTh).join('\n')
+  const exJson = prog.map((p,i)=>'    {"num":'+(i+1)+',"title":"Exercice '+(i+1)+' - '+p.theme+'","theme":"'+p.theme+'","points":'+ptsArr[i]+',"statement":"TODO","graph":null}').join(',\n')
 
-  const nExercices = isMaths ? 5 : 4
-  const pts = isMaths ? [5, 6, 4, 3, 2] : [6, 7, 4, 3]
-  const duration = isMaths ? 120 : 180
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en SVT (programme CNP officiel).
-Tu crées des sujets BAC BLANC SVT originaux, rigoureux et de niveau officiel.
+  const system = `Tu es un auteur expert de sujets du Baccalauréat France NSI/Informatique (programme officiel Éducation Nationale).
+Tu crées des sujets BAC BLANC NSI originaux, rigoureux, de niveau Bac France.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
-RÈGLES SVT OBLIGATOIRES :
-- Vocabulaire biologique précis : noms latins si nécessaire (ex: Homo sapiens)
-- Questions progressives avec sous-parties numérotées : 1) a) b) 2) a) b) c)
-- Données numériques réalistes (pH, températures, concentrations, périodes)
-- Schémas décrits textuellement : "D'après le document ci-dessous..."
-- Documents fournis : tableaux de données, graphiques décrits, résultats d'expériences
-- Structure officielle CNP Tunisie : "DOCUMENT 1 : ...", "DOCUMENT 2 : ..."
-- Relier les notions biologiques à des applications médicales, environnementales ou sociales
+NOTATION NSI :
+- Code Python : indentation 4 espaces, syntaxe correcte
+- SQL : majuscules SELECT FROM WHERE JOIN GROUP BY
+- Complexité : notation O(n), O(log n), O(n²)
+- Pas de LaTeX — texte brut uniquement`
 
-NOTATION SVT :
-- Termes techniques précis : ADN, ARN, méiose, crossing-over, osmose, etc.
-- Formules biologiques : 2ⁿ gamètes, pH = -log[H₃O⁺], n = 23 chromosomes
-- Schémas fonctionnels décrits avec précision`
+  const prompt = `Crée un sujet BAC BLANC NSI ORIGINAL pour ${secLabel}. Graine : ${seed}
+STRUCTURE BAC BLANC NSI FRANCE :
+Durée : ${secNSI.duration/60}h · Total : ${totalPts} points
+${progStr}
 
-  const exercicesPrompt = [
-    `EXERCICE 1 — ${prog.p1.theme} (${pts[0]} points) : ${p1Theme}`,
-    `EXERCICE 2 — ${prog.p2.theme} (${pts[1]} points) : ${p2Theme}`,
-    `EXERCICE 3 — ${prog.p3.theme} (${pts[2]} points) : ${p3Theme}`,
-    `EXERCICE 4 — ${prog.p4.theme} (${pts[3]} points) : ${p4Theme}`,
-    isMaths && p5Theme ? `EXERCICE 5 — ${prog.p5!.theme} (${pts[4]} points) : ${p5Theme}` : null,
-  ].filter(Boolean).join('\n')
+RÈGLES :
+- Sujet ORIGINAL varié, jamais répétitif
+- Questions progressives a) b) c) avec sous-parties
+- Code Python syntaxiquement correct et lisible
+- SQL réaliste avec vraies tables et données
+- Minimum 100 mots par exercice
 
-  const prompt = `Graine déterministe : ${seed}
-Date : ${dateStr}
-Section : ${sectionLabel}
+RÉPONSE JSON EXACTE :
+{"id":"BBF-NSI-${seed}","day":${dayNum},"date":"${dateStr}","section":"${secLabel}","sectionKey":"${candidat.sectionKey}","duration":${secNSI.duration},"totalPoints":${totalPts},"title":"Bac Blanc NSI ${yyyy} — ${secLabel}","exercises":[
+${exJson}
+]}`
 
-Crée un sujet BAC BLANC SVT ORIGINAL · Jour ${dayNum}.
-
-STRUCTURE OFFICIELLE :
-Durée : ${duration} min · Total : 20 points
-
-${exercicesPrompt}
-
-RÈGLES ABSOLUES :
-- Chaque exercice commence par 1 ou 2 documents (données expérimentales, tableaux, graphiques décrits)
-- Minimum 150 mots par exercice
-- Questions progressives du plus simple au plus complexe
-- Toujours un lien entre les documents et les questions
-- Données numériques précises et réalistes
-${isMaths ? '- Exercice 5 (Géologie/Évolution) : courte question théorique ou schéma à analyser (2 pts)' : ''}
-
-Réponds EXACTEMENT avec ce JSON :
-{
-  "title": "Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}",
-  "section": "${sectionLabel}",
-  "duration": ${duration},
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num": 1,
-      "title": "Exercice 1 — ${prog.p1.theme}",
-      "theme": "${prog.p1.theme}",
-      "points": ${pts[0]},
-      "graph": null,
-      "statement": "DOCUMENT 1 : [description données/tableau/schéma]\\n\\nDOCUMENT 2 : [données complémentaires]\\n\\n1) a) Question complète avec référence aux documents...\\n1) b) Question...\\n2) a) Question...\\n2) b) Question...\\n3) Question de synthèse..."
-    },
-    {
-      "num": 2,
-      "title": "Exercice 2 — ${prog.p2.theme}",
-      "theme": "${prog.p2.theme}",
-      "points": ${pts[1]},
-      "graph": null,
-      "statement": "DOCUMENT 1 : [description]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ...\\n2) c) ...\\n3) ..."
-    },
-    {
-      "num": 3,
-      "title": "Exercice 3 — ${prog.p3.theme}",
-      "theme": "${prog.p3.theme}",
-      "points": ${pts[2]},
-      "graph": null,
-      "statement": "DOCUMENT : [données]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ..."
-    },
-    {
-      "num": 4,
-      "title": "Exercice 4 — ${prog.p4.theme}",
-      "theme": "${prog.p4.theme}",
-      "points": ${pts[3]},
-      "graph": null,
-      "statement": "DONNÉES : [données]\\n\\n1) ...\\n2) ...\\n3) ..."
-    }${isMaths && p5Theme ? `,
-    {
-      "num": 5,
-      "title": "Exercice 5 — ${prog.p5?.theme || 'Géologie & Évolution'}",
-      "theme": "${prog.p5?.theme || 'Géologie & Évolution'}",
-      "points": 2,
-      "graph": null,
-      "statement": "DOCUMENT : [schéma ou données géologiques/évolution]\\n\\n1) Question théorique...\\n2) Question application..."
-    }` : ''}
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 6000, 'svt' as any)
-
-  const fallback: Omit<BacExam,'id'|'index'> = {
-    title: `Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}`,
-    section: sectionLabel,
-    sectionKey: candidat.sectionKey,
-    day: dayNum,
-    date: dateStr,
-    duration,
-    totalPoints: 20,
-    exercises: [
-      {num:1,title:`Exercice 1 — ${prog.p1.theme}`,theme:prog.p1.theme,points:pts[0],statement:'Exercice en cours de génération…'},
-      {num:2,title:`Exercice 2 — ${prog.p2.theme}`,theme:prog.p2.theme,points:pts[1],statement:'Exercice en cours de génération…'},
-      {num:3,title:`Exercice 3 — ${prog.p3.theme}`,theme:prog.p3.theme,points:pts[2],statement:'Exercice en cours de génération…'},
-      {num:4,title:`Exercice 4 — ${prog.p4.theme}`,theme:prog.p4.theme,points:pts[3],statement:'Exercice en cours de génération…'},
-      ...(isMaths && p5Theme ? [{num:5,title:`Exercice 5 — Géologie & Évolution`,theme:'Géologie & Évolution',points:2,statement:'Exercice en cours de génération…'}] : []),
-    ]
-  }
-
-  const parsed = parseJSON<Omit<BacExam,'id'|'index'>>(raw, fallback)
-  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
-
-  return {
-    ...parsed,
-    id: `bb-svt-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum,
-    sectionKey: candidat.sectionKey,
-    section: parsed.section || sectionLabel,
-    date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20,
-    duration: parsed.duration || duration,
-    index: 0,
-  }
-}
-
-// ── Génération examen Bac Blanc (distinct de simulation) ──────────
-async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const sec = SECTIONS.find(s=>s.key===candidat.sectionKey)!
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_CONCOURS_NATIONAL_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets CONCOURS BAC BLANC originaux et officiels.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-
-NOTATION MATHÉMATIQUE OBLIGATOIRE DANS LES ÉNONCÉS :
-
-EXPOSANTS — écrire TOUJOURS avec e^(...) entre parenthèses :
-  e^(x/2) et NON eˣ⁄² ni e^{x/2} ni e^x/2
-  e^(-x) et NON e⁻ˣ
-  e^(2x+1) et NON e²ˣ⁺¹
-  f(x) = (3x-2)·e^(x/2) + 4 ← EXEMPLE CORRECT
-  RÈGLE : toujours e^(expr) avec parenthèses autour de l'exposant entier
-
-DÉRIVÉES :
-  f'(x)  f''(x)  g'(x) — avec apostrophe droite
-
-INDICES — écrire avec subscript Unicode :
-  uₙ  uₙ₊₁  u₀  vₙ  xₙ — JAMAIS u_n ni u_{n+1}
-  z₁  z₂  z₃ — JAMAIS z_1
-
-VECTEURS — avec ⃗ Unicode (U+20D7) :
-  u⃗  v⃗  w⃗  AB⃗  AC⃗  AD⃗ ← CORRECT
-  Repère plan : (O ; i⃗, j⃗) ← CORRECT
-  Repère espace : (O ; i⃗, j⃗, k⃗) ← CORRECT
-  "Calculer les coordonnées des vecteurs AB⃗, AC⃗" ← CORRECT
-
-RACINES : √x  √(2x+1)  ∛x — JAMAIS sqrt(x)
-FRACTIONS : (a+b)/(c+d) — JAMAIS \frac
-ENSEMBLES : ℝ  ℕ  ℤ  ℂ  ∈  ∉  ∪  ∩
-GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  ε  μ
-LOIS : B(n ; p)  N(μ ; σ²) — avec point-virgule
-INTÉGRALE : ∫  SOMME : ∑  INFINI : +∞  -∞`
-
-  // Récupérer le programme du jour
-  const prog = getProgrammeJour(candidat.sectionKey, dayNum)
-  const ex1Theme = prog?.ex1.sousTh || sec.themes[0]
-  const ex2Theme = prog?.ex2.sousTh || sec.themes[1]
-  const ex3Theme = prog?.ex3.sousTh || sec.themes[2]||sec.themes[0]
-  const ex4Theme = prog?.ex4.sousTh || sec.themes[3]||sec.themes[1]
-
-  const prompt = `Crée le sujet du BAC BLANC OFFICIEL — Concours National — JOUR ${dayNum} — Section ${sec.label}.
-
-SEED DÉTERMINISTE (pour que tous les élèves du même jour aient le même sujet) : ${seed}
-DATE : ${dateStr}
-
-═══ THÈMES OBLIGATOIRES DU JOUR ${dayNum} ═══
-Exercice 1 (6 pts) — ${ex1Theme}
-Exercice 2 (6 pts) — ${ex2Theme}
-Exercice 3 (4 pts) — ${ex3Theme}
-Exercice 4 (4 pts) — ${ex4Theme}
-
-RÈGLES ABSOLUES :
-- Sujet NOUVEAU et ORIGINAL — jamais une copie des annales
-- Niveau exactement équivalent aux vrais examens Bac Tunisien officiel
-- Données numériques précises et réalistes
-- Durée 3h, Total 20 points
-- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
-- Minimum 120 mots par exercice
-
-PRÉSENTATION DES ÉNONCÉS (format officiel Bac Tunisie) :
-- Commencer par "Soit f la fonction définie sur..." ou "Dans le plan complexe..." ou "On considère..."
-- Donner TOUTES les données avant les questions
-- Numéroter : 1) a) b) 2) a) b) c) 3) a) b)
-- Précision des hypothèses comme dans un vrai sujet officiel
-
-GRAPHIQUES — CHAMP "graph" SÉPARÉ du "statement" :
-FORMAT COURBE : [GRAPH: {"type":"function","expressions":["(2*x+1)*Math.exp(-x)+1"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
-FORMAT GÉO : [GRAPH: {"type":"geometry","title":"Figure","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}],"fill":"#6366f120"}]}]
-- INTERDIT dans shapes : "line3d","point3d","segment3d"
-- Expressions JS : Math.exp déjà présent → NE PAS re-préfixer | JAMAIS x^2 → x*x | JAMAIS 2x → 2*x
-
-Réponds avec CE JSON EXACT (aucun texte avant ou après) :
-{
-  "title": "Bac Blanc — ${sec.label} — Concours Jour ${dayNum}",
-  "section": "${sec.label}",
-  "duration": ${sec.duration},
-  "totalPoints": 20,
-  "exercises": [
-    {
-      "num":1,
-      "title":"Exercice 1 — [Thème précis selon ${ex1Theme}]",
-      "theme":"${prog?.ex1.theme||sec.themes[0]}",
-      "points":6,
-      "graph":"[GRAPH: {JSON_VALIDE_ICI}]",
-      "statement":"Énoncé COMPLET et OFFICIEL. Commencer par définir la fonction/l'objet mathématique. Toutes les données avant les questions. Sous-parties 1) a) b) c) 2) a) b) c) 3) a) b). Minimum 200 mots. NE PAS inclure le [GRAPH] ici."
-    },
-    {
-      "num":2,
-      "title":"Exercice 2 — [Thème précis selon ${ex2Theme}]",
-      "theme":"${prog?.ex2.theme||sec.themes[1]}",
-      "points":6,
-      "graph":"[GRAPH: {JSON_VALIDE_ICI}] ou null si pas de graphique",
-      "statement":"Énoncé COMPLET. Minimum 150 mots."
-    },
-    {
-      "num":3,
-      "title":"Exercice 3 — [Thème précis selon ${ex3Theme}]",
-      "theme":"${prog?.ex3.theme||sec.themes[2]||sec.themes[0]}",
-      "points":4,
-      "graph":null,
-      "statement":"Énoncé complet. Minimum 80 mots."
-    },
-    {
-      "num":4,
-      "title":"Exercice 4 — [Thème précis selon ${ex4Theme}]",
-      "theme":"${prog?.ex4.theme||sec.themes[3]||sec.themes[1]}",
-      "points":4,
-      "graph":null,
-      "statement":"Énoncé complet. Minimum 80 mots."
+  const raw = await askClaude(prompt, system, 5000, 'informatique')
+  let data: any
+  try {
+    const clean = raw.replace(/```json|```/g,'').trim()
+    data = JSON.parse(clean)
+  } catch {
+    data = {
+      id: 'BBF-NSI-'+seed, day: dayNum, date: dateStr,
+      section: secLabel, sectionKey: candidat.sectionKey,
+      duration: secNSI.duration, totalPoints: totalPts,
+      title: 'Bac Blanc NSI '+yyyy+' — '+secLabel,
+      exercises: prog.map((p,i)=>({
+        num:i+1, title:'Exercice '+(i+1)+' - '+p.theme,
+        theme:p.theme, points:ptsArr[i],
+        statement:'Exercice sur '+p.theme+' : '+p.sousTh
+      }))
     }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 5000)
-  const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
-    title:`Bac Blanc — ${sec?.label||candidat.section} — Jour ${dayNum}`,
-    section:sec?.label||candidat.section, duration:sec?.duration||180, totalPoints:20,
-    exercises:[{num:1,title:'Exercice 1',theme:'Analyse',points:20,statement:'Erreur de génération — réessayez.'}]
-  })
-  return { ...parsed, id:`bb-j${dayNum}-${candidat.sectionKey}-${Date.now()}`, day:dayNum, date:dateStr, sectionKey:candidat.sectionKey }
+  }
+  data.id         = data.id         || ('BBF-NSI-'+seed)
+  data.day        = data.day        || dayNum
+  data.date       = data.date       || dateStr
+  data.section    = data.section    || secLabel
+  data.sectionKey = data.sectionKey || candidat.sectionKey
+  data.title      = data.title      || ('Bac Blanc NSI '+yyyy+' — '+secLabel)
+  return data as BacExam
 }
 
-// ════════════════════════════════════════════════════════════════════
-// PAGE CLASSEMENT — 100 premiers
-// ════════════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════════
-// PAGE STATISTIQUES — Classement + Insights + Admin
-// Accès : bouton "📊 Statistiques & Classement"
-// ════════════════════════════════════════════════════════════════════
+// ── Génération examen Bac Blanc LLCER Anglais France ─────────────
+async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const secAnglais = SECTIONS_ANGLAIS_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_ANGLAIS_FR[0]
+  const secLabel = secAnglais.label
+  const today = new Date()
+  const dd = String(today.getDate()).padStart(2,'0')
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const yyyy = today.getFullYear()
+  const dateStr = dd + '/' + mm + '/' + yyyy
+  const seed = 'BBFR_ANGLAIS_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  // Sélectionner 2 axes thématiques du jour (rotation basée sur dayNum)
+  const axes = secAnglais.programme
+  const ax1 = axes[dayNum % axes.length]
+  const ax2 = axes[(dayNum + 1) % axes.length]
+
+  const system = 'You are an expert author of French Baccalauréat LLCER English exams (official curriculum).'
+    + ' You create ORIGINAL, realistic exam papers based on the 8 official thematic axes.'
+    + ' RESPOND ONLY IN VALID JSON, no backticks, no comments.'
+    + ' ALL exam content MUST BE IN ENGLISH.'
+
+  const stmt1 = 'THEMATIC AXIS: ' + ax1.theme
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
+    + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
+    + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
+    + '\\nPaying particular attention to the specificities of the three documents, show how they interact to [synthesis question linked to ' + ax1.theme + '].'
+    + '\\n(approximately 500 words, in English)'
+    + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
+    + '\\nTranslate the following passage from Document A into French:'
+    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+
+  const stmt2 = 'THEMATIC AXIS: ' + ax2.theme
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
+    + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
+    + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
+    + '\\nPaying particular attention to the specificities of the three documents, show how they interact to [synthesis question linked to ' + ax2.theme + '].'
+    + '\\n(approximately 500 words, in English)'
+    + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
+    + '\\nTranslate the following passage from Document A into French:'
+    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+
+  const prompt = 'Create an ORIGINAL LLCER English Bac Blanc paper for ' + secLabel + '. Seed: ' + seed + '.'
+    + ' OFFICIAL LLCER STRUCTURE — 2 subjects at choice, student chooses ONE.'
+    + ' Duration: ' + Math.round(secAnglais.duration/60) + 'h | Total: 20 points.'
+    + ' Subject 1 axis: ' + ax1.theme + ' (' + ax1.sousTh + ').'
+    + ' Subject 2 axis: ' + ax2.theme + ' (' + ax2.sousTh + ').'
+    + ' Rules: create ORIGINAL documents (literary + journalistic + image).'
+    + ' Each subject: Part 1 = synthesis in English ~500 words (16pts) | Part 2 = translation into French (4pts).'
+    + ' ALL TEXT IN ENGLISH except translation instruction.'
+    + ' Respond with exactly this JSON: '
+    + '{"id":"bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '"'
+    + ',"day":' + dayNum
+    + ',"title":"Bac Blanc LLCER Anglais — ' + secLabel + ' — Jour ' + dayNum + '"'
+    + ',"section":"' + secLabel + '"'
+    + ',"date":"' + dateStr + '"'
+    + ',"totalPoints":20'
+    + ',"duration":' + secAnglais.duration
+    + ',"exercises":['
+    + '{"num":1,"theme":"' + ax1.theme + '","title":"Subject 1 — ' + ax1.theme + '","points":20,"statement":"' + stmt1.replace(/"/g, '\\"') + '"}'
+    + ',{"num":2,"theme":"' + ax2.theme + '","title":"Subject 2 — ' + ax2.theme + '","points":20,"statement":"' + stmt2.replace(/"/g, '\\"') + '"}'
+    + ']}'
+
+  const raw = await askClaude(prompt, system, 6000, 'anglais')
+
+  const parsed = parseJSON<BacExam>(raw, {
+    id: 'bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
+    day: dayNum,
+    title: 'Bac Blanc LLCER Anglais — ' + secLabel + ' — Jour ' + dayNum,
+    section: secLabel,
+    sectionKey: candidat.sectionKey,
+    date: dateStr,
+    totalPoints: 20,
+    duration: secAnglais.duration,
+    exercises: []
+  })
+
+  if (!parsed.exercises || parsed.exercises.length === 0) {
+    throw new Error('IA response invalid — please retry')
+  }
+
+  return {
+    ...parsed,
+    id: parsed.id || ('bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()),
+    day: parsed.day || dayNum,
+    sectionKey: candidat.sectionKey,
+    section: parsed.section || secLabel,
+    date: parsed.date || dateStr,
+    totalPoints: parsed.totalPoints || 20,
+    duration: parsed.duration || secAnglais.duration,
+  }
+}
+
+async function generateBacBlanc(candidat: Candidat, dayNum: number): Promise<BacExam> {
+  const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)!
+  const today = new Date()
+  const dd = String(today.getDate()).padStart(2,'0')
+  const mm = String(today.getMonth()+1).padStart(2,'0')
+  const yyyy = today.getFullYear()
+  const dateStr = dd + '/' + mm + '/' + yyyy
+  const seed = 'BBFR_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
+
+  const isShort = candidat.sectionKey === 'premiere' || candidat.sectionKey === 'expertes'
+  const nEx: number = isShort ? 3 : 4
+  let ptsArr: number[]
+  if (candidat.sectionKey === 'techno')   ptsArr = [7, 6, 7]
+  else if (candidat.sectionKey === 'expertes') ptsArr = [7, 7, 6]
+  else if (candidat.sectionKey === 'premiere') ptsArr = [7, 7, 6]
+  else ptsArr = [5, 5, 5, 5]
+  const totalPts = ptsArr.reduce((a, b) => a + b, 0)
+
+  const prog = sec.programme.slice(0, nEx)
+
+  // Construire les lignes de programme (sans template literals imbriqués)
+  const progParts: string[] = prog.map((p, i) =>
+    '- Exercice ' + (i+1) + ' (' + ptsArr[i] + 'pts) : ' + p.theme + ' | ' + p.sousTh
+  )
+  const progStr = progParts.join('\n')
+
+  // Construire le JSON des exercices (sans template literals imbriqués)
+  const exParts: string[] = prog.map((p, i) => {
+    const n = i + 1
+    const pts = ptsArr[i]
+    return '    {"num":' + n + ',"title":"Exercice ' + n + ' - ' + p.theme + '","theme":"' + p.theme + '","points":' + pts + ',"graph":null,"statement":"Enonce sur ' + p.theme + '. Min 130 mots. Sous-parties 1) 2) 3)."}'
+  })
+  const exJson = exParts.join(',\n')
+
+  const system = `Tu es un auteur expert du Baccalaureat français (programme officiel Education nationale).
+REPONDS UNIQUEMENT EN JSON VALIDE sans backticks.
+
+NOTATION OBLIGATOIRE DANS LES ÉNONCÉS :
+
+EXPOSANTS — RÈGLE ABSOLUE : toujours e^(expr) avec parenthèses :
+  e^(x/2)  e^(-x)  e^(2x+1) — JAMAIS eˣ⁄² ni e⁻ˣ ni e^{x}
+  f(x) = (3x-2)·e^(x/2) ← forme correcte
+
+DÉRIVÉES : f'(x)  f''(x)  g'(x)
+
+INDICES : uₙ  uₙ₊₁  u₀  z₁  z₂ (Unicode) — JAMAIS u_n ni z_1
+
+VECTEURS : u⃗  v⃗  AB⃗  AC⃗ — avec ⃗
+  Repère : (O ; i⃗, j⃗)  ou  (O ; i⃗, j⃗, k⃗)
+
+RACINES : √x  √(2x+1) — JAMAIS sqrt
+FRACTIONS : (a+b)/(c+d)
+ENSEMBLES : ℝ  ℕ  ℤ  ℂ  ∈  ∪  ∩
+LOIS : B(n ; p)  N(μ ; σ²)
+GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
+
+  const jsonTemplate = '{\n'
+    + '  "title": "' + (sec?.label||candidat.section) + ' - Bac Blanc France Jour ' + dayNum + '",\n'
+    + '  "section": "' + (sec?.label||candidat.section) + '",\n'
+    + '  "duration": ' + (sec?.duration||210) + ',\n'
+    + '  "totalPoints": ' + totalPts + ',\n'
+    + '  "exercises": [\n'
+    + exJson + '\n'
+    + '  ]\n'
+    + '}'
+
+  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
+
+  const raw = await askClaude(prompt, system, 5500)
+
+  const fallback = prog.map((p, i) => ({
+    num: i+1,
+    title: 'Exercice ' + (i+1) + ' - ' + p.theme,
+    theme: p.theme,
+    points: ptsArr[i],
+    statement: 'Exercice sur ' + p.theme + ' - erreur generation, reessayez.'
+  }))
+
+  const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
+    title: (sec?.label||candidat.section) + ' - Bac Blanc France Jour ' + dayNum,
+    section: sec?.label||candidat.section,
+    duration: sec?.duration||210,
+    totalPoints: totalPts,
+    exercises: fallback,
+  })
+
+  const id = 'bbf-j' + dayNum + '-' + candidat.sectionKey + '-' + Date.now()
+  return { ...parsed, id, day: dayNum, date: dateStr, sectionKey: candidat.sectionKey }
+}
+
+
 function PageStatistiques({onBack}:{onBack:()=>void}){
   const [tab, setTab] = useState<'classement'|'insights'|'admin'>('classement')
   const [filterSection, setFilterSection] = useState('')
   const [filterDay, setFilterDay] = useState(0)
-  const { isAdmin, checkMatiereAccess, matiereActive} = useAuth()
+  const { isAdmin } = useAuth()
   // Panel admin dans PageStatistiques — garde le state local pour la saisie email
   const [adminEmail, setAdminEmail] = useState('')
   const [adminOk, setAdminOk] = useState(isAdmin)  // admin Supabase = accès direct
@@ -1943,7 +1843,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
             <span>📊</span><span style={{color:'#a5b4fc',fontWeight:700,fontSize:13}}>Bac Blanc — Statistiques Nationales</span>
           </div>
           <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 6px'}}>Tableau de bord</h1>
-          <p style={{color:'rgba(255,255,255,0.4)',fontSize:14}}>Session Mai–Juin {today.getFullYear()} · {stats.totalParticipants} participants</p>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:14}}>Session France Mai–Juin {today.getFullYear()} · {stats.totalParticipants} participants</p>
         </div>
 
         {/* KPIs */}
@@ -1982,7 +1882,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
               <select value={filterSection} onChange={e=>setFilterSection(e.target.value)}
                 style={{background:'#1a1a35',border:'1px solid rgba(255,255,255,0.15)',borderRadius:8,padding:'8px 14px',color:'white',fontSize:13,outline:'none'}}>
                 <option value="">Toutes les sections</option>
-                {SECTIONS.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}
+                {SECTIONS_FR.map(s=><option key={s.key} value={s.key}>{s.label}</option>)}
               </select>
               <select value={filterDay} onChange={e=>setFilterDay(Number(e.target.value))}
                 style={{background:'#1a1a35',border:'1px solid rgba(255,255,255,0.15)',borderRadius:8,padding:'8px 14px',color:'white',fontSize:13,outline:'none'}}>
@@ -2002,7 +1902,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                       <div style={{background:`${colors[i]}18`,border:`2px solid ${colors[i]}`,borderRadius:12,padding:'12px 10px',height:heights[i],display:'flex',flexDirection:'column',justifyContent:'center',gap:4}}>
                         <div style={{fontWeight:800,fontSize:13,color:'white'}}>{r.prenom} {r.nom}</div>
                         <div style={{fontSize:11,color:'rgba(255,255,255,0.5)'}}>{r.lycee}</div>
-                        <div style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>{r.gouvernorat}</div>
+                        <div style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>{'France'}</div>
                         <div style={{fontSize:20,fontWeight:900,color:colors[i],marginTop:4}}>{r.score}/{r.maxScore}</div>
                       </div>
                       <div style={{fontSize:12,color:colors[i],fontWeight:700,marginTop:5}}>#{rank}</div>
@@ -2020,13 +1920,13 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                   ))}
                 </div>
                 {top100.map((r,i)=>{
-                  const sec=SECTIONS.find(s=>s.key===r.sectionKey)
+                  const sec=SECTIONS_FR.find(s=>s.key===r.sectionKey)
                   const pct=Math.round((r.score/r.maxScore)*100)
                   const rowBg=i<3?['rgba(251,191,36,0.07)','rgba(148,163,184,0.05)','rgba(205,124,58,0.05)'][i]:'transparent'
                   return(
                     <div key={i} style={{display:'grid',gridTemplateColumns:'50px 1fr 1fr 120px 80px 70px',padding:'12px 16px',borderBottom:'1px solid rgba(255,255,255,0.04)',background:rowBg,alignItems:'center',gap:0}}>
                       <div style={{fontWeight:800,color:i<3?['#fbbf24','#94a3b8','#cd7c3a'][i]:'rgba(255,255,255,0.35)',fontSize:i<3?18:14}}>{i<3?['🥇','🥈','🥉'][i]:`#${i+1}`}</div>
-                      <div><div style={{fontWeight:700,fontSize:13,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{r.gouvernorat}</div></div>
+                      <div><div style={{fontWeight:700,fontSize:13,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{'France'}</div></div>
                       <div style={{fontSize:12,color:'rgba(255,255,255,0.6)'}}>{r.lycee}</div>
                       <div>{sec&&<span style={{fontSize:11,padding:'3px 8px',borderRadius:50,background:`${sec.color}20`,color:sec.color,fontWeight:600}}>{sec.icon} {sec.label.split(' ')[0]}</span>}</div>
                       <div><div style={{fontWeight:800,fontSize:15,color:pct>=70?'#10b981':pct>=50?'#f59e0b':'#ef4444'}}>{r.score}/{r.maxScore}</div><div style={{fontSize:10,color:'rgba(255,255,255,0.3)'}}>{pct}%</div></div>
@@ -2060,18 +1960,13 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
               <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
-                <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>🗺️ Top gouvernorats</h3>
-                {topGov.length>0?topGov.map(([gov,count])=>{
-                  const max=topGov[0][1]
-                  return(<div key={gov} style={{marginBottom:12}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:13}}><span style={{color:'rgba(255,255,255,0.7)'}}>{gov}</span><span style={{color:'#6366f1',fontWeight:700}}>{count}</span></div><div style={{height:4,background:'rgba(255,255,255,0.08)',borderRadius:4,overflow:'hidden'}}><div style={{height:'100%',width:`${(count/max)*100}%`,background:'linear-gradient(90deg,#6366f1,#8b5cf6)',borderRadius:4}}/></div></div>)
-                }):<p style={{color:'rgba(255,255,255,0.3)',fontSize:13}}>Aucun participant encore</p>}
               </div>
               <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
                 <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>📚 Par section</h3>
-                {SECTIONS.map(sec=>{
+                {SECTIONS_FR.map(sec=>{
                   const cnt=stats.ranking.filter(r=>r.sectionKey===sec.key).length
                   const avg=cnt?Math.round(stats.ranking.filter(r=>r.sectionKey===sec.key).reduce((s,r)=>s+r.score/r.maxScore*100,0)/cnt):0
-                  return(<div key={sec.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:13}}><span style={{color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span><span style={{color:'rgba(255,255,255,0.6)'}}>{cnt}</span><span style={{color:'#fbbf24',fontWeight:700}}>moy. {avg}%</span></div>)
+                  return(<div key={sec.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'7px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:13}}><span style={{color:sec?.color||"#4f6ef7"}}>{sec?.icon||""} {(sec?.label||"").split(' ')[0]}</span><span style={{color:'rgba(255,255,255,0.6)'}}>{cnt}</span><span style={{color:'#fbbf24',fontWeight:700}}>moy. {avg}%</span></div>)
                 })}
               </div>
             </div>
@@ -2095,7 +1990,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
               <div style={{display:'flex',flexDirection:'column',gap:8}}>
                 {[
                   topDay?`📅 Jour le plus actif : Jour ${topDay[0]} avec ${topDay[1].length} participants`:null,
-                  topGov[0]?`🗺️ Gouvernorat leader : ${topGov[0][0]} (${topGov[0][1]} candidats)`:null,
+                  null,
                   avgScore>=70?`✅ Bon niveau général — score moyen de ${avgScore}%`:avgScore>0?`📚 Niveau à améliorer — score moyen de ${avgScore}%`:null,
                   distrib[4]>0?`🌟 ${distrib[4]} candidat${distrib[4]>1?'s':''} ont atteint ≥ 90%`:null,
                   distrib[0]>distrib[3]+distrib[4]?`⚠️ Majorité en-dessous de 40% — renforcement nécessaire`:null,
@@ -2136,7 +2031,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                   <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:20}}>
                     <h4 style={{fontSize:14,fontWeight:700,marginBottom:12,color:'rgba(255,255,255,0.8)'}}>📥 Export CSV</h4>
                     <button onClick={()=>{
-                      const csv=['Nom,Prénom,Lycée,Gouvernorat,Section,Score,Max,Jour,Date',...stats.ranking.map(r=>`${r.nom},${r.prenom},${r.lycee},${r.gouvernorat},${r.section},${r.score},${r.maxScore},${r.day},${r.date}`)].join('\n')
+                      const csv=['Nom,Prénom,Lycée,Section,Score,Max,Jour,Date',...stats.ranking.map(r=>`${r.nom},${r.prenom},${r.lycee},${r.section},${r.score},${r.maxScore},${r.day},${r.date}`)].join('\n')
                       const blob=new Blob([csv],{type:'text/csv'})
                       const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bac-blanc-resultats.csv';a.click()
                     }} style={{width:'100%',padding:'10px',borderRadius:8,border:'1px solid rgba(16,185,129,0.3)',background:'rgba(16,185,129,0.08)',color:'#6ee7b7',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
@@ -2145,7 +2040,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                   </div>
                   <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:20}}>
                     <h4 style={{fontSize:14,fontWeight:700,marginBottom:12,color:'rgba(255,255,255,0.8)'}}>🗑️ Gestion données</h4>
-                    <button onClick={()=>{if(window.confirm('Effacer toutes les données ?')){localStorage.removeItem('bb_ranking');localStorage.removeItem('bb_visits');window.location.reload()}}}
+                    <button onClick={()=>{if(window.confirm('Effacer toutes les données ?')){localStorage.removeItem('bb_france_ranking');localStorage.removeItem('bb_france_visits');window.location.reload()}}}
                       style={{width:'100%',padding:'10px',borderRadius:8,border:'1px solid rgba(239,68,68,0.3)',background:'rgba(239,68,68,0.06)',color:'#fca5a5',fontSize:13,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
                       🗑 Effacer tout
                     </button>
@@ -2154,8 +2049,8 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
                 <div style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:24}}>
                   <h3 style={{fontSize:15,fontWeight:700,marginBottom:16,color:'rgba(255,255,255,0.8)'}}>🏆 Top 10 — tous jours</h3>
                   {stats.ranking.sort((a,b)=>b.score-a.score).slice(0,10).map((r,i)=>{
-                    const sec=SECTIONS.find(s=>s.key===r.sectionKey)
-                    return(<div key={i} style={{display:'grid',gridTemplateColumns:'40px 1fr 140px 80px 60px',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',alignItems:'center',fontSize:13,gap:0}}><span style={{fontWeight:800,color:i<3?['#fbbf24','#94a3b8','#cd7c3a'][i]:'rgba(255,255,255,0.4)'}}>{i<3?['🥇','🥈','🥉'][i]:`#${i+1}`}</span><div><div style={{fontWeight:700,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{r.lycee} · {r.gouvernorat}</div></div>{sec&&<span style={{fontSize:11,padding:'2px 8px',borderRadius:50,background:`${sec.color}20`,color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span>}<span style={{fontWeight:800,color:r.score/r.maxScore>=0.7?'#10b981':r.score/r.maxScore>=0.5?'#f59e0b':'#ef4444'}}>{r.score}/{r.maxScore}</span><span style={{color:'rgba(255,255,255,0.4)',fontSize:11}}>J.{r.day}</span></div>)
+                    const sec=SECTIONS_FR.find(s=>s.key===r.sectionKey)
+                    return(<div key={i} style={{display:'grid',gridTemplateColumns:'40px 1fr 140px 80px 60px',padding:'10px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',alignItems:'center',fontSize:13,gap:0}}><span style={{fontWeight:800,color:i<3?['#fbbf24','#94a3b8','#cd7c3a'][i]:'rgba(255,255,255,0.4)'}}>{i<3?['🥇','🥈','🥉'][i]:`#${i+1}`}</span><div><div style={{fontWeight:700,color:'white'}}>{r.prenom} {r.nom}</div><div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{r.lycee}</div></div>{sec&&<span style={{fontSize:11,padding:'2px 8px',borderRadius:50,background:`${sec.color}20`,color:sec.color}}>{sec.icon} {sec.label.split(' ')[0]}</span>}<span style={{fontWeight:800,color:r.score/r.maxScore>=0.7?'#10b981':r.score/r.maxScore>=0.5?'#f59e0b':'#ef4444'}}>{r.score}/{r.maxScore}</span><span style={{color:'rgba(255,255,255,0.4)',fontSize:11}}>J.{r.day}</span></div>)
                   })}
                   {!stats.ranking.length&&<p style={{color:'rgba(255,255,255,0.3)',fontSize:13}}>Aucun résultat encore</p>}
                 </div>
@@ -2176,375 +2071,10 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
 
 
 // ════════════════════════════════════════════════════════════════════
-// PHASE 1B — CHOIX DE LA MATIÈRE (après inscription)
+// PHASE 1B — CHOIX MATIÈRE (Bac Blanc France)
 // ════════════════════════════════════════════════════════════════════
-
-// Sous-sections autorisées par matière
-
-const PROGRAMME_JOUR_FRANCAIS = [
-  { theme:'Le Partage',                  texte:'Texte argumentatif sur la solidarite et le dialogue interculturel (Camus, Maalouf, Ben Jelloun)',  production:'Dissertation — le partage est-il fondement de toute societe harmonieuse',       langue:'Connecteurs logiques · Subordination causale' },
-  { theme:"Engagement en Litterature",   texte:'Discours engage — role de l\'ecrivain face a l\'injustice sociale (Zola J\'accuse, Hugo)',       production:'Essai — l\'ecrivain doit-il s\'engager dans les affaires de son temps',          langue:'Modalisation · Discours rapporte' },
-  { theme:"Appel de la Modernite",       texte:'Texte explicatif — technologie et valeurs humaines (Jacquard, Diderot, Rousseau)',                  production:'Dissertation — faut-il choisir entre tradition et progres',                       langue:'Connecteurs logiques · Types de phrases' },
-  { theme:'Raison et Lumieres',          texte:'Texte philosophique — Voltaire et la liberte de pensee contre l\'obscurantisme religieux',         production:'Essai — la raison peut-elle combattre l\'obscurantisme',                          langue:'Subordination · Champ lexical de la raison' },
-  { theme:'Science et Progres',          texte:'Article scientifique — impact du developpement technologique sur la societe (Albert Jacquard)',     production:'Sujet de reflexion — le progres scientifique garantit-il le bonheur humain',      langue:'Connecteurs consecutifs · Modalisation' },
-  { theme:"Homme et Nature",             texte:'Texte ecologique — pollution et relation homme-nature (Jean Giono, Nicolas Hulot, Camus)',          production:'Dissertation — l\'homme est-il responsable de la destruction de la planete',     langue:'Champ lexical · Figures de style' },
-  { theme:'Communication et Medias',     texte:'Article de presse — medias, internet et manipulation de l\'information (Umberto Eco, McLuhan)',   production:'Essai — les reseaux sociaux menacent-ils la verite et la democratie',            langue:'Discours rapporte · Reformulation' },
-  { theme:'Tolerance et Humanisme',      texte:'Essai humaniste — tolerance et dialogue des cultures (Voltaire Traite, Amin Maalouf)',             production:'Dissertation — la tolerance est-elle suffisante contre le racisme',               langue:'Connecteurs adversatifs · Modalisation' },
-  { theme:'Litterature Engagee',         texte:'Extrait — Victor Hugo, Les Miserables, defense des opprimes et des pauvres',                      production:'Essai — la litterature peut-elle vraiment changer les mentalites',                langue:'Subordination relative · Lexique litteraire' },
-  { theme:'La Poesie',                   texte:'Poeme engage — Paul Eluard, Liberte, analyse des figures et du message resistant',               production:'Commentaire — analyser les figures de style et le message du poeme',              langue:'Figures de style · Versification et musicalite' },
-  { theme:'Vivre Ensemble',              texte:'Texte argumentatif — coexistence pacifique et respect des differences culturelles (Ben Jelloun)', production:'Dissertation — comment favoriser le vivre ensemble dans nos societes plurielles', langue:'Connecteurs logiques · Types de raisonnement' },
-  { theme:'Culture Litteraire',          texte:'Texte critique — mouvements litteraires du Romantisme au Symbolisme (Baudelaire, Rimbaud)',        production:'Essai — qu\'est-ce qui definit un grand ecrivain pour la posterite',            langue:'Champ lexical de la litterature · Epithetes' },
-  { theme:'Liberte de Pensee',           texte:'Texte philosophique — Denis Diderot, l\'Encyclopedie et le savoir contre l\'ignorance',         production:'Dissertation — la liberte d\'expression a-t-elle des limites legitimes',        langue:'Subordination concessive · Modalisation' },
-  { theme:'Progres et Ethique',          texte:'Article — biotechnologies et questions ethiques en science (Hubert Reeves, biologie)',             production:'Sujet de reflexion — la science peut-elle et doit-elle tout resoudre',            langue:'Connecteurs causaux · Argumentation rationnelle' },
-  { theme:'Art et Societe',              texte:'Texte argumentatif — role de l\'art dans la societe moderne et son engagement',                  production:'Essai — l\'art doit-il necessairement servir une cause politique ou sociale',   langue:'Champ lexical de l\'art · Figures rhetoriques' },
-  { theme:'Education et Egalite',        texte:'Article de presse — education comme outil d\'emancipation et ascension sociale',                production:'Dissertation — l\'education garantit-elle l\'egalite des chances dans la societe', langue:'Connecteurs logiques · Subordination causale' },
-  { theme:'Mondialisation et Identite',  texte:'Texte argumentatif — mondialisation et preservation des cultures locales (Maalouf, Eco)',         production:'Essai — la mondialisation est-elle une chance ou une menace pour nos cultures',  langue:'Discours rapporte · Reformulation' },
-  { theme:'Environnement et Avenir',     texte:'Texte de presse — developpement durable et responsabilite collective envers la planete',          production:'Dissertation — quel monde allons-nous laisser aux generations futures',           langue:'Futur · Modalisation de l\'obligation et du devoir' },
-  { theme:'Memoire et Histoire',         texte:'Texte narratif — importance du devoir de memoire dans les societes contemporaines',               production:'Essai — peut-on construire l\'avenir en oubliant le passe et ses traumatismes', langue:'Temps du passe · Connecteurs temporels' },
-  { theme:'Inegalites et Justice',       texte:'Texte engage — Emile Zola, Germinal, denonciation des inegalites sociales et de l\'injustice', production:'Dissertation — la litterature peut-elle vraiment combattre les inegalites',      langue:'Champ lexical de la justice · Connecteurs' },
-  { theme:'Technologie et Humanite',     texte:'Article — intelligence artificielle et transformation du travail humain et de la societe',        production:'Sujet de reflexion — l\'IA est-elle une opportunite ou un danger pour l\'humain', langue:'Vocabulaire scientifique · Argumentation logique' },
-  { theme:'Paix et Dialogue',            texte:'Discours humaniste — dialogue et reconciliation plutot que violence (Nelson Mandela, ONU)',       production:'Essai — le dialogue pacifique peut-il vraiment remplacer la guerre',             langue:'Subordination · Connecteurs adversatifs et concessifs' },
-  { theme:'Langue et Identite',          texte:'Texte reflexif — la langue maternelle comme patrimoine culturel et identitaire de l\'humanite', production:'Dissertation — peut-on perdre son identite en perdant sa langue maternelle',     langue:'Champ lexical de la langue · Figures identitaires' },
-  { theme:'Presse et Democratie',        texte:'Article de presse — liberte de la presse et fonctionnement democratique des societes',           production:'Essai — la presse libre est-elle un pilier indispensable de la democratie',     langue:'Modalisation · Discours rapporte journalistique' },
-  { theme:'Jeunesse et Engagement',      texte:'Texte argumentatif — jeunesse et responsabilite citoyenne dans un monde en crise',               production:'Dissertation — la jeunesse peut-elle vraiment changer le monde contemporain',    langue:'Connecteurs logiques · Argumentation et exemples' },
-  { theme:'Creativite et Innovation',    texte:'Texte explicatif — la creativite humaine comme moteur de progres et d\'innovation',             production:'Essai — la creativite s\'apprend-elle ou est-elle un don inne chez l\'homme',  langue:'Champ lexical · Comparaison et analogie' },
-  { theme:'Sport et Valeurs',            texte:'Texte argumentatif — le sport comme vecteur de valeurs universelles et de fraternite',           production:'Dissertation — le sport peut-il vraiment unir les peuples et transcender les differences', langue:'Champ lexical du sport · Figures de style' },
-  { theme:'Voyage et Decouverte',        texte:'Texte litteraire — le voyage comme source d\'enrichissement personnel, culturel et humain',    production:'Essai — voyager forme-t-il vraiment la jeunesse et developpe-t-il la tolerance', langue:'Subjonctif · Connecteurs concessifs' },
-  { theme:'Famille et Societe',          texte:'Texte sociologique — evolution de la structure familiale dans la societe contemporaine',          production:'Dissertation — la famille est-elle toujours le fondement irrempkacable de la societe', langue:'Connecteurs temporels · Argumentation sociologique' },
-  { theme:'Resistance et Courage',       texte:'Texte historique — resistance face a l\'oppression et courage individuel (Camus, Sartre)',      production:'Essai — qu\'est-ce que le courage dans la vie quotidienne et la societe',       langue:'Champ lexical du courage · Modalisation' },
-  { theme:'Diversite Culturelle',        texte:'Texte humaniste — richesse de la diversite culturelle et dialogue des civilisations (Maalouf)', production:'Dissertation — la diversite culturelle est-elle une richesse pour l\'humanite',  langue:'Connecteurs logiques · Champ lexical de la culture' },
-]
-
-function getProgrammeJourFrancais(dayNum: number) {
-  return PROGRAMME_JOUR_FRANCAIS[(dayNum - 1) % PROGRAMME_JOUR_FRANCAIS.length]
-}
-
-async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_FRANCAIS_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-
-  const isLettres = candidat.sectionKey === 'fr-lettres'
-  const sectionLabel = isLettres ? 'Section Lettres' : 'Sections Scientifiques'
-  const prog = getProgrammeJourFrancais(dayNum)
-
-  const sectionFocus = isLettres
-    ? 'textes litteraires engages · analyse poetique · dissertation et commentaire · auteurs (Hugo, Zola, Voltaire, Baudelaire, Eluard, Camus, Sartre)'
-    : 'textes scientifiques et argumentatifs · sujet de reflexion · essai structure · auteurs (Jacquard, Reeves, Giono, Maalouf, McLuhan, Eco)'
-
-  const system = `Tu es un expert en creation de sujets du Baccalaureat Francais Tunisie (programme officiel CNP/MEN).
-Tu crees des sujets BAC BLANC FRANCAIS de niveau officiel, entierement en francais.
-REPONDS UNIQUEMENT EN JSON VALIDE sans backticks ni commentaires.
-
-STRUCTURE OFFICIELLE BAC FRANCAIS TUNISIE :
-Partie I  — Comprehension de texte (7 pts) : texte 200-250 mots + 5 questions progressives
-Partie II — Langue et Expression (5 pts) : connecteurs, grammaire, vocabulaire, figures de style
-Partie III — Production Ecrite (8 pts) : dissertation ou essai argumente 25-30 lignes
-
-EXIGENCES :
-- Texte authentique niveau Bac Tunisie, 200-250 mots, en rapport avec le theme du jour
-- Questions progressives : comprehension globale → inference → vocabulaire → coherence textuelle
-- Production ecrite avec consigne claire et bareme detaille
-- Langue : exercices varies (connecteurs, modalisation, figures de style, reformulation)
-- Difficulte conforme aux vrais sujets officiels du Bac Tunisie`
-
-  const prompt = `Cree un sujet BAC BLANC FRANCAIS officiel — Concours National — JOUR ${dayNum} — ${sectionLabel}.
-
-GRAINE UNIQUE (tous les eleves du meme jour ont le meme sujet) : ${seed}
-DATE : ${dateStr}
-THEME : ${prog.theme}
-BASE DU TEXTE : ${prog.texte}
-SUJET DE PRODUCTION : ${prog.production}
-FOCUS LANGUE : ${prog.langue}
-FOCUS SECTION : ${sectionFocus}
-
-PARTIE I — COMPREHENSION DE TEXTE (7 pts) :
-Redige un texte ${isLettres ? 'litteraire ou argumentatif engage' : 'scientifique ou argumentatif'} de 200-250 mots sur le theme "${prog.theme}".
-Style : ${isLettres ? 'engage et litteraire, avec des references a des auteurs ou oeuvres, dimension humaine et culturelle forte' : 'informatif, logique et structure, avec des donnees et exemples concrets, dimension scientifique'}
-Puis redige ces 5 questions :
-  Q1 (1 pt) : Comprehension globale — quel est le message principal du texte ?
-  Q2 (2 pts) : Vrai (V) / Faux (F) / Non Mentionne (NM) — 2 affirmations avec justification par citation
-  Q3 (2 pts) : Question d\'inference ouverte — quel est le point de vue de l\'auteur ? justifiez
-  Q4 (1 pt) : Vocabulaire en contexte — expliquez l\'expression [choisie dans le texte]
-  Q5 (1 pt) : Referent ou coherence — a quoi renvoie le mot souligne dans le texte ?
-
-PARTIE II — LANGUE ET EXPRESSION (5 pts) :
-Focus : ${prog.langue}
-  Exercice A (2 pts) : 4 phrases a completer ou transformer selon le focus langue
-  Exercice B (1 pt) : 2 reformulations de phrases sans en changer le sens (avec mot impose)
-  Exercice C (2 pts) : 4 questions sur vocabulaire ou figures de style en contexte textuel
-
-PARTIE III — PRODUCTION ECRITE (8 pts) :
-Sujet : ${prog.production}
-Consigne complete : Redigez un texte argumente de 25 a 30 lignes comportant :
-  • Une introduction : presentez le sujet, posez la problematique, annoncez votre plan
-  • Un developpement : au moins 2 arguments solides illustres par des exemples precis ou des references
-  • Une conclusion : repondez a la problematique et ouvrez sur une reflexion plus large
-Bareme : Contenu et argumentation (4 pts) · Langue et richesse lexicale (2 pts) · Structure et coherence (2 pts)
-
-REPONDS AVEC CE JSON EXACT :
-{
-  "id": "bb-francais-${dayNum}-${candidat.sectionKey}",
-  "day": ${dayNum},
-  "title": "Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}",
-  "section": "${sectionLabel}",
-  "sectionKey": "${candidat.sectionKey}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
-  "duration": 120,
-  "exercises": [
-    {
-      "num": 1,
-      "theme": "${prog.theme}",
-      "title": "Partie I — Comprehension de texte",
-      "points": 7,
-      "graph": null,
-      "statement": "TEXTE :\n[Texte complet 200-250 mots sur ${prog.theme} — style ${isLettres ? 'litteraire engage' : 'scientifique argumentatif'}]\n\nQUESTIONS :\nQ1 (1 pt) — [question comprehension globale du message principal]\nQ2 (2 pts) — Dites si les affirmations suivantes sont Vraies (V), Fausses (F) ou Non Mentionnees (NM). Justifiez par une citation du texte :\n  a) [affirmation 1]\n  b) [affirmation 2]\nQ3 (2 pts) — [question d\'inference ouverte sur le point de vue de l\'auteur avec justification]\nQ4 (1 pt) — Expliquez l\'expression \'[expression du texte]\' telle qu\'elle est utilisee dans le contexte.\nQ5 (1 pt) — A quoi renvoie le mot \'[mot souligne]\' dans le paragraphe [X] ?"
-    },
-    {
-      "num": 2,
-      "theme": "Langue — ${prog.langue}",
-      "title": "Partie II — Langue et Expression",
-      "points": 5,
-      "graph": null,
-      "statement": "EXERCICE A (2 pts) — Completez les phrases avec le connecteur logique qui convient :\n1. [phrase 1 incomplète]\n2. [phrase 2 incomplète]\n3. [phrase 3 incomplète]\n4. [phrase 4 incomplète]\n\nEXERCICE B (1 pt) — Reformulez les phrases sans en changer le sens en utilisant le mot entre parentheses :\n1. [phrase 1] (mot impose 1)\n2. [phrase 2] (mot impose 2)\n\nEXERCICE C (2 pts) — Vocabulaire et style :\n1. [question figure de style ou vocabulaire 1]\n2. [question 2]\n3. [question 3]\n4. [question 4]"
-    },
-    {
-      "num": 3,
-      "theme": "${prog.production}",
-      "title": "Partie III — Production Ecrite",
-      "points": 8,
-      "graph": null,
-      "statement": "SUJET : ${prog.production}\n\nRedigez un texte argumente de 25 a 30 lignes.\nVotre devoir doit obligatoirement comporter :\n• Une introduction : presentez le sujet, formulez la problematique et annoncez votre plan\n• Un developpement argumente : au moins 2 arguments solides, chacun illustre par un exemple precis ou une reference litteraire/scientifique\n• Une conclusion : repondez clairement a la problematique et ouvrez sur une reflexion plus large\n\nBAREME DE NOTATION :\n• Contenu et qualite de l\'argumentation : 4 pts\n• Langue, style et richesse lexicale : 2 pts\n• Structure, coherence et organisation : 2 pts"
-    }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 5000)
-
-  const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-francais-${dayNum}-${candidat.sectionKey}`,
-    day: dayNum,
-    title: `Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}`,
-    section: sectionLabel,
-    sectionKey: candidat.sectionKey,
-    date: dateStr,
-    totalPoints: 20,
-    duration: 120,
-    exercises: []
-  })
-
-  if (!parsed.exercises || parsed.exercises.length === 0) {
-    throw new Error('Reponse IA invalide — reessayez')
-  }
-
-  return {
-    ...parsed,
-    id: parsed.id || `bb-francais-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum,
-    sectionKey: candidat.sectionKey,
-    section: parsed.section || sectionLabel,
-    date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20,
-    duration: parsed.duration || 120,
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// GÉNÉRATION BAC BLANC ÉCONOMIE (Sc. Éco & Gestion) — programme CNP
-// Épreuve coeff 3 · 3h · 20 pts · 3 parties (connaissances / document / réflexion)
-// ════════════════════════════════════════════════════════════════
-const PROGRAMME_JOUR_ECO = [
-  { theme:'La croissance économique',                       reflexion:"La croissance économique est-elle toujours souhaitable ?" },
-  { theme:'Les facteurs de la croissance',                  reflexion:"Le progrès technique est-il le principal moteur de la croissance ?" },
-  { theme:'Les mutations de la structure de production',    reflexion:"La tertiarisation traduit-elle un affaiblissement de l'industrie ?" },
-  { theme:'Les transformations des modes de vie',           reflexion:"La hausse du niveau de vie suffit-elle à améliorer le bien-être ?" },
-  { theme:'Les coûts de la croissance',                     reflexion:"La croissance économique n'a-t-elle que des effets positifs ?" },
-  { theme:'Le développement durable',                       reflexion:"Croissance économique et développement durable sont-ils conciliables ?" },
-  { theme:'Les échanges internationaux',                    reflexion:"Le libre-échange profite-t-il à tous les pays ?" },
-  { theme:'Les mutations du commerce international',         reflexion:"La spécialisation internationale est-elle un facteur de développement ?" },
-  { theme:'Les firmes multinationales',                     reflexion:"Les firmes multinationales favorisent-elles le développement des pays d'accueil ?" },
-]
-function getProgrammeJourEco(dayNum: number) {
-  return PROGRAMME_JOUR_ECO[(dayNum - 1) % PROGRAMME_JOUR_ECO.length]
-}
-
-async function generateBacBlancEconomie(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_ECONOMIE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-  const prog = getProgrammeJourEco(dayNum)
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
-Tu crées des sujets BAC BLANC ÉCONOMIE originaux, rigoureux et de niveau officiel (épreuve coefficient 3, durée 3h, 20 points).
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-INDICATEURS À MOBILISER selon le thème : taux de croissance t=(Vn-Vn-1)/Vn-1, TCAM, indices base 100, PIB réel/nominal, coefficient budgétaire, IDH, taux de couverture (X/M)x100, taux d'ouverture, termes de l'échange.`
-
-  const prompt = `Crée le sujet du BAC BLANC OFFICIEL ÉCONOMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
-SEED DÉTERMINISTE : ${seed}
-DATE : ${dateStr}
-THÈME DOMINANT DU JOUR : ${prog.theme}
-
-═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE D'ÉCONOMIE (Bac Tunisie) ═══
-Durée : 3h · Total : 20 points
-Partie 1 — MOBILISATION DES CONNAISSANCES (6 points) : 2 à 3 questions de cours (définitions, mécanismes, distinctions) portant sur « ${prog.theme} ».
-Partie 2 — ÉTUDE D'UN DOCUMENT (6 points) : un document chiffré (tableau de données réalistes présenté dans le statement) + questions de lecture, de CALCUL d'indicateurs (taux, indices, coefficients) et d'interprétation.
-Partie 3 — SUJET DE RÉFLEXION (8 points) : une dissertation argumentée. Sujet : « ${prog.reflexion} »
-
-RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- Données chiffrées réalistes et cohérentes (tableau dans le statement, valeurs plausibles pour la Tunisie)
-- Questions numérotées 1) 2) 3)
-- Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
-
-RÉPONSE JSON OBLIGATOIRE :
-{
-  "id": "bb-economie-${dayNum}-${candidat.sectionKey}",
-  "day": ${dayNum},
-  "title": "Bac Blanc — Économie — ${secLabel} — Jour ${dayNum}",
-  "section": "${secLabel}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
-  "duration": 180,
-  "exercises": [
-    { "num": 1, "theme": "Mobilisation des connaissances", "title": "Partie 1 — ${prog.theme}", "points": 6, "statement": "1) ...\n2) ...\n3) ...", "graph": null },
-    { "num": 2, "theme": "Étude de document", "title": "Partie 2 — Étude de document", "points": 6, "statement": "Document : [tableau de données chiffrées]\n\n1) ...\n2) Calculer ...\n3) Interpréter ...", "graph": null },
-    { "num": 3, "theme": "Sujet de réflexion", "title": "Partie 3 — Dissertation", "points": 8, "statement": "Sujet : « ${prog.reflexion} »\n\nConsignes : introduction (accroche, problématique, annonce du plan), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).", "graph": null }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 5000)
-  const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-economie-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Économie',
-    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
-  })
-  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
-  return {
-    ...parsed,
-    id: parsed.id || `bb-economie-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
-    section: parsed.section || secLabel, date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
-  }
-}
-
-// ════════════════════════════════════════════════════════════════
-// GÉNÉRATION BAC BLANC GESTION (Sc. Éco & Gestion) — programme CNP
-// Épreuve coeff 4 · 3h · 20 pts · 3 dossiers (compta-finance / coûts / domaine du jour)
-// ════════════════════════════════════════════════════════════════
-const PROGRAMME_JOUR_GES = [
-  { theme:'Évaluation & Consolidation', detail:'comptabilité, bilan, FDR/BFR/TN, résultat, TVA' },
-  { theme:"Gestion de l'approvisionnement", detail:'CUMP, stock moyen, rotation, durée de stockage, quantité économique de Wilson' },
-  { theme:'Gestion de la production', detail:'coûts complets, coût de revient, MCV, seuil de rentabilité, écarts' },
-  { theme:'Gestion commerciale', detail:'étude de marché, marketing-mix, part de marché, suivi des ventes' },
-  { theme:'Gestion des ressources humaines', detail:'effectifs, recrutement, formation, masse salariale' },
-  { theme:'Gestion financière', detail:'autofinancement, équilibre financier, ratios, gestion budgétaire' },
-]
-function getProgrammeJourGes(dayNum: number) {
-  return PROGRAMME_JOUR_GES[(dayNum - 1) % PROGRAMME_JOUR_GES.length]
-}
-
-async function generateBacBlancGestion(candidat: Candidat, dayNum: number): Promise<BacExam> {
-  const secLabel = candidat.section || 'Sciences Économiques et Gestion'
-  const today = new Date()
-  const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_GESTION_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
-  const prog = getProgrammeJourGes(dayNum)
-
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
-Tu crées des sujets BAC BLANC GESTION originaux, rigoureux et de niveau officiel (épreuve coefficient 4, durée 3h, 20 points).
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-FORMULES À MOBILISER : FDR=Capitaux permanents-Actif immobilisé · BFR=Actif circulant(HT)-Passif circulant(HT) · TN=FDR-BFR · CUMP · rotation=Consommation/stock moyen · MCV=CA-charges variables · Seuil de rentabilité=CF/taux de MCV · masse salariale=Σ(salaires bruts+charges patronales).`
-
-  const prompt = `Crée le sujet du BAC BLANC OFFICIEL GESTION — Concours National — JOUR ${dayNum} — Section ${secLabel}.
-SEED DÉTERMINISTE : ${seed}
-DATE : ${dateStr}
-DOMAINE DOMINANT DU JOUR : ${prog.theme} (${prog.detail})
-
-═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE DE GESTION (Bac Tunisie) ═══
-Durée : 3h · Total : 20 points · Sujet organisé en DOSSIERS indépendants avec données chiffrées.
-Dossier 1 — COMPTABILITÉ & ANALYSE FINANCIÈRE (7 points) : bilan, FDR, BFR, TN, résultat — données chiffrées + calculs + interprétation.
-Dossier 2 — CALCUL ET ANALYSE DES COÛTS / APPROVISIONNEMENT (7 points) : coût de revient ou gestion des stocks (CUMP, Wilson) ou seuil de rentabilité — tableau de charges + calculs.
-Dossier 3 — ${prog.theme.toUpperCase()} (6 points) : application sur ${prog.detail} — données chiffrées + questions de calcul et d'analyse.
-
-RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
-- Calculs explicites attendus (montrer les formules)
-
-RÉPONSE JSON OBLIGATOIRE :
-{
-  "id": "bb-gestion-${dayNum}-${candidat.sectionKey}",
-  "day": ${dayNum},
-  "title": "Bac Blanc — Gestion — ${secLabel} — Jour ${dayNum}",
-  "section": "${secLabel}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
-  "duration": 180,
-  "exercises": [
-    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 — Analyse financière", "points": 7, "statement": "Données : [extrait de bilan]\n\n1) Calculer le FDR ...\n2) Calculer le BFR ...\n3) En déduire la TN et interpréter ...", "graph": null },
-    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 — Coûts", "points": 7, "statement": "Données : [tableau de charges]\n\n1) ...\n2) Calculer le seuil de rentabilité ...\n3) Interpréter ...", "graph": null },
-    { "num": 3, "theme": "${prog.theme}", "title": "Dossier 3 — ${prog.theme}", "points": 6, "statement": "Données : [tableau]\n\n1) ...\n2) ...\n3) ...", "graph": null }
-  ]
-}`
-
-  const raw = await askClaude(prompt, system, 5000)
-  const parsed = parseJSON<BacExam>(raw, {
-    id: `bb-gestion-${dayNum}-${candidat.sectionKey}`, day: dayNum, title: 'Bac Blanc Gestion',
-    section: candidat.section, sectionKey: candidat.sectionKey, date: dateStr, totalPoints: 20, duration: 180, exercises: []
-  })
-  if (!parsed.exercises || parsed.exercises.length === 0) throw new Error('Réponse IA invalide — réessayez')
-  return {
-    ...parsed,
-    id: parsed.id || `bb-gestion-${dayNum}-${candidat.sectionKey}-${Date.now()}`,
-    day: parsed.day || dayNum, sectionKey: candidat.sectionKey,
-    section: parsed.section || secLabel, date: parsed.date || dateStr,
-    totalPoints: parsed.totalPoints || 20, duration: parsed.duration || 180,
-  }
-}
-
-const SECTIONS_PAR_MATIERE: Record<string, { key: string; label: string; icon: string; color: string }[]> = {
-  maths: [
-    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
-    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
-    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
-    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
-    { key:'eco',    label:'Éco-Gestion',             icon:'💹', color:'#10b981' },
-  ],
-  physique: [
-    { key:'maths',  label:'Mathématiques',          icon:'∑',  color:'#6366f1' },
-    { key:'scexp',  label:'Sc. Expérimentales',      icon:'⚗',  color:'#06d6a0' },
-    { key:'sctech', label:'Sc. Techniques',          icon:'⚙',  color:'#f59e0b' },
-    { key:'info',   label:'Informatique',            icon:'⌨',  color:'#8b5cf6' },
-  ],
-  informatique: [
-    { key:'info',   label:'Section Informatique',   icon:'⌨',  color:'#8b5cf6' },
-    { key:'autres', label:'Autres sections (TIC)',   icon:'🌐', color:'#06b6d4' },
-  ],
-  anglais: [
-    { key:'lettres', label:'Section Lettres',                icon:'📚', color:'#ec4899' },
-    { key:'toutes',  label:'Toutes sections (sauf Lettres)', icon:'🔬', color:'#6366f1' },
-  ],
-  svt: [
-    { key:'scexp-svt', label:'Sciences Expérimentales',  icon:'🔬', color:'#22c55e' },
-    { key:'maths-svt', label:'Section Mathématiques',    icon:'📐', color:'#a78bfa' },
-  ],
-  francais: [
-    { key:'fr-lettres',      label:'Section Lettres',        icon:'📚', color:'#ec4899' },
-    { key:'fr-scientifique', label:'Sections Scientifiques', icon:'🔬', color:'#8b5cf6' },
-  ],
-  economie: [
-    { key:'economie', label:'Sc. Éco & Gestion', icon:'📈', color:'#06b6d4' },
-  ],
-  gestion: [
-    { key:'gestion', label:'Sc. Éco & Gestion', icon:'💼', color:'#f43f5e' },
-  ],
-}
-
-function PhaseChoixMatiere({
-  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onEconomie, onGestion, onRetour,
-  hasActiveSubscription, checkMatiereAccess, matiereActive, isAdmin, weeklyLimit = 5
+function PhaseChoixMatiereFR({
+  candidat, dayNum, onMaths, onPhysique, onInfo, onAnglais, onSvt, onFrancais, onRetour
 }: {
   candidat: Candidat
   dayNum: number
@@ -2554,33 +2084,29 @@ function PhaseChoixMatiere({
   onAnglais: () => void
   onSvt: () => void
   onFrancais: () => void
-  onEconomie: () => void
-  onGestion: () => void
   onRetour: () => void
-  hasActiveSubscription?: boolean
-  checkMatiereAccess?: (m: any) => boolean
-  matiereActive?: string
-  isAdmin?: boolean
-  weeklyLimit?: number
 }) {
-  const sec = SECTIONS.find(s => s.key === candidat.sectionKey)
+  const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
 
-  // État : matière sélectionnée (null = pas encore choisi)
-  const [selectedMatiere, setSelectedMatiere] = useState<string | null>(null)
+  // Mapper section → section physique simulation france
+  const physSection = (() => {
+    switch (candidat.sectionKey) {
+      case 'terminale': return 'terminale-phys'
+      case 'premiere':  return 'premiere-phys'
+      case 'techno':    return 'sti2d-phys'
+      default:          return 'terminale-phys'
+    }
+  })()
 
-  // Sous-section sélectionnée pour la matière choisie
-  const [selectedSousSection, setSelectedSousSection] = useState<string>('')
-
-  // Définition des matières
   const MATIERES = [
     {
       key: 'maths',
       icon: '🧮',
       label: 'Mathématiques',
-      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses',
-      color: '#6366f1',
-      gradient: 'linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,92,246,0.08))',
-      border: 'rgba(99,102,241,0.4)',
+      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses · Programme officiel France',
+      color: '#4f6ef7',
+      gradient: 'linear-gradient(135deg,rgba(79,110,247,0.18),rgba(99,102,241,0.08))',
+      border: 'rgba(79,110,247,0.4)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
@@ -2589,22 +2115,23 @@ function PhaseChoixMatiere({
       key: 'physique',
       icon: '⚗️',
       label: 'Physique-Chimie',
-      desc: 'Examen complet · 4 exercices · Correction IA · Analyse des faiblesses · Programme PC officiel',
+      desc: 'Examen complet · 3 exercices · Correction IA · Programme officiel PC France · Analyse faiblesses',
       color: '#06d6a0',
       gradient: 'linear-gradient(135deg,rgba(6,214,160,0.15),rgba(16,185,129,0.06))',
       border: 'rgba(6,214,160,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
+
     },
     {
-      key: 'informatique',
-      icon: '💻',
-      label: 'Informatique',
-      desc: 'Algorithmique · Bases de données · TIC & Réseaux · Correction IA · Analyse des faiblesses',
-      color: '#8b5cf6',
-      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.15),rgba(109,40,217,0.06))',
-      border: 'rgba(139,92,246,0.35)',
+      key: 'svt',
+      icon: '🌱',
+      label: 'SVT',
+      desc: 'Examen complet · 3 exercices · Génétique & Évolution · Corps humain & Santé · Plantes & Géologie · Correction IA · Analyse faiblesses',
+      color: '#22c55e',
+      gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.06))',
+      border: 'rgba(34,197,94,0.35)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
@@ -2612,23 +2139,23 @@ function PhaseChoixMatiere({
     {
       key: 'anglais',
       icon: '🇬🇧',
-      label: 'Anglais',
-      desc: 'Reading Comprehension · Essay Writing · Language · 2 sections · Programme officiel CNP',
-      color: '#f59e0b',
-      gradient: 'linear-gradient(135deg,rgba(245,158,11,0.15),rgba(236,72,153,0.06))',
-      border: 'rgba(245,158,11,0.4)',
+      label: 'Anglais LLCER',
+      desc: '8 axes thématiques · Synthèse de documents · Traduction · Programme officiel LLCER France · Correction IA en anglais',
+      color: '#f43f5e',
+      gradient: 'linear-gradient(135deg,rgba(244,63,94,0.18),rgba(239,68,68,0.08))',
+      border: 'rgba(244,63,94,0.4)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
     {
-      key: 'svt',
-      icon: '🌱',
-      label: 'SVT',
-      desc: 'Génétique · Milieu intérieur · Neurophysiologie · Reproduction · Nutrition · Géologie & Évolution',
-      color: '#22c55e',
-      gradient: 'linear-gradient(135deg,rgba(34,197,94,0.15),rgba(16,185,129,0.06))',
-      border: 'rgba(34,197,94,0.38)',
+      key: 'informatique',
+      icon: '💻',
+      label: 'NSI / Informatique',
+      desc: 'Examen complet NSI · Algorithmique · Python · SQL · Réseaux · Correction IA · Analyse faiblesses',
+      color: '#8b5cf6',
+      gradient: 'linear-gradient(135deg,rgba(139,92,246,0.18),rgba(109,40,217,0.08))',
+      border: 'rgba(139,92,246,0.4)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
@@ -2636,68 +2163,16 @@ function PhaseChoixMatiere({
     {
       key: 'francais',
       icon: '📚',
-      label: 'Français',
-      desc: 'Compréhension de texte · Langue et expression · Production écrite · 2 sections · Programme officiel CNP',
+      label: 'Français · Philosophie',
+      desc: 'Philosophie Terminale (coef. 8) · EAF Première (coef. 5) · Dissertation · Explication de texte · Commentaire composé · Correction IA',
       color: '#ec4899',
-      gradient: 'linear-gradient(135deg,rgba(236,72,153,0.15),rgba(219,39,119,0.06))',
-      border: 'rgba(236,72,153,0.38)',
-      available: true,
-      badge: '✅ Disponible',
-      badgeColor: '#6ee7b7',
-    },
-    {
-      key: 'economie',
-      icon: '📈',
-      label: 'Économie',
-      desc: 'Mobilisation des connaissances · Étude de document · Sujet de réflexion · Programme Sc. Éco & Gestion',
-      color: '#06b6d4',
-      gradient: 'linear-gradient(135deg,rgba(6,182,212,0.15),rgba(34,211,238,0.06))',
-      border: 'rgba(6,182,212,0.38)',
-      available: true,
-      badge: '✅ Disponible',
-      badgeColor: '#6ee7b7',
-    },
-    {
-      key: 'gestion',
-      icon: '💼',
-      label: 'Gestion',
-      desc: 'Comptabilité & finance · Coûts · Approvisionnement · Marketing · RH · Programme Sc. Éco & Gestion',
-      color: '#f43f5e',
-      gradient: 'linear-gradient(135deg,rgba(244,63,94,0.15),rgba(251,113,133,0.06))',
-      border: 'rgba(244,63,94,0.38)',
+      gradient: 'linear-gradient(135deg,rgba(236,72,153,0.18),rgba(219,39,119,0.08))',
+      border: 'rgba(236,72,153,0.4)',
       available: true,
       badge: '✅ Disponible',
       badgeColor: '#6ee7b7',
     },
   ]
-
-  // Quand une matière disponible est cliquée → afficher ses sous-sections
-  const handleMatiereClick = (key: string, available: boolean) => {
-    if (!available) return
-    setSelectedMatiere(key)
-    // Pré-sélectionner la première sous-section de la matière
-    const sousSecs = SECTIONS_PAR_MATIERE[key] || []
-    setSelectedSousSection(sousSecs[0]?.key || '')
-  }
-
-  // Lancer l'examen avec la sous-section choisie
-  const handleLancer = () => {
-    if (!selectedMatiere || !selectedSousSection) return
-    // Mettre à jour sectionKey ET section label dans le candidat
-    const ss = (SECTIONS_PAR_MATIERE[selectedMatiere] || []).find(x => x.key === selectedSousSection)
-    candidat.sectionKey = selectedSousSection
-    candidat.section = ss?.label || selectedSousSection
-    if (selectedMatiere === 'maths') { onMaths(); return }
-    if (selectedMatiere === 'physique') { onPhysique(); return }
-    if (selectedMatiere === 'informatique') { onInfo(); return }
-    if (selectedMatiere === 'anglais') { onAnglais(); return }
-    if (selectedMatiere === 'svt') { onSvt(); return }
-    if (selectedMatiere === 'francais') { onFrancais(); return }
-    if (selectedMatiere === 'economie') { onEconomie(); return }
-    if (selectedMatiere === 'gestion') { onGestion(); return }
-  }
-
-  const sousSectionsDisponibles = selectedMatiere ? (SECTIONS_PAR_MATIERE[selectedMatiere] || []) : []
 
   return (
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
@@ -2706,156 +2181,76 @@ function PhaseChoixMatiere({
 
         {/* Header */}
         <div style={{textAlign:'center',marginBottom:36}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.1))',border:'1px solid rgba(245,158,11,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:18}}>
-            <span style={{fontSize:20}}>🏆</span>
-            <span style={{fontSize:13,fontWeight:800,color:'#fbbf24',letterSpacing:'0.1em',textTransform:'uppercase'}}>Concours National — Bac Blanc · Jour {dayNum}</span>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(99,102,241,0.1))',border:'1px solid rgba(59,130,246,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:18}}>
+            <span style={{fontSize:20}}>🇫🇷</span>
+            <span style={{fontSize:13,fontWeight:800,color:'#93c5fd',letterSpacing:'0.1em',textTransform:'uppercase'}}>Bac Blanc France — Jour {dayNum}</span>
           </div>
-          <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#fbbf24,#f59e0b)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+          <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#60a5fa,#4f6ef7,#818cf8)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
             Choisissez votre matière
           </h1>
           {/* Candidat info */}
           <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 20px',marginTop:10,flexWrap:'wrap',justifyContent:'center'}}>
             <span style={{fontSize:20}}>🎓</span>
-            <span style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>
-              {candidat.prenom} {candidat.nom}
-            </span>
+            <span style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.85)'}}>{candidat.prenom} {candidat.nom}</span>
             <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
-            <span style={{fontSize:12,color:sec?.color||'#fbbf24',fontWeight:700}}>{sec?.icon} {candidat.section}</span>
+            <span style={{fontSize:12,color:sec?.color||'#60a5fa',fontWeight:700}}>{sec?.icon} {candidat.section}</span>
             <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
             <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.lycee}</span>
           </div>
+          {/* Info section avec thèmes — affiché ici (plus dans la fiche) */}
+          {sec && (
+            <div style={{marginTop:14,display:'inline-flex',alignItems:'center',gap:8,background:`${sec.color}10`,border:`1px solid ${sec.color}25`,borderRadius:10,padding:'8px 18px',flexWrap:'wrap',justifyContent:'center'}}>
+              <span style={{fontSize:11,color:sec.color,fontWeight:700}}>{sec.icon} {sec.label}</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>·</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{sec.themes.join(' · ')}</span>
+            </div>
+          )}
         </div>
 
-        {/* ─── ÉTAPE 1 : Choisir la matière ─── */}
-        {!selectedMatiere ? (
-          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:28}}>
-            {MATIERES.map(m => {
-              const matiereKey = m.key === 'maths' ? 'mathematiques' : m.key
-              const isLk = !isAdmin && m.available && !!hasActiveSubscription && !!checkMatiereAccess && !checkMatiereAccess(matiereKey as any)
-              return (
-                <button
-                  key={m.key}
-                  disabled={isLk}
-                  onClick={() => handleMatiereClick(m.key, m.available)}
-                  style={{
-                    width:'100%',
-                    background: m.available ? m.gradient : 'rgba(255,255,255,0.02)',
-                    border:`1.5px solid ${m.available ? m.border : 'rgba(255,255,255,0.08)'}`,
-                    borderRadius:16, padding:'20px 24px', display:'flex', alignItems:'center',
-                    gap:20, cursor: m.available ? 'pointer' : 'default',
-                    opacity: m.available ? 1 : 0.45,
-                    transition:'transform 0.15s, box-shadow 0.15s',
-                    textAlign:'left', fontFamily:'inherit',
-                  }}
-                  onMouseEnter={e=>{ if(m.available){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
-                  onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
-                >
-                  <div style={{width:52,height:52,borderRadius:13,background:`${m.color}${m.available?'20':'10'}`,border:`1.5px solid ${m.color}${m.available?'40':'20'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,flexShrink:0}}>
-                    {isLk ? '🔒' : m.available ? m.icon : '🔒'}
-                  </div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4,flexWrap:'wrap'}}>
-                      <span style={{fontSize:16,fontWeight:800,color: m.available ? 'white' : 'rgba(255,255,255,0.35)'}}>{m.label}</span>
-                      <span style={{fontSize:10,fontWeight:700,
-                        color: isLk ? '#f59e0b' : m.available ? m.badgeColor : '#64748b',
-                        background: isLk ? 'rgba(245,158,11,0.15)' : m.available ? `${m.badgeColor}18` : 'rgba(100,116,139,0.12)',
-                        border:`1px solid ${isLk ? 'rgba(245,158,11,0.3)' : m.available ? m.badgeColor+'30' : 'rgba(100,116,139,0.2)'}`,
-                        borderRadius:20, padding:'2px 10px'}}>
-                        {isLk ? '🔒 Abonnement requis' : m.badge}
-                      </span>
-                    </div>
-                    <div style={{fontSize:12,color: m.available ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.2)',lineHeight:1.5}}>
-                      {isLk
-                        ? <span>S'abonner à <strong style={{color:m.color}}>{m.label}</strong> → <a href={`/abonnement?matiere=${matiereKey}`} style={{color:m.color,textDecoration:'underline'}}>Voir les plans</a></span>
-                        : m.available
-                          ? <>{m.desc} · <span style={{color:m.color,fontWeight:600}}>{(SECTIONS_PAR_MATIERE[m.key]||[]).length} sections disponibles</span></>
-                          : m.desc
-                      }
-                    </div>
-                  </div>
-                  {m.available && !isLk && <span style={{fontSize:20,color:m.color,flexShrink:0}}>›</span>}
-                </button>
-              )
-            })}
-          </div>
-        ) : (
-          /* ─── ÉTAPE 2 : Choisir la sous-section ─── */
-          <div style={{marginBottom:28}}>
-
-            {/* Breadcrumb retour */}
-            <button onClick={()=>setSelectedMatiere(null)}
-              style={{display:'flex',alignItems:'center',gap:6,background:'transparent',border:'none',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',marginBottom:20,padding:0}}>
-              ← Changer de matière
-            </button>
-
-            {/* Titre matière sélectionnée */}
-            {(() => {
-              const m = MATIERES.find(x => x.key === selectedMatiere)!
-              return (
-                <div style={{background:m.gradient,border:`1.5px solid ${m.border}`,borderRadius:14,padding:'16px 20px',marginBottom:22,display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:44,height:44,borderRadius:11,background:`${m.color}25`,border:`1.5px solid ${m.color}50`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{m.icon}</div>
-                  <div>
-                    <div style={{fontSize:16,fontWeight:800,color:'white',marginBottom:2}}>{m.label}</div>
-                    <div style={{fontSize:12,color:'rgba(255,255,255,0.45)'}}>Choisissez votre section pour personnaliser le sujet</div>
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Label section */}
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:10}}>
-              Votre section
-            </div>
-
-            {/* Grille sous-sections */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:24}}>
-              {sousSectionsDisponibles.map(ss => {
-                const isSelected = selectedSousSection === ss.key
-                return (
-                  <button key={ss.key} onClick={()=>setSelectedSousSection(ss.key)}
-                    style={{
-                      padding:'12px 16px', borderRadius:11,
-                      border:`2px solid ${isSelected ? ss.color : 'rgba(255,255,255,0.1)'}`,
-                      background: isSelected ? `${ss.color}18` : 'rgba(255,255,255,0.03)',
-                      color: isSelected ? ss.color : 'rgba(255,255,255,0.55)',
-                      fontSize:13, fontWeight:700, cursor:'pointer', textAlign:'left',
-                      display:'flex', alignItems:'center', gap:10,
-                      transition:'all 0.15s', fontFamily:'inherit',
-                    }}>
-                    <span style={{fontSize:18}}>{ss.icon}</span>
-                    <span style={{lineHeight:1.3}}>{ss.label}</span>
-                    {isSelected && <span style={{marginLeft:'auto',fontSize:16}}>✓</span>}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Bouton lancer */}
+        {/* Grille matières */}
+        <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
+          {MATIERES.map(m => (
             <button
-              onClick={handleLancer}
-              disabled={!selectedSousSection}
+              key={m.key}
+              disabled={!m.available}
+              onClick={() => {
+                if (!m.available) return
+                if (m.key === 'maths') { onMaths(); return }
+                if (m.key === 'physique') { onPhysique(); return }
+                if (m.key === 'informatique') { onInfo(); return }
+                if (m.key === 'anglais') { onAnglais(); return }
+                if (m.key === 'svt') { onSvt(); return }
+                if (m.key === 'francais') { onFrancais(); return }
+              }}
               style={{
-                width:'100%', padding:'15px', borderRadius:12, border:'none',
-                background: selectedSousSection
-                  ? 'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)'
-                  : 'rgba(255,255,255,0.08)',
-                color: selectedSousSection ? '#0a0a1a' : 'rgba(255,255,255,0.3)',
-                fontSize:15, fontWeight:900, cursor: selectedSousSection ? 'pointer' : 'not-allowed',
-                boxShadow: selectedSousSection ? '0 4px 24px rgba(245,158,11,0.45)' : 'none',
-                letterSpacing:'0.03em', display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-                fontFamily:'inherit', transition:'all 0.2s',
-              }}>
-              <span style={{fontSize:18}}>🏆</span>
-              {weeklyLimit === -1
-                ? 'Lancer le concours · Accès illimité'
-                : bbWeekCount() >= weeklyLimit
-                  ? `Quota atteint · ${weeklyLimit}/${weeklyLimit} cette semaine`
-                  : `Lancer le concours · ${bbWeekCount() + 1}/${weeklyLimit} cette semaine`}
+                width:'100%',background:m.gradient,border:`1.5px solid ${m.border}`,
+                borderRadius:16,padding:'22px 24px',display:'flex',alignItems:'center',
+                gap:20,cursor:m.available?'pointer':'not-allowed',
+                opacity:m.available?1:0.65,
+                transition:'transform 0.15s, box-shadow 0.15s',
+                textAlign:'left',fontFamily:'inherit',
+              }}
+              onMouseEnter={e=>{ if(m.available){const el=e.currentTarget as HTMLElement;el.style.transform='translateY(-2px)';el.style.boxShadow=`0 8px 32px ${m.color}30`} }}
+              onMouseLeave={e=>{ const el=e.currentTarget as HTMLElement;el.style.transform='translateY(0)';el.style.boxShadow='none' }}
+            >
+              <div style={{width:56,height:56,borderRadius:14,background:`${m.color}20`,border:`1.5px solid ${m.color}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>
+                {m.icon}
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:5,flexWrap:'wrap'}}>
+                  <span style={{fontSize:17,fontWeight:800,color:'white'}}>{m.label}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:m.badgeColor,background:`${m.badgeColor}18`,border:`1px solid ${m.badgeColor}30`,borderRadius:20,padding:'2px 10px'}}>
+                    {m.badge}
+                  </span>
+                </div>
+                <div style={{fontSize:13,color:'rgba(255,255,255,0.5)',lineHeight:1.5}}>{m.desc}</div>
+              </div>
+              {m.available && <span style={{fontSize:22,color:m.color,flexShrink:0,fontWeight:700}}>→</span>}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {/* Retour fiche */}
+        {/* Retour */}
         <div style={{textAlign:'center'}}>
           <button onClick={onRetour}
             style={{padding:'10px 24px',borderRadius:10,border:'1px solid rgba(255,255,255,0.12)',background:'transparent',color:'rgba(255,255,255,0.4)',fontSize:13,cursor:'pointer',fontFamily:'inherit',fontWeight:600}}>
@@ -2864,7 +2259,7 @@ function PhaseChoixMatiere({
         </div>
 
         <p style={{textAlign:'center',color:'rgba(255,255,255,0.2)',fontSize:11,marginTop:24}}>
-          5 nouveaux sujets chaque semaine · Période 1 Mai – 30 Juin
+          Chaque jour = un nouveau concours · Programme officiel Éducation Nationale France
         </p>
       </div>
       <Footer/>
@@ -2876,13 +2271,24 @@ function PhaseChoixMatiere({
 // PHASE 1 — INSCRIPTION
 // ════════════════════════════════════════════════════════════════════
 function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void;onStatistiques:()=>void}){
-  const { isAdmin } = useAuth()
+  const { isAdmin, hasActiveSubscription, checkMatiereAccess } = useAuth()
   const [nom,setNom]=useState('')
   const [prenom,setPrenom]=useState('')
   const [lycee,setLycee]=useState('')
-  const [gouvernorat,setGouvernorat]=useState('')
   const [sectionKey,setSectionKey]=useState('')
+  const [activeMatiereFiche,setActiveMatiereFiche]=useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'>('maths')
   const [err,setErr]=useState('')
+  // Si l'élève est abonné à une seule matière, sélectionner par défaut une matière accessible
+  useEffect(() => {
+    if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return
+    const order: Array<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'> = ['maths','physique','informatique','anglais','svt','francais']
+    const accessible = (k: string) => checkMatiereAccess((k === 'maths' ? 'mathematiques' : k) as any)
+    if (!accessible(activeMatiereFiche)) {
+      const first = order.find(accessible)
+      if (first) { setActiveMatiereFiche(first); setSectionKey('') }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveSubscription, isAdmin])
   const today=new Date()
   const periodeStart=new Date(today.getFullYear(),4,1)
   const periodeEnd  =new Date(today.getFullYear(),5,30)
@@ -2891,12 +2297,19 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   const dayNum=Math.max(1,Math.floor((today.getTime()-periodeStart.getTime())/(1000*60*60*24))+1)
   const monthNum=today.getMonth()+1
   const isMay=monthNum===5||monthNum===6
-  const sec=SECTIONS.find(s=>s.key===sectionKey)
+  const sec = SECTIONS_FR.find(s=>s.key===sectionKey)
+    || SECTIONS_NSI_FR?.find((s:any)=>s.key===sectionKey)
+    || SECTIONS_ANGLAIS_FR?.find((s:any)=>s.key===sectionKey)
+    || (sectionKey.includes('francais')
+        ? {key:sectionKey,label:sectionKey==='terminale-francais'?'Terminale — Philosophie':sectionKey==='premiere-francais'?'Première — EAF (Écrit + Oral)':'Seconde — Français',icon:'📚',color:'#ec4899',duration:sectionKey==='terminale-francais'||sectionKey==='premiere-francais'?240:120,coeff:sectionKey==='terminale-francais'?8:sectionKey==='premiere-francais'?5:1,themes:[],programme:[]}
+        : sectionKey.includes('phys')||sectionKey.includes('sti')||sectionKey.includes('st2s')
+        ? {key:sectionKey,label:sectionKey==='terminale-phys'?'Terminale Générale — Physique-Chimie':sectionKey==='premiere-phys'?'Première Spécialité — Physique-Chimie':sectionKey==='sti2d-phys'?'Terminale STI2D — Physique-Chimie':'Terminale ST2S — Physique-Chimie',icon:'⚗️',color:'#06d6a0',duration:sectionKey==='terminale-phys'?210:sectionKey==='sti2d-phys'?180:120,coeff:6,themes:[],programme:[]}
+        : undefined)
 
   const handleSubmit=()=>{
-    if(!nom.trim()||!prenom.trim()||!lycee.trim()||!gouvernorat){setErr('Veuillez remplir tous les champs.');return}
+    if(!nom.trim()||!prenom.trim()||!lycee.trim()||!sectionKey){setErr('Veuillez remplir tous les champs.');return}
     setErr('')
-    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),gouvernorat,section:'',sectionKey:'maths'})
+    onSubmit({nom:nom.trim(),prenom:prenom.trim(),lycee:lycee.trim(),section:sec!.label,sectionKey,matiere:activeMatiereFiche})
   }
 
   return(
@@ -2906,12 +2319,12 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
         {/* Hero */}
         <div style={{textAlign:'center',marginBottom:40}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(251,191,36,0.1))',border:'1px solid rgba(245,158,11,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:20}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(99,102,241,0.1))',border:'1px solid rgba(59,130,246,0.5)',borderRadius:50,padding:'8px 24px',marginBottom:20}}>
             <span style={{fontSize:22}}>🏆</span>
-            <span style={{fontSize:13,fontWeight:800,color:'#fbbf24',letterSpacing:'0.1em',textTransform:'uppercase'}}>Concours National — Bac Blanc</span>
+            <span style={{fontSize:13,fontWeight:800,color:'#93c5fd',letterSpacing:'0.1em',textTransform:'uppercase'}}>Bac Blanc France — Programme officiel</span>
           </div>
-          <h1 style={{fontSize:34,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#fbbf24,#f59e0b,#fbbf24)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
-            Bac Blanc IA
+          <h1 style={{fontSize:34,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#60a5fa,#4f6ef7,#818cf8)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
+            Bac Blanc France IA
           </h1>
           <p style={{color:'rgba(255,255,255,0.5)',fontSize:15,margin:'0 0 6px'}}>
             {isMay
@@ -2921,12 +2334,12 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
           </p>
           {!isMay&&(
             <div style={{display:'inline-flex',alignItems:'center',gap:8,marginTop:4,
-              background:'linear-gradient(135deg,rgba(245,158,11,0.12),rgba(251,191,36,0.08))',
-              border:'1px solid rgba(245,158,11,0.35)',borderRadius:50,
+              background:'linear-gradient(135deg,rgba(59,130,246,0.12),rgba(99,102,241,0.08))',
+              border:'1px solid rgba(59,130,246,0.35)',borderRadius:50,
               padding:'6px 16px'}}>
               <span style={{fontSize:14}}>📅</span>
               <span style={{fontSize:13,fontWeight:700,
-                background:'linear-gradient(135deg,#fbbf24,#f59e0b)',
+                background:'linear-gradient(135deg,#60a5fa,#4f6ef7)',
                 WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>
                 Disponible du 1er mai au 30 juin
               </span>
@@ -2936,44 +2349,118 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
         </div>
 
         {/* Carte inscription */}
-        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:18,padding:32,marginBottom:20}}>
-          <h2 style={{fontSize:18,fontWeight:700,marginBottom:24,color:'#fbbf24',display:'flex',alignItems:'center',gap:8}}>
+        <div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(79,110,247,0.2)',borderRadius:18,padding:32,marginBottom:20}}>
+          <h2 style={{fontSize:18,fontWeight:700,marginBottom:24,color:'#60a5fa',display:'flex',alignItems:'center',gap:8}}>
             <span>📝</span> Fiche d'inscription
           </h2>
 
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
             <div>
                 <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Nom</label>
-                <input value={nom} onChange={(e)=>setNom(e.target.value)} placeholder="BEN ALI"
+                <input value={nom} onChange={(e)=>setNom(e.target.value)} placeholder="MARTIN"
                   style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
               </div>
               <div>
                 <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Prénom</label>
-                <input value={prenom} onChange={(e)=>setPrenom(e.target.value)} placeholder="Mohamed"
+                <input value={prenom} onChange={(e)=>setPrenom(e.target.value)} placeholder="Emma"
                   style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
               </div>
           </div>
 
           <div style={{marginBottom:16}}>
             <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Lycée</label>
-            <input value={lycee} onChange={e=>setLycee(e.target.value)} placeholder="Lycée Sadiki"
+            <input value={lycee} onChange={e=>setLycee(e.target.value)} placeholder="Lycée Henri-IV"
               style={{width:'100%',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:'white',fontSize:14,outline:'none',boxSizing:'border-box' as any}}/>
           </div>
 
-          <div style={{marginBottom:24}}>
-            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:6,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Gouvernorat</label>
-            <select value={gouvernorat} onChange={e=>setGouvernorat(e.target.value)}
-              style={{width:'100%',background:'#1a1a35',border:'1px solid rgba(255,255,255,0.12)',borderRadius:8,padding:'10px 14px',color:gouvernorat?'white':'rgba(255,255,255,0.4)',fontSize:14,outline:'none'}}>
-              <option value="">— Choisir votre gouvernorat —</option>
-              {GOUVERNORATS.map(g=><option key={g} value={g}>{g}</option>)}
-            </select>
+
+          <div style={{marginBottom:20}}>
+            <label style={{fontSize:11,color:'rgba(255,255,255,0.5)',display:'block',marginBottom:10,fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>
+              Matière & Section
+            </label>
+
+            {/* Niveau 1 — Matière (filtrée selon l'abonnement ; admin voit tout) */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:8}}>
+              {([
+                {key:'maths'        as const, icon:'🧮', label:'Maths',            color:'#f59e0b'},
+                {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie',  color:'#06d6a0'},
+                {key:'informatique' as const, icon:'💻', label:'Informatique',     color:'#8b5cf6'},
+                {key:'anglais'      as const, icon:'🇬🇧', label:'Anglais LLCER',   color:'#f43f5e'},
+                {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
+                {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
+              ].filter(m => {
+                // L'élève ne voit que les matières couvertes par son abonnement ; admin voit tout ; sans abonnement → tout
+                if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return true
+                const k = m.key === 'maths' ? 'mathematiques' : m.key
+                return checkMatiereAccess(k as any)
+              })).map(m=>(
+                <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
+                  style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:7,padding:'16px 8px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:700,transition:'all 0.2s',
+                    background:activeMatiereFiche===m.key?m.color:'rgba(255,255,255,0.04)',
+                    color:activeMatiereFiche===m.key?'white':'rgba(255,255,255,0.55)',
+                    boxShadow:activeMatiereFiche===m.key?`0 4px 16px ${m.color}50`:'none'}}>
+                  <span style={{fontSize:24}}>{m.icon}</span>
+                  <span style={{fontSize:12,whiteSpace:'nowrap'}}>{m.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Niveau 2 — Sections selon matière */}
+            <div style={{display:'flex',flexDirection:'column',gap:6}}>
+              {(activeMatiereFiche==='maths' ? [
+                {key:'terminale',      label:'Terminale Générale',        icon:'🎓', color:'#f59e0b', duration:240, coeff:16},
+                {key:'premiere',       label:'Première Spécialité',       icon:'📗', color:'#4f6ef7', duration:120, coeff:2},
+                {key:'techno',         label:'Terminale STMG / STI2D',    icon:'📊', color:'#10b981', duration:180, coeff:5},
+                {key:'expertes',       label:'Option Maths Expertes',     icon:'★',  color:'#8b5cf6', duration:180, coeff:3},
+                {key:'seconde',        label:'Seconde Générale',          icon:'📘', color:'#06b6d4', duration:60,  coeff:1},
+              ] : activeMatiereFiche==='physique' ? [
+                {key:'terminale-phys', label:'Terminale Générale',        icon:'🎓', color:'#06d6a0', duration:210, coeff:6},
+                {key:'premiere-phys',  label:'Première Spécialité',       icon:'📗', color:'#06b6d4', duration:120, coeff:2},
+                {key:'sti2d-phys',     label:'Terminale STI2D',           icon:'⚙️', color:'#f59e0b', duration:180, coeff:4},
+                {key:'st2s-phys',      label:'Terminale ST2S',            icon:'🏥', color:'#ec4899', duration:120, coeff:3},
+              ] : activeMatiereFiche==='anglais' ? [
+                {key:'terminale-anglais', label:'Terminale — Spé LLCER Anglais', icon:'🎓', color:'#f43f5e', duration:210, coeff:16},
+                {key:'premiere-anglais',  label:'Première — Anglais (E.A.)',      icon:'📗', color:'#8b5cf6', duration:120, coeff:3},
+                {key:'seconde-anglais',   label:'Seconde — Anglais',              icon:'📘', color:'#06b6d4', duration:60,  coeff:2},
+              ] : activeMatiereFiche==='svt' ? [
+                {key:'terminale-svt', label:'Terminale Spé SVT',          icon:'🎓', color:'#22c55e', duration:210, coeff:16},
+                {key:'premiere-svt',  label:'Première Spé SVT',           icon:'📗', color:'#4ade80', duration:120, coeff:2},
+                {key:'seconde-svt',   label:'Seconde SVT',                icon:'📘', color:'#16a34a', duration:60,  coeff:1},
+              ] : activeMatiereFiche==='francais' ? [
+                {key:'terminale-francais', label:'Terminale — Philosophie', icon:'🧠', color:'#ec4899', duration:240, coeff:8},
+                {key:'premiere-francais',  label:'Première — EAF',          icon:'📗', color:'#f472b6', duration:240, coeff:5},
+                {key:'seconde-francais',   label:'Seconde — Français',       icon:'📘', color:'#a78bfa', duration:120, coeff:1},
+              ] : [
+                {key:'terminale-nsi',  label:'Terminale NSI',             icon:'🎓', color:'#8b5cf6', duration:210, coeff:16},
+                {key:'premiere-nsi',   label:'Première NSI',              icon:'📗', color:'#06b6d4', duration:120, coeff:2},
+                {key:'seconde-snt',    label:'Seconde SNT',               icon:'📘', color:'#10b981', duration:60,  coeff:1},
+              ]).map(s=>(
+                <button key={s.key} onClick={()=>setSectionKey(s.key)}
+                  style={{display:'flex',alignItems:'center',gap:12,padding:'12px 16px',borderRadius:12,border:`1.5px solid ${sectionKey===s.key?s.color:'rgba(255,255,255,0.08)'}`,cursor:'pointer',background:sectionKey===s.key?`${s.color}15`:'rgba(255,255,255,0.03)',transition:'all 0.2s',fontFamily:'inherit',textAlign:'left'}}>
+                  <span style={{fontSize:20}}>{s.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:13,color:sectionKey===s.key?s.color:'white',marginBottom:2}}>{s.label}</div>
+                    <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>Durée {s.duration/60}h · Coeff {s.coeff}</div>
+                  </div>
+                  {sectionKey===s.key&&<span style={{color:s.color,fontSize:18,fontWeight:900}}>✓</span>}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {sec&&(
+            <div style={{background:`${sec?.color||"#4f6ef7"}10`,border:`1px solid ${sec?.color||"#4f6ef7"}30`,borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13}}>
+              <div style={{color:sec?.color||"#4f6ef7",fontWeight:700,marginBottom:4}}>{sec?.icon||"📚"} {sec?.label||""}</div>
+              <div style={{color:'rgba(255,255,255,0.5)',fontSize:12}}>Thèmes : {sec.themes.join(' · ')}</div>
+              <div style={{color:'rgba(255,255,255,0.35)',marginTop:4,fontSize:11}}>Bac Blanc France · Choisissez votre matière à l'étape suivante</div>
+            </div>
+          )}
 
           {err&&<div style={{background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:8,padding:'10px 14px',fontSize:13,color:'#fca5a5',marginBottom:16}}>{err}</div>}
 
           <button onClick={handleSubmit}
-            style={{width:'100%',padding:'15px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#f59e0b,#fbbf24,#f59e0b)',color:'#0a0a1a',fontSize:15,fontWeight:900,cursor:'pointer',boxShadow:'0 4px 24px rgba(245,158,11,0.5)',letterSpacing:'0.03em',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
-            <span style={{fontSize:20}}>🏆</span> Commencer le Concours · Période 1 Mai – 30 Juin
+            style={{width:'100%',padding:'15px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#4f6ef7,#6366f1,#818cf8)',color:'white',fontSize:15,fontWeight:900,cursor:'pointer',boxShadow:'0 4px 24px rgba(79,110,247,0.5)',letterSpacing:'0.03em',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+            <span style={{fontSize:20}}>🇫🇷</span> Commencer le Concours · Période 1 Mai – 30 Juin
           </button>
         </div>
 
@@ -3000,8 +2487,8 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 // PHASE 2 — GÉNÉRATION
 // ════════════════════════════════════════════════════════════════════
 function PhaseGenerating({candidat}:{candidat:Candidat}){
-  const sec=SECTIONS.find(s=>s.key===candidat.sectionKey)
-  const secColor = sec?.color || '#06d6a0'
+  const sec=SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#4f6ef7'
   const secIcon  = sec?.icon  || '⚗️'
   const secLabel = sec?.label || candidat.section
   const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
@@ -3038,9 +2525,10 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   const [uploadError, setUploadError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const sec = SECTIONS.find(s=>s.key===exam.sectionKey) || SECTIONS.find(s=>s.key===candidat.sectionKey)
-  const secColor = sec?.color || '#06d6a0'
-  const secCoeff = sec?.coeff || 3
+  const sec = SECTIONS_FR.find(s=>s.key===exam.sectionKey) || SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
+  const secColor = sec?.color || '#4f6ef7'
+  const secCoeff = sec?.coeff || 6
+  const secDuration = sec?.duration || 210
 
   useEffect(()=>{
     if(!timerOn)return
@@ -3097,7 +2585,7 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   // ── Sujet officiel PDF ────────────────────────────────────────────
   const openSubjectPdf=()=>{
     const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    const secForPdf=SECTIONS.find(s=>s.key===exam.sectionKey)||{duration:180,coeff:3,icon:'📚'}
+    const secForPdf=SECTIONS_FR.find(s=>s.key===exam.sectionKey)||SECTIONS_FR.find(s=>s.key===candidat.sectionKey)||{duration:210,coeff:6,icon:'🇫🇷',label:candidat.section,key:candidat.sectionKey}
     const css=`
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
       *{box-sizing:border-box;margin:0;padding:0}
@@ -3155,7 +2643,7 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
   <div class="header-top">
     <div class="header-left">
       <strong>MathBac.AI</strong><br>
-      Bac Blanc — Concours National IA<br>
+      Bac Blanc France — Education nationale<br>
       <strong>Session : Mai ${new Date().getFullYear()}</strong><br>
       <span style="font-size:11px;color:#888">Sujet généré par intelligence artificielle</span>
     </div>
@@ -3183,7 +2671,7 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
 <div class="candidat-box">
   <div class="candidat-field"><div class="label">Nom &amp; Prénom</div><div class="value">${esc(candidat.prenom+' '+candidat.nom)}</div></div>
   <div class="candidat-field"><div class="label">Lycée</div><div class="value">${esc(candidat.lycee)}</div></div>
-  <div class="candidat-field"><div class="label">Gouvernorat</div><div class="value">${esc(candidat.gouvernorat)}</div></div>
+  
 </div>
 <div class="instructions">
   <strong>Instructions générales :</strong>
@@ -3217,7 +2705,7 @@ ${exercicesHtml}
           <span style={{fontSize:22}}>🏆</span>
           <div>
             <div style={{fontWeight:800,fontSize:14,color:'#fbbf24'}}>Bac Blanc — Concours Jour {exam.day}</div>
-            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {candidat.section} · {exam.duration/60}h</div>
+            <div style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{candidat.prenom} {candidat.nom} · {sec?.label||candidat.section} · {exam.duration/60}h · Coeff {secCoeff}</div>
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
@@ -3485,7 +2973,6 @@ function PageAnalyseExercice({
             <div style={{fontSize:12, fontWeight:700, color:scoreColor}}>{mention}</div>
           </div>
           <div style={{display:'flex', flexDirection:'column', gap:12}}>
-
             {analysis.globalAdvice.length > 0 && (
               <div>
                 <p style={{fontSize:11, fontWeight:700, color:'#a5b4fc', textTransform:'uppercase', letterSpacing:'0.08em', margin:'0 0 8px'}}>
@@ -3532,7 +3019,6 @@ function PageAnalyseExercice({
           </div>
         )}
 
-        {/* Plan d'étude personnalisé */}
         {(analysis as any).studyPlan && (
           <div style={{marginBottom:20,padding:'16px 20px',background:'rgba(16,185,129,0.07)',border:'1px solid rgba(16,185,129,0.25)',borderRadius:14}}>
             <div style={{fontSize:13,fontWeight:800,color:'#10b981',marginBottom:12}}>📅 Plan de travail personnalisé</div>
@@ -4120,7 +3606,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
             <span>🏆</span><span style={{color:'#fbbf24',fontWeight:700,fontSize:13}}>Bac Blanc Jour {exam.day} — {exam.section}</span>
           </div>
           <h2 style={{fontSize:22,color:'white',margin:'0 0 4px'}}>{candidat.prenom} {candidat.nom}</h2>
-          <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,margin:0}}>{candidat.lycee} · {candidat.gouvernorat}</p>
+          <p style={{color:'rgba(255,255,255,0.4)',fontSize:13,margin:0}}>{candidat.lycee}</p>
         </div>
 
         {/* Score + résumé */}
@@ -4295,7 +3781,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
 // ════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL — avec quotas Supabase
 // ════════════════════════════════════════════════════════════════════
-function BacBlancInner() {
+function BacBlancFranceInner() {
   const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota: incrementQuotaSub, checkMatiereAccess, matiereActive, activeMatieres, quotas, quotaLimits } = useAuth()
   globalMatiere = matiereActive
 
@@ -4310,7 +3796,7 @@ function BacBlancInner() {
   // Vérifier si l'élève a déjà passé un examen pour une matière aujourd'hui
   const todayStr = new Date().toISOString().split('T')[0]
   function hasPassedTodayForMatiere(_matiere: string): boolean {
-    // Modèle hebdomadaire (5/semaine) : plus de plafond quotidien (1/jour) — seul bbWeekCount fait foi
+    // Modèle hebdomadaire (5/semaine) : plus de plafond quotidien — seul bbWeekCount fait foi
     return false
   }
   function markPassedTodayForMatiere(matiere: string) {
@@ -4326,35 +3812,61 @@ function BacBlancInner() {
   const [corrections, setCorrections] = useState<Record<number,string>>({})
   const [analysis, setAnalysis] = useState<AnalysisResult|null>(null)
   const today = new Date()
-  // Période concours: 1er mai – 15 juin · Jour 1=1mai, Jour 46=15juin
+  // Période concours: 1er mai – 30 juin · Jour 1=1mai, Jour 61=30juin
   const periodeStart = new Date(today.getFullYear(), 4, 1)
-  const periodeEnd   = new Date(today.getFullYear(), 5, 15)
+  const periodeEnd   = new Date(today.getFullYear(), 5, 30)
   const isInPeriode  = today >= periodeStart && today <= periodeEnd
   // En dev: toujours actif (calcul libre même hors période)
   const dayNum = Math.max(1, Math.floor((today.getTime() - periodeStart.getTime()) / (1000*60*60*24)) + 1)
 
-  // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5 (valeur voulue), sinon la valeur du plan
-  // Limite Bac Blanc / semaine : 1 abonnement → 5 · 2 abonnements ou plus → 7 (≈ 1/jour mai-juin)
-  // (plan illimité conservé à -1). nbMatieres = nombre d'abonnements actifs.
+  // Limite hebdomadaire Bac Blanc robuste : -1 = illimité, 0/indéfini → 5, sinon la valeur du plan
   const bbWeeklyLimit = quotaLimits.bac_blanc_per_week === -1
     ? -1
-    : (nbMatieres >= 2 ? 7 : 5)
+    : (quotaLimits.bac_blanc_per_week && quotaLimits.bac_blanc_per_week > 0 ? quotaLimits.bac_blanc_per_week : 5)
 
   // Compteur de visite
   useEffect(() => { saveVisit() }, [])
 
   const handleInscription = useCallback(async (c: Candidat) => {
-    // Vérifier quota simulation via Supabase (admin = illimité)
-    // Filet de sécurité anti-abus (quota hebdo cumulé)
+    // Filet de sécurité anti-abus (admin = illimité)
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n\n→ mathsbac.com/abonnement`)
       return
     }
-    // Sauvegarder le candidat et montrer le choix de matière
-    setCandidat(c); setPhase('choix-matiere')
-  }, [isAdmin, checkQuota])
+    // La matière est déjà choisie sur la fiche d'inscription → on lance directement (plus de page intermédiaire)
+    const m = c.matiere || 'maths'
+    const matiereKey = m === 'maths' ? 'mathematiques' : m
+    // Vérif abonnement (admin exempté)
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess(matiereKey as any)) {
+      alert(`🔒 Votre abonnement ne couvre pas cette matière.\n\n→ mathsbac.com/abonnement?matiere=${matiereKey}`)
+      return
+    }
+    // Vérif limite hebdomadaire (admin exempté)
+    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
+      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
+      return
+    }
+    globalMatiere = matiereKey
+    setCandidat(c)
+    setPhase('generating')
+    try {
+      const gen: Record<string, (cand: Candidat, d: number) => Promise<BacExam>> = {
+        maths: generateBacBlanc,
+        physique: generateBacBlancPhysiqueFR,
+        informatique: generateBacBlancInformatique,
+        anglais: generateBacBlancAnglais,
+        svt: generateBacBlancSVT,
+        francais: generateBacBlancFrancais,
+      }
+      const e = await (gen[m] || generateBacBlanc)(c, dayNum)
+      await incrementQuotaSub('simulations')
+      incBbWeek()
+      setExam(e); setPhase('exam')
+    } catch {
+      alert('Erreur de génération. Réessayez.'); setPhase('inscription')
+    }
+  }, [isAdmin, hasActiveSubscription, checkMatiereAccess, simLimit, simUsed, dayNum, bbWeeklyLimit, incrementQuotaSub])
 
-  // Lancer le bac blanc maths (flux existant)
   const handleStartMaths = useCallback(async () => {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('mathematiques')) {
@@ -4371,6 +3883,7 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'mathematiques'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
@@ -4387,7 +3900,6 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  // Lancer le bac blanc physique-chimie (même flux que maths)
   const handleStartPhysique = useCallback(async () => {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('physique')) {
@@ -4404,13 +3916,14 @@ function BacBlancInner() {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'physique'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
     try {
-      const e = await generateBacBlancPhysique(candidat, dayNum)
+      const e = await generateBacBlancPhysiqueFR(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('physique')
@@ -4423,24 +3936,25 @@ function BacBlancInner() {
   const handleStartInfo = useCallback(async () => {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('informatique')) {
-      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique pour accéder au Bac Blanc Info.\n→ mathsbac.com/abonnement?matiere=informatique')
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Informatique NSI pour accéder au Bac Blanc.')
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('informatique')) {
-      alert('✅ Vous avez déjà passé votre examen Informatique aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.')
+      alert('✅ Vous avez déjà passé votre examen Informatique aujourd\'hui.\n\nRevenez demain pour un nouveau sujet.')
       return
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      alert('⚠️ Limite atteinte.')
       return
     }
+    globalMatiere = 'informatique'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
     setPhase('generating')
     try {
-      const e = await generateBacBlancInfo(candidat, dayNum)
+      const e = await generateBacBlancInformatique(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('informatique')
@@ -4450,22 +3964,21 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-
-  // ── Lancer le bac blanc Anglais ─────────────────────────────────────
   const handleStartAnglais = useCallback(async () => {
     if (!candidat) return
     if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('anglais')) {
-      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Anglais pour accéder au Bac Blanc LLCER Anglais.\n→ mathsbac.com/abonnement?matiere=anglais')
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('anglais')) {
-      alert("✅ Vous avez déjà passé votre examen Anglais aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      alert('✅ Vous avez déjà passé votre examen Anglais aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
       return
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      alert('⚠️ Limite atteinte.')
       return
     }
+    globalMatiere = 'anglais'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
@@ -4482,21 +3995,21 @@ function BacBlancInner() {
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  // ── Lancer le bac blanc SVT ─────────────────────────────────────────
-  const handleStartSVT = useCallback(async () => {
+  const handleStartSvt = useCallback(async () => {
     if (!candidat) return
-    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt' as any)) {
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('svt')) {
       alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à SVT pour accéder au Bac Blanc SVT.\n→ mathsbac.com/abonnement?matiere=svt')
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('svt')) {
-      alert("✅ Vous avez déjà passé votre examen SVT aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      alert('✅ Vous avez déjà passé votre examen SVT aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
       return
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
+      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'svt'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
@@ -4509,25 +4022,27 @@ function BacBlancInner() {
       markPassedTodayForMatiere('svt')
       setExam(e); setPhase('exam')
     } catch {
-      alert('Erreur de génération SVT. Réessayez.'); setPhase('choix-matiere')
+      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
-  // Lancer le bac blanc Français
+
+
   const handleStartFrancais = useCallback(async () => {
     if (!candidat) return
-    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('francais' as any)) {
-      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français pour accéder au Bac Blanc Français.\n→ mathsbac.com/abonnement?matiere=francais')
+    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('francais')) {
+      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Français · Philosophie pour accéder au Bac Blanc.\n→ mathsbac.com/abonnement?matiere=francais')
       return
     }
     if (!isAdmin && hasPassedTodayForMatiere('francais')) {
-      alert("✅ Vous avez déjà passé votre examen Français aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅\n\n💡 Si vous avez un abonnement Maths ou Physique, vous pouvez passer ces examens.")
+      alert('✅ Vous avez déjà passé votre examen Français · Philosophie aujourd\'hui.\n\nRevenez demain pour un nouveau sujet ! 📅')
       return
     }
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
       return
     }
+    globalMatiere = 'francais'
     if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
@@ -4542,69 +4057,7 @@ function BacBlancInner() {
     } catch {
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
-
-  // ── Lancer le bac blanc Économie ────────────────────────────────────
-  const handleStartEconomie = useCallback(async () => {
-    if (!candidat) return
-    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('economie' as any)) {
-      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Économie pour accéder au Bac Blanc Économie.\n→ mathsbac.com/abonnement?matiere=economie')
-      return
-    }
-    if (!isAdmin && hasPassedTodayForMatiere('economie')) {
-      alert("✅ Vous avez déjà passé votre examen Économie aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
-      return
-    }
-    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
-      return
-    }
-    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
-      return
-    }
-    setPhase('generating')
-    try {
-      const e = await generateBacBlancEconomie(candidat, dayNum)
-      await incrementQuotaSub('simulations')
-      incBbWeek()
-      markPassedTodayForMatiere('economie')
-      setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
-    }
-  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
-
-  // ── Lancer le bac blanc Gestion ─────────────────────────────────────
-  const handleStartGestion = useCallback(async () => {
-    if (!candidat) return
-    if (!isAdmin && hasActiveSubscription && !checkMatiereAccess('gestion' as any)) {
-      alert('🔒 Votre abonnement couvre une autre matière.\n\nAbonnez-vous à Gestion pour accéder au Bac Blanc Gestion.\n→ mathsbac.com/abonnement?matiere=gestion')
-      return
-    }
-    if (!isAdmin && hasPassedTodayForMatiere('gestion')) {
-      alert("✅ Vous avez déjà passé votre examen Gestion aujourd'hui.\n\nRevenez demain pour un nouveau sujet ! 📅")
-      return
-    }
-    if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
-      alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\nAvec ${nbMatieres} abonnement(s) actif(s), vous avez accès à ${nbMatieres} examen(s) par jour.\n\n→ mathsbac.com/abonnement`)
-      return
-    }
-    if (!isAdmin && bbWeeklyLimit !== -1 && bbWeekCount() >= bbWeeklyLimit) {
-      alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
-      return
-    }
-    setPhase('generating')
-    try {
-      const e = await generateBacBlancGestion(candidat, dayNum)
-      await incrementQuotaSub('simulations')
-      incBbWeek()
-      markPassedTodayForMatiere('gestion')
-      setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
-    }
-  }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
   const handleSubmitExam = useCallback((ans: string) => {
     setAnswers(ans); setCorrections({}); setPhase('correction')
@@ -4620,7 +4073,7 @@ function BacBlancInner() {
       // Sauvegarder dans le classement
       saveRanking({
         nom: candidat.nom, prenom: candidat.prenom, lycee: candidat.lycee,
-        gouvernorat: candidat.gouvernorat, section: candidat.section, sectionKey: candidat.sectionKey,
+        section: candidat.section, sectionKey: candidat.sectionKey,
         score: r.estimatedScore, maxScore: r.maxScore,
         day: dayNum, date: `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`,
         ts: Date.now()
@@ -4650,23 +4103,16 @@ function BacBlancInner() {
   
   if (phase === 'inscription') return <PhaseInscription onSubmit={handleInscription} onStatistiques={()=>setPhase('statistiques')}/>
   if (phase === 'choix-matiere' && candidat) return (
-    <PhaseChoixMatiere
+    <PhaseChoixMatiereFR
       candidat={candidat}
       dayNum={dayNum}
       onMaths={handleStartMaths}
       onPhysique={handleStartPhysique}
       onInfo={handleStartInfo}
       onAnglais={handleStartAnglais}
-      onSvt={handleStartSVT}
+      onSvt={handleStartSvt}
       onFrancais={handleStartFrancais}
-      onEconomie={handleStartEconomie}
-      onGestion={handleStartGestion}
       onRetour={()=>setPhase('inscription')}
-      hasActiveSubscription={hasActiveSubscription}
-      checkMatiereAccess={checkMatiereAccess}
-      matiereActive={matiereActive}
-      isAdmin={isAdmin}
-      weeklyLimit={bbWeeklyLimit}
     />
   )
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
@@ -4687,14 +4133,16 @@ function BacBlancInner() {
   return <PhaseInscription onSubmit={handleInscription} onStatistiques={()=>setPhase('statistiques')}/>
 }
 
-export default function BacBlancPage() {
+export default function BacBlancFrancePage() {
   return (
     <Suspense fallback={
       <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',alignItems:'center',justifyContent:'center',color:'rgba(255,255,255,0.5)',fontFamily:'system-ui'}}>
         Chargement…
       </div>
     }>
-      <BacBlancInner/>
+      <BacBlancFranceInner/>
     </Suspense>
   )
+
+// Intercepteur [FIGURE : ...] → convertit en AsciiGraph
 }
