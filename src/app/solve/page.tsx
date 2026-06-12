@@ -1639,6 +1639,10 @@ function SolvePageInner() {
   const [phase, setPhase] = useState<Phase>('input')
 
   // ── Sélecteur de matière ────────────────────────────────────────
+  // Détection programme pour ÉCO uniquement : abonnement éco-gestion → France (1 matière) ;
+  // sinon → Tunisie (économie + gestion). Admin voit les 3 pour pouvoir tester.
+  // Les 6 autres matières sont universelles (mêmes pour tous les programmes).
+  const isFranceEco = (activeMatieres as string[] | undefined || []).includes('eco-gestion')
   const MATIERE_LIST_SOLVE = [
     { key: 'mathematiques', label: 'Maths',    icon: '🧮', color: '#f59e0b' },
     { key: 'physique',      label: 'Physique',  icon: '⚗️', color: '#06d6a0' },
@@ -1646,14 +1650,22 @@ function SolvePageInner() {
     { key: 'anglais',       label: 'Anglais',   icon: '🇬🇧', color: '#f43f5e' },
     { key: 'informatique',  label: 'Info',      icon: '💻', color: '#8b5cf6' },
     { key: 'litterature',   label: 'Français',  icon: '🇫🇷', color: '#e879f9' },
-  ] as const
+    ...(isAdmin
+      ? [{ key: 'economie', label: 'Économie', icon: '📈', color: '#06b6d4' },
+         { key: 'gestion',   label: 'Gestion',  icon: '💼', color: '#f43f5e' },
+         { key: 'eco-gestion', label: 'Éco-Gestion', icon: '📊', color: '#14b8a6' }]
+      : isFranceEco
+      ? [{ key: 'eco-gestion', label: 'Éco-Gestion', icon: '📊', color: '#14b8a6' }]
+      : [{ key: 'economie', label: 'Économie', icon: '📈', color: '#06b6d4' },
+         { key: 'gestion',   label: 'Gestion',  icon: '💼', color: '#f43f5e' }]),
+  ]
 
   const [selectedMatiere, setSelectedMatiere] = useState<string>(() => {
     // Priorité : URL ?subject= → mathematiques par défaut
     // NE PAS utiliser matiereActive ici (1 seule matière) — laisser l'utilisateur choisir
     if (typeof window !== 'undefined') {
       const s = new URLSearchParams(window.location.search).get('subject')
-      if (s && ['physique','informatique','svt','anglais','litterature'].includes(s)) return s
+      if (s && ['physique','informatique','svt','anglais','litterature','economie','gestion','eco-gestion'].includes(s)) return s
     }
     return 'mathematiques'
   })
@@ -1787,8 +1799,8 @@ function SolvePageInner() {
 
     // ─── Détecter la matière depuis URL ?subject= ──────────────────────
     // Utiliser selectedMatiere (UI) au lieu de l'URL
-    const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature' =
-      (['physique','informatique','svt','anglais','litterature'].includes(selectedMatiere)
+    const activeSubj: 'maths'|'physique'|'informatique'|'svt'|'anglais'|'litterature'|'economie'|'gestion'|'eco-gestion' =
+      (['physique','informatique','svt','anglais','litterature','economie','gestion','eco-gestion'].includes(selectedMatiere)
         ? selectedMatiere : 'maths') as any
 
     // ─── Infixe commun aux 3 system prompts ─────────────────────────────────
@@ -2403,6 +2415,44 @@ SCHÉMAS LITTÉRATURE (utiliser quand applicable) :
 - Structure du commentaire composé → toujours annoncer clairement : I. [Axe 1] / II. [Axe 2] / III. [Axe 3 si applicable]
 - Chronologie littéraire → tableau récapitulatif des mouvements par siècle si demandé`
 
+
+    // ─── Prompts ÉCONOMIE / GESTION (Tunisie) + ÉCO-GESTION (France) ───
+    const SYSTEM_ECONOMIE = `Tu es un professeur expert du Baccalauréat tunisien, spécialiste en SCIENCES ÉCONOMIQUES.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES. Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+MÉTHODE ÉCONOMIE :
+- Définis chaque notion économique (PIB, croissance, inflation, chômage, IDH, balance commerciale, élasticité…).
+- Pose et explique CHAQUE calcul en entier : taux de variation = (Vf − Vi)/Vi × 100, indices base 100, coefficient multiplicateur, IDH, taux d'inflation (IPC), termes de l'échange. Montre la formule, l'application numérique, le résultat, l'interprétation.
+- Étude de document : explique comment lire le tableau/graphique (titre, source, unité, période), extrais les données, calcule, interprète.
+- Raisonnement / dissertation : introduction (accroche, définitions, problématique, annonce), développement structuré argumenté (mécanismes + exemples), conclusion.
+- Cite les mécanismes et auteurs pertinents.
+${UNIVERSAL_GRAPH_PROMPT}
+Pour présenter des données chiffrées, utilise un vrai tableau [GRAPH: {"type":"table",...}] ou un diagramme [GRAPH: {"type":"bar",...}].`
+
+    const SYSTEM_GESTION = `Tu es un professeur expert du Baccalauréat tunisien, spécialiste en GESTION (comptabilité, gestion financière, gestion des coûts).
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES. Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+MÉTHODE GESTION :
+- Comptabilité : bilan (actif/passif), compte de résultat, écritures, soldes intermédiaires de gestion.
+- Analyse financière : FDR = capitaux permanents − actif immobilisé ; BFR = actif circulant (hors trésorerie) − passif circulant (hors trésorerie) ; TN = FDR − BFR. Pose chaque formule, l'application chiffrée, le résultat, l'interprétation (équilibre financier).
+- Gestion des coûts : coût d'achat, coût de production, coût de revient, marge sur coût variable (MCV), taux de MCV, seuil de rentabilité = charges fixes / taux de MCV, point mort.
+- Gestion des stocks : CMUP, méthode FIFO, stock d'alerte, quantité économique.
+- Montre TOUJOURS le détail des calculs (formule → application numérique → résultat → interprétation).
+${UNIVERSAL_GRAPH_PROMPT}
+Pour les bilans, tableaux de charges et de coûts, utilise un vrai tableau [GRAPH: {"type":"table",...}] ou un diagramme [GRAPH: {"type":"bar",...}].`
+
+    const SYSTEM_ECO_GESTION = `Tu es un professeur expert du Baccalauréat France, spécialiste de SES (Sciences Économiques et Sociales) et de la série STMG.
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES. Ne résume JAMAIS. Développe TOUT.
+${COMMON_FORMAT}
+MÉTHODE SES / STMG :
+- EC1 / Mobilisation de connaissances : définis chaque notion, explique le mécanisme, cite les auteurs du programme (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls).
+- EC2 / Étude d'un document statistique : montre comment lire le document (titre, source, unité), fais les CALCULS en entier (taux de variation, indices base 100, points de %, coefficient multiplicateur, lecture de tables de mobilité), interprétation chiffrée.
+- EC3 / Raisonnement / Dissertation : méthode AEI (Affirmation — Explicitation — Illustration), introduction (accroche, définitions, problématique, annonce du plan), développement structuré, conclusion.
+- STMG Gestion-Finance : FDR = capitaux permanents − actif immobilisé ; BFR ; TN = FDR − BFR ; MCV ; taux de MCV ; seuil de rentabilité = charges fixes / taux de MCV. Pose chaque formule, le calcul complet, l'interprétation.
+${UNIVERSAL_GRAPH_PROMPT}
+Pour présenter des données chiffrées, utilise un vrai tableau [GRAPH: {"type":"table",...}] ou un diagramme [GRAPH: {"type":"bar",...}].`
+
+
     // System prompt strict — refus explicite des autres matières
     const REFUS_MATHS = '\u{1F512} Ce module est réservé aux Mathématiques. Sélectionne la bonne matière dans le menu.'
     const REFUS_PHYS  = '\u{1F512} Ce module est réservé à la Physique-Chimie. Sélectionne la bonne matière dans le menu.'
@@ -2410,21 +2460,30 @@ SCHÉMAS LITTÉRATURE (utiliser quand applicable) :
     const REFUS_ANG   = '\u{1F512} This module is reserved for English. Please select the correct subject in the menu.'
     const REFUS_INFO  = '\u{1F512} Ce module est réservé à l\'Informatique. Sélectionne la bonne matière dans le menu.'
     const REFUS_LIT   = '\u{1F512} Ce module est réservé à la Littérature Française. Sélectionne la bonne matière dans le menu.'
+    const REFUS_ECO   = '\u{1F512} Ce module est réservé à l\'Économie. Sélectionne la bonne matière dans le menu.'
+    const REFUS_GES   = '\u{1F512} Ce module est réservé à la Gestion. Sélectionne la bonne matière dans le menu.'
+    const REFUS_ECOGES= '\u{1F512} Ce module est réservé à l\'Économie & Gestion. Sélectionne la bonne matière dans le menu.'
     const STRICT_MATHS = SYSTEM_MATHS + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de mathématiques. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_MATHS
     const STRICT_PHYS  = SYSTEM_PHYSIQUE + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de physique-chimie. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_PHYS
     const STRICT_SVT   = SYSTEM_SVT + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de SVT. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_SVT
     const STRICT_ANG   = SYSTEM_ANGLAIS + '\n\nABSOLUTE RULE: You solve ONLY English exercises (grammar, essay, text analysis, LLCER). If the exercise is about another subject, respond EXACTLY: ' + REFUS_ANG
     const STRICT_INFO  = SYSTEM_INFO + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices d\'informatique. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_INFO
     const STRICT_LIT   = SYSTEM_LITTERATURE + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de littérature/français. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_LIT
+    const STRICT_ECO   = SYSTEM_ECONOMIE + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices d\'économie. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_ECO
+    const STRICT_GES   = SYSTEM_GESTION + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices de gestion. Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_GES
+    const STRICT_ECOGES= SYSTEM_ECO_GESTION + '\n\nRÈGLE ABSOLUE : Tu résous UNIQUEMENT des exercices d\'économie-gestion (SES/STMG). Si l\'exercice concerne une autre matière, réponds EXACTEMENT : ' + REFUS_ECOGES
     const system = activeSubj === 'physique' ? STRICT_PHYS
                  : activeSubj === 'informatique' ? STRICT_INFO
                  : activeSubj === 'svt' ? STRICT_SVT
                  : activeSubj === 'anglais' ? STRICT_ANG
                  : activeSubj === 'litterature' ? STRICT_LIT
+                 : activeSubj === 'economie' ? STRICT_ECO
+                 : activeSubj === 'gestion' ? STRICT_GES
+                 : activeSubj === 'eco-gestion' ? STRICT_ECOGES
                  : STRICT_MATHS
 
     const prompt = mode === 'solve'
-      ? `Résous cet exercice de ${activeSubj === 'physique' ? 'physique-chimie' : activeSubj === 'informatique' ? 'informatique' : activeSubj === 'svt' ? 'SVT' : activeSubj === 'anglais' ? 'English' : activeSubj === 'litterature' ? 'littérature française' : 'mathématiques'} (programme Bac Tunisie / France) de façon COMPLÈTE et PÉDAGOGIQUE.
+      ? `Résous cet exercice de ${activeSubj === 'physique' ? 'physique-chimie' : activeSubj === 'informatique' ? 'informatique' : activeSubj === 'svt' ? 'SVT' : activeSubj === 'anglais' ? 'English' : activeSubj === 'litterature' ? 'littérature française' : activeSubj === 'economie' ? 'économie' : activeSubj === 'gestion' ? 'gestion' : activeSubj === 'eco-gestion' ? 'économie-gestion (SES/STMG)' : 'mathématiques'} (programme Bac Tunisie / France) de façon COMPLÈTE et PÉDAGOGIQUE.
 
 EXERCICE :
 ${input}
@@ -2640,7 +2699,7 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
       const sol = full
 
       // Incrémenter quota via RPC Supabase (l'API route ne le fait plus) — UNE seule fois par résolution
-      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais' }
+      const _matiereInc: Record<string,string> = { physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', litterature:'francais', economie:'economie', gestion:'gestion', 'eco-gestion':'eco-gestion' }
       const _matiereForInc = (_matiereInc[activeSubj] || 'mathematiques') as any
       await incrementQuota('solver', _matiereForInc)
 
