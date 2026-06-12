@@ -2583,7 +2583,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 
             {/* Niveau 1 — Matière (filtrée selon l'abonnement ; admin voit tout) */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,padding:8}}>
-              {([
+              {(()=>{ const _allM=[
                 {key:'maths'        as const, icon:'🧮', label:'Maths',            color:'#f59e0b'},
                 {key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie',  color:'#06d6a0'},
                 {key:'informatique' as const, icon:'💻', label:'Informatique',     color:'#8b5cf6'},
@@ -2591,12 +2591,12 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
                 {key:'svt'          as const, icon:'🌱', label:'SVT',              color:'#22c55e'},
                 {key:'francais'     as const, icon:'📚', label:'Français · Philo', color:'#ec4899'},
                 {key:'eco-gestion'  as const, icon:'📊', label:'Éco & Gestion',    color:'#14b8a6'},
-              ].filter(m => {
+              ]; const _fM=_allM.filter(m => {
                 // L'élève ne voit que les matières couvertes par son abonnement ; admin voit tout ; sans abonnement → tout
                 if (isAdmin || !hasActiveSubscription || !checkMatiereAccess) return true
                 const k = m.key === 'maths' ? 'mathematiques' : m.key
-                return checkMatiereAccess(k as any)
-              })).map(m=>(
+                try { return checkMatiereAccess(k as any) } catch { return true }
+              }); return (_fM.length ? _fM : _allM) })().map(m=>(
                 <button key={m.key} onClick={()=>{setActiveMatiereFiche(m.key);setSectionKey('')}}
                   style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:7,padding:'16px 8px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:700,transition:'all 0.2s',
                     background:activeMatiereFiche===m.key?m.color:'rgba(255,255,255,0.04)',
@@ -4161,6 +4161,7 @@ function BacBlancFranceInner() {
         anglais: generateBacBlancAnglais,
         svt: generateBacBlancSVT,
         francais: generateBacBlancFrancais,
+        'eco-gestion': generateBacBlancEcoFR,
       }
       const e = await (gen[m] || generateBacBlanc)(c, dayNum)
       await incrementQuotaSub('simulations')
