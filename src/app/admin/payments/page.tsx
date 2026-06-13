@@ -57,6 +57,29 @@ const PLAN_LABELS: Record<string,string> = {
   annuel_gestion:'Annuel · 💼 Gestion',
   sprint_bac_gestion:'Sprint · 💼 Gestion',
   sprint_gestion:'Sprint · 💼 Gestion',
+  'mensuel_eco-gestion':'Mensuel · 📊 Éco-Gestion',
+  'annuel_eco-gestion':'Annuel · 📊 Éco-Gestion',
+  'sprint_bac_eco-gestion':'Sprint · 📊 Éco-Gestion',
+  'sprint_eco-gestion':'Sprint · 📊 Éco-Gestion',
+}
+
+// Extraction de la matière depuis le plan_type (ordre important : eco-gestion AVANT gestion)
+function matiereFromPlan(pt: string): string {
+  const p = (pt || '').toLowerCase()
+  if (p.includes('eco-gestion')) return 'eco-gestion'
+  if (p.includes('economie'))    return 'economie'
+  if (p.includes('gestion'))     return 'gestion'
+  if (p.includes('physique'))    return 'physique'
+  if (p.includes('svt'))         return 'svt'
+  if (p.includes('anglais'))     return 'anglais'
+  if (p.includes('informatique'))return 'informatique'
+  if (p.includes('francais'))    return 'francais'
+  return 'mathematiques'
+}
+const MAT_BADGE: Record<string,string> = {
+  'eco-gestion':'📊 Éco-Gestion', economie:'📈 Économie', gestion:'💼 Gestion',
+  physique:'⚗️ PC', svt:'🧬 SVT', anglais:'🇬🇧 Anglais', informatique:'💻 Info',
+  francais:'📚 Français', mathematiques:'🧮 Maths',
 }
 const METHOD_ICONS: Record<string,string> = {
   d17:'🏛️', flouci:'📱', recharge_mobile:'📞', especes:'💵', stripe:'💳'
@@ -133,7 +156,7 @@ export default function AdminPaymentsPage() {
   async function activate(s: Sub) {
     setActivating(s.id); setMsg('')
     try {
-      const matiere = matieres[s.id] || 'mathematiques'
+      const matiere = matieres[s.id] || matiereFromPlan(s.plan_type)
       const basePlan = s.plan_type?.startsWith('sprint') ? 'sprint_bac'
         : s.plan_type?.startsWith('annuel') ? 'annuel' : 'mensuel'
       const finalPlanType = `${basePlan}_${matiere}`
@@ -368,7 +391,7 @@ export default function AdminPaymentsPage() {
                     {s.status !== 'active' && (
                       <>
                         {/* Sélecteur matière */}
-                        <select value={matieres[s.id]||'mathematiques'}
+                        <select value={matieres[s.id]||matiereFromPlan(s.plan_type)}
                           onChange={e => setMatieres(m => ({...m,[s.id]:e.target.value}))}
                           style={{ padding:'5px 8px', borderRadius:7, border:'1px solid rgba(255,255,255,0.12)',
                             background:'rgba(255,255,255,0.06)', color:'white', fontSize:11, fontWeight:600,
@@ -381,6 +404,7 @@ export default function AdminPaymentsPage() {
                           <option value="francais">📚 Français</option>
                           <option value="economie">📈 Économie</option>
                           <option value="gestion">💼 Gestion</option>
+                          <option value="eco-gestion">📊 Éco-Gestion</option>
                         </select>
                         <button onClick={() => activate(s)} disabled={isAct}
                           style={{ padding:'7px 14px', borderRadius:8, border:'none', cursor:'pointer',
@@ -395,12 +419,7 @@ export default function AdminPaymentsPage() {
                         {/* Badge matière actuelle */}
                         {(() => {
                           const pt = s.plan_type || ''
-                          const mat = pt.includes('physique') ? '⚗️ PC'
-                            : pt.includes('svt') ? '🧬 SVT'
-                            : pt.includes('anglais') ? '🇬🇧 Anglais'
-                            : pt.includes('informatique') ? '💻 Info'
-                            : pt.includes('francais') ? '📚 Français'
-                            : '🧮 Maths'
+                          const mat = MAT_BADGE[matiereFromPlan(pt)] || '🧮 Maths'
                           return (
                             <div style={{ padding:'4px 10px', borderRadius:6,
                               background:'rgba(79,110,247,0.12)', border:'1px solid rgba(79,110,247,0.25)',
@@ -424,6 +443,7 @@ export default function AdminPaymentsPage() {
                           <option value="francais">📚 Français</option>
                           <option value="economie">📈 Économie</option>
                           <option value="gestion">💼 Gestion</option>
+                          <option value="eco-gestion">📊 Éco-Gestion</option>
                         </select>
                         {matieres[s.id] && (
                           <button onClick={async () => {
