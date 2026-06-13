@@ -106,6 +106,14 @@ export default function AdminPaymentsPage() {
   const [matieres,   setMatieres]   = useState<Record<string,string>>({})
   const [sortBy,     setSortBy]     = useState<'date_asc'|'date_desc'|'expiry_asc'|'expiry_desc'>('date_desc')
   const [filterDate, setFilterDate] = useState('')
+  const [isMobile,   setIsMobile]   = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 760)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   async function loadAll() {
     setLoading(true)
@@ -246,7 +254,7 @@ export default function AdminPaymentsPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:28 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4,1fr)', gap:14, marginBottom:28 }}>
           {[
             { label:'Total', val: stats.total, color:'#4f6ef7' },
             { label:'Actifs', val: stats.active, color:'#10b981' },
@@ -333,7 +341,7 @@ export default function AdminPaymentsPage() {
                   background:'rgba(255,255,255,0.03)',
                   border:`1px solid ${s.status==='active'?'rgba(16,185,129,0.2)':s.status.includes('pending')?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.08)'}`,
                   borderRadius:14, padding:'16px 20px',
-                  display:'grid', gridTemplateColumns:'1fr 1fr 1fr auto', gap:16, alignItems:'center',
+                  display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr auto', gap:16, alignItems: isMobile ? 'stretch' : 'center',
                 }}>
                   {/* Colonne 1 — User */}
                   <div>
