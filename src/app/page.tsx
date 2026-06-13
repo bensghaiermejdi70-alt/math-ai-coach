@@ -24,11 +24,12 @@ const MATIERES = [
   { icon: '💼', label: 'Gestion', color: '#f43f5e', href: '/bac/gestion', isNew: true },
 ]
 
+// Ordre IDENTIQUE à TYPED_WORDS pour que le hero et la démo affichent la même matière
 const DEMO_BY_MATIERE = [
-  { mat: 'Économie · Bac', color: '#06b6d4', gen: 'Exercice 1 — Croissance & PIB', doc: 'Tableau INS 2024 ✓', corr: 'Barème + remédiation', grade: '17.5' },
-  { mat: 'Gestion · Bac', color: '#f43f5e', gen: 'Dossier — Analyse financière', doc: 'Bilan · FDR / BFR / TN ✓', corr: 'Calculs + interprétation', grade: '16' },
   { mat: 'Mathématiques · Bac', color: '#5B6CFF', gen: 'Exercice 2 — Suites & limites', doc: 'Graphique de fonction ✓', corr: 'Étapes justifiées', grade: '18' },
   { mat: 'Physique-Chimie · Bac', color: '#06d6a0', gen: 'Exercice 1 — Cinétique chimique', doc: 'Courbe [A] = f(t) ✓', corr: 'Méthode + schéma', grade: '15.5' },
+  { mat: 'Économie · Bac', color: '#06b6d4', gen: 'Exercice 1 — Croissance & PIB', doc: 'Tableau INS 2024 ✓', corr: 'Barème + remédiation', grade: '17.5' },
+  { mat: 'Gestion · Bac', color: '#f43f5e', gen: 'Dossier — Analyse financière', doc: 'Bilan · FDR / BFR / TN ✓', corr: 'Calculs + interprétation', grade: '16' },
   { mat: 'Anglais · Bac', color: '#f59e0b', gen: 'Reading comprehension', doc: 'Press article excerpt ✓', corr: 'Feedback in English', grade: '17' },
   { mat: 'Informatique · Bac', color: '#8b5cf6', gen: 'Algorithmique — Tri', doc: 'Trace d\'exécution ✓', corr: 'Complexité + code', grade: '18.5' },
 ]
@@ -52,7 +53,7 @@ const FEATURES = [
   { icon: '🧮', title: 'Solveur étape par étape', desc: "Chaque étape justifiée. La méthode complète, pas seulement le résultat.", color: '#4f6ef7', href: '/solve', img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=600&q=80' },
   { icon: '🤖', title: 'Chat IA Professeur', desc: "Pose tes questions en français. L'IA répond comme un enseignant, avec graphiques interactifs.", color: '#9D7BFF', href: '/chat', img: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80' },
   { icon: '📊', title: 'Analyse & remédiation', desc: "Détection des lacunes, exercices ciblés et plan de révision généré par l'IA.", color: '#ec4899', href: '/chat', img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80' },
-  { icon: '🏆', title: 'Bac Blanc national', desc: "Concours quotidien avec chrono, correction IA et classement national.", color: '#f59e0b', href: '/bac-blanc', img: 'https://images.unsplash.com/photo-1523050854058-8df90110c8f5?w=600&q=80' },
+  { icon: '🏆', title: 'Bac Blanc national', desc: "Concours quotidien avec chrono, correction IA et classement national.", color: '#f59e0b', href: '/bac-blanc', img: 'https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=600&q=80' },
   { icon: '📚', title: 'Cours & programme officiel', desc: "Tous les chapitres, définitions, théorèmes, formules et exercices corrigés.", color: '#06b6d4', href: '/bac', img: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=600&q=80' },
 ]
 
@@ -61,11 +62,13 @@ const SECTIONS_TN = [
   { href: '/bac/sciences-exp', icon: '⚗️', titre: 'Sciences Exp.', couleur: '#10b981' },
   { href: '/bac/sciences-tech', icon: '⚙️', titre: 'Sciences Tech.', couleur: '#06b6d4' },
   { href: '/bac/informatique', icon: '💻', titre: 'Informatique', couleur: '#8b5cf6' },
+  { href: '/bac/lettres', icon: '📖', titre: 'Lettres', couleur: '#a78bfa' },
   { href: '/bac/economie', icon: '📈', titre: 'Économie', couleur: '#06b6d4', isNew: true },
   { href: '/bac/gestion', icon: '💼', titre: 'Gestion', couleur: '#f43f5e', isNew: true },
 ]
 
 const SECTIONS_FR = [
+  { href: '/bac-france/seconde', icon: '📘', titre: 'Seconde', couleur: '#10b981' },
   { href: '/bac-france/terminale-generale', icon: '🎓', titre: 'Terminale Générale', couleur: '#5B6CFF' },
   { href: '/bac-france/premiere', icon: '📗', titre: 'Première Spécialité', couleur: '#3b82f6' },
   { href: '/bac-france/terminale-techno', icon: '📊', titre: 'STMG / STI2D', couleur: '#10b981' },
@@ -110,16 +113,15 @@ function VideoPlayer() {
 }
 
 // Démo live : flux de génération qui change selon la matière (signature du hero)
-function LiveDemo() {
-  const [mi, setMi] = useState(0)
+function LiveDemo({ subjectIndex }: { subjectIndex: number }) {
   const [shown, setShown] = useState(0)
-  const d = DEMO_BY_MATIERE[mi]
+  const d = DEMO_BY_MATIERE[subjectIndex % DEMO_BY_MATIERE.length]
+  // La matière suit le mot du hero (subjectIndex) → toujours synchronisés.
   useEffect(() => {
     setShown(0)
-    const timers = [1, 2, 3, 4].map((n, i) => setTimeout(() => setShown((s) => Math.max(s, i + 1)), 450 + i * 600))
-    const next = setTimeout(() => setMi((m) => (m + 1) % DEMO_BY_MATIERE.length), 5200)
-    return () => { timers.forEach(clearTimeout); clearTimeout(next) }
-  }, [mi])
+    const timers = [1, 2, 3, 4].map((n, i) => setTimeout(() => setShown((s) => Math.max(s, i + 1)), 350 + i * 480))
+    return () => { timers.forEach(clearTimeout) }
+  }, [subjectIndex])
   const lines = [
     { label: 'Matière', val: d.mat },
     { label: 'Génération du sujet', val: d.gen },
@@ -171,7 +173,7 @@ export default function HomePage() {
     const tick = () => {
       if (!deleting) {
         setTyped(word.slice(0, i + 1)); i++
-        if (i === word.length) { deleting = true; timer = setTimeout(tick, 1400); return }
+        if (i === word.length) { deleting = true; timer = setTimeout(tick, 2800); return }
       } else {
         setTyped(word.slice(0, i - 1)); i--
         if (i === 0) { deleting = false; setWordIdx((w) => (w + 1) % TYPED_WORDS.length); return }
@@ -244,7 +246,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="v2-hero-right reveal">
-              <LiveDemo />
+              <LiveDemo subjectIndex={wordIdx} />
             </div>
           </div>
 
