@@ -1364,6 +1364,9 @@ export default function ChatPage() {
   const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription, matiereActive, activeMatieres, checkMatiereAccess } = useAuth()
   // Recalculer à chaque render (quotas peut changer après refreshSubscription)
   // Matière sélectionnée — initialisée depuis l'abonnement actif
+  // Détection programme pour ÉCO uniquement : abonnement éco-gestion → France (1 matière) ;
+  // sinon → Tunisie (économie + gestion). Admin voit les 3. Les 6 autres matières sont universelles.
+  const isFranceEco = (activeMatieres as string[] | undefined || []).includes('eco-gestion')
   const MATIERE_LIST = [
     { key: 'mathematiques', label: 'Maths',    icon: '🧮', color: '#f59e0b' },
     { key: 'physique',      label: 'Physique',  icon: '⚗️', color: '#06d6a0' },
@@ -1371,6 +1374,14 @@ export default function ChatPage() {
     { key: 'anglais',       label: 'Anglais',   icon: '🇬🇧', color: '#f43f5e' },
     { key: 'informatique',  label: 'Info',      icon: '💻', color: '#8b5cf6' },
     { key: 'litterature',   label: 'Français',  icon: '🇫🇷', color: '#e879f9' },
+    ...(isAdmin
+      ? [{ key: 'economie', label: 'Économie', icon: '📈', color: '#06b6d4' },
+         { key: 'gestion',   label: 'Gestion',  icon: '💼', color: '#f43f5e' },
+         { key: 'eco-gestion', label: 'Éco-Gestion', icon: '📊', color: '#14b8a6' }]
+      : isFranceEco
+      ? [{ key: 'eco-gestion', label: 'Éco-Gestion', icon: '📊', color: '#14b8a6' }]
+      : [{ key: 'economie', label: 'Économie', icon: '📈', color: '#06b6d4' },
+         { key: 'gestion',   label: 'Gestion',  icon: '💼', color: '#f43f5e' }]),
   ] as const
 
   const [selectedMatiere, setSelectedMatiere] = useState<string>(() => matiereActive || 'mathematiques')
@@ -1514,6 +1525,9 @@ export default function ChatPage() {
               const REFUS_ANG   = '\u{1F512} This module is reserved for **English**. For this question, please select the corresponding subject in the menu above.'
               const REFUS_INFO  = '\u{1F512} Ce module est réservé à l\'**Informatique**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const REFUS_LIT   = '\u{1F512} Ce module est réservé à la **Littérature Française**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
+              const REFUS_ECO   = '\u{1F512} Ce module est réservé à l\'**Économie**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
+              const REFUS_GES   = '\u{1F512} Ce module est réservé à la **Gestion**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
+              const REFUS_ECOGES= '\u{1F512} Ce module est réservé à l\'**Économie & Gestion**. Pour cette question, sélectionne la matière correspondante dans le menu ci-dessus.'
               const FORMAT = '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n'
                 + '## RÉPONSE EXHAUSTIVE — RÈGLE ABSOLUE\n'
                 + 'Réponds TOUJOURS de façon COMPLÈTE et DÉTAILLÉE, jamais abrégée ni tronquée.\n'
@@ -1604,6 +1618,36 @@ export default function ChatPage() {
                   'Tu es EXCLUSIVEMENT un professeur de Littérature Française et Français.\n'
                   + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de littérature française (commentaire composé, dissertation, figures de style, versification, auteurs, mouvements).\n'
                   + 'Si question hors littérature/français, réponds EXACTEMENT : ' + REFUS_LIT
+                  + FORMAT,
+                economie:
+                  'Tu es EXCLUSIVEMENT un professeur de SCIENCES ÉCONOMIQUES Bac Tunisie.\n'
+                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions d\'économie.\n'
+                  + 'Si question hors économie, réponds EXACTEMENT : ' + REFUS_ECO + '\n'
+                  + 'MÉTHODE : définis chaque notion (PIB, croissance, inflation IPC, chômage, IDH, élasticité, balance commerciale). '
+                  + 'Pose CHAQUE calcul en entier : taux de variation = (Vf-Vi)/Vi×100, indices base 100, coefficient multiplicateur, IDH, taux d\'inflation. Formule → application numérique → résultat → interprétation. '
+                  + 'Étude de document : lecture (titre, source, unité, période), extraction des données, calcul, interprétation. '
+                  + 'Dissertation : introduction (accroche, définitions, problématique, annonce), développement argumenté (mécanismes + exemples), conclusion. '
+                  + 'Pour présenter des données chiffrées, utilise un TABLEAU MARKDOWN (| col | col |). Pour une courbe (offre/demande, coût), utilise un bloc ```graph de type function.'
+                  + FORMAT,
+                gestion:
+                  'Tu es EXCLUSIVEMENT un professeur de GESTION Bac Tunisie (comptabilité, gestion financière, coûts).\n'
+                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions de gestion.\n'
+                  + 'Si question hors gestion, réponds EXACTEMENT : ' + REFUS_GES + '\n'
+                  + 'MÉTHODE : Comptabilité (bilan actif/passif, compte de résultat, SIG). '
+                  + 'Analyse financière : FDR = capitaux permanents - actif immobilisé ; BFR = actif circulant (hors trésorerie) - passif circulant (hors trésorerie) ; TN = FDR - BFR. Formule → application chiffrée → résultat → interprétation (équilibre financier). '
+                  + 'Coûts : coût d\'achat, de production, de revient, marge sur coût variable (MCV), taux de MCV, seuil de rentabilité = charges fixes / taux de MCV, point mort. '
+                  + 'Stocks : CMUP, FIFO, stock d\'alerte. Montre TOUJOURS le détail des calculs. '
+                  + 'Pour les bilans, tableaux de charges et de coûts, utilise un TABLEAU MARKDOWN (| col | col |).'
+                  + FORMAT,
+                'eco-gestion':
+                  'Tu es EXCLUSIVEMENT un professeur de SES (Sciences Économiques et Sociales) et STMG, Bac France.\n'
+                  + 'RÈGLE ABSOLUE : Tu réponds UNIQUEMENT aux questions d\'économie-gestion (SES / STMG).\n'
+                  + 'Si question hors économie-gestion, réponds EXACTEMENT : ' + REFUS_ECOGES + '\n'
+                  + 'MÉTHODE SES : EC1 (mobilisation : définis, explique le mécanisme, cite les auteurs - Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls) ; '
+                  + 'EC2 (étude de document statistique : lecture, calculs en entier - taux de variation, indices base 100, points de %, lecture de tables de mobilité - interprétation) ; '
+                  + 'EC3 / dissertation (méthode AEI : Affirmation-Explicitation-Illustration ; introduction, développement structuré, conclusion). '
+                  + 'STMG Gestion-Finance : FDR = capitaux permanents - actif immobilisé ; BFR ; TN = FDR - BFR ; MCV ; taux de MCV ; seuil = charges fixes / taux de MCV. Pose chaque formule, le calcul complet, l\'interprétation. '
+                  + 'Pour présenter des données chiffrées, utilise un TABLEAU MARKDOWN (| col | col |). Pour une courbe, utilise un bloc ```graph de type function.'
                   + FORMAT,
               }
               return instructions[selectedMatiere] || instructions['mathematiques']
