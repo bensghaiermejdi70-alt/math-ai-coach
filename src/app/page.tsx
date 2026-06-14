@@ -28,9 +28,11 @@ const MATIERES = [
 const DEMO_BY_MATIERE = [
   { mat: 'Mathématiques · Bac', color: '#5B6CFF', gen: 'Exercice 2 — Suites & limites', doc: 'Graphique de fonction ✓', corr: 'Étapes justifiées', grade: '18' },
   { mat: 'Physique-Chimie · Bac', color: '#06d6a0', gen: 'Exercice 1 — Cinétique chimique', doc: 'Courbe [A] = f(t) ✓', corr: 'Méthode + schéma', grade: '15.5' },
+  { mat: 'SVT · Bac', color: '#10b981', gen: 'Exercice — Génétique & hérédité', doc: 'Schéma · brassage chromosomique ✓', corr: 'Raisonnement + schéma', grade: '16.5' },
   { mat: 'Économie · Bac', color: '#06b6d4', gen: 'Exercice 1 — Croissance & PIB', doc: 'Tableau INS 2024 ✓', corr: 'Barème + remédiation', grade: '17.5' },
   { mat: 'Gestion · Bac', color: '#f43f5e', gen: 'Dossier — Analyse financière', doc: 'Bilan · FDR / BFR / TN ✓', corr: 'Calculs + interprétation', grade: '16' },
   { mat: 'Anglais · Bac', color: '#f59e0b', gen: 'Reading comprehension', doc: 'Press article excerpt ✓', corr: 'Feedback in English', grade: '17' },
+  { mat: 'Français · Bac', color: '#a78bfa', gen: 'Commentaire — analyse de texte', doc: 'Extrait · œuvre au programme ✓', corr: 'Plan + analyse stylistique', grade: '15' },
   { mat: 'Informatique · Bac', color: '#8b5cf6', gen: 'Algorithmique — Tri', doc: 'Trace d\'exécution ✓', corr: 'Complexité + code', grade: '18.5' },
 ]
 
@@ -76,7 +78,7 @@ const SECTIONS_FR = [
   { href: '/bac-france/eco-gestion', icon: '📊', titre: 'Éco-Gestion · SES', couleur: '#14b8a6', isNew: true },
 ]
 
-const TYPED_WORDS = ['Mathématiques', 'Physique-Chimie', 'Économie', 'Gestion', 'Anglais', 'Informatique']
+const TYPED_WORDS = ['Mathématiques', 'Physique-Chimie', 'SVT', 'Économie', 'Gestion', 'Anglais', 'Français', 'Informatique']
 
 // ═══════════════════════════════════════════════════════════════
 //  MICRO-COMPOSANTS
