@@ -496,15 +496,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
     if (!user) return
-
-    const { error: rpcError } = await supabase.rpc('increment_quota', {
-      p_user_id: user.id,
-      p_matiere: matiere,
-      p_type: type
-    })
-
-    if (rpcError) console.error('incrementQuota RPC error:', rpcError)
-
+    // L'incrément est désormais fait CÔTÉ SERVEUR (proxy /api/anthropic), non contournable.
+    // Ici on se contente de rafraîchir l'affichage des quotas après la réponse.
+    // (type & matiere restent dans la signature pour ne rien changer aux appelants.)
     await loadQuotas(user.id)
   }
 

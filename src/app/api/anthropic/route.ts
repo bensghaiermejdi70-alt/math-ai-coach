@@ -6,6 +6,27 @@ import { fetchAnthropicWithRetry } from '@/lib/anthropic/fetchWithRetry'
 
 export const maxDuration = 120
 
+// ── Rate limiting anti-rafale (en mémoire, par utilisateur) ──
+//    Le quota hebdo limite le VOLUME total ; ceci limite le DÉBIT (req/minute)
+//    pour bloquer les rafales abusives (scripts) qui exploseraient coûts & charge.
+//    Stocké sur globalThis pour survivre aux hot-reloads / rester partagé dans l'instance.
+const RL_WINDOW_MS = 60_000   // fenêtre glissante : 60 secondes
+const RL_MAX = 25             // max 25 requêtes / 60 s / utilisateur
+const _rlStore: Map<string, number[]> =
+  (globalThis as any).__mb_rl || ((globalThis as any).__mb_rl = new Map())
+
+function rateLimitOk(userId: string): boolean {
+  const now = Date.now()
+  const recent = (_rlStore.get(userId) || []).filter((t) => now - t < RL_WINDOW_MS)
+  if (recent.length >= RL_MAX) {
+    _rlStore.set(userId, recent)   // on garde la fenêtre à jour sans ajouter
+    return false
+  }
+  recent.push(now)
+  _rlStore.set(userId, recent)
+  return true
+}
+
 // Détecter le type de requête pour comptabiliser le bon quota
 function getQuotaType(body: any): 'chat' | 'solver' | 'simulations' | null {
   // Priorité au paramètre explicite 'type' passé par le client
@@ -68,6 +89,31 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Connexion requise' }, { status: 401 })
+    }
+
+    // ── Rate limiting (anti-rafale) — admin exempté ──
+    if (user.email !== ADMIN_EMAIL && !rateLimitOk(user.id)) {
+      return NextResponse.json(
+        { error: 'Trop de requêtes en peu de temps. Réessaie dans une minute.', rate_limited: true },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
+    // ── Comptage du quota CÔTÉ SERVEUR (non contournable) ──
+    // L'incrément n'est plus déclenché par le client. Il est fait ici, APRÈS un
+    // appel Anthropic réussi, via la RPC SECURITY DEFINER increment_quota.
+    const _userId = user.id
+    const _userEmail = user.email
+    const countUsage = async () => {
+      if (_userEmail === ADMIN_EMAIL) return          // admin = illimité, non compté
+      const qt = getQuotaType(body)
+      if (!qt) return
+      const mt = ((body?.matiere as MatiereType) || 'mathematiques')
+      try {
+        await supabase.rpc('increment_quota', { p_user_id: _userId, p_matiere: mt, p_type: qt })
+      } catch (e) {
+        console.error('increment_quota (serveur) échec:', e)
+      }
     }
 
 
@@ -176,6 +222,7 @@ const response = await fetchAnthropicWithRetry('https://api.anthropic.com/v1/mes
           { status: response.status }
         )
       }
+      await countUsage()
       return new Response(response.body, {
         status: 200,
         headers: {
@@ -196,7 +243,8 @@ const response = await fetchAnthropicWithRetry('https://api.anthropic.com/v1/mes
       )
     }
 
-    // Quota géré par la RPC increment_quota côté composant React
+    // Quota compté côté serveur (countUsage) — plus aucun incrément côté client
+    await countUsage()
 
     return NextResponse.json(data)
 
