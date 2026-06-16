@@ -309,19 +309,32 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
 
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
-  try { return JSON.parse(cleaned) }
-  catch {
-    try {
-      const blocks: string[] = []
-      let rep = cleaned.replace(/\[GRAPH:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\]/g, (_m:string, j:string) => {
-        blocks.push(j); return `__G_${blocks.length-1}__`
-      })
-      const parsed = JSON.parse(rep)
-      const ri = (s:string) => s.replace(/__G_(\d+)__/g, (_m:string,i:string)=>`[GRAPH: ${blocks[Number(i)]}]`)
-      if (parsed?.exercises) parsed.exercises = parsed.exercises.map((ex:any)=>({...ex, statement:ex.statement?ri(ex.statement):ex.statement}))
-      return parsed as T
-    } catch { return fallback }
-  }
+  // 1) Parse direct
+  try { return JSON.parse(cleaned) } catch {}
+  // 2) Protéger les blocs [GRAPH: {...}] par des placeholders puis parser.
+  //    Regex non-greedy jusqu'au "}]" → tolère accolades, guillemets et ascii multi-lignes (circuits/montages physique).
+  try {
+    const blocks: string[] = []
+    const rep = cleaned.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, j: string) => {
+      blocks.push(j); return `__G_${blocks.length - 1}__`
+    })
+    const parsed: any = JSON.parse(rep)
+    const ri = (s: any) => typeof s === 'string'
+      ? s.replace(/__G_(\d+)__/g, (_m: string, i: string) => `[GRAPH: ${blocks[Number(i)]}]`)
+      : s
+    if (parsed?.exercises) {
+      parsed.exercises = parsed.exercises.map((ex: any) => ({ ...ex, statement: ri(ex.statement), graph: ri(ex.graph) }))
+    }
+    return parsed as T
+  } catch {}
+  // 3) Dernier recours : retirer les blocs graphiques (exam valide, sans figure) plutôt que d'échouer complètement.
+  try {
+    const noGraph = cleaned
+      .replace(/\[GRAPH:\s*[\s\S]*?\}\s*\]/g, '')
+      .replace(/"graph"\s*:\s*"(?:[^"\\]|\\.)*"/g, '"graph": null')
+    return JSON.parse(noGraph) as T
+  } catch {}
+  return fallback
 }
 
 
