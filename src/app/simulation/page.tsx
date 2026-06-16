@@ -833,7 +833,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 4000, matie
   // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const m = matiere || globalMatiere
   const body = {
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: prompt }],
@@ -867,7 +867,7 @@ async function askClaudeWithImages(
     }
     content.push({ type: 'text', text: prompt })
     const body = {
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],

@@ -43,7 +43,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000, matie
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: maxTokens,
         system,
         messages: [{ role: 'user', content: prompt }],
@@ -74,7 +74,7 @@ async function askClaudeWithImage(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system,
       messages: [{
@@ -120,7 +120,7 @@ async function askClaudeWithAttachments(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: maxTokens,
         system,
         messages: [{ role: 'user', content }],
@@ -1491,7 +1491,7 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
           if (ext === 'pdf') {
             const r = await fetch('/api/solve', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 6000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: "Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de la première à la dernière ligne, sans rien omettre ni résumer (toutes les questions et sous-questions). IMPORTANT : n'utilise AUCUN symbole dollar $ ni délimiteur LaTeX ($...$, \\(...\\), \\[...\\]). Écris les maths en notation lisible avec des symboles Unicode (½, √, π, ℂ, ζ, ≤, ≥, ∈, ∞, z̄ pour le conjugué, u⃗ pour les vecteurs, |z|, etc.). Aucune introduction ni commentaire." }] }] })
+              body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 6000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: "Transcris INTÉGRALEMENT le texte de cet exercice de mathématiques, de la première à la dernière ligne, sans rien omettre ni résumer (toutes les questions et sous-questions). IMPORTANT : n'utilise AUCUN symbole dollar $ ni délimiteur LaTeX ($...$, \\(...\\), \\[...\\]). Écris les maths en notation lisible avec des symboles Unicode (½, √, π, ℂ, ζ, ≤, ≥, ∈, ∞, z̄ pour le conjugué, u⃗ pour les vecteurs, |z|, etc.). Aucune introduction ni commentaire." }] }] })
             })
             const d = await r.json()
             text = d.content?.map((c: any) => c.text || '').join('') || ''

@@ -325,7 +325,7 @@ function stripIncompleteGraph(s: string): string {
 async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string, onDelta?: (full: string) => void): Promise<string> {
   // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const body = {
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: prompt }],
@@ -364,7 +364,7 @@ async function askClaudeWithImages(
     }
     content.push({ type: 'text', text: prompt })
     const body = {
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],

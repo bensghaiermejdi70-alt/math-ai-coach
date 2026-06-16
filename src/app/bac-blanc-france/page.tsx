@@ -286,7 +286,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514', max_tokens: maxTokens, system,
+      model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
       messages: [{ role:'user', content:prompt }],
       type: 'simulations',
       matiere: matiere || globalMatiere || 'mathematiques'

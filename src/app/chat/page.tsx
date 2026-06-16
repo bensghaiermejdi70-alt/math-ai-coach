@@ -1514,7 +1514,7 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 6000, // relevé pour des réponses exhaustives (reste sous le timeout serveur 115s)
           stream: true, // affichage au fil de l'eau
           type: 'chat', // comptage quota explicite (évite toute mauvaise détection)
