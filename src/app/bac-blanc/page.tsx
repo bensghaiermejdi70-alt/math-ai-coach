@@ -271,31 +271,70 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
+      stream: true, // SSE : les tokens arrivent en continu → on reste sous le timeout serveur 115s (comme le chat). Sans ça, les générations lourdes (maths/physique/svt avec graphiques) dépassaient le délai → spinner infini.
       messages: [{ role:'user', content:prompt }],
       type: 'simulations',
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
-  const d = await r.json()
-  return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
+  // ── Lecture du flux SSE : on accumule tout le texte, puis on le renvoie (même signature qu'avant) ──
+  const reader = r.body?.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let acc = ''
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const raw of lines) {
+        const line = raw.trim()
+        if (!line.startsWith('data:')) continue
+        const payload = line.slice(5).trim()
+        if (!payload || payload === '[DONE]') continue
+        let evt: any
+        try { evt = JSON.parse(payload) } catch { continue } // ligne SSE partielle : ignorée
+        if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+          acc += evt.delta.text
+        }
+      }
+    }
+  }
+  if (!acc) throw new Error('Réponse vide du serveur (streaming)')
+  return acc
 }
 
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
-  try { return JSON.parse(cleaned) }
-  catch {
-    try {
-      const blocks: string[] = []
-      let rep = cleaned.replace(/\[GRAPH:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\]/g, (_m:string, j:string) => {
-        blocks.push(j); return `__G_${blocks.length-1}__`
-      })
-      const parsed = JSON.parse(rep)
-      const ri = (s:string) => s.replace(/__G_(\d+)__/g, (_m:string,i:string)=>`[GRAPH: ${blocks[Number(i)]}]`)
-      if (parsed?.exercises) parsed.exercises = parsed.exercises.map((ex:any)=>({...ex, statement:ex.statement?ri(ex.statement):ex.statement}))
-      return parsed as T
-    } catch { return fallback }
-  }
+  // 1) Parse direct
+  try { return JSON.parse(cleaned) } catch {}
+  // 2) Protéger les blocs [GRAPH: {...}] par des placeholders puis parser.
+  //    Regex non-greedy jusqu'au "}]" → tolère accolades, guillemets et ascii multi-lignes (circuits/montages physique).
+  try {
+    const blocks: string[] = []
+    const rep = cleaned.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, j: string) => {
+      blocks.push(j); return `__G_${blocks.length - 1}__`
+    })
+    const parsed: any = JSON.parse(rep)
+    const ri = (s: any) => typeof s === 'string'
+      ? s.replace(/__G_(\d+)__/g, (_m: string, i: string) => `[GRAPH: ${blocks[Number(i)]}]`)
+      : s
+    if (parsed?.exercises) {
+      parsed.exercises = parsed.exercises.map((ex: any) => ({ ...ex, statement: ri(ex.statement), graph: ri(ex.graph) }))
+    }
+    return parsed as T
+  } catch {}
+  // 3) Dernier recours : retirer les blocs graphiques (exam valide, sans figure) plutôt que d'échouer complètement.
+  try {
+    const noGraph = cleaned
+      .replace(/\[GRAPH:\s*[\s\S]*?\}\s*\]/g, '')
+      .replace(/"graph"\s*:\s*"(?:[^"\\]|\\.)*"/g, '"graph": null')
+    return JSON.parse(noGraph) as T
+  } catch {}
+  return fallback
 }
 
 
@@ -4534,8 +4573,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4571,8 +4610,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4605,8 +4644,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('informatique')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4641,8 +4680,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4711,8 +4750,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('francais')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
@@ -4746,8 +4785,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('economie')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
@@ -4781,8 +4820,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('gestion')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
