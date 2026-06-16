@@ -211,7 +211,9 @@ const response = await fetchAnthropicWithRetry('https://api.anthropic.com/v1/mes
     'anthropic-version': '2023-06-01',
   },
   body: JSON.stringify(anthropicBody),
-}, { maxRetries: 2, overallTimeoutMs: 115000 })
+}, anthropicBody.stream
+    ? { maxRetries: 0, overallTimeoutMs: 240000 } // streaming : pas de retry, délai large (240s) — la connexion reste active, pour les générations lourdes (bac blanc maths/physique/svt)
+    : { maxRetries: 2, overallTimeoutMs: 115000 })
 
     // ── Mode streaming (SSE) : on relaie le flux Anthropic tel quel au client ──
     if (anthropicBody.stream) {

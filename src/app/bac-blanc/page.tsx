@@ -4560,8 +4560,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4597,8 +4597,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4631,8 +4631,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('informatique')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4667,8 +4667,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
 
@@ -4737,8 +4737,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('francais')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
@@ -4772,8 +4772,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('economie')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
@@ -4807,8 +4807,8 @@ function BacBlancInner() {
       incBbWeek()
       markPassedTodayForMatiere('gestion')
       setExam(e); setPhase('exam')
-    } catch {
-      alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
+    } catch (err) {
+      console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, hasActiveSubscription, checkMatiereAccess, checkQuota, incrementQuotaSub, simLimit, simUsed, nbMatieres])
 
