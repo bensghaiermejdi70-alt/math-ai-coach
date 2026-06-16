@@ -271,14 +271,40 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
+      stream: true, // SSE : les tokens arrivent en continu → on reste sous le timeout serveur 115s (comme le chat). Sans ça, les générations lourdes (maths/physique/svt avec graphiques) dépassaient le délai → spinner infini.
       messages: [{ role:'user', content:prompt }],
       type: 'simulations',
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
-  const d = await r.json()
-  return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
+  // ── Lecture du flux SSE : on accumule tout le texte, puis on le renvoie (même signature qu'avant) ──
+  const reader = r.body?.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let acc = ''
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+      for (const raw of lines) {
+        const line = raw.trim()
+        if (!line.startsWith('data:')) continue
+        const payload = line.slice(5).trim()
+        if (!payload || payload === '[DONE]') continue
+        let evt: any
+        try { evt = JSON.parse(payload) } catch { continue } // ligne SSE partielle : ignorée
+        if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+          acc += evt.delta.text
+        }
+      }
+    }
+  }
+  if (!acc) throw new Error('Réponse vide du serveur (streaming)')
+  return acc
 }
 
 function parseJSON<T>(raw: string, fallback: T): T {
