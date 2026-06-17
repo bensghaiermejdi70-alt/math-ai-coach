@@ -829,6 +829,20 @@ function stripIncompleteGraph(s: string): string {
   return s
 }
 
+// Rend lisible le JSON d'examen en cours de génération (aperçu live)
+function humanizeStream(s: string): string {
+  let t = s.replace(/\\n/g, '\n').replace(/\\"/g, '"')
+  t = t.replace(/\[GRAPH:[\s\S]*?\}\s*\]/g, '  📊 [figure]')
+  t = t.replace(/\[GRAPH:[\s\S]*$/, "  ✏️ rédaction d'un graphique…")
+  return t
+    .replace(/"(?:title|statement|graph|theme|sousTheme|num|points|duration|section|enonce|consigne)"\s*:/gi, '')
+    .replace(/[{}\[\]]/g, ' ')
+    .replace(/"\s*,\s*"/g, '\n').replace(/[",]/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: MatiereType, onDelta?: (full: string) => void): Promise<string> {
   // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const m = matiere || globalMatiere
@@ -948,7 +962,7 @@ function parseJSON<T>(raw: string, fallback: T): T {
 
 // ── Génération examen ─────────────────────────────────────────────
 async function generateOneExam(
-  archives: Archive[], customText: string, idx: number
+  archives: Archive[], customText: string, idx: number, onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
   const contextLines = archives.map(a =>
     `- ${a.section} ${a.year} Session ${a.session} | Thèmes: ${a.themes.join(', ')}`
@@ -1216,7 +1230,7 @@ ${isAnglaisExam ? `{
   ]
 }`}`
 
-  const raw = await askClaude(prompt, system, 5000)
+  const raw = await askClaude(prompt, system, 5000, undefined, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title:`${section} — Simulation Variante ${idx+1}`,
     section, duration:180, totalPoints:totalPts,
@@ -3552,7 +3566,7 @@ async function generateChapterExam(
   chapitres: { titre: string; badge: string; desc: string }[],
   sectionKey: string,
   sectionLabel: string,
-  idx: number
+  idx: number, onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
   const chapList = chapitres.map((c, i) => `Exercice ${i+1} — ${c.titre} (${c.badge}) : ${c.desc}`).join('\n')
   const totalPts = 20
@@ -3605,7 +3619,7 @@ ${chapitres.map((c,i)=>`    {
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 6000)
+  const raw = await askClaude(prompt, system, 6000, undefined, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title:`${sectionLabel} — Chapitres Variante ${idx+1}`,
     section:sectionLabel, duration:180, totalPoints:totalPts,
@@ -4330,6 +4344,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
+  const [liveGen, setLiveGen] = useState('') // examen qui s'écrit en direct
   const [error, setError] = useState('')
   const [currentIdx, setCurrentIdx] = useState(0)
   const started = useRef(false)
@@ -4348,8 +4363,9 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const generateNext = useCallback(async (idx: number) => {
     setGenerating(true)
     setError('')
+    setLiveGen('')
     try {
-      const exam = await generateOneExam(archives, customText, idx)
+      const exam = await generateOneExam(archives, customText, idx, (pp) => setLiveGen(pp))
       setExams(prev => [...prev, exam])
       setCurrentIdx(idx + 1)
       // Incrémenter quota dans Supabase
@@ -4405,6 +4421,10 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
           <div style={{padding:'18px 20px',background:'rgba(99,102,241,0.06)',border:'1px dashed rgba(99,102,241,0.3)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,minHeight:130}}>
             <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid rgba(99,102,241,0.2)',borderTopColor:'#6366f1',animation:'spin 0.8s linear infinite'}}/>
             <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>Generation de l&apos;examen {currentIdx+1}...</p>
+            {liveGen && (
+              <div style={{width:'100%',maxHeight:'34vh',overflowY:'auto',background:'rgba(0,0,0,0.18)',borderRadius:10,padding:'12px 14px',fontSize:12.5,lineHeight:1.6,color:'rgba(255,255,255,0.78)',whiteSpace:'pre-wrap',textAlign:'left'}}>{humanizeStream(liveGen).slice(-1400)}</div>
+            )}
+            {liveGen && <p style={{margin:0,fontSize:11,fontWeight:700,color:'#818cf8',fontVariantNumeric:'tabular-nums'}}>✍️ {liveGen.length.toLocaleString('fr-FR')} caractères rédigés…</p>}
           </div>
         )}
 
@@ -5644,7 +5664,9 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
     if (!corrections[nextIdx]) {
       setGenerating(true)
       try {
-        const text = await correctSingleExercise(exam, nextIdx, answers)
+        const text = await correctSingleExercise(exam, nextIdx, answers, (partial) => {
+          setCorrections(prev => ({ ...prev, [nextIdx]: stripIncompleteGraph(partial) }))
+        })
         setCorrections(prev => ({ ...prev, [nextIdx]: text }))
         if (onGraphExtracted) {
           const extracted = extractFirstGraph(text)
@@ -6336,6 +6358,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   globalMatiere = ((matiere ? matiereMapC[matiere] : null) || matiereActive || 'mathematiques') as MatiereType
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
+  const [liveGen, setLiveGen] = useState('') // examen qui s'écrit en direct
   const [error, setError] = useState('')
   const started = useRef(false)
 
@@ -6346,10 +6369,10 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   const limitReached = !isUnlimited && simUsed >= simLimit
 
   const generateNext = useCallback(async (idx: number) => {
-    setGenerating(true); setError('')
+    setGenerating(true); setError(''); setLiveGen('')
     try {
       const sectionKey = Object.values(CHAPITRES_PAR_SECTION).find(s=>s.label===sectionLabel)?.key || 'maths'
-      const exam = await generateChapterExam(chapitres, sectionKey, sectionLabel, idx)
+      const exam = await generateChapterExam(chapitres, sectionKey, sectionLabel, idx, (pp) => setLiveGen(pp))
       setExams(prev => [...prev, exam])
       await incrementQuotaSub('simulations')
     } catch(e) {
@@ -6416,6 +6439,10 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
             <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>
               Génération de l'examen ciblé sur<br/>{chapitres.map(c=>c.titre).join(', ')}...
             </p>
+            {liveGen && (
+              <div style={{width:'100%',maxHeight:'34vh',overflowY:'auto',background:'rgba(0,0,0,0.18)',borderRadius:10,padding:'12px 14px',fontSize:12.5,lineHeight:1.6,color:'rgba(255,255,255,0.78)',whiteSpace:'pre-wrap',textAlign:'left'}}>{humanizeStream(liveGen).slice(-1400)}</div>
+            )}
+            {liveGen && <p style={{margin:0,fontSize:11,fontWeight:700,color:'#34d399',fontVariantNumeric:'tabular-nums'}}>✍️ {liveGen.length.toLocaleString('fr-FR')} caractères rédigés…</p>}
           </div>
         )}
 
