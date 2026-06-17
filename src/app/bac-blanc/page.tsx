@@ -272,6 +272,7 @@ FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. I
 let onStreamProgress: ((full: string) => void) | null = null
 
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
+  const myProgress = onStreamProgress // capture le listener propre à CET appel (évite qu'une analyse de fond coupe le streaming d'une correction)
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -282,7 +283,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
-  if (!r.ok) { onStreamProgress = null; const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
+  if (!r.ok) { if (onStreamProgress === myProgress) onStreamProgress = null; const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
   // ── Lecture du flux SSE : on accumule tout le texte, puis on le renvoie (même signature qu'avant) ──
   const reader = r.body?.getReader()
   const decoder = new TextDecoder()
@@ -307,13 +308,13 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
           if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
             acc += evt.delta.text
             const now = Date.now()
-            if (onStreamProgress && now - lastEmit >= 70) { lastEmit = now; onStreamProgress(acc) } // throttle ~14 fps : fluide + léger
+            if (myProgress && now - lastEmit >= 70) { lastEmit = now; myProgress(acc) } // throttle ~14 fps : fluide + léger
           }
         }
       }
     }
   } finally {
-    onStreamProgress = null // auto-nettoyage : pas de fuite vers l'appel suivant (analyse, note, etc.)
+    if (onStreamProgress === myProgress) onStreamProgress = null // ne remet à null QUE son propre listener
   }
   if (!acc) throw new Error('Réponse vide du serveur (streaming)')
   return acc
@@ -1290,10 +1291,10 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
   const prompt = isAnglaisCorrection
     ? (withWork
       ? `EXAM: ${examTitle}\nEXERCISE TO CORRECT: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nSTUDENT'S ANSWER:\n${studentWork}\n\nWrite the COMPLETE correction of this exercise. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Detailed Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule / approach — WHY this method applies here]\n**Step-by-step answer:**\n- Step 1: [Action] → [Result]\n> **Answer:** [Final answer clearly stated]\n**Marking scheme — Question X:** [X] pts\n**Student's answer analysis:**\n✅ Correct: [what the student did well]\n❌ Incorrect: [what is wrong or missing]\n💡 Tip: [how to correct this error]\n---\n> **Summary ${exercise.title}:** [X]/${exercise.points} pts — [Global pedagogical comment]`
-      : `EXAM: ${examTitle}\nEXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nWrite the COMPLETE and EXHAUSTIVE correction. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Complete Correction (${exercise.points} pts)\n\n[For EACH numbered question:]\n### Question X —\n**Concept and method:** [Rule — explain WHY this approach is chosen]\n**Complete answer:**\n- Step 1: [Action + justification] → [Working] = [Result]\n> **Answer:** [Final answer]\n**Marking scheme:** [X] pts\n**Pedagogical note:** [Key grammar rule or writing tip]\n**Common mistake:** [Frequent error on this type of question and why it is wrong]\n---\n> **Key takeaway:** [2-3 rules or strategies to remember]`)
+      : `EXAM: ${examTitle}\nEXERCISE: ${exercise.title} — ${exercise.points} points out of ${totalPoints}\n\nFULL STATEMENT:\n${exercise.statement}\n\nWrite the COMPLETE correction. Cover EVERY numbered question, in order, skipping none. Be COMPLETE but DIRECT (no filler) and you MUST finish the whole exercise. ALL text MUST be in ENGLISH. Structure:\n\n## ${exercise.title} — Complete Correction (${exercise.points} pts)\n\n[For EACH numbered question, in order:]\n### Question X\n**Method:** [Rule / formula + why, in 1 sentence]\n**Solution:**\n- [Step → working = result]\n> **Answer:** [Final answer]\n**Marking scheme:** [X] pts\n\n[ONCE only, at the very end, after ALL questions are done:]\n---\n> **📌 Key takeaways & pitfalls:** [2-3 key formulas/methods + 1-2 common mistakes to avoid]`)
     : (withWork
       ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
-      : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`)
+      : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE de l'exercice. Traite TOUTES les sous-questions, dans l'ordre, sans en sauter aucune. Sois COMPLET mais DIRECT (va a l'essentiel, pas de remplissage) et termine IMPERATIVEMENT l'exercice entier. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question, dans l'ordre :]\n### Question X\n**Methode :** [Theoreme / formule + pourquoi, en 1 phrase]\n**Resolution :**\n- [Etape → calcul = resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n\n[UNE SEULE FOIS, a la toute fin, apres avoir traite TOUTES les questions :]\n---\n> **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques a eviter]`)
 
   return askClaude(prompt, system, 8000)
 }
