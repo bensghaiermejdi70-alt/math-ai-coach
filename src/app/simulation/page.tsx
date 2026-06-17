@@ -1442,73 +1442,58 @@ ${exercise.statement}
 REPONSE DE L'ELEVE :
 ${studentWork}${imageNote}
 
-Redige la correction COMPLETE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
-
+Redige la correction COMPLETE de cet exercice UNIQUEMENT, en analysant la copie de l'eleve. RÉPONDS UNIQUEMENT aux questions réellement posées — aucune variante ni alternative hypothétique. Sois COMPLET mais DIRECT (pas de remplissage) et traite TOUTES les sous-questions jusqu'à la dernière. Structure :
 ## ${exercise.title} — Correction detaillee (${exercise.points} pts)
+[Pour CHAQUE sous-question numerotee, dans l'ordre :]
 
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
+### Question X
+**Methode :** [Theoreme / formule / methode + pourquoi on l'applique ici, en 1-2 phrases]
 
-### Question X —
-**Concept utilise :** [Theoreme / formule / methode — et POURQUOI on l'applique ici specifiquement]
+**Resolution :**
+- [Etape : action precise → calcul visible = resultat]
+- [...continuer sans sauter d'etape jusqu'au resultat final]
 
-**Resolution etape par etape :**
-- Etape 1 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 2 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 3 : [Action precise] → [Resultat final]
+> **Resultat :** [Reponse finale]
 
-> **Resultat :** [Reponse finale encadree]
+**Bareme :** [X] pts
 
-**Verification :** [Controle du resultat quand c'est pertinent : substitution dans l'equation, coherence/ordre de grandeur, cas limite]
+**Analyse de la copie :** ✅ [ce que l'eleve a bien fait] · ❌ [ce qui est faux ou manquant + pourquoi] · 💡 [comment corriger]
 
-**Bareme question X :** [X] pts
-- [X] pt : [pour quoi exactement]
-- [X] pt : [pour quoi exactement]
-
-**Analyse reponse eleve :**
-✅ Correct : [ce que l'eleve a bien fait]
-❌ Incorrect : [ce qui est faux ou manquant, avec explication du pourquoi]
-💡 Conseil : [comment corriger cette erreur specifique]
-
-**Piege classique :** [L'erreur la plus frequente sur ce type de question et pourquoi elle est fausse]
+[A la toute fin, UNE SEULE FOIS, apres avoir traite TOUTES les questions :]
 
 ---
 
-> **Bilan ${exercise.title} :** [X]/${exercise.points} pts — [commentaire pedagogique global]`
+> **Bilan ${exercise.title} :** [X]/${exercise.points} pts — [points forts, points a travailler, 1-2 pieges classiques a retenir]`
     : `EXAMEN : ${examTitle}
 EXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
 
 ENONCE COMPLET :
 ${exercise.statement}
 
-Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
+Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT aux questions réellement posées — AUCUNE variante ni « alternative pédagogique » hypothétique. Sois COMPLET mais DIRECT (pas de remplissage) et traite TOUTES les sous-questions jusqu'à la dernière. Structure :
 
 ## ${exercise.title} — Correction complete (${exercise.points} pts)
 
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
+[Pour CHAQUE sous-question numerotee, dans l'ordre :]
 
-### Question X —
-**Concept et methode :** [Theoreme / formule appliquee — expliquer POURQUOI on choisit cette methode et pas une autre. Donner le theoreme exact avec ses conditions d'application.]
+### Question X
+**Methode :** [Theoreme / formule appliquee + pourquoi, en 1-2 phrases]
 
-**Demonstration complete :**
-- Etape 1 : [Action + justification theorique] → [Calcul complet visible] = [Resultat]
-- Etape 2 : [Action + justification] → [Calcul] = [Resultat]
-- Etape 3 : ... (continuer jusqu'au resultat final, AUCUNE etape sautee)
+**Resolution :**
+- [Etape : action + justification → calcul visible = resultat]
+- [...continuer sans sauter d'etape essentielle jusqu'au resultat final]
 
 > **Resultat :** [Reponse finale]
 
-**Verification :** [Controle du resultat quand c'est pertinent : substitution, coherence/ordre de grandeur, cas limite]
+**Bareme :** [X] pts — [demarche / calcul / conclusion]
 
-**Bareme :** [X] pts — [Detail : X pt pour la demarche, X pt pour le calcul, X pt pour la conclusion]
-
-**Point pedagogique important :** [Generalisation, remarque de methode, variante possible]
-
-**Erreur classique :** [Piege frequent sur CE TYPE PRECIS de question — explication detaillee de pourquoi c'est faux]
+[UNE SEULE FOIS, a la toute fin, apres avoir traite TOUTES les questions :]
 
 ---
 
-> **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`)
+> **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques frequentes a eviter sur ce type d'exercice]`)
 
-  return askClaude(prompt, system, 8000, undefined, onDelta)
+  return askClaude(prompt, system, 9000, undefined, onDelta)
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
