@@ -1262,8 +1262,8 @@ IMPORTANT: ALL your correction must be written in ENGLISH — never use French.
 Use markdown: ### for sections, **bold** for key answers, > for important points.`
     : isEcoCorrection
     ? `Tu es un professeur correcteur du Baccalauréat tunisien, section Sciences Économiques et de Gestion (Économie & Gestion, programme CNP).
-Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES.
-Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
+Tu rédiges des corrections COMPLÈTES, claires et pédagogiques.
+Donne toutes les étapes essentielles (l'élève doit comprendre sans autre ressource) mais sois DIRECT : pas de remplissage. RÉPONDS UNIQUEMENT aux questions réellement posées — n'ajoute aucune section hypothétique ou alternative. PRIORITÉ : traite TOUTES les questions jusqu'à la dernière et termine la correction.
 
 NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
 - QUESTIONS DE COURS / MOBILISATION : définis chaque notion avec précision, explique le mécanisme économique, illustre par un exemple.
@@ -1274,8 +1274,8 @@ NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
 Vocabulaire économique et comptable rigoureux. Données toujours accompagnées de leur unité et de leur source.
 Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.`
     : `Tu es un professeur correcteur du Baccalaureat tunisien, specialiste en mathematiques.
-Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
-Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
+Tu rediges des corrections COMPLETES, claires et pedagogiques.
+Donne toutes les etapes essentielles (l'eleve doit comprendre sans autre ressource) mais sois DIRECT : pas de remplissage. REPONDS UNIQUEMENT aux questions reellement posees — n'ajoute AUCUNE section hypothetique du type « Alternative pedagogique : si la propriete etait... ». PRIORITE : traite TOUTES les questions de l'exercice jusqu'a la derniere et termine la correction.
 Tu as suffisamment de tokens pour tout rediger. Ne t'arrete JAMAIS avant la fin. Ne dis JAMAIS "je vais resumer" ou "et ainsi de suite". Redige CHAQUE etape jusqu'au bout sans exception.
 
 NIVEAU DE DETAIL EXIGE (correction modele notee 20/20) :
@@ -1508,7 +1508,7 @@ Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structur
 
 > **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`)
 
-  return askClaude(prompt, system, 12000, undefined, onDelta)
+  return askClaude(prompt, system, 8000, undefined, onDelta)
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -5701,7 +5701,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
       {/* Stepper des exercices — lecture seule, navigation libre seulement sur exercices déjà corrigés */}
       <div style={{display:'flex',gap:8,marginBottom:28,flexWrap:'wrap',alignItems:'center'}}>
         {exam.exercises.map((ex, i) => {
-          const done = !!corrections[i]
+          const done = !!corrections[i] && !(i === currentIdx && generating) // ✓ seulement quand vraiment terminé (pas pendant le streaming)
           const active = i === currentIdx
           const locked = !done && i !== currentIdx
           const c = colors[i % colors.length]
@@ -5759,7 +5759,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
             {pdfMsg[currentIdx] && (
               <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'3px 10px',background:'rgba(16,185,129,0.1)',borderRadius:6}}>✓ {pdfMsg[currentIdx]}</span>
             )}
-            {currentCorrection && (
+            {!generating && currentCorrection && (
               <>
                 <button onClick={() => openExercisePdf(currentIdx)}
                   style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
@@ -5840,7 +5840,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
 
         {/* Analyse par exercice — apparaît après correction */}
         {/* Badge analyse → ouvre page pleine */}
-        {currentCorrection&&(
+        {!generating && currentCorrection&&(
           <div style={{margin:'8px 20px 12px',display:'flex',alignItems:'center',gap:10}}>
             {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]&&(
               <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:8,background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.15)',fontSize:12,color:'rgba(255,255,255,0.5)'}}>
@@ -5866,7 +5866,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
           </div>
         )}
         {/* Footer navigation */}
-        {currentCorrection && (
+        {!generating && currentCorrection && (
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
             <div style={{fontSize:12,color:'rgba(255,255,255,0.35)'}}>
               Exercice {currentIdx+1} / {totalEx} corrigé ✓
