@@ -2008,7 +2008,8 @@ RACINES : √x  √(2x+1) — JAMAIS sqrt
 FRACTIONS : (a+b)/(c+d)
 ENSEMBLES : ℝ  ℕ  ℤ  ℂ  ∈  ∪  ∩
 LOIS : B(n ; p)  N(μ ; σ²)
-GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
+GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ
+GRAPHIQUES DANS LES ÉNONCÉS : optionnels et 2D uniquement. Géométrie dans l'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace, produit vectoriel) → AUCUN graphique : laisse "graph":null et décris la figure en mots. Le format ne gère pas la 3D ; tenter une figure 3D fait planter la génération en fin de sujet. Énoncés CONCIS. Termine TOUJOURS le JSON complet (toutes les accolades et crochets fermés).`
 
   const jsonTemplate = '{\n'
     + '  "title": "' + (sec?.label||candidat.section) + ' - Bac Blanc France Jour ' + dayNum + '",\n'
