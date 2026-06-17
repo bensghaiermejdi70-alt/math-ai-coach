@@ -280,7 +280,8 @@ TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"]
 
 RÈGLE ABSOLUE : JAMAIS écrire [FIGURE : ...] ou [SCHÉMA : ...] — TOUJOURS générer le vrai [GRAPH: ...]
 Circuit/pile → TYPE 3 ascii · Courbe → TYPE 1 · Géo → TYPE 2 · JAMAIS expressions:[] vide
-FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. INTERDIT ABSOLU : dessiner une figure « à la main » en ascii hors TYPE 3, ou dans un bloc triple-backtick. Une transformation / repère / points / vecteurs / axe = TYPE 2 geometry COMPACT (≤ 8 formes, jamais une grille géante). Le triple-backtick est réservé UNIQUEMENT au code informatique — jamais pour une figure de maths / physique / SVT.`
+FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. INTERDIT ABSOLU : dessiner une figure « à la main » en ascii hors TYPE 3, ou dans un bloc triple-backtick. Une transformation / repère / points / vecteurs / axe = TYPE 2 geometry COMPACT (≤ 8 formes, jamais une grille géante). Le triple-backtick est réservé UNIQUEMENT au code informatique — jamais pour une figure de maths / physique / SVT.
+GÉOMÉTRIE DANS L'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace, produit vectoriel) → AUCUN graphique (le format ne gère pas la 3D). Décris la figure en mots, ne tente JAMAIS de dessiner une figure 3D.`
 
 
 let onStreamProgress: ((full: string) => void) | null = null
@@ -2021,7 +2022,7 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
 
   const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
 
-  const raw = await askClaude(prompt, system, 7000)
+  const raw = await askClaude(prompt, system, 8500)
 
   const fallback = prog.map((p, i) => ({
     num: i+1,
