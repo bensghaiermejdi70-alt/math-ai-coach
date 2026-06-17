@@ -279,39 +279,103 @@ TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","
 TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8]}]
 
 RÈGLE ABSOLUE : JAMAIS écrire [FIGURE : ...] ou [SCHÉMA : ...] — TOUJOURS générer le vrai [GRAPH: ...]
-Circuit/pile → TYPE 3 ascii · Courbe → TYPE 1 · Géo → TYPE 2 · JAMAIS expressions:[] vide`
+Circuit/pile → TYPE 3 ascii · Courbe → TYPE 1 · Géo → TYPE 2 · JAMAIS expressions:[] vide
+FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. INTERDIT ABSOLU : dessiner une figure « à la main » en ascii hors TYPE 3, ou dans un bloc triple-backtick. Une transformation / repère / points / vecteurs / axe = TYPE 2 geometry COMPACT (≤ 8 formes, jamais une grille géante). Le triple-backtick est réservé UNIQUEMENT au code informatique — jamais pour une figure de maths / physique / SVT.`
 
+
+let onStreamProgress: ((full: string) => void) | null = null
 
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
+  const myProgress = onStreamProgress // capture le listener propre à CET appel (évite qu'une analyse de fond coupe le streaming d'une correction)
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
+      stream: true, // SSE : les tokens arrivent en continu → on reste sous le timeout serveur 115s (comme le chat). Sans ça, les générations lourdes (maths/physique/svt avec graphiques) dépassaient le délai → spinner infini.
       messages: [{ role:'user', content:prompt }],
       type: 'simulations',
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
-  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
-  const d = await r.json()
-  return d.content?.map((b:any)=>b.type==='text'?b.text:'').join('') || ''
+  if (!r.ok) { if (onStreamProgress === myProgress) onStreamProgress = null; const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
+  // ── Lecture du flux SSE : on accumule tout le texte, puis on le renvoie (même signature qu'avant) ──
+  const reader = r.body?.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let acc = ''
+  let lastEmit = 0
+  try {
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const raw of lines) {
+          const line = raw.trim()
+          if (!line.startsWith('data:')) continue
+          const payload = line.slice(5).trim()
+          if (!payload || payload === '[DONE]') continue
+          let evt: any
+          try { evt = JSON.parse(payload) } catch { continue } // ligne SSE partielle : ignorée
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            acc += evt.delta.text
+            const now = Date.now()
+            if (myProgress && now - lastEmit >= 70) { lastEmit = now; myProgress(acc) } // throttle ~14 fps : fluide + léger
+          }
+        }
+      }
+    }
+  } finally {
+    if (onStreamProgress === myProgress) onStreamProgress = null // ne remet à null QUE son propre listener
+  }
+  if (!acc) throw new Error('Réponse vide du serveur (streaming)')
+  return acc
+}
+
+// Transforme du JSON partiel en flux de texte lisible (pour l'aperçu live du concours)
+function humanizeStream(s: string): string {
+  let t = s.replace(/\\n/g, '\n').replace(/\\"/g, '"')
+  t = t.replace(/\[GRAPH:[\s\S]*?\}\s*\]/g, '  📊 [figure]')      // graphes terminés → label compact
+  t = t.replace(/\[GRAPH:[\s\S]*$/, "  ✏️ rédaction d'un graphique…") // graphe en cours (non fermé) → indicateur d'activité (évite l'impression de blocage)
+  return t
+    .replace(/"(?:title|statement|graph|theme|sousTheme|num|points|duration|sectionKey|id|day)"\s*:/gi, '')
+    .replace(/[{}\[\]]/g, ' ')
+    .replace(/"\s*,\s*"/g, '\n').replace(/[",]/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
-  try { return JSON.parse(cleaned) }
-  catch {
-    try {
-      const blocks: string[] = []
-      let rep = cleaned.replace(/\[GRAPH:\s*(\{(?:[^{}]|\{[^{}]*\})*\})\]/g, (_m:string, j:string) => {
-        blocks.push(j); return `__G_${blocks.length-1}__`
-      })
-      const parsed = JSON.parse(rep)
-      const ri = (s:string) => s.replace(/__G_(\d+)__/g, (_m:string,i:string)=>`[GRAPH: ${blocks[Number(i)]}]`)
-      if (parsed?.exercises) parsed.exercises = parsed.exercises.map((ex:any)=>({...ex, statement:ex.statement?ri(ex.statement):ex.statement}))
-      return parsed as T
-    } catch { return fallback }
-  }
+  // 1) Parse direct
+  try { return JSON.parse(cleaned) } catch {}
+  // 2) Protéger les blocs [GRAPH: {...}] par des placeholders puis parser.
+  //    Regex non-greedy jusqu'au "}]" → tolère accolades, guillemets et ascii multi-lignes (circuits/montages physique).
+  try {
+    const blocks: string[] = []
+    const rep = cleaned.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, j: string) => {
+      blocks.push(j); return `__G_${blocks.length - 1}__`
+    })
+    const parsed: any = JSON.parse(rep)
+    const ri = (s: any) => typeof s === 'string'
+      ? s.replace(/__G_(\d+)__/g, (_m: string, i: string) => `[GRAPH: ${blocks[Number(i)]}]`)
+      : s
+    if (parsed?.exercises) {
+      parsed.exercises = parsed.exercises.map((ex: any) => ({ ...ex, statement: ri(ex.statement), graph: ri(ex.graph) }))
+    }
+    return parsed as T
+  } catch {}
+  // 3) Dernier recours : retirer les blocs graphiques (exam valide, sans figure) plutôt que d'échouer complètement.
+  try {
+    const noGraph = cleaned
+      .replace(/\[GRAPH:\s*[\s\S]*?\}\s*\]/g, '')
+      .replace(/"graph"\s*:\s*"(?:[^"\\]|\\.)*"/g, '"graph": null')
+    return JSON.parse(noGraph) as T
+  } catch {}
+  return fallback
 }
 
 // ── sanitizeExpr (identique simulation) ──────────────────────────
@@ -1061,7 +1125,7 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
   const withWork = studentWork.trim().length > 10
   const prompt = withWork
     ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
-    : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE et EXHAUSTIVE. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept et methode :** [Theoreme / formule — expliquer POURQUOI]\n**Demonstration complete :**\n- Etape 1 : [Action + justification] → [Calcul] = [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n**Point pedagogique important :** [Generalisation]\n**Erreur classique :** [Piege frequent]\n---\n> **A retenir :** [Formules ou methodes cles]`
+    : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE de l'exercice. Traite TOUTES les sous-questions, dans l'ordre, sans en sauter aucune. Sois COMPLET mais DIRECT (va a l'essentiel, pas de remplissage) et termine IMPERATIVEMENT l'exercice entier. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question, dans l'ordre :]\n### Question X\n**Methode :** [Theoreme / formule + pourquoi, en 1 phrase]\n**Resolution :**\n- [Etape → calcul = resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n\n[UNE SEULE FOIS, a la toute fin, apres avoir traite TOUTES les questions :]\n---\n> **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques a eviter]`
 
   return askClaude(prompt, system, 8000)
 }
@@ -1126,7 +1190,7 @@ NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
     + '  ]\n'
     + '}\n\nRÈGLE GRAPHIQUE ABSOLUE : si un exercice mentionne un circuit (RC, RL, RLC, pile), générer OBLIGATOIREMENT le champ \"graph\" avec type \"ascii\". JAMAIS écrire [FIGURE : ...] dans le statement — TOUJOURS générer le vrai [GRAPH: {...}].'
 
-  const raw = await askClaude(prompt, system, 5500)
+  const raw = await askClaude(prompt, system, 6500)
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1573,7 +1637,7 @@ NOTATION SVT OBLIGATOIRE :
     + '  ]\n'
     + '}'
 
-  const raw = await askClaude(prompt, system, 5500, 'svt')
+  const raw = await askClaude(prompt, system, 6500, 'svt')
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1649,7 +1713,7 @@ RÉPONSE JSON EXACTE :
 ${exJson}
 ]}`
 
-  const raw = await askClaude(prompt, system, 5000, 'informatique')
+  const raw = await askClaude(prompt, system, 6000, 'informatique')
   let data: any
   try {
     const clean = raw.replace(/```json|```/g,'').trim()
@@ -1957,7 +2021,7 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  μ`
 
   const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
 
-  const raw = await askClaude(prompt, system, 5500)
+  const raw = await askClaude(prompt, system, 7000)
 
   const fallback = prog.map((p, i) => ({
     num: i+1,
@@ -2695,7 +2759,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 // ════════════════════════════════════════════════════════════════════
 // PHASE 2 — GÉNÉRATION
 // ════════════════════════════════════════════════════════════════════
-function PhaseGenerating({candidat}:{candidat:Candidat}){
+function PhaseGenerating({candidat, live}:{candidat:Candidat; live?:string}){
   const sec=SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
   const secColor = sec?.color || '#4f6ef7'
   const secIcon  = sec?.icon  || '⚗️'
@@ -2703,6 +2767,9 @@ function PhaseGenerating({candidat}:{candidat:Candidat}){
   const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
   const [msgIdx,setMsgIdx]=useState(0)
   useEffect(()=>{const t=setInterval(()=>setMsgIdx(m=>(m+1)%msgs.length),2200);return()=>clearInterval(t)},[])
+  const preview = (live||'').trim() ? humanizeStream(live as string) : ''
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(()=>{ if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight },[preview])
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:28,color:'white',fontFamily:'system-ui'}}>
       <div style={{position:'relative',width:80,height:80}}>
@@ -2714,8 +2781,18 @@ function PhaseGenerating({candidat}:{candidat:Candidat}){
         <div style={{fontSize:20,fontWeight:800,color:secColor,marginBottom:10}}>Génération du Concours</div>
         <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
         <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
+        {(live||'').length>0 && (
+          <div style={{color:secColor,fontSize:12,fontWeight:700,marginTop:10,fontVariantNumeric:'tabular-nums'}}>
+            ✍️ {(live as string).length.toLocaleString('fr-FR')} caractères rédigés…
+          </div>
+        )}
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+      {preview && (
+        <div ref={scrollRef} style={{width:'min(680px,92vw)',maxHeight:'38vh',overflowY:'auto',background:'rgba(255,255,255,0.04)',border:`1px solid ${secColor}33`,borderRadius:14,padding:'16px 18px',fontSize:13.5,lineHeight:1.65,color:'rgba(255,255,255,0.82)',whiteSpace:'pre-wrap',textAlign:'left'}}>
+          {preview}<span style={{display:'inline-block',width:8,height:15,marginLeft:2,background:secColor,verticalAlign:'middle',animation:'blink 1s step-end infinite'}}/>
+        </div>
+      )}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes blink{50%{opacity:0}}`}</style>
     </div>
   )
 }
@@ -3516,6 +3593,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
   const [currentIdx,setCurrentIdx]=useState(0)
   const [corrections,setCorrections]=useState<Record<number,string>>({})
   const [generating,setGenerating]=useState(false)
+  const [liveCorr,setLiveCorr]=useState('') // correction qui s'écrit en direct (streaming)
   const [pdfMsg,setPdfMsg]=useState<Record<number,string>>({})
   // Analyse par exercice — déclenchée après chaque correction
   const [perExAnalysis,setPerExAnalysis]=useState<Record<number,AnalysisResult>>({})
@@ -3529,7 +3607,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
 
   const generateCurrent=useCallback(async()=>{
     if(generating||corrections[currentIdx])return
-    setGenerating(true)
+    setGenerating(true); setLiveCorr(''); onStreamProgress = setLiveCorr
     try{
       const text=await correctSingleExercise(exam,currentIdx,answers)
       setCorrections(prev=>({...prev,[currentIdx]:text}))
@@ -3563,7 +3641,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
     const nextIdx=currentIdx+1
     setCurrentIdx(nextIdx)
     if(!corrections[nextIdx]){
-      setGenerating(true)
+      setGenerating(true); setLiveCorr(''); onStreamProgress = setLiveCorr
       try{
         const text=await correctSingleExercise(exam,nextIdx,answers)
         setCorrections(prev=>({...prev,[nextIdx]:text}))
@@ -3690,6 +3768,9 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
           {/* Correction */}
           <div style={{padding:'20px 24px'}}>
             {generating&&!currentCorrection?(
+              liveCorr ? (
+                <div><p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.35)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 12px'}}>✍️ Correction en cours…</p><MD text={liveCorr}/></div>
+              ) : (
               <div style={{textAlign:'center',padding:'40px 20px'}}>
                 <div style={{fontSize:44,marginBottom:14,animation:'float 2s ease-in-out infinite'}}>⚡</div>
                 <h4 style={{color:'#e2e8f0',marginBottom:8,fontSize:16}}>Correction de l&apos;exercice {currentIdx+1}…</h4>
@@ -3698,6 +3779,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
                   <div style={{height:'100%',background:`linear-gradient(90deg,${colors[currentIdx%colors.length]},#10b981)`,borderRadius:3,animation:'slideBar 1.8s ease-in-out infinite'}}/>
                 </div>
               </div>
+              )
             ):currentCorrection?(
               <div>
                 <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>✅ Correction complète</p>
@@ -4110,6 +4192,7 @@ function BacBlancFranceInner() {
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
+  const [liveGen, setLiveGen] = useState('') // concours qui s'écrit en direct (streaming)
   const [exam, setExam] = useState<BacExam|null>(null)
   const [answers, setAnswers] = useState('')
   const [corrections, setCorrections] = useState<Record<number,string>>({})
@@ -4169,7 +4252,7 @@ function BacBlancFranceInner() {
     }
     globalMatiere = matiereKey
     setCandidat(c)
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const gen: Record<string, (cand: Candidat, d: number) => Promise<BacExam>> = {
         maths: generateBacBlanc,
@@ -4184,7 +4267,7 @@ function BacBlancFranceInner() {
       await incrementQuotaSub('simulations')
       incBbWeek()
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('inscription')
     }
   }, [isAdmin, hasActiveSubscription, checkMatiereAccess, simLimit, simUsed, dayNum, bbWeeklyLimit, incrementQuotaSub])
@@ -4215,14 +4298,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlanc(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4253,14 +4336,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancPhysiqueFR(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4289,14 +4372,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancInformatique(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('informatique')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4325,14 +4408,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancAnglais(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4361,14 +4444,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancSVT(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('svt')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4399,14 +4482,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancFrancais(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('francais')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4435,14 +4518,14 @@ function BacBlancFranceInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancEcoFR(candidat, dayNum)
       await incrementQuotaSub('simulations')
       incBbWeek()
       markPassedTodayForMatiere('eco-gestion')
       setExam(e); setPhase('exam')
-    } catch {
+    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
   }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
@@ -4513,7 +4596,7 @@ function BacBlancFranceInner() {
       onRetour={()=>setPhase('inscription')}
     />
   )
-  if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
+  if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat} live={liveGen}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
   if ((phase === 'grading' || phase === 'graded') && exam && candidat) return(
     <PhaseGrade exam={exam} grade={gradeResult} onSeeCorrection={handleSeeCorrection}/>
