@@ -972,8 +972,8 @@ async function generateOneExam(
   const totalPts = archives[0]?.sectionKey==='info' ? 20 : 20
 
   // Détecter la matière pour adapter le system prompt
-  const isPhysExam    = archives[0]?.sectionKey?.includes('phys') ?? false
-  const isAnglaisExam = archives[0]?.sectionKey?.includes('anglais') ?? false
+  const isPhysExam    = globalMatiere === 'physique' || (archives[0]?.sectionKey?.includes('phys') ?? false)
+  const isAnglaisExam = globalMatiere === 'anglais' || (archives[0]?.sectionKey?.includes('anglais') ?? false)
   const isEcoExam     = globalMatiere === 'economie'
   const isGestionExam = globalMatiere === 'gestion'
 
@@ -1067,7 +1067,7 @@ FORMAT 6 — SCHÉMA CIRCUIT ÉLECTRIQUE (ASCII) :
 [GRAPH: {"type":"ascii","title":"Circuit RC série","content":"\n  ┌───┤R├────┬───┐\n  │          │   │\n  E(t)      ═╪═ C  u_C\n  │          │   │\n  └──────────┴───┘","legend":["R: résistance (Ω)","C: condensateur (F)","E(t): générateur","u_C: tension condensateur"]}]
 
 RÈGLES ABSOLUES :
-- Le graphique va dans le champ "graph" SÉPARÉ — PAS dans "statement" — pour éviter les guillemets imbriqués
+- Maths en Unicode dans "statement" : x², √x, e^(x), uₙ, ∞, ≤, ≥, →, ℝ, ∫, lim — JAMAIS de LaTeX ni de symboles $ ou $$ (interdits) — PAS dans "statement" — pour éviter les guillemets imbriqués
 - Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" OU null si pas de graphique
 - INTERDIT dans shapes : "line3d", "point3d", "segment3d" — utiliser "segment","point","vector","line"
 - Expressions JS : JAMAIS x^2 ou x^3 — TOUJOURS x*x ou x*x*x | JAMAIS 2x — TOUJOURS 2*x
@@ -1493,7 +1493,7 @@ Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT au
 
 > **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques frequentes a eviter sur ce type d'exercice]`)
 
-  return askClaude(prompt, system, 9000, undefined, onDelta)
+  return askClaude(prompt, system, 10000, undefined, onDelta)
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -2827,13 +2827,38 @@ if (typeof document !== 'undefined' && !document.getElementById('mb-vec-style'))
   document.head.appendChild(_st)
 }
 
+// Nettoie le LaTeX résiduel ($...$, \lim, \frac, \mathbb, exposants…) → Unicode lisible
+function cleanLatex(s: string): string {
+  if (!s) return s
+  let t = s
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$\n]+?)\$/g, '$1')
+  t = t.replace(/\\left|\\right|\\!|\\;|\\:|\\displaystyle/g, '').replace(/\\,/g, ' ').replace(/\\quad|\\qquad/g, '  ')
+       .replace(/\\text\s*\{([^}]*)\}/g, '$1').replace(/\\mathrm\s*\{([^}]*)\}/g, '$1').replace(/\\operatorname\s*\{([^}]*)\}/g, '$1')
+  t = t.replace(/\\lim_?\s*\{([^}]*)\}/g, 'lim($1)').replace(/\\lim\b/g, 'lim')
+       .replace(/\\sum_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u03A3[$1\u2192$2]').replace(/\\sum\b/g, '\u03A3')
+       .replace(/\\int_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u222B[$1\u2192$2]').replace(/\\int\b/g, '\u222B')
+       .replace(/\\sqrt\s*\{([^}]*)\}/g, '\u221A($1)').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '($1)/($2)')
+       .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '$1\u20D7').replace(/\\vec\s*\{([^}]*)\}/g, '$1\u20D7')
+  const sym: Record<string, string> = { 'to':'\u2192','rightarrow':'\u2192','Rightarrow':'\u21D2','infty':'\u221E','cdot':'\u00B7','times':'\u00D7','div':'\u00F7','pm':'\u00B1','mp':'\u2213','leq':'\u2264','le':'\u2264','geq':'\u2265','ge':'\u2265','neq':'\u2260','approx':'\u2248','equiv':'\u2261','notin':'\u2209','in':'\u2208','subset':'\u2282','cup':'\u222A','cap':'\u2229','forall':'\u2200','exists':'\u2203','partial':'\u2202','nabla':'\u2207','alpha':'\u03B1','beta':'\u03B2','gamma':'\u03B3','delta':'\u03B4','theta':'\u03B8','lambda':'\u03BB','mu':'\u00B5','pi':'\u03C0','rho':'\u03C1','sigma':'\u03C3','tau':'\u03C4','phi':'\u03C6','omega':'\u03C9','Delta':'\u0394','Omega':'\u03A9','Sigma':'\u03A3','Phi':'\u03A6' }
+  for (const k of Object.keys(sym)) t = t.replace(new RegExp('\\\\' + k + '\\b', 'g'), sym[k])
+  t = t.replace(/\\mathbb\s*\{R\}/g, '\u211D').replace(/\\mathbb\s*\{N\}/g, '\u2115').replace(/\\mathbb\s*\{Z\}/g, '\u2124').replace(/\\mathbb\s*\{Q\}/g, '\u211A').replace(/\\mathbb\s*\{C\}/g, '\u2102')
+  const sup: Record<string, string> = { '0':'\u2070','1':'\u00B9','2':'\u00B2','3':'\u00B3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','+':'\u207A','-':'\u207B','n':'\u207F','i':'\u2071' }
+  const sub: Record<string, string> = { '0':'\u2080','1':'\u2081','2':'\u2082','3':'\u2083','4':'\u2084','5':'\u2085','6':'\u2086','7':'\u2087','8':'\u2088','9':'\u2089','n':'\u2099','i':'\u1D62','k':'\u2096','+':'\u208A','-':'\u208B' }
+  t = t.replace(/\^\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sup) ? [...g].map((c: string) => sup[c]).join('') : '^(' + g + ')')
+       .replace(/\^([0-9])/g, (_m: string, g: string) => sup[g] || ('^' + g))
+       .replace(/_\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sub) ? [...g].map((c: string) => sub[c]).join('') : '_' + g)
+       .replace(/_([0-9nik])/g, (_m: string, g: string) => sub[g] || ('_' + g))
+  t = t.replace(/\\\\/g, ' ').replace(/\\[a-zA-Z]+/g, (m: string) => m.slice(1))
+  return t
+}
+
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
   return (
     <div>
       {segments.map((seg, i) => {
         if (seg.type === 'text') {
-          return seg.content ? <MDLines key={i} text={seg.content} /> : null
+          return seg.content ? <MDLines key={i} text={cleanLatex(seg.content)} /> : null
         } else {
           try {
             const spec: GraphSpec = JSON.parse(seg.content)
@@ -2861,6 +2886,8 @@ function buildCorrectionHtml(
   autoDownload = false,
   graphImages: string[] = []
 ): string {
+
+  correctionText = cleanLatex(correctionText)
 
   const C = {
     ex:  ['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'],
@@ -3558,9 +3585,14 @@ async function generateChapterExam(
   const nEx = Math.max(chapitres.length, 3)
 
   const isEcoGes = globalMatiere === 'economie' || globalMatiere === 'gestion'
+  const isPhys = globalMatiere === 'physique'
   const system = isEcoGes
     ? `Tu es un auteur expert de sujets d'ÉCONOMIE et de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
 Tu crées des sujets ORIGINAUX : questions de cours, travail sur documents statistiques (tableaux, graphiques), calculs (économie : taux de variation, indices, taux de couverture, IDH ; gestion : FDR, BFR, TN, MCV, seuil de rentabilité, CUMP), études de cas d'entreprise.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isPhys
+    ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
+Tu crées des sujets ORIGINAUX de physique-chimie (mécanique, électricité, ondes, chimie) avec des valeurs et UNITÉS physiques réalistes (N, J, V, A, Ω, mol, m/s…). Schémas de circuits/montages via le champ "graph" type ascii si pertinent.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
@@ -4643,7 +4675,7 @@ function PhaseExam({ exam, onSubmit }: {
         </div>
         <div class="exercice-body">
           ${hasG?'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>':''}
-          <p style="white-space:pre-wrap">${esc2(ex.statement)}</p>
+          <p style="white-space:pre-wrap">${esc2(cleanLatex(ex.statement))}</p>
         </div>
       </div>`
     }).join('\n')
@@ -6018,7 +6050,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
       .replace(/\*(.+?)\*/g,'<em>$1</em>')
       .replace(/`(.+?)`/g,'<code>$1</code>')
 
-    const feedbackHtml = feedback.split('\n').map(line => {
+    const feedbackHtml = cleanLatex(feedback).split('\n').map(line => {
       const t = line.trim()
       if (!t) return '<div style="height:5px"></div>'
       if (t.startsWith('## ')) return '<h3 style="color:#a5b4fc;font-size:14px;font-weight:800;margin:18px 0 8px">'+md2html(t.slice(3))+'</h3>'
@@ -6048,7 +6080,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
         +' · '+esc(ex.objective)+'</div></div>'
       +'<div class="section-label" style="color:#94a3b8">Énoncé</div>'
       +'<div class="enonce">'+''+'</div>'
-      +'<div class="enonce-text">'+ex.statement+'</div>'
+      +'<div class="enonce-text">'+cleanLatex(ex.statement)+'</div>'
       +hintHtml
       +answerHtml
       +'<div class="correction-block"><h2>🤖 Correction IA personnalisée</h2>'+feedbackHtml+'</div>'
