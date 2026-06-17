@@ -419,7 +419,7 @@ export default function HomePage() {
 
       </main>
       <Footer />
-      <style>{V2_CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: V2_CSS }} />
     </>
   )
 }
