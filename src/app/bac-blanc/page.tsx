@@ -266,6 +266,10 @@ RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→
 JAMAIS expressions:[] vide · JAMAIS geometry pour une pile`
 
 
+// Écouteur de flux : appelé à chaque token pendant la génération (affichage en direct).
+// askClaude le remet à null tout seul à la fin → aucune fuite entre concours / correction / analyse.
+let onStreamProgress: ((full: string) => void) | null = null
+
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
   const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -277,34 +281,54 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
-  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
+  if (!r.ok) { onStreamProgress = null; const e = await r.json().catch(()=>({})); throw new Error(e.error||`HTTP ${r.status}`) }
   // ── Lecture du flux SSE : on accumule tout le texte, puis on le renvoie (même signature qu'avant) ──
   const reader = r.body?.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
   let acc = ''
-  if (reader) {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      const lines = buffer.split('\n')
-      buffer = lines.pop() || ''
-      for (const raw of lines) {
-        const line = raw.trim()
-        if (!line.startsWith('data:')) continue
-        const payload = line.slice(5).trim()
-        if (!payload || payload === '[DONE]') continue
-        let evt: any
-        try { evt = JSON.parse(payload) } catch { continue } // ligne SSE partielle : ignorée
-        if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
-          acc += evt.delta.text
+  let lastEmit = 0
+  try {
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+        for (const raw of lines) {
+          const line = raw.trim()
+          if (!line.startsWith('data:')) continue
+          const payload = line.slice(5).trim()
+          if (!payload || payload === '[DONE]') continue
+          let evt: any
+          try { evt = JSON.parse(payload) } catch { continue } // ligne SSE partielle : ignorée
+          if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+            acc += evt.delta.text
+            const now = Date.now()
+            if (onStreamProgress && now - lastEmit >= 70) { lastEmit = now; onStreamProgress(acc) } // throttle ~14 fps : fluide + léger
+          }
         }
       }
     }
+  } finally {
+    onStreamProgress = null // auto-nettoyage : pas de fuite vers l'appel suivant (analyse, note, etc.)
   }
   if (!acc) throw new Error('Réponse vide du serveur (streaming)')
   return acc
+}
+
+// Transforme du JSON partiel en flux de texte lisible (pour l'aperçu live du concours)
+function humanizeStream(s: string): string {
+  return s
+    .replace(/\\n/g, '\n').replace(/\\"/g, '"')
+    .replace(/\[GRAPH:[\s\S]*?\}\s*\]/g, '  [figure…]')
+    .replace(/"(?:title|statement|graph|theme|sousTheme|num|points|duration|sectionKey|id|day)"\s*:/gi, '')
+    .replace(/[{}\[\]]/g, ' ')
+    .replace(/"\s*,\s*"/g, '\n').replace(/[",]/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function parseJSON<T>(raw: string, fallback: T): T {
@@ -3077,7 +3101,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
 // ════════════════════════════════════════════════════════════════════
 // PHASE 2 — GÉNÉRATION
 // ════════════════════════════════════════════════════════════════════
-function PhaseGenerating({candidat}:{candidat:Candidat}){
+function PhaseGenerating({candidat, live}:{candidat:Candidat; live?:string}){
   const sec=SECTIONS.find(s=>s.key===candidat.sectionKey)
   const secColor = sec?.color || '#06d6a0'
   const secIcon  = sec?.icon  || '⚗️'
@@ -3085,8 +3109,11 @@ function PhaseGenerating({candidat}:{candidat:Candidat}){
   const msgs=['Analyse du programme officiel…','Création des exercices…','Vérification du niveau Bac…','Finalisation du concours…']
   const [msgIdx,setMsgIdx]=useState(0)
   useEffect(()=>{const t=setInterval(()=>setMsgIdx(m=>(m+1)%msgs.length),2200);return()=>clearInterval(t)},[])
+  const preview = (live||'').trim() ? humanizeStream(live as string) : ''
+  const scrollRef = useRef<HTMLDivElement>(null)
+  useEffect(()=>{ if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight },[preview])
   return(
-    <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:28,color:'white',fontFamily:'system-ui'}}>
+    <div style={{minHeight:'100vh',background:'#0a0a1a',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:24,color:'white',fontFamily:'system-ui',padding:'24px 16px'}}>
       <div style={{position:'relative',width:80,height:80}}>
         <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}20`}}/>
         <div style={{position:'absolute',inset:0,borderRadius:'50%',border:`3px solid ${secColor}`,borderTopColor:'transparent',animation:'spin 1s linear infinite'}}/>
@@ -3097,7 +3124,12 @@ function PhaseGenerating({candidat}:{candidat:Candidat}){
         <div style={{color:'rgba(255,255,255,0.6)',fontSize:15,marginBottom:6}}>{candidat.prenom} {candidat.nom} · {secLabel}</div>
         <div style={{color:'rgba(255,255,255,0.35)',fontSize:13,animation:'fadeIn 0.5s ease',transition:'all 0.4s'}}>{msgs[msgIdx]}</div>
       </div>
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`}</style>
+      {preview && (
+        <div ref={scrollRef} style={{width:'min(680px,92vw)',maxHeight:'38vh',overflowY:'auto',background:'rgba(255,255,255,0.04)',border:`1px solid ${secColor}33`,borderRadius:14,padding:'16px 18px',fontSize:13.5,lineHeight:1.65,color:'rgba(255,255,255,0.82)',whiteSpace:'pre-wrap',textAlign:'left'}}>
+          {preview}<span style={{display:'inline-block',width:8,height:15,marginLeft:2,background:secColor,verticalAlign:'middle',animation:'blink 1s step-end infinite'}}/>
+        </div>
+      )}
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes blink{50%{opacity:0}}`}</style>
     </div>
   )
 }
@@ -3899,6 +3931,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
   const [currentIdx,setCurrentIdx]=useState(0)
   const [corrections,setCorrections]=useState<Record<number,string>>({})
   const [generating,setGenerating]=useState(false)
+  const [liveCorr,setLiveCorr]=useState('') // correction qui s'écrit en direct (streaming)
   const [pdfMsg,setPdfMsg]=useState<Record<number,string>>({})
   // Analyse par exercice — déclenchée après chaque correction
   const [perExAnalysis,setPerExAnalysis]=useState<Record<number,AnalysisResult>>({})
@@ -3912,7 +3945,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
 
   const generateCurrent=useCallback(async()=>{
     if(generating||corrections[currentIdx])return
-    setGenerating(true)
+    setGenerating(true); setLiveCorr(''); onStreamProgress = setLiveCorr
     try{
       const text=await correctSingleExercise(exam,currentIdx,answers)
       setCorrections(prev=>({...prev,[currentIdx]:text}))
@@ -3946,7 +3979,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
     const nextIdx=currentIdx+1
     setCurrentIdx(nextIdx)
     if(!corrections[nextIdx]){
-      setGenerating(true)
+      setGenerating(true); setLiveCorr(''); onStreamProgress = setLiveCorr
       try{
         const text=await correctSingleExercise(exam,nextIdx,answers)
         setCorrections(prev=>({...prev,[nextIdx]:text}))
@@ -4073,6 +4106,12 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
           {/* Correction */}
           <div style={{padding:'20px 24px'}}>
             {generating&&!currentCorrection?(
+              liveCorr?(
+              <div>
+                <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>✍️ Correction en cours…</p>
+                <MD text={liveCorr}/>
+              </div>
+              ):(
               <div style={{textAlign:'center',padding:'40px 20px'}}>
                 <div style={{fontSize:44,marginBottom:14,animation:'float 2s ease-in-out infinite'}}>⚡</div>
                 <h4 style={{color:'#e2e8f0',marginBottom:8,fontSize:16}}>Correction de l&apos;exercice {currentIdx+1}…</h4>
@@ -4081,6 +4120,7 @@ function PhaseCorrection({exam,candidat,answers,onFinish,onGraphExtracted}:{
                   <div style={{height:'100%',background:`linear-gradient(90deg,${colors[currentIdx%colors.length]},#10b981)`,borderRadius:3,animation:'slideBar 1.8s ease-in-out infinite'}}/>
                 </div>
               </div>
+              )
             ):currentCorrection?(
               <div>
                 <p style={{fontSize:11,fontWeight:700,color:'rgba(255,255,255,0.3)',textTransform:'uppercase',letterSpacing:'0.08em',margin:'0 0 14px'}}>✅ Correction complète</p>
@@ -4494,6 +4534,7 @@ function BacBlancInner() {
   const [phase, setPhase] = useState<Phase>('inscription')
   const [candidat, setCandidat] = useState<Candidat|null>(null)
   const [exam, setExam] = useState<BacExam|null>(null)
+  const [liveGen, setLiveGen] = useState('') // texte du concours qui s'écrit en direct (streaming)
   const [answers, setAnswers] = useState('')
   const [corrections, setCorrections] = useState<Record<number,string>>({})
   const [analysis, setAnalysis] = useState<AnalysisResult|null>(null)
@@ -4566,7 +4607,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlanc(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4603,7 +4644,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancPhysique(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4637,7 +4678,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancInfo(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4673,7 +4714,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancAnglais(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4708,7 +4749,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancSVT(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4743,7 +4784,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancFrancais(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4778,7 +4819,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancEconomie(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4813,7 +4854,7 @@ function BacBlancInner() {
       alert('⚠️ Limite Bac Blanc atteinte : ' + bbWeekCount() + ' examen(s) cette semaine (max ' + bbWeeklyLimit + '/semaine). Revenez la semaine prochaine.')
       return
     }
-    setPhase('generating')
+    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancGestion(candidat, dayNum)
       await incrementQuotaSub('simulations')
@@ -4897,7 +4938,7 @@ function BacBlancInner() {
       weeklyLimit={bbWeeklyLimit}
     />
   )
-  if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat}/>
+  if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat} live={liveGen}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
   if ((phase === 'grading' || phase === 'graded') && exam && candidat) return(
     <PhaseGrade exam={exam} grade={gradeResult} onSeeCorrection={handleSeeCorrection}/>
