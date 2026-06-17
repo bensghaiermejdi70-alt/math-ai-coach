@@ -264,7 +264,8 @@ TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","
 TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8],"colors":["#6366f1","#10b981"]}]
 RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
 JAMAIS expressions:[] vide · JAMAIS geometry pour une pile
-FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. INTERDIT ABSOLU : dessiner une figure « à la main » en ascii hors TYPE 3, ou dans un bloc triple-backtick. Une transformation / repère / points / vecteurs / axe de glissement = TYPE 2 geometry COMPACT (≤ 8 formes, jamais une grille géante). Le triple-backtick est réservé UNIQUEMENT au code informatique — jamais pour une figure de maths / physique / SVT.`
+FIGURE/SCHÉMA = TOUJOURS un des 5 [GRAPH:...] ci-dessus, sur UNE seule ligne. INTERDIT ABSOLU : dessiner une figure « à la main » en ascii hors TYPE 3, ou dans un bloc triple-backtick. Une transformation / repère / points / vecteurs / axe de glissement = TYPE 2 geometry COMPACT (≤ 8 formes, jamais une grille géante). Le triple-backtick est réservé UNIQUEMENT au code informatique — jamais pour une figure de maths / physique / SVT.
+GÉOMÉTRIE DANS L'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace, produit vectoriel) → AUCUN graphique (le format ne gère pas la 3D). Décris la figure en mots, ne tente JAMAIS de dessiner une figure 3D.`
 
 
 // Écouteur de flux : appelé à chaque token pendant la génération (affichage en direct).
@@ -1928,6 +1929,7 @@ GRAPHIQUES — CHAMP "graph" SÉPARÉ du "statement" :
 FORMAT COURBE : [GRAPH: {"type":"function","expressions":["(2*x+1)*Math.exp(-x)+1"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
 FORMAT GÉO : [GRAPH: {"type":"geometry","title":"Figure","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"triangle","points":[{"x":0,"y":0,"label":"A"},{"x":4,"y":0,"label":"B"},{"x":1,"y":3,"label":"C"}],"fill":"#6366f120"}]}]
 - INTERDIT dans shapes : "line3d","point3d","segment3d"
+- GÉOMÉTRIE DANS L'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace, produit vectoriel) → "graph":null OBLIGATOIRE, décris la figure en mots. Le format ne gère pas la 3D ; tenter une figure 3D fait planter la génération en fin de sujet.
 - Expressions JS : Math.exp déjà présent → NE PAS re-préfixer | JAMAIS x^2 → x*x | JAMAIS 2x → 2*x
 
 Réponds avec CE JSON EXACT (aucun texte avant ou après) :
@@ -1972,7 +1974,7 @@ Réponds avec CE JSON EXACT (aucun texte avant ou après) :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 7000)
+  const raw = await askClaude(prompt, system, 8500)
   const parsed = parseJSON<Omit<BacExam,'id'|'day'|'date'|'sectionKey'|'index'>>(raw, {
     title:`Bac Blanc — ${sec?.label||candidat.section} — Jour ${dayNum}`,
     section:sec?.label||candidat.section, duration:sec?.duration||180, totalPoints:20,
