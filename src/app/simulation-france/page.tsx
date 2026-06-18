@@ -5801,7 +5801,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
       {/* Stepper des exercices — lecture seule, navigation libre seulement sur exercices déjà corrigés */}
       <div style={{display:'flex',gap:8,marginBottom:28,flexWrap:'wrap',alignItems:'center'}}>
         {exam.exercises.map((ex, i) => {
-          const done = !!corrections[i]
+          const done = !!corrections[i] && !(i === currentIdx && generating)
           const active = i === currentIdx
           const locked = !done && i !== currentIdx
           const c = colors[i % colors.length]
@@ -5859,7 +5859,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
             {pdfMsg[currentIdx] && (
               <span style={{fontSize:11,color:'#6ee7b7',fontWeight:600,padding:'3px 10px',background:'rgba(16,185,129,0.1)',borderRadius:6}}>✓ {pdfMsg[currentIdx]}</span>
             )}
-            {currentCorrection && (
+            {!generating && currentCorrection && (
               <>
                 <button onClick={() => openExercisePdf(currentIdx)}
                   style={{display:'flex',alignItems:'center',gap:6,padding:'7px 13px',
@@ -5940,7 +5940,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
 
         {/* Analyse par exercice — apparaît après correction */}
         {/* Badge analyse → ouvre page pleine */}
-        {currentCorrection&&(
+        {!generating && currentCorrection&&(
           <div style={{margin:'8px 20px 12px',display:'flex',alignItems:'center',gap:10}}>
             {analyzingEx===currentIdx&&!perExAnalysis[currentIdx]&&(
               <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:8,background:'rgba(99,102,241,0.06)',border:'1px solid rgba(99,102,241,0.15)',fontSize:12,color:'rgba(255,255,255,0.5)'}}>
@@ -5966,7 +5966,7 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
           </div>
         )}
         {/* Footer navigation */}
-        {currentCorrection && (
+        {!generating && currentCorrection && (
           <div style={{padding:'16px 24px',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:12}}>
             <div style={{fontSize:12,color:'rgba(255,255,255,0.35)'}}>
               Exercice {currentIdx+1} / {totalEx} corrigé ✓
