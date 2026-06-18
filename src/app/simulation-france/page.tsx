@@ -322,6 +322,20 @@ function stripIncompleteGraph(s: string): string {
   return s
 }
 
+// Rend lisible le JSON d'examen en cours de génération (aperçu live)
+function humanizeStream(s: string): string {
+  let t = s.replace(/\\n/g, '\n').replace(/\\"/g, '"')
+  t = t.replace(/\[GRAPH:[\s\S]*?\}\s*\]/g, '  📊 [figure]')
+  t = t.replace(/\[GRAPH:[\s\S]*$/, "  ✏️ rédaction d'un graphique…")
+  return t
+    .replace(/"(?:title|statement|graph|theme|sousTheme|num|points|duration|section|enonce|consigne)"\s*:/gi, '')
+    .replace(/[{}\[\]]/g, ' ')
+    .replace(/"\s*,\s*"/g, '\n').replace(/[",]/g, ' ')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string, onDelta?: (full: string) => void): Promise<string> {
   // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const body = {
@@ -404,6 +418,28 @@ function extractImagesFromText(text: string): { images: { data: string; mediaTyp
   return { images, cleanText }
 }
 
+// Répare un JSON tronqué (coupé par maxTokens/timeout) : ferme chaînes/accolades/crochets ouverts
+function repairTruncatedJson(s: string): string {
+  let inStr = false, esc = false
+  const stack: string[] = []
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (esc) { esc = false; continue }
+    if (c === '\\') { esc = true; continue }
+    if (c === '"') { inStr = !inStr; continue }
+    if (inStr) continue
+    if (c === '{' || c === '[') stack.push(c)
+    else if (c === '}' || c === ']') stack.pop()
+  }
+  let r = s
+  if (inStr) r += '"'
+  r = r.replace(/,\s*$/, '')
+  r = r.replace(/"[^"]*"\s*:\s*$/, '')
+  r = r.replace(/,\s*$/, '')
+  for (let i = stack.length - 1; i >= 0; i--) r += stack[i] === '{' ? '}' : ']'
+  return r
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   try { return JSON.parse(cleaned) }
@@ -432,14 +468,16 @@ function parseJSON<T>(raw: string, fallback: T): T {
       }
       return parsed as T
     } catch {
-      return fallback
+      // Stratégie 3 : JSON tronqué (coupé) → fermer les structures ouvertes et re-parser
+      try { return JSON.parse(repairTruncatedJson(cleaned)) as T }
+      catch { return fallback }
     }
   }
 }
 
 // ── Génération examen ─────────────────────────────────────────────
 async function generateOneExam(
-  archives: Archive[], customText: string, idx: number, matiere: string = 'mathematiques'
+  archives: Archive[], customText: string, idx: number, matiere: string = 'mathematiques', onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
   const contextLines = archives.map(a =>
     `- ${a.section} ${a.year} Session ${a.session} | Thèmes: ${a.themes.join(', ')}`
@@ -704,7 +742,7 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000, matiere)
+  const raw = await askClaude(prompt, system, 5000, matiere, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title: isAnglais ? `LLCER Anglais — Simulation Variante ${idx+1}` : `${section} — Simulation Variante ${idx+1}`,
     section: isAnglais ? 'Terminale LLCER Anglais' : section,
@@ -955,73 +993,80 @@ ${exercise.statement}
 REPONSE DE L'ELEVE :
 ${studentWork}${imageNote}
 
-Redige la correction COMPLETE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
-
+Redige la correction COMPLETE de cet exercice UNIQUEMENT, en analysant la copie de l'eleve. RÉPONDS UNIQUEMENT aux questions réellement posées — aucune variante ni alternative hypothétique. Sois COMPLET mais DIRECT (pas de remplissage) et traite TOUTES les sous-questions jusqu'à la dernière. Structure :
 ## ${exercise.title} — Correction detaillee (${exercise.points} pts)
+[Pour CHAQUE sous-question numerotee, dans l'ordre :]
 
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
+### Question X
+**Methode :** [Theoreme / formule / methode + pourquoi on l'applique ici, en 1-2 phrases]
 
-### Question X —
-**Concept utilise :** [Theoreme / formule / methode — et POURQUOI on l'applique ici specifiquement]
+**Resolution :**
+- [Etape : action precise → calcul visible = resultat]
+- [...continuer sans sauter d'etape jusqu'au resultat final]
 
-**Resolution etape par etape :**
-- Etape 1 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 2 : [Action precise] → [Resultat intermediaire avec calcul visible]
-- Etape 3 : [Action precise] → [Resultat final]
+> **Resultat :** [Reponse finale]
 
-> **Resultat :** [Reponse finale encadree]
+**Bareme :** [X] pts
 
-**Verification :** [Controle du resultat quand c'est pertinent : substitution dans l'equation, coherence/ordre de grandeur, cas limite]
+**Analyse de la copie :** ✅ [ce que l'eleve a bien fait] · ❌ [ce qui est faux ou manquant + pourquoi] · 💡 [comment corriger]
 
-**Bareme question X :** [X] pts
-- [X] pt : [pour quoi exactement]
-- [X] pt : [pour quoi exactement]
-
-**Analyse reponse eleve :**
-✅ Correct : [ce que l'eleve a bien fait]
-❌ Incorrect : [ce qui est faux ou manquant, avec explication du pourquoi]
-💡 Conseil : [comment corriger cette erreur specifique]
-
-**Piege classique :** [L'erreur la plus frequente sur ce type de question et pourquoi elle est fausse]
+[A la toute fin, UNE SEULE FOIS, apres avoir traite TOUTES les questions :]
 
 ---
 
-> **Bilan ${exercise.title} :** [X]/${exercise.points} pts — [commentaire pedagogique global]`
+> **Bilan ${exercise.title} :** [X]/${exercise.points} pts — [points forts, points a travailler, 1-2 pieges classiques a retenir]`
     : `EXAMEN : ${examTitle}
 EXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
 
 ENONCE COMPLET :
 ${exercise.statement}
 
-Redige la correction COMPLETE et EXHAUSTIVE de cet exercice UNIQUEMENT. Structure OBLIGATOIRE :
+Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT aux questions réellement posées — AUCUNE variante ni « alternative pédagogique » hypothétique. Sois COMPLET mais DIRECT (pas de remplissage) et traite TOUTES les sous-questions jusqu'à la dernière. Structure :
 
 ## ${exercise.title} — Correction complete (${exercise.points} pts)
 
-[Pour CHAQUE sous-question numerotee dans l'enonce :]
+[Pour CHAQUE sous-question numerotee, dans l'ordre :]
 
-### Question X —
-**Concept et methode :** [Theoreme / formule appliquee — expliquer POURQUOI on choisit cette methode et pas une autre. Donner le theoreme exact avec ses conditions d'application.]
+### Question X
+**Methode :** [Theoreme / formule appliquee + pourquoi, en 1-2 phrases]
 
-**Demonstration complete :**
-- Etape 1 : [Action + justification theorique] → [Calcul complet visible] = [Resultat]
-- Etape 2 : [Action + justification] → [Calcul] = [Resultat]
-- Etape 3 : ... (continuer jusqu'au resultat final, AUCUNE etape sautee)
+**Resolution :**
+- [Etape : action + justification → calcul visible = resultat]
+- [...continuer sans sauter d'etape essentielle jusqu'au resultat final]
 
 > **Resultat :** [Reponse finale]
 
-**Verification :** [Controle du resultat quand c'est pertinent : substitution, coherence/ordre de grandeur, cas limite]
+**Bareme :** [X] pts — [demarche / calcul / conclusion]
 
-**Bareme :** [X] pts — [Detail : X pt pour la demarche, X pt pour le calcul, X pt pour la conclusion]
-
-**Point pedagogique important :** [Generalisation, remarque de methode, variante possible]
-
-**Erreur classique :** [Piege frequent sur CE TYPE PRECIS de question — explication detaillee de pourquoi c'est faux]
+[UNE SEULE FOIS, a la toute fin, apres avoir traite TOUTES les questions :]
 
 ---
 
-> **A retenir pour ${exercise.title} :** [2-3 formules ou methodes cles a memoriser absolument]`
+> **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques frequentes a eviter sur ce type d'exercice]`
 
-  return askClaude(prompt, system, 12000, undefined, onDelta)
+  // ── Correction robuste avec CONTINUATION AUTO ──
+  // Une longue correction maths peut être coupée au timeout proxy (~240s) avant 3b/3c.
+  // On force une sentinelle de fin ; si elle manque, on relance pour terminer et on recolle.
+  const FIN = '[[FIN_CORRECTION]]'
+  const promptFull = prompt + "\n\nIMPÉRATIF ABSOLU : corrige TOUTES les sous-questions dans l'ordre, jusqu'à la TOUTE DERNIÈRE (ex. 3b, 3c…), sans en omettre aucune. Quand la correction est ENTIÈREMENT terminée, écris sur une dernière ligne EXACTEMENT : " + FIN
+
+  let full = await askClaude(promptFull, system, 8000, undefined, onDelta)
+
+  let tries = 0
+  while (tries < 2 && !full.includes('FIN_CORRECTION')) {
+    tries++
+    const base = full
+    const tail = base.slice(-1800)
+    const contPrompt = "Tu corriges l'exercice \"" + exercise.title + "\". Voici la correction DÉJÀ rédigée (NE la répète SURTOUT PAS) :\n\n…" + tail
+      + "\n\n---\nÉNONCÉ COMPLET (référence) :\n" + exercise.statement
+      + "\n\nCONTINUE la correction EXACTEMENT là où elle s'est arrêtée ci-dessus, sans RIEN répéter, et traite TOUTES les sous-questions restantes jusqu'à la dernière. Même format (### Question X, **Méthode :**, **Résolution :**, > **Résultat :**, **Barème :**). Quand tout est terminé, écris sur une dernière ligne EXACTEMENT : " + FIN
+    const cont = await askClaude(contPrompt, system, 8000, undefined,
+      onDelta ? (pp: string) => onDelta(base + '\n' + pp) : undefined)
+    full = base + '\n' + cont
+  }
+
+  // Retirer la sentinelle (et tout ce qui suit) du texte final
+  return full.split(/[\[\]*\s]*FIN_CORRECTION[\s\S]*/)[0].trimEnd()
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -1103,7 +1148,7 @@ JSON requis :
     {"id":"remSim${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtriser en conditions Bac]","statement":"Exercice avancé type Bac France. 4 sous-parties. Minimum 100 mots.","hint":"[Conseil méthodologique niveau Bac]","officialCorrection":"[Correction officielle niveau Bac. Minimum 80 mots.]"}
   ]
 }`
-  const raw = await askClaude(prompt, system, 3000)
+  const raw = await askClaude(prompt, system, 6000, undefined, () => {})
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exercise.points,
     weakAreas:[{theme:exercise.theme,severity:'moderate',description:'Analyse indisponible',priority:1}],
@@ -1188,7 +1233,7 @@ Génère ce JSON :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000)
+  const raw = await askClaude(prompt, system, 7000, undefined, () => {})
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
     weakAreas:[{theme:'Général',severity:'moderate',description:'Analyse non disponible',priority:1}],
@@ -2310,21 +2355,51 @@ if (typeof document !== 'undefined' && !document.getElementById('mb-vec-style'))
   document.head.appendChild(_st)
 }
 
+// Nettoie le LaTeX résiduel ($...$, \lim, \frac, \mathbb, exposants…) → Unicode lisible
+function cleanLatex(s: string): string {
+  if (!s) return s
+  let t = s
+  t = t.replace(/[\[\]*\s]*FIN_CORRECTION[\[\]*\s]*/g, ' ').replace(/\**\[?\[?FIN[_A-Z]*$/g, '')
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$\n]+?)\$/g, '$1')
+  t = t.replace(/\\left|\\right|\\!|\\;|\\:|\\displaystyle/g, '').replace(/\\,/g, ' ').replace(/\\quad|\\qquad/g, '  ')
+       .replace(/\\text\s*\{([^}]*)\}/g, '$1').replace(/\\mathrm\s*\{([^}]*)\}/g, '$1').replace(/\\operatorname\s*\{([^}]*)\}/g, '$1')
+  t = t.replace(/\\lim_?\s*\{([^}]*)\}/g, 'lim($1)').replace(/\\lim\b/g, 'lim')
+       .replace(/\\sum_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u03A3[$1\u2192$2]').replace(/\\sum\b/g, '\u03A3')
+       .replace(/\\int_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u222B[$1\u2192$2]').replace(/\\int\b/g, '\u222B')
+       .replace(/\\sqrt\s*\{([^}]*)\}/g, '\u221A($1)').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '($1)/($2)')
+       .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '$1\u20D7').replace(/\\vec\s*\{([^}]*)\}/g, '$1\u20D7')
+  const sym: Record<string, string> = { 'to':'\u2192','rightarrow':'\u2192','Rightarrow':'\u21D2','infty':'\u221E','cdot':'\u00B7','times':'\u00D7','div':'\u00F7','pm':'\u00B1','mp':'\u2213','leq':'\u2264','le':'\u2264','geq':'\u2265','ge':'\u2265','neq':'\u2260','approx':'\u2248','equiv':'\u2261','notin':'\u2209','in':'\u2208','subset':'\u2282','cup':'\u222A','cap':'\u2229','forall':'\u2200','exists':'\u2203','partial':'\u2202','nabla':'\u2207','alpha':'\u03B1','beta':'\u03B2','gamma':'\u03B3','delta':'\u03B4','theta':'\u03B8','lambda':'\u03BB','mu':'\u00B5','pi':'\u03C0','rho':'\u03C1','sigma':'\u03C3','tau':'\u03C4','phi':'\u03C6','omega':'\u03C9','Delta':'\u0394','Omega':'\u03A9','Sigma':'\u03A3','Phi':'\u03A6' }
+  for (const k of Object.keys(sym)) t = t.replace(new RegExp('\\\\' + k + '\\b', 'g'), sym[k])
+  t = t.replace(/\\mathbb\s*\{R\}/g, '\u211D').replace(/\\mathbb\s*\{N\}/g, '\u2115').replace(/\\mathbb\s*\{Z\}/g, '\u2124').replace(/\\mathbb\s*\{Q\}/g, '\u211A').replace(/\\mathbb\s*\{C\}/g, '\u2102')
+  const sup: Record<string, string> = { '0':'\u2070','1':'\u00B9','2':'\u00B2','3':'\u00B3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','+':'\u207A','-':'\u207B','n':'\u207F','i':'\u2071' }
+  const sub: Record<string, string> = { '0':'\u2080','1':'\u2081','2':'\u2082','3':'\u2083','4':'\u2084','5':'\u2085','6':'\u2086','7':'\u2087','8':'\u2088','9':'\u2089','n':'\u2099','i':'\u1D62','k':'\u2096','+':'\u208A','-':'\u208B' }
+  t = t.replace(/\^\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sup) ? [...g].map((c: string) => sup[c]).join('') : '^(' + g + ')')
+       .replace(/\^([0-9])/g, (_m: string, g: string) => sup[g] || ('^' + g))
+       .replace(/_\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sub) ? [...g].map((c: string) => sub[c]).join('') : '_' + g)
+       .replace(/_([0-9nik])/g, (_m: string, g: string) => sub[g] || ('_' + g))
+  t = t.replace(/\\\\/g, ' ').replace(/\\[a-zA-Z]+/g, (m: string) => m.slice(1))
+  return t
+}
+
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
+  let gi = 0
   return (
     <div>
       {segments.map((seg, i) => {
         if (seg.type === 'text') {
-          return seg.content ? <MDLines key={i} text={seg.content} /> : null
+          return seg.content ? <MDLines key={i} text={cleanLatex(seg.content)} /> : null
         } else {
+          const myGi = gi++
+          let inner
           try {
             const spec: GraphSpec = JSON.parse(seg.content)
-            return <SmartGraph key={i} spec={spec} />
+            inner = <SmartGraph spec={spec} />
           } catch {
             // Si JSON invalide, afficher quand même proprement
-            return <div key={i} style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
+            inner = <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
           }
+          return <div key={i} data-mbgraph={myGi}>{inner}</div>
         }
       })}
     </div>
@@ -2360,7 +2435,7 @@ function buildCorrectionHtml(
     .replace(/>/g,'&gt;')
 
   /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
-  const inline = (s: string) => vecToHtml(esc(s))
+  const inline = (s: string) => vecToHtml(esc(cleanLatex(s)))
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
 
@@ -2816,17 +2891,23 @@ function svgToPng(svg: SVGElement): Promise<string> {
 
 async function captureGraphsInOrder(container: HTMLElement | null): Promise<string[]> {
   if (!container || typeof document === 'undefined') return []
+  // Capture par marqueur : 1 entrée par [GRAPH:] dans l'ordre du texte (alignement garanti)
+  const wrappers = Array.from(container.querySelectorAll('[data-mbgraph]')) as HTMLElement[]
+  wrappers.sort((a, b) => Number(a.getAttribute('data-mbgraph')) - Number(b.getAttribute('data-mbgraph')))
   const out: string[] = []
-  const nodes = Array.from(container.querySelectorAll('.js-plotly-plot, svg')) as HTMLElement[]
-  for (const node of nodes) {
-    if (node.tagName.toLowerCase() === 'svg' && node.closest('.js-plotly-plot')) continue
+  const P = (window as any).Plotly
+  for (const w of wrappers) {
     try {
-      const P = (window as any).Plotly
-      if (node.classList.contains('js-plotly-plot') && P && typeof P.toImage === 'function') {
-        const w = (node as HTMLElement).offsetWidth || 700, h = (node as HTMLElement).offsetHeight || 400
-        out.push(await P.toImage(node, { format: 'png', width: w, height: h, scale: 2 }))
-      } else if (node.tagName.toLowerCase() === 'svg') {
-        out.push(await svgToPng(node as unknown as SVGElement))
+      const plot = w.querySelector('.js-plotly-plot') as HTMLElement | null
+      const svg = w.querySelector('svg') as SVGElement | null
+      if (plot && P && typeof P.toImage === 'function') {
+        const ww = plot.offsetWidth || 700, hh = plot.offsetHeight || 400
+        out.push(await P.toImage(plot, { format: 'png', width: ww, height: hh, scale: 2 }))
+      } else if (svg) {
+        out.push(await svgToPng(svg as unknown as SVGElement))
+      } else {
+        // Type non capturable (ascii / table) → image vide, le fallback graphToSvg prendra le relais
+        out.push('')
       }
     } catch {
       out.push('')
@@ -3629,7 +3710,8 @@ async function generateChapterExam(
   chapitres: { titre: string; badge: string; desc: string }[],
   sectionKey: string,
   sectionLabel: string,
-  idx: number
+  idx: number,
+  onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
   const chapList = chapitres.map((c, i) => `Exercice ${i+1} — ${c.titre} (${c.badge}) : ${c.desc}`).join('\n')
   const totalPts = 20
@@ -3676,7 +3758,7 @@ ${chapitres.map((c,i)=>`    {
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 6000)
+  const raw = await askClaude(prompt, system, 6000, undefined, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title:`${sectionLabel} — Chapitres Variante ${idx+1}`,
     section:sectionLabel, duration:180, totalPoints:totalPts,
@@ -4359,6 +4441,7 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
 
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
+  const [liveGen, setLiveGen] = useState('') // examen qui s'écrit en direct
   const [error, setError] = useState('')
   const [currentIdx, setCurrentIdx] = useState(0)
   const started = useRef(false)
@@ -4377,8 +4460,9 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const generateNext = useCallback(async (idx: number) => {
     setGenerating(true)
     setError('')
+    setLiveGen('')
     try {
-      const exam = await generateOneExam(archives, customText, idx, matiereActive)
+      const exam = await generateOneExam(archives, customText, idx, matiereActive, (pp)=>setLiveGen(pp))
       setExams(prev => [...prev, exam])
       setCurrentIdx(idx + 1)
       // Incrémenter quota dans Supabase
@@ -4433,7 +4517,14 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
         {generating && (
           <div style={{padding:'18px 20px',background:'rgba(99,102,241,0.06)',border:'1px dashed rgba(99,102,241,0.3)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,minHeight:130}}>
             <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid rgba(99,102,241,0.2)',borderTopColor:'#6366f1',animation:'spin 0.8s linear infinite'}}/>
-            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>Generation de l&apos;examen {currentIdx+1}...</p>
+            <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>
+              Generation de l&apos;examen {currentIdx+1}...{liveGen ? ` ✍️ ${liveGen.length.toLocaleString('fr-FR')} caractères` : ''}
+            </p>
+            {liveGen && (
+              <div style={{width:'100%',maxHeight:200,overflow:'auto',background:'rgba(0,0,0,0.25)',borderRadius:8,padding:'10px 12px',fontSize:11,lineHeight:1.5,color:'rgba(255,255,255,0.55)',whiteSpace:'pre-wrap',fontFamily:'ui-monospace,monospace',textAlign:'left'}}>
+                {humanizeStream(liveGen).slice(-1400)}
+              </div>
+            )}
           </div>
         )}
 
@@ -4667,7 +4758,7 @@ function PhaseExam({ exam, onSubmit }: {
         </div>
         <div class="exercice-body">
           ${hasG?'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>':''}
-          <p style="white-space:pre-wrap">${esc2(ex.statement)}</p>
+          <p style="white-space:pre-wrap">${esc2(cleanLatex(ex.statement))}</p>
         </div>
       </div>`
     }).join('\n')
@@ -5673,7 +5764,9 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
     if (!corrections[nextIdx]) {
       setGenerating(true)
       try {
-        const text = await correctSingleExercise(exam, nextIdx, answers)
+        const text = await correctSingleExercise(exam, nextIdx, answers, (partial) => {
+          setCorrections(prev => ({ ...prev, [nextIdx]: stripIncompleteGraph(partial) }))
+        })
         setCorrections(prev => ({ ...prev, [nextIdx]: text }))
         if (onGraphExtracted) {
           const extracted = extractFirstGraph(text)
@@ -6040,7 +6133,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
       .replace(/\*(.+?)\*/g,'<em>$1</em>')
       .replace(/`(.+?)`/g,'<code>$1</code>')
 
-    const feedbackHtml = feedback.split('\n').map(line => {
+    const feedbackHtml = cleanLatex(feedback).split('\n').map(line => {
       const t = line.trim()
       if (!t) return '<div style="height:5px"></div>'
       if (t.startsWith('## ')) return '<h3 style="color:#a5b4fc;font-size:14px;font-weight:800;margin:18px 0 8px">'+md2html(t.slice(3))+'</h3>'
@@ -6070,7 +6163,7 @@ function PhaseAnalysis({ analysis, onRestart }: {
         +' · '+esc(ex.objective)+'</div></div>'
       +'<div class="section-label" style="color:#94a3b8">Énoncé</div>'
       +'<div class="enonce"></div>'
-      +'<div class="enonce-text">'+ex.statement+'</div>'
+      +'<div class="enonce-text">'+cleanLatex(ex.statement)+'</div>'
       +hintHtml
       +answerHtml
       +'<div class="correction-block"><h2>🤖 Correction IA personnalisée</h2>'+feedbackHtml+'</div>'
@@ -6365,6 +6458,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   globalMatiere = (matiere ? _matiereMapPGC[matiere] : null) || matiereActive || 'mathematiques'
   const [exams, setExams] = useState<GeneratedExam[]>([])
   const [generating, setGenerating] = useState(false)
+  const [liveGen, setLiveGen] = useState('')
   const [error, setError] = useState('')
   const started = useRef(false)
 
@@ -6376,10 +6470,10 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   const limitReached = !isUnlimited && simUsed >= simLimit
 
   const generateNext = useCallback(async (idx: number) => {
-    setGenerating(true); setError('')
+    setGenerating(true); setError(''); setLiveGen('')
     try {
       const sectionKey = Object.values(CHAPITRES_PAR_SECTION).find(s=>s.label===sectionLabel)?.key || 'maths'
-      const exam = await generateChapterExam(chapitres, sectionKey, sectionLabel, idx)
+      const exam = await generateChapterExam(chapitres, sectionKey, sectionLabel, idx, (pp)=>setLiveGen(pp))
       setExams(prev => [...prev, exam])
       await incrementQuotaSub('simulations')
     } catch(e) {
@@ -6441,8 +6535,13 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
           <div style={{padding:'18px 20px',background:'rgba(6,214,160,0.06)',border:'1px dashed rgba(6,214,160,0.3)',borderRadius:14,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,minHeight:130}}>
             <div style={{width:36,height:36,borderRadius:'50%',border:'3px solid rgba(6,214,160,0.2)',borderTopColor:'#06d6a0',animation:'spin 0.8s linear infinite'}}/>
             <p style={{margin:0,fontSize:12,color:'rgba(255,255,255,0.4)',textAlign:'center'}}>
-              Génération de l'examen ciblé sur<br/>{chapitres.map(c=>c.titre).join(', ')}...
+              Génération de l'examen ciblé sur<br/>{chapitres.map(c=>c.titre).join(', ')}...{liveGen ? ` ✍️ ${liveGen.length.toLocaleString('fr-FR')} caractères` : ''}
             </p>
+            {liveGen && (
+              <div style={{width:'100%',maxHeight:200,overflow:'auto',background:'rgba(0,0,0,0.25)',borderRadius:8,padding:'10px 12px',fontSize:11,lineHeight:1.5,color:'rgba(255,255,255,0.55)',whiteSpace:'pre-wrap',fontFamily:'ui-monospace,monospace',textAlign:'left'}}>
+                {humanizeStream(liveGen).slice(-1400)}
+              </div>
+            )}
           </div>
         )}
 
@@ -6640,8 +6739,20 @@ Vos abonnements actifs : ${matieresList}
   const handleGoAnalyse = useCallback(async(fullCorrection: string) => {
     if(!activeExam) return
     setCorrectionText(fullCorrection); setPhase('analysing')
-    const analysis = await analyzeStudentWork(activeExam, studentAnswers, fullCorrection)
-    setAnalysisResult(analysis); setPhase('analysis')
+    try {
+      const analysis = await analyzeStudentWork(activeExam, studentAnswers, fullCorrection)
+      setAnalysisResult(analysis); setPhase('analysis')
+    } catch (e) {
+      console.error('[Analyse FR]', e)
+      // Ne JAMAIS rester bloqué sur le spinner
+      setAnalysisResult({
+        estimatedScore: 0, maxScore: activeExam.totalPoints,
+        weakAreas: [{ theme:'Analyse indisponible', severity:'moderate', description:"Le rapport n'a pas pu être généré (délai dépassé). Tu peux réessayer.", priority:1 }],
+        strengths: [], globalAdvice: ["Réessaie l'analyse dans un moment."],
+        remediationExercises: []
+      } as AnalysisResult)
+      setPhase('analysis')
+    }
   },[activeExam, studentAnswers])
 
   const handleOpenAnalyse = useCallback((idx: number, analysis: AnalysisResult, exercise: any) => {
