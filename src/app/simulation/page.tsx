@@ -1493,7 +1493,29 @@ Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT au
 
 > **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques frequentes a eviter sur ce type d'exercice]`)
 
-  return askClaude(prompt, system, 10000, undefined, onDelta)
+  // ── Correction robuste avec CONTINUATION AUTO ──
+  // Une longue correction maths peut être coupée au timeout proxy (~240s) avant 3b/3c.
+  // On force une sentinelle de fin ; si elle manque, on relance pour terminer et on recolle.
+  const FIN = '[[FIN_CORRECTION]]'
+  const promptFull = prompt + "\n\nIMPÉRATIF ABSOLU : corrige TOUTES les sous-questions dans l'ordre, jusqu'à la TOUTE DERNIÈRE (ex. 3b, 3c…), sans en omettre aucune. Quand la correction est ENTIÈREMENT terminée, écris sur une dernière ligne EXACTEMENT : " + FIN
+
+  let full = await askClaude(promptFull, system, 8000, undefined, onDelta)
+
+  let tries = 0
+  while (tries < 2 && !full.includes('FIN_CORRECTION')) {
+    tries++
+    const base = full
+    const tail = base.slice(-1800)
+    const contPrompt = "Tu corriges l'exercice \"" + exercise.title + "\". Voici la correction DÉJÀ rédigée (NE la répète SURTOUT PAS) :\n\n…" + tail
+      + "\n\n---\nÉNONCÉ COMPLET (référence) :\n" + exercise.statement
+      + "\n\nCONTINUE la correction EXACTEMENT là où elle s'est arrêtée ci-dessus, sans RIEN répéter, et traite TOUTES les sous-questions restantes jusqu'à la dernière. Même format (### Question X, **Méthode :**, **Résolution :**, > **Résultat :**, **Barème :**). Quand tout est terminé, écris sur une dernière ligne EXACTEMENT : " + FIN
+    const cont = await askClaude(contPrompt, system, 8000, undefined,
+      onDelta ? (pp: string) => onDelta(base + '\n' + pp) : undefined)
+    full = base + '\n' + cont
+  }
+
+  // Retirer la sentinelle (et tout ce qui suit) du texte final
+  return full.split(/[\[\]*\s]*FIN_CORRECTION[\s\S]*/)[0].trimEnd()
 }
 
 // Genere la correction exercice par exercice et appelle onProgress a chaque etape
@@ -2831,6 +2853,7 @@ if (typeof document !== 'undefined' && !document.getElementById('mb-vec-style'))
 function cleanLatex(s: string): string {
   if (!s) return s
   let t = s
+  t = t.replace(/[\[\]*\s]*FIN_CORRECTION[\[\]*\s]*/g, ' ').replace(/\**\[?\[?FIN[_A-Z]*$/g, '')
   t = t.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$\n]+?)\$/g, '$1')
   t = t.replace(/\\left|\\right|\\!|\\;|\\:|\\displaystyle/g, '').replace(/\\,/g, ' ').replace(/\\quad|\\qquad/g, '  ')
        .replace(/\\text\s*\{([^}]*)\}/g, '$1').replace(/\\mathrm\s*\{([^}]*)\}/g, '$1').replace(/\\operatorname\s*\{([^}]*)\}/g, '$1')
