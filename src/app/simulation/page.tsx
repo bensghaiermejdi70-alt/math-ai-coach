@@ -1648,7 +1648,7 @@ JSON requis (COMPLET) :
 
 // ── Analyse faiblesses ────────────────────────────────────────────
 async function analyzeStudentWork(
-  exam: GeneratedExam, studentWork: string, correction: string
+  exam: GeneratedExam, studentWork: string, correction: string, onDelta?: (full: string) => void
 ): Promise<AnalysisResult> {
   const system = (globalMatiere==='economie'||globalMatiere==='gestion')
     ? `Tu es un expert en pédagogie de l'Économie et de la Gestion (Bac Tunisie) et en remédiation scolaire.
@@ -1746,7 +1746,7 @@ Génère ce JSON COMPLET :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000)
+  const raw = await askClaude(prompt, system, 5000, undefined, onDelta || (() => {}))
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
     weakAreas:[{theme:'Général',severity:'moderate',description:'Analyse non disponible',priority:1}],
@@ -2877,19 +2877,23 @@ function cleanLatex(s: string): string {
 
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
+  let gi = 0
   return (
     <div>
       {segments.map((seg, i) => {
         if (seg.type === 'text') {
           return seg.content ? <MDLines key={i} text={cleanLatex(seg.content)} /> : null
         } else {
+          const myGi = gi++
+          let inner
           try {
             const spec: GraphSpec = JSON.parse(seg.content)
-            return <SmartGraph key={i} spec={spec} />
+            inner = <SmartGraph spec={spec} />
           } catch {
             // Si JSON invalide, afficher quand même proprement
-            return <div key={i} style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
+            inner = <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
           }
+          return <div key={i} data-mbgraph={myGi}>{inner}</div>
         }
       })}
     </div>
@@ -2910,8 +2914,6 @@ function buildCorrectionHtml(
   graphImages: string[] = []
 ): string {
 
-  correctionText = cleanLatex(correctionText)
-
   const C = {
     ex:  ['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'],
     exBg:['#1e1b4b','#052e16','#431407','#2e1065','#082f49'],
@@ -2927,7 +2929,7 @@ function buildCorrectionHtml(
     .replace(/>/g,'&gt;')
 
   /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
-  const inline = (s: string) => vecToHtml(esc(s))
+  const inline = (s: string) => vecToHtml(esc(cleanLatex(s)))
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/`(.+?)`/g,'<code>$1</code>')
 
@@ -3384,18 +3386,23 @@ function svgToPng(svg: SVGElement): Promise<string> {
 
 async function captureGraphsInOrder(container: HTMLElement | null): Promise<string[]> {
   if (!container || typeof document === 'undefined') return []
+  // Capture par marqueur : 1 entrée par [GRAPH:] dans l'ordre du texte (alignement garanti)
+  const wrappers = Array.from(container.querySelectorAll('[data-mbgraph]')) as HTMLElement[]
+  wrappers.sort((a, b) => Number(a.getAttribute('data-mbgraph')) - Number(b.getAttribute('data-mbgraph')))
   const out: string[] = []
-  const nodes = Array.from(container.querySelectorAll('.js-plotly-plot, svg')) as HTMLElement[]
-  for (const node of nodes) {
-    // Ignore les <svg> internes à un graphique Plotly (déjà capturé via Plotly.toImage)
-    if (node.tagName.toLowerCase() === 'svg' && node.closest('.js-plotly-plot')) continue
+  const P = (window as any).Plotly
+  for (const w of wrappers) {
     try {
-      const P = (window as any).Plotly
-      if (node.classList.contains('js-plotly-plot') && P && typeof P.toImage === 'function') {
-        const w = (node as HTMLElement).offsetWidth || 700, h = (node as HTMLElement).offsetHeight || 400
-        out.push(await P.toImage(node, { format: 'png', width: w, height: h, scale: 2 }))
-      } else if (node.tagName.toLowerCase() === 'svg') {
-        out.push(await svgToPng(node as unknown as SVGElement))
+      const plot = w.querySelector('.js-plotly-plot') as HTMLElement | null
+      const svg = w.querySelector('svg') as SVGElement | null
+      if (plot && P && typeof P.toImage === 'function') {
+        const ww = plot.offsetWidth || 700, hh = plot.offsetHeight || 400
+        out.push(await P.toImage(plot, { format: 'png', width: ww, height: hh, scale: 2 }))
+      } else if (svg) {
+        out.push(await svgToPng(svg as unknown as SVGElement))
+      } else {
+        // Type non capturable (ascii / table) → image vide, le fallback graphToSvg prendra le relais
+        out.push('')
       }
     } catch {
       out.push('')
@@ -5979,8 +5986,8 @@ function PhaseCorrection({ exam, answers, onAnalyse, onGraphExtracted, onOpenAna
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 6 — ANALYSE + REMÉDIATION
 // ═══════════════════════════════════════════════════════════════════
-function PhaseAnalysis({ analysis, onRestart }: {
-  analysis:AnalysisResult|null; onRestart:()=>void
+function PhaseAnalysis({ analysis, liveChars=0, onRestart }: {
+  analysis:AnalysisResult|null; liveChars?:number; onRestart:()=>void
 }) {
   const [remAnswers, setRemAnswers] = useState<Record<string,string>>({})
   const [remFeedback, setRemFeedback] = useState<Record<string,string>>({})
@@ -6136,6 +6143,11 @@ function PhaseAnalysis({ analysis, onRestart }: {
         <p style={{color:'rgba(255,255,255,0.4)',fontSize:13}}>
           L&apos;IA identifie vos points faibles et prepare vos exercices de remediation
         </p>
+        {liveChars > 0 && (
+          <p style={{color:'#a5b4fc',fontSize:12,marginTop:6,fontWeight:600}}>
+            ✍️ {liveChars.toLocaleString('fr-FR')} caractères générés…
+          </p>
+        )}
         <div style={{width:260,height:4,borderRadius:4,background:'rgba(255,255,255,0.06)',margin:'24px auto 0',overflow:'hidden'}}>
           <div style={{height:'100%',background:'linear-gradient(90deg,#8b5cf6,#ec4899)',borderRadius:4,animation:'slideBar 1.8s ease-in-out infinite'}}/>
         </div>
@@ -6545,6 +6557,7 @@ function SimulationIAPageInner() {
   const [correctionText, setCorrectionText] = useState('')
   const [gradeResult, setGradeResult] = useState<{score:number;maxScore:number;comment:string;breakdown:{title:string;pts:number;max:number;reason:string}[]}|null>(null)
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult|null>(null)
+  const [liveAnalyse, setLiveAnalyse] = useState(0)
   const [analysePageData, setAnalysePageData] = useState<{
     analysis: AnalysisResult
     exercise: { title:string; theme:string; points:number; statement:string; graph?:string }
@@ -6681,9 +6694,21 @@ function SimulationIAPageInner() {
 
   const handleGoAnalyse = useCallback(async(fullCorrection: string) => {
     if(!activeExam) return
-    setCorrectionText(fullCorrection); setPhase('analysing')
-    const analysis = await analyzeStudentWork(activeExam, studentAnswers, fullCorrection)
-    setAnalysisResult(analysis); setPhase('analysis')
+    setCorrectionText(fullCorrection); setLiveAnalyse(0); setPhase('analysing')
+    try {
+      const analysis = await analyzeStudentWork(activeExam, studentAnswers, fullCorrection, (full)=>setLiveAnalyse(full.length))
+      setAnalysisResult(analysis); setPhase('analysis')
+    } catch (e) {
+      console.error('[Analyse]', e)
+      // Ne JAMAIS rester bloqué sur le spinner : fallback + passage en phase analysis
+      setAnalysisResult({
+        estimatedScore: 0, maxScore: activeExam.totalPoints,
+        weakAreas: [{ theme:'Analyse indisponible', severity:'moderate', description:"Le rapport n'a pas pu être généré (délai dépassé). Tu peux réessayer.", priority:1 }],
+        strengths: [], globalAdvice: ["Réessaie l'analyse dans un moment."],
+        remediationExercises: []
+      } as AnalysisResult)
+      setPhase('analysis')
+    }
   },[activeExam, studentAnswers])
 
   const handleOpenAnalyse = useCallback((idx: number, analysis: AnalysisResult, exercise: any) => {
@@ -6815,7 +6840,7 @@ function SimulationIAPageInner() {
                 onOpenAnalyse={handleOpenAnalyse}/>}
 
             {(phase==='analysing'||phase==='analysis')&&
-              <PhaseAnalysis analysis={analysisResult} onRestart={handleRestart}/>}
+              <PhaseAnalysis analysis={analysisResult} liveChars={phase==='analysing'?liveAnalyse:0} onRestart={handleRestart}/>}
 
           </div>
         </div>
