@@ -927,6 +927,28 @@ function extractImagesFromText(text: string): { images: { data: string; mediaTyp
   return { images, cleanText }
 }
 
+// Répare un JSON tronqué (coupé par maxTokens/timeout) : ferme chaînes/accolades/crochets ouverts
+function repairTruncatedJson(s: string): string {
+  let inStr = false, esc = false
+  const stack: string[] = []
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (esc) { esc = false; continue }
+    if (c === '\\') { esc = true; continue }
+    if (c === '"') { inStr = !inStr; continue }
+    if (inStr) continue
+    if (c === '{' || c === '[') stack.push(c)
+    else if (c === '}' || c === ']') stack.pop()
+  }
+  let r = s
+  if (inStr) r += '"'
+  r = r.replace(/,\s*$/, '')
+  r = r.replace(/"[^"]*"\s*:\s*$/, '')
+  r = r.replace(/,\s*$/, '')
+  for (let i = stack.length - 1; i >= 0; i--) r += stack[i] === '{' ? '}' : ']'
+  return r
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   try { return JSON.parse(cleaned) }
@@ -955,7 +977,9 @@ function parseJSON<T>(raw: string, fallback: T): T {
       }
       return parsed as T
     } catch {
-      return fallback
+      // Stratégie 3 : JSON tronqué (coupé) → fermer les structures ouvertes et re-parser
+      try { return JSON.parse(repairTruncatedJson(cleaned)) as T }
+      catch { return fallback }
     }
   }
 }
@@ -1637,7 +1661,7 @@ JSON requis (COMPLET) :
     }
   ]
 }`
-  const raw = await askClaude(prompt, system, 3000)
+  const raw = await askClaude(prompt, system, 6000, undefined, () => {})
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exercise.points,
     weakAreas:[{theme:exercise.theme,severity:'moderate',description:'Analyse indisponible',priority:1}],
@@ -1746,7 +1770,7 @@ Génère ce JSON COMPLET :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000, undefined, onDelta || (() => {}))
+  const raw = await askClaude(prompt, system, 7000, undefined, onDelta || (() => {}))
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
     weakAreas:[{theme:'Général',severity:'moderate',description:'Analyse non disponible',priority:1}],
