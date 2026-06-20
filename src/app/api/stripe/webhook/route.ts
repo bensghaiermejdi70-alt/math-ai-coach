@@ -263,6 +263,50 @@ export async function POST(req: Request) {
         return NextResponse.json({ received: true })
       }
 
+      // ══════════════════════════════════════════════════════════════
+      // ANTI-DOUBLON STRIPE — un seul abonnement actif par personne/matiere
+      // Les Payment Links / customer_email peuvent creer plusieurs clients
+      // et plusieurs abonnements pour la meme personne. On garde UNIQUEMENT
+      // le nouvel abonnement et on ANNULE les autres de la meme matiere dans
+      // Stripe (sinon ils continuent de facturer => resiliation non definitive).
+      // ══════════════════════════════════════════════════════════════
+      if (subscriptionId) {
+        try {
+          const matiereNew = extractMatiere(planType)
+          const BILLING = ["active", "trialing", "past_due", "unpaid"]
+          const emailLc = email.toLowerCase()
+
+          const clients = await stripe.customers.list({ email: emailLc, limit: 100 })
+          const clientIds = new Set<string>([customerId, ...clients.data.map((c) => c.id)])
+
+          for (const cid of clientIds) {
+            const subs = await stripe.subscriptions.list({
+              customer: cid,
+              status: "all",
+              limit: 100,
+            })
+            for (const old of subs.data) {
+              if (old.id === subscriptionId) continue           // garder le nouvel abonnement
+              if (!BILLING.includes(old.status)) continue       // ignorer ceux deja annules
+              const oldPrice = old.items.data[0]?.price?.id || ""
+              const oldPlan  = PRICE_TO_PLAN[oldPrice]
+              if (!oldPlan) continue                            // prix inconnu => on ne touche pas
+              if (extractMatiere(oldPlan) !== matiereNew) continue  // garder les autres matieres
+
+              await stripe.subscriptions.cancel(old.id)
+              console.log(`🧹 Doublon annule dans Stripe: ${old.id} (matiere ${matiereNew})`)
+
+              await supabase
+                .from("subscriptions")
+                .update({ status: "cancelled", is_active: false })
+                .eq("stripe_subscription_id", old.id)
+            }
+          }
+        } catch (e) {
+          console.error("Erreur anti-doublon Stripe (non bloquant):", (e as any)?.message)
+        }
+      }
+
       // Vérifier doublon actif par matière
       if (profile?.id) {
         const matiere = extractMatiere(planType)
