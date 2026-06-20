@@ -291,9 +291,6 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
   let buffer = ''
   let acc = ''
   let lastEmit = 0
-  let stopReason = ''
-  let gotStop = false
-  const t0 = Date.now()
   try {
     if (reader) {
       while (true) {
@@ -314,18 +311,12 @@ async function askClaude(prompt: string, system: string, maxTokens = 5000, matie
             const now = Date.now()
             if (myProgress && now - lastEmit >= 70) { lastEmit = now; myProgress(acc) } // throttle ~14 fps : fluide + léger
           }
-          if (evt.type === 'message_delta' && evt.delta?.stop_reason) stopReason = evt.delta.stop_reason
-          if (evt.type === 'message_stop') gotStop = true
         }
       }
     }
-  } catch (streamErr) {
-    console.error('[BB-DIAG] FLUX COUPE (erreur) chars=' + acc.length + ' stop_reason=' + (stopReason||'(aucun)') + ' message_stop=' + gotStop + ' ms=' + (Date.now()-t0), streamErr)
-    throw streamErr
   } finally {
     if (onStreamProgress === myProgress) onStreamProgress = null // ne remet à null QUE son propre listener
   }
-  console.log('[BB-DIAG] FIN chars=' + acc.length + ' stop_reason=' + (stopReason||'(aucun)') + ' message_stop=' + gotStop + ' ms=' + (Date.now()-t0))
   if (!acc) throw new Error('Réponse vide du serveur (streaming)')
   return acc
 }
@@ -4629,7 +4620,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlanc(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('mathematiques')
       setExam(e); setPhase('exam')
@@ -4666,7 +4657,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancPhysique(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('physique')
       setExam(e); setPhase('exam')
@@ -4700,7 +4691,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancInfo(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('informatique')
       setExam(e); setPhase('exam')
@@ -4736,7 +4727,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancAnglais(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('anglais')
       setExam(e); setPhase('exam')
@@ -4771,7 +4762,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancSVT(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('svt')
       setExam(e); setPhase('exam')
@@ -4806,7 +4797,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancFrancais(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('francais')
       setExam(e); setPhase('exam')
@@ -4841,7 +4832,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancEconomie(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('economie')
       setExam(e); setPhase('exam')
@@ -4876,7 +4867,7 @@ function BacBlancInner() {
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
       const e = await generateBacBlancGestion(candidat, dayNum)
-      await incrementQuotaSub('simulations')
+      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('gestion')
       setExam(e); setPhase('exam')
