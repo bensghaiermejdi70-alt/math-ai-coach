@@ -564,10 +564,14 @@ function graphToSvg(jsonStr: string): string {
   return ''
 }
 
+function vecHtml(s:string):string{
+  return s.replace(/([A-Za-zÀ-ÿΑ-Ωα-ω]{1,3})\u20D7/g,'<span style="position:relative;display:inline-block;white-space:nowrap;padding-top:0.18em"><span style="position:absolute;left:0;right:0;top:0;text-align:center;font-size:0.8em;line-height:1">→</span>$1</span>').replace(/\u20D7/g,'')
+}
+
 // ── textToHtml (identique simulation) ─────────────────────────────
 function textToHtml(rawText: string): string {
   const esc = (s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-  const inline = (s:string)=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>')
+  const inline = (s:string)=>vecHtml(esc(s)).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>')
   const line2html = (raw:string):string=>{
     const t=raw.trim()
     if(!t)return '<div class="spacer"></div>'
@@ -877,6 +881,29 @@ function figureToAscii(figureText: string): string {
   return '[GRAPH: ' + JSON.stringify({type:'ascii',title,content:schemaContent,legend}) + ']'
 }
 
+// ── Vecteurs : flèche CSS au-dessus des lettres (corrige tofu U+20D7) ──
+function Vec({children}:{children:React.ReactNode}){
+  return (
+    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap',paddingTop:'0.18em'}}>
+      <span style={{position:'absolute',left:0,right:0,top:0,textAlign:'center',fontSize:'0.8em',lineHeight:1,pointerEvents:'none'}}>→</span>
+      {children}
+    </span>
+  )
+}
+function renderVectors(text:string):React.ReactNode{
+  if(!text||text.indexOf('\u20D7')===-1)return text
+  const re=/([A-Za-zÀ-ÿΑ-Ωα-ω]{1,3})\u20D7/g
+  const out:React.ReactNode[]=[]; let last=0,k=0,m:RegExpExecArray|null
+  const clean=(x:string)=>x.replace(/\u20D7/g,'')
+  while((m=re.exec(text))){
+    if(m.index>last)out.push(clean(text.slice(last,m.index)))
+    out.push(<Vec key={k++}>{m[1]}</Vec>)
+    last=m.index+m[0].length
+  }
+  if(last<text.length)out.push(clean(text.slice(last)))
+  return out
+}
+
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
   const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
@@ -884,7 +911,7 @@ function TextWithGraphs({text}:{text:string}){
   return(
     <div>
       {segs.map((s,i)=>{
-        if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{s.content}</span>
+        if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{renderVectors(s.content)}</span>
         try{const spec=JSON.parse(s.content);return <SmartGraph key={i} spec={spec}/>}
         catch{return <span key={i} style={{color:'#ef4444',fontSize:11}}>[Graphique invalide]</span>}
       })}
@@ -3925,7 +3952,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
   const openRemFeedbackPdf=(ex:AnalysisResult['remediationExercises'][number])=>{
     const feedback=remFeedback[ex.id]||'',answer=remAnswers[ex.id]||''
     const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    const md2html=(s:string)=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>')
+    const md2html=(s:string)=>vecHtml(esc(s)).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>')
     const feedbackHtml=feedback.split('\n').map(line=>{
       const t=line.trim();if(!t)return '<div style="height:5px"></div>'
       if(t.startsWith('## '))return '<h3 style="color:#a5b4fc;font-size:14px;font-weight:800;margin:18px 0 8px">'+md2html(t.slice(3))+'</h3>'
