@@ -386,7 +386,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-lc-rlc', titre:'3.2 Circuit RLC — oscillations amorties',
+      notions:['L·q\'\'+R·q\'+q/C=0','Régimes : pseudo-périodique, critique, apériodique','Amortissement α=R/(2L)','Entretien des oscillations'],
+      blocs:[
+        {
+          notion:'📉 Amortissement et entretien',
+          theoremes:[
+            { id:'D-LC2', type:'def', nom:'Les trois régimes du circuit RLC',
+              enonce:"Circuit RLC série : L·d²q/dt² + R·dq/dt + q/C = 0\n\nSelon la résistance R :\n\nPSEUDO-PÉRIODIQUE (R<2√(L/C)) :\nq(t)=Q_max·e^(−αt)·cos(ω₁t+φ), α=R/(2L)\nAmplitude décroît, pseudo-période T≈T₀.\n\nCRITIQUE (R=2√(L/C)) :\nRetour à l'équilibre le plus rapide SANS oscillation.\n\nAPÉRIODIQUE (R>2√(L/C)) :\nRetour lent sans oscillation.\n\nL'énergie diminue : dE/dt=−R·i²<0 (effet Joule).",
+              remarque:"Le régime critique est recherché dans les systèmes de mesure et de commande pour une réponse rapide sans oscillation." },
+            { id:'D-LC3', type:'def', nom:'Entretien des oscillations',
+              enonce:"Pour compenser les pertes par effet Joule, on fournit de l'énergie au circuit à chaque période\n(montage à résistance négative / ALI).\n\nRÉSULTAT : oscillations ENTRETENUES d'amplitude constante à ω₀=1/√(LC).\nC'est le principe de l'OSCILLATEUR (générateur de signaux, horloge).\n\nBilan : énergie apportée par période = énergie dissipée par R par période.",
+              remarque:"Un oscillateur entretenu transforme une énergie continue d'alimentation en oscillations périodiques stables." },
+          ],
+          exercices:[
+            { id:'EX-LC3', niveau:'Facile', titre:'Résistance critique',
+              enonce:"L=10mH, C=1µF. Calculer la résistance critique R_c=2√(L/C).",
+              correction:"R_c=2√(10⁻²/10⁻⁶)=2√(10⁴)=2×100=200 Ω.\nSi R≥200Ω : régime apériodique." },
+            { id:'EX-LC4', niveau:'Intermédiaire', titre:'Énergie dissipée',
+              enonce:"Condensateur C=1µF chargé sous U₀=10V puis connecté à L et R. Énergie initiale et finale (t→∞) ?",
+              correction:"E_init=½CU₀²=½×10⁻⁶×100=50µJ.\nÀ t→∞ : u=0, i=0 → E_final=0.\nToute l'énergie (50µJ) est dissipée par effet Joule." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -560,7 +584,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-om-stationnaires', titre:'5.2 Réflexion, ondes stationnaires et Doppler',
+      notions:['Réflexion sur un obstacle (écho)','Ondes stationnaires : nœuds et ventres','Corde fixée : f_n=n·v/(2ℓ)','Effet Doppler : décalage de fréquence'],
+      blocs:[
+        {
+          notion:'📡 Stationnaires et applications',
+          theoremes:[
+            { id:'D-OM2', type:'def', nom:'Ondes stationnaires et modes propres',
+              enonce:"RÉFLEXION : à un obstacle, l'onde incidente est renvoyée.\nLa superposition incidente + réfléchie donne une ONDE STATIONNAIRE.\n\nNŒUDS : amplitude nulle ; VENTRES : amplitude maximale.\nDistance entre deux nœuds consécutifs = λ/2.\n\nCORDE FIXÉE AUX DEUX EXTRÉMITÉS (longueur ℓ) :\nRésonance si ℓ = n·λ/2  →  f_n = n·v/(2ℓ)  (n = 1, 2, 3…)\nFondamental : f₁ = v/(2ℓ) ; harmoniques : f_n = n·f₁.",
+              remarque:"Les modes propres (fréquences de résonance) déterminent la note fondamentale et le timbre d'un instrument." },
+            { id:'F-OM2', type:'formule', nom:'Écho et effet Doppler',
+              enonce:"MESURE PAR ÉCHO (sonar, télémètre à ultrasons) :\nAller-retour : d = v·Δt/2.\n\nEFFET DOPPLER : la fréquence perçue change avec le mouvement relatif source/récepteur.\nRapprochement → fréquence plus élevée ; éloignement → plus basse.\nf' ≈ f·(1 ± v_source/v).\n\nApplications : radar de vitesse, échographie Doppler, contrôle non destructif par ultrasons.",
+              remarque:"Le contrôle non destructif (CND) par ultrasons détecte des défauts internes d'une pièce par la réflexion des ondes (d=v·Δt/2)." },
+          ],
+          exercices:[
+            { id:'EX-ON3', niveau:'Facile', titre:'Mesure par écho',
+              enonce:"Un capteur à ultrasons (v=340m/s) reçoit l'écho 10ms après l'émission. Distance de l'obstacle ?",
+              correction:"d=v·Δt/2=340×10×10⁻³/2=1,7 m." },
+            { id:'EX-ON4', niveau:'Intermédiaire', titre:'Corde vibrante',
+              enonce:"Corde ℓ=0,6m, v=180m/s, fixée aux deux bouts. Fréquence fondamentale et 2e harmonique ?",
+              correction:"f₁=v/(2ℓ)=180/(2×0,6)=150 Hz.\nf₂=2×f₁=300 Hz." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -846,7 +894,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-ck-suivi', titre:'8.2 Suivi expérimental et ordre de réaction',
+      notions:['Suivi : conductimétrie, spectrophotométrie, pression','Loi de Beer-Lambert A=ε·ℓ·c','Ordre 0 / 1 / 2','Trempe pour figer la réaction'],
+      blocs:[
+        {
+          notion:'📈 Méthodes de suivi et exploitation',
+          theoremes:[
+            { id:'D-CK3', type:'def', nom:'Méthodes de suivi expérimental',
+              enonce:"SPECTROPHOTOMÉTRIE (espèce colorée) :\nLoi de Beer-Lambert : A = ε·ℓ·c\nA absorbance ; ε (L·mol⁻¹·cm⁻¹) ; ℓ trajet (cm) ; c (mol/L)\n→ mesurer A(t) donne c(t).\n\nCONDUCTIMÉTRIE (espèces ioniques) :\nG = σ·S/ℓ varie avec les concentrations ioniques → suit l'avancement.\n\nMANOMÉTRIE / VOLUMÉTRIE : si dégagement gazeux (P ∝ n_gaz).\n\nTREMPE : refroidissement brutal d'un prélèvement pour bloquer la réaction avant dosage.",
+              remarque:"La trempe « fige » le système : la vitesse devient quasi nulle, laissant le temps de doser l'échantillon." },
+            { id:'F-CK1', type:'formule', nom:'Ordre de réaction',
+              enonce:"LOI DE VITESSE : v = k·[A]ⁿ (n = ordre)\n\nORDRE 0 : v=k → [A]=[A]₀−kt (droite) ; t₁/₂=[A]₀/(2k)\nORDRE 1 : v=k[A] → [A]=[A]₀·e^(−kt) ; t₁/₂=ln2/k (CONSTANT)\nORDRE 2 : v=k[A]² → 1/[A]=1/[A]₀+kt ; t₁/₂=1/(k[A]₀)\n\nRECONNAISSANCE :\n• [A](t) droite → ordre 0\n• ln[A](t) droite → ordre 1\n• t₁/₂ indépendant de [A]₀ → ordre 1",
+              remarque:"Critère simple : pour un ordre 1, le temps de demi-réaction est constant quelle que soit la concentration initiale." },
+          ],
+          exercices:[
+            { id:'EX-CK2', niveau:'Facile', titre:'Loi de Beer-Lambert',
+              enonce:"Absorbance A=0,6, ε=150 L·mol⁻¹·cm⁻¹, ℓ=1cm. Concentration c ?",
+              correction:"c=A/(ε·ℓ)=0,6/(150×1)=4×10⁻³ mol/L." },
+            { id:'EX-CK3', niveau:'Intermédiaire', titre:'Reconnaissance d\'ordre',
+              enonce:"t₁/₂=15min que [A]₀=0,1 ou 0,2 mol/L. Ordre et constante k ?",
+              correction:"t₁/₂ indépendant de [A]₀ → ordre 1.\nk=ln2/t₁/₂=0,693/15≈0,046 min⁻¹." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -910,7 +982,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-eq-constante', titre:'9.2 Constante d\'équilibre et critère d\'évolution',
+      notions:['Qr = produits/réactifs','Qr<K → sens direct ; Qr>K → sens inverse','Calcul de K à l\'équilibre','Influence T, P, dilution'],
+      blocs:[
+        {
+          notion:'⚖️ Quotient, constante et déplacement',
+          theoremes:[
+            { id:'D-EQ2', type:'def', nom:'Quotient de réaction et constante K',
+              enonce:"Pour aA + bB ⇌ cC + dD :\nQr = [C]^c·[D]^d / ([A]^a·[B]^b)  (à un instant t)\n\nCONSTANTE D'ÉQUILIBRE : Qr = K à l'équilibre.\nK ne dépend que de la température.\n\nCRITÈRE D'ÉVOLUTION :\nQr < K → sens DIRECT (→)\nQr > K → sens INVERSE (←)\nQr = K → équilibre (aucune évolution nette)\n\nLIEN τ ↔ K (acide faible C, taux τ) :\nKa = τ²C/(1−τ) ≈ τ²C si τ petit → τ ≈ √(Ka/C).\nDiluer (C↓) augmente τ (loi d'Ostwald).",
+              remarque:"Changer les concentrations initiales modifie le taux d'avancement τ mais jamais la constante K (qui ne dépend que de T)." },
+          ],
+          exercices:[
+            { id:'EX-EQ2', niveau:'Facile', titre:'Critère d\'évolution',
+              enonce:"A+B⇌C, K=50. À un instant t : [A]=0,2 ; [B]=0,2 ; [C]=0,4 mol/L. Sens d'évolution ?",
+              correction:"Qr=[C]/([A][B])=0,4/(0,2×0,2)=0,4/0,04=10.\nQr=10 < K=50 → sens DIRECT." },
+            { id:'EX-EQ3', niveau:'Difficile', titre:'Calcul de K à l\'équilibre',
+              enonce:"H₂+I₂⇌2HI, V=1L. À l'équilibre [H₂]=0,1 ; [I₂]=0,1 ; [HI]=0,8 mol/L. Calculer K.",
+              correction:"K=[HI]²/([H₂][I₂])=0,8²/(0,1×0,1)=0,64/0,01=64." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -1068,7 +1161,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-elec-faraday', titre:'11.2 Loi de Faraday, accumulateurs et corrosion',
+      notions:['Q=I·t ; m=M·I·t/(n·F)','Capacité d\'une batterie (A·h)','Autonomie t=Q/I','Corrosion et anode sacrificielle'],
+      blocs:[
+        {
+          notion:'🔋 Quantité d\'électricité et applications',
+          theoremes:[
+            { id:'M-EL1', type:'methode', nom:'Calculs par la loi de Faraday',
+              enonce:"CHARGE ÉLECTRIQUE : Q = I·t (en coulombs ; 1 A·h = 3600 C)\n\nMASSE DÉPOSÉE/CONSOMMÉE :\nm = M·I·t / (n·F)  avec F = 96500 C/mol\nQUANTITÉ DE MATIÈRE : n_substance = Q/(n·F)\nVOLUME DE GAZ : V = n_substance·V_m\n\nCALCUL DU TEMPS : t = m·n·F/(M·I)\n\nEXEMPLE — argenture :\nDéposer m=2,16g d'Ag (M=108, n=1) à I=2A :\nt = 2,16×1×96500/(108×2) ≈ 965 s ≈ 16 min.",
+              remarque:"Penser à convertir les heures en secondes et les A·h en coulombs (×3600) dans la loi de Faraday." },
+            { id:'D-EL2', type:'def', nom:'Accumulateurs et corrosion',
+              enonce:"ACCUMULATEUR (pile rechargeable) :\nDécharge → fonctionne en pile (spontané) ; Charge → électrolyse (forcé).\nCAPACITÉ Q en A·h ; autonomie t=Q/I ; énergie W=Q·U.\n\nCORROSION : oxydation spontanée d'un métal (rouille du fer : Fe→Fe²⁺+2e⁻).\n\nPROTECTION :\n• Anode sacrificielle : relier à un métal plus réducteur (Zn, Mg) qui s'oxyde à la place.\n• Galvanisation (couche de zinc).\n• Protection cathodique imposée par générateur.\n• Revêtement isolant (peinture).",
+              remarque:"Sur les coques de navires et les pipelines, des blocs de zinc (anodes sacrificielles) sont consommés à la place de l'acier." },
+          ],
+          exercices:[
+            { id:'EX-EL2', niveau:'Facile', titre:'Autonomie d\'une batterie',
+              enonce:"Batterie 1500 mAh alimente un circuit de 300 mA. Autonomie ?",
+              correction:"t=Q/I=1500/300=5 heures." },
+            { id:'EX-EL3', niveau:'Intermédiaire', titre:'Masse de cuivre déposée',
+              enonce:"Électrolyse de CuSO₄ : I=2A pendant 30min. Masse de Cu (M=64, n=2) ?",
+              correction:"t=1800s. m=64×2×1800/(2×96500)=230400/193000≈1,19 g." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -1207,6 +1324,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-ofe2', titre:"2. Impédance, déphasage et puissance",
+      notions:["Impédance Z=√(R²+(Lω−1/Cω)²)","Déphasage tanφ=(Lω−1/Cω)/R","Puissance P=U_eff·I_eff·cosφ","Facteur de puissance cosφ"],
+      blocs:[
+        {
+          notion:"⚡ Régime sinusoïdal forcé",
+          theoremes:[
+            { id:'F-OFE2', type:'formule', nom:"Impédance et déphasage",
+              enonce:"u(t)=Um·sin(ωt) ; i(t)=Im·sin(ωt+φ)\n\nIMPÉDANCE : Z = Um/Im = √[R² + (Lω − 1/(Cω))²]\n\nDÉPHASAGE de u par rapport à i :\ntanφ = (Lω − 1/(Cω))/R\n• Lω > 1/Cω → inductif (φ>0)\n• Lω < 1/Cω → capacitif (φ<0)\n• Lω = 1/Cω → résonance : Z=R, φ=0, Im max=Um/R" },
+            { id:'F-OFE3', type:'formule', nom:"Puissance en régime sinusoïdal",
+              enonce:"PUISSANCE MOYENNE (active, W) :\nP = U_eff·I_eff·cosφ = R·I_eff²\navec U_eff=Um/√2 , I_eff=Im/√2\n\nFACTEUR DE PUISSANCE : cosφ\nSeule R consomme de la puissance ; L et C ont une puissance moyenne nulle.\n\nÀ LA RÉSONANCE : φ=0 → cosφ=1 → P maximale = U_eff²/R.",
+              remarque:"Un faible cosφ augmente le courant pour une même puissance utile : on relève le facteur de puissance avec des condensateurs (distribution électrique)." },
+          ],
+          exercices:[
+            { id:'EX-OFE2', niveau:'Facile', titre:"Impédance hors résonance",
+              enonce:"R=30Ω, Lω=80Ω, 1/Cω=40Ω. Calculer Z et φ.",
+              correction:"Z=√(30²+(80−40)²)=√(900+1600)=√2500=50Ω.\ntanφ=40/30=1,33 → φ≈53° (inductif)." },
+            { id:'EX-OFE3', niveau:'Difficile', titre:"Puissance à la résonance",
+              enonce:"À la résonance R=20Ω, U_eff=10V. Puissance moyenne et I_eff ?",
+              correction:"À la résonance Z=R → I_eff=10/20=0,5A.\nP=U_eff·I_eff·cos0=10×0,5=5 W." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -1235,6 +1376,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-elec2', titre:"2. Amplification, filtrage et alimentation",
+      notions:["Gain d'un amplificateur Av=Us/Ue","Décibels : G_dB=20·log(Us/Ue)","Filtrage de l'ondulation par condensateur","Alimentation régulée stabilisée"],
+      blocs:[
+        {
+          notion:"🔧 Amplification et conversion d'énergie",
+          theoremes:[
+            { id:'F-EL3', type:'formule', nom:"Amplification et gain en décibels",
+              enonce:"AMPLIFICATEUR :\nGain en tension : A_v = Us/Ue\nGain en décibels : G_dB = 20·log₁₀(|Us/Ue|)\n\nA_v=10 → 20 dB ; A_v=100 → 40 dB ; A_v=1 → 0 dB.\n\nMONTAGE À TRANSISTOR (émetteur commun) : amplifie le signal d'entrée.\nMONTAGE À ALI (amplificateur opérationnel) :\n• Non inverseur : A_v = 1 + R₂/R₁\n• Inverseur : A_v = −R₂/R₁\n\nLa puissance de sortie est fournie par l'alimentation, pilotée par le signal d'entrée.",
+              remarque:"Un amplificateur ne « crée » pas d'énergie : il module l'énergie de l'alimentation au rythme du signal d'entrée." },
+            { id:'D-EL3', type:'def', nom:"Chaîne d'alimentation continue",
+              enonce:"Convertir le secteur alternatif (230 V ~) en tension continue :\n\n1. TRANSFORMATEUR : abaisse la tension (ex. 230 V → 12 V).\n2. REDRESSEMENT : pont de Graetz (4 diodes) → tension toujours positive.\n3. FILTRAGE : condensateur en parallèle → lisse l'ondulation.\nOndulation résiduelle ΔU diminue si C grand (τ=RC ≫ T).\n4. RÉGULATION : régulateur (ex. 7805) → tension stable malgré la charge.\n\nRésultat : tension continue stable pour alimenter un circuit électronique.",
+              remarque:"Plus la capacité de filtrage est grande, plus l'ondulation résiduelle après redressement est faible." },
+          ],
+          exercices:[
+            { id:'EX-EL2', niveau:'Facile', titre:"Gain en décibels",
+              enonce:"Un amplificateur a Ue=20mV et Us=2V. Calculer le gain A_v et en décibels.",
+              correction:"A_v=Us/Ue=2/0,02=100.\nG_dB=20·log(100)=40 dB." },
+            { id:'EX-EL3', niveau:'Intermédiaire', titre:"Amplificateur non inverseur",
+              enonce:"ALI non inverseur : R₁=1kΩ, R₂=9kΩ. Gain ? Tension de sortie si Ue=0,5V ?",
+              correction:"A_v=1+R₂/R₁=1+9=10.\nUs=A_v×Ue=10×0,5=5 V." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -1257,6 +1423,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-IOMT1', niveau:'Moyen', titre:"Interfrange Young",
               enonce:"Fentes : a=0,4mm, D=1,5m, λ=550nm. Calculer l'interfrange i.",
               correction:"i=λD/a=550×10⁻⁹×1,5/(0,4×10⁻³)=2,0625×10⁻³m≈2,06 mm." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-iomt2', titre:"2. Photons, niveaux d'énergie et applications",
+      notions:["Photon : E=hf=hc/λ","Niveaux d'énergie quantifiés","Cellule photovoltaïque, photodiode","Fibre optique et capteurs"],
+      blocs:[
+        {
+          notion:"⚛️ Quantification et capteurs optiques",
+          theoremes:[
+            { id:'F-IOMT2', type:'formule', nom:"Photon et niveaux d'énergie",
+              enonce:"ÉNERGIE D'UN PHOTON :\nE = h·f = h·c/λ\nh = 6,63×10⁻³⁴ J·s ; c = 3×10⁸ m/s ; 1 eV = 1,6×10⁻¹⁹ J\n\nNIVEAUX D'ÉNERGIE QUANTIFIÉS :\nUn atome ne prend que certaines énergies E₁<E₂<…\nÉmission : hf = E_p − E_n (niveau haut → bas)\nAbsorption : l'atome absorbe un photon d'énergie exactement ΔE.\n→ explique les RAIES des spectres.\n\nEFFET PHOTOÉLECTRIQUE : E_c = h·f − W₀ ; seuil f₀ = W₀/h.",
+              remarque:"Chaque transition entre niveaux correspond à une longueur d'onde précise : signature spectrale d'un élément." },
+            { id:'D-IOMT1', type:'def', nom:"Applications techniques",
+              enonce:"CELLULE PHOTOVOLTAÏQUE :\nUn photon d'énergie hf ≥ E_gap libère une paire électron-trou → courant.\nConversion lumière → électricité (panneaux solaires).\n\nPHOTODIODE / CAPTEUR CCD :\nLa lumière reçue génère un courant proportionnel à l'éclairement\n→ appareils photo, scanners, capteurs de luminosité.\n\nLED : effet inverse (recombinaison → émission de photon, hf = E_gap).\n\nFIBRE OPTIQUE : guidage de la lumière par réflexion totale interne\n(n_cœur > n_gaine) → transmission de données à haut débit.",
+              remarque:"Photovoltaïque et LED illustrent la conversion réciproque lumière ↔ électricité via les photons." },
+          ],
+          exercices:[
+            { id:'EX-IOMT2', niveau:'Facile', titre:"Énergie d'un photon",
+              enonce:"Photon de longueur d'onde λ=600 nm. Énergie en joules et en eV ?",
+              correction:"E=hc/λ=6,63×10⁻³⁴×3×10⁸/(600×10⁻⁹)=3,32×10⁻¹⁹ J.\nEn eV : 3,32×10⁻¹⁹/1,6×10⁻¹⁹≈2,07 eV." },
+            { id:'EX-IOMT3', niveau:'Difficile', titre:"Seuil photovoltaïque",
+              enonce:"Une cellule au silicium a un gap E_gap=1,1 eV. Longueur d'onde maximale d'un photon capable de générer du courant ?",
+              correction:"λ_max=hc/E_gap=6,63×10⁻³⁴×3×10⁸/(1,1×1,6×10⁻¹⁹)≈1,13×10⁻⁶ m≈1130 nm (proche IR)." },
           ],
         },
       ],

@@ -402,7 +402,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-lc-rlc', titre:'3.2 Circuit RLC — oscillations amorties',
+      notions:['L·q\'\'+R·q\'+q/C=0','Régimes : pseudo-périodique, critique, apériodique','Décrément et amortissement α=R/(2L)','Entretien des oscillations'],
+      blocs:[
+        {
+          notion:'📉 Amortissement et entretien',
+          theoremes:[
+            { id:'D-LC2', type:'def', nom:'Les trois régimes du circuit RLC',
+              enonce:"Circuit RLC série : L·d²q/dt² + R·dq/dt + q/C = 0\n\nSelon la résistance R :\n\nPSEUDO-PÉRIODIQUE (R faible, R<2√(L/C)) :\nq(t)=Q_max·e^(−αt)·cos(ω₁t+φ), α=R/(2L)\nAmplitude décroît, pseudo-période T≈T₀.\n\nCRITIQUE (R=2√(L/C)) :\nRetour à l'équilibre le plus rapide SANS oscillation.\n\nAPÉRIODIQUE (R grand, R>2√(L/C)) :\nRetour lent sans oscillation.\n\nL'énergie diminue : dE/dt=−R·i²<0 (effet Joule).",
+              remarque:"Le régime critique est recherché dans les appareils de mesure (galvanomètre) pour une réponse rapide sans oscillation." },
+            { id:'D-LC3', type:'def', nom:'Entretien des oscillations',
+              enonce:"Pour compenser les pertes par effet Joule, on fournit de l'énergie au circuit\nà chaque période (dispositif à résistance négative, montage à ALI).\n\nRÉSULTAT : oscillations ENTRETENUES d'amplitude constante,\nà la pulsation propre ω₀=1/√(LC).\n\nC'est le principe de l'OSCILLATEUR (générateur de signaux, horloge).\n\nBilan : énergie apportée par période = énergie dissipée par R par période.",
+              remarque:"Un oscillateur entretenu transforme une énergie continue (alimentation) en oscillations périodiques stables." },
+          ],
+          exercices:[
+            { id:'EX-LC3', niveau:'Facile', titre:'Résistance critique',
+              enonce:"L=10mH, C=1µF. Calculer la résistance critique R_c=2√(L/C).",
+              correction:"R_c=2√(10⁻²/10⁻⁶)=2√(10⁴)=2×100=200 Ω.\nSi R≥200Ω : régime apériodique." },
+            { id:'EX-LC4', niveau:'Intermédiaire', titre:'Énergie dissipée',
+              enonce:"Condensateur C=1µF chargé sous U₀=10V puis connecté à L et R. Énergie initiale et énergie finale (t→∞) ?",
+              correction:"E_init=½CU₀²=½×10⁻⁶×100=5×10⁻⁵J=50µJ.\nÀ t→∞ : u=0, i=0 → E_final=0.\nToute l'énergie (50µJ) est dissipée par effet Joule." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -576,7 +600,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-om-stationnaires', titre:'5.2 Réflexion, ondes stationnaires et Doppler',
+      notions:['Réflexion sur un obstacle (écho)','Ondes stationnaires : nœuds et ventres','Corde fixée : f_n=n·v/(2ℓ)','Effet Doppler : décalage de fréquence'],
+      blocs:[
+        {
+          notion:'📡 Stationnaires et applications',
+          theoremes:[
+            { id:'D-OM2', type:'def', nom:'Ondes stationnaires et modes propres',
+              enonce:"RÉFLEXION : à un obstacle, l'onde incidente est renvoyée.\nLa superposition incidente + réfléchie donne une ONDE STATIONNAIRE.\n\nNŒUDS : amplitude nulle (immobiles) ; VENTRES : amplitude maximale.\nDistance entre deux nœuds consécutifs = λ/2.\n\nCORDE FIXÉE AUX DEUX EXTRÉMITÉS (longueur ℓ) :\nRésonance si ℓ = n·λ/2  →  f_n = n·v/(2ℓ)  (n = 1, 2, 3…)\nFondamental : f₁ = v/(2ℓ) ; harmoniques : f_n = n·f₁.\n\nApplications : cordes d'instruments, tuyaux sonores.",
+              remarque:"Les modes propres (fréquences de résonance) déterminent la note fondamentale et le timbre d'un instrument." },
+            { id:'F-OM2', type:'formule', nom:'Écho et effet Doppler',
+              enonce:"MESURE PAR ÉCHO (sonar, télémètre à ultrasons) :\nAller-retour : d = v·Δt/2.\n\nEFFET DOPPLER : la fréquence perçue change avec le mouvement relatif source/récepteur.\nRapprochement → fréquence plus élevée ; éloignement → plus basse.\nf' ≈ f·(1 ± v_source/v).\n\nApplications : radar de vitesse, échographie Doppler (débit sanguin), astronomie (décalage vers le rouge).",
+              remarque:"L'échographie médicale utilise la réflexion des ultrasons aux interfaces des tissus (d=v·Δt/2)." },
+          ],
+          exercices:[
+            { id:'EX-ON3', niveau:'Facile', titre:'Mesure par écho',
+              enonce:"Un sonar émet un signal (v=1500m/s dans l'eau) et reçoit l'écho 0,2s après. Profondeur ?",
+              correction:"d=v·Δt/2=1500×0,2/2=150 m." },
+            { id:'EX-ON4', niveau:'Intermédiaire', titre:'Corde vibrante',
+              enonce:"Corde ℓ=0,6m, v=180m/s, fixée aux deux bouts. Fréquence fondamentale et 2e harmonique ?",
+              correction:"f₁=v/(2ℓ)=180/(2×0,6)=150 Hz.\nf₂=2×f₁=300 Hz." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -862,7 +910,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-ck-suivi', titre:'8.2 Suivi expérimental et ordre de réaction',
+      notions:['Suivi : conductimétrie, spectrophotométrie, pression','Loi de Beer-Lambert A=ε·ℓ·c','Ordre 0 / 1 / 2','Trempe pour figer la réaction'],
+      blocs:[
+        {
+          notion:'📈 Méthodes de suivi et exploitation',
+          theoremes:[
+            { id:'D-CK3', type:'def', nom:'Méthodes de suivi expérimental',
+              enonce:"SPECTROPHOTOMÉTRIE (espèce colorée) :\nLoi de Beer-Lambert : A = ε·ℓ·c\nA absorbance ; ε coefficient (L·mol⁻¹·cm⁻¹) ; ℓ trajet (cm) ; c (mol/L)\n→ mesurer A(t) donne c(t).\n\nCONDUCTIMÉTRIE (espèces ioniques) :\nG = σ·S/ℓ varie avec les concentrations ioniques → suit l'avancement.\n\npH-MÉTRIE : si H₃O⁺ produit/consommé.\nMANOMÉTRIE / VOLUMÉTRIE : si dégagement gazeux (P ∝ n_gaz).\n\nTREMPE : refroidissement brutal d'un prélèvement pour bloquer la réaction avant dosage.",
+              remarque:"La trempe « fige » le système : la vitesse devient quasi nulle, ce qui laisse le temps de doser l'échantillon." },
+            { id:'F-CK1', type:'formule', nom:'Ordre de réaction',
+              enonce:"LOI DE VITESSE : v = k·[A]ⁿ (n = ordre)\n\nORDRE 0 : v=k → [A]=[A]₀−kt (droite) ; t₁/₂=[A]₀/(2k)\nORDRE 1 : v=k[A] → [A]=[A]₀·e^(−kt) ; t₁/₂=ln2/k (CONSTANT)\nORDRE 2 : v=k[A]² → 1/[A]=1/[A]₀+kt ; t₁/₂=1/(k[A]₀)\n\nRECONNAISSANCE :\n• [A](t) droite → ordre 0\n• ln[A](t) droite → ordre 1\n• t₁/₂ indépendant de [A]₀ → ordre 1",
+              remarque:"Le critère le plus simple : pour un ordre 1, le temps de demi-réaction est constant quelle que soit la concentration initiale." },
+          ],
+          exercices:[
+            { id:'EX-CK2', niveau:'Facile', titre:'Loi de Beer-Lambert',
+              enonce:"Absorbance A=0,6, ε=150 L·mol⁻¹·cm⁻¹, ℓ=1cm. Concentration c ?",
+              correction:"c=A/(ε·ℓ)=0,6/(150×1)=4×10⁻³ mol/L." },
+            { id:'EX-CK3', niveau:'Intermédiaire', titre:'Reconnaissance d\'ordre',
+              enonce:"t₁/₂=15min que [A]₀=0,1 ou 0,2 mol/L. Ordre et constante k ?",
+              correction:"t₁/₂ indépendant de [A]₀ → ordre 1.\nk=ln2/t₁/₂=0,693/15≈0,046 min⁻¹." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -926,7 +998,28 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-eq-constante', titre:'9.2 Constante d\'équilibre et critère d\'évolution',
+      notions:['Qr = produits/réactifs','Qr<K → sens direct ; Qr>K → sens inverse','Calcul de K à l\'équilibre','Influence T, P, dilution'],
+      blocs:[
+        {
+          notion:'⚖️ Quotient, constante et déplacement',
+          theoremes:[
+            { id:'D-EQ2', type:'def', nom:'Quotient de réaction et constante K',
+              enonce:"Pour aA + bB ⇌ cC + dD :\nQr = [C]^c·[D]^d / ([A]^a·[B]^b)  (à un instant t)\n\nCONSTANTE D'ÉQUILIBRE : Qr = K à l'équilibre.\nK ne dépend que de la température.\n\nCRITÈRE D'ÉVOLUTION :\nQr < K → sens DIRECT (→)\nQr > K → sens INVERSE (←)\nQr = K → équilibre (aucune évolution nette)\n\nLIEN τ ↔ K (acide faible C, taux τ) :\nKa = τ²C/(1−τ) ≈ τ²C si τ petit → τ ≈ √(Ka/C).\nDiluer (C↓) augmente τ (loi d'Ostwald).",
+              remarque:"Changer les concentrations initiales modifie le taux d'avancement τ mais jamais la constante K (qui ne dépend que de T)." },
+          ],
+          exercices:[
+            { id:'EX-EQ2', niveau:'Facile', titre:'Critère d\'évolution',
+              enonce:"A+B⇌C, K=50. À un instant t : [A]=0,2 ; [B]=0,2 ; [C]=0,4 mol/L. Sens d'évolution ?",
+              correction:"Qr=[C]/([A][B])=0,4/(0,2×0,2)=0,4/0,04=10.\nQr=10 < K=50 → sens DIRECT." },
+            { id:'EX-EQ3', niveau:'Difficile', titre:'Calcul de K à l\'équilibre',
+              enonce:"H₂+I₂⇌2HI, V=1L. À l'équilibre [H₂]=0,1 ; [I₂]=0,1 ; [HI]=0,8 mol/L. Calculer K.",
+              correction:"K=[HI]²/([H₂][I₂])=0,8²/(0,1×0,1)=0,64/0,01=64." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -1084,7 +1177,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
       ]
 
     },
-
+    {
+      id:'sc-elec-faraday', titre:'11.2 Loi de Faraday, accumulateurs et corrosion',
+      notions:['Q=I·t ; m=M·I·t/(n·F)','Capacité d\'une batterie (A·h)','Autonomie t=Q/I','Corrosion et anode sacrificielle'],
+      blocs:[
+        {
+          notion:'🔋 Quantité d\'électricité et applications',
+          theoremes:[
+            { id:'M-EL1', type:'methode', nom:'Calculs par la loi de Faraday',
+              enonce:"CHARGE ÉLECTRIQUE : Q = I·t (en coulombs ; 1 A·h = 3600 C)\n\nMASSE DÉPOSÉE/CONSOMMÉE :\nm = M·I·t / (n·F)  avec F = 96500 C/mol\nQUANTITÉ DE MATIÈRE : n_substance = Q/(n·F)\nVOLUME DE GAZ : V = n_substance·V_m\n\nCALCUL DU TEMPS : t = m·n·F/(M·I)\n\nEXEMPLE — argenture :\nDéposer m=2,16g d'Ag (M=108, n=1) à I=2A :\nt = 2,16×1×96500/(108×2) ≈ 965 s ≈ 16 min.",
+              remarque:"Penser à convertir les heures en secondes et les A·h en coulombs (×3600) dans la loi de Faraday." },
+            { id:'D-EL2', type:'def', nom:'Accumulateurs et corrosion',
+              enonce:"ACCUMULATEUR (pile rechargeable) :\nDécharge → fonctionne en pile (spontané) ; Charge → électrolyse (forcé).\nCAPACITÉ Q en A·h ; autonomie t=Q/I ; énergie W=Q·U.\n\nCORROSION : oxydation spontanée d'un métal (rouille du fer : Fe→Fe²⁺+2e⁻).\n\nPROTECTION :\n• Anode sacrificielle : relier à un métal plus réducteur (Zn, Mg) qui s'oxyde à la place.\n• Galvanisation (couche de zinc).\n• Protection cathodique imposée par générateur.\n• Revêtement isolant (peinture).",
+              remarque:"Sur les coques de navires et les pipelines, des blocs de zinc (anodes sacrificielles) sont consommés à la place de l'acier." },
+          ],
+          exercices:[
+            { id:'EX-EL2', niveau:'Facile', titre:'Autonomie d\'une batterie',
+              enonce:"Batterie 1500 mAh alimente un circuit de 300 mA. Autonomie ?",
+              correction:"t=Q/I=1500/300=5 heures." },
+            { id:'EX-EL3', niveau:'Intermédiaire', titre:'Masse de cuivre déposée',
+              enonce:"Électrolyse de CuSO₄ : I=2A pendant 30min. Masse de Cu (M=64, n=2) ?",
+              correction:"t=1800s. m=64×2×1800/(2×96500)=230400/193000≈1,19 g." },
+          ]
+        },
+      ]
+    },
   ]
 
 },
@@ -1219,6 +1336,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-of2', titre:"2. Amortissement, acuité de résonance et applications",
+      notions:["Amortissement faible → résonance aiguë","Facteur de qualité Q et bande passante","Déphasage : −π/2 à la résonance","Résonances utiles et destructrices"],
+      blocs:[
+        {
+          notion:"📈 Acuité de résonance et phénomènes réels",
+          theoremes:[
+            { id:'D-OF2', type:'def', nom:"Acuité de la résonance et amortissement",
+              enonce:"L'amortissement h détermine la forme de la courbe de résonance Xm(ω) :\n\nFAIBLE AMORTISSEMENT (h petit, Q grand) :\nRésonance AIGUË : pic d'amplitude étroit et élevé.\n\nFORT AMORTISSEMENT (h grand, Q petit) :\nRésonance FLOUE : pic large et bas (voire absente).\n\nFACTEUR DE QUALITÉ : Q = mω₀/h\nBANDE PASSANTE à −3 dB : Δω = ω₀/Q.\nQ élevé → système sélectif en fréquence.\n\nDÉPHASAGE excitation/réponse :\nà ω ≪ ω₀ : en phase ; à la résonance : déphasage de −π/2 ;\nà ω ≫ ω₀ : en opposition de phase.",
+              remarque:"Plus l'amortissement est faible, plus la résonance est aiguë et l'amplitude à la résonance grande (potentiellement destructrice)." },
+            { id:'D-OF3', type:'def', nom:"Résonances dans la vie courante",
+              enonce:"RÉSONANCES UTILES :\n• Instruments de musique (caisse de résonance)\n• Circuits d'accord radio (sélection d'une station)\n• Balançoire poussée au bon rythme\n\nRÉSONANCES DESTRUCTRICES (à éviter) :\n• Pont soumis au vent ou au pas cadencé (pont de Tacoma, troupe au pas)\n• Vibrations d'un moteur, d'une machine tournante\n• Séismes sur les bâtiments (fréquence propre)\n\nPRÉVENTION : amortisseurs, désaccord des fréquences propres, masses accordées.",
+              remarque:"On fait rompre le pas à une troupe traversant un pont pour éviter d'exciter sa fréquence propre (résonance)." },
+          ],
+          exercices:[
+            { id:'EX-OF2', niveau:'Facile', titre:"Facteur de qualité et bande passante",
+              enonce:"Oscillateur : ω₀=20 rad/s, Q=10. Largeur de bande Δω et acuité ?",
+              correction:"Δω=ω₀/Q=20/10=2 rad/s.\nQ=10 élevé → résonance aiguë (système sélectif)." },
+            { id:'EX-OF3', niveau:'Difficile', titre:"Coefficient d'amortissement",
+              enonce:"m=0,2 kg, ω₀=20 rad/s, Q=8. Calculer le coefficient d'amortissement h.",
+              correction:"Q=mω₀/h → h=mω₀/Q=0,2×20/8=0,5 kg/s (N·s/m)." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -1243,6 +1385,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-IOM1', niveau:'Moyen', titre:"Interfrange Young",
               enonce:"Fentes de Young : a=0,5 mm, D=2 m, λ=600 nm. Calculer l'interfrange.",
               correction:"i=λD/a=600×10⁻⁹×2/(0,5×10⁻³)=2,4×10⁻³ m=2,4 mm." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-iom2', titre:"2. Photons, niveaux d'énergie et dualité",
+      notions:["Photon : E=hf=hc/λ","Niveaux d'énergie quantifiés","Émission/absorption : ΔE=hf","Dualité onde-corpuscule (De Broglie)"],
+      blocs:[
+        {
+          notion:"⚛️ Quantification et dualité",
+          theoremes:[
+            { id:'F-IOM3', type:'formule', nom:"Photon et niveaux d'énergie",
+              enonce:"ÉNERGIE D'UN PHOTON :\nE = h·f = h·c/λ\nh = 6,63×10⁻³⁴ J·s ; c = 3×10⁸ m/s\nConversion : 1 eV = 1,6×10⁻¹⁹ J\n\nNIVEAUX D'ÉNERGIE QUANTIFIÉS (atome) :\nUn atome ne peut prendre que certaines énergies E₁<E₂<E₃…\n\nÉMISSION : passage d'un niveau haut E_p vers un niveau bas E_n\n→ photon émis d'énergie : hf = E_p − E_n\nABSORPTION : l'atome absorbe un photon d'énergie exactement ΔE.\n\n→ explique les RAIES des spectres (chaque transition = une longueur d'onde).",
+              remarque:"Les longueurs d'onde des raies d'un élément correspondent aux différences entre ses niveaux d'énergie : signature unique de l'élément." },
+            { id:'F-IOM4', type:'formule', nom:"Effet photoélectrique et De Broglie",
+              enonce:"EFFET PHOTOÉLECTRIQUE :\nUn métal éclairé émet des électrons si f ≥ f₀ (seuil).\nÉnergie cinétique max : E_c = h·f − W₀\nW₀ = travail d'extraction ; fréquence seuil f₀ = W₀/h.\nL'effet dépend de la FRÉQUENCE, pas de l'intensité → preuve du photon.\n\nDUALITÉ ONDE-CORPUSCULE (De Broglie) :\nÀ toute particule de quantité de mouvement p=mv est associée une longueur d'onde :\nλ = h/(m·v)\n→ la lumière et la matière ont une double nature (onde et corpuscule).",
+              remarque:"L'effet photoélectrique (Einstein, 1905) a établi la nature corpusculaire de la lumière, complémentaire de sa nature ondulatoire (interférences)." },
+          ],
+          exercices:[
+            { id:'EX-IOM2', niveau:'Facile', titre:"Énergie d'un photon",
+              enonce:"Photon de longueur d'onde λ=500 nm. Énergie en joules et en eV ?",
+              correction:"E=hc/λ=6,63×10⁻³⁴×3×10⁸/(500×10⁻⁹)=3,98×10⁻¹⁹ J.\nEn eV : 3,98×10⁻¹⁹/1,6×10⁻¹⁹≈2,5 eV." },
+            { id:'EX-IOM3', niveau:'Difficile', titre:"Effet photoélectrique",
+              enonce:"Métal de travail d'extraction W₀=2 eV éclairé par λ=400 nm. Y a-t-il émission ? Énergie cinétique max ?",
+              correction:"E_photon=hc/λ=4,97×10⁻¹⁹ J≈3,1 eV > W₀=2 eV → émission OUI.\nE_c=E_photon−W₀=3,1−2=1,1 eV." },
           ],
         },
       ],
