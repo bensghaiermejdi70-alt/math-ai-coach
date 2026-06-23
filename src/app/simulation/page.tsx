@@ -1027,6 +1027,7 @@ async function generateOneExam(
   const isEcoExam     = globalMatiere === 'economie'
   const isGestionExam = globalMatiere === 'gestion'
   const isSvtExam     = globalMatiere === 'svt' || (archives[0]?.sectionKey?.includes('svt') ?? false)
+  const isFrancaisExam = globalMatiere === 'francais' || (archives[0]?.sectionKey?.includes('francais') ?? false)
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -1037,6 +1038,11 @@ RESPOND ONLY IN VALID JSON — no backticks, no comments.
 
 IMPORTANT LANGUAGE RULE: ALL content (statements, questions, passages, answer keys) MUST be written in ENGLISH.
 The correction and model answers MUST also be entirely in ENGLISH.`
+    : isFrancaisExam
+    ? `Tu es un auteur expert de sujets de FRANÇAIS du Baccalauréat tunisien (programme officiel, sections scientifiques et Lettres).
+Tu crées des sujets ORIGINAUX : un TEXTE littéraire support (extrait de roman ou de nouvelle, ~250-350 mots, auteur et œuvre plausibles), suivi d'une étude de texte (compréhension rédigée + langue) et d'un essai argumentatif.
+Texte riche et lisible, avec 3 à 5 mots difficiles expliqués en notes.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isEcoExam
     ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
 Tu crées des sujets ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
@@ -1062,13 +1068,20 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
   const physExtraRules = isAnglaisExam ? `
 ENGLISH EXAM RULES — MANDATORY :
 ALL text MUST be in ENGLISH — passages, questions, instructions, model answers.
-Structure officielle Bac Anglais Tunisie :
-- Exercise 1 — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions (Q1=1pt, Q2=2pts, Q3=2pts, Q4=2pts, Q5=1pt)
-- Exercise 2 — Writing (8 pts) : essay or article task with clear instructions, 180-200 words minimum
-- Exercise 3 — Language (4 pts) : grammar exercises (Exercise A 2pts + Exercise B 2pts)
-Total : 20 points — Duration : 2 hours
+Structure officielle Bac Anglais Tunisie (3 sections) :
+- I. READING COMPREHENSION (8 pts) : authentic text 280-320 words + question types variés : (1) tick the best title ; (2) complete a paragraph with N words taken from the text ; (3) for each statement pick ONE detail from the text showing it is false ; (4) circle the 2 adjectives that best describe a character ; (5) find words/expressions meaning the same as given definitions ; (6) what do the underlined words refer to ; (7) personal justified answer.
+- II. WRITING (8 pts) : TWO tasks — (1) guided writing from notes or a table (e.g. a short biography from given notes) ; (2) free writing from a quote (article, Facebook post or essay, ~12 lines).
+- III. LANGUAGE (4 pts) : THREE exercises — (1) fill in the blanks with words from a given box ; (2) put the words in brackets in the right tense or form ; (3) circle the right option (vocabulary/grammar).
+Total : 20 points — Duration : 2 hours.
 NEVER use French in the exam — every word must be in English.
-The model correction must also be entirely in English.` : isEcoExam ? `
+The model correction must also be entirely in English.` : isFrancaisExam ? `
+RÈGLES SPÉCIFIQUES FRANÇAIS (Bac Tunisie) · 20 pts · 2h :
+- Exercice 1 — ÉTUDE DE TEXTE (10 pts) :
+   • TEXTE support au DÉBUT du "statement" : extrait littéraire ORIGINAL (~250-350 mots), 3 à 5 mots difficiles expliqués en notes (1: … 2: …), avec la référence (Auteur, Titre, éditeur, année — plausibles).
+   • A) Compréhension (6 pts) : 3 questions rédigées sur le sens du texte, chacune (2 pts) justifiée par une phrase ou un indice du texte ; au moins une demande de relever et expliquer un procédé d'écriture. Mention « Toute réponse doit être entièrement rédigée ».
+   • B) Langue (4 pts) : (1) antonyme/synonyme d'un mot souligné + réemploi dans une phrase personnelle (1 pt) ; (2) transformation d'une phrase — forme emphatique↔neutre, voix active↔passive, ou style direct↔indirect (1,5 pt) ; (3) construire une phrase complexe par subordination exprimant un rapport précis : concession, cause ou conséquence (1,5 pt).
+- Exercice 2 — ESSAI (10 pts) : une citation (en lien avec le texte) + une question de débat → point de vue personnel argumenté, appuyé sur des arguments et des exemples précis (~16 lignes).
+- Thèmes : éducation, progrès, science et société, liberté, travail, tradition/modernité, engagement.` : isEcoExam ? `
 RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
 - Structure : Ex1 Mobilisation de connaissances (questions de cours, 6 pts) · Ex2 Travail sur document statistique (lecture + calculs, 6 pts) · Ex3 Analyse de document(s) (4 pts) · Ex4 Synthèse argumentée (4 pts)
 - Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar". DONNÉES CHIFFRÉES DU PAYS — utilise EXCLUSIVEMENT les données officielles ci-dessous (reprends valeurs et années EXACTES, ne pas inventer ; choisis la série qui colle au thème) :\n${blocDonneesTunisie()}
@@ -1176,6 +1189,29 @@ ${isAnglaisExam ? `{
       "points": 4,
       "graph": null,
       "statement": "EXERCISE A (2 pts) — Fill in the blanks / Transform the sentences:\n1. [sentence]  2. [sentence]  3. [sentence]  4. [sentence]\n\nEXERCISE B (2 pts) — Rewrite / Vocabulary matching:\n1. [item]  2. [item]  3. [item]  4. [item]"
+    }
+  ]
+}` : isFrancaisExam ? `{
+  "title": "Français — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 120,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — Étude de texte (Compréhension + Langue)",
+      "theme": "Étude de texte",
+      "points": 10,
+      "graph": null,
+      "statement": "TEXTE\n\n[Extrait littéraire ORIGINAL ~250-350 mots, avec mots difficiles en notes : 1 … 2 …]\n\n— [Auteur, Titre, éditeur, année]\n\nI- ÉTUDE DE TEXTE (10 points)\n\nA- Compréhension (6 points) — Toute réponse doit être entièrement rédigée :\n1) [question sur le sens] Justifiez par une phrase du texte. (2 pts)\n2) [question + relever et expliquer un procédé d'écriture] (2 pts)\n3) [question] Justifiez par un indice textuel. (2 pts)\n\nB- Langue (4 points) :\n1) [antonyme/synonyme d'un mot souligné + réemploi dans une phrase personnelle] (1 pt)\n2) [transformer une phrase : emphatique→neutre / actif↔passif / direct↔indirect] (1,5 pt)\n3) [construire une phrase complexe par subordination : concession / cause / conséquence] (1,5 pt)"
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — Essai",
+      "theme": "Essai argumentatif",
+      "points": 10,
+      "graph": null,
+      "statement": "II- ESSAI (10 points)\n\n« [citation en lien avec le thème du texte] »\n\n[Question de débat ouverte]\n\nVous développerez à ce propos un point de vue personnel en vous appuyant sur des arguments et des exemples précis. (environ 16 lignes)"
     }
   ]
 }` : isEcoExam ? `{
