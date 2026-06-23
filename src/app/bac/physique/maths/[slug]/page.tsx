@@ -415,6 +415,36 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-LN2', niveau:'Intermédiaire', titre:'Loupe',
               enonce:"Loupe f'=5cm. Objet à 4cm de O. Grandissement G ?",
               correction:"G=D/f'=25/5=5× (grossissement commercial).\nVérifier : OA=−4cm, 1/OA'=1/5−1/4=4/20−5/20=−1/20 → OA'=−20cm (image virtuelle).\nγ=−20/(−4)=5 ✓" },
+            { id:'EX-LN3', niveau:'Difficile', titre:'Lentille divergente',
+              enonce:"Lentille divergente f'=−20cm. Objet réel à OA=−30cm. Position et nature de l'image.",
+              correction:"1/OA'=1/f'+1/OA=−1/20−1/30=−3/60−2/60=−5/60 → OA'=−12cm.\nImage virtuelle (OA'<0), droite (γ=−12/−30=0,4>0), réduite (|γ|<1)." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-len-instruments', titre:'7.2 Instruments d\'optique',
+      notions:['Œil : modèle réduit, accommodation','Punctum proximum / remotum','Microscope : grossissement G=G_oc×γ_obj','Lunette astronomique : G=f\'_obj/f\'_oc'],
+      blocs:[
+        {
+          notion:'🔬 Œil et instruments grossissants',
+          theoremes:[
+            { id:'D-LN3', type:'def', nom:'Modèle réduit de l\'œil',
+              enonce:"ŒIL = lentille convergente (cristallin) + écran (rétine)\nDistance cristallin-rétine FIXE → la vergence varie : ACCOMMODATION.\n\nPUNCTUM REMOTUM (PR) : point le plus éloigné vu net\n→ œil normal : à l'infini (vergence minimale)\nPUNCTUM PROXIMUM (PP) : point le plus proche vu net\n→ œil normal : dm ≈ 25 cm (vision distincte)\n\nDÉFAUTS :\nMyopie : œil trop convergent → PR à distance finie (corrigé par lentille divergente)\nHypermétropie : œil pas assez convergent (lentille convergente)\nPresbytie : perte d'accommodation (verres progressifs)" },
+            { id:'F-LN2', type:'formule', nom:'Microscope et lunette astronomique',
+              enonce:"GROSSISSEMENT d'un instrument : G = α'/α\n(α' angle sous lequel on voit l'image, α l'objet à l'œil nu)\n\nMICROSCOPE (objectif + oculaire) :\nL'objectif donne une image réelle agrandie (γ_obj),\nl'oculaire joue le rôle de loupe (G_oc = dm/f'_oc).\nG = |γ_obj| × G_oc = (Δ·dm)/(f'_obj·f'_oc)\n(Δ = intervalle optique entre les foyers)\n\nLUNETTE ASTRONOMIQUE (système afocal) :\nObjet à l'infini → image intermédiaire dans le plan focal commun.\nGrossissement : G = f'_objectif / f'_oculaire\nLongueur de la lunette : L = f'_obj + f'_oc",
+              remarque:"Système afocal : F'_objectif confondu avec F_oculaire → l'image finale d'un objet à l'infini est à l'infini (œil au repos)." },
+          ],
+          exercices:[
+            { id:'EX-LN4', niveau:'Facile', titre:'Vergence d\'une lentille',
+              enonce:"Une lentille a une distance focale f'=4cm. Calculer sa vergence V.",
+              correction:"V=1/f'=1/0,04=25 dioptries (δ)." },
+            { id:'EX-LN5', niveau:'Intermédiaire', titre:'Lunette astronomique',
+              enonce:"Lunette : objectif f'_obj=100cm, oculaire f'_oc=5cm. Grossissement et longueur ?",
+              correction:"G=f'_obj/f'_oc=100/5=20×.\nL=f'_obj+f'_oc=105cm (système afocal)." },
+            { id:'EX-LN6', niveau:'Difficile', titre:'Correction d\'un œil myope',
+              enonce:"Un œil myope a son PR à 50cm. Quelle vergence de verre correcteur pour voir à l'infini ?",
+              correction:"Le verre doit ramener l'image d'un objet à l'infini sur le PR (−50cm).\n1/OA'−1/OA=V avec OA→−∞, OA'=−0,5m : V=1/(−0,5)=−2δ (lentille divergente)." },
           ]
         },
       ]
@@ -617,6 +647,34 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ]
     },
+    {
+      id:'sc-ck-suivi', titre:'11.2 Suivi cinétique et loi de vitesse',
+      notions:['Méthodes de suivi : pression, conductimétrie, spectro','Tableau d\'avancement x(t)','Loi de vitesse v=k[A]ⁿ','Évolution de t₁/₂'],
+      blocs:[
+        {
+          notion:'📈 Méthodes de suivi et exploitation',
+          theoremes:[
+            { id:'M-CK1', type:'methode', nom:'Méthodes de suivi d\'une réaction',
+              enonce:"Suivre l'avancement x(t) au cours du temps :\n\nSUIVI PHYSIQUE (non destructif, continu) :\n• Conductimétrie : si des ions apparaissent/disparaissent (σ=Σλᵢ[Xᵢ])\n• Spectrophotométrie : si une espèce colorée (loi de Beer-Lambert A=ε·ℓ·c)\n• Pression : pour les gaz à V et T constants (P ∝ n_gaz)\n• pH-métrie : si H₃O⁺ produit/consommé\n\nSUIVI CHIMIQUE (titrage) :\nPrélèvements + trempe (refroidissement brutal pour bloquer la réaction) + dosage.\n\nEXPLOITATION :\n1. Tableau d'avancement → relier la grandeur mesurée à x\n2. Tracer x(t) ou [A](t)\n3. Vitesse = pente de la tangente ; t₁/₂ par lecture",
+              remarque:"La trempe (refroidissement) divise par ~2 la vitesse tous les 10°C : elle « fige » le système le temps du dosage." },
+            { id:'F-CK1', type:'formule', nom:'Loi de vitesse et ordre',
+              enonce:"LOI DE VITESSE : v = k·[A]ⁿ  (n = ordre par rapport à A)\nk = constante de vitesse (dépend de T, loi d'Arrhenius)\n\nORDRE 0 : v=k → [A]=[A]₀−kt (droite) ; t₁/₂=[A]₀/(2k)\nORDRE 1 : v=k[A] → [A]=[A]₀·e^(−kt) ; t₁/₂=ln2/k (CONSTANT)\n\nRECONNAISSANCE :\n• [A](t) droite → ordre 0\n• ln[A](t) droite → ordre 1\n• t₁/₂ indépendant de [A]₀ → ordre 1\n\nTEMPS DE DEMI-RÉACTION : durée pour consommer la moitié du réactif limitant.",
+              remarque:"Pour l'ordre 1, t₁/₂ est constant : c'est le critère le plus simple à repérer expérimentalement (radioactivité, beaucoup de réactions)." },
+          ],
+          exercices:[
+            { id:'EX-CK3', niveau:'Facile', titre:'Reconnaissance d\'ordre 1',
+              enonce:"Pour une réaction, t₁/₂=120s quel que soit [A]₀. Quel est l'ordre ? Donner k.",
+              correction:"t₁/₂ indépendant de [A]₀ → ordre 1.\nk=ln2/t₁/₂=0,693/120≈5,8×10⁻³ s⁻¹." },
+            { id:'EX-CK4', niveau:'Intermédiaire', titre:'Suivi conductimétrique',
+              enonce:"Hydrolyse d'un ester libérant des ions. σ passe de 0 à σ∞=1,2 mS/cm. À t, σ=0,9 mS/cm. Taux d'avancement ?",
+              correction:"σ ∝ x (les ions apparaissent proportionnellement à x).\nτ=x/x_max=σ/σ∞=0,9/1,2=0,75=75%." },
+            { id:'EX-CK5', niveau:'Difficile', titre:'Cinétique d\'ordre 1',
+              enonce:"[A]₀=0,1 mol/L, ordre 1, k=2×10⁻² s⁻¹. Concentration à t=60s et t₁/₂.",
+              correction:"[A]=0,1·e^(−0,02×60)=0,1·e^(−1,2)≈0,1×0,301=0,0301 mol/L.\nt₁/₂=ln2/k=0,693/0,02≈34,7 s." },
+          ]
+        },
+      ]
+    },
   ]
 },
 
@@ -648,6 +706,34 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-EQ2', niveau:'Intermédiaire', titre:'Le Chatelier — synthèse',
               enonce:"N₂(g)+3H₂(g)⇌2NH₃(g) ΔH<0 (exothermique). Pour maximiser NH₃ : augmenter ou diminuer T ? Augmenter ou diminuer P ?",
               correction:"ΔH<0 → sens direct exothermique → diminuer T favorise NH₃.\nSens direct : 4 moles gaz → 2 moles gaz → augmenter P favorise NH₃." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-eq-taux', titre:'12.2 Taux d\'avancement et calcul de K',
+      notions:['Avancement final x_f, maximal x_max','Taux d\'avancement τ=x_f/x_max','Réaction totale (τ≈1) / limitée (τ<1)','Calcul de K à partir des concentrations à l\'équilibre'],
+      blocs:[
+        {
+          notion:'⚗️ Avancement, taux et constante',
+          theoremes:[
+            { id:'D-EQ2', type:'def', nom:'Taux d\'avancement final',
+              enonce:"TABLEAU D'AVANCEMENT : suivre n(t) via x.\nF. aA + bB → produits\nn(A)=n₀(A)−a·x ; n(B)=n₀(B)−b·x ; …\n\nAVANCEMENT MAXIMAL x_max :\nObtenu si la réaction était TOTALE (réactif limitant épuisé).\n\nTAUX D'AVANCEMENT FINAL :\nτ = x_f / x_max  (0 ≤ τ ≤ 1)\n\nτ = 1 (ou ≈1) → réaction TOTALE\nτ < 1 → réaction LIMITÉE (équilibre atteint avant épuisement)\n\nFACTEURS : τ dépend de K et de la dilution (un acide faible est d'autant plus dissocié que la solution est diluée — loi de dilution d'Ostwald).",
+              remarque:"Ne pas confondre x_max (réaction supposée totale) et x_f (avancement réellement atteint à l'équilibre)." },
+            { id:'M-EQ1', type:'methode', nom:'Calculer K à partir de l\'état d\'équilibre',
+              enonce:"MÉTHODE :\n1. Dresser le tableau d'avancement (en mol).\n2. Exprimer les concentrations à l'équilibre : [X]_éq = n_éq(X)/V.\n3. Écrire K = Π[produits]^coeff / Π[réactifs]^coeff.\n4. Remplacer par les valeurs numériques.\n\nLIEN avec τ (acide faible AH, C₀, volume V) :\nAH + H₂O ⇌ A⁻ + H₃O⁺\n[H₃O⁺]=[A⁻]=τ·C₀ ; [AH]=(1−τ)C₀\nKa = (τ·C₀)²/((1−τ)C₀) = τ²C₀/(1−τ)\n\nSi τ petit : Ka ≈ τ²C₀ → τ ≈ √(Ka/C₀).",
+              remarque:"K est sans dimension (concentrations rapportées à C°=1 mol/L) et ne dépend que de la température." },
+          ],
+          exercices:[
+            { id:'EX-EQ3', niveau:'Facile', titre:'Taux d\'avancement',
+              enonce:"x_max=5×10⁻³ mol, x_f=3×10⁻³ mol. Taux d'avancement ? Réaction totale ?",
+              correction:"τ=x_f/x_max=3/5=0,6=60%.\nτ<1 → réaction LIMITÉE (équilibre)." },
+            { id:'EX-EQ4', niveau:'Intermédiaire', titre:'Constante d\'acidité',
+              enonce:"Acide faible C₀=0,01 mol/L, taux de dissociation τ=0,05. Calculer Ka et pKa.",
+              correction:"Ka=τ²C₀/(1−τ)=(0,05²×0,01)/0,95=2,5×10⁻⁵/0,95≈2,63×10⁻⁵.\npKa=−log(Ka)≈4,58." },
+            { id:'EX-EQ5', niveau:'Difficile', titre:'Calcul de K à l\'équilibre',
+              enonce:"H₂+I₂⇌2HI, V=1L. À l'équilibre : [H₂]=0,2 ; [I₂]=0,2 ; [HI]=1,6 mol/L. Calculer K.",
+              correction:"K=[HI]²/([H₂][I₂])=1,6²/(0,2×0,2)=2,56/0,04=64." },
           ]
         },
       ]
@@ -735,6 +821,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-rc2', titre:'2. Équation différentielle et exploitation graphique',
+      notions:['Loi des mailles → équation différentielle','Solution uC(t)=E(1−e^{−t/τ})','τ par la tangente à l\'origine','Énergie dissipée par R'],
+      blocs:[
+        {
+          notion:'📈 Mise en équation et mesure de τ',
+          theoremes:[
+            { id:'F-RC3', type:'formule', nom:'Équation différentielle du dipôle RC',
+              enonce:"Loi des mailles (charge) : E = uR + uC = R·i + uC\nOr i = C·(duC/dt) :\n\nÉQUATION : τ·(duC/dt) + uC = E   avec τ = RC\n\nSolution (uC(0)=0) : uC(t) = E·(1 − e^{−t/τ})\n\nVÉRIFICATION : à t=0, uC=0 ; à t→∞, uC=E (duC/dt=0).\n\nDÉCHARGE : τ·(duC/dt) + uC = 0 → uC(t)=U₀·e^{−t/τ}" },
+            { id:'M-RC1', type:'methode', nom:'Déterminer τ graphiquement',
+              enonce:"Trois méthodes pour lire τ sur la courbe uC(t) :\n\n1. TANGENTE À L'ORIGINE : elle coupe l'asymptote uC=E à t=τ.\n2. VALEUR À 63% : uC(τ)=0,63·E (charge) ; uC(τ)=0,37·U₀ (décharge).\n3. RÉGIME PERMANENT atteint à ≈5τ.\n\nÉNERGIE :\n• Emmagasinée par C en fin de charge : E_C=½CE²\n• Dissipée par R pendant la charge : E_R=½CE² (autant !)\n• Fournie par le générateur : E_g=CE² (= E_C + E_R).",
+              remarque:"Le rendement énergétique d'une charge RC est de 50% : la moitié de l'énergie fournie est dissipée par effet Joule, quelle que soit R." },
+          ],
+          exercices:[
+            { id:'EX-RC2', niveau:'Facile', titre:'Lecture de τ',
+              enonce:"Sur uC(t), la tangente à l'origine coupe l'asymptote E=6V à t=2ms. Donner τ et, si C=20µF, la valeur de R.",
+              correction:"τ=2ms. R=τ/C=2×10⁻³/20×10⁻⁶=100 Ω." },
+            { id:'EX-RC3', niveau:'Difficile', titre:'Bilan énergétique',
+              enonce:"C=10µF chargé sous E=12V via R. Énergie fournie par le générateur et énergie dissipée par R ?",
+              correction:"E_C=½CE²=½×10⁻⁵×144=0,72 mJ.\nE_R=0,72 mJ (égale à E_C).\nE_g=CE²=1,44 mJ (rendement 50%)." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -759,6 +869,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-RL1', niveau:'Moyen', titre:'Circuit RL — constante de temps',
               enonce:"Bobine L=0,2H en série avec R=100Ω sous E=10V. Calculer τ, i(τ), énergie en régime permanent.",
               correction:"τ=L/R=0,2/100=2 ms. i(τ)=(10/100)(1-e⁻¹)≈0,0632 A. I∞=E/R=0,1 A. Em=½×0,2×0,01=1 mJ." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-rl2', titre:'2. Équation, énergie magnétique et surtension',
+      notions:['Équation : τ(di/dt)+i=E/R','Énergie Em=½Li²','Loi de Lenz : opposition aux variations','Surtension à la rupture'],
+      blocs:[
+        {
+          notion:'🧲 Mise en équation et énergie',
+          theoremes:[
+            { id:'F-RL3', type:'formule', nom:'Équation différentielle du dipôle RL',
+              enonce:"Loi des mailles (établissement) : E = R·i + L·(di/dt)\n\nÉQUATION : τ·(di/dt) + i = E/R   avec τ = L/R\n\nSolution (i(0)=0) : i(t) = (E/R)·(1 − e^{−t/τ})\nI∞ = E/R (régime permanent : la bobine se comporte comme un fil).\n\nTENSION BOBINE : uL = L·(di/dt) = E·e^{−t/τ}\nÀ t=0 : uL=E ; en régime permanent : uL=0.\n\nÉNERGIE MAGNÉTIQUE emmagasinée : Em = ½·L·I²" },
+            { id:'D-RL1', type:'def', nom:'Loi de Lenz et surtension',
+              enonce:"LOI DE LENZ : le courant induit s'oppose, par ses effets, à la cause qui lui donne naissance.\n→ La bobine s'oppose aux VARIATIONS du courant (force électromotrice e=−L·di/dt).\n\nÀ L'ÉTABLISSEMENT : la bobine retarde la montée du courant.\n\nÀ LA RUPTURE : i ne peut pas s'annuler instantanément (Em stockée).\n→ surtension aux bornes de la bobine pouvant créer une étincelle.\nProtection : diode de roue libre en parallèle.\n\nCONTINUITÉ : le courant dans une bobine est toujours continu (pas de saut).",
+              remarque:"Analogie : la bobine est à l'inertie du courant ce que la masse est à l'inertie mécanique (Em=½LI² ↔ Ec=½mv²)." },
+          ],
+          exercices:[
+            { id:'EX-RL2', niveau:'Facile', titre:'Tension initiale aux bornes de la bobine',
+              enonce:"RL sous E=10V, à l'instant t=0 (i=0). Que vaut uL(0) et uR(0) ?",
+              correction:"À t=0 : i=0 → uR=Ri=0 et uL=E−uR=10V (toute la tension est aux bornes de la bobine)." },
+            { id:'EX-RL3', niveau:'Difficile', titre:'Énergie et durée',
+              enonce:"L=0,5H, R=50Ω, E=15V. Énergie magnétique en régime permanent et temps pour atteindre 99% de I∞.",
+              correction:"I∞=E/R=0,3A. Em=½LI∞²=½×0,5×0,09=22,5 mJ.\n99% atteint à ≈5τ=5×L/R=5×0,01=50 ms." },
           ],
         },
       ],
@@ -789,6 +923,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-rlc2', titre:'2. Régimes et échanges énergétiques',
+      notions:['Régimes : périodique, pseudo-périodique, apériodique','Énergie totale E=½Cu²+½Li²','Dissipation par R (effet Joule)','Entretien des oscillations'],
+      blocs:[
+        {
+          notion:'🔋 Énergie et amortissement',
+          theoremes:[
+            { id:'D-RLC1', type:'def', nom:'Les trois régimes du circuit RLC',
+              enonce:"Selon la valeur de R (amortissement) :\n\nR = 0 (idéal) : RÉGIME PÉRIODIQUE\nu(t)=Um·cos(ω₀t+φ), oscillations entretenues, T₀=2π√(LC).\n\nR FAIBLE : RÉGIME PSEUDO-PÉRIODIQUE\nu(t)=Um·e^{−αt}·cos(ωt+φ), α=R/(2L)\nL'amplitude décroît, pseudo-période T≈T₀.\n\nR GRAND (R ≥ 2√(L/C)) : RÉGIME APÉRIODIQUE\nRetour à l'équilibre SANS oscillation.\n\nRÉGIME CRITIQUE : R=2√(L/C), retour le plus rapide sans oscillation." },
+            { id:'F-RLC2', type:'formule', nom:'Énergie et oscillations entretenues',
+              enonce:"ÉNERGIE TOTALE :\nE = E_C + E_L = ½·C·u² + ½·L·i²\n\nSi R=0 : E = constante (échange permanent entre condensateur et bobine).\nDeux fois par période, E est entièrement électrique puis entièrement magnétique.\n\nSi R≠0 : dE/dt = −R·i² < 0 → l'énergie diminue (effet Joule).\nÉnergie dissipée = E_initiale − E_finale.\n\nENTRETIEN : un dispositif (résistance négative, ALI) compense les pertes Joule\n→ amplitude constante, oscillations entretenues à ω₀.",
+              remarque:"Analogie mécanique : LC ↔ système masse-ressort. ½Cu² ↔ ½kx² (potentielle), ½Li² ↔ ½mv² (cinétique)." },
+          ],
+          exercices:[
+            { id:'EX-RLC2', niveau:'Facile', titre:'Régime critique',
+              enonce:"L=0,1H, C=10µF. Calculer la résistance critique R_c=2√(L/C).",
+              correction:"R_c=2√(0,1/10⁻⁵)=2√(10⁴)=2×100=200 Ω.\nSi R≥200Ω : régime apériodique." },
+            { id:'EX-RLC3', niveau:'Difficile', titre:'Énergie dissipée',
+              enonce:"Condensateur C=10µF chargé sous U₀=12V puis connecté à L+R. Énergie initiale et énergie finale (à t→∞) ?",
+              correction:"E_init=½CU₀²=½×10⁻⁵×144=0,72 mJ.\nÀ t→∞ : i=0 et u=0 → E_final=0.\nToute l'énergie (0,72 mJ) est dissipée par effet Joule dans R." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -811,6 +969,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-OF1', niveau:'Moyen', titre:'Fréquence de résonance',
               enonce:"RLC : R=10Ω, L=0,1H, C=10µF. Calculer f₀, Q, bande passante.",
               correction:"f₀=1/(2π√(LC))=159 Hz. Q=Lω₀/R=0,1×(2π×159)/10≈1. Δf=f₀/Q=159 Hz." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-of2', titre:'2. Impédance, déphasage et puissance',
+      notions:['Impédance Z=√(R²+(Lω−1/Cω)²)','Déphasage tanφ=(Lω−1/Cω)/R','Puissance moyenne P=UI·cosφ','Facteur de puissance cosφ'],
+      blocs:[
+        {
+          notion:'⚡ Régime sinusoïdal forcé',
+          theoremes:[
+            { id:'F-OF2', type:'formule', nom:'Impédance et déphasage',
+              enonce:"TENSION : u(t)=Um·sin(ωt) ; COURANT : i(t)=Im·sin(ωt+φ)\n\nIMPÉDANCE : Z = Um/Im = √[R² + (Lω − 1/(Cω))²]\n\nDÉPHASAGE de u par rapport à i :\ntanφ = (Lω − 1/(Cω))/R\n\n• Lω > 1/Cω → circuit INDUCTIF (u en avance, φ>0)\n• Lω < 1/Cω → circuit CAPACITIF (u en retard, φ<0)\n• Lω = 1/Cω → RÉSONANCE : Z=R minimale, φ=0 (u et i en phase), Im max=Um/R" },
+            { id:'F-OF3', type:'formule', nom:'Puissance en régime sinusoïdal',
+              enonce:"PUISSANCE INSTANTANÉE : p(t)=u(t)·i(t)\n\nPUISSANCE MOYENNE (active, en watts) :\nP = U_eff·I_eff·cosφ = R·I_eff²\navec U_eff=Um/√2 , I_eff=Im/√2\n\nFACTEUR DE PUISSANCE : cosφ\nSeule la résistance consomme de la puissance (bobine et condensateur : P moyenne nulle).\n\nÀ LA RÉSONANCE : φ=0 → cosφ=1 → P maximale = U_eff²/R.",
+              remarque:"Un faible cosφ (circuit très inductif) augmente le courant pour une même puissance utile : d'où le « relèvement du facteur de puissance » par condensateurs en distribution électrique." },
+          ],
+          exercices:[
+            { id:'EX-OF2', niveau:'Facile', titre:'Impédance hors résonance',
+              enonce:"R=20Ω, Lω=50Ω, 1/Cω=20Ω. Calculer Z et le déphasage φ.",
+              correction:"Z=√(20²+(50−20)²)=√(400+900)=√1300≈36Ω.\ntanφ=30/20=1,5 → φ≈56° (circuit inductif)." },
+            { id:'EX-OF3', niveau:'Difficile', titre:'Puissance à la résonance',
+              enonce:"À la résonance, R=10Ω, U_eff=12V. Puissance moyenne consommée et I_eff ?",
+              correction:"À la résonance Z=R → I_eff=U_eff/R=1,2A.\nP=U_eff·I_eff·cos0=12×1,2=14,4 W (=R·I_eff²=10×1,44)." },
           ],
         },
       ],
@@ -841,6 +1023,31 @@ const ALL_CHAPTERS: Record<string,Chap> = {
         },
       ],
     },
+    {
+      id:'sc-fi2', titre:'2. Décibels, diagramme de Bode et passe-bande',
+      notions:['Gain en dB : G_dB=20·log(Us/Ue)','Fréquence de coupure à −3 dB','Pente : ±20 dB/décade','Passe-bande : Δf=f₂−f₁'],
+      blocs:[
+        {
+          notion:'📊 Bode et filtre passe-bande',
+          theoremes:[
+            { id:'F-FI2', type:'formule', nom:'Gain en décibels et diagramme de Bode',
+              enonce:"GAIN EN DÉCIBELS : G_dB = 20·log₁₀(Us/Ue)\n\nG = 1   → G_dB = 0 (signal transmis intégralement)\nG = 1/√2 → G_dB = −3 dB (définition de la fréquence de coupure)\nG = 1/10 → G_dB = −20 dB\n\nDIAGRAMME DE BODE : G_dB en fonction de log(f).\nPasse-bas du 1er ordre :\n• f ≪ fc : G_dB ≈ 0 (plateau)\n• f ≫ fc : pente de −20 dB/décade (×10 sur f → −20 dB)\n\nDÉCADE = ×10 en fréquence ; OCTAVE = ×2.",
+              remarque:"Une coupure « plus raide » (−40 dB/décade) s'obtient avec un filtre du 2nd ordre (RLC ou deux cellules RC)." },
+            { id:'D-FI1', type:'def', nom:'Filtre passe-bande',
+              enonce:"FILTRE PASSE-BANDE : ne laisse passer qu'une bande de fréquences [f₁ ; f₂].\nObtenu par circuit RLC série (résonance) ou association passe-haut + passe-bas.\n\nFRÉQUENCES DE COUPURE f₁, f₂ : où G = G_max/√2 (−3 dB).\nLARGEUR DE BANDE : Δf = f₂ − f₁\nFRÉQUENCE CENTRALE : f₀ = √(f₁·f₂)\nFACTEUR DE QUALITÉ : Q = f₀/Δf\n\nQ élevé → filtre sélectif (bande étroite, utilisé en radio pour sélectionner une station).",
+              remarque:"Le facteur de qualité Q relie sélectivité et bande passante : Δf=f₀/Q. Plus Q est grand, plus le filtre est sélectif." },
+          ],
+          exercices:[
+            { id:'EX-FI2', niveau:'Facile', titre:'Conversion en décibels',
+              enonce:"Un filtre a un gain G=Us/Ue=0,1. Exprimer le gain en décibels.",
+              correction:"G_dB=20·log(0,1)=20×(−1)=−20 dB." },
+            { id:'EX-FI3', niveau:'Difficile', titre:'Passe-bande et sélectivité',
+              enonce:"Passe-bande : f₁=950Hz, f₂=1050Hz. Fréquence centrale, largeur de bande et facteur de qualité ?",
+              correction:"f₀=√(950×1050)=√997500≈999Hz≈1kHz.\nΔf=1050−950=100Hz. Q=f₀/Δf≈999/100≈10 (filtre sélectif)." },
+          ],
+        },
+      ],
+    },
   ],
 },
 
@@ -863,6 +1070,30 @@ const ALL_CHAPTERS: Record<string,Chap> = {
             { id:'EX-OM1', niveau:'Facile', titre:"Célérité et longueur d'onde",
               enonce:"Une onde sonore de fréquence f=440 Hz se propage à v=340 m/s. Calculer λ et T.",
               correction:"λ=v/f=340/440≈0,77 m. T=1/f≈2,27 ms. Vérif: v=λ/T=0,77/(2,27×10⁻³)≈340 m/s." },
+          ],
+        },
+      ],
+    },
+    {
+      id:'sc-om2', titre:'2. Phase, interférences et diffraction',
+      notions:['Points en phase : d=k·λ','Points en opposition : d=(k+½)·λ','Interférences : δ=d₂−d₁','Diffraction par une fente'],
+      blocs:[
+        {
+          notion:'🌊 Phase, interférences et diffraction',
+          theoremes:[
+            { id:'D-OM1', type:'def', nom:'Phase et déphasage entre deux points',
+              enonce:"Deux points M₁ et M₂ d'une même onde, distants de d :\n\nDÉPHASAGE : Δφ = 2π·d/λ\n\nEN PHASE (vibrent de la même façon) :\nd = k·λ  (k entier) → Δφ = 2kπ\n\nEN OPPOSITION DE PHASE :\nd = (k + ½)·λ  (k entier) → Δφ = (2k+1)π\n\nRETARD : un point M à distance d de la source reproduit le mouvement\nde la source avec un retard τ = d/v." },
+            { id:'F-OM2', type:'formule', nom:'Interférences et diffraction',
+              enonce:"INTERFÉRENCES (deux sources S₁, S₂ en phase) :\nDifférence de marche : δ = d₂ − d₁\nINTERFÉRENCE CONSTRUCTIVE (amplitude max) : δ = k·λ\nINTERFÉRENCE DESTRUCTIVE (amplitude nulle) : δ = (k+½)·λ\n\nDIFFRACTION par une fente de largeur a :\nÉcart angulaire (demi-largeur de la tache centrale) :\nθ = λ/a   (θ en radians, si θ petit)\n\nLargeur de la tache centrale sur un écran à distance D :\nL = 2·D·λ/a\n\nLa diffraction est d'autant plus marquée que a est petit (a comparable à λ).",
+              remarque:"La diffraction est observable quand la dimension de l'ouverture/obstacle est de l'ordre de λ. Elle prouve le caractère ondulatoire de la lumière." },
+          ],
+          exercices:[
+            { id:'EX-OM2', niveau:'Facile', titre:'Points en phase',
+              enonce:"Onde de longueur d'onde λ=2cm. Deux points distants de d=8cm sont-ils en phase ?",
+              correction:"d/λ=8/2=4 (entier) → d=4λ → les deux points sont EN PHASE." },
+            { id:'EX-OM3', niveau:'Difficile', titre:'Diffraction par une fente',
+              enonce:"Laser λ=633nm, fente a=0,1mm, écran à D=2m. Largeur de la tache centrale ?",
+              correction:"θ=λ/a=633×10⁻⁹/10⁻⁴=6,33×10⁻³ rad.\nL=2Dλ/a=2×2×633×10⁻⁹/10⁻⁴=2,53×10⁻² m≈2,5 cm." },
           ],
         },
       ],
