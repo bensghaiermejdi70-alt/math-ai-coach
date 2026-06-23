@@ -1026,6 +1026,7 @@ async function generateOneExam(
   const isAnglaisExam = globalMatiere === 'anglais' || (archives[0]?.sectionKey?.includes('anglais') ?? false)
   const isEcoExam     = globalMatiere === 'economie'
   const isGestionExam = globalMatiere === 'gestion'
+  const isSvtExam     = globalMatiere === 'svt' || (archives[0]?.sectionKey?.includes('svt') ?? false)
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -1045,6 +1046,10 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isGestionExam
     ? `Tu es un auteur expert de sujets de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
 Tu crées des ÉTUDES DE CAS ORIGINALES d'une entreprise : comptabilité (bilan, compte de résultat), analyse financière (FDR, BFR, TN, ratios), gestion des stocks (CUMP, Wilson), coûts (coût complet, MCV, seuil de rentabilité), avec des données chiffrées COHÉRENTES.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isSvtExam
+    ? `Tu es un auteur expert de sujets de SVT (Sciences de la Vie et de la Terre) du Baccalauréat tunisien (programme CNP officiel, sections Sciences expérimentales et Mathématiques).
+Tu crées des sujets ORIGINAUX et rigoureux : QCM, restitution de connaissances, analyse de documents (résultats d'expérience, graphiques, électrophorèse, arbres généalogiques) et raisonnement scientifique.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isPhysExam
     ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
@@ -1074,7 +1079,17 @@ RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion
 - ÉTUDE DE CAS d'une entreprise FICTIVE (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices), portant sur le DERNIER EXERCICE CLÔTURÉ ${n1} : intitulés « Bilan au 31/12/${n1} », « exercice ${n1} ». Toute évolution (CA, ventes…) se termine en ${n1}.
 - Documents comptables en tableaux : champ "graph" type "table" (extrait de bilan, compte de résultat, tableau de stocks, tableau de coûts)
 - Calculs OBLIGATOIRES selon les dossiers : Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · Taux de MCV=MCV/CA · Seuil de rentabilité=Charges fixes/Taux de MCV · CUMP · Rotation des stocks=Consommation/Stock moyen · Masse salariale
-- Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isPhysExam ? `
+- Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isSvtExam ? `
+RÈGLES SPÉCIFIQUES SVT (Bac Tunisie — programme CNP officiel) · 20 pts · 3h :
+Structure officielle : PREMIÈRE PARTIE (8 pts, restitution) + DEUXIÈME PARTIE (12 pts, raisonnement sur documents). Le sujet COMMENCE toujours par un QCM.
+- Exercice 1 — PREMIÈRE PARTIE — Restitution des connaissances (8 pts) :
+   • A) QCM (4 pts) au DÉBUT du "statement" : 4 à 5 items numérotés, chacun 4 propositions a) b) c) d) ; format tunisien = retrouver la (ou les deux) réponse(s) EXACTE(S) par item ; l'élève indique la/les lettre(s).
+   • B) QROC / restitution (4 pts) : questions à réponses ouvertes courtes, schéma fonctionnel à compléter/annoter, ou exposé structuré.
+- Exercice 2 — DEUXIÈME PARTIE (6 pts) : raisonnement scientifique sur un nombre réduit de documents (résultats d'expérience, graphique, électrophorèse, arbre généalogique) — Génétique OU Immunologie.
+- Exercice 3 — DEUXIÈME PARTIE (6 pts) : raisonnement sur documents — AUTRE domaine (Milieu intérieur & Neuro OU Reproduction). [Ex2 + Ex3 = 12 pts]
+- Domaines du programme : Génétique (brassage, méiose, Mendel, Hardy-Weinberg) · Milieu intérieur & Neuro (glycémie, potentiel d'action, synapse, réflexe) · Immunité (spécifique/non spécifique) · Reproduction (cycles, hormones) · Nutrition & Photosynthèse.
+- Données chiffrées réalistes (glycémie 0,8-1,2 g/L, potentiel de repos -70 mV…). Tableaux d'expérience / graphiques dans le champ "graph" si pertinent.
+- Dans la CORRECTION, donne toujours les bonnes réponses du QCM.` : isPhysExam ? `
 RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
 - Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
 - Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
@@ -1239,6 +1254,37 @@ ${isAnglaisExam ? `{
       "points": 4,
       "graph": null,
       "statement": "Questions de gestion 1), 2) (masse salariale, part de marché, financement, budget). Minimum 90 mots."
+    }
+  ]
+}` : isSvtExam ? `{
+  "title": "SVT — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": ${totalPts},
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Exercice 1 — Première partie : Restitution (QCM + QROC)",
+      "theme": "QCM + QROC",
+      "points": 8,
+      "graph": null,
+      "statement": "PREMIÈRE PARTIE (8 points)\n\nA — QCM (4 pts) : pour chaque item, indiquer la (ou les deux) réponse(s) exacte(s).\n1) [proposition] a) … b) … c) … d) …\n2) … 3) … 4) …  (4 à 5 items)\n\nB — QROC / Restitution (4 pts) : [questions à réponses ouvertes courtes / compléter le schéma fonctionnel / exposé structuré sur une notion du programme]."
+    },
+    {
+      "num": 2,
+      "title": "Exercice 2 — [Génétique ou Immunologie]",
+      "theme": "[Domaine]",
+      "points": 6,
+      "graph": "[GRAPH: {JSON type table/bar si document chiffré}] ou null",
+      "statement": "DEUXIÈME PARTIE (6 points)\n\nDOCUMENT(S) : [résultats d'expérience / électrophorèse / arbre généalogique / graphique — décrits ici] [voir document ci-dessus]\n\n1) Analyser le(s) document(s).\n2) Interpréter / déduire.\n3) Raisonnement de synthèse. Minimum 120 mots."
+    },
+    {
+      "num": 3,
+      "title": "Exercice 3 — [Milieu intérieur/Neuro ou Reproduction]",
+      "theme": "[Domaine]",
+      "points": 6,
+      "graph": "[GRAPH: {JSON si document chiffré}] ou null",
+      "statement": "DEUXIÈME PARTIE (6 points)\n\nDOCUMENT(S) : [décrits ici] [voir document ci-dessus]\n\n1) Analyse. 2) Interprétation. 3) Raisonnement. Minimum 120 mots."
     }
   ]
 }` : `{
