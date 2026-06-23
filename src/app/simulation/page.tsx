@@ -985,6 +985,32 @@ function parseJSON<T>(raw: string, fallback: T): T {
 }
 
 // ── Génération examen ─────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// BASE DE DONNÉES OFFICIELLE TUNISIE (sources INS · BCT · Banque Mondiale)
+// Injectée dans le prompt Économie pour des chiffres pays RÉELS (pas inventés).
+// ⚠️ À actualiser ~chaque année quand l'INS publie l'exercice clos.
+// ════════════════════════════════════════════════════════════════
+const DONNEES_TUNISIE = {
+  source: 'INS, BCT, Banque Mondiale',
+  derniereAnnee: 2025,
+  series: [
+    { cle: 'Taux de croissance du PIB réel (%)',            v: [['2021','4,7'],['2022','2,8'],['2023','0,2'],['2024','1,4'],['2025','2,5']] },
+    { cle: "Taux d'inflation — IPC moyen annuel (%)",       v: [['2021','5,7'],['2022','8,3'],['2023','9,3'],['2024','7,0'],['2025','5,7']] },
+    { cle: 'Taux de chômage (%)',                           v: [['2022','15,2'],['2023','16,4'],['2024','16,0'],['2025','15,4']] },
+    { cle: 'Exportations — prix courants (MD)',             v: [['2023','62077,6'],['2024','62077,6'],['2025','63695,1']] },
+    { cle: 'Importations — prix courants (MD)',             v: [['2023','79146,3'],['2024','81005,2'],['2025','85495,4']] },
+    { cle: 'Solde de la balance commerciale (MD)',          v: [['2023','-17069,0'],['2024','-18927,6'],['2025','-21800,3']] },
+    { cle: 'Taux de couverture X/M (%)',                    v: [['2023','78,4'],['2024','76,6'],['2025','74,5']] },
+    { cle: 'Taux de change moyen (BCT, fév. 2026)',         v: [['USD/TND','2,86'],['EUR/TND','3,38']] },
+  ],
+}
+function blocDonneesTunisie(): string {
+  const lignes = DONNEES_TUNISIE.series
+    .map(s => '- ' + s.cle + ' : ' + s.v.map(x => x[0] + ' \u2192 ' + x[1]).join(' \u00b7 '))
+    .join('\n')
+  return 'DONNÉES OFFICIELLES TUNISIE (sources ' + DONNEES_TUNISIE.source + ', jusqu\'à ' + DONNEES_TUNISIE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document chiffré. NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : reprends les valeurs et années EXACTES ; choisis la série qui colle au thème ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
+}
+
 async function generateOneExam(
   archives: Archive[], customText: string, idx: number, onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
@@ -1000,6 +1026,8 @@ async function generateOneExam(
   const isAnglaisExam = globalMatiere === 'anglais' || (archives[0]?.sectionKey?.includes('anglais') ?? false)
   const isEcoExam     = globalMatiere === 'economie'
   const isGestionExam = globalMatiere === 'gestion'
+  const annee = new Date().getFullYear()
+  const n1 = annee - 1
 
   const system = isAnglaisExam
     ? `You are an expert author of official Tunisian Baccalaureate English exam papers (CNP official programme).
@@ -1011,7 +1039,7 @@ The correction and model answers MUST also be entirely in ENGLISH.`
     : isEcoExam
     ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
 Tu crées des sujets ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
-Tes documents sont RÉALISTES : vraies grandeurs (PIB, taux de croissance, solde commercial, taux de couverture, IDH, coefficient budgétaire…), sources et années citées (INS, Banque Mondiale, FMI).
+Pour les données chiffrées du pays, utilise EXCLUSIVEMENT les données officielles fournies dans les règles (INS · BCT · Banque Mondiale) — valeurs et années EXACTES, jamais inventées. Grandeurs : PIB, croissance, commerce extérieur (X, M, taux de couverture), inflation, chômage, IDH.
 Notions et formules du programme tunisien.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isGestionExam
@@ -1038,12 +1066,12 @@ NEVER use French in the exam — every word must be in English.
 The model correction must also be entirely in English.` : isEcoExam ? `
 RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
 - Structure : Ex1 Mobilisation de connaissances (questions de cours, 6 pts) · Ex2 Travail sur document statistique (lecture + calculs, 6 pts) · Ex3 Analyse de document(s) (4 pts) · Ex4 Synthèse argumentée (4 pts)
-- Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar" (données INS / Banque Mondiale / FMI réalistes, avec source et année)
+- Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar". DONNÉES CHIFFRÉES DU PAYS — utilise EXCLUSIVEMENT les données officielles ci-dessous (reprends valeurs et années EXACTES, ne pas inventer ; choisis la série qui colle au thème) :\n${blocDonneesTunisie()}
 - Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture ((X+M)/2)/PIB×100, coefficient budgétaire, TCAM, IDH
 - Notions du programme : croissance (extensive/intensive), facteurs de croissance, développement durable, échanges extérieurs, mondialisation, FMN, coûts de la croissance
 - Toujours citer la source et l'année des documents` : isGestionExam ? `
 RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion) :
-- ÉTUDE DE CAS d'une entreprise (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices)
+- ÉTUDE DE CAS d'une entreprise FICTIVE (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices), portant sur le DERNIER EXERCICE CLÔTURÉ ${n1} : intitulés « Bilan au 31/12/${n1} », « exercice ${n1} ». Toute évolution (CA, ventes…) se termine en ${n1}.
 - Documents comptables en tableaux : champ "graph" type "table" (extrait de bilan, compte de résultat, tableau de stocks, tableau de coûts)
 - Calculs OBLIGATOIRES selon les dossiers : Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · Taux de MCV=MCV/CA · Seuil de rentabilité=Charges fixes/Taux de MCV · CUMP · Rotation des stocks=Consommation/Stock moyen · Masse salariale
 - Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isPhysExam ? `
