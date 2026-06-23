@@ -1893,6 +1893,31 @@ function getProgrammeJourEcoFR(sectionKey: string, dayNum: number) {
   return prog[(dayNum - 1) % prog.length]
 }
 
+// ════════════════════════════════════════════════════════════════
+// BASE DE DONNÉES OFFICIELLE FRANCE (sources INSEE · Banque de France · Eurostat)
+// Injectée dans le prompt Éco-Gestion (SES) pour des chiffres pays RÉELS.
+// ⚠️ À actualiser ~chaque année (note de conjoncture INSEE / comptes de la Nation).
+// ════════════════════════════════════════════════════════════════
+const DONNEES_FRANCE = {
+  source: 'INSEE, Banque de France, Eurostat',
+  derniereAnnee: 2025,
+  series: [
+    { cle: 'Croissance du PIB réel (%)',                 v: [['2021','6,9'],['2022','2,7'],['2023','1,4'],['2024','1,2'],['2025','0,9']] },
+    { cle: "Taux d'inflation — IPC moyen annuel (%)",    v: [['2021','1,6'],['2022','5,2'],['2023','4,9'],['2024','2,0'],['2025','1,0']] },
+    { cle: 'Taux de chômage au sens du BIT (%)',         v: [['2021','7,9'],['2022','7,3'],['2023','7,3'],['2024','7,4'],['2025','7,6']] },
+    { cle: 'PIB 2024',                                   v: [['courant','2 920 Md€'],['constant base 2020','2 613 Md€']] },
+    { cle: 'Déficit public (% du PIB)',                  v: [['2023','-5,5'],['2024','-5,8'],['2025','-5,4']] },
+    { cle: 'Dette publique (% du PIB)',                  v: [['2023','109,9'],['2024','113,0'],['2025','115,0']] },
+    { cle: 'SMIC 2025',                                  v: [['brut horaire','11,88 €'],['brut mensuel 35h','1 801,80 €']] },
+  ],
+}
+function blocDonneesFrance(): string {
+  const lignes = DONNEES_FRANCE.series
+    .map(s => '- ' + s.cle + ' : ' + s.v.map(x => x[0] + ' \u2192 ' + x[1]).join(' \u00b7 '))
+    .join('\n')
+  return 'DONNÉES OFFICIELLES FRANCE (sources ' + DONNEES_FRANCE.source + ', jusqu\'à ' + DONNEES_FRANCE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document statistique (SES). NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : valeurs et années EXACTES ; choisis la série qui colle au thème ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
+}
+
 async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const secLabel = candidat.section || 'Terminale Spé SES'
   const sk = candidat.sectionKey
@@ -1913,15 +1938,17 @@ async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number): Promis
 
   const system = `Tu es un auteur expert de sujets du Baccalauréat France en Sciences Économiques et Sociales (SES) et en série STMG (programme officiel Éducation Nationale).
 Tu crées des sujets BAC BLANC ÉCONOMIE & GESTION originaux, rigoureux, de niveau Bac France.
-Données statistiques RÉALISTES (PIB, chômage, indices base 100, parts en %, INSEE/Eurystat plausibles), sources et années citées.
+Pour le document statistique macro (SES), utilise EXCLUSIVEMENT les données officielles fournies plus bas (bloc « DONNÉES OFFICIELLES FRANCE » — INSEE/Banque de France/Eurostat) : valeurs et années EXACTES, ne pas inventer. Pour la Gestion-Finance STMG, données d'une entreprise fictive réalistes (dernier exercice clôturé).
 Vocabulaire SES précis, auteurs du programme (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls).
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
 ${UNIVERSAL_GRAPH_PROMPT}
 
-GRAPHIQUES SES — le document statistique va dans le champ "graph" SÉPARÉ :
-- TABLEAU : [GRAPH: {"type":"table","title":"Taux de chômage par diplôme (France, 2024, %)","headers":["Diplôme","Taux (%)","Part actifs (%)"],"rows":[["Sans diplôme","12,4","14"],["Bac","7,8","22"],["Bac+5","3,9","38"]]}]
-- DIAGRAMME BARRES : [GRAPH: {"type":"bar","title":"Croissance du PIB (%)","categories":["2021","2022","2023","2024"],"values":[6.4,2.6,1.1,0.9],"yLabel":"Taux (%)","xLabel":"Année"}]`
+${blocDonneesFrance()}
+
+GRAPHIQUES SES — le document statistique va dans le champ "graph" SÉPARÉ, en reprenant les chiffres officiels ci-dessus :
+- TABLEAU : [GRAPH: {"type":"table","title":"Économie française (INSEE)","headers":["Année","Croissance PIB (%)","Inflation (%)","Chômage (%)"],"rows":[["2023","1,4","4,9","7,3"],["2024","1,2","2,0","7,4"],["2025","0,9","1,0","7,6"]]}]
+- DIAGRAMME BARRES : [GRAPH: {"type":"bar","title":"Croissance du PIB en France (%, INSEE)","categories":["2021","2022","2023","2024","2025"],"values":[6.9,2.7,1.4,1.2,0.9],"yLabel":"Taux (%)","xLabel":"Année"}]`
 
   const structure = isStmg
     ? `STRUCTURE STMG (étude de cas, 20 points) :\nDossier 1 - MANAGEMENT (7 pts) : ${t1}\nDossier 2 - DROIT & ÉCONOMIE (6 pts) : ${t2}\nDossier 3 - GESTION-FINANCE (7 pts, calculs FDR/BFR/TN/MCV/seuil, tableau OBLIGATOIRE) : ${t3}`
@@ -1943,7 +1970,7 @@ Durée : ${secDuration/60}h · Total : 20 points
 
 RÈGLES ABSOLUES :
 - Sujet ORIGINAL, jamais une copie des annales
-- Données statistiques réalistes, sources (INSEE, Eurostat, OCDE) et années citées
+- Document statistique macro : reprends les chiffres EXACTS du bloc « DONNÉES OFFICIELLES FRANCE » (ne pas inventer). STMG Gestion-Finance : données d'entreprise fictive réalistes, dernier exercice clôturé.
 - Calculs précis : taux de variation, indices base 100, points de %, Gini, FDR/BFR/TN, seuil (STMG)
 - Le document chiffré va dans le champ "graph" (type "table" ou "bar"), PAS en texte dans le statement
 - Questions numérotées 1) 2) 3) · Minimum 120 mots par exercice
