@@ -2493,12 +2493,40 @@ function getProgrammeJourEco(dayNum: number) {
   return PROGRAMME_JOUR_ECO[(dayNum - 1) % PROGRAMME_JOUR_ECO.length]
 }
 
+// ════════════════════════════════════════════════════════════════
+// BASE DE DONNÉES OFFICIELLE TUNISIE (sources INS · BCT · Banque Mondiale)
+// Injectée dans le prompt Économie pour des chiffres pays RÉELS (pas inventés).
+// ⚠️ À actualiser ~chaque année quand l'INS publie l'exercice clos.
+// ════════════════════════════════════════════════════════════════
+const DONNEES_TUNISIE = {
+  source: 'INS, BCT, Banque Mondiale',
+  derniereAnnee: 2025,
+  series: [
+    { cle: 'Taux de croissance du PIB réel (%)',            v: [['2021','4,7'],['2022','2,8'],['2023','0,2'],['2024','1,4'],['2025','2,5']] },
+    { cle: "Taux d'inflation — IPC moyen annuel (%)",       v: [['2021','5,7'],['2022','8,3'],['2023','9,3'],['2024','7,0'],['2025','5,7']] },
+    { cle: 'Taux de chômage (%)',                           v: [['2022','15,2'],['2023','16,4'],['2024','16,0'],['2025','15,4']] },
+    { cle: 'Exportations — prix courants (MD)',             v: [['2023','62077,6'],['2024','62077,6'],['2025','63695,1']] },
+    { cle: 'Importations — prix courants (MD)',             v: [['2023','79146,3'],['2024','81005,2'],['2025','85495,4']] },
+    { cle: 'Solde de la balance commerciale (MD)',          v: [['2023','-17069,0'],['2024','-18927,6'],['2025','-21800,3']] },
+    { cle: 'Taux de couverture X/M (%)',                    v: [['2023','78,4'],['2024','76,6'],['2025','74,5']] },
+    { cle: 'Taux de change moyen (BCT, fév. 2026)',         v: [['USD/TND','2,86'],['EUR/TND','3,38']] },
+  ],
+}
+function blocDonneesTunisie(): string {
+  const lignes = DONNEES_TUNISIE.series
+    .map(s => '- ' + s.cle + ' : ' + s.v.map(x => x[0] + ' → ' + x[1]).join(' · '))
+    .join('\n')
+  return 'DONNÉES OFFICIELLES TUNISIE (sources ' + DONNEES_TUNISIE.source + ', jusqu\'à ' + DONNEES_TUNISIE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document chiffré de la Partie 2. NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : reprends les valeurs et les années EXACTES ; choisis la série qui colle au thème du jour ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
+}
+
 async function generateBacBlancEconomie(candidat: Candidat, dayNum: number): Promise<BacExam> {
   const secLabel = candidat.section || 'Sciences Économiques et Gestion'
   const today = new Date()
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
   const seed = `BAC_BLANC_ECONOMIE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
   const prog = getProgrammeJourEco(dayNum)
+  const annee = today.getFullYear()
+  const n1 = annee - 1, n2 = annee - 2, n3 = annee - 3
 
   const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
 Tu crées des sujets BAC BLANC ÉCONOMIE originaux, rigoureux et de niveau officiel (épreuve coefficient 3, durée 3h, 20 points).
@@ -2518,13 +2546,15 @@ Partie 3 — SUJET DE RÉFLEXION (8 points) : une dissertation argumentée. Suje
 
 RÈGLES ABSOLUES :
 - Sujet ORIGINAL — jamais une copie des annales
-- Données chiffrées réalistes et cohérentes (tableau dans le statement, valeurs plausibles pour la Tunisie)
+- DONNÉES OFFICIELLES OBLIGATOIRES : pour le document chiffré (Partie 2), utilise EXCLUSIVEMENT les données officielles du bloc « DONNÉES OFFICIELLES TUNISIE » fourni plus bas. Reprends les valeurs et années EXACTES (ne pas inventer, ne pas arrondir, ne pas extrapoler). Choisis la série qui correspond au thème du jour.
 - Questions numérotées 1) 2) 3)
 - Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
 
+${blocDonneesTunisie()}
+
 GRAPHIQUES — TABLEAU & DIAGRAMME (champ "graph" SÉPARÉ du statement, Partie 2 OBLIGATOIRE) :
-- TABLEAU de données : [GRAPH: {"type":"table","title":"Évolution du PIB tunisien (prix courants, MDT)","headers":["Année","PIB","Taux de croissance (%)"],"rows":[["2021","123450","4,3"],["2022","138900","2,6"],["2023","145200","1,2"]]}]
-- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Taux de chômage (%)","categories":["2021","2022","2023","2024"],"values":[16.2,15.3,16.1,15.8],"yLabel":"Taux (%)","xLabel":"Année"}]
+- TABLEAU de données : [GRAPH: {"type":"table","title":"Commerce extérieur de la Tunisie (MD, prix courants — INS)","headers":["Année","Exportations","Importations","Taux de couverture (%)"],"rows":[["2023","62077,6","79146,3","78,4"],["2024","62077,6","81005,2","76,6"],["2025","63695,1","85495,4","74,5"]]}]
+- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Taux d'inflation en Tunisie (%, INS)","categories":["2022","2023","2024","2025"],"values":[8.3,9.3,7.0,5.7],"yLabel":"Taux (%)","xLabel":"Année"}]
 - Le document chiffré de la Partie 2 va dans le champ "graph" (type "table" ou "bar"), PAS en texte dans le statement. Les questions de lecture/calcul/interprétation exploitent ces données. Guillemets internes valides.
 
 RÉPONSE JSON OBLIGATOIRE :
@@ -2580,6 +2610,8 @@ async function generateBacBlancGestion(candidat: Candidat, dayNum: number): Prom
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
   const seed = `BAC_BLANC_GESTION_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
   const prog = getProgrammeJourGes(dayNum)
+  const annee = today.getFullYear()
+  const n1 = annee - 1, n2 = annee - 2, n3 = annee - 3
 
   const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
 Tu crées des sujets BAC BLANC GESTION originaux, rigoureux et de niveau officiel (épreuve coefficient 4, durée 3h, 20 points).
@@ -2599,12 +2631,13 @@ Dossier 3 — ${prog.theme.toUpperCase()} (6 points) : application sur ${prog.de
 
 RÈGLES ABSOLUES :
 - Sujet ORIGINAL — jamais une copie des annales
-- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
+- ACTUALITÉ OBLIGATOIRE : nous sommes en ${annee}. Le bilan et les comptes portent sur le DERNIER EXERCICE CLÔTURÉ = ${n1} (intitulés « Bilan au 31/12/${n1} », « exercice ${n1} »). Toute évolution chiffrée (chiffre d'affaires, ventes, effectifs…) doit se TERMINER à l'année ${n1} (ex : ${n2}, ${n1} ou ${n3}, ${n2}, ${n1}). Jamais d'années anciennes comme dernier exercice.
+- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes et récentes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
 - Calculs explicites attendus (montrer les formules)
 
 GRAPHIQUES - TABLEAU & DIAGRAMME (champ "graph" SEPARE du statement) :
-- TABLEAU (bilan, charges, couts) : [GRAPH: {"type":"table","title":"Extrait du bilan (DT)","headers":["Poste","Montant"],"rows":[["Capitaux permanents","180000"],["Actif immobilise","120000"],["Actif circulant","95000"],["Passif circulant","60000"]]}]
-- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Evolution du chiffre d affaires (kDT)","categories":["2021","2022","2023"],"values":[420,468,510],"yLabel":"kDT","xLabel":"Annee"}]
+- TABLEAU (bilan, charges, couts) : [GRAPH: {"type":"table","title":"Extrait du bilan au 31/12/${n1} (DT)","headers":["Poste","Montant"],"rows":[["Capitaux permanents","180000"],["Actif immobilise","120000"],["Actif circulant","95000"],["Passif circulant","60000"]]}]
+- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Evolution du chiffre d affaires (kDT)","categories":["${n3}","${n2}","${n1}"],"values":[420,468,510],"yLabel":"kDT","xLabel":"Annee"}]
 - Les donnees chiffrees des Dossiers 1 et 2 vont dans le champ "graph" (type "table" ou "bar"), exploitees par les questions de calcul. Guillemets internes valides.
 
 RÉPONSE JSON OBLIGATOIRE :
