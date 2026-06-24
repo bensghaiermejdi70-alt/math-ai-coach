@@ -1028,6 +1028,8 @@ async function generateOneExam(
   const isGestionExam = globalMatiere === 'gestion'
   const isSvtExam     = globalMatiere === 'svt' || (archives[0]?.sectionKey?.includes('svt') ?? false)
   const isFrancaisExam = globalMatiere === 'francais' || (archives[0]?.sectionKey?.includes('francais') ?? false)
+  const isInfoExam = globalMatiere === 'informatique'
+  const infoIsBDWeb = isInfoExam && (idx % 2 === 1)
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -1042,6 +1044,11 @@ The correction and model answers MUST also be entirely in ENGLISH.`
     ? `Tu es un auteur expert de sujets de FRANÇAIS du Baccalauréat tunisien (programme officiel, sections scientifiques et Lettres).
 Tu crées des sujets ORIGINAUX : un TEXTE littéraire support (extrait de roman ou de nouvelle, ~250-350 mots, auteur et œuvre plausibles), suivi d'une étude de texte (compréhension rédigée + langue) et d'un essai argumentatif.
 Texte riche et lisible, avec 3 à 5 mots difficiles expliqués en notes.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isInfoExam
+    ? `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien, section Sciences de l'informatique (programme officiel).
+Tu maîtrises l'algorithmique en pseudo-code tunisien (Fonction/Procédure, DEBUT/FIN, Pour/Tant que/Répéter, Si/Sinon/FinSi, ← pour l'affectation, types Tab/Mat), la récursivité, les structures de données, les bases de données relationnelles (SQL) et la programmation web (HTML/CSS/JavaScript/PHP).
+Tu crées des sujets ORIGINAUX, rigoureux, au niveau du Bac, avec du code correct et bien indenté.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isEcoExam
     ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
@@ -1058,8 +1065,9 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 Tu crées des sujets ORIGINAUX et rigoureux : QCM, restitution de connaissances, analyse de documents (résultats d'expérience, graphiques, électrophorèse, arbres généalogiques) et raisonnement scientifique.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isPhysExam
-    ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques et des contextes scientifiques précis.
+    ? `Tu es un auteur expert de sujets de SCIENCES PHYSIQUES (Physique-Chimie) du Baccalauréat tunisien, section Sciences expérimentales (programme officiel, épreuve 3h, coefficient 4).
+Tu maîtrises la chimie (cinétique, équilibres, acide-base, piles/électrolyse, chimie organique) et la physique (électricité RC/RL/RLC, ondes, oscillations mécaniques, physique nucléaire et atomique).
+Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques, des courbes à exploiter et des contextes scientifiques précis.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
@@ -1081,12 +1089,25 @@ RÈGLES SPÉCIFIQUES FRANÇAIS (Bac Tunisie) · 20 pts · 2h :
    • A) Compréhension (6 pts) : 3 questions rédigées sur le sens du texte, chacune (2 pts) justifiée par une phrase ou un indice du texte ; au moins une demande de relever et expliquer un procédé d'écriture. Mention « Toute réponse doit être entièrement rédigée ».
    • B) Langue (4 pts) : (1) antonyme/synonyme d'un mot souligné + réemploi dans une phrase personnelle (1 pt) ; (2) transformation d'une phrase — forme emphatique↔neutre, voix active↔passive, ou style direct↔indirect (1,5 pt) ; (3) construire une phrase complexe par subordination exprimant un rapport précis : concession, cause ou conséquence (1,5 pt).
 - Exercice 2 — ESSAI (10 pts) : une citation (en lien avec le texte) + une question de débat → point de vue personnel argumenté, appuyé sur des arguments et des exemples précis (~16 lignes).
-- Thèmes : éducation, progrès, science et société, liberté, travail, tradition/modernité, engagement.` : isEcoExam ? `
+- Thèmes : éducation, progrès, science et société, liberté, travail, tradition/modernité, engagement.` : isInfoExam ? `
+RÈGLES SPÉCIFIQUES INFORMATIQUE (Bac Tunisie — Sciences de l'informatique) · 20 pts :
+${infoIsBDWeb ? `Génère une épreuve « STI » en 2 PARTIES :
+- PARTIE A — Bases de données (12 pts) : décris un schéma relationnel (tables, champs, clés primaires et étrangères) ; interprétation (représentation textuelle de la base, clés, Vrai/Faux sur les règles de gestion, intégrité référentielle/de domaine) ; LECTURE de requêtes (associer chaque requête SQL à son rôle) ; ÉCRITURE de requêtes SQL (SELECT avec JOIN, GROUP BY/COUNT/SUM, HAVING, sous-requêtes/NOT IN, INSERT/UPDATE/DELETE, ALTER TABLE ... ADD CHECK).
+- PARTIE B — Programmation Web (8 pts) : donne un extrait de code HTML ; rôle des balises/attributs (form, method, input type, lien CSS externe, onload, select, alt...), QCM, puis compléter/écrire du HTML/CSS/JavaScript (ou PHP/MySQL).` : `Génère une épreuve « Algorithmique et Programmation » (3h, 4 exercices) :
+- Ex1 (3 pts) : un algorithme DONNÉ (Fonction/Procédure) + QCM (cocher la bonne réponse) sur son type, sa valeur retournée pour un tableau fourni, son rôle ; + une question d'explication (trace).
+- Ex2 (≈4,75 pts) : RÉCURSIVITÉ — écrire une fonction récursive (suite, factorielle, PGCD...) puis un module qui l'appelle.
+- Ex3 (≈4,75 pts) : TABLEAUX / MATRICES — une procédure sur un Tab puis une procédure sur une Mat qui l'appelle (types Tab et Mat prédéfinis, sans tableau de déclaration).
+- Ex4 (≈7,5 pts) : PROBLÈME de synthèse — analyse modulaire (plusieurs modules), traitements/conversions.
+Pseudo-code tunisien : Fonction Nom(p:Type):Type / DEBUT…FIN / Pour i de a à b Faire / Tant que…Faire / Répéter…Jusqu'à / Si…Alors…Sinon…FinSi / ← affectation.`}
+- Tout le code (pseudo-code, SQL, HTML) doit être correct, indenté et réaliste ; énoncés et données cohérents.` : isEcoExam ? `
 RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
-- Structure : Ex1 Mobilisation de connaissances (questions de cours, 6 pts) · Ex2 Travail sur document statistique (lecture + calculs, 6 pts) · Ex3 Analyse de document(s) (4 pts) · Ex4 Synthèse argumentée (4 pts)
-- Ex2 : champ "graph" OBLIGATOIRE, type "table" OU "bar". DONNÉES CHIFFRÉES DU PAYS — utilise EXCLUSIVEMENT les données officielles ci-dessous (reprends valeurs et années EXACTES, ne pas inventer ; choisis la série qui colle au thème) :\n${blocDonneesTunisie()}
+- Structure officielle EXACTE (3 questions, 3h, coef 3) :
+   • Question 1 (4 pts) : QCM AVEC JUSTIFICATION — 4 items ; pour chaque item, choisir la proposition correcte ET justifier (souvent par un calcul). Items basés sur des DOCUMENTS (tableaux/graphiques de données réelles) et des notions (micro : fonction de production/isoquante, utilité ; macro : PIB, FBCF, inflation, niveau de vie, IDH, PGF).
+   • Question 2 (6 pts) : PROBLÈME de microéconomie — théorie du consommateur (fonction d'utilité, courbe d'indifférence, droite de budget, panier d'équilibre) OU du producteur (fonction de production, isoquante, coûts) ; avec document graphique ; résolution analytique.
+   • Question 3 (10 pts) : RAISONNEMENT argumenté — consigne « À l'aide de vos connaissances et des documents, montrez que… » + Document 1 (tableau de données réelles INS/BCT/Banque Mondiale) + Document 2 (texte d'auteur) ; réponse structurée intro / développement / conclusion.
+- DONNÉES CHIFFRÉES DU PAYS (pour les tableaux/graphiques de Q1 et Q3) — utilise EXCLUSIVEMENT les données officielles ci-dessous (reprends valeurs et années EXACTES, ne pas inventer ; choisis la série qui colle au thème) :\n${blocDonneesTunisie()}
 - Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture ((X+M)/2)/PIB×100, coefficient budgétaire, TCAM, IDH
-- Notions du programme : croissance (extensive/intensive), facteurs de croissance, développement durable, échanges extérieurs, mondialisation, FMN, coûts de la croissance
+- Notions : croissance (extensive/intensive, PGF), facteurs de production, FBCF/investissement, développement durable, échanges extérieurs, mondialisation ; microéconomie (utilité, production, isoquante, coûts)
 - Toujours citer la source et l'année des documents` : isGestionExam ? `
 RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion) :
 - ÉTUDE DE CAS d'une entreprise FICTIVE (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices), portant sur le DERNIER EXERCICE CLÔTURÉ ${n1} : intitulés « Bilan au 31/12/${n1} », « exercice ${n1} ». Toute évolution (CA, ventes…) se termine en ${n1}.
@@ -1103,12 +1124,18 @@ Structure officielle : PREMIÈRE PARTIE (8 pts, restitution) + DEUXIÈME PARTIE 
 - Domaines du programme : Génétique (brassage, méiose, Mendel, Hardy-Weinberg) · Milieu intérieur & Neuro (glycémie, potentiel d'action, synapse, réflexe) · Immunité (spécifique/non spécifique) · Reproduction (cycles, hormones) · Nutrition & Photosynthèse.
 - Données chiffrées réalistes (glycémie 0,8-1,2 g/L, potentiel de repos -70 mV…). Tableaux d'expérience / graphiques dans le champ "graph" si pertinent.
 - Dans la CORRECTION, donne toujours les bonnes réponses du QCM.` : isPhysExam ? `
-RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE :
-- Chimie : au moins 1 exercice avec données numériques (pH, Ka, concentrations, potentiels, vitesses)
-- Physique : au moins 1 exercice avec circuits (RC/RL/RLC) ou mécanique (Newton, énergie) ou ondes
-- Notation : utiliser LaTeX pour formules chimiques et physiques
-- Unités SI obligatoires : mol·L⁻¹, V, Ω, m·s⁻², Hz, J
-- Structure : Chimie (exercices 1-2) + Physique (exercices 3-4)` : ''
+RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE (Bac Tunisie — Sciences expérimentales) · 20 pts · 3h · coef 4 :
+Structure officielle : CHIMIE (9 pts) puis PHYSIQUE (11 pts).
+▸ CHIMIE (9 pts) — 2 exercices :
+   - 1 exercice expérimental avec données numériques et souvent une COURBE à exploiter : cinétique chimique (vitesse, temps de demi-réaction, taux d'avancement τ=f(t)) OU équilibre/estérification OU acide-base (pH, Ka, dosage, courbe pH=f(V)) OU piles/électrolyse.
+   - éventuellement 1 exercice « Étude d'un document scientifique » (texte + questions, chimie organique : alcools, acides, esters, amines, amides…).
+▸ PHYSIQUE (11 pts) — 2 ou 3 exercices parmi :
+   - Électricité : dipôle RC, RL ou RLC (régime transitoire/libre/forcé, oscillations, équation différentielle, exploitation de courbes oscilloscope, détermination de R, L, C, E).
+   - Ondes : propagation le long d'une corde, ondes à la surface de l'eau, interférences, diffraction (longueur d'onde, célérité, déphasage).
+   - Oscillations mécaniques : pendule élastique ou pesant, énergie mécanique.
+   - Physique nucléaire / atomique : désintégration radioactive (loi de décroissance, demi-vie), fission/fusion, énergie de liaison (MeV), défaut de masse.
+   - éventuellement « Étude d'un document scientifique » (physique).
+- Au moins une COURBE/figure à exploiter (champ "graph" si donnée numérique). Vraies valeurs numériques, unités SI (mol·L⁻¹, V, Ω, m·s⁻², Hz, J, MeV), formules claires.` : ''
 
   const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
@@ -1214,7 +1241,28 @@ ${isAnglaisExam ? `{
       "statement": "II- ESSAI (10 points)\n\n« [citation en lien avec le thème du texte] »\n\n[Question de débat ouverte]\n\nVous développerez à ce propos un point de vue personnel en vous appuyant sur des arguments et des exemples précis. (environ 16 lignes)"
     }
   ]
-}` : isEcoExam ? `{
+}` : isInfoExam ? (infoIsBDWeb ? `{
+  "title": "Informatique — Bases de données & Web — Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Partie A — Bases de données : Interprétation", "theme":"Bases de données", "points":4, "graph":null, "statement":"Schéma relationnel « Gestion_X » : [décrire les tables, champs, clés primaires et clés étrangères].\n\n1) Donner la représentation textuelle de la base (pour chaque table : nom, champs, clé primaire, clé(s) étrangère(s)).\n2) Compléter un tableau Vrai/Faux sur les règles de gestion.\n3) Compléter des phrases avec : clé primaire, clé étrangère, intégrité référentielle, intégrité de domaine." },
+    { "num":2, "title":"Partie A — Requêtes SQL", "theme":"SQL", "points":8, "graph":null, "statement":"1) Associer chaque requête SQL (INSERT, SELECT, UPDATE, DELETE, ALTER TABLE) à son rôle.\n2) Écrire en SQL les requêtes suivantes :\n   a) Affichage avec jointure et condition.\n   b) Regroupement (GROUP BY) avec COUNT ou SUM.\n   c) Filtrage avec HAVING (ex. total supérieur à un seuil).\n   d) Sous-requête ou NOT IN (ex. éléments non utilisés).\n   e) Mise à jour (UPDATE) ou contrainte (ALTER TABLE ... ADD CHECK)." },
+    { "num":3, "title":"Partie B — Programmation Web", "theme":"Web (HTML/CSS/JS)", "points":8, "graph":null, "statement":"On donne l'aperçu et un extrait du code HTML d'une page.\n1) Indiquer, pour chaque rôle, le numéro de ligne correspondant (formulaire, method, input, lien CSS externe, onload JavaScript, liste déroulante, alt...).\n2) QCM : pour chaque affirmation, cocher la proposition correcte (attribut method, balise hr, input type range, attribut alt...).\n3) Compléter ou écrire un fragment HTML/CSS/JavaScript demandé." }
+  ]
+}` : `{
+  "title": "Informatique — Algorithmique — Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — Lecture d'algorithme + QCM", "theme":"Algorithmique", "points":3, "graph":null, "statement":"Soit l'algorithme suivant (Fonction ou Procédure en pseudo-code) :\n\nFonction Exemple(T : Tab, x : Entier) : ...\nDEBUT\n   ...\nFIN\n\nTravail demandé :\n1) Pour chaque question, cocher (X) la bonne réponse :\n   a) Quel est le type de la fonction ?\n   b) Pour un tableau T donné, quelle valeur retourne la fonction ?\n   c) Quel est le rôle de la fonction ?\n2) Expliquer / justifier (trace de l'exécution)." },
+    { "num":2, "title":"Exercice 2 — Récursivité", "theme":"Récursivité", "points":4.75, "graph":null, "statement":"On définit une suite (ou notion) récursive.\n1) Calculer un terme.\n2) Donner l'ordre de récurrence et le justifier.\n3) Écrire l'algorithme d'une fonction RÉCURSIVE calculant le terme général.\n4) En appelant cette fonction, écrire un module (ex. approximation à epsilon près)." },
+    { "num":3, "title":"Exercice 3 — Tableaux / Matrices", "theme":"Structures de données", "points":4.75, "graph":null, "statement":"On donne un tableau T (type Tab) et une matrice M (type Mat) avec un exemple.\n1) Écrire une procédure agissant sur le tableau T.\n2) En appelant la procédure précédente, écrire une procédure agissant sur toute la matrice M.\nNB : Tab et Mat sont des types prédéfinis ; ne pas dresser le tableau de déclaration." },
+    { "num":4, "title":"Exercice 4 — Problème de synthèse", "theme":"Problème", "points":7.5, "graph":null, "statement":"PROBLÈME : [situation concrète].\nProcédé :\n   Étape 1 : ...\n   Étape 2 : ...\n   Étape 3 : ...\nTravail demandé : proposer l'analyse modulaire (liste des modules) puis écrire les algorithmes des fonctions/procédures nécessaires." }
+  ]
+}`) : isEcoExam ? `{
   "title": "Économie — Simulation IA Variante ${idx+1}",
   "section": "${section}",
   "duration": 180,
@@ -1222,35 +1270,27 @@ ${isAnglaisExam ? `{
   "exercises": [
     {
       "num": 1,
-      "title": "Exercice 1 — Mobilisation de connaissances",
-      "theme": "[Chapitre du programme]",
-      "points": 6,
-      "graph": null,
-      "statement": "Questions de cours numérotées 1), 2), 3) sur des notions précises (définitions, mécanismes, formules économiques). Minimum 120 mots."
+      "title": "Question 1 — QCM justifié",
+      "theme": "QCM (micro + macro)",
+      "points": 4,
+      "graph": "[GRAPH: {table OU bar de données réelles, si un item s'appuie sur un document chiffré}] ou null",
+      "statement": "Pour chacun des items suivants, choisir la proposition correcte PUIS justifier (calcul ou argument).\n\n1) [item appuyé sur un document de données réelles : variation du PIB / FBCF / indice des prix] a) ... b) ... c) ... d) ...\n2) [item macro : niveau de vie, IDH, développement durable] a) ... b) ... c) ... d) ...\n3) [item micro : fonction de production / isoquante] a) ... b) ... c) ... d) ...\n4) [item : PGF, croissance, échanges extérieurs] a) ... b) ... c) ... d) ..."
     },
     {
       "num": 2,
-      "title": "Exercice 2 — Travail sur document statistique",
-      "theme": "[Chapitre]",
+      "title": "Question 2 — Problème de microéconomie",
+      "theme": "Théorie du consommateur / producteur",
       "points": 6,
-      "graph": "[GRAPH: {JSON type table OU bar — OBLIGATOIRE}]",
-      "statement": "DOCUMENT — [Titre, Source : INS/Banque Mondiale/FMI, Année] [voir document ci-dessus]\\n\\nQuestions :\\n1) Lecture d'une donnée précise du document (1 pt)\\n2) Calcul (taux de variation / indice base 100 / taux de couverture / coefficient budgétaire) — écrire la formule puis le résultat (3 pts)\\n3) Interprétation à l'aide du document et de vos connaissances (2 pts). Minimum 120 mots."
+      "graph": "[GRAPH: {courbe d'indifférence + droite de budget, ou isoquante}] ou null",
+      "statement": "[Contexte concret avec données chiffrées : budget, prix, fonction.]\n\nDocument : [graphique — courbe d'indifférence et droite de budget OU isoquante].\n\n1) Donner la signification économique des points indiqués.\n2) Déterminer analytiquement le panier d'équilibre (fonction d'utilité U(x,y) OU de production Q(L,K)).\n3) [Variation d'un prix ou d'un revenu] : déterminer le nouveau panier optimal et commenter.\n4) [Question d'ouverture : comportement citoyen / effets socio-économiques]."
     },
     {
       "num": 3,
-      "title": "Exercice 3 — Analyse de document",
-      "theme": "[Chapitre]",
-      "points": 4,
-      "graph": null,
-      "statement": "DOCUMENT — [texte 4-6 lignes, source, année]\\n\\nQuestions d'analyse 1), 2). Minimum 90 mots."
-    },
-    {
-      "num": 4,
-      "title": "Exercice 4 — Synthèse argumentée",
-      "theme": "[Chapitre]",
-      "points": 4,
-      "graph": null,
-      "statement": "SUJET : [question de réflexion]. Réponse organisée (introduction, arguments appuyés sur le cours et les documents, conclusion). Minimum 100 mots."
+      "title": "Question 3 — Raisonnement argumenté (dissertation)",
+      "theme": "Croissance / Développement / Échanges",
+      "points": 10,
+      "graph": "[GRAPH: {Document 1 = tableau de données réelles INS/BCT/Banque Mondiale}]",
+      "statement": "Consigne : « À l'aide de vos connaissances et des documents ci-joints, montrez que [problématique, ex. l'accroissement des facteurs de production constitue une source de croissance économique]. »\n\nDocument 1 : [tableau de données réelles — voir document ci-dessus].\nDocument 2 : [texte d'un auteur économiste, ~6 à 8 lignes, avec référence].\n\nRédiger une réponse structurée : introduction (problématique), développement argumenté exploitant les DEUX documents et vos connaissances, conclusion. Minimum 250 mots."
     }
   ]
 }` : isGestionExam ? `{
@@ -1322,6 +1362,18 @@ ${isAnglaisExam ? `{
       "graph": "[GRAPH: {JSON si document chiffré}] ou null",
       "statement": "DEUXIÈME PARTIE (6 points)\n\nDOCUMENT(S) : [décrits ici] [voir document ci-dessus]\n\n1) Analyse. 2) Interprétation. 3) Raisonnement. Minimum 120 mots."
     }
+  ]
+}` : isPhysExam ? `{
+  "title": "Physique-Chimie — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Chimie — Exercice 1", "theme":"Cinétique / Équilibre / Acide-base", "points":5, "graph":"[GRAPH: {courbe si exploitation graphique, ex. taux d'avancement=f(t) ou pH=f(V)}] ou null", "statement":"CHIMIE (9 points)\n\n[Énoncé expérimental avec données numériques (concentrations, volumes, température) et exploitation d'une courbe.]\n1) Dresser le tableau d'avancement.\n2) [Exploitation : vitesse, taux d'avancement, concentrations / pH / Ka selon le thème].\n3) [Lecture graphique + calcul]." },
+    { "num":2, "title":"Chimie — Exercice 2", "theme":"Acide-base / Piles / Document scientifique", "points":4, "graph":null, "statement":"[2e exercice de chimie OU « Étude d'un document scientifique » : un texte de chimie organique (alcools, acides, esters, amines, amides) suivi de questions de compréhension et d'écriture d'équations en formules semi-développées.]" },
+    { "num":3, "title":"Physique — Exercice 1", "theme":"Électricité (RC / RL / RLC)", "points":4, "graph":"[GRAPH: {courbe u(t) ou i(t) si numérique}] ou null", "statement":"PHYSIQUE (11 points)\n\n[Circuit électrique : établir/vérifier l'équation différentielle, expression de la solution, régime permanent/oscillations.]\n1) [Équation différentielle / solution].\n2) [Exploitation des courbes (oscilloscope) : déterminer E, U0, I0, la constante de temps].\n3) [En déduire R, L ou C]." },
+    { "num":4, "title":"Physique — Exercice 2", "theme":"Ondes / Oscillations mécaniques", "points":4, "graph":"[GRAPH: {aspect d'une corde ou diagramme du mouvement si numérique}] ou null", "statement":"[Propagation d'ondes (corde, surface de l'eau), interférences ou diffraction : longueur d'onde, célérité, déphasage, points en phase/opposition ; OU oscillateur mécanique et énergie.]" },
+    { "num":5, "title":"Physique — Exercice 3", "theme":"Physique nucléaire / atomique", "points":3, "graph":null, "statement":"[Réaction nucléaire (désintégration, fission ou fusion) : équation avec lois de conservation, énergie libérée en MeV, énergie de liaison, demi-vie ; données de masses fournies.]" }
   ]
 }` : `{
   "title": "${section} — Simulation IA Variante ${idx+1}",
