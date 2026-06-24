@@ -85,6 +85,7 @@ interface Archive {
   id: string; year: number; session: SessionType
   section: string; sectionKey: string; color: string
   url: string; themes: string[]; icon: string
+  variant?: 'algo' | 'bd'; subLabel?: string
 }
 
 const YEARS = [2025,2024,2023,2022,2021,2020,2019,2018,2017,2016,2015] as const
@@ -198,14 +199,30 @@ const SECTION_CONFIGS_INFO = [
 ]
 
 const ARCHIVES_INFO: Archive[] = YEARS.flatMap(y =>
-  SECTION_CONFIGS_INFO.flatMap(sc => [
-    { id:`${sc.key}-${y}-p`, year:y, session:'Principale' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'principale',sc.folder,sc.file), themes:sc.themes },
-    { id:`${sc.key}-${y}-c`, year:y, session:'Contrôle' as SessionType,
-      section:sc.label, sectionKey:sc.key, color:sc.color, icon:sc.icon,
-      url:bw(y,'controle',sc.folder,sc.file), themes:sc.themes },
-  ])
+  SECTION_CONFIGS_INFO.flatMap(sc => {
+    const sess: { s: SessionType; code: 'principale'|'controle'; suf: string }[] = [
+      { s:'Principale', code:'principale', suf:'p' },
+      { s:'Contrôle',   code:'controle',   suf:'c' },
+    ]
+    // Section Sciences Informatiques : 2 épreuves par session (Algorithmique + Bases de données)
+    if (sc.key === 'info') {
+      return sess.flatMap(se => [
+        { id:`info-${y}-${se.suf}-algo`, year:y, session:se.s, section:sc.label, sectionKey:sc.key,
+          color:sc.color, icon:'⚙️', url:bw(y,se.code,sc.folder,'algorithme.pdf'),
+          themes:['Algorithmique & Programmation','Récursivité','Tableaux & Matrices','Problème de synthèse'],
+          variant:'algo' as const, subLabel:'Sujet Algo' },
+        { id:`info-${y}-${se.suf}-bd`, year:y, session:se.s, section:sc.label, sectionKey:sc.key,
+          color:sc.color, icon:'🗄️', url:bw(y,se.code,sc.folder,'bd.pdf'),
+          themes:['Bases de données SQL','Programmation Web (HTML/CSS/JS)'],
+          variant:'bd' as const, subLabel:'Sujet BD' },
+      ])
+    }
+    // Autres sections (TIC) : une épreuve par session
+    return sess.map(se => ({
+      id:`${sc.key}-${y}-${se.suf}`, year:y, session:se.s, section:sc.label, sectionKey:sc.key,
+      color:sc.color, icon:sc.icon, url:bw(y,se.code,sc.folder,sc.file), themes:sc.themes,
+    }))
+  })
 )
 
 const CHAPITRES_INFO: Record<string, {
@@ -1029,7 +1046,9 @@ async function generateOneExam(
   const isSvtExam     = globalMatiere === 'svt' || (archives[0]?.sectionKey?.includes('svt') ?? false)
   const isFrancaisExam = globalMatiere === 'francais' || (archives[0]?.sectionKey?.includes('francais') ?? false)
   const isInfoExam = globalMatiere === 'informatique'
-  const infoIsBDWeb = isInfoExam && (idx % 2 === 1)
+  const isTicExam = isInfoExam && (archives[0]?.sectionKey === 'autres-sections')
+  const infoVariant = archives[0]?.variant
+  const infoIsBDWeb = isInfoExam && !isTicExam && (infoVariant === 'bd' || (!infoVariant && idx % 2 === 1))
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -1046,10 +1065,15 @@ Tu crées des sujets ORIGINAUX : un TEXTE littéraire support (extrait de roman 
 Texte riche et lisible, avec 3 à 5 mots difficiles expliqués en notes.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : isInfoExam
-    ? `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien, section Sciences de l'informatique (programme officiel).
+    ? (isTicExam
+    ? `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien pour les sections Mathématiques, Sciences expérimentales et Sciences techniques (épreuve 1h30, coefficient 0.5).
+Tu maîtrises l'algorithmique en pseudo-code tunisien (Fonction/Procédure, DEBUT/FIN, Pour/Tant que/Répéter, Si/Sinon/FinSi, ← pour l'affectation, type TAB). NIVEAU ACCESSIBLE : pas de récursivité, pas de matrices, pas de bases de données ni de programmation web.
+Tu crées des sujets ORIGINAUX, clairs et adaptés à ces sections.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien, section Sciences de l'informatique (programme officiel).
 Tu maîtrises l'algorithmique en pseudo-code tunisien (Fonction/Procédure, DEBUT/FIN, Pour/Tant que/Répéter, Si/Sinon/FinSi, ← pour l'affectation, types Tab/Mat), la récursivité, les structures de données, les bases de données relationnelles (SQL) et la programmation web (HTML/CSS/JavaScript/PHP).
 Tu crées des sujets ORIGINAUX, rigoureux, au niveau du Bac, avec du code correct et bien indenté.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`)
     : isEcoExam
     ? `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
 Tu crées des sujets ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
@@ -1091,7 +1115,11 @@ RÈGLES SPÉCIFIQUES FRANÇAIS (Bac Tunisie) · 20 pts · 2h :
 - Exercice 2 — ESSAI (10 pts) : une citation (en lien avec le texte) + une question de débat → point de vue personnel argumenté, appuyé sur des arguments et des exemples précis (~16 lignes).
 - Thèmes : éducation, progrès, science et société, liberté, travail, tradition/modernité, engagement.` : isInfoExam ? `
 RÈGLES SPÉCIFIQUES INFORMATIQUE (Bac Tunisie — Sciences de l'informatique) · 20 pts :
-${infoIsBDWeb ? `Génère une épreuve « STI » en 2 PARTIES :
+${isTicExam ? `Génère une épreuve « Informatique » ACCESSIBLE (sections Maths/Sc.exp/Sc.tech, 1h30, coef 0.5), 3 exercices :
+- Ex1 (3,25 pts) : TABLEAUX DE TRACE — pour 3 à 4 séquences algorithmiques SIMPLES (boucles Pour/Tant que sur entiers, chaînes de caractères, petit tableau), donner le RÉSULTAT d'exécution pour une valeur donnée et le RÔLE de la séquence.
+- Ex2 (3,75 pts) : un algorithme DONNÉ (Fonction/Procédure simple, écrit ENTIER) — déterminer le type retourné, donner le résultat de quelques appels sur un tableau fourni, déduire le rôle, puis écrire un MODULE simple (parcours, tri élémentaire) qui l'appelle.
+- Problème (13 pts) : un PROBLÈME de synthèse concret décomposé en MODULES — écrire l'algorithme du programme principal (analyse modulaire) puis l'algorithme de chaque module, avec les tableaux de déclaration des objets et nouveaux types. Type TAB.
+NIVEAU ACCESSIBLE : PAS de récursivité, PAS de matrices, PAS de SQL ni de web. Pseudo-code tunisien (Fonction/Procédure, DEBUT…FIN, Pour, Tant que, Si…FinSi, ←).` : infoIsBDWeb ? `Génère une épreuve « STI » en 2 PARTIES :
 - PARTIE A — Bases de données (12 pts) : décris un schéma relationnel (tables, champs, clés primaires et étrangères) ; interprétation (représentation textuelle de la base, clés, Vrai/Faux sur les règles de gestion, intégrité référentielle/de domaine) ; LECTURE de requêtes (associer chaque requête SQL à son rôle) ; ÉCRITURE de requêtes SQL (SELECT avec JOIN, GROUP BY/COUNT/SUM, HAVING, sous-requêtes/NOT IN, INSERT/UPDATE/DELETE, ALTER TABLE ... ADD CHECK).
 - PARTIE B — Programmation Web (8 pts) : donne un extrait de code HTML ; rôle des balises/attributs (form, method, input type, lien CSS externe, onload, select, alt...), QCM, puis compléter/écrire du HTML/CSS/JavaScript (ou PHP/MySQL).` : `Génère une épreuve « Algorithmique et Programmation » (3h, 4 exercices) :
 - Ex1 (3 pts) : un algorithme DONNÉ (Fonction/Procédure) + QCM (cocher la bonne réponse) sur son type, sa valeur retournée pour un tableau fourni, son rôle ; + une question d'explication (trace).
@@ -1244,7 +1272,17 @@ ${isAnglaisExam ? `{
       "statement": "II- ESSAI (10 points)\n\n« [citation en lien avec le thème du texte] »\n\n[Question de débat ouverte]\n\nVous développerez à ce propos un point de vue personnel en vous appuyant sur des arguments et des exemples précis. (environ 16 lignes)"
     }
   ]
-}` : isInfoExam ? (infoIsBDWeb ? `{
+}` : isInfoExam ? (isTicExam ? `{
+  "title": "Informatique (TIC) — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 90,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — Tableaux de trace", "theme":"Trace / Rôle", "points":3.25, "graph":null, "statement":"Pour chaque séquence algorithmique, donner le RÉSULTAT de l'exécution (pour la valeur indiquée) puis le RÔLE de la séquence.\n\n[3 à 4 séquences SIMPLES : boucles Pour/Tant que sur des entiers, manipulation de chaînes de caractères, parcours d'un petit tableau d'entiers.]" },
+    { "num":2, "title":"Exercice 2 — Lecture d'algorithme + module", "theme":"Algorithme + module", "points":3.75, "graph":null, "statement":"Soit l'algorithme COMPLET suivant d'une fonction simple (rédigé ENTIÈREMENT, sans « ... ») :\n\n[Fonction entière]\n\n1) Déterminer le type du résultat retourné par la fonction.\n2) Pour un tableau T donné, donner le résultat de quelques appels puis déduire le rôle de la fonction.\n3) Écrire l'algorithme d'un module simple (ex. ORDONNER, RECHERCHER) qui fait appel à cette fonction. NB : le type TAB est prédéfini." },
+    { "num":3, "title":"Problème — Analyse modulaire", "theme":"Problème de synthèse", "points":13, "graph":null, "statement":"PROBLÈME : [situation concrète décrite avec un exemple chiffré].\n\nTravail demandé :\n1) Écrire l'algorithme du programme principal, solution du problème, en le décomposant en MODULES.\n2) Écrire l'algorithme de chaque module envisagé.\nNB : dresser les tableaux de déclaration des objets et des nouveaux types nécessaires (type TAB)." }
+  ]
+}` : infoIsBDWeb ? `{
   "title": "Informatique — Bases de données & Web — Variante ${idx+1}",
   "section": "${section}",
   "duration": 180,
@@ -4026,6 +4064,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
                   <div style={{fontSize:10,marginTop:4,color:'rgba(255,255,255,0.35)',display:'flex',alignItems:'center',gap:4}}>
                     <span>{a.session==='Principale'?'📌':'🔄'}</span>{a.session}
                   </div>
+                  {a.subLabel && <div style={{marginTop:6,fontSize:10,fontWeight:800,color:a.color,background:`${a.color}1e`,border:`1px solid ${a.color}40`,borderRadius:6,padding:'2px 7px',display:'inline-block'}}>{a.subLabel}</div>}
                 </div>
               )
             })}
@@ -5072,7 +5111,7 @@ ${exHtml}
         {panel !== 'answer' && (
           <div>
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:12,fontWeight:600}}>📋 Sujet</p>
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+            <div style={{display:'flex',flexDirection:'column',gap:14,maxHeight:'74vh',overflowY:'auto',paddingRight:6}}>
               {exam.exercises.map(ex => (
                 <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center',gap:8,flexWrap:'wrap'}}>
