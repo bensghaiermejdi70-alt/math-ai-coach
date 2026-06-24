@@ -1099,7 +1099,7 @@ ${infoIsBDWeb ? `Génère une épreuve « STI » en 2 PARTIES :
 - Ex3 (≈4,75 pts) : TABLEAUX / MATRICES — une procédure sur un Tab puis une procédure sur une Mat qui l'appelle (types Tab et Mat prédéfinis, sans tableau de déclaration).
 - Ex4 (≈7,5 pts) : PROBLÈME de synthèse — analyse modulaire (plusieurs modules), traitements/conversions.
 Pseudo-code tunisien : Fonction Nom(p:Type):Type / DEBUT…FIN / Pour i de a à b Faire / Tant que…Faire / Répéter…Jusqu'à / Si…Alors…Sinon…FinSi / ← affectation.`}
-- Tout le code (pseudo-code, SQL, HTML) doit être correct, indenté et réaliste ; énoncés et données cohérents.` : isEcoExam ? `
+- Tout le code (pseudo-code, SQL, HTML) doit être correct, indenté et réaliste ; énoncés et données cohérents.\n- IMPORTANT (énoncé) : une question « Écrire la fonction/procédure X » ne contient QUE la consigne (rôle + éventuellement la ligne de signature). NE JAMAIS mettre dans l'énoncé un squelette « DEBUT … FIN » avec des « … » à la place du corps — l'élève croit alors que le sujet est incomplet. Le pseudo-code COMPLET du corps n'apparaît QUE dans la correction. Pour un algorithme DONNÉ à lire/tracer (Ex1), écris-le ENTIER (toutes les instructions), sans « … ».` : isEcoExam ? `
 RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) :
 - Structure officielle EXACTE (3 questions, 3h, coef 3) :
    • Question 1 (4 pts) : QCM AVEC JUSTIFICATION — 4 items ; pour chaque item, choisir la proposition correcte ET justifier (souvent par un calcul). Items basés sur des DOCUMENTS (tableaux/graphiques de données réelles) et des notions (micro : fonction de production/isoquante, utilité ; macro : PIB, FBCF, inflation, niveau de vie, IDH, PGF).
@@ -1109,11 +1109,14 @@ RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gesti
 - Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture ((X+M)/2)/PIB×100, coefficient budgétaire, TCAM, IDH
 - Notions : croissance (extensive/intensive, PGF), facteurs de production, FBCF/investissement, développement durable, échanges extérieurs, mondialisation ; microéconomie (utilité, production, isoquante, coûts)
 - Toujours citer la source et l'année des documents` : isGestionExam ? `
-RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — Sciences Économiques & de Gestion) :
-- ÉTUDE DE CAS d'une entreprise FICTIVE (raison sociale, activité, données chiffrées COHÉRENTES entre les exercices), portant sur le DERNIER EXERCICE CLÔTURÉ ${n1} : intitulés « Bilan au 31/12/${n1} », « exercice ${n1} ». Toute évolution (CA, ventes…) se termine en ${n1}.
-- Documents comptables en tableaux : champ "graph" type "table" (extrait de bilan, compte de résultat, tableau de stocks, tableau de coûts)
-- Calculs OBLIGATOIRES selon les dossiers : Résultat=Produits−Charges · FDR=Capitaux permanents−Actif immobilisé · BFR=Actif circulant−Passif circulant · TN=FDR−BFR · MCV=CA−Charges variables · Taux de MCV=MCV/CA · Seuil de rentabilité=Charges fixes/Taux de MCV · CUMP · Rotation des stocks=Consommation/Stock moyen · Masse salariale
-- Interprétation EXIGÉE (situation financière, équilibre FDR/BFR, point mort)` : isSvtExam ? `
+RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — section Économie & Gestion) · 20 pts · 3h30 · coef 3 :
+Structure officielle : PREMIÈRE PARTIE (5 pts) + DEUXIÈME PARTIE (15 pts).
+▸ PREMIÈRE PARTIE (5 pts) — 2 exercices techniques INDÉPENDANTS (petites entreprises fictives) parmi : gestion économique des stocks (modèle de Wilson, coûts d'approvisionnement) · choix du programme de fabrication (MCV par heure machine, optimisation) · gestion des ressources humaines / GPEC (besoins en personnel, masse salariale) · gestion budgétaire (budgets, écarts) · gestion de la production.
+▸ DEUXIÈME PARTIE (15 pts) — ÉTUDE DE CAS d'une SEULE entreprise FICTIVE, cohérente sur 4 dossiers parmi : analyse de la situation / diagnostic (cycle de vie produit, évolution du CA) · étude de la rentabilité (seuil de rentabilité, MCV, SIG, ratios) · action commerciale / marketing-mix / campagne publicitaire · lancement d'un nouveau produit (prix psychologique, taux de marge) · investissement et financement (BFR en jours et en valeur, intérêts composés, emprunt et tableau d'amortissement, décaissements actualisés / VAN, choix de financement).
+- Entreprise FICTIVE ; si un bilan ou un compte de résultat est fourni, le dater du DERNIER EXERCICE CLÔTURÉ ${n1} (« Bilan au 31/12/${n1} », « exercice ${n1} »), évolutions se terminant en ${n1}.
+- Documents chiffrés en tableaux : champ "graph" type "table" (bilan, compte de résultat, tableau de stocks, de coûts, d'amortissement, d'écarts). Le bloc [GRAPH: {...}] doit être un JSON STRICTEMENT VALIDE (guillemets droits ", AUCUNE virgule après le dernier élément, AUCUN retour à la ligne dans le JSON) — sinon mettre null.
+- Calculs OBLIGATOIRES selon les dossiers : Wilson Q*=√(2·D·Cl/Cs) · CUMP · Rotation des stocks=Consommation/Stock moyen · MCV=CA−Charges variables · Taux de MCV · Seuil de rentabilité=Charges fixes/Taux de MCV · Résultat=Produits−Charges · FDR · BFR · TN=FDR−BFR · prix psychologique · taux de marge/marque · valeur acquise (intérêts composés) · annuité et tableau d'amortissement d'emprunt · VAN / décaissements actualisés · masse salariale.
+- Interprétation EXIGÉE (rentabilité, équilibre financier, choix optimal justifié).` : isSvtExam ? `
 RÈGLES SPÉCIFIQUES SVT (Bac Tunisie — programme CNP officiel) · 20 pts · 3h :
 Structure officielle : PREMIÈRE PARTIE (8 pts, restitution) + DEUXIÈME PARTIE (12 pts, raisonnement sur documents). Le sujet COMMENCE toujours par un QCM.
 - Exercice 1 — PREMIÈRE PARTIE — Restitution des connaissances (8 pts) :
@@ -1257,7 +1260,7 @@ ${isAnglaisExam ? `{
   "duration": 180,
   "totalPoints": 20,
   "exercises": [
-    { "num":1, "title":"Exercice 1 — Lecture d'algorithme + QCM", "theme":"Algorithmique", "points":3, "graph":null, "statement":"Soit l'algorithme suivant (Fonction ou Procédure en pseudo-code) :\n\nFonction Exemple(T : Tab, x : Entier) : ...\nDEBUT\n   ...\nFIN\n\nTravail demandé :\n1) Pour chaque question, cocher (X) la bonne réponse :\n   a) Quel est le type de la fonction ?\n   b) Pour un tableau T donné, quelle valeur retourne la fonction ?\n   c) Quel est le rôle de la fonction ?\n2) Expliquer / justifier (trace de l'exécution)." },
+    { "num":1, "title":"Exercice 1 — Lecture d'algorithme + QCM", "theme":"Algorithmique", "points":3, "graph":null, "statement":"Soit l'algorithme COMPLET suivant (rédige-le ENTIÈREMENT, du DEBUT au FIN, avec toutes les instructions, SANS « ... ») :\n\n[ici le pseudo-code complet de la Fonction/Procédure]\n\nTravail demandé :\n1) Pour chaque question, cocher (X) la bonne réponse :\n   a) Quel est le type de la fonction ?\n   b) Pour un tableau T donné, quelle valeur retourne la fonction ?\n   c) Quel est le rôle de la fonction ?\n2) Expliquer / justifier (trace de l'exécution)." },
     { "num":2, "title":"Exercice 2 — Récursivité", "theme":"Récursivité", "points":4.75, "graph":null, "statement":"On définit une suite (ou notion) récursive.\n1) Calculer un terme.\n2) Donner l'ordre de récurrence et le justifier.\n3) Écrire l'algorithme d'une fonction RÉCURSIVE calculant le terme général.\n4) En appelant cette fonction, écrire un module (ex. approximation à epsilon près)." },
     { "num":3, "title":"Exercice 3 — Tableaux / Matrices", "theme":"Structures de données", "points":4.75, "graph":null, "statement":"On donne un tableau T (type Tab) et une matrice M (type Mat) avec un exemple.\n1) Écrire une procédure agissant sur le tableau T.\n2) En appelant la procédure précédente, écrire une procédure agissant sur toute la matrice M.\nNB : Tab et Mat sont des types prédéfinis ; ne pas dresser le tableau de déclaration." },
     { "num":4, "title":"Exercice 4 — Problème de synthèse", "theme":"Problème", "points":7.5, "graph":null, "statement":"PROBLÈME : [situation concrète].\nProcédé :\n   Étape 1 : ...\n   Étape 2 : ...\n   Étape 3 : ...\nTravail demandé : proposer l'analyse modulaire (liste des modules) puis écrire les algorithmes des fonctions/procédures nécessaires." }
@@ -1296,41 +1299,15 @@ ${isAnglaisExam ? `{
 }` : isGestionExam ? `{
   "title": "Gestion — Simulation IA Variante ${idx+1}",
   "section": "${section}",
-  "duration": 180,
+  "duration": 210,
   "totalPoints": 20,
   "exercises": [
-    {
-      "num": 1,
-      "title": "Dossier 1 — Comptabilité",
-      "theme": "Comptabilité",
-      "points": 6,
-      "graph": "[GRAPH: {JSON type table — extrait de compte de résultat ou de bilan}]",
-      "statement": "L'entreprise [Raison sociale], spécialisée dans [activité], vous communique ses données. [voir document ci-dessus]\\n\\nTravail à faire :\\n1) Calculer le résultat de l'exercice (Produits − Charges) (3 pts)\\n2) [TVA due / variation / commentaire] (3 pts). Données chiffrées cohérentes."
-    },
-    {
-      "num": 2,
-      "title": "Dossier 2 — Analyse financière",
-      "theme": "Analyse financière",
-      "points": 6,
-      "graph": "[GRAPH: {JSON type table — bilan fonctionnel condensé}]",
-      "statement": "À partir du bilan fonctionnel [voir document ci-dessus] :\\n1) Calculer le FDR = Capitaux permanents − Actif immobilisé (2 pts)\\n2) Calculer le BFR = Actif circulant − Passif circulant (2 pts)\\n3) Calculer la TN = FDR − BFR et interpréter la situation de trésorerie (2 pts)."
-    },
-    {
-      "num": 3,
-      "title": "Dossier 3 — Gestion des stocks / des coûts",
-      "theme": "Coûts & Stocks",
-      "points": 4,
-      "graph": "[GRAPH: {JSON type table — données de coûts ou de stocks}]",
-      "statement": "[voir document ci-dessus]\\n\\nTravail à faire :\\n1) [CUMP / rotation des stocks / MCV = CA − charges variables] (2 pts)\\n2) Calculer le seuil de rentabilité = Charges fixes / Taux de MCV et l'interpréter (2 pts)."
-    },
-    {
-      "num": 4,
-      "title": "Dossier 4 — Gestion (RH / commerciale / financière)",
-      "theme": "Gestion",
-      "points": 4,
-      "graph": null,
-      "statement": "Questions de gestion 1), 2) (masse salariale, part de marché, financement, budget). Minimum 90 mots."
-    }
+    { "num":1, "title":"Première partie — Exercice 1", "theme":"Stocks (Wilson) / GPEC / Gestion budgétaire", "points":2.5, "graph":"[GRAPH: {table si données chiffrées}] ou null", "statement":"PREMIÈRE PARTIE\n\n[Petite entreprise fictive.] Exercice technique : gestion économique des stocks (modèle de Wilson : nombre optimal de commandes, coûts d'approvisionnement) OU GPEC OU gestion budgétaire (budgets, écarts).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":2, "title":"Première partie — Exercice 2", "theme":"Programme de fabrication / Production", "points":2.5, "graph":null, "statement":"[Autre petite entreprise fictive.] Exercice technique : choix du programme de fabrication (MCV par heure machine, produit le plus rentable, optimisation) OU gestion de la production.\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":3, "title":"Deuxième partie — Dossier 1 : Analyse de la situation", "theme":"Diagnostic / Rentabilité", "points":4, "graph":"[GRAPH: {table — évolution du CA, SIG ou ratios}] ou null", "statement":"DEUXIÈME PARTIE — ENTREPRISE « [Nom fictif] » ([activité]).\n\nDossier 1 — Analyse de la situation actuelle : cycle de vie des produits, évolution de l'activité/CA et diagnostic commercial OU étude de la rentabilité (seuil de rentabilité, MCV).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":4, "title":"Deuxième partie — Dossier 2 : Gestion des stocks / coûts", "theme":"Stocks & Coûts", "points":4, "graph":"[GRAPH: {table de stocks ou de coûts}] ou null", "statement":"Dossier 2 — Gestion des stocks (CUMP, rotation) OU calcul et analyse des coûts.\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":5, "title":"Deuxième partie — Dossier 3 : Action commerciale / Lancement", "theme":"Marketing / Lancement", "points":4, "graph":null, "statement":"Dossier 3 — Action commerciale / campagne publicitaire / marketing-mix OU lancement d'un nouveau produit (prix psychologique à partir d'une enquête d'acceptabilité, taux de marge, prix HTVA).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":6, "title":"Deuxième partie — Dossier 4 : Investissement et financement", "theme":"Financement / BFR", "points":3, "graph":"[GRAPH: {table — tableau d'amortissement d'emprunt ou de décaissements actualisés}] ou null", "statement":"Dossier 4 — Investissement et financement : BFR en nombre de jours de CA HT puis en valeur ; financement (valeur acquise d'un capital placé à intérêts composés, emprunt bancaire, tableau d'amortissement, annuité, décaissements nets actualisés, choix du financement le plus avantageux justifié).\n\nTravail à faire : 1) ... 2) ... 3) ..." }
   ]
 }` : isSvtExam ? `{
   "title": "SVT — Simulation IA Variante ${idx+1}",
@@ -2175,7 +2152,7 @@ function sanitizeExpr(expr: string): string {
 
   // ── 6. Constantes ───────────────────────────────────────────────────
   e = e
-    .replace(/\bpi\b/gi, 'Math.PI')
+    .replace(/(?<![a-zA-Z0-9_.])pi(?![a-zA-Z0-9_])/gi, 'Math.PI')
     .replace(/π/g, 'Math.PI')
     .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g, 'Math.E')
     .replace(/\bInfinity\b/g, '1e15')
@@ -3061,6 +3038,21 @@ function cleanLatex(s: string): string {
   return t
 }
 
+// Parse robuste d'un spec de graphique : JSON.parse, sinon réparation légère
+function parseGraphSpecSafe(raw: string): any | null {
+  if (!raw || typeof raw !== 'string') return null
+  try { return JSON.parse(raw) } catch {}
+  const repaired = raw
+    .replace(/[\u201C\u201D]/g, '"')        // guillemets doubles typographiques → "
+    .replace(/[\u2018\u2019]/g, "'")         // apostrophes typographiques
+    .replace(/\/\/[^\n\r]*/g, '')            // commentaires //
+    .replace(/[\n\r\t]+/g, ' ')             // retours à la ligne internes
+    .replace(/,\s*([}\]])/g, '$1')           // virgules traînantes
+    .replace(/\bNaN\b/g, '0')
+  try { return JSON.parse(repaired) } catch {}
+  return null
+}
+
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
   let gi = 0
@@ -3073,7 +3065,8 @@ function TextWithGraphs({ text }: { text: string }) {
           const myGi = gi++
           let inner
           try {
-            const spec: GraphSpec = JSON.parse(seg.content)
+            const spec = parseGraphSpecSafe(seg.content) as GraphSpec
+            if (!spec) throw new Error('graph format')
             inner = <SmartGraph spec={spec} />
           } catch {
             // Si JSON invalide, afficher quand même proprement
