@@ -3605,7 +3605,7 @@ ${MB_VEC_CSS}</style>
 
   <div class="doc-title">
     <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBAC.AI</div>
-    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://app.mathsbac.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
+    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://mathbacai.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
     <h1>${esc(exam.title)}</h1>
     <div class="sub">Correction IA détaillée · ${exam.totalPoints}/20 pts · ${new Date().toLocaleDateString('fr-FR')}</div>
   </div>

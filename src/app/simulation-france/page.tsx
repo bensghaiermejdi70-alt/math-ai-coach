@@ -515,6 +515,8 @@ async function generateOneExam(
   const isAnglais = matiere === 'anglais'
   const isFrancais = matiere === 'francais'
   const isEco = matiere === 'eco-gestion'
+  const isPhysique = matiere === 'physique'
+  const isSvt = matiere === 'svt'
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -529,53 +531,70 @@ Tu crées des sujets ORIGINAUX et réalistes : épreuves composées (EC1 mobilis
 Pour les données chiffrées de la France, utilise EXCLUSIVEMENT les données officielles fournies dans les règles (INSEE · Banque de France · Eurostat) — valeurs et années EXACTES, jamais inventées. Grandeurs : PIB, croissance, inflation (IPC), chômage, déficit/dette publique.
 Vocabulaire SES précis : notions du programme officiel, auteurs (Schumpeter, Ricardo, Bourdieu, Durkheim, Becker, Paugam, Rawls…).
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isPhysique
+    ? `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat général français (enseignement de spécialité, programme officiel Éducation nationale, épreuve 3h30, 20 points).
+Tu maîtrises la chimie (transformations, cinétique, équilibres, acide-base et titrages pH-métriques, pH/pKa, spectroscopie UV-visible/IR/RMN, dosage par étalonnage (Beer-Lambert), chimie organique et nomenclature, synthèse/rendement) et la physique (mécanique newtonienne et équations différentielles, énergie mécanique, ondes (interférences, diffraction, effet Doppler, intensité sonore), électricité (dipôle RC), physique nucléaire et radioactivité, énergie de liaison en MeV).
+Tu crées des sujets ORIGINAUX, CONTEXTUALISÉS (situations concrètes réalistes), avec de vraies données numériques, des courbes et documents à exploiter.
+NOTATION : exposants e^(-t/τ), indices uₙ/u_C, vecteurs (F⃗, v⃗, a⃗), unités SI (mol·L⁻¹, V, Ω, F, m·s⁻², N, J, MeV, Bq). JAMAIS de LaTeX brut (\frac, \sqrt).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isSvt
+    ? `Tu es un auteur expert de sujets de SVT (Sciences de la Vie et de la Terre) du Baccalauréat général français (enseignement de spécialité, programme officiel, épreuve écrite 3h30).
+Tu maîtrises tout le programme de terminale : génétique et évolution (brassage, mutations, histoire humaine), reproduction et hormones, immunologie (réaction inflammatoire, lymphocytes, vaccination), neurobiologie (réflexe, motricité, cerveau, plasticité), géologie (tectonique, déformation, hydrothermalisme), climats passés et actuels, écosystèmes et forêt, plante (organisation, vie fixée, reproduction), enzymes/métabolisme/photosynthèse.
+Tu crées des sujets ORIGINAUX et rigoureux : un exercice de RESTITUTION ORGANISÉE des connaissances (texte argumenté) et un exercice de PRATIQUE DU RAISONNEMENT SCIENTIFIQUE à partir d'un dossier de documents (résultats expérimentaux, graphiques, cartes, tableaux).
+NOTATION : termes scientifiques précis, données réalistes (δ18O, °C, années BP, %…). JAMAIS de LaTeX brut.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isFrancais
+    ? `Tu es un auteur expert de sujets de PHILOSOPHIE du Baccalauréat général français (programme officiel, épreuve 4h, coefficient 8).
+Tu crées des sujets ORIGINAUX et rigoureux conformes au format officiel : DEUX sujets de dissertation (questions philosophiques portant sur les notions du programme : la conscience, l'inconscient, autrui, le temps, la nature, la technique, le travail, l'art, le langage, la religion, l'État, la justice, le devoir, la liberté, le bonheur, la vérité, la raison, la science…) et UN sujet d'explication de texte (un extrait authentique d'un grand auteur de la tradition philosophique).
+Tout en français impeccable. RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : `Tu es un auteur expert de sujets du Baccalauréat français (programme officiel Éducation nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 NOTATION FRANÇAISE : f'(x), ∫, √, ℝ, ∈, ≤, ≥, →, Δ, θ, xₙ, uₙ₊₁, x², eˣ — JAMAIS \frac ni \sqrt ni LaTeX brut.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = isAnglais
-    ? `Create an ORIGINAL LLCER English Baccalauréat paper number ${idx+1} (out of 5 variants) inspired by these sources:
+    ? `Create an ORIGINAL French Baccalauréat LLCER ENGLISH (Langues, Littératures et Cultures Étrangères et Régionales — Anglais) specialty paper number ${idx+1} (out of 5 variants), inspired by these sources:
 ${contextLines}
 ${customText ? `\nStudent reference text:\n${customText.substring(0,800)}` : ''}
 
-STRICT RULES:
-- Create a NEW original paper, never copy. Always change theme, authors, documents, context
-- Keep the official French Baccalauréat LLCER structure and level
-- 2 subjects at choice (Sujet 1 and Sujet 2), each with a different thematic axis
-- Each subject: Part 1 = Document synthesis in English (~500 words) | Part 2 = Translation into French
-- Documents: 2-3 authentic-style excerpts (literary, press, image description) + questions
-- Total: ${totalPts} points (Synthesis 16pts + Translation 4pts)
-- ALL text in ENGLISH (titles, statements, document excerpts, questions)
-- Thematic axes: Identities & Exchanges / Private & Public Sphere / Art & Power / Citizenship & Virtual Worlds / Fictions & Realities / Scientific Innovation & Responsibility / Diversity & Inclusion / Territory & Memory
+OFFICIAL STRUCTURE — LLCER English specialty · 3h30 · 20 points :
+- The paper offers TWO subjects at choice (Sujet 1 and Sujet 2). Each is built on a DIFFERENT official thematic axis.
+- Official LLCER English thematic axes (French label, English content): « Expression et construction de soi », « Voyages, territoires, frontières », « Imaginaires », « Rencontres ».
+- Each subject = a DOSSIER of THREE documents that INTERACT:
+   • Document A — a LITERARY excerpt (novel / short story), 12-18 lines, with LINE NUMBERS every 5 lines (5, 10, 15…), plausible reference (Author, Title, Year).
+   • Document B — a SECOND literary excerpt OR a press article OR an advertisement text, different register/period, with its reference.
+   • Document C — an IMAGE: a painting, a photograph OR an advertisement/poster. Give a precise visual DESCRIPTION (4-7 lines) + reference (Artist/Designer, Title, Year). Describe an ORIGINAL/plausible image (never a real protected work).
+- PART 1 — SYNTHESIS in ENGLISH (16 points): "Paying particular attention to the characteristics of the documents, show how they interact to [precise question tied to the axis]." (~500 words, in English).
+- PART 2 — TRANSLATION into FRENCH (4 points): translate a SPECIFIC passage of Document A — give the exact line range (e.g. "lines 1 to 7"), 5-8 lines, rich and representative.
+- The whole dossier and the synthesis instruction are in ENGLISH; the translation target is FRENCH; thematic labels may stay in French.
+- Original documents only — invent plausible authors/works, never copy real protected texts.
 
 Respond EXACTLY with this JSON (no text before or after):
-
 {
-  "title": "LLCER Anglais — Simulation IA Variante ${idx+1}",
-  "section": "Terminale LLCER Anglais",
+  "title": "LLCER Anglais (spécialité) — Simulation IA Variante ${idx+1}",
+  "section": "Terminale — Spécialité LLCER Anglais",
   "duration": 210,
   "totalPoints": ${totalPts},
   "exercises": [
     {
       "num": 1,
-      "title": "Subject 1 — [Thematic Axis Name]",
-      "theme": "[Axis: e.g. Identities & Exchanges]",
+      "title": "Sujet 1 — [Thematic axis in French]",
+      "theme": "[Axis FR]",
       "points": ${totalPts},
       "graph": null,
-      "statement": "THEMATIC AXIS: [Axis Title]\n\nDOCUMENT A — [Author, Title, Year]:\n[Realistic literary or journalistic excerpt, 8-12 lines]\n\nDOCUMENT B — [Author/Source, Title, Year]:\n[Realistic excerpt from a different register, 6-10 lines]\n\nDOCUMENT C — [Artist/Photographer, Title, Year]:\n[Detailed description of an image, painting or photograph, 4-6 lines]\n\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---\nPaying particular attention to the specificities of the three documents, show how they interact to [precise synthesis question linked to the axis].\n(approximately 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate the following passage from Document A into French:\n[Extract of 4-6 lines from Document A that are rich and representative]"
+      "statement": "THÉMATIQUE : « [axe officiel] »\n\nDOCUMENT A — [Author, Title, Year]\n[Literary excerpt, 12-18 lines, with line numbers 5/10/15]\n\nDOCUMENT B — [Author/Source, Title, Year]\n[Second excerpt / press article / advertisement, 8-14 lines]\n\nDOCUMENT C — [Artist, Title, Year]\n[Precise description of an original image / painting / photograph / advertisement, 4-7 lines]\n\n--- PART 1: SYNTHESIS (16 points) ---\nPaying particular attention to the characteristics of the documents, show how they interact to [precise synthesis question linked to the axis]. (about 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate into French the following passage from Document A (lines X to Y):\n[Extract of 5-8 lines taken from Document A]"
     },
     {
       "num": 2,
-      "title": "Subject 2 — [Different Thematic Axis]",
-      "theme": "[Different Axis]",
+      "title": "Sujet 2 — [Different thematic axis in French]",
+      "theme": "[Different axis FR]",
       "points": ${totalPts},
       "graph": null,
-      "statement": "THEMATIC AXIS: [Different Axis Title]\n\nDOCUMENT A — [Author, Title, Year]:\n[Realistic literary or journalistic excerpt, 8-12 lines]\n\nDOCUMENT B — [Author/Source, Title, Year]:\n[Realistic excerpt from a different register, 6-10 lines]\n\nDOCUMENT C — [Artist/Photographer, Title, Year]:\n[Detailed description of an image, painting or photograph, 4-6 lines]\n\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---\nPaying particular attention to the specificities of the three documents, show how they interact to [precise synthesis question linked to the axis].\n(approximately 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate the following passage from Document A into French:\n[Extract of 4-6 lines from Document A]"
+      "statement": "THÉMATIQUE : « [autre axe officiel] »\n\nDOCUMENT A — [Author, Title, Year]\n[Literary excerpt, 12-18 lines, with line numbers 5/10/15]\n\nDOCUMENT B — [Author/Source, Title, Year]\n[Second excerpt / press article / advertisement, 8-14 lines]\n\nDOCUMENT C — [Artist, Title, Year]\n[Precise description of an original image / painting / photograph / advertisement, 4-7 lines]\n\n--- PART 1: SYNTHESIS (16 points) ---\nPaying particular attention to the characteristics of the documents, show how they interact to [precise synthesis question linked to the axis]. (about 500 words, in English)\n\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---\nTranslate into French the following passage from Document A (lines X to Y):\n[Extract of 5-8 lines taken from Document A]"
     }
   ]
 }`
-    : isEco
+        : isEco
     ? `Crée un sujet de Bac SES/STMG ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
 ${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
@@ -667,6 +686,108 @@ Ex3 = Gestion-Finance : calculs sur données chiffrées d'une entreprise fictive
       "graph": null,
       "statement": "4ème exercice UNIQUEMENT pour la Seconde (4×5=20). Pour Terminale (4+6+10), Première (6+6+8) et STMG (7+6+7) : 3 exercices seulement. Minimum 80 mots."
     }
+  ]
+}`
+    : isPhysique
+    ? `Crée un sujet de PHYSIQUE-CHIMIE (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+${contextLines}
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Bac général Physique-Chimie (spécialité) · 3h30 · 20 points :
+- 3 exercices INDÉPENDANTS, chacun ancré dans une SITUATION CONCRÈTE réaliste avec un titre évocateur (ex. « Un emballage intelligent au rayon poissonnerie », « Datation d'une roche », « Viscosimètre à chute de bille »).
+- Répartition des points sur 20 (ex. 9+6+5, 8+7+5 ou 7+7+6) — l'indiquer dans "points".
+- Couvrir au total CHIMIE et PHYSIQUE. Choisir des thèmes parmi :
+   • CHIMIE : cinétique (temps de demi-réaction, ordre 1, loi de vitesse), équilibre/quotient de réaction, acide-base et TITRAGE pH-métrique (équivalence, pKa à la demi-équivalence, courbe pH=f(V) et sa dérivée dpH/dV), spectroscopie (UV-visible, IR, RMN), dosage par étalonnage (loi de Beer-Lambert), chimie organique et NOMENCLATURE, synthèse/rendement, incertitudes (quotient |x−xref|/u(x)).
+   • PHYSIQUE : mécanique (2ᵉ loi de Newton, équation différentielle du mouvement, chute avec frottement et vitesse limite, énergie mécanique), ondes (interférences, diffraction, effet Doppler, niveau d'intensité sonore), physique NUCLÉAIRE (radioactivité, loi de décroissance N(t)=N₀·e^(−λ·t), demi-vie t₁/₂=ln2/λ, datation, défaut de masse et énergie de liaison en MeV), électricité (dipôle RC, charge/décharge).
+- Au moins UN exercice doit comporter une COURBE à exploiter ET une ÉQUATION DIFFÉRENTIELLE à établir/vérifier/résoudre.
+- Questions numérotées Q1, Q2, Q3… (notation officielle française). Rubrique « Données : » (constantes, masses, valeurs, formules fournies) en tête des exercices concernés.
+- Inclure au moins une question de PRISE D'INITIATIVE : « Le candidat est invité à prendre des initiatives et à présenter la démarche suivie, même si elle n'a pas abouti. »
+- Vraies valeurs numériques, unités SI cohérentes.
+
+GRAPHIQUES — UTILISER LE SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+
+GRAPHIQUES PHYSIQUE-CHIMIE — RÈGLES :
+- COURBE (titrage pH=f(V), décroissance radioactive, cinétique, vitesse v(t), charge RC) → champ "graph" type "function" :
+  [GRAPH: {"type":"function","expressions":["5*Math.exp(-x/300)"],"xMin":0,"xMax":2000,"labels":["[BH⁻] (µmol/L)"],"title":"Évolution temporelle","xLabel":"t (s)","yLabel":"concentration"}]
+- MONTAGE / CIRCUIT RC / PILE / DISPOSITIF → champ "graph" type "ascii" (JAMAIS "geometry" pour un montage).
+- Le graphique va dans le champ "graph" SÉPARÉ (PAS dans "statement"), guillemets internes échappés \"type\". Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" OU null.
+- Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt.
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "Physique-Chimie (spécialité) — Simulation IA Variante ${idx+1}",
+  "section": "Terminale — Spécialité Physique-Chimie",
+  "duration": 210,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — [Contexte concret] (chimie)", "theme":"Chimie", "points":9, "graph":"[GRAPH: {courbe pH=f(V) OU cinétique}] ou null", "statement":"[Situation concrète].\n\nDonnées : [constantes, valeurs, formules].\n\nQ1. ...\nQ2. ...\nQ3. ...\nQ4. ..." },
+    { "num":2, "title":"Exercice 2 — [Contexte concret] (nucléaire / ondes)", "theme":"Physique nucléaire / Ondes", "points":6, "graph":"[GRAPH: {courbe de décroissance OU modélisation}] ou null", "statement":"[Situation concrète].\n\nDonnées : [demi-vie, λ, masses…].\n\nQ1. ...\nQ2. ...\nQ3. ..." },
+    { "num":3, "title":"Exercice 3 — [Contexte concret] (mécanique / électricité)", "theme":"Mécanique / Électricité", "points":5, "graph":"[GRAPH: {courbe v(t) OU schéma ascii}] ou null", "statement":"[Situation concrète].\n\nDonnées : [masses, ρ, g, α…].\n\nQ1. Montrer que… (2ᵉ loi de Newton).\nQ2. Établir l'équation différentielle vérifiée par v(t).\nQ3. ..." }
+  ]
+}`
+    : isSvt
+    ? `Crée un sujet de SVT (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+${contextLines}
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Bac général SVT (spécialité), épreuve écrite · 3h30 · 20 points :
+Le candidat traite OBLIGATOIREMENT les DEUX exercices.
+- EXERCICE 1 — RESTITUTION ORGANISÉE DES CONNAISSANCES (8 points) :
+   • Une seule QUESTION de synthèse à traiter sous forme de TEXTE ARGUMENTÉ structuré (introduction, développement organisé, conclusion). Thème du programme (génétique, immunologie, neurobiologie, plante, géologie/climat…).
+   • Consigne type : « Vous rédigerez un texte argumenté. On attend des expériences, des observations, des exemples pour appuyer votre exposé et argumenter votre propos. » Un schéma-bilan peut être attendu.
+- EXERCICE 2 — PRATIQUE DU RAISONNEMENT SCIENTIFIQUE / EXPLOITATION DE DOCUMENTS (12 points) :
+   • Une situation-problème + un DOSSIER de 3 à 4 documents (résultats expérimentaux, GRAPHIQUES, cartes, tableaux, micrographies décrites) numérotés Document 1, 2, 3…
+   • Une QUESTION ouverte : « À partir de l'exploitation des documents et de vos connaissances, [caractériser / expliquer / proposer une hypothèse]… »
+   • Consigne type : « Vous organiserez votre réponse selon une démarche de votre choix intégrant des données des documents et les connaissances utiles. »
+   • AU MOINS un document chiffré exploitable rendu dans le champ "graph" (type "function", "table" ou "bar"). Les autres documents sont décrits dans le statement.
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie. Thèmes et documents NOUVEAUX à chaque variante.
+- Données réalistes et cohérentes, exploitables par le raisonnement.
+- Le bloc [GRAPH:] (le document chiffré le plus marquant) va dans le champ "graph" SÉPARÉ, guillemets internes échappés \"type\". Valeur : "[GRAPH: {JSON_VALIDE}]" OU null.
+
+GRAPHIQUES — UTILISER LE SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+- COURBE (δ18O=f(âge), abondance d'une espèce, concentration, activité enzymatique) → type "function".
+- TABLEAU (exigences écologiques, mesures, génotypes) → type "table".  · DIAGRAMME → type "bar".
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "SVT (spécialité) — Simulation IA Variante ${idx+1}",
+  "section": "Terminale — Spécialité SVT",
+  "duration": 210,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — [Thème] (restitution)", "theme":"Mobilisation des connaissances", "points":8, "graph":null, "statement":"[Introduction situant le thème.]\n\nQUESTION :\n[Question de synthèse]\n\nVous rédigerez un texte argumenté. On attend des expériences, des observations, des exemples pour appuyer votre exposé et argumenter votre propos." },
+    { "num":2, "title":"Exercice 2 — [Thème] (raisonnement sur documents)", "theme":"Pratique du raisonnement scientifique", "points":12, "graph":"[GRAPH: {document chiffré : type function/table/bar}] ou null", "statement":"[Introduction de la situation-problème.]\n\nQUESTION :\n[Question ouverte : caractériser / expliquer / proposer une hypothèse]\n\nVous organiserez votre réponse selon une démarche de votre choix intégrant des données des documents et les connaissances utiles.\n\nDocument 1 : [voir graphique ci-dessus / description précise]\nDocument 2 : [description précise des données]\nDocument 3 : [description précise des données]" }
+  ]
+}`
+    : isFrancais
+    ? `Crée un sujet de PHILOSOPHIE (Terminale, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Bac général Philosophie · 4h · coefficient 8 · 20 points :
+Le candidat traite, AU CHOIX, l'UN des trois sujets. Présente les TROIS :
+- SUJET 1 — DISSERTATION : une question philosophique concise (ex. « Notre avenir dépend-il de la technique ? », « La vérité est-elle toujours convaincante ? »). Formulation sans intitulé de notion explicite.
+- SUJET 2 — DISSERTATION : une AUTRE question, sur une notion DIFFÉRENTE du programme.
+- SUJET 3 — EXPLICATION DE TEXTE : un extrait AUTHENTIQUE (≈180-260 mots) d'un philosophe de la tradition (Platon, Aristote, Descartes, Spinoza, Locke, Hume, Rousseau, Kant, Hegel, Mill, Nietzsche, Bergson, Alain, Arendt, Rawls, Merleau-Ponty…), correctement attribué, suivi de la consigne officielle.
+
+RÈGLES ABSOLUES :
+- Sujets ORIGINAUX — jamais une copie. Notions et auteur DIFFÉRENTS à chaque variante ; les deux dissertations portent sur des notions différentes.
+- Le texte du sujet 3 doit être un VRAI extrait d'une œuvre réelle (Auteur, Titre, année), philosophiquement riche et autonome. 1-2 notes de bas de page peuvent expliquer un mot difficile.
+- AUCUN graphique (graph: null partout).
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "Philosophie — Simulation IA Variante ${idx+1}",
+  "section": "Terminale — Philosophie",
+  "duration": 240,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Sujet 1 — Dissertation", "theme":"[Notion 1]", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Question philosophique, ex. « … ? »]" },
+    { "num":2, "title":"Sujet 2 — Dissertation", "theme":"[Notion 2 différente]", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Autre question philosophique sur une notion différente]" },
+    { "num":3, "title":"Sujet 3 — Explication de texte", "theme":"[Auteur]", "points":20, "graph":null, "statement":"EXPLICATION DE TEXTE\n\nExpliquer le texte suivant :\n\n[Extrait authentique ≈180-260 mots]\n\n— [Auteur, Titre, année]\n\n[Notes éventuelles : 1. … 2. …]\n\nLa connaissance de la doctrine de l'auteur n'est pas requise. Il faut et il suffit que l'explication rende compte, par la compréhension précise du texte, du problème dont il est question." }
   ]
 }`
     : `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
@@ -806,6 +927,9 @@ async function correctOneExercise(
     || exercise.title?.toLowerCase().includes('subject 2')
 
   const isEcoCorrect = globalMatiere === 'eco-gestion'
+  const isPhysiqueCorrect = globalMatiere === 'physique'
+  const isSvtCorrect = globalMatiere === 'svt'
+  const isFrancaisCorrect = globalMatiere === 'francais'
 
   const system = isAnglaisCorrect
     ? `You are an expert LLCER English examiner and teacher correcting a French Baccalauréat paper.
@@ -827,6 +951,48 @@ NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
 - Termine chaque question par le barème détaillé et les pièges classiques.
 Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.
 Vocabulaire SES rigoureux. Données chiffrées toujours accompagnées de leur unité et de leur source.`
+    : isPhysiqueCorrect
+    ? `Tu es un professeur correcteur du Baccalauréat français, spécialiste de PHYSIQUE-CHIMIE (enseignement de spécialité).
+Tu rédiges des corrections EXHAUSTIVES, ULTRA-DÉTAILLÉES et PÉDAGOGIQUES, entièrement en français.
+Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource. Ne t'arrête JAMAIS avant la fin.
+
+NIVEAU DE DÉTAIL EXIGÉ (correction modèle notée 20/20) :
+- Pour CHAQUE question : rappelle la LOI / PRINCIPE / FORMULE du cours utilisé (2ᵉ loi de Newton, loi de vitesse et cinétique, loi de Beer-Lambert, relation pH = pKa + log([base]/[acide]), loi de décroissance radioactive N(t)=N₀·e^(−λ·t), conservation des nombres de masse et de charge…), PUIS l'application numérique COMPLÈTE (chaque calcul visible, conversions d'unités explicites), PUIS l'interprétation physique du résultat.
+- UNITÉS SI systématiques et cohérentes à chaque étape ; vérifie l'homogénéité d'une relation quand c'est pertinent.
+- Établis et résous les ÉQUATIONS DIFFÉRENTIELLES en détaillant (solution générale, condition initiale, constante de temps τ, régime permanent).
+- Titrages : définis l'équivalence, exploite la demi-équivalence (pKa = pH) et la dérivée dpH/dV.
+- Nucléaire : équations de désintégration équilibrées, t₁/₂ = ln2/λ, énergie en MeV (E = Δm·c²), défaut de masse.
+- Incertitudes : quotient |x−xref|/u(x) et conclusion argumentée sur la compatibilité.
+- Termine chaque question par le résultat en **gras**, une VÉRIFICATION (ordre de grandeur ou cas limite) et les pièges classiques.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.
+
+NOTATION : exposants Unicode (e^(-t/τ), x², 10⁻³), indices (uₙ, u_C, t₁/₂), vecteurs (F⃗, v⃗, a⃗), symboles (∫, √, ≤, ≥, →, λ, τ, ρ, Δ, ∞). JAMAIS de LaTeX brut (commandes backslash type frac ou sqrt) — utilise (a)/(b) et √( ).
+
+GRAPHIQUES DANS LA CORRECTION (quand c'est utile) :
+- COURBE (titrage pH=f(V), décroissance radioactive, cinétique, vitesse v(t), charge RC) → [GRAPH: {"type":"function","expressions":["5*Math.exp(-x/300)"],"xMin":0,"xMax":2000,"labels":["[BH⁻] (µmol/L)"],"title":"Évolution temporelle","xLabel":"t (s)","yLabel":"concentration"}]
+- MONTAGE / CIRCUIT RC / PILE / DISPOSITIF → [GRAPH: {"type":"ascii","title":"Circuit RC série","content":"...schéma...","legend":["R: résistance (Ω)","C: condensateur (F)"]}]
+- Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt. Place le [GRAPH:] juste APRÈS l'explication théorique, AVANT les calculs.`
+    : isSvtCorrect
+    ? `Tu es un professeur correcteur du Baccalauréat français, spécialiste de SVT (Sciences de la Vie et de la Terre, enseignement de spécialité).
+Tu rédiges des corrigés EXHAUSTIFS, ULTRA-DÉTAILLÉS et PÉDAGOGIQUES, entièrement en français. Ne résume JAMAIS une étape. Développe TOUT. L'élève doit comprendre sans autre ressource.
+
+NIVEAU DE DÉTAIL EXIGÉ (corrigé modèle noté maximum) :
+- EXERCICE DE RESTITUTION (texte argumenté) : rédige une INTRODUCTION (définition des termes, problématique, annonce du plan), un DÉVELOPPEMENT organisé en parties (chaque mécanisme expliqué pas à pas, appuyé sur expériences/observations/exemples du programme), une CONCLUSION (bilan + ouverture), et décris le SCHÉMA-BILAN attendu si pertinent.
+- EXERCICE DE RAISONNEMENT SUR DOCUMENTS : pour CHAQUE document, montre comment l'EXPLOITER (ce qu'on lit/observe → ce qu'on en déduit), puis CONNECTE les documents entre eux et aux CONNAISSANCES, et construis la DÉMARCHE complète qui répond à la question (analyse → interprétation → mise en relation → conclusion argumentée).
+- Vocabulaire scientifique rigoureux ; données chiffrées avec unités ; lecture précise des graphiques.
+- Termine par le barème détaillé et les attendus / pièges classiques.
+Utilise markdown : ### pour les parties, **gras** pour les résultats, > pour les points importants.
+GRAPHIQUES (si utile) : courbe → [GRAPH: {"type":"function","expressions":["..."],"xMin":0,"xMax":10,"labels":["..."],"title":"..."}] ; tableau → [GRAPH: {"type":"table","title":"...","headers":[...],"rows":[...]}]. Expressions JS : x*x (jamais x^2).`
+    : isFrancaisCorrect
+    ? `Tu es un professeur correcteur du Baccalauréat français, spécialiste de PHILOSOPHIE.
+Tu rédiges des corrigés EXHAUSTIFS, ULTRA-DÉTAILLÉS et PÉDAGOGIQUES, entièrement en français. Ne résume JAMAIS. Développe TOUT. L'élève doit comprendre sans autre ressource.
+
+NIVEAU DE DÉTAIL EXIGÉ (corrigé modèle noté maximum) :
+- DISSERTATION : analyse des termes du sujet, dégagement du PROBLÈME et des présupposés, formulation de la PROBLÉMATIQUE, construction d'un PLAN dialectique détaillé (I / II / III avec sous-parties), rédaction d'une INTRODUCTION modèle (amorce, définition, problématique, annonce) et d'une CONCLUSION modèle ; pour chaque partie : thèse + arguments + RÉFÉRENCES philosophiques précises (auteur + thèse + œuvre) + exemples ; objections et dépassement.
+- EXPLICATION DE TEXTE : situation du texte (thème, thèse, problème), explication STRUCTURÉE suivant les mouvements du texte (sens des termes, articulations logiques, exemples), explicitation des enjeux, intérêt philosophique et UNE objection. Ne PAS exiger la connaissance de la doctrine de l'auteur.
+- Méthode explicite à chaque étape (l'élève doit pouvoir reproduire). Termine par le barème et les attendus.
+Utilise markdown : ### pour les parties, **gras** pour les points clés, > pour les conseils de méthode.
+AUCUN graphique.`
     : `Tu es un professeur correcteur du Baccalaureat français, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1011,6 +1177,51 @@ Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY.
   const imageNote = hasImages
     ? "\n\nNOTE : L'élève a soumis des photos de sa copie papier. Traite sa réponse comme si tu avais vu sa copie (tu ne peux pas réellement voir les images mais utilise le contexte disponible pour une correction personnalisée)."
     : ''
+
+  // ── SVT : corrigé dédié (pas de sous-questions numérotées) ──
+  if (isSvtCorrect) {
+    const svtPrompt = `EXAMEN : ${examTitle}
+EXERCICE À CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
+
+ÉNONCÉ COMPLET :
+${exercise.statement}
+${withWork ? `\nRÉPONSE DE L'ÉLÈVE :\n${studentWork}${imageNote}` : ''}
+
+Rédige le CORRIGÉ COMPLET de cet exercice de SVT UNIQUEMENT${withWork ? ", en évaluant la copie de l'élève" : ''}. Structure :
+## ${exercise.title} — Corrigé détaillé (${exercise.points} pts)
+### Analyse de la consigne
+[Reformuler le problème ; identifier précisément ce qui est attendu]
+### Corrigé rédigé (modèle)
+[Si restitution : introduction + développement organisé (mécanismes détaillés, expériences/observations/exemples) + conclusion + description du schéma-bilan.
+Si raisonnement sur documents : exploitation document par document (observation → déduction), mise en relation avec les connaissances, démarche complète aboutissant à la réponse argumentée.]
+### Connaissances mobilisées
+[Notions clés du programme à maîtriser pour ce sujet]
+${withWork ? "### Évaluation de la copie\n[Réussites, manques, conseils ciblés]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [critères de notation + pièges classiques]`
+    return askClaude(svtPrompt, system, 8000)
+  }
+
+  // ── PHILOSOPHIE : corrigé dédié (dissertation / explication de texte) ──
+  if (isFrancaisCorrect) {
+    const philoPrompt = `EXAMEN : ${examTitle}
+SUJET À CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
+
+ÉNONCÉ COMPLET :
+${exercise.statement}
+${withWork ? `\nCOPIE DE L'ÉLÈVE :\n${studentWork}${imageNote}` : ''}
+
+Rédige le CORRIGÉ COMPLET de ce sujet de PHILOSOPHIE UNIQUEMENT${withWork ? ", en évaluant la copie" : ''}. Structure :
+## ${exercise.title} — Corrigé détaillé (${exercise.points} pts)
+### Analyse et problématisation
+[Dissertation : analyse des termes du sujet, problème, problématique. Explication : thème, thèse, problème du texte.]
+### Plan détaillé
+[Dissertation : plan en I / II (/ III) avec sous-parties et thèses. Explication : mouvements du texte.]
+### Corrigé rédigé (modèle)
+[Introduction modèle, développement complet avec RÉFÉRENCES philosophiques précises (auteur + thèse + œuvre) et exemples, conclusion modèle. Pour l'explication : explication structurée suivant les mouvements du texte + intérêt philosophique + une objection.]
+### Références mobilisables
+[Auteurs et thèses pertinents pour ce sujet]
+${withWork ? "### Évaluation de la copie\n[Forces, faiblesses, conseils de méthode ciblés]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [critères de notation + pièges classiques]`
+    return askClaude(philoPrompt, system, 8000)
+  }
 
   const prompt = withWork
     ? `EXAMEN : ${examTitle}
@@ -1418,11 +1629,30 @@ function PhaseTimeline({ phase }: { phase: Phase }) {
 function useScript(src: string) {
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
-    if (document.querySelector(`script[src="${src}"]`)) { setLoaded(true); return }
+    if (typeof document === 'undefined') return
+    const isPlotly = src.includes('plotly')
+    const ready = () => !isPlotly || !!(window as any).Plotly
+    let cancelled = false
+    let poll: any = null
+    const markLoaded = () => {
+      if (ready()) { if (!cancelled) setLoaded(true); return }
+      poll = setInterval(() => { if (ready()) { clearInterval(poll); poll = null; if (!cancelled) setLoaded(true) } }, 80)
+    }
+    const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null
+    if (existing) {
+      if (ready()) { setLoaded(true) }
+      else { existing.addEventListener('load', markLoaded); markLoaded() }
+      return () => { cancelled = true; if (poll) clearInterval(poll); existing.removeEventListener('load', markLoaded) }
+    }
     const s = document.createElement('script')
     s.src = src; s.async = true
-    s.onload = () => setLoaded(true)
+    s.onload = markLoaded
+    s.onerror = () => { setTimeout(() => {
+      if (cancelled || ready()) return
+      const r = document.createElement('script'); r.src = src; r.async = true; r.onload = markLoaded; document.head.appendChild(r)
+    }, 1500) }
     document.head.appendChild(s)
+    return () => { cancelled = true; if (poll) clearInterval(poll) }
   }, [src])
   return loaded
 }
@@ -1528,7 +1758,7 @@ function sanitizeExpr(expr: string): string {
 
   // ── 6. Constantes ───────────────────────────────────────────────────
   e = e
-    .replace(/\bpi\b/gi, 'Math.PI')
+    .replace(/(?<![a-zA-Z0-9_.])pi(?![a-zA-Z0-9_])/gi, 'Math.PI')
     .replace(/π/g, 'Math.PI')
     .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g, 'Math.E')
     .replace(/\bInfinity\b/g, '1e15')
@@ -2410,6 +2640,20 @@ function cleanLatex(s: string): string {
   return t
 }
 
+function parseGraphSpecSafe(raw: string): any | null {
+  if (!raw || typeof raw !== 'string') return null
+  try { return JSON.parse(raw) } catch {}
+  const repaired = raw
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\/\/[^\n\r]*/g, '')
+    .replace(/[\n\r\t]+/g, ' ')
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/\bNaN\b/g, '0')
+  try { return JSON.parse(repaired) } catch {}
+  return null
+}
+
 function TextWithGraphs({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
   let gi = 0
@@ -2422,13 +2666,14 @@ function TextWithGraphs({ text }: { text: string }) {
           const myGi = gi++
           let inner
           try {
-            const spec: GraphSpec = JSON.parse(seg.content)
+            const spec = parseGraphSpecSafe(seg.content) as GraphSpec
+            if (!spec) throw new Error('fmt')
             inner = <SmartGraph spec={spec} />
           } catch {
             // Si JSON invalide, afficher quand même proprement
             inner = <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
           }
-          return <div key={i} data-mbgraph={myGi}>{inner}</div>
+          return <div key={i} data-mbgraph={myGi} style={{minWidth:0,maxWidth:'100%',overflowX:'auto'}}>{inner}</div>
         }
       })}
     </div>
@@ -4734,6 +4979,7 @@ function PhaseExam({ exam, onSubmit }: {
   const [uploadedFiles, setUploadedFiles] = useState<{name:string; content:string; type:string}[]>([])
   const [uploadError, setUploadError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const subjectRenderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!timerOn) return
@@ -4747,7 +4993,11 @@ function PhaseExam({ exam, onSubmit }: {
   const timerColor = pct > 40 ? '#10b981' : pct > 15 ? '#f59e0b' : '#ef4444'
 
   /* ── Télécharger sujet ── */
-  const openSubjectPdf = () => {
+  const openSubjectPdf = async () => {
+    const win=window.open('','_blank')
+    let __graphImgs: string[] = []
+    try { __graphImgs = await captureGraphsInOrder(subjectRenderRef.current) } catch { __graphImgs = [] }
+    let __gi = 0
     const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const css=`
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
@@ -4780,13 +5030,15 @@ function PhaseExam({ exam, onSubmit }: {
     `
     const exHtml=exam.exercises.map(ex=>{
       const hasG=!!(ex.graph&&ex.graph!=='null')
+      const __img=hasG?(__graphImgs[__gi++]||''):''
+      const __gHtml=hasG?(__img?`<div style="text-align:center;margin:10px 0"><img src="${__img}" style="max-width:100%;border:1px solid #ddd;border-radius:6px"/></div>`:'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>'):''
       return `<div class="exercice">
         <div class="exercice-header">
           <span class="exercice-title">📐 ${esc2(ex.title)}</span>
           <span class="exercice-pts">${ex.points} points</span>
         </div>
         <div class="exercice-body">
-          ${hasG?'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>':''}
+          ${__gHtml}
           <p style="white-space:pre-wrap">${esc2(cleanLatex(ex.statement))}</p>
         </div>
       </div>`
@@ -4840,11 +5092,8 @@ ${exHtml}
   <span>${new Date().toLocaleDateString('fr-FR')}</span>
 </div>
 </div></body></html>`
-    const blob=new Blob([html],{type:'text/html;charset=utf-8'})
-    const url=URL.createObjectURL(blob)
-    const win=window.open(url,'_blank')
-    if(!win){const a=document.createElement('a');a.href=url;a.download=`Sujet-${exam.title.replace(/[^\w-]/g,'-')}.html`;a.click()}
-    setTimeout(()=>URL.revokeObjectURL(url),12000)
+    if(win){win.document.open();win.document.write(html);win.document.close()}
+    else{const blob=new Blob([html],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`Sujet-${exam.title.replace(/[^\w-]/g,'-')}.html`;a.click();setTimeout(()=>URL.revokeObjectURL(url),12000)}
   }
 
   /* ── Télécharger les réponses tapées ── */
@@ -4928,6 +5177,10 @@ ${exHtml}
 
   return (
     <div>
+      {/* Conteneur caché : rend les graphiques du sujet pour la capture PDF (toujours monté, hors écran) */}
+      <div ref={subjectRenderRef} aria-hidden style={{position:'fixed',left:-99999,top:0,width:760,opacity:0,pointerEvents:'none',zIndex:-1}}>
+        {exam.exercises.map(ex => (((ex as any).graph && (ex as any).graph !== 'null') ? <div key={ex.num}><TextWithGraphs text={(ex as any).graph} /></div> : null))}
+      </div>
       {/* Barre contrôles */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,padding:'14px 20px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,flexWrap:'wrap',gap:12}}>
         <div>
@@ -4973,11 +5226,11 @@ ${exHtml}
 
         {/* Sujet */}
         {panel !== 'answer' && (
-          <div>
+          <div style={{minWidth:0}}>
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:12,fontWeight:600}}>📋 Sujet</p>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {exam.exercises.map(ex => (
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px'}}>
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px',minWidth:0,overflowWrap:'break-word',wordBreak:'break-word'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center',gap:8,flexWrap:'wrap'}}>
                     <span style={{fontWeight:700,fontSize:13,color:'#a5b4fc'}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
