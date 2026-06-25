@@ -2640,6 +2640,62 @@ function cleanLatex(s: string): string {
   return t
 }
 
+// ── Rendu statique HTML des graphiques NON capturables par Plotly/SVG (ascii, table, bar) — pour les PDF ──
+function graphSpecToStaticHtml(raw: string): string {
+  if (!raw || typeof raw !== 'string') return ''
+  let jsonStr = raw.trim()
+  const b = jsonStr.indexOf('{')
+  if (b >= 0) {
+    let depth = 0, k = b
+    for (; k < jsonStr.length; k++) { if (jsonStr[k] === '{') depth++; else if (jsonStr[k] === '}') { depth--; if (depth === 0) break } }
+    jsonStr = jsonStr.slice(b, k + 1)
+  }
+  const sp = parseGraphSpecSafe(jsonStr)
+  if (!sp) return ''
+  const esc = (x: any) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const GC = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#06b6d4']
+
+  if (sp.type === 'ascii') {
+    const content = esc(sp.content || '')
+    const title = sp.title ? '<div style="font-size:12px;font-weight:700;color:#1a1a2e;margin-bottom:6px;text-align:center">' + esc(sp.title) + '</div>' : ''
+    const legend = (Array.isArray(sp.legend) && sp.legend.length)
+      ? '<ul style="margin:8px 0 0 0;padding-left:18px;font-size:11px;color:#444;text-align:left">' + sp.legend.map((l: any) => '<li>' + esc(l) + '</li>').join('') + '</ul>' : ''
+    return '<div style="margin:12px 0;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f7f7fb;display:inline-block;max-width:100%">' + title + '<pre style="margin:0;font-family:\'Courier New\',monospace;font-size:12px;line-height:1.45;color:#1a1a2e;white-space:pre;overflow-x:auto;text-align:left">' + content + '</pre>' + legend + '</div>'
+  }
+
+  if (sp.type === 'table') {
+    const headers: any[] = sp.headers || sp.columns || []
+    const rows: any[] = sp.rows || sp.data || []
+    let ht = '<table style="border-collapse:collapse;font-size:12px;margin:0 auto">'
+    if (headers.length) ht += '<thead><tr>' + headers.map((c: any) => '<th style="border:1px solid #1a1a2e;padding:5px 9px;background:#1a1a2e;color:#fff;text-align:center">' + esc(c) + '</th>').join('') + '</tr></thead>'
+    ht += '<tbody>' + rows.map((r: any) => '<tr>' + (Array.isArray(r) ? r : Object.values(r)).map((c: any) => '<td style="border:1px solid #94a3b8;padding:5px 9px;text-align:center">' + esc(c) + '</td>').join('') + '</tr>').join('') + '</tbody></table>'
+    const tt = sp.title ? '<div style="font-size:11px;color:#475569;text-align:center;margin-top:5px">' + esc(sp.title) + '</div>' : ''
+    return '<div style="margin:12px 0">' + ht + tt + '</div>'
+  }
+
+  if (sp.type === 'bar' || sp.type === 'bars') {
+    const cats: any[] = sp.categories || sp.labels || ((sp.data || []).map((d: any) => d.label || d.name)) || []
+    const vals: any[] = sp.values || ((sp.data || []).map((d: any) => d.value || d.y)) || []
+    const nums = vals.map((v: any) => Number(v)).filter((x: number) => isFinite(x))
+    const maxV = Math.max(...nums, 1)
+    const BW = 460, BH = 210, bp = 34, n = vals.length || 1
+    const gap = (BW - bp * 2) / n, bw = gap * 0.6
+    let bars = ''
+    vals.forEach((v: any, k: number) => {
+      const hh = (Number(v) / maxV) * (BH - bp * 2)
+      const x = bp + k * gap + (gap - bw) / 2, y = BH - bp - (isFinite(hh) ? hh : 0)
+      const c = GC[k % GC.length]
+      bars += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (isFinite(hh) ? hh : 0).toFixed(1) + '" fill="' + c + '" rx="3"/>'
+      bars += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (BH - bp + 13) + '" font-size="9" fill="#475569" text-anchor="middle">' + esc(cats[k] ?? '').slice(0, 12) + '</text>'
+      bars += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" font-size="9" fill="#1a1a2e" text-anchor="middle">' + esc(v) + '</text>'
+    })
+    const tt = sp.title ? '<text x="' + (BW / 2) + '" y="14" font-size="11" fill="#64748b" text-anchor="middle">' + esc(sp.title) + '</text>' : ''
+    return '<div style="margin:12px 0;display:inline-block"><svg width="' + BW + '" height="' + BH + '" viewBox="0 0 ' + BW + ' ' + BH + '" xmlns="http://www.w3.org/2000/svg" style="background:#fff">' + bars + tt + '</svg></div>'
+  }
+
+  return ''
+}
+
 function parseGraphSpecSafe(raw: string): any | null {
   if (!raw || typeof raw !== 'string') return null
   try { return JSON.parse(raw) } catch {}
@@ -2921,7 +2977,7 @@ function buildCorrectionHtml(
       if(captured){
         parts.push('<div class="mb-graph" style="margin:12px 0;text-align:center"><img src="'+captured+'" style="max-width:100%;display:block;margin:0 auto;border-radius:10px;border:1px solid #e5e7eb"/></div>')
       } else {
-        const svg=graphToSvg(rawText.slice(jgs,gjj+1))
+        const svg=graphToSvg(rawText.slice(jgs,gjj+1))||graphSpecToStaticHtml(rawText.slice(jgs,gjj+1))
         parts.push(svg||'<div style="padding:8px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;font-size:11px;color:#fcd34d;margin:8px 0">📊 Figure mathématique</div>')
       }
       gp=(gcb!==-1?gcb:gjj)+1
@@ -5031,7 +5087,8 @@ function PhaseExam({ exam, onSubmit }: {
     const exHtml=exam.exercises.map(ex=>{
       const hasG=!!(ex.graph&&ex.graph!=='null')
       const __img=hasG?(__graphImgs[__gi++]||''):''
-      const __gHtml=hasG?(__img?`<div style="text-align:center;margin:10px 0"><img src="${__img}" style="max-width:100%;border:1px solid #ddd;border-radius:6px"/></div>`:'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>'):''
+      const __static=(hasG&&!__img)?graphSpecToStaticHtml(String((ex as any).graph)):''
+      const __gHtml=hasG?(__img?`<div style="text-align:center;margin:10px 0"><img src="${__img}" style="max-width:100%;border:1px solid #ddd;border-radius:6px"/></div>`:(__static?`<div style="text-align:center;margin:10px 0">${__static}</div>`:'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>')):''
       return `<div class="exercice">
         <div class="exercice-header">
           <span class="exercice-title">📐 ${esc2(ex.title)}</span>
@@ -5053,7 +5110,7 @@ function PhaseExam({ exam, onSubmit }: {
 <div class="header-official">
   <div class="header-top">
     <div class="header-left">
-      <strong>Bac.AI France</strong><br>
+      <strong>MathBac.AI</strong><br>
       Simulation IA — Préparation Bac<br>
       <strong>Variante n°${exam.index+1}</strong>
     </div>
@@ -5087,7 +5144,7 @@ function PhaseExam({ exam, onSubmit }: {
 </div>
 ${exHtml}
 <div class="footer">
-  <span>Bac.AI France — Simulation IA</span>
+  <span>MathBac.AI — Simulation IA</span>
   <span class="footer-center">${esc2(exam.title)}</span>
   <span>${new Date().toLocaleDateString('fr-FR')}</span>
 </div>
