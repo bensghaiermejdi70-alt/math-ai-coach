@@ -2080,11 +2080,42 @@ function PhaseTimeline({ phase }: { phase: Phase }) {
 function useScript(src: string) {
   const [loaded, setLoaded] = useState(false)
   useEffect(() => {
-    if (document.querySelector(`script[src="${src}"]`)) { setLoaded(true); return }
+    if (typeof document === 'undefined') return
+    const isPlotly = src.includes('plotly')
+    // « prêt » = pour Plotly, on exige que window.Plotly soit réellement défini
+    const ready = () => !isPlotly || !!(window as any).Plotly
+    let cancelled = false
+    let poll: any = null
+
+    // Attend que la lib soit vraiment dispo (évite la course quand plusieurs graphiques montent ensemble)
+    const markLoaded = () => {
+      if (ready()) { if (!cancelled) setLoaded(true); return }
+      poll = setInterval(() => {
+        if (ready()) { clearInterval(poll); poll = null; if (!cancelled) setLoaded(true) }
+      }, 80)
+    }
+
+    const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement | null
+    if (existing) {
+      if (ready()) { setLoaded(true) }
+      else { existing.addEventListener('load', markLoaded); markLoaded() }
+      return () => { cancelled = true; if (poll) clearInterval(poll); existing.removeEventListener('load', markLoaded) }
+    }
+
     const s = document.createElement('script')
     s.src = src; s.async = true
-    s.onload = () => setLoaded(true)
+    s.onload = markLoaded
+    s.onerror = () => {
+      // Échec réseau → on retente une fois après un court délai
+      setTimeout(() => {
+        if (cancelled || ready()) return
+        const r = document.createElement('script')
+        r.src = src; r.async = true; r.onload = markLoaded
+        document.head.appendChild(r)
+      }, 1500)
+    }
     document.head.appendChild(s)
+    return () => { cancelled = true; if (poll) clearInterval(poll) }
   }, [src])
   return loaded
 }
@@ -5132,7 +5163,7 @@ ${exHtml}
   return (
     <div>
       {/* Rendu caché des graphiques pour capture haute qualité (PDF sujet) */}
-      <div ref={subjectRenderRef} aria-hidden style={{position:'absolute',left:-99999,top:0,width:760,opacity:0,pointerEvents:'none',zIndex:-1}}>
+      <div ref={subjectRenderRef} aria-hidden style={{position:'fixed',left:-99999,top:0,width:760,opacity:0,pointerEvents:'none',zIndex:-1}}>
         <TextWithGraphs text={exam.exercises.map(e=>{const g=(e as any).graph; return ((g && g!=='null' && String(g).includes('[GRAPH:')) ? g+'\n' : '')+e.statement}).join('\n')} />
       </div>
       {/* Barre contrôles */}
