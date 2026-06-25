@@ -4900,6 +4900,7 @@ function PhaseExam({ exam, onSubmit }: {
   const [uploadedFiles, setUploadedFiles] = useState<{name:string; content:string; type:string}[]>([])
   const [uploadError, setUploadError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const subjectRenderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!timerOn) return
@@ -4913,7 +4914,11 @@ function PhaseExam({ exam, onSubmit }: {
   const timerColor = pct > 40 ? '#10b981' : pct > 15 ? '#f59e0b' : '#ef4444'
 
   /* ── Télécharger sujet ── */
-  const openSubjectPdf = () => {
+  const openSubjectPdf = async () => {
+    const win = window.open('', '_blank')
+    let captured: string[] = []
+    try { captured = await captureGraphsInOrder(subjectRenderRef.current) } catch { captured = [] }
+    let __gIdx = 0
     const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const css=`
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap');
@@ -4956,8 +4961,13 @@ function PhaseExam({ exam, onSubmit }: {
         let gd=0,gjj=jgs
         while(gjj<rawText.length){ if(rawText[gjj]==='{')gd++; else if(rawText[gjj]==='}'){gd--; if(gd===0)break} gjj++ }
         const gcb=rawText.indexOf(']',gjj)
-        const svg=graphSpecToSvg(rawText.slice(jgs,gjj+1))
-        if(svg)parts.push('<div style="text-align:center;margin:10px 0">'+svg+'</div>')
+        const __img=captured[__gIdx]; __gIdx++
+        if(__img && __img.startsWith('data:image')){
+          parts.push('<div class="mb-graph" style="text-align:center;margin:12px 0"><img src="'+__img+'" style="max-width:100%;border:1px solid #e5e7eb;border-radius:10px"/></div>')
+        } else {
+          const svg=graphSpecToSvg(rawText.slice(jgs,gjj+1))
+          if(svg)parts.push('<div style="text-align:center;margin:10px 0">'+svg+'</div>')
+        }
         gp=(gcb!==-1?gcb:gjj)+1
       }
       return parts.join('\n')
@@ -5031,11 +5041,13 @@ ${exHtml}
   <span>${new Date().toLocaleDateString('fr-FR')}</span>
 </div>
 </div></body></html>`
-    const blob=new Blob([html],{type:'text/html;charset=utf-8'})
-    const url=URL.createObjectURL(blob)
-    const win=window.open(url,'_blank')
-    if(!win){const a=document.createElement('a');a.href=url;a.download=`Sujet-${exam.title.replace(/[^\w-]/g,'-')}.html`;a.click()}
-    setTimeout(()=>URL.revokeObjectURL(url),12000)
+    if(win){ win.document.open(); win.document.write(html); win.document.close() }
+    else {
+      const blob=new Blob([html],{type:'text/html;charset=utf-8'})
+      const url=URL.createObjectURL(blob)
+      const a=document.createElement('a'); a.href=url; a.download=`Sujet-${exam.title.replace(/[^\w-]/g,'-')}.html`; a.click()
+      setTimeout(()=>URL.revokeObjectURL(url),12000)
+    }
   }
 
   /* ── Télécharger les réponses tapées ── */
@@ -5119,6 +5131,10 @@ ${exHtml}
 
   return (
     <div>
+      {/* Rendu caché des graphiques pour capture haute qualité (PDF sujet) */}
+      <div ref={subjectRenderRef} aria-hidden style={{position:'absolute',left:-99999,top:0,width:760,opacity:0,pointerEvents:'none',zIndex:-1}}>
+        <TextWithGraphs text={exam.exercises.map(e=>{const g=(e as any).graph; return ((g && g!=='null' && String(g).includes('[GRAPH:')) ? g+'\n' : '')+e.statement}).join('\n')} />
+      </div>
       {/* Barre contrôles */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,padding:'14px 20px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:14,flexWrap:'wrap',gap:12}}>
         <div>
