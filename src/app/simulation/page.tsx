@@ -3141,7 +3141,7 @@ function TextWithGraphs({ text }: { text: string }) {
             // Si JSON invalide, afficher quand même proprement
             inner = <div style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>
           }
-          return <div key={i} data-mbgraph={myGi}>{inner}</div>
+          return <div key={i} data-mbgraph={myGi} style={{minWidth:0,maxWidth:'100%',overflowX:'auto'}}>{inner}</div>
         }
       })}
     </div>
@@ -5211,11 +5211,11 @@ ${exHtml}
 
         {/* Sujet */}
         {panel !== 'answer' && (
-          <div>
+          <div style={{minWidth:0}}>
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:12,fontWeight:600}}>📋 Sujet</p>
-            <div style={{display:'flex',flexDirection:'column',gap:14,maxHeight:'74vh',overflowY:'auto',paddingRight:6}}>
+            <div style={{display:'flex',flexDirection:'column',gap:14,maxHeight:'74vh',overflowY:'auto',overflowX:'hidden',paddingRight:6,minWidth:0}}>
               {exam.exercises.map(ex => (
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px'}}>
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderLeft:'3px solid #6366f1',borderRadius:12,padding:'16px 18px',minWidth:0,overflowWrap:'break-word',wordBreak:'break-word'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center',gap:8,flexWrap:'wrap'}}>
                     <span style={{fontWeight:700,fontSize:13,color:'#a5b4fc'}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
@@ -5230,7 +5230,7 @@ ${exHtml}
 
         {/* Zone réponse */}
         {panel !== 'subject' && (
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{display:'flex',flexDirection:'column',gap:10,minWidth:0}}>
 
             {/* Header zone réponse */}
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
