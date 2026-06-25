@@ -3123,113 +3123,40 @@ function TextWithGraphs({ text }: { text: string }) {
 // Approche : HTML stylé ouvert dans un onglet → Ctrl+P → Enregistrer en PDF
 // Résultat : polices parfaites, symboles mathématiques, couleurs fidèles
 
-function buildCorrectionHtml(
-  exam: GeneratedExam,
-  correctionText: string,
-  studentAnswers: string,
-  autoDownload = false,
-  graphImages: string[] = []
-): string {
-
-  const C = {
-    ex:  ['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'],
-    exBg:['#1e1b4b','#052e16','#431407','#2e1065','#082f49'],
-    exTx:['#a5b4fc','#6ee7b7','#fcd34d','#c4b5fd','#67e8f9'],
-  }
-
-  let exIdx = -1
-
-  /* ── escape HTML basique ── */
-  const esc = (s: string) => s
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-
-  /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
-  const inline = (s: string) => vecToHtml(esc(cleanLatex(s)))
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/`(.+?)`/g,'<code>$1</code>')
-
-  /* ── convertit une ligne Markdown en HTML ── */
-  const line2html = (raw: string): string => {
-    const t = raw.trim()
-    if (!t) return '<div class="spacer"></div>'
-
-    // ## Exercice N
-    if (t.startsWith('## ')) {
-      exIdx = Math.min(exIdx + 1, C.ex.length - 1)
-      return (
-        `<div class="ex-hdr" style="background:${C.exBg[exIdx]};` +
-        `border-left:5px solid ${C.ex[exIdx]};color:${C.exTx[exIdx]}">` +
-        `${inline(t.slice(3))}</div>`
-      )
-    }
-
-    // ### Partie / Question
-    if (t.startsWith('### ')) {
-      const col = C.ex[Math.max(exIdx,0)]
-      const bg  = C.exBg[Math.max(exIdx,0)]
-      return (
-        `<div class="q-hdr" style="border-left:3px solid ${col};` +
-        `background:${col}14;color:${col}">${inline(t.slice(4))}</div>`
-      )
-    }
-
-    // > **Résultat / Bilan**
-    if (t.startsWith('>')) {
-      const inner = t.replace(/^>\s*/,'')
-      if (inner.startsWith('**')) {
-        return `<div class="result-box">${inline(inner)}</div>`
-      }
-      return `<div class="tip-box">${inline(inner)}</div>`
-    }
-
-    // --- séparateur
-    if (t === '---') return '<hr>'
-
-    // Ligne **Concept / Méthode
-    if (/^\*\*(Concept|M.thode|Th.or.me|Rappel|D.finition)/i.test(t))
-      return `<div class="concept">${inline(t)}</div>`
-
-    // **Résultat :**
-    if (/^\*\*(R.sultat|Conclusion)/i.test(t))
-      return `<div class="result-inline">${inline(t)}</div>`
-
-    // **Barème / Bilan Exercice
-    if (/^\*\*(Bar.me|Bilan|Note)/i.test(t))
-      return `<div class="bareme">${inline(t)}</div>`
-
-    // **Erreur / Piège
-    if (/^\*\*(Erreur|Pi.ge|Attention)/i.test(t))
-      return `<div class="err">${inline(t)}</div>`
-
-    // **Point pédago / À retenir
-    if (/^\*\*(Point|Astuce|. retenir|Key)/i.test(t))
-      return `<div class="tip-line">${inline(t)}</div>`
-
-    // Analyse élève ✅ ❌ 💡
-    if (/[✅❌💡]/.test(t))
-      return `<div class="analysis">${inline(t)}</div>`
-
-    // Étapes : - Étape N ou • Étape
-    if (/^[-•]\s*[Éé]tape\s*\d/i.test(t) || /^[Éé]tape\s*\d/i.test(t))
-      return `<div class="step">${inline(t)}</div>`
-
-    // Bullet générique
-    if (t.startsWith('- ') || t.startsWith('• '))
-      return `<div class="bullet">${inline(t.slice(2))}</div>`
-
-    // Texte normal
-    return `<p>${inline(t)}</p>`
-  }
-
-  // ── Convertit [GRAPH:{...}] en SVG inline pour l'impression ─────
-  const graphToSvg = (jsonStr: string): string => {
+// Convertit un spec [GRAPH:{...}] en SVG/HTML statique (réutilisé par les PDF sujet et correction)
+function graphSpecToSvg(jsonStr: string): string {
     try {
       const sp = JSON.parse(jsonStr)
       const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
       const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       const proj3 = (p: {x:number;y?:number;z?:number}) => ({ x:(p.x||0)+(((p as any).z)||0)*0.4, y:(p.y||0)+(((p as any).z)||0)*0.3 })
+      if (sp.type === 'table') {
+        const headers:any[] = sp.headers || sp.columns || []
+        const rows:any[] = sp.rows || sp.data || []
+        let ht = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin:0 auto">'
+        if (headers.length) ht += '<thead><tr>'+headers.map((c:any)=>'<th style="border:1px solid #1a1a2e;padding:5px 8px;background:#1a1a2e;color:#fff;text-align:left">'+esc2(String(c))+'</th>').join('')+'</tr></thead>'
+        ht += '<tbody>'+rows.map((r:any)=>'<tr>'+(Array.isArray(r)?r:Object.values(r)).map((c:any)=>'<td style="border:1px solid #94a3b8;padding:5px 8px">'+esc2(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+        const tt = sp.title?'<div style="font-size:11px;color:#475569;text-align:center;margin-top:4px">'+esc2(String(sp.title))+'</div>':''
+        return '<div class="mb-graph" style="margin:12px 0">'+ht+tt+'</div>'
+      }
+      if (sp.type === 'bar' || sp.type === 'bars') {
+        const labels:any[] = sp.labels || (sp.data||[]).map((d:any)=>d.label||d.name) || []
+        const values:any[] = sp.values || (sp.data||[]).map((d:any)=>d.value||d.y) || []
+        const nums = values.map((v:any)=>Number(v)).filter((x:number)=>isFinite(x))
+        const maxV = Math.max(...nums, 1)
+        const BW=480, BH=220, bp=34, n=values.length||1
+        const gap=(BW-bp*2)/n, bw=gap*0.6
+        let bars=''
+        values.forEach((v:any,k:number)=>{
+          const hh=(Number(v)/maxV)*(BH-bp*2)
+          const x=bp+k*gap+(gap-bw)/2, y=BH-bp-(isFinite(hh)?hh:0)
+          bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(isFinite(hh)?hh:0).toFixed(1)+'" fill="'+GC[k%GC.length]+'" rx="3"/>'
+          bars+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(BH-bp+12)+'" font-size="9" fill="#475569" text-anchor="middle">'+esc2(String(labels[k]??'')).slice(0,12)+'</text>'
+          bars+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" font-size="9" fill="#1a1a2e" text-anchor="middle">'+esc2(String(v))+'</text>'
+        })
+        const tt = sp.title?'<text x="'+(BW/2)+'" y="14" font-size="11" fill="#64748b" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+        return '<div class="mb-graph" style="margin:12px 0;display:inline-block"><svg width="'+BW+'" height="'+BH+'" viewBox="0 0 '+BW+' '+BH+'" xmlns="http://www.w3.org/2000/svg" style="background:#fff">'+bars+tt+'</svg></div>'
+      }
 
       if (sp.type === 'function') {
         const FW=520,FH=260,FP=46
@@ -3336,7 +3263,110 @@ function buildCorrectionHtml(
       }
     }catch(_e){return ''}
     return ''
+}
+
+function buildCorrectionHtml(
+  exam: GeneratedExam,
+  correctionText: string,
+  studentAnswers: string,
+  autoDownload = false,
+  graphImages: string[] = []
+): string {
+
+  const C = {
+    ex:  ['#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'],
+    exBg:['#1e1b4b','#052e16','#431407','#2e1065','#082f49'],
+    exTx:['#a5b4fc','#6ee7b7','#fcd34d','#c4b5fd','#67e8f9'],
   }
+
+  let exIdx = -1
+
+  /* ── escape HTML basique ── */
+  const esc = (s: string) => s
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+
+  /* ── inline : **gras**, `code` et vecteurs (flèche au-dessus) ── */
+  const inline = (s: string) => vecToHtml(esc(cleanLatex(s)))
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`(.+?)`/g,'<code>$1</code>')
+
+  /* ── convertit une ligne Markdown en HTML ── */
+  const line2html = (raw: string): string => {
+    const t = raw.trim()
+    if (!t) return '<div class="spacer"></div>'
+
+    // ## Exercice N
+    if (t.startsWith('## ')) {
+      exIdx = Math.min(exIdx + 1, C.ex.length - 1)
+      return (
+        `<div class="ex-hdr" style="background:${C.exBg[exIdx]};` +
+        `border-left:5px solid ${C.ex[exIdx]};color:${C.exTx[exIdx]}">` +
+        `${inline(t.slice(3))}</div>`
+      )
+    }
+
+    // ### Partie / Question
+    if (t.startsWith('### ')) {
+      const col = C.ex[Math.max(exIdx,0)]
+      const bg  = C.exBg[Math.max(exIdx,0)]
+      return (
+        `<div class="q-hdr" style="border-left:3px solid ${col};` +
+        `background:${col}14;color:${col}">${inline(t.slice(4))}</div>`
+      )
+    }
+
+    // > **Résultat / Bilan**
+    if (t.startsWith('>')) {
+      const inner = t.replace(/^>\s*/,'')
+      if (inner.startsWith('**')) {
+        return `<div class="result-box">${inline(inner)}</div>`
+      }
+      return `<div class="tip-box">${inline(inner)}</div>`
+    }
+
+    // --- séparateur
+    if (t === '---') return '<hr>'
+
+    // Ligne **Concept / Méthode
+    if (/^\*\*(Concept|M.thode|Th.or.me|Rappel|D.finition)/i.test(t))
+      return `<div class="concept">${inline(t)}</div>`
+
+    // **Résultat :**
+    if (/^\*\*(R.sultat|Conclusion)/i.test(t))
+      return `<div class="result-inline">${inline(t)}</div>`
+
+    // **Barème / Bilan Exercice
+    if (/^\*\*(Bar.me|Bilan|Note)/i.test(t))
+      return `<div class="bareme">${inline(t)}</div>`
+
+    // **Erreur / Piège
+    if (/^\*\*(Erreur|Pi.ge|Attention)/i.test(t))
+      return `<div class="err">${inline(t)}</div>`
+
+    // **Point pédago / À retenir
+    if (/^\*\*(Point|Astuce|. retenir|Key)/i.test(t))
+      return `<div class="tip-line">${inline(t)}</div>`
+
+    // Analyse élève ✅ ❌ 💡
+    if (/[✅❌💡]/.test(t))
+      return `<div class="analysis">${inline(t)}</div>`
+
+    // Étapes : - Étape N ou • Étape
+    if (/^[-•]\s*[Éé]tape\s*\d/i.test(t) || /^[Éé]tape\s*\d/i.test(t))
+      return `<div class="step">${inline(t)}</div>`
+
+    // Bullet générique
+    if (t.startsWith('- ') || t.startsWith('• '))
+      return `<div class="bullet">${inline(t.slice(2))}</div>`
+
+    // Texte normal
+    return `<p>${inline(t)}</p>`
+  }
+
+  // ── Convertit [GRAPH:{...}] en SVG inline pour l'impression ─────
+  const graphToSvg = graphSpecToSvg
 
   // ── Convertit texte + [GRAPH:] en HTML ──────────────────────────
   const textToHtml = (rawText: string): string => {
@@ -4914,16 +4944,41 @@ function PhaseExam({ exam, onSubmit }: {
       .footer-center{text-align:center;font-weight:700;color:#1a1a2e;font-size:11px}
       @media print{.print-bar{display:none!important}.wrap{padding:8px 16px}.exercice{page-break-inside:avoid}}
     `
+    const renderGraphsInText = (rawText: string): string => {
+      if(!rawText) return ''
+      const GTAG='[GRAPH:'; const parts:string[]=[]; let gp=0
+      while(gp<rawText.length){
+        const gi=rawText.indexOf(GTAG,gp)
+        if(gi===-1){ const t=rawText.slice(gp); if(t.trim())parts.push('<p style="white-space:pre-wrap">'+esc2(cleanLatex(t))+'</p>'); break }
+        if(gi>gp){ const t=rawText.slice(gp,gi); if(t.trim())parts.push('<p style="white-space:pre-wrap">'+esc2(cleanLatex(t))+'</p>') }
+        const jgs=rawText.indexOf('{',gi+GTAG.length)
+        if(jgs===-1){ parts.push('<p style="white-space:pre-wrap">'+esc2(cleanLatex(rawText.slice(gi)))+'</p>'); break }
+        let gd=0,gjj=jgs
+        while(gjj<rawText.length){ if(rawText[gjj]==='{')gd++; else if(rawText[gjj]==='}'){gd--; if(gd===0)break} gjj++ }
+        const gcb=rawText.indexOf(']',gjj)
+        const svg=graphSpecToSvg(rawText.slice(jgs,gjj+1))
+        if(svg)parts.push('<div style="text-align:center;margin:10px 0">'+svg+'</div>')
+        gp=(gcb!==-1?gcb:gjj)+1
+      }
+      return parts.join('\n')
+    }
+    const renderGraphField = (g:any): string => {
+      if(!g||g==='null') return ''
+      const t=String(g).trim()
+      if(t.includes('[GRAPH:')) return renderGraphsInText(t)
+      if(t.startsWith('{')){ const svg=graphSpecToSvg(t); return svg?'<div style="text-align:center;margin:10px 0">'+svg+'</div>':'' }
+      return ''
+    }
     const exHtml=exam.exercises.map(ex=>{
-      const hasG=!!((ex as any).graph&&(ex as any).graph!=='null')
+      const gHtml=renderGraphField((ex as any).graph)
       return `<div class="exercice">
         <div class="exercice-header">
           <span class="exercice-title">📐 ${esc2(ex.title)}</span>
           <span class="exercice-pts">${ex.points} points</span>
         </div>
         <div class="exercice-body">
-          ${hasG?'<div style="text-align:center;padding:8px 0;color:#6366f1;font-size:13px">📊 Voir graphique dans l&#39;interface MathBac.AI</div>':''}
-          <p style="white-space:pre-wrap">${esc2(cleanLatex(ex.statement))}</p>
+          ${gHtml}
+          ${renderGraphsInText(ex.statement)}
         </div>
       </div>`
     }).join('\n')
