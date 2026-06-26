@@ -517,6 +517,7 @@ async function generateOneExam(
   const isEco = matiere === 'eco-gestion'
   const isPhysique = matiere === 'physique'
   const isSvt = matiere === 'svt'
+  const isInfo = matiere === 'informatique'
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -547,11 +548,18 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     ? `Tu es un auteur expert de sujets de PHILOSOPHIE du Baccalauréat général français (programme officiel, épreuve 4h, coefficient 8).
 Tu crées des sujets ORIGINAUX et rigoureux conformes au format officiel : DEUX sujets de dissertation (questions philosophiques portant sur les notions du programme : la conscience, l'inconscient, autrui, le temps, la nature, la technique, le travail, l'art, le langage, la religion, l'État, la justice, le devoir, la liberté, le bonheur, la vérité, la raison, la science…) et UN sujet d'explication de texte (un extrait authentique d'un grand auteur de la tradition philosophique).
 Tout en français impeccable. RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : isInfo
+    ? `Tu es un auteur expert de sujets de NSI (Numérique et Sciences Informatiques) du Baccalauréat général français (enseignement de spécialité, programme officiel, épreuve écrite 3h30, 20 points).
+Tu maîtrises tout le programme de terminale NSI : structures de données (listes, piles, files, dictionnaires, arbres binaires/ABR, graphes), algorithmique (parcours, tris, recherche dichotomique, récursivité, diviser-pour-régner, programmation dynamique, algorithmes gloutons, coût/complexité), programmation Python et POO (classes, attributs, méthodes, __init__, __repr__), bases de données relationnelles et SQL (SELECT/FROM/WHERE/JOIN/ORDER BY/DISTINCT/agrégats/INSERT/UPDATE/DELETE, clés primaires et étrangères, schéma relationnel), architectures matérielles et systèmes d'exploitation (processus, ordonnancement, interblocage), réseaux (adressage IPv4, masques de sous-réseau, adresse réseau/diffusion, routage RIP et OSPF, protocoles TCP/IP).
+Tu crées des sujets ORIGINAUX et rigoureux : 3 exercices INDÉPENDANTS couvrant des thèmes DIFFÉRENTS, avec du code Python authentique (numéroté quand demandé), des tables SQL et des schémas réseau.
+CODE : Python correct et indenté. Pour « Recopier et compléter », ne mets des « ... » QU'aux emplacements précis à compléter, jamais sur tout le corps d'une fonction.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     : `Tu es un auteur expert de sujets du Baccalauréat français (programme officiel Éducation nationale).
 Tu crées des sujets ORIGINAUX, réalistes, avec de vraies données numériques.
 NOTATION FRANÇAISE : f'(x), ∫, √, ℝ, ∈, ≤, ≥, →, Δ, θ, xₙ, uₙ₊₁, x², eˣ — JAMAIS \frac ni \sqrt ni LaTeX brut.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
+  const sesDissertation = isEco && /terminale/i.test(String(section)) && (idx % 2 === 1)
   const prompt = isAnglais
     ? `Create an ORIGINAL French Baccalauréat LLCER ENGLISH (Langues, Littératures et Cultures Étrangères et Régionales — Anglais) specialty paper number ${idx+1} (out of 5 variants), inspired by these sources:
 ${contextLines}
@@ -595,7 +603,43 @@ Respond EXACTLY with this JSON (no text before or after):
   ]
 }`
         : isEco
-    ? `Crée un sujet de Bac SES/STMG ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+    ? (sesDissertation
+    ? `Crée un sujet de SES — DISSERTATION s'appuyant sur un dossier documentaire — ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+${contextLines}
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Terminale Spécialité SES · DISSERTATION · 4h · 20 points :
+UN seul sujet de dissertation s'appuyant sur un dossier de 3 à 4 documents.
+- Une QUESTION de dissertation (économie, sociologie OU science politique, programme de terminale).
+- Un DOSSIER de 3-4 documents éclairant le sujet : au moins UN document STATISTIQUE (rendu dans le champ "graph" type "table" ou "bar"), les autres décrits dans le statement (texte de presse/auteur résumé 4-6 lignes, tableau, données).
+- Utiliser les données chiffrées EXACTES du bloc « DONNÉES OFFICIELLES FRANCE » (ne pas inventer).
+- Notions et auteurs du programme (Schumpeter, Bourdieu, Durkheim, Becker, Granovetter, Rawls, Weber…).
+
+GRAPHIQUES & TABLEAUX — SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+
+${blocDonneesFrance()}
+
+- Document statistique → champ "graph" type "table" ou "bar", guillemets internes échappés \"type\". Valeur "[GRAPH: {JSON_VALIDE}]" ou null.
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "SES — Dissertation — Simulation IA Variante ${idx+1}",
+  "section": "${section}",
+  "duration": 240,
+  "totalPoints": 20,
+  "exercises": [
+    {
+      "num": 1,
+      "title": "Dissertation s'appuyant sur un dossier documentaire",
+      "theme": "[Chapitre du programme]",
+      "points": 20,
+      "graph": "[GRAPH: {document statistique table ou bar}] ou null",
+      "statement": "Il est demandé au candidat : de répondre à la question posée par le sujet ; de construire une argumentation à partir d'une problématique qu'il devra élaborer ; de mobiliser des connaissances et des informations pertinentes, notamment celles figurant dans le dossier ; de rédiger en organisant le développement sous la forme d'un plan cohérent qui ménage l'équilibre des parties.\n\nSUJET : [Question de dissertation précise]\n\nCe sujet comporte [3 ou 4] documents.\n\nDOCUMENT 1 — [Titre, Source, Année] : [texte de presse/auteur résumé, 4-6 lignes].\nDOCUMENT 2 — [Titre statistique, Source, Année] [voir document ci-dessous].\nDOCUMENT 3 — [Titre, Source, Année] : [texte ou données, 4-6 lignes].\nDOCUMENT 4 — [Titre, Source, Année] : [optionnel, texte ou tableau]."
+    }
+  ]
+}`
+    : `Crée un sujet de Bac SES/STMG ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
 ${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
 
@@ -687,7 +731,7 @@ Ex3 = Gestion-Finance : calculs sur données chiffrées d'une entreprise fictive
       "statement": "4ème exercice UNIQUEMENT pour la Seconde (4×5=20). Pour Terminale (4+6+10), Première (6+6+8) et STMG (7+6+7) : 3 exercices seulement. Minimum 80 mots."
     }
   ]
-}`
+}`)
     : isPhysique
     ? `Crée un sujet de PHYSIQUE-CHIMIE (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
@@ -788,6 +832,47 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
     { "num":1, "title":"Sujet 1 — Dissertation", "theme":"[Notion 1]", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Question philosophique, ex. « … ? »]" },
     { "num":2, "title":"Sujet 2 — Dissertation", "theme":"[Notion 2 différente]", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Autre question philosophique sur une notion différente]" },
     { "num":3, "title":"Sujet 3 — Explication de texte", "theme":"[Auteur]", "points":20, "graph":null, "statement":"EXPLICATION DE TEXTE\n\nExpliquer le texte suivant :\n\n[Extrait authentique ≈180-260 mots]\n\n— [Auteur, Titre, année]\n\n[Notes éventuelles : 1. … 2. …]\n\nLa connaissance de la doctrine de l'auteur n'est pas requise. Il faut et il suffit que l'explication rende compte, par la compréhension précise du texte, du problème dont il est question." }
+  ]
+}`
+    : isInfo
+    ? `Crée un sujet de NSI (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
+${contextLines}
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Bac général NSI (spécialité), épreuve écrite · 3h30 · 20 points :
+Le sujet est composé de TROIS exercices INDÉPENDANTS ; le candidat traite les trois.
+Répartition : Exercice 1 (6 pts) · Exercice 2 (6 pts) · Exercice 3 (8 pts).
+Chaque exercice porte sur des thèmes DIFFÉRENTS. Couvrir au total au moins 4 domaines parmi :
+- BASES DE DONNÉES & SQL : schéma relationnel (clé primaire soulignée, clé étrangère notée #), requêtes SELECT/FROM/WHERE (AND/OR)/JOIN ... ON, ORDER BY, DISTINCT, agrégats (SUM, COUNT), INSERT/UPDATE/DELETE. Donner des extraits de tables (graph "table").
+- STRUCTURES DE DONNÉES : listes, piles, files, dictionnaires, arbres binaires / ABR, graphes (parcours, implémentation en Python/POO, trace d'exécution).
+- ALGORITHMIQUE : récursivité, diviser-pour-régner, programmation dynamique, gloutons, tris, recherche dichotomique, COÛT/complexité temporelle (en O(...) ou « dans le pire des cas »).
+- PROGRAMMATION PYTHON & POO : classes (attributs, méthodes, __init__, __repr__), « Recopier et compléter » du code.
+- ARCHITECTURE & SYSTÈMES : processus, ordonnancement, interblocage, mémoire.
+- RÉSEAUX : adressage IPv4, masque de sous-réseau (notation /24), adresse réseau et de diffusion, nombre de machines, tables de routage, RIP (nombre de sauts) et OSPF (coût = 10^9 / débit).
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL — jamais une copie. Thèmes, données, code NOUVEAUX à chaque variante.
+- Code Python AUTHENTIQUE, correct et indenté. Pour « Recopier et compléter », ne mettre des « ... » QU'aux emplacements précis à compléter (jamais tout le corps d'une fonction).
+- Questions numérotées 1., 2., 3.…
+- Au moins UN exercice avec une table SQL et UN exercice avec un schéma (réseau/arbre/pile-file) dans le champ "graph".
+
+GRAPHIQUES & TABLES — UTILISER LE SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+- TABLE SQL / tableau de données → champ "graph" type "table" : [GRAPH: {"type":"table","title":"Table inventaire","headers":["id","marque","modele","annee","prix"],"rows":[["3","Gibson","Les Paul Standard","1959","250000"],["7","Fender","Stratocaster","1956","200000"]]}]
+- SCHÉMA RÉSEAU / ARBRE / PILE-FILE → champ "graph" type "ascii".
+- Le graphique va dans le champ "graph" SÉPARÉ, guillemets internes échappés \"type\". Valeur : "[GRAPH: {JSON_VALIDE}]" OU null.
+- Le CODE Python s'écrit dans le "statement" (texte indenté), PAS dans "graph".
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "NSI (spécialité) — Simulation IA Variante ${idx+1}",
+  "section": "Terminale — Spécialité NSI",
+  "duration": 210,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — [Thème, ex. Bases de données]", "theme":"[Domaine]", "points":6, "graph":"[GRAPH: {table SQL}] ou null", "statement":"Cet exercice porte sur [domaine].\n\n[Contexte + schéma relationnel : relation(attribut_clé, ..., #clé_étrangère) + extrait de table].\n\n1. [Question SQL/lecture]\n2. [Écrire une requête...]\n3. [...]" },
+    { "num":2, "title":"Exercice 2 — [Thème, ex. structures de données / algorithmique]", "theme":"[Domaine]", "points":6, "graph":"[GRAPH: {schéma pile/file/arbre ascii}] ou null", "statement":"Cet exercice porte sur [domaine].\n\n[Classe Python ou structure, code indenté].\n\n1. [Question]\n2. Recopier et compléter le code suivant :\n   1  def f(...):\n   2      ...\n3. Donner le coût d'exécution dans le pire des cas en fonction de n." },
+    { "num":3, "title":"Exercice 3 — [Thème, ex. réseaux / arbres binaires / POO]", "theme":"[Domaine(s)]", "points":8, "graph":"[GRAPH: {schéma réseau ascii ou table}] ou null", "statement":"Cet exercice porte sur [domaines].\n\n[Contexte : réseau d'entreprise, ABR, etc.].\n\n1. [Question]\n2. [Question]\n3. [Recopier et compléter / justifier]" }
   ]
 }`
     : `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
@@ -896,7 +981,7 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title: isAnglais ? `LLCER Anglais — Simulation Variante ${idx+1}` : `${section} — Simulation Variante ${idx+1}`,
     section: isAnglais ? 'Terminale LLCER Anglais' : section,
-    duration: isAnglais ? 210 : isEco ? 240 : 180,
+    duration: isAnglais ? 210 : isEco ? 240 : isInfo ? 210 : 180,
     totalPoints:totalPts,
     exercises:[{num:1,title: isAnglais ? 'Subject 1' : 'Exercice 1',theme: isAnglais ? 'Identities & Exchanges' : 'Analyse',points:20,statement: isAnglais ? 'Generation error — please retry.' : 'Erreur de génération — veuillez réessayer.'}]
   })
@@ -930,6 +1015,7 @@ async function correctOneExercise(
   const isPhysiqueCorrect = globalMatiere === 'physique'
   const isSvtCorrect = globalMatiere === 'svt'
   const isFrancaisCorrect = globalMatiere === 'francais'
+  const isInfoCorrect = globalMatiere === 'informatique'
 
   const system = isAnglaisCorrect
     ? `You are an expert LLCER English examiner and teacher correcting a French Baccalauréat paper.
@@ -993,6 +1079,20 @@ NIVEAU DE DÉTAIL EXIGÉ (corrigé modèle noté maximum) :
 - Méthode explicite à chaque étape (l'élève doit pouvoir reproduire). Termine par le barème et les attendus.
 Utilise markdown : ### pour les parties, **gras** pour les points clés, > pour les conseils de méthode.
 AUCUN graphique.`
+    : isInfoCorrect
+    ? `Tu es un professeur correcteur du Baccalauréat français, spécialiste de NSI (Numérique et Sciences Informatiques, enseignement de spécialité).
+Tu rédiges des corrigés EXHAUSTIFS, ULTRA-DÉTAILLÉS et PÉDAGOGIQUES, entièrement en français. Ne résume JAMAIS. Développe TOUT. L'élève doit comprendre sans autre ressource.
+
+NIVEAU DE DÉTAIL EXIGÉ (corrigé modèle noté maximum) :
+- Pour CHAQUE question numérotée : rappelle la notion/méthode mobilisée, donne la réponse COMPLÈTE et le RAISONNEMENT.
+- SQL : écris les requêtes COMPLÈTES et correctes (SELECT/FROM/WHERE/JOIN ON/ORDER BY/DISTINCT/SUM/INSERT/UPDATE/DELETE) ; explique chaque clause ; quand on demande le résultat, donne-le sous forme de table.
+- PYTHON : fournis le code COMPLET, correct et INDENTÉ (jamais de « ... » laissés dans le corrigé), explique la logique ligne par ligne ; pour la POO détaille classes, attributs et méthodes ; ajoute des exemples d'exécution (>>> ...).
+- COMPLEXITÉ : justifie le coût en O(...) (ou « dans le pire des cas ») avec le raisonnement sur le nombre d'opérations.
+- STRUCTURES DE DONNÉES (piles, files, arbres, graphes) : détaille l'état de la structure ÉTAPE PAR ÉTAPE (trace d'exécution).
+- RÉSEAUX : calcule les adresses (réseau, diffusion, nombre de machines, masque /n), complète les tables de routage, calcule les coûts OSPF (10^9/débit) et les sauts RIP.
+Utilise markdown : ### par question, blocs de code indentés, **gras** pour les résultats finaux, > pour les points clés.
+Termine par le barème détaillé et les pièges classiques.
+Pas de graphiques mathématiques ; tu peux donner une table (type "table") pour un résultat SQL.`
     : `Tu es un professeur correcteur du Baccalaureat français, specialiste en mathematiques.
 Tu rediges des corrections EXHAUSTIVES, ULTRA-DETAILLEES et PEDAGOGIQUES.
 Ne resume JAMAIS une etape. Developpe TOUT. L'eleve doit comprendre sans autre ressource.
@@ -1177,6 +1277,29 @@ Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY.
   const imageNote = hasImages
     ? "\n\nNOTE : L'élève a soumis des photos de sa copie papier. Traite sa réponse comme si tu avais vu sa copie (tu ne peux pas réellement voir les images mais utilise le contexte disponible pour une correction personnalisée)."
     : ''
+
+  // ── NSI : corrigé dédié (SQL / Python / complexité / réseaux) ──
+  if (isInfoCorrect) {
+    const nsiPrompt = `EXAMEN : ${examTitle}
+EXERCICE À CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}
+
+ÉNONCÉ COMPLET :
+${exercise.statement}
+${withWork ? `\nRÉPONSE DE L'ÉLÈVE :\n${studentWork}${imageNote}` : ''}
+
+Rédige le CORRIGÉ COMPLET de cet exercice de NSI UNIQUEMENT${withWork ? ", en évaluant la copie de l'élève" : ''}. Structure :
+## ${exercise.title} — Corrigé détaillé (${exercise.points} pts)
+Pour CHAQUE question numérotée (1., 2., 3.…) :
+### Question N
+[Notion/méthode mobilisée, puis réponse COMPLÈTE :
+- SQL → requête(s) complète(s) et correcte(s) + explication des clauses + table de résultat si demandé.
+- Python → code COMPLET et indenté (aucun « ... » laissé) + explication ligne par ligne + exemple d'exécution >>> si utile.
+- Complexité → coût en O(...) justifié.
+- Structures de données → trace d'exécution étape par étape.
+- Réseaux → calculs d'adresses (réseau, diffusion, masque /n, nb de machines), table de routage complétée, coûts OSPF/RIP.]
+${withWork ? "### Évaluation de la copie\n[Réussites, erreurs, conseils ciblés par question]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [répartition des points par question + pièges classiques]`
+    return askClaude(nsiPrompt, system, 8000)
+  }
 
   // ── SVT : corrigé dédié (pas de sous-questions numérotées) ──
   if (isSvtCorrect) {
