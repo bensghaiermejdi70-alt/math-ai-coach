@@ -460,57 +460,41 @@ async function generateBacBlancPhysique(candidat: Candidat, dayNum: number): Pro
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
   const seed = `BAC_BLANC_PHYSIQUE_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (programme CNP officiel).
-Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux et de niveau officiel.
+  const system = `Tu es un auteur expert de sujets de SCIENCES PHYSIQUES (Physique-Chimie) du Baccalauréat tunisien, section Sciences expérimentales (programme officiel, épreuve 3h, coefficient 4).
+Tu maîtrises la chimie (cinétique, équilibres, acide-base, piles/électrolyse, chimie organique) et la physique (électricité RC/RL/RLC, ondes, oscillations mécaniques, physique nucléaire et atomique).
+Tu crées des sujets BAC BLANC ORIGINAUX, réalistes, avec de vraies données numériques, des courbes à exploiter et des contextes scientifiques précis.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
 NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
 EXPOSANTS : e^(-t/τ)  N₀·e^(-λt)  ½mv²  ½Cu²  — TOUJOURS parenthèses autour de l'exposant
-INDICES UNICODE : u_C → uC  i(t)  N₀  T₁/₂  ω₀  τ — utiliser symboles Unicode
-VECTEURS : F⃗  a⃗  v⃗  P⃗  — avec U+20D7
-UNITÉS : toujours préciser l'unité (V, A, Ω, F, H, m/s², N, J, mol/L, mol, s)
-FORMULES CLÉS :
-- RC : τ=RC · uC(t)=E(1-e^(-t/τ)) · i(t)=(E/R)e^(-t/τ) · E=½Cu²
-- RL : τ=L/R · i(t)=(E/R)(1-e^(-t/τ)) · eL=-L·di/dt · Em=½Li²
-- RLC : ω₀=1/√(LC) · T₀=2π√(LC) · Q=L/(R√LC)
-- Pendule : T=2π√(l/g) · Ressort : T=2π√(m/k)
-- Newton : ΣF=ma · Ec=½mv² · W=F·d·cosθ
-- Ondes : v=λ·f · τ=d/v · i=λD/a · nλ=d·sinθ
-- Nucléaire : N(t)=N₀·e^(-λt) · t₁/₂=ln2/λ · E=Δm·c²
-- Chimie : v=dx/dt · Ka=[A⁻][H₃O⁺]/[AH] · pH=-log[H₃O⁺] · m=MIt/(nF)`
-
-  const prog = getProgrammeJourPhysique(candidat.sectionKey, dayNum)
-  const ex1Theme = prog?.ex1.sousTh || 'Dipôle RC — charge et décharge'
-  const ex2Theme = prog?.ex2.sousTh || 'Mécanique — 2ème loi de Newton'
-  const ex3Theme = prog?.ex3.sousTh || 'Cinétique chimique'
-  const ex4Theme = prog?.ex4.sousTh || 'Acide-base — pH et dosage'
+INDICES UNICODE : uC  i(t)  N₀  T₁/₂  ω₀  τ
+UNITÉS : toujours préciser (V, A, Ω, F, H, m·s⁻², N, J, mol·L⁻¹, mol, s, MeV)
+FORMULES : RC τ=RC · uC=E(1-e^(-t/τ)) · RL τ=L/R · RLC ω₀=1/√(LC) · v=λ·f · N(t)=N₀·e^(-λt) · t₁/₂=ln2/λ · E=Δm·c² · Ka=[A⁻][H₃O⁺]/[AH] · pH=-log[H₃O⁺]`
 
   const prompt = `Crée le sujet du BAC BLANC OFFICIEL PHYSIQUE-CHIMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
-
 SEED DÉTERMINISTE : ${seed}
 DATE : ${dateStr}
 
-═══ STRUCTURE OFFICIELLE DU SUJET PHYSIQUE-CHIMIE BAC TUNISIE ═══
-Durée : 3h · Total : 20 points · Format officiel MEN Tunisie
-
-Exercice 1 — PHYSIQUE PARTIE 1 (8 points) — ${ex1Theme}
-Exercice 2 — PHYSIQUE PARTIE 2 (6 points) — ${ex2Theme}
-Exercice 3 — CHIMIE PARTIE 1 (3 points) — ${ex3Theme}
-Exercice 4 — CHIMIE PARTIE 2 (3 points) — ${ex4Theme}
+RÈGLES SPÉCIFIQUES PHYSIQUE-CHIMIE (Bac Tunisie — Sc. expérimentales) · 20 pts · 3h · coef 4 :
+STRUCTURE OFFICIELLE : CHIMIE (9 pts) D'ABORD, puis PHYSIQUE (11 pts).
+▸ CHIMIE (9 pts) — 2 exercices :
+   - Ex1 (5 pts) : exercice expérimental avec données numériques et souvent une COURBE à exploiter — cinétique chimique (vitesse, temps de demi-réaction, taux d'avancement τ=f(t)) OU équilibre/estérification OU acide-base (pH, Ka, dosage, courbe pH=f(V)) OU piles/électrolyse. Dresser le tableau d'avancement.
+   - Ex2 (4 pts) : 2e exercice de chimie OU « Étude d'un document scientifique » (texte de chimie organique : alcools, acides, esters, amines, amides + questions et écriture d'équations en formules semi-développées).
+▸ PHYSIQUE (11 pts) — 3 exercices :
+   - Ex1 (4 pts) : Électricité — dipôle RC, RL ou RLC (régime transitoire/libre/forcé, équation différentielle, exploitation de courbes oscilloscope, détermination de R, L, C, E).
+   - Ex2 (4 pts) : Ondes (corde, surface de l'eau, interférences, diffraction : λ, célérité, déphasage) OU oscillations mécaniques (pendule, énergie mécanique).
+   - Ex3 (3 pts) : Physique nucléaire / atomique (désintégration, loi de décroissance, demi-vie, fission/fusion, énergie de liaison en MeV, défaut de masse ; masses fournies).
 
 RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- Niveau exactement équivalent aux vrais examens officiels Bac Tunisie
-- Données numériques réalistes et cohérentes (R en kΩ, C en μF, L en mH...)
-- Chaque exercice a des sous-parties numérotées 1) a) b) 2) a) b) c) etc.
-- Minimum 120 mots par exercice
-- Inclure figures et schémas décrits textuellement (circuit, montage, courbe)
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie
+- Vraies valeurs numériques, unités SI · au moins une COURBE/figure à exploiter (champ "graph")
+- Sous-parties numérotées 1) a) b) 2) a) b) c) · minimum 120 mots par exercice
+- Pile électrochimique / circuit RC-RL-RLC / montage → champ "graph" type "ascii" (FORMAT ci-dessous). JAMAIS [FIGURE : ...] dans statement.
+- Courbe numérique (τ=f(t), pH=f(V), u(t), i(t)) → champ "graph" type "function".
+- Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" (guillemets internes échappés \") OU null.
 
-PRÉSENTATION OFFICIELLE :
-Exercice 1 : "On réalise le montage représenté par la figure ci-contre..."
-Exercice 2 : "Un pendule simple de longueur l=..." ou "Un solide (S) de masse m=..."
-Exercice 3 : "On étudie la cinétique de la réaction entre..."
-Exercice 4 : "On réalise un dosage pH-métrique de..."
+FORMAT COURBE : [GRAPH: {"type":"function","expressions":["100*(1-Math.exp(-x/0.5))"],"xMin":0,"xMax":3,"labels":["uC(t)"],"title":"Charge du condensateur"}]
+FORMAT CIRCUIT (ascii) : [GRAPH: {"type":"ascii","title":"Circuit RC série","content":"  ┌───┤R├────┬───┐\n  │          │   │\n  E(t)      ═╪═ C\n  │          │   │\n  └──────────┴───┘","legend":["R: résistance (Ω)","C: condensateur (F)","E(t): générateur"]}]
 
 RÉPONSE JSON OBLIGATOIRE :
 {
@@ -522,44 +506,14 @@ RÉPONSE JSON OBLIGATOIRE :
   "totalPoints": 20,
   "duration": 180,
   "exercises": [
-    {
-      "num": 1,
-      "theme": "${prog?.ex1.theme || 'Physique'}",
-      "title": "Titre exercice 1 (ex: Dipôle RC — condensateur)",
-      "points": 8,
-      "statement": "DONNÉES : [données numériques complètes]\n\nOn réalise le montage représenté ci-dessous.\n\n1) a) Question complète avec toutes les données...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question...\n3) a) Question finale...",
-      "graph": "[GRAPH: {\"type\":\"ascii\",\"title\":\"Montage expérimental\",\"content\":\"  ┌──┤R├──┤L├──┬──┐\\n  │             ═╪═C\\n  E(t)           │\\n  └─────────────┘\",\"legend\":[\"R: résistance\",\"L: bobine\",\"C: condensateur\"]}]"
-    },
-    {
-      "num": 2,
-      "theme": "${prog?.ex2.theme || 'Physique'}",
-      "title": "Titre exercice 2 (ex: Pendule simple — oscillations)",
-      "points": 6,
-      "statement": "DONNÉES : [données numériques]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...\n2) c) ...",
-      "graph": null
-    },
-    {
-      "num": 3,
-      "theme": "${prog?.ex3.theme || 'Chimie'}",
-      "title": "Titre exercice 3 (ex: Cinétique chimique)",
-      "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
-      "graph": null
-    },
-    {
-      "num": 4,
-      "theme": "${prog?.ex4.theme || 'Chimie'}",
-      "title": "Titre exercice 4 (ex: Dosage acide-base)",
-      "points": 3,
-      "statement": "DONNÉES : [données]\n\n1) ...\n2) ...\n3) ...",
-      "graph": null
-    }
+    { "num":1, "theme":"Chimie", "title":"Chimie — Exercice 1 (Cinétique / Équilibre / Acide-base)", "points":5, "graph":"[GRAPH: {\"type\":\"function\",...}] ou null", "statement":"CHIMIE (9 points)\n\nDONNÉES : [...]\n\n1) Dresser le tableau d'avancement.\n2) [exploitation : vitesse / τ / pH / Ka].\n3) [lecture graphique + calcul]." },
+    { "num":2, "theme":"Chimie", "title":"Chimie — Exercice 2 (Acide-base / Piles / Document scientifique)", "points":4, "graph":null, "statement":"[2e exercice de chimie OU « Étude d'un document scientifique » de chimie organique + questions.]" },
+    { "num":3, "theme":"Physique", "title":"Physique — Exercice 1 (Électricité RC / RL / RLC)", "points":4, "graph":"[GRAPH: {courbe u(t) ou i(t)}] ou null", "statement":"PHYSIQUE (11 points)\n\nDONNÉES : [...]\n\n1) [équation différentielle / solution].\n2) [exploitation des courbes : E, U₀, I₀, constante de temps].\n3) [en déduire R, L ou C]." },
+    { "num":4, "theme":"Physique", "title":"Physique — Exercice 2 (Ondes / Oscillations)", "points":4, "graph":null, "statement":"[Ondes (λ, célérité, déphasage, interférences/diffraction) OU oscillateur mécanique et énergie.]" },
+    { "num":5, "theme":"Physique", "title":"Physique — Exercice 3 (Nucléaire / Atomique)", "points":3, "graph":null, "statement":"[Réaction nucléaire : équation avec lois de conservation, énergie libérée en MeV, énergie de liaison, demi-vie ; masses fournies.]" }
   ]
-}
+}`
 
-RÈGLE GRAPHIQUE ABSOLUE : JAMAIS écrire [FIGURE : ...] dans statement — TOUJOURS générer le champ \"graph\" avec [GRAPH: {"type":"ascii",...}] pour les circuits et montages.`
-
-// Utiliser askClaude() — même fonction que generateBacBlanc (maths)
   const raw = await askClaude(prompt, system, 6500)
 
   const parsed = parseJSON<BacExam>(raw, {
@@ -599,76 +553,92 @@ async function generateBacBlancInfo(candidat: Candidat, dayNum: number): Promise
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
   const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en Informatique (programme CNP officiel).
-Tu crées des sujets BAC BLANC INFORMATIQUE originaux, rigoureux et de niveau officiel.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+  const isTic = candidat.sectionKey === 'autres'
+  const infoIsBDWeb = !isTic && (dayNum % 2 === 0)
+  const secLbl = isTic ? 'Sections Maths / Sc. expérimentales / Sc. techniques (TIC)' : 'Section Sciences de l\'informatique'
 
-NOTATION INFORMATIQUE OBLIGATOIRE :
-- Algorithmes : utiliser la notation Pascal/Python officielle tunisienne
-- SQL : majuscules pour les mots-clés (SELECT, FROM, WHERE, JOIN, GROUP BY, HAVING)
-- Bases de données : schéma relationnel avec clés primaires (#) et étrangères (*)
-- TIC : utiliser les termes techniques officiels du programme CNP
+  const system = isTic
+    ? `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien pour les sections Mathématiques, Sciences expérimentales et Sciences techniques (épreuve 1h30, coefficient 0.5).
+Tu maîtrises l'algorithmique en pseudo-code tunisien (Fonction/Procédure, DEBUT/FIN, Pour/Tant que/Répéter, Si/Sinon/FinSi, ← pour l'affectation, type TAB). NIVEAU ACCESSIBLE : pas de récursivité, pas de matrices, pas de bases de données ni de programmation web.
+Tu crées des sujets BAC BLANC ORIGINAUX, clairs et adaptés à ces sections.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : `Tu es un auteur expert de sujets d'INFORMATIQUE du Baccalauréat tunisien, section Sciences de l'informatique (programme officiel).
+Tu maîtrises l'algorithmique en pseudo-code tunisien (Fonction/Procédure, DEBUT/FIN, Pour/Tant que/Répéter, Si/Sinon/FinSi, ← pour l'affectation, types Tab/Mat), la récursivité, les structures de données, les bases de données relationnelles (SQL) et la programmation web (HTML/CSS/JavaScript/PHP).
+Tu crées des sujets BAC BLANC ORIGINAUX, rigoureux, au niveau du Bac, avec du code correct et bien indenté.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
-STRUCTURE DU SUJET INFORMATIQUE BAC TUNISIE :
-- Exercice 1 : Algorithmique & Programmation (7 pts) — Pascal ou Python
-- Exercice 2 : Bases de données (6 pts) — SQL + Modélisation
-- Exercice 3 : TIC & Réseaux (7 pts) — Internet, Web, Sécurité
-Total : 20 points`
+  const reglesInfo = isTic
+    ? `Génère une épreuve « Informatique » ACCESSIBLE (sections Maths/Sc.exp/Sc.tech, 1h30, coef 0.5), 3 exercices :
+- Ex1 (3,25 pts) : TABLEAUX DE TRACE — pour 3 à 4 séquences algorithmiques SIMPLES (boucles Pour/Tant que sur entiers, chaînes de caractères, petit tableau), donner le RÉSULTAT d'exécution pour une valeur donnée et le RÔLE de la séquence.
+- Ex2 (3,75 pts) : un algorithme DONNÉ (Fonction/Procédure simple, écrit ENTIER) — déterminer le type retourné, donner le résultat de quelques appels sur un tableau fourni, déduire le rôle, puis écrire un MODULE simple (parcours, tri élémentaire) qui l'appelle.
+- Problème (13 pts) : un PROBLÈME de synthèse concret décomposé en MODULES — écrire l'algorithme du programme principal (analyse modulaire) puis l'algorithme de chaque module, avec les tableaux de déclaration des objets et nouveaux types. Type TAB.
+NIVEAU ACCESSIBLE : PAS de récursivité, PAS de matrices, PAS de SQL ni de web.`
+    : infoIsBDWeb
+    ? `Génère une épreuve « STI » en 2 PARTIES :
+- PARTIE A — Bases de données (12 pts) : décris un schéma relationnel (tables, champs, clés primaires et étrangères) ; interprétation (représentation textuelle, clés, Vrai/Faux sur les règles de gestion, intégrité référentielle/de domaine) ; LECTURE de requêtes (associer chaque requête SQL à son rôle) ; ÉCRITURE de requêtes SQL (SELECT avec JOIN, GROUP BY/COUNT/SUM, HAVING, sous-requêtes/NOT IN, INSERT/UPDATE/DELETE, ALTER TABLE ... ADD CHECK).
+- PARTIE B — Programmation Web (8 pts) : donne un extrait de code HTML ; rôle des balises/attributs (form, method, input type, lien CSS externe, onload, select, alt...), QCM, puis compléter/écrire du HTML/CSS/JavaScript (ou PHP/MySQL).`
+    : `Génère une épreuve « Algorithmique et Programmation » (3h, 4 exercices) :
+- Ex1 (3 pts) : un algorithme DONNÉ (Fonction/Procédure) + QCM (cocher la bonne réponse) sur son type, sa valeur retournée pour un tableau fourni, son rôle ; + une question d'explication (trace).
+- Ex2 (≈4,75 pts) : RÉCURSIVITÉ — écrire une fonction récursive (suite, factorielle, PGCD...) puis un module qui l'appelle.
+- Ex3 (≈4,75 pts) : TABLEAUX / MATRICES — une procédure sur un Tab puis une procédure sur une Mat qui l'appelle (types Tab et Mat prédéfinis).
+- Ex4 (≈7,5 pts) : PROBLÈME de synthèse — analyse modulaire (plusieurs modules), traitements/conversions.
+Pseudo-code tunisien : Fonction Nom(p:Type):Type / DEBUT…FIN / Pour i de a à b Faire / Tant que…Faire / Répéter…Jusqu'à / Si…Alors…Sinon…FinSi / ← affectation.`
 
-  const prompt = `Graine de variation : ${seed}
-Date : ${dateStr}
-Section : ${candidat.section}
-Candidat : ${candidat.prenom} ${candidat.nom}
-
-Crée un sujet BAC BLANC INFORMATIQUE ORIGINAL variante jour ${dayNum}.
-
-EXERCICE 1 — ALGORITHMIQUE (7 pts) :
-Crée un exercice complet sur un algorithme de tri OU récursivité OU structures de données.
-- Partie A (3 pts) : Analyse et trace d'exécution
-- Partie B (4 pts) : Écriture de l'algorithme complet en Pascal ou Python
-
-EXERCICE 2 — BASES DE DONNÉES (6 pts) :
-Crée un exercice sur une base de données réaliste (bibliothèque, hôpital, école, commerce...).
-- Partie A (2 pts) : Modèle relationnel — clés primaires/étrangères
-- Partie B (4 pts) : 4 requêtes SQL progressives (SELECT, JOIN, GROUP BY, sous-requête)
-
-EXERCICE 3 — TIC & RÉSEAUX (7 pts) :
-Crée un exercice sur Internet, Web (HTML/CSS/JS/PHP) ou Sécurité informatique.
-- Questions progressives couvrant les notions théoriques et pratiques du programme
-
-Réponds EXACTEMENT avec ce JSON :
-{
-  "title": "Bac Blanc Informatique — Variante Jour ${dayNum}",
-  "section": "${candidat.section}",
+  const tmplInfo = isTic
+    ? `{
+  "id": "bb-info-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Informatique (TIC) — Jour ${dayNum}",
+  "section": "${secLbl}",
+  "duration": 90,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — Tableaux de trace", "theme":"Trace / Rôle", "points":3.25, "graph":null, "statement":"Pour chaque séquence algorithmique, donner le RÉSULTAT de l'exécution (pour la valeur indiquée) puis le RÔLE de la séquence.\n\n[3 à 4 séquences SIMPLES : boucles Pour/Tant que sur des entiers, manipulation de chaînes, parcours d'un petit tableau d'entiers — écrites ENTIÈREMENT.]" },
+    { "num":2, "title":"Exercice 2 — Lecture d'algorithme + module", "theme":"Algorithme + module", "points":3.75, "graph":null, "statement":"Soit l'algorithme COMPLET suivant d'une fonction simple (rédigé ENTIÈREMENT, sans « ... ») :\n\n[Fonction entière]\n\n1) Déterminer le type du résultat retourné par la fonction.\n2) Pour un tableau T donné, donner le résultat de quelques appels puis déduire le rôle de la fonction.\n3) Écrire l'algorithme d'un module simple (ex. ORDONNER, RECHERCHER) qui fait appel à cette fonction. NB : le type TAB est prédéfini." },
+    { "num":3, "title":"Problème — Analyse modulaire", "theme":"Problème de synthèse", "points":13, "graph":null, "statement":"PROBLÈME : [situation concrète décrite avec un exemple chiffré].\n\nTravail demandé :\n1) Écrire l'algorithme du programme principal, solution du problème, en le décomposant en MODULES.\n2) Écrire l'algorithme de chaque module envisagé.\nNB : dresser les tableaux de déclaration des objets et des nouveaux types nécessaires (type TAB)." }
+  ]
+}`
+    : infoIsBDWeb
+    ? `{
+  "id": "bb-info-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Informatique — Bases de données & Web — Jour ${dayNum}",
+  "section": "${secLbl}",
   "duration": 180,
   "totalPoints": 20,
   "exercises": [
-    {
-      "num": 1,
-      "title": "Exercice 1 — Algorithmique & Programmation",
-      "theme": "Algorithmique",
-      "points": 7,
-      "graph": null,
-      "statement": "Énoncé complet exercice algorithmique. Minimum 200 mots. Sous-parties numérotées 1), 2), 3)..."
-    },
-    {
-      "num": 2,
-      "title": "Exercice 2 — Bases de données",
-      "theme": "Bases de données",
-      "points": 6,
-      "graph": null,
-      "statement": "Présenter le schéma relationnel puis les requêtes SQL. Minimum 150 mots."
-    },
-    {
-      "num": 3,
-      "title": "Exercice 3 — TIC & Réseaux",
-      "theme": "TIC",
-      "points": 7,
-      "graph": null,
-      "statement": "Énoncé complet TIC. Minimum 150 mots. Sous-parties numérotées."
-    }
+    { "num":1, "title":"Partie A — Bases de données : Interprétation", "theme":"Bases de données", "points":4, "graph":null, "statement":"Schéma relationnel « Gestion_X » : [décrire les tables, champs, clés primaires et clés étrangères].\n\n1) Donner la représentation textuelle de la base (pour chaque table : nom, champs, clé primaire, clé(s) étrangère(s)).\n2) Compléter un tableau Vrai/Faux sur les règles de gestion.\n3) Compléter des phrases avec : clé primaire, clé étrangère, intégrité référentielle, intégrité de domaine." },
+    { "num":2, "title":"Partie A — Requêtes SQL", "theme":"SQL", "points":8, "graph":null, "statement":"1) Associer chaque requête SQL (INSERT, SELECT, UPDATE, DELETE, ALTER TABLE) à son rôle.\n2) Écrire en SQL les requêtes suivantes :\n   a) Affichage avec jointure et condition.\n   b) Regroupement (GROUP BY) avec COUNT ou SUM.\n   c) Filtrage avec HAVING.\n   d) Sous-requête ou NOT IN.\n   e) Mise à jour (UPDATE) ou contrainte (ALTER TABLE ... ADD CHECK)." },
+    { "num":3, "title":"Partie B — Programmation Web", "theme":"Web (HTML/CSS/JS)", "points":8, "graph":null, "statement":"On donne l'aperçu et un extrait du code HTML d'une page.\n1) Indiquer, pour chaque rôle, le numéro de ligne correspondant (formulaire, method, input, lien CSS externe, onload JavaScript, liste déroulante, alt...).\n2) QCM : pour chaque affirmation, cocher la proposition correcte.\n3) Compléter ou écrire un fragment HTML/CSS/JavaScript demandé." }
   ]
 }`
+    : `{
+  "id": "bb-info-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc — Informatique — Algorithmique — Jour ${dayNum}",
+  "section": "${secLbl}",
+  "duration": 180,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Exercice 1 — Lecture d'algorithme + QCM", "theme":"Algorithmique", "points":3, "graph":null, "statement":"Soit l'algorithme COMPLET suivant (rédige-le ENTIÈREMENT, du DEBUT au FIN, avec toutes les instructions, SANS « ... ») :\n\n[ici le pseudo-code complet de la Fonction/Procédure]\n\nTravail demandé :\n1) Pour chaque question, cocher (X) la bonne réponse :\n   a) Quel est le type de la fonction ?\n   b) Pour un tableau T donné, quelle valeur retourne la fonction ?\n   c) Quel est le rôle de la fonction ?\n2) Expliquer / justifier (trace de l'exécution)." },
+    { "num":2, "title":"Exercice 2 — Récursivité", "theme":"Récursivité", "points":4.75, "graph":null, "statement":"On définit une suite (ou notion) récursive.\n1) Calculer un terme.\n2) Donner l'ordre de récurrence et le justifier.\n3) Écrire l'algorithme d'une fonction RÉCURSIVE calculant le terme général.\n4) En appelant cette fonction, écrire un module (ex. approximation à epsilon près)." },
+    { "num":3, "title":"Exercice 3 — Tableaux / Matrices", "theme":"Structures de données", "points":4.75, "graph":null, "statement":"On donne un tableau T (type Tab) et une matrice M (type Mat) avec un exemple.\n1) Écrire une procédure agissant sur le tableau T.\n2) En appelant la procédure précédente, écrire une procédure agissant sur toute la matrice M.\nNB : Tab et Mat sont des types prédéfinis." },
+    { "num":4, "title":"Exercice 4 — Problème de synthèse", "theme":"Problème", "points":7.5, "graph":null, "statement":"PROBLÈME : [situation concrète].\nTravail demandé : proposer l'analyse modulaire (liste des modules) puis écrire les algorithmes des fonctions/procédures nécessaires." }
+  ]
+}`
+
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL INFORMATIQUE — Concours National — JOUR ${dayNum} — ${secLbl}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
+
+RÈGLES SPÉCIFIQUES INFORMATIQUE (Bac Tunisie) · 20 pts :
+${reglesInfo}
+- Tout le code (pseudo-code, SQL, HTML) doit être correct, indenté et réaliste ; énoncés et données cohérents.
+- IMPORTANT (énoncé) : une question « Écrire la fonction/procédure X » ne contient QUE la consigne (rôle + éventuellement la ligne de signature). NE JAMAIS mettre dans l'énoncé un squelette « DEBUT … FIN » avec des « … » à la place du corps — l'élève croit alors que le sujet est incomplet. Le pseudo-code COMPLET du corps n'apparaît QUE dans la correction. Pour un algorithme DONNÉ à lire/tracer, écris-le ENTIER (toutes les instructions), sans « … ».
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie.
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+${tmplInfo}`
 
   const raw = await askClaude(prompt, system, 6000, 'informatique')
   const fallback: Omit<BacExam,'id'|'index'> = {
@@ -739,7 +709,7 @@ function sanitizeExpr(expr: string): string {
     [/(?<![a-zA-Z0-9_.])pow\s*\(/g,'Math.pow('],
   ]
   for(const [re,repl] of fns) e=e.replace(re,repl)
-  e = e.replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+  e = e.replace(/(?<![a-zA-Z0-9_.])pi(?![a-zA-Z0-9_])/gi,'Math.PI').replace(/π/g,'Math.PI')
        .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
        .replace(/\s+/g,'')
   return e || '0'
@@ -758,10 +728,41 @@ function autoDetectGraphType(spec: any): string {
 // ── graphToSvg (identique simulation) ─────────────────────────────
 function graphToSvg(jsonStr: string): string {
   try {
-    const sp = JSON.parse(jsonStr)
+    const sp = parseGraphSpecSafe(jsonStr)
+    if(!sp) return ''
     const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
     const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const proj3 = (p: any) => ({ x:(p.x||0)+((p.z)||0)*0.4, y:(p.y||0)+((p.z)||0)*0.3 })
+
+    if (sp.type === 'table') {
+      const headers:any[] = sp.headers||sp.columns||[]
+      const rows:any[] = sp.rows||sp.data||[]
+      let ht='<table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace;margin:0">'
+      if(headers.length)ht+='<thead><tr>'+headers.map((c:any)=>'<th style="border:1px solid rgba(99,102,241,0.3);padding:6px 10px;background:rgba(99,102,241,0.15);color:#a5b4fc;text-align:center">'+esc2(String(c))+'</th>').join('')+'</tr></thead>'
+      ht+='<tbody>'+rows.map((r:any)=>'<tr>'+(Array.isArray(r)?r:Object.values(r)).map((c:any)=>'<td style="border:1px solid rgba(255,255,255,0.12);padding:5px 10px;color:#e2e8f0;text-align:center">'+esc2(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+      const tt=sp.title?'<div style="font-size:11px;color:#a5b4fc;text-align:center;margin-bottom:6px;font-weight:700">'+esc2(String(sp.title))+'</div>':''
+      return '<div style="margin:12px 0;padding:10px;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e">'+tt+ht+'</div>'
+    }
+
+    if (sp.type === 'bar' || sp.type === 'bars') {
+      const cats:any[] = sp.categories||sp.labels||((sp.data||[]).map((d:any)=>d.label||d.name))||[]
+      const vals:any[] = sp.values||((sp.data||[]).map((d:any)=>d.value||d.y))||[]
+      const nums = vals.map((v:any)=>Number(v)).filter((x:number)=>isFinite(x))
+      const maxV = Math.max(...nums,1)
+      const BW=480,BH=220,bp=34,n=vals.length||1
+      const gap=(BW-bp*2)/n, bw=gap*0.6
+      let bars=''
+      vals.forEach((v:any,k:number)=>{
+        const hh=(Number(v)/maxV)*(BH-bp*2)
+        const x=bp+k*gap+(gap-bw)/2, y=BH-bp-(isFinite(hh)?hh:0)
+        const c=GC[k%GC.length]
+        bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(isFinite(hh)?hh:0).toFixed(1)+'" fill="'+c+'" rx="3" opacity="0.85"/>'
+        bars+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(BH-bp+13)+'" font-size="9" fill="#94a3b8" text-anchor="middle">'+esc2(String(cats[k]??'')).slice(0,12)+'</text>'
+        bars+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" font-size="9" fill="'+c+'" text-anchor="middle" font-weight="bold">'+esc2(String(v))+'</text>'
+      })
+      const tt=sp.title?'<text x="'+(BW/2)+'" y="14" font-size="11" fill="#a5b4fc" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+      return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block"><svg width="'+BW+'" height="'+BH+'" viewBox="0 0 '+BW+' '+BH+'" style="background:#0f0f1e;display:block">'+bars+tt+'</svg></div>'
+    }
 
     if (sp.type === 'function') {
       const FW=520,FH=260,FP=46
@@ -1012,8 +1013,30 @@ function parseGraphSegments(text:string):Array<{type:'text'|'graph';content:stri
 function useScript(src:string){
   const[loaded,setLoaded]=useState(false)
   useEffect(()=>{
-    if(document.querySelector(`script[src="${src}"]`)){setLoaded(true);return}
-    const s=document.createElement('script');s.src=src;s.async=true;s.onload=()=>setLoaded(true);document.head.appendChild(s)
+    if(typeof document==='undefined')return
+    const isPlotly=src.includes('plotly')
+    const ready=()=>!isPlotly||!!(window as any).Plotly
+    let cancelled=false
+    let poll:any=null
+    const markLoaded=()=>{
+      if(ready()){if(!cancelled)setLoaded(true);return}
+      poll=setInterval(()=>{if(ready()){clearInterval(poll);poll=null;if(!cancelled)setLoaded(true)}},80)
+    }
+    const existing=document.querySelector(`script[src="${src}"]`) as HTMLScriptElement|null
+    if(existing){
+      if(ready()){setLoaded(true)}
+      else{existing.addEventListener('load',markLoaded);markLoaded()}
+      return ()=>{cancelled=true;if(poll)clearInterval(poll);existing.removeEventListener('load',markLoaded)}
+    }
+    const sc=document.createElement('script')
+    sc.src=src;sc.async=true
+    sc.onload=markLoaded
+    sc.onerror=()=>{setTimeout(()=>{
+      if(cancelled||ready())return
+      const r=document.createElement('script');r.src=src;r.async=true;r.onload=markLoaded;document.head.appendChild(r)
+    },1500)}
+    document.head.appendChild(sc)
+    return ()=>{cancelled=true;if(poll)clearInterval(poll)}
   },[src])
   return loaded
 }
@@ -1199,16 +1222,35 @@ function renderVectors(text:string):React.ReactNode{
   return out
 }
 
+// ── parseGraphSpecSafe : parsing robuste des specs [GRAPH] (répare guillemets typo, virgules traînantes, NaN…) ──
+function parseGraphSpecSafe(raw: string): any | null {
+  if (!raw || typeof raw !== 'string') return null
+  try { return JSON.parse(raw) } catch {}
+  const repaired = raw
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\/\/[^\n\r]*/g, '')
+    .replace(/[\n\r\t]+/g, ' ')
+    .replace(/,\s*([}\]])/g, '$1')
+    .replace(/\bNaN\b/g, '0')
+  try { return JSON.parse(repaired) } catch {}
+  return null
+}
+
 function TextWithGraphs({text}:{text:string}){
   if(!text)return null
   const processedText = text.replace(/\[FIGURE\s*:[^\]]+\]/gi, (m: string) => figureToAscii(m))
   const segs=parseGraphSegments(processedText)
+  let gi=0
   return(
     <div>
       {segs.map((s,i)=>{
         if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{renderVectors(s.content)}</span>
-        try{const spec=JSON.parse(s.content);return <SmartGraph key={i} spec={spec}/>}
-        catch{return <span key={i} style={{color:'#ef4444',fontSize:11}}>[Graphique invalide]</span>}
+        const myGi=gi++
+        let inner
+        try{const spec=parseGraphSpecSafe(s.content);if(!spec)throw new Error('fmt');inner=<SmartGraph spec={spec}/>}
+        catch{inner=<div style={{padding:'8px 12px',background:'rgba(245,158,11,0.08)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:8,fontSize:11,color:'#fcd34d',margin:'8px 0'}}>📊 Graphique non disponible (format invalide)</div>}
+        return <div key={i} data-mbgraph={myGi} style={{minWidth:0,maxWidth:'100%',overflowX:'auto'}}>{inner}</div>
       })}
     </div>
   )
@@ -1543,88 +1585,61 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
 
   const prog = getProgrammeJourAnglais(dayNum)
 
-  const system = `You are an expert author of official Tunisian Baccalaureate English papers (CNP official programme).
-You create original BAC BLANC ANGLAIS papers of official level.
+  const system = `You are an expert author of official Tunisian Baccalaureate English exam papers (CNP official programme).
+You create ORIGINAL BAC BLANC ANGLAIS papers at official Bac level.
 RESPOND ONLY IN VALID JSON — no backticks, no comments.
-
-OFFICIAL STRUCTURE — BAC ANGLAIS TUNISIE :
-Part I   — Reading Comprehension (8 pts) : authentic text 280-320 words + 5 questions
-Part II  — Writing (8 pts) : structured essay or article, 180-200 words minimum
-Part III — Language (4 pts) : grammar + vocabulary exercises (4+4 items)
-
-REQUIREMENTS :
-- Text must be authentic and engaging at B2 level
-- Questions progress from literal to inferential to evaluative
-- Writing task must have clear instructions including word count
-- Grammar exercises must be varied and clearly labeled
-- The paper must match the difficulty level of official Bac Tunisie exams`
+IMPORTANT LANGUAGE RULE: ALL content (statements, questions, passages, instructions) MUST be written entirely in ENGLISH. Never use French.`
 
   const prompt = `Create an official BAC BLANC ANGLAIS paper — National Contest — DAY ${dayNum} — ${sectionLabel}.
-
 SEED (all students same day = same paper): ${seed}
 DATE: ${dateStr}
 THEME: ${prog.theme}
-WRITING TASK: ${prog.writing}
+WRITING TASK FOCUS: ${prog.writing}
 GRAMMAR FOCUS: ${prog.grammar}
 SECTION FOCUS: ${sectionFocus}
 
-PART I — READING COMPREHENSION (8 pts):
-Write an authentic text of 280-320 words about "${prog.theme}".
-${isLettres
-  ? 'Style: literary/journalistic — descriptive, personal voice, cultural references, emotional engagement.'
-  : 'Style: informative/scientific — logical structure, facts, examples, objective analysis.'}
-Then write 5 questions:
-  Q1 (1 pt): Global comprehension — What is the main idea of the text?
-  Q2 (2 pts): True/False/Not Mentioned — 2 statements with justification from the text
-  Q3 (2 pts): Open question — Find evidence and infer the author's point of view
-  Q4 (2 pts): Vocabulary — define or find synonyms for 2 words from context
-  Q5 (1 pt): Referent or cohesion — What does "it/they/this" refer to in line X?
-
-PART II — WRITING (8 pts):
-Task: ${prog.writing}
-Instructions: Write a well-structured essay/article of 180-200 words.
-Include: clear introduction · 2-3 well-developed arguments with examples · conclusion
-Marking: Content & Ideas (4 pts) · Language & Grammar (2 pts) · Organisation (2 pts)
-
-PART III — LANGUAGE (4 pts):
-Focus: ${prog.grammar}
-Exercise A (2 pts): 4 fill-in-the-blank or sentence transformation items
-Exercise B (2 pts): 4 rewriting or vocabulary matching items
+ENGLISH EXAM RULES — MANDATORY · Total 20 points · 2 hours :
+ALL text MUST be in ENGLISH — passages, questions, instructions, model answers.
+Official Tunisian Bac English structure (3 sections) :
+- I. READING COMPREHENSION (8 pts) : authentic text 280-320 words about "${prog.theme}" (${isLettres ? 'literary/journalistic style — descriptive, personal voice, cultural references' : 'informative/scientific style — logical structure, facts, examples'}), followed by VARIED question types : (1) tick the best title ; (2) complete a paragraph with N words taken from the text ; (3) for each statement pick ONE detail from the text showing it is true/false ; (4) circle the 2 adjectives that best describe a character/idea ; (5) find words/expressions meaning the same as given definitions ; (6) what do the underlined words refer to ; (7) personal justified answer.
+- II. WRITING (8 pts) : TWO tasks — (1) guided writing from notes or a table (e.g. a short biography or report from given notes) ; (2) free writing from a quote (article, Facebook post or essay, ~12 lines) : ${prog.writing}.
+- III. LANGUAGE (4 pts) : THREE exercises — (1) fill in the blanks with words from a given box ; (2) put the words in brackets in the right tense or form ; (3) circle the right option (vocabulary/grammar) — focus: ${prog.grammar}.
+NEVER use French in the exam — every word must be in English.
+Original paper — never a copy of past papers · official Bac Tunisie level.
 
 RESPOND WITH THIS EXACT JSON:
 {
   "id": "bb-anglais-${dayNum}-${candidat.sectionKey}",
   "day": ${dayNum},
-  "title": "Bac Blanc — Anglais — ${sectionLabel} — Day ${dayNum}",
+  "title": "Bac Blanc — English — ${sectionLabel} — Day ${dayNum}",
   "section": "${sectionLabel}",
   "sectionKey": "${candidat.sectionKey}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
   "duration": 120,
+  "totalPoints": 20,
   "exercises": [
     {
       "num": 1,
-      "theme": "${prog.theme}",
+      "theme": "Reading",
       "title": "Part I — Reading Comprehension",
       "points": 8,
       "graph": null,
-      "statement": "TEXT:\n[Full authentic text 280-320 words about ${prog.theme} — ${sectionFocus}]\n\nQUESTIONS:\nQ1 (1 pt) — [global comprehension question]\nQ2 (2 pts) — Say whether the following statements are True (T), False (F) or Not Mentioned (NM). Justify with a quote from the text:\n  a) [statement 1]\n  b) [statement 2]\nQ3 (2 pts) — [open inference question requiring evidence from text]\nQ4 (2 pts) — Find in the text words or expressions that mean:\n  a) [definition 1]\n  b) [definition 2]\nQ5 (1 pt) — What does the underlined word \'[word]\' in paragraph X refer to?"
+      "statement": "Read the following passage carefully.\n\n[AUTHENTIC ENGLISH TEXT — 280-320 words about ${prog.theme}]\n\nQUESTIONS:\n1) (1 pt) Tick the best title for the text: a) ... b) ... c) ...\n2) (1 pt) Complete the following paragraph with words from the text.\n3) (1.5 pts) For each statement, pick ONE detail from the text that shows it is true or false:\n  a) [statement]  b) [statement]\n4) (1 pt) Circle the TWO adjectives that best describe [character/idea]: ...\n5) (1.5 pts) Find in the text words or expressions that mean:\n  a) [definition]  b) [definition]  c) [definition]\n6) (1 pt) What do the underlined words refer to? a) 'it' (line X) → ...  b) 'they' (line Y) → ...\n7) (1 pt) [Personal justified question — give your own opinion with evidence.]"
     },
     {
       "num": 2,
-      "theme": "Writing — ${prog.theme}",
+      "theme": "Writing",
       "title": "Part II — Writing",
       "points": 8,
       "graph": null,
-      "statement": "TASK: ${prog.writing}\n\nWrite a well-structured essay or article (180-200 words).\nYour writing should include:\n• A clear introduction presenting your topic or position\n• Two or three well-developed paragraphs with arguments and examples\n• A conclusion summarising your point of view\n\nMARKING SCHEME:\n• Content and Ideas: 4 pts\n• Language, Grammar and Vocabulary: 2 pts\n• Organisation and Cohesion: 2 pts"
+      "statement": "TASK 1 (4 pts) — Guided writing:\n[Write a short biography / report / paragraph from the following notes or table]\n[notes or table here]\n\nTASK 2 (4 pts) — Free writing (~12 lines):\n« [quote related to ${prog.theme}] »\n${prog.writing}\nMarking: Content & Ideas · Language & Grammar · Organisation."
     },
     {
       "num": 3,
-      "theme": "Language — ${prog.grammar}",
+      "theme": "Language",
       "title": "Part III — Language",
       "points": 4,
       "graph": null,
-      "statement": "GRAMMAR FOCUS: ${prog.grammar}\n\nEXERCISE A (2 pts) — Fill in the blanks or transform the sentences:\n1. [sentence 1 — item requiring ${prog.grammar.split('·')[0].trim()}]\n2. [sentence 2]\n3. [sentence 3]\n4. [sentence 4]\n\nEXERCISE B (2 pts) — Rewrite the sentences without changing the meaning / Match the words:\n1. [sentence or matching item 1]\n2. [sentence or matching item 2]\n3. [sentence or matching item 3]\n4. [sentence or matching item 4]"
+      "statement": "EXERCISE 1 (1.5 pts) — Fill in the blanks with words from the box (one word is extra):\n[box: ...]\n[text with 3 blanks]\n\nEXERCISE 2 (1.5 pts) — Put the words in brackets in the right tense or form:\n1. ... 2. ... 3. ...\n\nEXERCISE 3 (1 pt) — Circle the right option (focus: ${prog.grammar}):\n1. ... 2. ... 3. ... 4. ..."
     }
   ]
 }`
@@ -1750,53 +1765,38 @@ async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<
   const pts = isMaths ? [5, 6, 4, 3, 2] : [6, 7, 4, 3]
   const duration = isMaths ? 120 : 180
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien en SVT (programme CNP officiel).
-Tu crées des sujets BAC BLANC SVT originaux, rigoureux et de niveau officiel.
+  const dom2 = prog.p2.theme
+  const dom3 = prog.p3.theme
+
+  const system = `Tu es un auteur expert de sujets de SVT (Sciences de la Vie et de la Terre) du Baccalauréat tunisien (programme CNP officiel, sections Sciences expérimentales et Mathématiques).
+Tu crées des sujets BAC BLANC ORIGINAUX et rigoureux : QCM, restitution de connaissances, analyse de documents (résultats d'expérience, graphiques, électrophorèse, arbres généalogiques) et raisonnement scientifique.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
-RÈGLES SVT OBLIGATOIRES :
-- Vocabulaire biologique précis : noms latins si nécessaire (ex: Homo sapiens)
-- Questions progressives avec sous-parties numérotées : 1) a) b) 2) a) b) c)
-- Données numériques réalistes (pH, températures, concentrations, périodes)
-- Schémas décrits textuellement : "D'après le document ci-dessous..."
-- Documents fournis : tableaux de données, graphiques décrits, résultats d'expériences
-- Structure officielle CNP Tunisie : "DOCUMENT 1 : ...", "DOCUMENT 2 : ..."
-- Relier les notions biologiques à des applications médicales, environnementales ou sociales
+NOTATION SVT : termes techniques précis (ADN, ARN, méiose, crossing-over, potentiel d'action, synapse) · données réalistes (glycémie 0,8-1,2 g/L, potentiel de repos -70 mV) · 2ⁿ gamètes · n=23 chromosomes.`
 
-NOTATION SVT :
-- Termes techniques précis : ADN, ARN, méiose, crossing-over, osmose, etc.
-- Formules biologiques : 2ⁿ gamètes, pH = -log[H₃O⁺], n = 23 chromosomes
-- Schémas fonctionnels décrits avec précision`
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL SVT — Concours National — JOUR ${dayNum} — ${sectionLabel}.
+SEED DÉTERMINISTE : ${seed}
+DATE : ${dateStr}
 
-  const exercicesPrompt = [
-    `EXERCICE 1 — ${prog.p1.theme} (${pts[0]} points) : ${p1Theme}`,
-    `EXERCICE 2 — ${prog.p2.theme} (${pts[1]} points) : ${p2Theme}`,
-    `EXERCICE 3 — ${prog.p3.theme} (${pts[2]} points) : ${p3Theme}`,
-    `EXERCICE 4 — ${prog.p4.theme} (${pts[3]} points) : ${p4Theme}`,
-    isMaths && p5Theme ? `EXERCICE 5 — ${prog.p5!.theme} (${pts[4]} points) : ${p5Theme}` : null,
-  ].filter(Boolean).join('\n')
-
-  const prompt = `Graine déterministe : ${seed}
-Date : ${dateStr}
-Section : ${sectionLabel}
-
-Crée un sujet BAC BLANC SVT ORIGINAL · Jour ${dayNum}.
-
-STRUCTURE OFFICIELLE :
-Durée : ${duration} min · Total : 20 points
-
-${exercicesPrompt}
+RÈGLES SPÉCIFIQUES SVT (Bac Tunisie — programme CNP officiel) · 20 pts · 3h :
+STRUCTURE OFFICIELLE : PREMIÈRE PARTIE (8 pts, restitution) + DEUXIÈME PARTIE (12 pts, raisonnement sur documents). Le sujet COMMENCE toujours par un QCM.
+- Exercice 1 — PREMIÈRE PARTIE — Restitution des connaissances (8 pts) :
+   • A) QCM (4 pts) au DÉBUT du statement : 4 à 5 items numérotés, chacun 4 propositions a) b) c) d) ; format tunisien = retrouver la (ou les deux) réponse(s) EXACTE(S) par item ; l'élève indique la/les lettre(s).
+   • B) QROC / restitution (4 pts) : questions à réponses ouvertes courtes, schéma fonctionnel à compléter/annoter, ou exposé structuré.
+- Exercice 2 — DEUXIÈME PARTIE (6 pts) : raisonnement scientifique sur un nombre réduit de documents (résultats d'expérience, graphique, électrophorèse, arbre généalogique) — domaine : ${dom2} (Génétique OU Immunologie).
+- Exercice 3 — DEUXIÈME PARTIE (6 pts) : raisonnement sur documents — AUTRE domaine : ${dom3} (Milieu intérieur & Neuro OU Reproduction). [Ex2 + Ex3 = 12 pts]
 
 RÈGLES ABSOLUES :
-- Chaque exercice commence par 1 ou 2 documents (données expérimentales, tableaux, graphiques décrits)
-- Minimum 150 mots par exercice
-- Questions progressives du plus simple au plus complexe
-- Toujours un lien entre les documents et les questions
-- Données numériques précises et réalistes
-${isMaths ? '- Exercice 5 (Géologie/Évolution) : courte question théorique ou schéma à analyser (2 pts)' : ''}
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie
+- Données chiffrées réalistes · tableaux d'expérience / graphiques dans le champ "graph" (type "table" ou "bar") si pertinent
+- Chaque exercice de la 2ème partie : 1) Analyser le(s) document(s). 2) Interpréter / déduire. 3) Raisonnement de synthèse (minimum 120 mots).
+- Dans la CORRECTION, donner toujours les bonnes réponses du QCM.
+- Valeur de "graph" : une string "[GRAPH: {JSON_VALIDE}]" (type table/bar, guillemets internes échappés \") OU null.
 
 Réponds EXACTEMENT avec ce JSON :
 {
+  "id": "bb-svt-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
   "title": "Bac Blanc SVT — ${sectionLabel} — Jour ${dayNum}",
   "section": "${sectionLabel}",
   "duration": ${duration},
@@ -1804,44 +1804,28 @@ Réponds EXACTEMENT avec ce JSON :
   "exercises": [
     {
       "num": 1,
-      "title": "Exercice 1 — ${prog.p1.theme}",
-      "theme": "${prog.p1.theme}",
-      "points": ${pts[0]},
+      "title": "Exercice 1 — Première partie : Restitution (QCM + QROC)",
+      "theme": "QCM + QROC",
+      "points": 8,
       "graph": null,
-      "statement": "DOCUMENT 1 : [description données/tableau/schéma]\\n\\nDOCUMENT 2 : [données complémentaires]\\n\\n1) a) Question complète avec référence aux documents...\\n1) b) Question...\\n2) a) Question...\\n2) b) Question...\\n3) Question de synthèse..."
+      "statement": "PREMIÈRE PARTIE (8 points)\n\nA — QCM (4 pts) : pour chaque item, indiquer la (ou les deux) réponse(s) exacte(s).\n1) [proposition] a) … b) … c) … d) …\n2) … 3) … 4) …  (4 à 5 items)\n\nB — QROC / Restitution (4 pts) : [questions à réponses ouvertes courtes / compléter le schéma fonctionnel / exposé structuré sur une notion du programme]."
     },
     {
       "num": 2,
-      "title": "Exercice 2 — ${prog.p2.theme}",
-      "theme": "${prog.p2.theme}",
-      "points": ${pts[1]},
-      "graph": null,
-      "statement": "DOCUMENT 1 : [description]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ...\\n2) c) ...\\n3) ..."
+      "title": "Exercice 2 — ${dom2}",
+      "theme": "${dom2}",
+      "points": 6,
+      "graph": "[GRAPH: {JSON type table/bar si document chiffré}] ou null",
+      "statement": "DEUXIÈME PARTIE (6 points)\n\nDOCUMENT(S) : [résultats d'expérience / électrophorèse / arbre généalogique / graphique — décrits ici] [voir document ci-dessus]\n\n1) Analyser le(s) document(s).\n2) Interpréter / déduire.\n3) Raisonnement de synthèse. Minimum 120 mots."
     },
     {
       "num": 3,
-      "title": "Exercice 3 — ${prog.p3.theme}",
-      "theme": "${prog.p3.theme}",
-      "points": ${pts[2]},
-      "graph": null,
-      "statement": "DOCUMENT : [données]\\n\\n1) a) ...\\n1) b) ...\\n2) a) ...\\n2) b) ..."
-    },
-    {
-      "num": 4,
-      "title": "Exercice 4 — ${prog.p4.theme}",
-      "theme": "${prog.p4.theme}",
-      "points": ${pts[3]},
-      "graph": null,
-      "statement": "DONNÉES : [données]\\n\\n1) ...\\n2) ...\\n3) ..."
-    }${isMaths && p5Theme ? `,
-    {
-      "num": 5,
-      "title": "Exercice 5 — ${prog.p5?.theme || 'Géologie & Évolution'}",
-      "theme": "${prog.p5?.theme || 'Géologie & Évolution'}",
-      "points": 2,
-      "graph": null,
-      "statement": "DOCUMENT : [schéma ou données géologiques/évolution]\\n\\n1) Question théorique...\\n2) Question application..."
-    }` : ''}
+      "title": "Exercice 3 — ${dom3}",
+      "theme": "${dom3}",
+      "points": 6,
+      "graph": "[GRAPH: {JSON si document chiffré}] ou null",
+      "statement": "DEUXIÈME PARTIE (6 points)\n\nDOCUMENT(S) : [décrits ici] [voir document ci-dessus]\n\n1) Analyse. 2) Interprétation. 3) Raisonnement. Minimum 120 mots."
+    }
   ]
 }`
 
@@ -2356,90 +2340,51 @@ async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Pro
     ? 'textes litteraires engages · analyse poetique · dissertation et commentaire · auteurs (Hugo, Zola, Voltaire, Baudelaire, Eluard, Camus, Sartre)'
     : 'textes scientifiques et argumentatifs · sujet de reflexion · essai structure · auteurs (Jacquard, Reeves, Giono, Maalouf, McLuhan, Eco)'
 
-  const system = `Tu es un expert en creation de sujets du Baccalaureat Francais Tunisie (programme officiel CNP/MEN).
-Tu crees des sujets BAC BLANC FRANCAIS de niveau officiel, entierement en francais.
-REPONDS UNIQUEMENT EN JSON VALIDE sans backticks ni commentaires.
+  const system = `Tu es un auteur expert de sujets de FRANÇAIS du Baccalauréat tunisien (programme officiel, sections scientifiques et Lettres).
+Tu crées des sujets BAC BLANC ORIGINAUX : un TEXTE littéraire support (extrait de roman ou de nouvelle, ~250-350 mots, auteur et œuvre plausibles), suivi d'une étude de texte (compréhension rédigée + langue) et d'un essai argumentatif.
+Texte riche et lisible, avec 3 à 5 mots difficiles expliqués en notes.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
-STRUCTURE OFFICIELLE BAC FRANCAIS TUNISIE :
-Partie I  — Comprehension de texte (7 pts) : texte 200-250 mots + 5 questions progressives
-Partie II — Langue et Expression (5 pts) : connecteurs, grammaire, vocabulaire, figures de style
-Partie III — Production Ecrite (8 pts) : dissertation ou essai argumente 25-30 lignes
-
-EXIGENCES :
-- Texte authentique niveau Bac Tunisie, 200-250 mots, en rapport avec le theme du jour
-- Questions progressives : comprehension globale → inference → vocabulaire → coherence textuelle
-- Production ecrite avec consigne claire et bareme detaille
-- Langue : exercices varies (connecteurs, modalisation, figures de style, reformulation)
-- Difficulte conforme aux vrais sujets officiels du Bac Tunisie`
-
-  const prompt = `Cree un sujet BAC BLANC FRANCAIS officiel — Concours National — JOUR ${dayNum} — ${sectionLabel}.
-
-GRAINE UNIQUE (tous les eleves du meme jour ont le meme sujet) : ${seed}
+  const prompt = `Crée le sujet du BAC BLANC OFFICIEL FRANÇAIS — Concours National — JOUR ${dayNum} — ${sectionLabel}.
+SEED DÉTERMINISTE : ${seed}
 DATE : ${dateStr}
-THEME : ${prog.theme}
-BASE DU TEXTE : ${prog.texte}
-SUJET DE PRODUCTION : ${prog.production}
-FOCUS LANGUE : ${prog.langue}
+THÈME : ${prog.theme}
 FOCUS SECTION : ${sectionFocus}
 
-PARTIE I — COMPREHENSION DE TEXTE (7 pts) :
-Redige un texte ${isLettres ? 'litteraire ou argumentatif engage' : 'scientifique ou argumentatif'} de 200-250 mots sur le theme "${prog.theme}".
-Style : ${isLettres ? 'engage et litteraire, avec des references a des auteurs ou oeuvres, dimension humaine et culturelle forte' : 'informatif, logique et structure, avec des donnees et exemples concrets, dimension scientifique'}
-Puis redige ces 5 questions :
-  Q1 (1 pt) : Comprehension globale — quel est le message principal du texte ?
-  Q2 (2 pts) : Vrai (V) / Faux (F) / Non Mentionne (NM) — 2 affirmations avec justification par citation
-  Q3 (2 pts) : Question d\'inference ouverte — quel est le point de vue de l\'auteur ? justifiez
-  Q4 (1 pt) : Vocabulaire en contexte — expliquez l\'expression [choisie dans le texte]
-  Q5 (1 pt) : Referent ou coherence — a quoi renvoie le mot souligne dans le texte ?
+RÈGLES SPÉCIFIQUES FRANÇAIS (Bac Tunisie) · 20 pts · 2h :
+- Exercice 1 — ÉTUDE DE TEXTE (10 pts) :
+   • TEXTE support au DÉBUT du statement : extrait littéraire ORIGINAL (~250-350 mots), 3 à 5 mots difficiles expliqués en notes (1: … 2: …), avec la référence (Auteur, Titre, éditeur, année — plausibles).
+   • A) Compréhension (6 pts) : 3 questions rédigées sur le sens du texte, chacune (2 pts) justifiée par une phrase ou un indice du texte ; au moins une demande de relever et expliquer un procédé d'écriture. Mention « Toute réponse doit être entièrement rédigée ».
+   • B) Langue (4 pts) : (1) antonyme/synonyme d'un mot souligné + réemploi dans une phrase personnelle (1 pt) ; (2) transformation d'une phrase — forme emphatique↔neutre, voix active↔passive, ou style direct↔indirect (1,5 pt) ; (3) construire une phrase complexe par subordination exprimant un rapport précis : concession, cause ou conséquence (1,5 pt).
+- Exercice 2 — ESSAI (10 pts) : une citation (en lien avec le texte) + une question de débat → point de vue personnel argumenté, appuyé sur des arguments et des exemples précis (~16 lignes).
+- Thèmes : éducation, progrès, science et société, liberté, travail, tradition/modernité, engagement.
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie.
 
-PARTIE II — LANGUE ET EXPRESSION (5 pts) :
-Focus : ${prog.langue}
-  Exercice A (2 pts) : 4 phrases a completer ou transformer selon le focus langue
-  Exercice B (1 pt) : 2 reformulations de phrases sans en changer le sens (avec mot impose)
-  Exercice C (2 pts) : 4 questions sur vocabulaire ou figures de style en contexte textuel
-
-PARTIE III — PRODUCTION ECRITE (8 pts) :
-Sujet : ${prog.production}
-Consigne complete : Redigez un texte argumente de 25 a 30 lignes comportant :
-  • Une introduction : presentez le sujet, posez la problematique, annoncez votre plan
-  • Un developpement : au moins 2 arguments solides illustres par des exemples precis ou des references
-  • Une conclusion : repondez a la problematique et ouvrez sur une reflexion plus large
-Bareme : Contenu et argumentation (4 pts) · Langue et richesse lexicale (2 pts) · Structure et coherence (2 pts)
-
-REPONDS AVEC CE JSON EXACT :
+Réponds EXACTEMENT avec ce JSON :
 {
   "id": "bb-francais-${dayNum}-${candidat.sectionKey}",
   "day": ${dayNum},
-  "title": "Bac Blanc Francais — ${sectionLabel} — Jour ${dayNum}",
+  "title": "Bac Blanc Français — ${sectionLabel} — Jour ${dayNum}",
   "section": "${sectionLabel}",
   "sectionKey": "${candidat.sectionKey}",
-  "date": "${dateStr}",
-  "totalPoints": 20,
   "duration": 120,
+  "totalPoints": 20,
   "exercises": [
     {
       "num": 1,
-      "theme": "${prog.theme}",
-      "title": "Partie I — Comprehension de texte",
-      "points": 7,
+      "title": "Exercice 1 — Étude de texte (Compréhension + Langue)",
+      "theme": "Étude de texte",
+      "points": 10,
       "graph": null,
-      "statement": "TEXTE :\n[Texte complet 200-250 mots sur ${prog.theme} — style ${isLettres ? 'litteraire engage' : 'scientifique argumentatif'}]\n\nQUESTIONS :\nQ1 (1 pt) — [question comprehension globale du message principal]\nQ2 (2 pts) — Dites si les affirmations suivantes sont Vraies (V), Fausses (F) ou Non Mentionnees (NM). Justifiez par une citation du texte :\n  a) [affirmation 1]\n  b) [affirmation 2]\nQ3 (2 pts) — [question d\'inference ouverte sur le point de vue de l\'auteur avec justification]\nQ4 (1 pt) — Expliquez l\'expression \'[expression du texte]\' telle qu\'elle est utilisee dans le contexte.\nQ5 (1 pt) — A quoi renvoie le mot \'[mot souligne]\' dans le paragraphe [X] ?"
+      "statement": "TEXTE\n\n[Extrait littéraire ORIGINAL ~250-350 mots, avec mots difficiles en notes : 1 … 2 …]\n\n— [Auteur, Titre, éditeur, année]\n\nI- ÉTUDE DE TEXTE (10 points)\n\nA- Compréhension (6 points) — Toute réponse doit être entièrement rédigée :\n1) [question sur le sens] Justifiez par une phrase du texte. (2 pts)\n2) [question + relever et expliquer un procédé d'écriture] (2 pts)\n3) [question] Justifiez par un indice textuel. (2 pts)\n\nB- Langue (4 points) :\n1) [antonyme/synonyme d'un mot souligné + réemploi dans une phrase personnelle] (1 pt)\n2) [transformer une phrase : emphatique→neutre / actif↔passif / direct↔indirect] (1,5 pt)\n3) [construire une phrase complexe par subordination : concession / cause / conséquence] (1,5 pt)"
     },
     {
       "num": 2,
-      "theme": "Langue — ${prog.langue}",
-      "title": "Partie II — Langue et Expression",
-      "points": 5,
+      "title": "Exercice 2 — Essai",
+      "theme": "Essai argumentatif",
+      "points": 10,
       "graph": null,
-      "statement": "EXERCICE A (2 pts) — Completez les phrases avec le connecteur logique qui convient :\n1. [phrase 1 incomplète]\n2. [phrase 2 incomplète]\n3. [phrase 3 incomplète]\n4. [phrase 4 incomplète]\n\nEXERCICE B (1 pt) — Reformulez les phrases sans en changer le sens en utilisant le mot entre parentheses :\n1. [phrase 1] (mot impose 1)\n2. [phrase 2] (mot impose 2)\n\nEXERCICE C (2 pts) — Vocabulaire et style :\n1. [question figure de style ou vocabulaire 1]\n2. [question 2]\n3. [question 3]\n4. [question 4]"
-    },
-    {
-      "num": 3,
-      "theme": "${prog.production}",
-      "title": "Partie III — Production Ecrite",
-      "points": 8,
-      "graph": null,
-      "statement": "SUJET : ${prog.production}\n\nRedigez un texte argumente de 25 a 30 lignes.\nVotre devoir doit obligatoirement comporter :\n• Une introduction : presentez le sujet, formulez la problematique et annoncez votre plan\n• Un developpement argumente : au moins 2 arguments solides, chacun illustre par un exemple precis ou une reference litteraire/scientifique\n• Une conclusion : repondez clairement a la problematique et ouvrez sur une reflexion plus large\n\nBAREME DE NOTATION :\n• Contenu et qualite de l\'argumentation : 4 pts\n• Langue, style et richesse lexicale : 2 pts\n• Structure, coherence et organisation : 2 pts"
+      "statement": "II- ESSAI (10 points)\n\n« [citation en lien avec le thème du texte] »\n\n[Question de débat ouverte]\n\nVous développerez à ce propos un point de vue personnel en vous appuyant sur des arguments et des exemples précis. (environ 16 lignes)"
     }
   ]
 }`
@@ -2528,36 +2473,32 @@ async function generateBacBlancEconomie(candidat: Candidat, dayNum: number): Pro
   const annee = today.getFullYear()
   const n1 = annee - 1, n2 = annee - 2, n3 = annee - 3
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
-Tu crées des sujets BAC BLANC ÉCONOMIE originaux, rigoureux et de niveau officiel (épreuve coefficient 3, durée 3h, 20 points).
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-INDICATEURS À MOBILISER selon le thème : taux de croissance t=(Vn-Vn-1)/Vn-1, TCAM, indices base 100, PIB réel/nominal, coefficient budgétaire, IDH, taux de couverture (X/M)x100, taux d'ouverture, termes de l'échange.`
+  const system = `Tu es un auteur expert de sujets d'ÉCONOMIE du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
+Tu crées des sujets BAC BLANC ORIGINAUX : mobilisation de connaissances, travail sur documents statistiques (tableaux, graphiques), et synthèse argumentée.
+Pour les données chiffrées du pays, utilise EXCLUSIVEMENT les données officielles fournies dans les règles (INS · BCT · Banque Mondiale) — valeurs et années EXACTES, jamais inventées. Grandeurs : PIB, croissance, commerce extérieur (X, M, taux de couverture), inflation, chômage, IDH.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée le sujet du BAC BLANC OFFICIEL ÉCONOMIE — Concours National — JOUR ${dayNum} — Section ${secLabel}.
 SEED DÉTERMINISTE : ${seed}
 DATE : ${dateStr}
 THÈME DOMINANT DU JOUR : ${prog.theme}
 
-═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE D'ÉCONOMIE (Bac Tunisie) ═══
-Durée : 3h · Total : 20 points
-Partie 1 — MOBILISATION DES CONNAISSANCES (6 points) : 2 à 3 questions de cours (définitions, mécanismes, distinctions) portant sur « ${prog.theme} ».
-Partie 2 — ÉTUDE D'UN DOCUMENT (6 points) : un document chiffré (tableau de données réalistes présenté dans le statement) + questions de lecture, de CALCUL d'indicateurs (taux, indices, coefficients) et d'interprétation.
-Partie 3 — SUJET DE RÉFLEXION (8 points) : une dissertation argumentée. Sujet : « ${prog.reflexion} »
-
-RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- DONNÉES OFFICIELLES OBLIGATOIRES : pour le document chiffré (Partie 2), utilise EXCLUSIVEMENT les données officielles du bloc « DONNÉES OFFICIELLES TUNISIE » fourni plus bas. Reprends les valeurs et années EXACTES (ne pas inventer, ne pas arrondir, ne pas extrapoler). Choisis la série qui correspond au thème du jour.
-- Questions numérotées 1) 2) 3)
-- Partie 3 : énoncer le sujet + consignes (introduction avec problématique, développement structuré argumenté avec exemples, conclusion)
-
+RÈGLES SPÉCIFIQUES ÉCONOMIE (Bac Tunisie — Sciences Économiques & de Gestion) · 20 pts · 3h · coef 3 :
+Structure officielle EXACTE (3 questions) :
+   • Question 1 (4 pts) : QCM AVEC JUSTIFICATION — 4 items ; pour chaque item, choisir la proposition correcte ET justifier (souvent par un calcul). Items basés sur des DOCUMENTS (tableaux/graphiques de données réelles) et des notions (micro : fonction de production/isoquante, utilité ; macro : PIB, FBCF, inflation, niveau de vie, IDH, PGF).
+   • Question 2 (6 pts) : PROBLÈME de microéconomie — théorie du consommateur (fonction d'utilité, courbe d'indifférence, droite de budget, panier d'équilibre) OU du producteur (fonction de production, isoquante, coûts) ; avec document graphique ; résolution analytique.
+   • Question 3 (10 pts) : RAISONNEMENT argumenté — consigne « À l'aide de vos connaissances et des documents, montrez que… » + Document 1 (tableau de données réelles INS/BCT/Banque Mondiale) + Document 2 (texte d'auteur) ; réponse structurée intro / développement / conclusion (minimum 250 mots).
+- DONNÉES CHIFFRÉES DU PAYS (pour Q1 et Q3) — utilise EXCLUSIVEMENT les données ci-dessous (valeurs et années EXACTES, ne pas inventer ; choisis la série qui colle au thème) :
 ${blocDonneesTunisie()}
+- Calculs attendus : taux de variation t=(Vn−Vn-1)/Vn-1×100, indice base 100, taux de couverture (X/M)×100, taux d'ouverture, coefficient budgétaire, TCAM, IDH.
+- Le document chiffré (Q1 et/ou Q3) va dans le champ "graph" (type "table" ou "bar"), exploité par les questions. Toujours citer la source et l'année.
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie.
 
-GRAPHIQUES — TABLEAU & DIAGRAMME (champ "graph" SÉPARÉ du statement, Partie 2 OBLIGATOIRE) :
-- TABLEAU de données : [GRAPH: {"type":"table","title":"Commerce extérieur de la Tunisie (MD, prix courants — INS)","headers":["Année","Exportations","Importations","Taux de couverture (%)"],"rows":[["2023","62077,6","79146,3","78,4"],["2024","62077,6","81005,2","76,6"],["2025","63695,1","85495,4","74,5"]]}]
-- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Taux d'inflation en Tunisie (%, INS)","categories":["2022","2023","2024","2025"],"values":[8.3,9.3,7.0,5.7],"yLabel":"Taux (%)","xLabel":"Année"}]
-- Le document chiffré de la Partie 2 va dans le champ "graph" (type "table" ou "bar"), PAS en texte dans le statement. Les questions de lecture/calcul/interprétation exploitent ces données. Guillemets internes valides.
+FORMATS GRAPHIQUES :
+- TABLEAU : [GRAPH: {"type":"table","title":"Commerce extérieur de la Tunisie (MD — INS)","headers":["Année","Exportations","Importations","Taux de couverture (%)"],"rows":[["2023","62077,6","79146,3","78,4"],["2024","62077,6","81005,2","76,6"],["2025","63695,1","85495,4","74,5"]]}]
+- BARRES : [GRAPH: {"type":"bar","title":"Taux d'inflation (%, INS)","categories":["2022","2023","2024","2025"],"values":[8.3,9.3,7.0,5.7]}]
 
-RÉPONSE JSON OBLIGATOIRE :
+Réponds EXACTEMENT avec ce JSON :
 {
   "id": "bb-economie-${dayNum}-${candidat.sectionKey}",
   "day": ${dayNum},
@@ -2567,9 +2508,30 @@ RÉPONSE JSON OBLIGATOIRE :
   "totalPoints": 20,
   "duration": 180,
   "exercises": [
-    { "num": 1, "theme": "Mobilisation des connaissances", "title": "Partie 1 — ${prog.theme}", "points": 6, "statement": "1) ...\n2) ...\n3) ...", "graph": null },
-    { "num": 2, "theme": "Étude de document", "title": "Partie 2 - Étude de document", "points": 6, "statement": "Document statistique ci-dessous (voir tableau/graphique).\n\n1) Lire la donnée de [annee]\n2) Calculer [indicateur : taux/indice/coefficient]\n3) Interpreter l'evolution observee", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table ou bar, donnees chiffrees tunisiennes realistes}]" },
-    { "num": 3, "theme": "Sujet de réflexion", "title": "Partie 3 — Dissertation", "points": 8, "statement": "Sujet : « ${prog.reflexion} »\n\nConsignes : introduction (accroche, problématique, annonce du plan), développement structuré et argumenté avec exemples, conclusion (bilan + ouverture).", "graph": null }
+    {
+      "num": 1,
+      "title": "Question 1 — QCM justifié",
+      "theme": "QCM (micro + macro)",
+      "points": 4,
+      "graph": "[GRAPH: {table OU bar de données réelles, si un item s'appuie sur un document}] ou null",
+      "statement": "Pour chacun des items suivants, choisir la proposition correcte PUIS justifier (calcul ou argument).\n\n1) [item appuyé sur un document de données réelles : variation du PIB / FBCF / indice des prix] a) ... b) ... c) ... d) ...\n2) [item macro : niveau de vie, IDH, développement durable] a) ... b) ... c) ... d) ...\n3) [item micro : fonction de production / isoquante] a) ... b) ... c) ... d) ...\n4) [item : PGF, croissance, échanges extérieurs] a) ... b) ... c) ... d) ..."
+    },
+    {
+      "num": 2,
+      "title": "Question 2 — Problème de microéconomie",
+      "theme": "Théorie du consommateur / producteur",
+      "points": 6,
+      "graph": "[GRAPH: {courbe d'indifférence + droite de budget, ou isoquante}] ou null",
+      "statement": "[Contexte concret avec données chiffrées : budget, prix, fonction.]\n\nDocument : [graphique — courbe d'indifférence et droite de budget OU isoquante].\n\n1) Donner la signification économique des points indiqués.\n2) Déterminer analytiquement le panier d'équilibre (fonction d'utilité U(x,y) OU de production Q(L,K)).\n3) [Variation d'un prix ou d'un revenu] : déterminer le nouveau panier optimal et commenter.\n4) [Question d'ouverture : comportement citoyen / effets socio-économiques]."
+    },
+    {
+      "num": 3,
+      "title": "Question 3 — Raisonnement argumenté (dissertation)",
+      "theme": "Croissance / Développement / Échanges",
+      "points": 10,
+      "graph": "[GRAPH: {Document 1 = tableau de données réelles INS/BCT/Banque Mondiale}]",
+      "statement": "Consigne : « À l'aide de vos connaissances et des documents ci-joints, montrez que [problématique : ${prog.reflexion}]. »\n\nDocument 1 : [tableau de données réelles — voir document ci-dessus].\nDocument 2 : [texte d'un auteur économiste, ~6 à 8 lignes, avec référence].\n\nRédiger une réponse structurée : introduction (problématique), développement argumenté exploitant les DEUX documents et vos connaissances, conclusion. Minimum 250 mots."
+    }
   ]
 }`
 
@@ -2613,34 +2575,30 @@ async function generateBacBlancGestion(candidat: Candidat, dayNum: number): Prom
   const annee = today.getFullYear()
   const n1 = annee - 1, n2 = annee - 2, n3 = annee - 3
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat tunisien (section Économie et Gestion, programme CNP officiel).
-Tu crées des sujets BAC BLANC GESTION originaux, rigoureux et de niveau officiel (épreuve coefficient 4, durée 3h, 20 points).
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-FORMULES À MOBILISER : FDR=Capitaux permanents-Actif immobilisé · BFR=Actif circulant(HT)-Passif circulant(HT) · TN=FDR-BFR · CUMP · rotation=Consommation/stock moyen · MCV=CA-charges variables · Seuil de rentabilité=CF/taux de MCV · masse salariale=Σ(salaires bruts+charges patronales).`
+  const system = `Tu es un auteur expert de sujets de GESTION du Baccalauréat tunisien, section Sciences Économiques et de Gestion (programme CNP officiel).
+Tu crées des ÉTUDES DE CAS ORIGINALES d'une entreprise : comptabilité (bilan, compte de résultat), analyse financière (FDR, BFR, TN, ratios), gestion des stocks (CUMP, Wilson), coûts (coût complet, MCV, seuil de rentabilité), avec des données chiffrées COHÉRENTES.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée le sujet du BAC BLANC OFFICIEL GESTION — Concours National — JOUR ${dayNum} — Section ${secLabel}.
 SEED DÉTERMINISTE : ${seed}
 DATE : ${dateStr}
 DOMAINE DOMINANT DU JOUR : ${prog.theme} (${prog.detail})
 
-═══ STRUCTURE OFFICIELLE DE L'ÉPREUVE DE GESTION (Bac Tunisie) ═══
-Durée : 3h · Total : 20 points · Sujet organisé en DOSSIERS indépendants avec données chiffrées.
-Dossier 1 — COMPTABILITÉ & ANALYSE FINANCIÈRE (7 points) : bilan, FDR, BFR, TN, résultat — données chiffrées + calculs + interprétation.
-Dossier 2 — CALCUL ET ANALYSE DES COÛTS / APPROVISIONNEMENT (7 points) : coût de revient ou gestion des stocks (CUMP, Wilson) ou seuil de rentabilité — tableau de charges + calculs.
-Dossier 3 — ${prog.theme.toUpperCase()} (6 points) : application sur ${prog.detail} — données chiffrées + questions de calcul et d'analyse.
+RÈGLES SPÉCIFIQUES GESTION (Bac Tunisie — section Économie & Gestion) · 20 pts · 3h30 · coef 3 :
+Structure officielle : PREMIÈRE PARTIE (5 pts) + DEUXIÈME PARTIE (15 pts).
+▸ PREMIÈRE PARTIE (5 pts) — 2 exercices techniques INDÉPENDANTS (petites entreprises fictives) parmi : gestion économique des stocks (modèle de Wilson, coûts d'approvisionnement) · choix du programme de fabrication (MCV par heure machine, optimisation) · gestion des ressources humaines / GPEC (besoins en personnel, masse salariale) · gestion budgétaire (budgets, écarts).
+▸ DEUXIÈME PARTIE (15 pts) — ÉTUDE DE CAS d'une SEULE entreprise FICTIVE, cohérente sur 4 dossiers parmi : analyse de la situation / diagnostic (cycle de vie produit, évolution du CA) · étude de la rentabilité (seuil de rentabilité, MCV, SIG, ratios) · action commerciale / marketing-mix / lancement d'un nouveau produit (prix psychologique, taux de marge) · investissement et financement (BFR en jours et en valeur, intérêts composés, emprunt et tableau d'amortissement, décaissements actualisés / VAN, choix de financement).
 
 RÈGLES ABSOLUES :
-- Sujet ORIGINAL — jamais une copie des annales
-- ACTUALITÉ OBLIGATOIRE : nous sommes en ${annee}. Le bilan et les comptes portent sur le DERNIER EXERCICE CLÔTURÉ = ${n1} (intitulés « Bilan au 31/12/${n1} », « exercice ${n1} »). Toute évolution chiffrée (chiffre d'affaires, ventes, effectifs…) doit se TERMINER à l'année ${n1} (ex : ${n2}, ${n1} ou ${n3}, ${n2}, ${n1}). Jamais d'années anciennes comme dernier exercice.
-- Chaque dossier contient des DONNÉES CHIFFRÉES réalistes et récentes (tableaux dans le statement) et des questions numérotées 1) 2) 3)
-- Calculs explicites attendus (montrer les formules)
+- Entreprise FICTIVE ; si un bilan ou un compte de résultat est fourni, le dater du DERNIER EXERCICE CLÔTURÉ ${n1} (« Bilan au 31/12/${n1} », « exercice ${n1} »), évolutions se terminant en ${n1} (ex. ${n3}, ${n2}, ${n1}).
+- Documents chiffrés en tableaux : champ "graph" type "table" (bilan, compte de résultat, stocks, coûts, amortissement, écarts). Le bloc [GRAPH: {...}] doit être un JSON STRICTEMENT VALIDE (guillemets droits ", AUCUNE virgule après le dernier élément, AUCUN retour à la ligne dans le JSON) — sinon mettre null.
+- Calculs OBLIGATOIRES : Wilson Q*=√(2·D·Cl/Cs) · CUMP · Rotation=Consommation/Stock moyen · MCV=CA−Charges variables · Taux de MCV · Seuil de rentabilité=Charges fixes/Taux de MCV · Résultat=Produits−Charges · FDR · BFR · TN=FDR−BFR · prix psychologique · taux de marge/marque · valeur acquise (intérêts composés) · annuité et tableau d'amortissement d'emprunt · VAN / décaissements actualisés · masse salariale.
+- Interprétation EXIGÉE (rentabilité, équilibre financier, choix optimal justifié). Questions numérotées 1) 2) 3).
+- Sujet ORIGINAL — jamais une copie des annales · niveau officiel Bac Tunisie.
 
-GRAPHIQUES - TABLEAU & DIAGRAMME (champ "graph" SEPARE du statement) :
-- TABLEAU (bilan, charges, couts) : [GRAPH: {"type":"table","title":"Extrait du bilan au 31/12/${n1} (DT)","headers":["Poste","Montant"],"rows":[["Capitaux permanents","180000"],["Actif immobilise","120000"],["Actif circulant","95000"],["Passif circulant","60000"]]}]
-- DIAGRAMME EN BARRES : [GRAPH: {"type":"bar","title":"Evolution du chiffre d affaires (kDT)","categories":["${n3}","${n2}","${n1}"],"values":[420,468,510],"yLabel":"kDT","xLabel":"Annee"}]
-- Les donnees chiffrees des Dossiers 1 et 2 vont dans le champ "graph" (type "table" ou "bar"), exploitees par les questions de calcul. Guillemets internes valides.
+FORMAT TABLEAU : [GRAPH: {"type":"table","title":"Extrait du bilan au 31/12/${n1} (DT)","headers":["Poste","Montant"],"rows":[["Capitaux permanents","180000"],["Actif immobilisé","120000"],["Actif circulant","95000"],["Passif circulant","60000"]]}]
 
-RÉPONSE JSON OBLIGATOIRE :
+Réponds EXACTEMENT avec ce JSON :
 {
   "id": "bb-gestion-${dayNum}-${candidat.sectionKey}",
   "day": ${dayNum},
@@ -2648,11 +2606,14 @@ RÉPONSE JSON OBLIGATOIRE :
   "section": "${secLabel}",
   "date": "${dateStr}",
   "totalPoints": 20,
-  "duration": 180,
+  "duration": 210,
   "exercises": [
-    { "num": 1, "theme": "Comptabilité & finance", "title": "Dossier 1 - Analyse financiere", "points": 7, "statement": "Donnees du bilan ci-dessous (voir tableau).\n\n1) Calculer le FDR\n2) Calculer le BFR\n3) En deduire la TN et interpreter", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table, extrait de bilan en DT}]" },
-    { "num": 2, "theme": "Coûts / Approvisionnement", "title": "Dossier 2 - Couts", "points": 7, "statement": "Tableau de charges ci-dessous (voir tableau).\n\n1) Determiner le cout\n2) Calculer le seuil de rentabilite\n3) Interpreter", "graph": "[GRAPH: {JSON_VALIDE_ICI, type table, tableau de charges}]" },
-    { "num": 3, "theme": "${prog.theme}", "title": "Dossier 3 — ${prog.theme}", "points": 6, "statement": "Données : [tableau]\n\n1) ...\n2) ...\n3) ...", "graph": null }
+    { "num":1, "title":"Première partie — Exercice 1", "theme":"Stocks (Wilson) / GPEC / Gestion budgétaire", "points":2.5, "graph":"[GRAPH: {table si données chiffrées}] ou null", "statement":"PREMIÈRE PARTIE\n\n[Petite entreprise fictive.] Exercice technique : gestion économique des stocks (modèle de Wilson) OU GPEC OU gestion budgétaire (budgets, écarts).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":2, "title":"Première partie — Exercice 2", "theme":"Programme de fabrication / Production", "points":2.5, "graph":null, "statement":"[Autre petite entreprise fictive.] Exercice technique : choix du programme de fabrication (MCV par heure machine, produit le plus rentable) OU gestion de la production.\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":3, "title":"Deuxième partie — Dossier 1 : Analyse de la situation", "theme":"Diagnostic / Rentabilité", "points":4, "graph":"[GRAPH: {table — évolution du CA, SIG ou ratios}] ou null", "statement":"DEUXIÈME PARTIE — ENTREPRISE « [Nom fictif] » ([activité]).\n\nDossier 1 — Analyse de la situation actuelle : cycle de vie des produits, évolution de l'activité/CA et diagnostic commercial OU étude de la rentabilité (seuil de rentabilité, MCV).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":4, "title":"Deuxième partie — Dossier 2 : Gestion des stocks / coûts", "theme":"Stocks & Coûts", "points":4, "graph":"[GRAPH: {table de stocks ou de coûts}] ou null", "statement":"Dossier 2 — Gestion des stocks (CUMP, rotation) OU calcul et analyse des coûts.\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":5, "title":"Deuxième partie — Dossier 3 : Action commerciale / Lancement", "theme":"Marketing / Lancement", "points":4, "graph":null, "statement":"Dossier 3 — Action commerciale / marketing-mix OU lancement d'un nouveau produit (prix psychologique à partir d'une enquête d'acceptabilité, taux de marge, prix HTVA).\n\nTravail à faire : 1) ... 2) ... 3) ..." },
+    { "num":6, "title":"Deuxième partie — Dossier 4 : Investissement et financement", "theme":"Financement / BFR", "points":3, "graph":"[GRAPH: {table — amortissement d'emprunt ou décaissements actualisés}] ou null", "statement":"Dossier 4 — Investissement et financement : BFR en nombre de jours de CA HT puis en valeur ; financement (valeur acquise à intérêts composés, emprunt bancaire, tableau d'amortissement, annuité, décaissements nets actualisés / VAN, choix du financement le plus avantageux justifié).\n\nTravail à faire : 1) ... 2) ... 3) ..." }
   ]
 }`
 
@@ -3438,11 +3399,11 @@ ${exercicesHtml}
 
         {/* Colonne Sujet */}
         {panel!=='answer'&&(
-          <div style={{padding:'20px',borderRight:'1px solid rgba(255,255,255,0.07)',overflowY:'auto',maxHeight:'calc(100vh - 60px)'}}>
+          <div style={{padding:'20px',borderRight:'1px solid rgba(255,255,255,0.07)',overflowY:'auto',overflowX:'hidden',maxHeight:'calc(100vh - 60px)',minWidth:0}}>
             <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',marginBottom:14,fontWeight:700}}>📋 Sujet officiel</p>
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               {exam.exercises.map(ex=>(
-                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${secColor}`,borderRadius:12,padding:'16px 18px'}}>
+                <div key={ex.num} style={{background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderLeft:`3px solid ${secColor}`,borderRadius:12,padding:'16px 18px',minWidth:0,overflowWrap:'break-word',wordBreak:'break-word'}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:10,alignItems:'center'}}>
                     <span style={{fontWeight:700,fontSize:13,color:secColor}}>{ex.title}</span>
                     <span style={{fontFamily:'monospace',fontSize:12,color:'#fbbf24',fontWeight:700}}>{ex.points} pts</span>
@@ -3457,7 +3418,7 @@ ${exercicesHtml}
 
         {/* Colonne Réponse */}
         {panel!=='subject'&&(
-          <div style={{padding:'20px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto',maxHeight:'calc(100vh - 60px)'}}>
+          <div style={{padding:'20px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto',overflowX:'hidden',maxHeight:'calc(100vh - 60px)',minWidth:0}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
               <p style={{fontSize:11,textTransform:'uppercase',letterSpacing:'0.1em',color:'rgba(255,255,255,0.3)',fontWeight:700,margin:0}}>✍️ Votre réponse</p>
               {/* Toggle tape / import */}
