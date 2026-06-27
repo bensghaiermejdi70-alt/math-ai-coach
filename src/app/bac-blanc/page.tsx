@@ -818,7 +818,7 @@ function autoDetectGraphType(spec: any): string {
 // ── graphToSvg (identique simulation) ─────────────────────────────
 function graphToSvg(jsonStr: string): string {
   try {
-    const sp = JSON.parse(jsonStr)
+    let sp:any; try{sp=JSON.parse(jsonStr)}catch{sp=JSON.parse(repairJsonText(jsonStr))}
     const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
     const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const proj3 = (p: any) => ({ x:(p.x||0)+((p.z)||0)*0.4, y:(p.y||0)+((p.z)||0)*0.3 })
@@ -1294,7 +1294,7 @@ function TextWithGraphs({text}:{text:string}){
     <div>
       {segs.map((s,i)=>{
         if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{renderVectors(s.content)}</span>
-        try{const spec=JSON.parse(s.content);return <SmartGraph key={i} spec={spec}/>}
+        try{let spec:any; try{spec=JSON.parse(s.content)}catch{spec=JSON.parse(repairJsonText(s.content))}; return <SmartGraph key={i} spec={spec}/>}
         catch{return <span key={i} style={{color:'#ef4444',fontSize:11}}>[Graphique invalide]</span>}
       })}
     </div>
