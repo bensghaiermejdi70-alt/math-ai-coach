@@ -349,10 +349,62 @@ function humanizeStream(s: string): string {
     .trim()
 }
 
+function repairJsonText(s: string): string {
+  let out = '', inStr = false, esc = false
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (esc) { out += c; esc = false; continue }
+    if (c === '\\') { out += c; esc = true; continue }
+    if (c === '"') { inStr = !inStr; out += c; continue }
+    if (inStr) {
+      if (c === '\n') { out += '\\n'; continue }
+      if (c === '\r') { out += '\\r'; continue }
+      if (c === '\t') { out += '\\t'; continue }
+    }
+    out += c
+  }
+  out = out.replace(/\\(?!["\\/bfnrtu]|u[0-9a-fA-F]{4})/g, '\\\\')
+  out = out.replace(/,(\s*[}\]])/g, '$1')
+  return out
+}
+
+function salvageExercises(raw: string): any | null {
+  const m = raw.match(/"exercises"\s*:\s*\[/)
+  if (!m || m.index == null) return null
+  let i = m.index + m[0].length
+  const exercises: any[] = []
+  while (i < raw.length) {
+    while (i < raw.length && /[\s,]/.test(raw[i])) i++
+    if (raw[i] !== '{') break
+    let depth = 0, j = i, inStr = false, esc = false
+    for (; j < raw.length; j++) {
+      const c = raw[j]
+      if (esc) { esc = false; continue }
+      if (c === '\\') { esc = true; continue }
+      if (c === '"') { inStr = !inStr; continue }
+      if (!inStr) { if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { j++; break } } }
+    }
+    if (depth !== 0) break
+    const objText = raw.slice(i, j)
+    try {
+      const blocks: string[] = []
+      const rep = objText.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, g: string) => { blocks.push(g); return `__G_${blocks.length - 1}__` })
+      const ex: any = JSON.parse(repairJsonText(rep))
+      const ri = (x: any) => typeof x === 'string' ? x.replace(/__G_(\d+)__/g, (_m: string, k: string) => `[GRAPH: ${blocks[Number(k)]}]`) : x
+      ex.statement = ri(ex.statement); ex.graph = ri(ex.graph)
+      if (ex && (ex.statement || ex.title)) exercises.push(ex)
+    } catch {}
+    i = j
+  }
+  return exercises.length ? { exercises } : null
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   // 1) Parse direct
   try { return JSON.parse(cleaned) } catch {}
+  // 1bis) Parse après réparation
+  try { return JSON.parse(repairJsonText(cleaned)) } catch {}
   // 2) Protéger les blocs [GRAPH: {...}] par des placeholders puis parser.
   //    Regex non-greedy jusqu'au "}]" → tolère accolades, guillemets et ascii multi-lignes (circuits/montages physique).
   try {
@@ -360,7 +412,7 @@ function parseJSON<T>(raw: string, fallback: T): T {
     const rep = cleaned.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, j: string) => {
       blocks.push(j); return `__G_${blocks.length - 1}__`
     })
-    const parsed: any = JSON.parse(rep)
+    const parsed: any = JSON.parse(repairJsonText(rep))
     const ri = (s: any) => typeof s === 'string'
       ? s.replace(/__G_(\d+)__/g, (_m: string, i: string) => `[GRAPH: ${blocks[Number(i)]}]`)
       : s
@@ -375,6 +427,10 @@ function parseJSON<T>(raw: string, fallback: T): T {
       .replace(/\[GRAPH:\s*[\s\S]*?\}\s*\]/g, '')
       .replace(/"graph"\s*:\s*"(?:[^"\\]|\\.)*"/g, '"graph": null')
     return JSON.parse(noGraph) as T
+  } catch {}
+  try {
+    const salv = salvageExercises(cleaned)
+    if (salv && salv.exercises.length) return salv as T
   } catch {}
   return fallback
 }
@@ -461,7 +517,7 @@ function autoDetectGraphType(spec: any): string {
 // ── graphToSvg (identique simulation) ─────────────────────────────
 function graphToSvg(jsonStr: string): string {
   try {
-    const sp = JSON.parse(jsonStr)
+    let sp:any; try{sp=JSON.parse(jsonStr)}catch{sp=JSON.parse(repairJsonText(jsonStr))}
     const GC = ['#6366f1','#10b981','#f59e0b','#ec4899','#06b6d4']
     const esc2 = (s: string) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     const proj3 = (p: any) => ({ x:(p.x||0)+((p.z)||0)*0.4, y:(p.y||0)+((p.z)||0)*0.3 })
@@ -559,6 +615,33 @@ function graphToSvg(jsonStr: string): string {
       const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
       return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
         +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" style="background:#0f0f1e;display:block">'+gsvg+gttl+'</svg></div>'
+    }
+
+    if (sp.type === 'ascii') {
+      const content = esc2(String(sp.content||''))
+      const ttl = sp.title?'<div style="color:#a5b4fc;font-size:12px;font-weight:700;margin-bottom:6px;text-align:center">'+esc2(String(sp.title))+'</div>':''
+      const leg = Array.isArray(sp.legend)&&sp.legend.length?'<ul style="margin:8px 0 0 0;padding-left:18px;font-size:11px;color:#cbd5e1;text-align:left">'+sp.legend.map((l:any)=>'<li>'+esc2(String(l))+'</li>').join('')+'</ul>':''
+      return '<div style="margin:12px 0;padding:12px;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block;max-width:100%">'+ttl+'<pre style="margin:0;font-family:\'Courier New\',monospace;font-size:12px;line-height:1.45;color:#e0e7ff;white-space:pre;overflow-x:auto;text-align:left">'+content+'</pre>'+leg+'</div>'
+    }
+    if (sp.type === 'table') {
+      const headers:any[]=sp.headers||sp.columns||[]
+      const rows:any[]=sp.rows||sp.data||[]
+      let ht='<table style="border-collapse:collapse;font-size:12px;margin:0 auto;color:#e0e7ff">'
+      if(headers.length)ht+='<thead><tr>'+headers.map((c:any)=>'<th style="border:1px solid #6366f1;padding:5px 9px;background:#312e81;color:#fff">'+esc2(String(c))+'</th>').join('')+'</tr></thead>'
+      ht+='<tbody>'+rows.map((r:any)=>'<tr>'+(Array.isArray(r)?r:Object.values(r)).map((c:any)=>'<td style="border:1px solid #475569;padding:5px 9px;text-align:center">'+esc2(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+      const ttl=sp.title?'<div style="color:#a5b4fc;font-size:11px;text-align:center;margin-top:5px">'+esc2(String(sp.title))+'</div>':''
+      return '<div style="margin:12px 0;padding:10px;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block;max-width:100%;overflow-x:auto">'+ht+ttl+'</div>'
+    }
+    if (sp.type === 'bar' || sp.type === 'bars') {
+      const cats:any[]=sp.categories||sp.labels||((sp.data||[]).map((d:any)=>d.label||d.name))||[]
+      const vals:any[]=sp.values||((sp.data||[]).map((d:any)=>d.value||d.y))||[]
+      const nums=vals.map((v:any)=>Number(v)).filter((x:number)=>isFinite(x))
+      const maxV=Math.max(...nums,1)
+      const BW=440,BH=200,bp=32,n=vals.length||1,gap=(BW-bp*2)/n,bw=gap*0.6
+      let bars=''
+      vals.forEach((v:any,k:number)=>{const hh=(Number(v)/maxV)*(BH-bp*2),x=bp+k*gap+(gap-bw)/2,y=BH-bp-(isFinite(hh)?hh:0),c=GC[k%GC.length];bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(isFinite(hh)?hh:0).toFixed(1)+'" fill="'+c+'" rx="3"/>'+'<text x="'+(x+bw/2).toFixed(1)+'" y="'+(BH-bp+13)+'" font-size="9" fill="#cbd5e1" text-anchor="middle">'+esc2(String(cats[k]??'')).slice(0,12)+'</text>'+'<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" font-size="9" fill="#e0e7ff" text-anchor="middle">'+esc2(String(v))+'</text>'})
+      const ttl=sp.title?'<text x="'+(BW/2)+'" y="13" font-size="11" fill="#a5b4fc" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+      return '<div style="margin:12px 0;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block"><svg width="'+BW+'" height="'+BH+'" viewBox="0 0 '+BW+' '+BH+'">'+bars+ttl+'</svg></div>'
     }
   }catch(_e){return ''}
   return ''
@@ -687,8 +770,15 @@ function openCorrectionPdf(exam: BacExam, correctionText: string, studentAnswers
 function extractFirstGraph(text: string): string|null {
   const tag='[GRAPH:'; const idx=text.indexOf(tag); if(idx===-1)return null
   const jsonStart=text.indexOf('{',idx+tag.length); if(jsonStart===-1)return null
-  let depth=0,j=jsonStart
-  while(j<text.length){if(text[j]==='{')depth++;else if(text[j]==='}'){depth--;if(depth===0)break};j++}
+  let depth=0,j=jsonStart,inStr=false,escp=false
+  while(j<text.length){
+    const c=text[j]
+    if(escp){escp=false;j++;continue}
+    if(c==='\\'){escp=true;j++;continue}
+    if(c==='"'){inStr=!inStr;j++;continue}
+    if(!inStr){if(c==='{')depth++;else if(c==='}'){depth--;if(depth===0)break}}
+    j++
+  }
   const cb=text.indexOf(']',j); if(cb===-1)return null
   return text.slice(idx,cb+1)
 }
@@ -702,8 +792,15 @@ function parseGraphSegments(text:string):Array<{type:'text'|'graph';content:stri
     if(idx===-1){result.push({type:'text',content:text.slice(i)});break}
     if(idx>i)result.push({type:'text',content:text.slice(i,idx)})
     const jsonStart=text.indexOf('{',idx+tag.length); if(jsonStart===-1){result.push({type:'text',content:text.slice(idx)});break}
-    let depth=0,j=jsonStart
-    while(j<text.length){if(text[j]==='{')depth++;else if(text[j]==='}'){depth--;if(depth===0)break};j++}
+    let depth=0,j=jsonStart,inStr=false,escp=false
+    while(j<text.length){
+      const c=text[j]
+      if(escp){escp=false;j++;continue}
+      if(c==='\\'){escp=true;j++;continue}
+      if(c==='"'){inStr=!inStr;j++;continue}
+      if(!inStr){if(c==='{')depth++;else if(c==='}'){depth--;if(depth===0)break}}
+      j++
+    }
     const closeBracket=text.indexOf(']',j)
     if(closeBracket===-1){result.push({type:'text',content:text.slice(idx)});break}
     result.push({type:'graph',content:text.slice(jsonStart,j+1)})
@@ -912,8 +1009,8 @@ function TextWithGraphs({text}:{text:string}){
     <div>
       {segs.map((s,i)=>{
         if(s.type==='text')return <span key={i} style={{whiteSpace:'pre-wrap'}}>{renderVectors(s.content)}</span>
-        try{const spec=JSON.parse(s.content);return <SmartGraph key={i} spec={spec}/>}
-        catch{return <span key={i} style={{color:'#ef4444',fontSize:11}}>[Graphique invalide]</span>}
+        try{let spec:any; try{spec=JSON.parse(s.content)}catch{spec=JSON.parse(repairJsonText(s.content))}; return <SmartGraph key={i} spec={spec}/>}
+        catch{return null}
       })}
     </div>
   )
@@ -1179,16 +1276,11 @@ async function generateBacBlancPhysiqueFR(candidat: Candidat, dayNum: number): P
   const ex2Theme = prog?.ex2.sousTh || 'Optique ondulatoire — interférences et diffraction'
   const ex3Theme = prog?.ex3.sousTh || 'Chimie organique — familles et réactions'
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
-Tu crées des sujets BAC BLANC PHYSIQUE-CHIMIE originaux, rigoureux, de niveau Bac France.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-
-NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
-- Formules : écriture standard (pas LaTeX brut)
-- Exposants : e^(-t/τ), N₀·e^(-λt), ½mv², ½Cu²
-- Unités SI précises : V, A, Ω, F, H, m/s², N, J, mol/L, s, Hz
-- JAMAIS \frac — utiliser (a+b)/(c+d)
-- Vecteurs : F⃗, a⃗, v⃗, P⃗`
+  const system = `Tu es un auteur expert de sujets de PHYSIQUE-CHIMIE du Baccalauréat général français (enseignement de spécialité, programme officiel Éducation nationale, épreuve 3h30, 20 points).
+Tu maîtrises la chimie (transformations, cinétique, équilibres, acide-base et titrages pH-métriques, pH/pKa, spectroscopie UV-visible/IR/RMN, dosage par étalonnage (Beer-Lambert), chimie organique et nomenclature, synthèse/rendement) et la physique (mécanique newtonienne et équations différentielles, énergie mécanique, ondes (interférences, diffraction, effet Doppler, intensité sonore), électricité (dipôle RC), physique nucléaire et radioactivité, énergie de liaison en MeV).
+Tu crées des sujets ORIGINAUX, CONTEXTUALISÉS (situations concrètes réalistes), avec de vraies données numériques, des courbes et documents à exploiter.
+NOTATION : exposants e^(-t/τ), indices uₙ/u_C, vecteurs (F⃗, v⃗, a⃗), unités SI (mol·L⁻¹, V, Ω, F, m·s⁻², N, J, MeV, Bq). JAMAIS de LaTeX brut (\frac, \sqrt).
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = 'Crée un sujet BAC BLANC PHYSIQUE-CHIMIE France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
     + 'STRUCTURE OFFICIELLE BAC FRANCE PHYSIQUE-CHIMIE :\n'
@@ -1216,9 +1308,13 @@ NOTATION PHYSIQUE-CHIMIE OBLIGATOIRE :
     + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Physique') + '", "title": "Titre exercice 2", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ...", "graph": null },\n'
     + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Chimie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNÉES :\n[données]\n\n1) ...\n2) ...\n3) ...", "graph": null }\n'
     + '  ]\n'
-    + '}\n\nRÈGLE GRAPHIQUE ABSOLUE : si un exercice mentionne un circuit (RC, RL, RLC, pile), générer OBLIGATOIREMENT le champ \"graph\" avec type \"ascii\". JAMAIS écrire [FIGURE : ...] dans le statement — TOUJOURS générer le vrai [GRAPH: {...}].'
+    + '}\n\nRÈGLES GRAPHIQUES (système universel) :\n'
+    + '- COURBE (titrage pH=f(V) et sa dérivée, décroissance radioactive N(t)=N0·e^(-λt), cinétique [B]=f(t), charge/décharge RC u(t), vitesse v(t)) → champ \"graph\" type \"function\" : [GRAPH: {\"type\":\"function\",\"expressions\":[\"5*Math.exp(-x/300)\"],\"xMin\":0,\"xMax\":2000,\"title\":\"Évolution temporelle\",\"xLabel\":\"t (s)\",\"yLabel\":\"concentration\"}]. Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt.\n'
+    + '- CIRCUIT / MONTAGE (RC, RL, RLC, pile, dispositif) → champ \"graph\" type \"ascii\".\n'
+    + '- TABLEAU de mesures → type \"table\".\n'
+    + '- Le graphique va dans le champ \"graph\" SÉPARÉ (PAS dans statement), guillemets internes échappés. Valeur : \"[GRAPH: {JSON_VALIDE}]\" ou null. JAMAIS [FIGURE : ...] — toujours un vrai [GRAPH: {...}].'
 
-  const raw = await askClaude(prompt, system, 6500)
+  const raw = await askClaude(prompt, system, 8000)
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-physique-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1299,7 +1395,11 @@ async function generateBacBlancFrancais(candidat: Candidat, dayNum: number): Pro
   const ex2Theme  = prog.ex2
   const ex3Theme  = (prog as any).ex3 || ''
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
+  const system = isTerminale
+    ? `Tu es un auteur expert de sujets de PHILOSOPHIE du Baccalauréat général français (programme officiel, épreuve 4h, coefficient 8).
+Tu crées des sujets ORIGINAUX et rigoureux conformes au format officiel : DEUX sujets de dissertation (questions philosophiques portant sur les notions du programme : la conscience, l'inconscient, autrui, le temps, la nature, la technique, le travail, l'art, le langage, la religion, l'État, la justice, le devoir, la liberté, le bonheur, la vérité, la raison, la science…) et UN sujet d'explication de texte (un extrait authentique d'un grand auteur de la tradition philosophique).
+Tout en français impeccable. RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
+    : `Tu es un auteur expert de sujets du Baccalauréat France (programme Éducation Nationale officiel).
 Tu crées des sujets BAC BLANC FRANÇAIS originaux, rigoureux, de niveau Bac France.
 RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
 
@@ -1316,7 +1416,7 @@ NOTATION FRANÇAIS OBLIGATOIRE :
     ? `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)${ex3Theme ? '\nExercice 3 — ' + ex3Theme + ' (bonus/aide)' : ''}`
     : `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)`
 
-  const prompt = 'Crée un sujet BAC BLANC ' + isPhiloStr + ' ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
+  let prompt = 'Crée un sujet BAC BLANC ' + isPhiloStr + ' ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
     + 'STRUCTURE OFFICIELLE BAC FRANCE :\n'
     + 'Durée : ' + (secDuration/60) + 'h · Total : 20 points · Coeff : ' + coeff + '\n'
     + structure + '\n\n'
@@ -1358,7 +1458,38 @@ NOTATION FRANÇAIS OBLIGATOIRE :
     + '  ]\n'
     + '}'
 
-  const raw = await askClaude(prompt, system, 5500, 'francais')
+  if (isTerminale) {
+    prompt = `Crée un sujet BAC BLANC PHILOSOPHIE France ORIGINAL pour ${secLabel}. Graine : ${seed}.
+
+STRUCTURE OFFICIELLE — Bac général Philosophie · ${secDuration/60}h · coefficient 8 · 20 points :
+Le candidat traite, AU CHOIX, l'UN des trois sujets. Présente les TROIS :
+- SUJET 1 — DISSERTATION : une question philosophique concise (notion : ${ex1Theme}). Formulation sans intitulé de notion explicite (ex. « Notre avenir dépend-il de la technique ? »).
+- SUJET 2 — DISSERTATION : une AUTRE question, sur une notion DIFFÉRENTE du programme.
+- SUJET 3 — EXPLICATION DE TEXTE : un extrait AUTHENTIQUE (≈180-260 mots) d'un philosophe de la tradition (Platon, Aristote, Descartes, Spinoza, Locke, Hume, Rousseau, Kant, Hegel, Mill, Nietzsche, Bergson, Alain, Arendt, Rawls…), correctement attribué (Auteur, Titre, année), suivi de la consigne officielle.
+
+RÈGLES ABSOLUES :
+- Sujets ORIGINAUX — jamais une copie. Les deux dissertations portent sur des notions DIFFÉRENTES.
+- Le texte du sujet 3 doit être un VRAI extrait d'une œuvre réelle, philosophiquement riche et autonome.
+- AUCUN graphique (graph: null partout).
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "id": "bbfr-francais-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc Philosophie — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": ${secDuration},
+  "exercises": [
+    { "num":1, "theme":"${ex1Theme}", "title":"Sujet 1 — Dissertation", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Question philosophique concise, ex. « … ? »]" },
+    { "num":2, "theme":"Dissertation", "title":"Sujet 2 — Dissertation", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Autre question philosophique sur une notion différente]" },
+    { "num":3, "theme":"Explication de texte", "title":"Sujet 3 — Explication de texte", "points":20, "graph":null, "statement":"EXPLICATION DE TEXTE\n\nExpliquer le texte suivant :\n\n[Extrait authentique ≈180-260 mots]\n\n— [Auteur, Titre, année]\n\nLa connaissance de la doctrine de l'auteur n'est pas requise. Il faut et il suffit que l'explication rende compte, par la compréhension précise du texte, du problème dont il est question." }
+  ]
+}`
+  }
+
+  const raw = await askClaude(prompt, system, 7000, 'francais')
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1626,46 +1757,46 @@ async function generateBacBlancSVT(candidat: Candidat, dayNum: number): Promise<
   const ex2Theme = prog?.ex2.sousTh || 'Corps humain — immunite et sante'
   const ex3Theme = prog?.ex3.sousTh || 'Plantes — photosynthese et paleoclimats'
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat France SVT (programme Education Nationale officiel).
-Tu crées des sujets BAC BLANC SVT originaux, rigoureux, de niveau Bac France.
-REPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
+  const system = `Tu es un auteur expert de sujets de SVT (Sciences de la Vie et de la Terre) du Baccalauréat général français (enseignement de spécialité, programme officiel, épreuve écrite 3h30).
+Tu maîtrises tout le programme de terminale : génétique et évolution (brassage, mutations, histoire humaine), reproduction et hormones, immunologie (réaction inflammatoire, lymphocytes, vaccination), neurobiologie (réflexe, motricité, cerveau, plasticité), géologie (tectonique, déformation, hydrothermalisme), climats passés et actuels, écosystèmes et forêt, plante (organisation, vie fixée, reproduction), enzymes/métabolisme/photosynthèse.
+Tu crées des sujets ORIGINAUX et rigoureux : un exercice de RESTITUTION ORGANISÉE des connaissances (texte argumenté) et un exercice de PRATIQUE DU RAISONNEMENT SCIENTIFIQUE à partir d'un dossier de documents (résultats expérimentaux, graphiques, cartes, tableaux).
+NOTATION : termes scientifiques précis, données réalistes (δ18O, °C, années BP, %…). JAMAIS de LaTeX brut.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
-NOTATION SVT OBLIGATOIRE :
-- Symboles : ADN, ARNm, ATP, CO2, O2, H2O, Na+, K+, Ca2+
-- Formules simples : pas de LaTeX — utiliser ecriture standard
-- Abreviations acceptees : LB, LT, NK, CMH, HLA, GnRH, LH, FSH
-- Chiffres realistes (pH 7.4, [glucose] 1 g/L, T 37 degres C)`
+  const prompt = `Crée un sujet BAC BLANC SVT France ORIGINAL pour ${secLabel}. Graine : ${seed}.
 
-  const prompt = 'Cree un sujet BAC BLANC SVT France ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
-    + 'STRUCTURE OFFICIELLE BAC FRANCE SVT :\n'
-    + 'Duree : ' + (secDuration/60) + 'h · Total : 20 points\n'
-    + 'Exercice 1 — GENETIQUE & EVOLUTION (8 points) : ' + ex1Theme + '\n'
-    + 'Exercice 2 — CORPS HUMAIN & SANTE (6 points) : ' + ex2Theme + '\n'
-    + 'Exercice 3 — PLANTES, ECOLOGIE & GEOLOGIE (6 points) : ' + ex3Theme + '\n\n'
-    + 'REGLES ABSOLUES :\n'
-    + '- Sujet ORIGINAL, jamais une copie des annales\n'
-    + '- Niveau exactement equivalent au vrai Bac France SVT\n'
-    + '- Donnees numeriques realistes (dates geologiques, concentrations, pressions)\n'
-    + '- Chaque exercice avec sous-parties 1) 2) 3) ou a) b) c)\n'
-    + '- Minimum 120 mots par exercice\n'
-    + '- Documents SVT : tableaux de donnees, schemas a legender, courbes a interpreter\n\n'
-    + 'REPONSE JSON EXACTE :\n'
-    + '{\n'
-    + '  "id": "bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '",\n'
-    + '  "day": ' + dayNum + ',\n'
-    + '  "title": "Bac Blanc SVT — ' + secLabel + ' — Jour ' + dayNum + '",\n'
-    + '  "section": "' + secLabel + '",\n'
-    + '  "date": "' + dateStr + '",\n'
-    + '  "totalPoints": 20,\n'
-    + '  "duration": ' + secDuration + ',\n'
-    + '  "exercises": [\n'
-    + '    { "num": 1, "theme": "' + (prog?.ex1.theme || 'Genetique et Evolution') + '", "title": "Titre exercice 1", "points": 8, "statement": "DOCUMENTS :\n[tableau de donnees ou schema]\n\n1) a) Question...\n1) b) Question...\n2) a) Question...\n2) b) Question...\n2) c) Question..." },\n'
-    + '    { "num": 2, "theme": "' + (prog?.ex2.theme || 'Corps humain et Sante') + '", "title": "Titre exercice 2", "points": 6, "statement": "DOCUMENTS :\n[donnees]\n\n1) a) ...\n1) b) ...\n2) a) ...\n2) b) ..." },\n'
-    + '    { "num": 3, "theme": "' + (prog?.ex3.theme || 'Plantes et Geologie') + '", "title": "Titre exercice 3", "points": 6, "statement": "DONNEES :\n[donnees]\n\n1) ...\n2) ...\n3) ..." }\n'
-    + '  ]\n'
+STRUCTURE OFFICIELLE — Bac général SVT · ${secDuration/60}h · 20 points :
+Le candidat traite OBLIGATOIREMENT les DEUX exercices.
+- EXERCICE 1 — RESTITUTION ORGANISÉE DES CONNAISSANCES (8 points) : une QUESTION de synthèse (thème : ${ex1Theme}) à traiter sous forme de TEXTE ARGUMENTÉ structuré (introduction, développement organisé, conclusion). Consigne : « Vous rédigerez un texte argumenté. On attend des expériences, des observations, des exemples pour appuyer votre exposé. » Un schéma-bilan peut être attendu.
+- EXERCICE 2 — PRATIQUE DU RAISONNEMENT SCIENTIFIQUE / EXPLOITATION DE DOCUMENTS (12 points) : une situation-problème (thème : ${ex2Theme}) + un DOSSIER de 3 à 4 documents (résultats expérimentaux, GRAPHIQUES, cartes, tableaux) numérotés Document 1, 2, 3. Une QUESTION ouverte : « À partir de l'exploitation des documents et de vos connaissances, [caractériser / expliquer / proposer une hypothèse]… ». Consigne : « Vous organiserez votre réponse selon une démarche de votre choix intégrant des données des documents et les connaissances utiles. » AU MOINS un document chiffré exploitable rendu dans le champ "graph".
+
+RÈGLES ABSOLUES :
+- Sujet ORIGINAL, jamais une copie. Données réalistes et cohérentes, exploitables par le raisonnement.
+- Minimum 120 mots par exercice.
+
+GRAPHIQUES — SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+- COURBE (δ18O=f(âge), abondance d'une espèce, concentration, activité enzymatique) → type "function".
+- TABLEAU (exigences écologiques, mesures, génotypes) → type "table". · DIAGRAMME → type "bar".
+- Le graphique va dans le champ "graph" SÉPARÉ (PAS dans statement), guillemets internes échappés \"type\". Valeur : "[GRAPH: {JSON_VALIDE}]" ou null. JAMAIS [FIGURE:...].
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "id": "bbfr-svt-${dayNum}-${candidat.sectionKey}",
+  "day": ${dayNum},
+  "title": "Bac Blanc SVT — ${secLabel} — Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": ${secDuration},
+  "exercises": [
+    { "num":1, "theme":"${prog?.ex1.theme || 'Mobilisation des connaissances'}", "title":"Exercice 1 — [Thème] (restitution)", "points":8, "graph":null, "statement":"[Introduction situant le thème.]\n\nQUESTION :\n[Question de synthèse]\n\nVous rédigerez un texte argumenté. On attend des expériences, des observations, des exemples pour appuyer votre exposé et argumenter votre propos." },
+    { "num":2, "theme":"${prog?.ex2.theme || 'Pratique du raisonnement scientifique'}", "title":"Exercice 2 — [Thème] (raisonnement sur documents)", "points":12, "graph":"[GRAPH: {document chiffré : type function/table/bar}] ou null", "statement":"[Introduction de la situation-problème.]\n\nQUESTION :\n[Question ouverte : caractériser / expliquer / proposer une hypothèse]\n\nVous organiserez votre réponse selon une démarche de votre choix intégrant des données des documents et les connaissances utiles.\n\nDocument 1 : [voir graphique ci-dessus / description précise]\nDocument 2 : [description précise des données]\nDocument 3 : [description précise des données]" }
+  ]
+}`
     + '}'
 
-  const raw = await askClaude(prompt, system, 6500, 'svt')
+  const raw = await askClaude(prompt, system, 8000, 'svt')
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-svt-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1714,15 +1845,11 @@ async function generateBacBlancInformatique(candidat: Candidat, dayNum: number):
   const progStr = prog.map((p,i)=>'- Exercice '+(i+1)+' ('+ptsArr[i]+'pts) : '+p.theme+' | '+p.sousTh).join('\n')
   const exJson = prog.map((p,i)=>'    {"num":'+(i+1)+',"title":"Exercice '+(i+1)+' - '+p.theme+'","theme":"'+p.theme+'","points":'+ptsArr[i]+',"statement":"TODO","graph":null}').join(',\n')
 
-  const system = `Tu es un auteur expert de sujets du Baccalauréat France NSI/Informatique (programme officiel Éducation Nationale).
-Tu crées des sujets BAC BLANC NSI originaux, rigoureux, de niveau Bac France.
-RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.
-
-NOTATION NSI :
-- Code Python : indentation 4 espaces, syntaxe correcte
-- SQL : majuscules SELECT FROM WHERE JOIN GROUP BY
-- Complexité : notation O(n), O(log n), O(n²)
-- Pas de LaTeX — texte brut uniquement`
+  const system = `Tu es un auteur expert de sujets de NSI (Numérique et Sciences Informatiques) du Baccalauréat général français (enseignement de spécialité, programme officiel, épreuve écrite 3h30, 20 points).
+Tu maîtrises tout le programme de terminale NSI : structures de données (listes, piles, files, dictionnaires, arbres binaires/ABR, graphes), algorithmique (parcours, tris, recherche dichotomique, récursivité, diviser-pour-régner, programmation dynamique, gloutons, coût/complexité), programmation Python et POO (classes, attributs, méthodes, __init__, __repr__), bases de données relationnelles et SQL (SELECT/FROM/WHERE/JOIN/ORDER BY/DISTINCT/agrégats/INSERT/UPDATE/DELETE, clés primaires et étrangères, schéma relationnel), architectures matérielles et systèmes (processus, ordonnancement, interblocage), réseaux (adressage IPv4, masques de sous-réseau, adresse réseau/diffusion, routage RIP et OSPF, protocoles TCP/IP).
+Tu crées des sujets ORIGINAUX et rigoureux : des exercices INDÉPENDANTS couvrant des thèmes DIFFÉRENTS, avec du code Python authentique, des tables SQL et des schémas réseau.
+CODE : Python correct et indenté. Pour « Recopier et compléter », ne mets des « ... » QU'aux emplacements précis à compléter, jamais sur tout le corps d'une fonction.
+RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 
   const prompt = `Crée un sujet BAC BLANC NSI ORIGINAL pour ${secLabel}. Graine : ${seed}
 STRUCTURE BAC BLANC NSI FRANCE :
@@ -1736,12 +1863,19 @@ RÈGLES :
 - SQL réaliste avec vraies tables et données
 - Minimum 100 mots par exercice
 
+GRAPHIQUES & TABLES — SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+- TABLE SQL / tableau de données → champ "graph" type "table" : [GRAPH: {"type":"table","title":"Table inventaire","headers":["id","marque","annee","prix"],"rows":[["3","Gibson","1959","250000"],["7","Fender","1956","200000"]]}]
+- SCHÉMA RÉSEAU / ARBRE / PILE-FILE → champ "graph" type "ascii".
+- Au moins UN exercice avec une table SQL et UN exercice avec un schéma (réseau/arbre/pile-file) dans le champ "graph". Le CODE Python s'écrit dans "statement" (texte indenté), PAS dans "graph".
+- Le graphique va dans le champ "graph" SÉPARÉ, guillemets internes échappés. Valeur : "[GRAPH: {JSON_VALIDE}]" ou null. JAMAIS [FIGURE:...].
+
 RÉPONSE JSON EXACTE :
 {"id":"BBF-NSI-${seed}","day":${dayNum},"date":"${dateStr}","section":"${secLabel}","sectionKey":"${candidat.sectionKey}","duration":${secNSI.duration},"totalPoints":${totalPts},"title":"Bac Blanc NSI ${yyyy} — ${secLabel}","exercises":[
 ${exJson}
 ]}`
 
-  const raw = await askClaude(prompt, system, 6000, 'informatique')
+  const raw = await askClaude(prompt, system, 8000, 'informatique')
   let data: any
   try {
     const clean = raw.replace(/```json|```/g,'').trim()
@@ -1790,7 +1924,7 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
     + ' ALL exam content MUST BE IN ENGLISH.'
 
   const stmt1 = 'THEMATIC AXIS: ' + ax1.theme
-    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Original literary excerpt, 12-18 lines, WITH line numbers every 5 lines (5, 10, 15...)]'
     + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
     + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
     + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
@@ -1798,10 +1932,10 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
     + '\\n(approximately 500 words, in English)'
     + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
     + '\\nTranslate the following passage from Document A into French:'
-    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+    + '\\n[Specify the exact line range, e.g. "lines 1 to 7", then give the 5-8 line extract from Document A]'
 
   const stmt2 = 'THEMATIC AXIS: ' + ax2.theme
-    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Realistic literary or journalistic excerpt, 8-12 lines]'
+    + '\\n\\nDOCUMENT A — [Author, Title, Year]:\\n[Original literary excerpt, 12-18 lines, WITH line numbers every 5 lines (5, 10, 15...)]'
     + '\\n\\nDOCUMENT B — [Author/Source, Title, Year]:\\n[Excerpt from a different register, 6-10 lines]'
     + '\\n\\nDOCUMENT C — [Artist/Photographer, Title, Year]:\\n[Detailed description of image or photograph, 4-6 lines]'
     + '\\n\\n--- PART 1: DOCUMENT SYNTHESIS (16 points) ---'
@@ -1809,7 +1943,7 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
     + '\\n(approximately 500 words, in English)'
     + '\\n\\n--- PART 2: TRANSLATION INTO FRENCH (4 points) ---'
     + '\\nTranslate the following passage from Document A into French:'
-    + '\\n[Rich representative extract of 4-6 lines from Document A]'
+    + '\\n[Specify the exact line range, e.g. "lines 1 to 7", then give the 5-8 line extract from Document A]'
 
   const prompt = 'Create an ORIGINAL LLCER English Bac Blanc paper for ' + secLabel + '. Seed: ' + seed + '.'
     + ' OFFICIAL LLCER STRUCTURE — 2 subjects at choice, student chooses ONE.'
@@ -1832,7 +1966,7 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number): Prom
     + ',{"num":2,"theme":"' + ax2.theme + '","title":"Subject 2 — ' + ax2.theme + '","points":20,"statement":"' + stmt2.replace(/"/g, '\\"') + '"}'
     + ']}'
 
-  const raw = await askClaude(prompt, system, 6000, 'anglais')
+  const raw = await askClaude(prompt, system, 7000, 'anglais')
 
   const parsed = parseJSON<BacExam>(raw, {
     id: 'bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '-' + Date.now(),
@@ -1924,6 +2058,7 @@ async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number): Promis
   const isStmg = sk === 'stmg-eco'
   const isSeconde = sk === 'seconde-eco'
   const isPremiere = sk === 'premiere-eco'
+  const sesDissertation = !isStmg && !isSeconde && !isPremiere && (dayNum % 2 === 1) // Terminale SES : alterne épreuve composée / dissertation
   const secDuration = isSeconde ? 60 : 240
   const today = new Date()
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
@@ -1962,7 +2097,7 @@ GRAPHIQUES SES — le document statistique va dans le champ "graph" SÉPARÉ, en
   const ptsEx2 = isStmg ? 6 : (isSeconde ? 8 : 6)
   const ptsEx3 = isStmg ? 7 : (isSeconde ? 6 : (isPremiere ? 8 : 10))
 
-  const prompt = `Crée un sujet BAC BLANC ÉCONOMIE & GESTION France ORIGINAL pour ${secLabel}. Graine : ${seed}.
+  let prompt = `Crée un sujet BAC BLANC ÉCONOMIE & GESTION France ORIGINAL pour ${secLabel}. Graine : ${seed}.
 
 ${structure}
 
@@ -1991,7 +2126,33 @@ RÉPONSE JSON EXACTE :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 6000)
+  if (sesDissertation) {
+    prompt = `Crée un sujet BAC BLANC SES — DISSERTATION France ORIGINAL pour ${secLabel}. Graine : ${seed}.
+
+STRUCTURE OFFICIELLE — Terminale Spécialité SES · DISSERTATION · ${secDuration/60}h · 20 points :
+UN seul sujet de dissertation s'appuyant sur un dossier de 3 à 4 documents.
+- Une QUESTION de dissertation (économie, sociologie OU science politique, programme de terminale ; thème : ${t1} / ${t3}).
+- Le dossier comporte 3-4 documents dont AU MOINS un document statistique (champ "graph" type "table" ou "bar"), les autres décrits dans le statement.
+- Utiliser les données chiffrées EXACTES du bloc « DONNÉES OFFICIELLES FRANCE » (ne pas inventer).
+
+RÈGLES : sujet ORIGINAL, problématique à élaborer, plan cohérent et équilibré.
+
+RÉPONSE JSON EXACTE :
+{
+  "id": "bbfr-eco-${dayNum}-${sk}",
+  "day": ${dayNum},
+  "title": "Bac Blanc SES (Dissertation) - ${secLabel} - Jour ${dayNum}",
+  "section": "${secLabel}",
+  "date": "${dateStr}",
+  "totalPoints": 20,
+  "duration": ${secDuration},
+  "exercises": [
+    { "num":1, "theme":"${th1}", "title":"Dissertation s'appuyant sur un dossier documentaire", "points":20, "graph":"[GRAPH: {document statistique type table ou bar, données françaises officielles}] ou null", "statement":"Il est demandé au candidat : de répondre à la question posée par le sujet ; de construire une argumentation à partir d'une problématique qu'il devra élaborer ; de mobiliser des connaissances et des informations pertinentes, notamment celles figurant dans le dossier ; de rédiger en organisant le développement sous la forme d'un plan cohérent qui ménage l'équilibre des parties.\n\nSUJET : [Question de dissertation précise]\n\nCe sujet comporte [3 ou 4] documents.\n\nDOCUMENT 1 — [Titre, Source, Année] : [texte de presse/auteur résumé, 4-6 lignes].\nDOCUMENT 2 — [Titre statistique, Source, Année] [voir document ci-dessous].\nDOCUMENT 3 — [Titre, Source, Année] : [texte ou données, 4-6 lignes]." }
+  ]
+}`
+  }
+
+  const raw = await askClaude(prompt, system, 8000)
   const parsed = parseJSON<BacExam>(raw, {
     id: `bbfr-eco-${dayNum}-${sk}-${Date.now()}`, day: dayNum,
     title: `Bac Blanc Éco-Gestion - ${secLabel} - Jour ${dayNum}`,
@@ -2075,7 +2236,17 @@ GRAPHIQUES DANS LES ÉNONCÉS : optionnels et 2D uniquement. Géométrie dans l'
     + '  ]\n'
     + '}'
 
-  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\n\nProgramme a couvrir :\n' + progStr + '\n\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac) :\n' + jsonTemplate
+  const graphRules = `GRAPHIQUES — SYSTÈME UNIVERSEL :
+${UNIVERSAL_GRAPH_PROMPT}
+FORMAT 1 — COURBE DE FONCTION : [GRAPH: {"type":"function","expressions":["x*Math.exp(-x)+2"],"xMin":-1,"xMax":5,"labels":["f(x)"],"title":"Courbe de f"}]
+FORMAT 2 — FIGURE GÉOMÉTRIQUE 2D / PLAN COMPLEXE (triangle, cercle, vecteurs, affixes) : [GRAPH: {"type":"geometry","title":"Triangle ABC","shapes":[{"type":"axes","step":1},{"type":"grid","step":1},{"type":"point","cx":0,"cy":0,"label":"A"}]}]
+RÈGLES GRAPHIQUES :
+- Exercice fonction / analyse → champ "graph" type "function" OBLIGATOIRE avec la courbe.
+- Exercice géométrie 2D ou plan complexe → champ "graph" type "geometry".
+- Géométrie dans l'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace) → "graph":null et décrire la figure en mots (le rendu est 2D uniquement).
+- Le graphique va dans le champ "graph" SÉPARÉ (PAS dans statement), guillemets internes échappés \"type\". Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt. Valeur : "[GRAPH: {JSON_VALIDE}]" ou null.`
+
+  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\\n\\nProgramme a couvrir :\\n' + progStr + '\\n\\n' + graphRules + '\\n\\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac, ajoute le champ graph quand pertinent) :\\n' + jsonTemplate
 
   const raw = await askClaude(prompt, system, 8500)
 
@@ -2963,14 +3134,32 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
     const exercicesHtml=exam.exercises.map(ex=>{
       const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       const hasG=!!(ex.graph&&ex.graph!=='null')
+      const gHtml = hasG ? (graphToSvg(String(ex.graph).replace(/^\[GRAPH:\s*/,'').replace(/\]\s*$/,''))||'') : ''
+      const stmtToHtml=(text:string)=>{
+        const GTAG='[GRAPH:'; let out=''; let gp=0
+        while(gp<text.length){
+          const gi=text.indexOf(GTAG,gp)
+          if(gi===-1){out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gp))+'</p>';break}
+          if(gi>gp)out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gp,gi))+'</p>'
+          const jgs=text.indexOf('{',gi+GTAG.length)
+          if(jgs===-1){out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gi))+'</p>';break}
+          let gd=0,gjj=jgs
+          while(gjj<text.length){if(text[gjj]==='{')gd++;else if(text[gjj]==='}'){gd--;if(gd===0)break};gjj++}
+          const gcb=text.indexOf(']',gjj)
+          const g=graphToSvg(text.slice(jgs,gjj+1))
+          out+=g?('<div style="text-align:center;margin:8px 0">'+g+'</div>'):''
+          gp=(gcb!==-1?gcb:gjj)+1
+        }
+        return out
+      }
       return `<div class="exercice">
         <div class="exercice-header">
           <span class="exercice-title">📐 ${esc(ex.title)}</span>
           <span class="exercice-pts">${ex.points} points</span>
         </div>
         <div class="exercice-body">
-          ${hasG?'<p style="color:#6366f1;font-size:12px">📊 Voir graphique dans l&#39;interface MathBac.AI</p>':''}
-          <p style="white-space:pre-wrap">${esc(ex.statement)}</p>
+          ${gHtml?('<div style="text-align:center;margin:10px 0">'+gHtml+'</div>'):''}
+          ${stmtToHtml(ex.statement)}
         </div>
       </div>`
     }).join('\n')
