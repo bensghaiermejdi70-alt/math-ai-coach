@@ -356,6 +356,38 @@ function repairJsonText(s: string): string {
   return out
 }
 
+// Sauvetage d'une réponse tronquée : extrait les objets exercice COMPLETS de la liste "exercises"
+function salvageExercises(raw: string): any | null {
+  const m = raw.match(/"exercises"\s*:\s*\[/)
+  if (!m || m.index == null) return null
+  let i = m.index + m[0].length
+  const exercises: any[] = []
+  while (i < raw.length) {
+    while (i < raw.length && /[\s,]/.test(raw[i])) i++
+    if (raw[i] !== '{') break
+    let depth = 0, j = i, inStr = false, esc = false
+    for (; j < raw.length; j++) {
+      const c = raw[j]
+      if (esc) { esc = false; continue }
+      if (c === '\\') { esc = true; continue }
+      if (c === '"') { inStr = !inStr; continue }
+      if (!inStr) { if (c === '{') depth++; else if (c === '}') { depth--; if (depth === 0) { j++; break } } }
+    }
+    if (depth !== 0) break // objet incomplet (tronqué) → on s'arrête
+    const objText = raw.slice(i, j)
+    try {
+      const blocks: string[] = []
+      const rep = objText.replace(/\[GRAPH:\s*([\s\S]*?\})\s*\]/g, (_m: string, g: string) => { blocks.push(g); return `__G_${blocks.length - 1}__` })
+      const ex: any = JSON.parse(repairJsonText(rep))
+      const ri = (x: any) => typeof x === 'string' ? x.replace(/__G_(\d+)__/g, (_m: string, k: string) => `[GRAPH: ${blocks[Number(k)]}]`) : x
+      ex.statement = ri(ex.statement); ex.graph = ri(ex.graph)
+      if (ex && (ex.statement || ex.title)) exercises.push(ex)
+    } catch {}
+    i = j
+  }
+  return exercises.length ? { exercises } : null
+}
+
 function parseJSON<T>(raw: string, fallback: T): T {
   const cleaned = raw.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim()
   // 1) Parse direct
@@ -384,6 +416,11 @@ function parseJSON<T>(raw: string, fallback: T): T {
       .replace(/\[GRAPH:\s*[\s\S]*?\}\s*\]/g, '')
       .replace(/"graph"\s*:\s*"(?:[^"\\]|\\.)*"/g, '"graph": null')
     return JSON.parse(noGraph) as T
+  } catch {}
+  // 4) Dernier recours : sauver les exercices complets d'une réponse tronquée
+  try {
+    const salv = salvageExercises(cleaned)
+    if (salv && salv.exercises.length) return salv as T
   } catch {}
   return fallback
 }
@@ -879,6 +916,33 @@ function graphToSvg(jsonStr: string): string {
       const gttl=sp.title?'<text x="'+(GW/2)+'" y="'+(GH-4)+'" fill="#aaa" font-size="11" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
       return '<div style="margin:12px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(99,102,241,0.3);display:inline-block">'
         +'<svg width="'+GW+'" height="'+GH+'" viewBox="0 0 '+GW+' '+GH+'" style="background:#0f0f1e;display:block">'+gsvg+gttl+'</svg></div>'
+    }
+
+    if (sp.type === 'ascii') {
+      const content = esc2(String(sp.content||''))
+      const ttl = sp.title?'<div style="color:#a5b4fc;font-size:12px;font-weight:700;margin-bottom:6px;text-align:center">'+esc2(String(sp.title))+'</div>':''
+      const leg = Array.isArray(sp.legend)&&sp.legend.length?'<ul style="margin:8px 0 0 0;padding-left:18px;font-size:11px;color:#cbd5e1;text-align:left">'+sp.legend.map((l:any)=>'<li>'+esc2(String(l))+'</li>').join('')+'</ul>':''
+      return '<div style="margin:12px 0;padding:12px;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block;max-width:100%">'+ttl+'<pre style="margin:0;font-family:\'Courier New\',monospace;font-size:12px;line-height:1.45;color:#e0e7ff;white-space:pre;overflow-x:auto;text-align:left">'+content+'</pre>'+leg+'</div>'
+    }
+    if (sp.type === 'table') {
+      const headers:any[]=sp.headers||sp.columns||[]
+      const rows:any[]=sp.rows||sp.data||[]
+      let ht='<table style="border-collapse:collapse;font-size:12px;margin:0 auto;color:#e0e7ff">'
+      if(headers.length)ht+='<thead><tr>'+headers.map((c:any)=>'<th style="border:1px solid #6366f1;padding:5px 9px;background:#312e81;color:#fff">'+esc2(String(c))+'</th>').join('')+'</tr></thead>'
+      ht+='<tbody>'+rows.map((r:any)=>'<tr>'+(Array.isArray(r)?r:Object.values(r)).map((c:any)=>'<td style="border:1px solid #475569;padding:5px 9px;text-align:center">'+esc2(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody></table>'
+      const ttl=sp.title?'<div style="color:#a5b4fc;font-size:11px;text-align:center;margin-top:5px">'+esc2(String(sp.title))+'</div>':''
+      return '<div style="margin:12px 0;padding:10px;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block;max-width:100%;overflow-x:auto">'+ht+ttl+'</div>'
+    }
+    if (sp.type === 'bar' || sp.type === 'bars') {
+      const cats:any[]=sp.categories||sp.labels||((sp.data||[]).map((d:any)=>d.label||d.name))||[]
+      const vals:any[]=sp.values||((sp.data||[]).map((d:any)=>d.value||d.y))||[]
+      const nums=vals.map((v:any)=>Number(v)).filter((x:number)=>isFinite(x))
+      const maxV=Math.max(...nums,1)
+      const BW=440,BH=200,bp=32,n=vals.length||1,gap=(BW-bp*2)/n,bw=gap*0.6
+      let bars=''
+      vals.forEach((v:any,k:number)=>{const hh=(Number(v)/maxV)*(BH-bp*2),x=bp+k*gap+(gap-bw)/2,y=BH-bp-(isFinite(hh)?hh:0),c=GC[k%GC.length];bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(isFinite(hh)?hh:0).toFixed(1)+'" fill="'+c+'" rx="3"/>'+'<text x="'+(x+bw/2).toFixed(1)+'" y="'+(BH-bp+13)+'" font-size="9" fill="#cbd5e1" text-anchor="middle">'+esc2(String(cats[k]??'')).slice(0,12)+'</text>'+'<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" font-size="9" fill="#e0e7ff" text-anchor="middle">'+esc2(String(v))+'</text>'})
+      const ttl=sp.title?'<text x="'+(BW/2)+'" y="13" font-size="11" fill="#a5b4fc" text-anchor="middle">'+esc2(String(sp.title))+'</text>':''
+      return '<div style="margin:12px 0;border-radius:10px;border:1px solid rgba(99,102,241,0.3);background:#0f0f1e;display:inline-block"><svg width="'+BW+'" height="'+BH+'" viewBox="0 0 '+BW+' '+BH+'">'+bars+ttl+'</svg></div>'
     }
   }catch(_e){return ''}
   return ''
@@ -3321,14 +3385,34 @@ function PhaseExam({exam,candidat,onSubmit}:{exam:BacExam;candidat:Candidat;onSu
     const exercicesHtml=exam.exercises.map(ex=>{
       const esc2=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       const hasG=!!(ex.graph&&ex.graph!=='null')
+      // Rendu du graphique dédié (champ graph)
+      const gHtml = hasG ? (graphToSvg(String(ex.graph).replace(/^\[GRAPH:\s*/,'').replace(/\]\s*$/,''))||'') : ''
+      // Rendu de l'énoncé en traitant les blocs [GRAPH:] inline
+      const stmtToHtml=(text:string)=>{
+        const GTAG='[GRAPH:'; let out=''; let gp=0
+        while(gp<text.length){
+          const gi=text.indexOf(GTAG,gp)
+          if(gi===-1){out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gp))+'</p>';break}
+          if(gi>gp)out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gp,gi))+'</p>'
+          const jgs=text.indexOf('{',gi+GTAG.length)
+          if(jgs===-1){out+='<p style="white-space:pre-wrap">'+esc2(text.slice(gi))+'</p>';break}
+          let gd=0,gjj=jgs
+          while(gjj<text.length){if(text[gjj]==='{')gd++;else if(text[gjj]==='}'){gd--;if(gd===0)break};gjj++}
+          const gcb=text.indexOf(']',gjj)
+          const g=graphToSvg(text.slice(jgs,gjj+1))
+          out+=g?('<div style="text-align:center;margin:8px 0">'+g+'</div>'):''
+          gp=(gcb!==-1?gcb:gjj)+1
+        }
+        return out
+      }
       return `<div class="exercice">
         <div class="exercice-header">
           <span class="exercice-title">📐 ${esc(ex.title)}</span>
           <span class="exercice-pts">${ex.points} points</span>
         </div>
         <div class="exercice-body">
-          ${hasG?'<p style="color:#6366f1;font-size:12px">📊 Voir graphique dans l&#39;interface MathBac.AI</p>':''}
-          <p style="white-space:pre-wrap">${esc(ex.statement)}</p>
+          ${gHtml?('<div style="text-align:center;margin:10px 0">'+gHtml+'</div>'):''}
+          ${stmtToHtml(ex.statement)}
         </div>
       </div>`
     }).join('\n')
