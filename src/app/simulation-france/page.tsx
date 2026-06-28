@@ -51,6 +51,13 @@ import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: string = 'mathematiques'
+type Difficulty = 'facile' | 'moyen' | 'difficile'
+let globalDifficulty: Difficulty = 'moyen'
+function difficultyBloc(d: Difficulty): string {
+  if (d === 'facile') return '\n\nNIVEAU DE DIFFICULTÉ : FACILE — questions directes et progressives, données simples, calculs courts, fort guidage (sous-questions qui aident), aucun piège. Conforme au programme mais accessible.'
+  if (d === 'difficile') return '\n\nNIVEAU DE DIFFICULTÉ : DIFFICILE — sujet exigeant de type « matière principale » : raisonnement approfondi en plusieurs étapes, données réalistes complexes, questions ouvertes et de synthèse, quelques pièges classiques. Haut du barème.'
+  return '\n\nNIVEAU DE DIFFICULTÉ : MOYEN — niveau bac standard, équilibré.'
+}
 // Sync globalMatiere whenever activeMatiere changes (called in component)
 
 // ════════════════════════════════════════════════════════════════════
@@ -977,7 +984,7 @@ Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 5000, matiere, onDelta)
+  const raw = await askClaude(prompt, system + difficultyBloc(globalDifficulty), 5000, matiere, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title: isAnglais ? `LLCER Anglais — Simulation Variante ${idx+1}` : `${section} — Simulation Variante ${idx+1}`,
     section: isAnglais ? 'Terminale LLCER Anglais' : section,
@@ -4211,7 +4218,7 @@ ${chapitres.map((c,i)=>`    {
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 6000, undefined, onDelta)
+  const raw = await askClaude(prompt, system + difficultyBloc(globalDifficulty), 6000, undefined, onDelta)
   const parsed = parseJSON<Omit<GeneratedExam,'id'|'index'>>(raw, {
     title:`${sectionLabel} — Chapitres Variante ${idx+1}`,
     section:sectionLabel, duration:180, totalPoints:totalPts,
@@ -4234,6 +4241,23 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
   const SEC_CONFIGS_ACTIVE = scProp       ?? SECTION_CONFIGS
   const [tab, setTab] = useState<'archive'|'chapitre'|'import'|'correction-directe'>('archive')
+  const [difficulty, setDifficulty] = useState<Difficulty>(globalDifficulty)
+  const pickDiff = (d: Difficulty) => { setDifficulty(d); globalDifficulty = d }
+  const diffSelector = (
+    <div style={{margin:'0 0 16px',background:'rgba(59,130,246,0.07)',border:'1px solid rgba(59,130,246,0.28)',borderRadius:14,padding:'14px 16px'}}>
+      <div style={{fontSize:12,fontWeight:800,color:'#93c5fd',marginBottom:10,textAlign:'center'}}>🎚️ Niveau de difficulté</div>
+      <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+        {(([['facile','🟢 Facile','#10b981'],['moyen','🟡 Moyen','#f59e0b'],['difficile','🔴 Difficile','#ef4444']] as [Difficulty,string,string][]).map(([val,label,col])=>(
+          <button key={val} onClick={()=>pickDiff(val)} style={{
+            padding:'9px 18px',borderRadius:10,fontSize:14,fontWeight:800,cursor:'pointer',transition:'all .15s',fontFamily:'inherit',
+            border: difficulty===val?('2px solid '+col):'2px solid rgba(255,255,255,0.12)',
+            background: difficulty===val?(col+'22'):'rgba(255,255,255,0.03)',
+            color: difficulty===val?col:'rgba(255,255,255,0.6)'
+          }}>{label}</button>
+        )))}
+      </div>
+    </div>
+  )
   const searchParams = useSearchParams()
 
   // ── Onglet Archives ──
@@ -4396,6 +4420,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             {canStartArchive&&<p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>
               L'IA va créer <strong style={{color:'#a5b4fc'}}>10 examens originaux</strong> en quelques secondes
             </p>}
+            {diffSelector}
             <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected,customText)} disabled={!canStartArchive}>
               🧠 Générer mes examens →
             </PrimaryBtn>
@@ -4497,6 +4522,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             ) : (
               <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',margin:0}}>Sélectionne entre 1 et 4 chapitres</p>
             )}
+            {diffSelector}
             <PrimaryBtn
               onClick={()=>canStartChap&&onStart([],`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
               disabled={!canStartChap}>
@@ -4533,6 +4559,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
               onBlur={e=>e.target.style.borderColor='rgba(255,255,255,0.1)'}/>
           </div>
           <div style={{display:'flex',justifyContent:'flex-end'}}>
+            {diffSelector}
             <PrimaryBtn onClick={()=>(customText.trim().length>20||fileName)&&onStart([],customText)} disabled={customText.trim().length<=20&&!fileName}>
               🧠 Générer mes examens →
             </PrimaryBtn>
