@@ -1076,8 +1076,16 @@ function parseGraphSegments(text:string):Array<{type:'text'|'graph';content:stri
 function useScript(src:string){
   const[loaded,setLoaded]=useState(false)
   useEffect(()=>{
-    if(document.querySelector(`script[src="${src}"]`)){setLoaded(true);return}
-    const s=document.createElement('script');s.src=src;s.async=true;s.onload=()=>setLoaded(true);document.head.appendChild(s)
+    let cancelled=false
+    const globalName=src.includes('plotly')?'Plotly':null
+    const ready=()=>!globalName||!!(window as any)[globalName]
+    const markWhenReady=()=>{ if(cancelled)return; if(ready()){setLoaded(true);return} setTimeout(markWhenReady,80) }
+    if(document.querySelector(`script[src="${src}"]`)){markWhenReady();return ()=>{cancelled=true}}
+    const s=document.createElement('script');s.src=src;s.async=true
+    s.onload=()=>markWhenReady()
+    s.onerror=()=>{ setTimeout(()=>{ if(cancelled)return; const s2=document.createElement('script');s2.src=src;s2.async=true;s2.onload=()=>markWhenReady();document.head.appendChild(s2) },600) }
+    document.head.appendChild(s)
+    return ()=>{cancelled=true}
   },[src])
   return loaded
 }
@@ -1113,7 +1121,9 @@ function MathGraph({spec}:{spec:any}){
       if(traces.length===0){setErr('Tracé impossible');return}
       const W=ref.current.clientWidth||340,H=220
       const layout={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(255,255,255,0.04)',font:{color:'#e2e8f0',size:11,family:'system-ui'},title:{text:spec.title||'',font:{size:12,color:'#a5b4fc'},x:0.5},xaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.xLabel||'x',color:'#94a3b8'},yaxis:{gridcolor:'rgba(255,255,255,0.08)',zerolinecolor:'rgba(255,255,255,0.25)',title:spec.yLabel||'y',color:'#94a3b8'},margin:{l:42,r:12,t:spec.title?36:12,b:36},legend:{font:{size:10,color:'#94a3b8'},bgcolor:'rgba(0,0,0,0)'},width:W,height:H}
-      ;(window as any).Plotly.newPlot(ref.current,traces,layout,{displayModeBar:false,responsive:true})
+      const Plotly=(window as any).Plotly
+      if(!Plotly||!Plotly.newPlot){setErr('');return}
+      Plotly.newPlot(ref.current,traces,layout,{displayModeBar:false,responsive:true})
       setErr('')
     }catch(e:any){setErr('Tracé impossible — '+String(e).slice(0,60))}
   },[plotlyLoaded,spec])
