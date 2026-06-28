@@ -191,15 +191,22 @@ const { type, matiere, ...anthropicBody } = body
 // ── Prompt caching : met en cache le system prompt (réutilisé à chaque appel).
 //    AUCUN impact sur la réponse : même contenu, même modèle, même max_tokens, même détail.
 //    Seule la facturation de la portion répétée baisse (lecture du cache ≈ -90 %).
+//    TTL 1 h (au lieu de 5 min par défaut) : l'élève lit/réfléchit souvent plus de
+//    5 min entre deux requêtes (lecture d'une correction, génération de la variante
+//    suivante) ; avec 5 min le cache expirait AVANT la requête suivante. Le 1 h garde
+//    le système chaud sur toute la session → bien plus de lectures à -90 %.
+//    (Sur le bac blanc, tous les élèves d'une même section/jour partagent le même
+//    system : cache partagé entre utilisateurs pendant 1 h.)
+const _CACHE: any = { type: 'ephemeral', ttl: '1h' }
 if (typeof anthropicBody.system === 'string' && anthropicBody.system.trim().length > 0) {
   anthropicBody.system = [
-    { type: 'text', text: anthropicBody.system, cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: anthropicBody.system, cache_control: _CACHE },
   ]
 } else if (Array.isArray(anthropicBody.system) && anthropicBody.system.length > 0) {
   // system déjà sous forme de blocs : on marque le dernier bloc comme cacheable (sans double-emballage)
   const _last = anthropicBody.system[anthropicBody.system.length - 1]
   if (_last && typeof _last === 'object' && !_last.cache_control) {
-    _last.cache_control = { type: 'ephemeral' }
+    _last.cache_control = _CACHE
   }
 }
 

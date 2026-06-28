@@ -1494,15 +1494,18 @@ export default function ChatPage() {
 
     // ── Prompt caching de l'historique : marque la fin du contexte comme point de cache.
     //    AUCUN impact sur la réponse (même contenu, même modèle, même max_tokens).
-    //    Les tours précédents sont relus à -90 % dès que la conversation dépasse ~1024 tokens.
+    //    Les tours précédents sont relus à -90 % dès que la conversation dépasse ~2048 tokens.
+    //    TTL 1 h : l'élève met souvent plus de 5 min à lire une réponse avant de relancer ;
+    //    le 1 h garde l'historique en cache sur toute la conversation (et les pauses de lecture).
+    const _CACHE_1H: any = { type: 'ephemeral', ttl: '1h' }
     const cachedPayload = (messagesPayload as any[]).map((m, i) => {
       if (i !== messagesPayload.length - 1) return m
       if (typeof m.content === 'string') {
-        return { ...m, content: [{ type: 'text', text: m.content, cache_control: { type: 'ephemeral' } }] }
+        return { ...m, content: [{ type: 'text', text: m.content, cache_control: _CACHE_1H }] }
       }
       if (Array.isArray(m.content) && m.content.length > 0) {
         const blocks = m.content.map((b: any, j: number) =>
-          j === m.content.length - 1 ? { ...b, cache_control: { type: 'ephemeral' } } : b
+          j === m.content.length - 1 ? { ...b, cache_control: _CACHE_1H } : b
         )
         return { ...m, content: blocks }
       }
