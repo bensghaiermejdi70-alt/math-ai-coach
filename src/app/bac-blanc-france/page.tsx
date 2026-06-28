@@ -4518,25 +4518,10 @@ function BacBlancFranceInner() {
       return
     }
     globalMatiere = matiereKey
+    // La matière est choisie sur la fiche → on route vers l'écran « niveau de difficulté » AVANT de générer
     setCandidat(c)
-    setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
-    try {
-      const gen: Record<string, (cand: Candidat, d: number) => Promise<BacExam>> = {
-        maths: generateBacBlanc,
-        physique: generateBacBlancPhysiqueFR,
-        informatique: generateBacBlancInformatique,
-        anglais: generateBacBlancAnglais,
-        svt: generateBacBlancSVT,
-        francais: generateBacBlancFrancais,
-        'eco-gestion': generateBacBlancEcoFR,
-      }
-      const e = await (gen[m] || generateBacBlanc)(c, dayNum)
-      incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
-      incBbWeek()
-      setExam(e); setPhase('exam')
-    } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
-      alert('Erreur de génération. Réessayez.'); setPhase('inscription')
-    }
+    setPendingMatiere(m)
+    setPhase('choix-difficulte')
   }, [isAdmin, hasActiveSubscription, checkMatiereAccess, simLimit, simUsed, dayNum, bbWeeklyLimit, incrementQuotaSub])
 
   const handleStartMaths = useCallback(async () => {
