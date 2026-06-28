@@ -637,7 +637,16 @@ export default function Navbar() {
 
         {/* ═══ LIGNE 2 : navigation principale (desktop) ═══ */}
         <div style={{display:'flex',gap:10,alignItems:'center',justifyContent:'flex-end',flexWrap:'wrap'}} className="nav-desktop">
-          {navLinks.map(l => {
+          {navLinks.slice(0,2).map(l => {
+            const isActive = pathname.startsWith(l.href) && l.href !== '/'
+            return (
+              <Link key={l.href} href={l.href} style={{display:'inline-flex',alignItems:'center',padding:'6px 14px',borderRadius:50,fontSize:14,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap',transition:'all 0.2s',color:isActive?'#fff':'var(--text2)',background:isActive?'linear-gradient(135deg,var(--accent),var(--accent2))':'rgba(255,255,255,0.04)',border:'1px solid '+(isActive?'transparent':'var(--border)')}}>
+                {l.label}
+              </Link>
+            )
+          })}
+          <ExamensDropdown pathname={pathname} />
+          {navLinks.slice(2).map(l => {
             const isActive = pathname.startsWith(l.href) && l.href !== '/'
             return (
               <Link key={l.href} href={l.href} style={{display:'inline-flex',alignItems:'center',padding:'6px 14px',borderRadius:50,fontSize:14,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap',transition:'all 0.2s',color:isActive?'#fff':'var(--text2)',background:isActive?'linear-gradient(135deg,var(--accent),var(--accent2))':'rgba(255,255,255,0.04)',border:'1px solid '+(isActive?'transparent':'var(--border)')}}>
@@ -646,7 +655,6 @@ export default function Navbar() {
             )
           })}
           <SimulationDropdown pathname={pathname} />
-          <ExamensDropdown pathname={pathname} />
           <BacBlancBtn pathname={pathname} />
           <AbonnementDropdown pathname={pathname} />
         </div>
