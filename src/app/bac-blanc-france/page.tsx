@@ -222,7 +222,7 @@ interface RankingEntry {
   day: number; date: string; ts: number
 }
 
-type Phase = 'inscription'|'choix-matiere'|'generating'|'exam'|'grading'|'graded'|'correction'|'analysing'|'analysis'|'statistiques'
+type Phase = 'inscription'|'choix-matiere'|'choix-difficulte'|'generating'|'exam'|'grading'|'graded'|'correction'|'analysing'|'analysis'|'statistiques'
 
 // ── LocalStorage helpers ──────────────────────────────────────────
 function saveRanking(entry: RankingEntry) {
@@ -2717,23 +2717,6 @@ function PhaseChoixMatiereFR({
           )}
         </div>
 
-        {/* Sélecteur de difficulté — carte visible avant les matières */}
-        <div style={{maxWidth:560,margin:'0 auto 22px',background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.3)',borderRadius:16,padding:'18px 20px',textAlign:'center'}}>
-          <div style={{fontSize:13,fontWeight:800,color:'#a5b4fc',marginBottom:12}}>🎚️ Niveau de difficulté <span style={{fontWeight:600,color:'rgba(255,255,255,0.45)'}}>— choisis AVANT ta matière</span></div>
-          <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
-            {(([['facile','🟢 Facile','#10b981'],['moyen','🟡 Moyen','#f59e0b'],['difficile','🔴 Difficile','#ef4444']] as [Difficulty,string,string][]).map(([val,label,col])=>(
-              <button key={val} onClick={()=>setDifficulty(val)} style={{
-                padding:'12px 22px',borderRadius:12,fontSize:15,fontWeight:800,cursor:'pointer',transition:'all .15s',
-                border: difficulty===val?('2px solid '+col):'2px solid rgba(255,255,255,0.12)',
-                background: difficulty===val?(col+'25'):'rgba(255,255,255,0.03)',
-                color: difficulty===val?col:'rgba(255,255,255,0.6)',
-                transform: difficulty===val?'scale(1.05)':'scale(1)'
-              }}>{label}</button>
-            )))}
-          </div>
-          <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:10}}>Niveau sélectionné : <b style={{color:'#e2e8f0'}}>{difficulty==='facile'?'🟢 Facile':difficulty==='difficile'?'🔴 Difficile':'🟡 Moyen'}</b> · appliqué à l'examen que tu vas générer</div>
-        </div>
-
         {/* Grille matières */}
         <div style={{display:'flex',flexDirection:'column',gap:14,marginBottom:28}}>
           {MATIERES.map(m => (
@@ -4473,6 +4456,8 @@ function BacBlancFranceInner() {
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen')
+  const [pendingMatiere, setPendingMatiere] = useState<string>('')
+  const pickMatiere = (key: string) => { setPendingMatiere(key); setPhase('choix-difficulte') }
   const [candidat, setCandidat] = useState<Candidat|null>(null)
   const [liveGen, setLiveGen] = useState('') // concours qui s'écrit en direct (streaming)
   const [exam, setExam] = useState<BacExam|null>(null)
@@ -4868,18 +4853,76 @@ function BacBlancFranceInner() {
     <PhaseChoixMatiereFR
       candidat={candidat}
       dayNum={dayNum}
-      onMaths={handleStartMaths}
-      onPhysique={handleStartPhysique}
-      onInfo={handleStartInfo}
-      onAnglais={handleStartAnglais}
-      onSvt={handleStartSvt}
-      onFrancais={handleStartFrancais}
-      onEco={handleStartEco}
+      onMaths={()=>pickMatiere('maths')}
+      onPhysique={()=>pickMatiere('physique')}
+      onInfo={()=>pickMatiere('informatique')}
+      onAnglais={()=>pickMatiere('anglais')}
+      onSvt={()=>pickMatiere('svt')}
+      onFrancais={()=>pickMatiere('francais')}
+      onEco={()=>pickMatiere('eco-gestion')}
       onRetour={()=>setPhase('inscription')}
       difficulty={difficulty}
       setDifficulty={setDifficulty}
     />
   )
+  if (phase === 'choix-difficulte' && candidat) {
+    const matLabel: Record<string,string> = {maths:'Mathématiques',physique:'Physique-Chimie',informatique:'Informatique (NSI)',anglais:'Anglais',svt:'SVT',francais:'Français / Philosophie','eco-gestion':'SES / Éco-gestion'}
+    const runGenerate = () => {
+      if (pendingMatiere==='maths') handleStartMaths()
+      else if (pendingMatiere==='physique') handleStartPhysique()
+      else if (pendingMatiere==='informatique') handleStartInfo()
+      else if (pendingMatiere==='anglais') handleStartAnglais()
+      else if (pendingMatiere==='svt') handleStartSvt()
+      else if (pendingMatiere==='francais') handleStartFrancais()
+      else if (pendingMatiere==='eco-gestion') handleStartEco()
+    }
+    const opts: [Difficulty,string,string,string][] = [
+      ['facile','🟢','Facile','Questions directes, données simples, fort guidage.'],
+      ['moyen','🟡','Moyen','Niveau bac standard, équilibré.'],
+      ['difficile','🔴','Difficile','Raisonnement approfondi, données complexes, pièges.'],
+    ]
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'radial-gradient(1200px 600px at 50% -10%, rgba(59,130,246,0.12), transparent)'}}>
+        <div style={{maxWidth:580,width:'100%'}}>
+          <button onClick={()=>setPhase('choix-matiere')} style={{background:'none',border:'none',color:'rgba(255,255,255,0.5)',fontSize:13,cursor:'pointer',marginBottom:18,fontFamily:'inherit'}}>← Changer de matière</button>
+          <div style={{textAlign:'center',marginBottom:26}}>
+            <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 10px',background:'linear-gradient(135deg,#60a5fa,#4f6ef7,#818cf8)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Niveau de difficulté</h1>
+            <div style={{display:'inline-flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'8px 18px',flexWrap:'wrap',justifyContent:'center'}}>
+              <span style={{fontSize:13,fontWeight:800,color:'#93c5fd'}}>{matLabel[pendingMatiere]||pendingMatiere}</span>
+              <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>·</span>
+              <span style={{fontSize:12,color:'rgba(255,255,255,0.75)'}}>{candidat.section}</span>
+            </div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:26}}>
+            {opts.map(([val,emo,label,desc])=>{
+              const col = val==='facile'?'#10b981':val==='difficile'?'#ef4444':'#f59e0b'
+              const on = difficulty===val
+              return (
+                <button key={val} onClick={()=>setDifficulty(val)} style={{
+                  width:'100%',textAlign:'left',display:'flex',alignItems:'center',gap:16,cursor:'pointer',fontFamily:'inherit',
+                  background: on?(col+'1a'):'rgba(255,255,255,0.03)',
+                  border: on?('2px solid '+col):'2px solid rgba(255,255,255,0.1)',
+                  borderRadius:14,padding:'16px 20px',transition:'all .15s'
+                }}>
+                  <span style={{fontSize:26}}>{emo}</span>
+                  <span style={{flex:1}}>
+                    <span style={{display:'block',fontSize:16,fontWeight:800,color: on?col:'#e2e8f0'}}>{label}</span>
+                    <span style={{display:'block',fontSize:12,color:'rgba(255,255,255,0.5)',marginTop:2}}>{desc}</span>
+                  </span>
+                  {on && <span style={{fontSize:18,color:col}}>✓</span>}
+                </button>
+              )
+            })}
+          </div>
+          <button onClick={runGenerate} style={{
+            width:'100%',padding:'16px',borderRadius:14,border:'none',cursor:'pointer',fontFamily:'inherit',
+            fontSize:16,fontWeight:900,color:'#fff',background:'linear-gradient(135deg,#3b82f6,#6366f1)',
+            boxShadow:'0 8px 28px rgba(99,102,241,0.4)'
+          }}>✨ Générer l'examen ({difficulty==='facile'?'Facile':difficulty==='difficile'?'Difficile':'Moyen'})</button>
+        </div>
+      </div>
+    )
+  }
   if (phase === 'generating' && candidat) return <PhaseGenerating candidat={candidat} live={liveGen}/>
   if (phase === 'exam' && exam && candidat) return <PhaseExam exam={exam} candidat={candidat} onSubmit={handleSubmitExam}/>
   if ((phase === 'grading' || phase === 'graded') && exam && candidat) return(
