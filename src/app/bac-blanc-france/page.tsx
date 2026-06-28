@@ -2715,21 +2715,23 @@ function PhaseChoixMatiereFR({
               <span style={{fontSize:11,color:'rgba(255,255,255,0.4)'}}>{sec.themes.join(' · ')}</span>
             </div>
           )}
-          {/* Sélecteur de difficulté — choix libre */}
-          <div style={{marginTop:18,display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
-            <span style={{fontSize:11,color:'rgba(255,255,255,0.5)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em'}}>Niveau de difficulté</span>
-            <div style={{display:'inline-flex',gap:8,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:6}}>
-              {(([['facile','🟢 Facile','#10b981'],['moyen','🟡 Moyen','#f59e0b'],['difficile','🔴 Difficile','#ef4444']] as [Difficulty,string,string][]).map(([val,label,col])=>(
-                <button key={val} onClick={()=>setDifficulty(val)} style={{
-                  padding:'8px 16px',borderRadius:9,fontSize:13,fontWeight:800,cursor:'pointer',transition:'all .15s',
-                  border: difficulty===val?('1px solid '+col):'1px solid transparent',
-                  background: difficulty===val?(col+'22'):'transparent',
-                  color: difficulty===val?col:'rgba(255,255,255,0.55)'
-                }}>{label}</button>
-              )))}
-            </div>
-            <span style={{fontSize:10.5,color:'rgba(255,255,255,0.35)'}}>Choisis selon l'importance de la matière pour toi · appliqué à l'examen généré</span>
+        </div>
+
+        {/* Sélecteur de difficulté — carte visible avant les matières */}
+        <div style={{maxWidth:560,margin:'0 auto 22px',background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.3)',borderRadius:16,padding:'18px 20px',textAlign:'center'}}>
+          <div style={{fontSize:13,fontWeight:800,color:'#a5b4fc',marginBottom:12}}>🎚️ Niveau de difficulté <span style={{fontWeight:600,color:'rgba(255,255,255,0.45)'}}>— choisis AVANT ta matière</span></div>
+          <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
+            {(([['facile','🟢 Facile','#10b981'],['moyen','🟡 Moyen','#f59e0b'],['difficile','🔴 Difficile','#ef4444']] as [Difficulty,string,string][]).map(([val,label,col])=>(
+              <button key={val} onClick={()=>setDifficulty(val)} style={{
+                padding:'12px 22px',borderRadius:12,fontSize:15,fontWeight:800,cursor:'pointer',transition:'all .15s',
+                border: difficulty===val?('2px solid '+col):'2px solid rgba(255,255,255,0.12)',
+                background: difficulty===val?(col+'25'):'rgba(255,255,255,0.03)',
+                color: difficulty===val?col:'rgba(255,255,255,0.6)',
+                transform: difficulty===val?'scale(1.05)':'scale(1)'
+              }}>{label}</button>
+            )))}
           </div>
+          <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:10}}>Niveau sélectionné : <b style={{color:'#e2e8f0'}}>{difficulty==='facile'?'🟢 Facile':difficulty==='difficile'?'🔴 Difficile':'🟡 Moyen'}</b> · appliqué à l'examen que tu vas générer</div>
         </div>
 
         {/* Grille matières */}
