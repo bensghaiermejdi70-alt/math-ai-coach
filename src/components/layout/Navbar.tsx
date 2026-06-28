@@ -116,15 +116,13 @@ function SimulationDropdown({ pathname }: { pathname: string }) {
   return (
     <div ref={ref} style={{ position:'relative' }}>
       <button onClick={() => setOpen(o => !o)} style={{
-        display:'flex', alignItems:'center', gap:5,
-        background:'transparent', border:'none', cursor:'pointer',
-        color: isActive ? 'var(--text)' : 'var(--muted)',
-        fontSize:14, fontWeight:500, padding:0, fontFamily:'var(--font-body)',
-        borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
-        paddingBottom:2, transition:'color 0.2s',
+        display:'inline-flex', alignItems:'center', gap:5,
+        padding:'6px 14px', borderRadius:50, cursor:'pointer',
+        background: isActive ? 'linear-gradient(135deg,var(--accent),var(--accent2))' : 'rgba(255,255,255,0.04)',
+        border:'1px solid ' + (isActive ? 'transparent' : 'var(--border)'),
+        color: isActive ? '#fff' : 'var(--text2)',
+        fontSize:14, fontWeight:600, fontFamily:'var(--font-body)', transition:'all 0.2s', whiteSpace:'nowrap',
       }}
-        onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
-        onMouseLeave={e => e.currentTarget.style.color = isActive ? 'var(--text)' : 'var(--muted)'}
       >
         Simulation IA
         <span style={{ fontSize:9, transition:'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', display:'inline-block', marginLeft:1 }}>▼</span>
@@ -210,15 +208,13 @@ function ExamensDropdown({ pathname }: { pathname: string }) {
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          display:'flex', alignItems:'center', gap:5,
-          background:'transparent', border:'none', cursor:'pointer',
-          color: isActive ? 'var(--text)' : 'var(--muted)',
-          fontSize:14, fontWeight:500, padding:0, fontFamily:'var(--font-body)',
-          borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
-          paddingBottom:2, transition:'color 0.2s',
+          display:'inline-flex', alignItems:'center', gap:5,
+          padding:'6px 14px', borderRadius:50, cursor:'pointer',
+          background: isActive ? 'linear-gradient(135deg,var(--accent),var(--accent2))' : 'rgba(255,255,255,0.04)',
+          border:'1px solid ' + (isActive ? 'transparent' : 'var(--border)'),
+          color: isActive ? '#fff' : 'var(--text2)',
+          fontSize:14, fontWeight:600, fontFamily:'var(--font-body)', transition:'all 0.2s', whiteSpace:'nowrap',
         }}
-        onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
-        onMouseLeave={e => e.currentTarget.style.color = isActive ? 'var(--text)' : 'var(--muted)'}
       >
         Examens
         <span style={{
@@ -640,11 +636,11 @@ export default function Navbar() {
         </div>
 
         {/* ═══ LIGNE 2 : navigation principale (desktop) ═══ */}
-        <div style={{display:'flex',gap:24,alignItems:'center',justifyContent:'center',flexWrap:'wrap'}} className="nav-desktop">
+        <div style={{display:'flex',gap:10,alignItems:'center',justifyContent:'flex-start',flexWrap:'wrap'}} className="nav-desktop">
           {navLinks.map(l => {
             const isActive = pathname.startsWith(l.href) && l.href !== '/'
             return (
-              <Link key={l.href} href={l.href} style={{color:isActive?'var(--text)':'var(--muted)',textDecoration:'none',fontSize:14,fontWeight:500,transition:'color 0.2s',borderBottom:isActive?'2px solid var(--accent)':'2px solid transparent',paddingBottom:2}}>
+              <Link key={l.href} href={l.href} style={{display:'inline-flex',alignItems:'center',padding:'6px 14px',borderRadius:50,fontSize:14,fontWeight:600,textDecoration:'none',whiteSpace:'nowrap',transition:'all 0.2s',color:isActive?'#fff':'var(--text2)',background:isActive?'linear-gradient(135deg,var(--accent),var(--accent2))':'rgba(255,255,255,0.04)',border:'1px solid '+(isActive?'transparent':'var(--border)')}}>
                 {l.label}
               </Link>
             )
