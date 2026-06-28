@@ -636,7 +636,7 @@ export default function Navbar() {
         </div>
 
         {/* ═══ LIGNE 2 : navigation principale (desktop) ═══ */}
-        <div style={{display:'flex',gap:10,alignItems:'center',justifyContent:'flex-start',flexWrap:'wrap'}} className="nav-desktop">
+        <div style={{display:'flex',gap:10,alignItems:'center',justifyContent:'flex-end',flexWrap:'wrap'}} className="nav-desktop">
           {navLinks.map(l => {
             const isActive = pathname.startsWith(l.href) && l.href !== '/'
             return (
