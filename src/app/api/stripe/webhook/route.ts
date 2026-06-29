@@ -46,9 +46,17 @@ const PRICE_TO_PLAN: Record<string, string> = {
 }
 
 // ── Notification email client + admin via Resend ─────────────────
+function escHtml(v: unknown): string {
+  return String(v ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+
 async function sendConfirmationEmails(email: string, planType: string, amount: number) {
   const RESEND_KEY = process.env.RESEND_API_KEY
   if (!RESEND_KEY) return
+
+  const emailEsc = escHtml(email)
 
   const MATIERE_ICONS: Record<string, string> = {
     mathematiques: "📐", physique: "⚗️", svt: "🌱", anglais: "🇬🇧", informatique: "💻", francais: "📚", "eco-gestion": "📊",
@@ -114,7 +122,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
             ✅ Voir mon abonnement actif →
           </a>
           <p style="color:#aaa;font-size:13px;margin-top:8px">
-            Connectez-vous avec l'email : <strong style="color:white">${email}</strong>
+            Connectez-vous avec l'email : <strong style="color:white">${emailEsc}</strong>
           </p>
           <p style="color:#666;font-size:12px;margin-top:24px">
             Pour toute question : WhatsApp 99 268 970<br/>app.mathsbac.com
@@ -136,7 +144,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
       subject: `💰 Nouveau paiement Stripe — ${planType} · ${amount}€`,
       html: `
         <h2>💰 Paiement confirmé</h2>
-        <p><strong>Email :</strong> ${email}</p>
+        <p><strong>Email :</strong> ${emailEsc}</p>
         <p><strong>Plan :</strong> ${planLabels[planType] || planType}</p>
         <p><strong>Montant :</strong> ${amount} €</p>
         <p>L'abonnement a été activé automatiquement.</p>

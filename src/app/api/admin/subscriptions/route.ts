@@ -2,14 +2,38 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { ADMIN_EMAIL } from '@/lib/types/monetisation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// ── 🔒 Garde-fou : seul un admin peut appeler ces routes ──────────
+// Lit l'identité réelle depuis le cookie de session (aucune confiance au client).
+async function requireAdmin(): Promise<boolean> {
+  try {
+    const authClient = createServerSupabaseClient()
+    const { data: { user } } = await authClient.auth.getUser()
+    if (!user) return false
+    if (user.email === ADMIN_EMAIL) return true
+    // Sinon, vérifier le rôle en base (cohérent avec isAdmin de l'app)
+    const { data: prof } = await supabase
+      .from('profiles').select('role').eq('id', user.id).single()
+    return prof?.role === 'admin'
+  } catch {
+    return false
+  }
+}
+
+const FORBIDDEN = () =>
+  NextResponse.json({ error: 'Accès refusé — réservé à l’administrateur.' }, { status: 403 })
+
 // ── GET : lire toutes les subscriptions ──────────────────────────
 export async function GET() {
+  if (!(await requireAdmin())) return FORBIDDEN()
+
   const { data: subs, error } = await supabase
     .from('subscriptions')
     .select('*')
@@ -31,6 +55,8 @@ export async function GET() {
 
 // ── PATCH : activer / désactiver ─────────────────────────────────
 export async function PATCH(req: NextRequest) {
+  if (!(await requireAdmin())) return FORBIDDEN()
+
   try {
     const body = await req.json()
     const { id, status, user_id, plan_type, ends_at, email_target, action, matiere } = body

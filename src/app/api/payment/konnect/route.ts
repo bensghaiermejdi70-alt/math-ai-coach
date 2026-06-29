@@ -100,14 +100,34 @@ export async function POST(request: NextRequest) {
 
 // Webhook Konnect (réception confirmation paiement)
 export async function PUT(request: NextRequest) {
-  // Vérifier signature webhook
-  const signature = request.headers.get('x-konnect-signature')
-  // TODO: vérifier signature HMAC si Konnect le supporte
-
   const body = await request.json()
-  const { paymentRef, payment } = body
+  const { paymentRef } = body
 
-  if (payment?.status !== 'paid') {
+  if (!paymentRef) {
+    return NextResponse.json({ error: 'paymentRef manquant' }, { status: 400 })
+  }
+
+  // ── SÉCURITÉ : ne JAMAIS faire confiance au statut envoyé dans le webhook.
+  //    On revérifie le vrai statut auprès de l'API Konnect avec notre clé.
+  //    Sinon n'importe qui pourrait POSTer { paymentRef, payment:{status:'paid'} }
+  //    et activer un abonnement sans payer.
+  let verifiedPaid = false
+  try {
+    const verifyRes = await fetch(`${KONNECT_API}/payments/${encodeURIComponent(paymentRef)}`, {
+      method: 'GET',
+      headers: { 'x-api-key': KONNECT_API_KEY },
+    })
+    if (verifyRes.ok) {
+      const verifyData = await verifyRes.json()
+      const status = verifyData?.payment?.status || verifyData?.status
+      verifiedPaid = status === 'completed' || status === 'paid'
+    }
+  } catch (e) {
+    console.error('Konnect verify error:', e)
+  }
+
+  if (!verifiedPaid) {
+    // Paiement non confirmé par Konnect → on n'active rien.
     return NextResponse.json({ received: true })
   }
 
