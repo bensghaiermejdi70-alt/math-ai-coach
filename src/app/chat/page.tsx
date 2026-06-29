@@ -1729,7 +1729,11 @@ export default function ChatPage() {
   return (
     <>
       <Navbar />
-      <main style={{ position: 'fixed', top: 64, left: 0, right: 0, bottom: 0, zIndex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <style>{`
+        .chat-main { top: 108px; }
+        @media (max-width: 900px) { .chat-main { top: 62px; } }
+      `}</style>
+      <main className="chat-main" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: '0 8px', gap: 16, minHeight: 0, scrollbarWidth: 'thin', scrollbarColor: 'rgba(99,102,241,0.4) transparent' }}>
 
           {/* ── SIDEBAR ── */}
@@ -1867,7 +1871,7 @@ export default function ChatPage() {
                   <div style={{ fontSize: 46, marginBottom: 14 }}>🎓</div>
                   <h2 style={{ fontSize: 21, marginBottom: 8 }}>Bonjour ! Je suis ton Prof IA</h2>
                   <p style={{ color: 'var(--text2)', fontSize: 14, maxWidth: 500, margin: '0 auto 28px', lineHeight: 1.6 }}>
-                    Pose-moi n&apos;importe quelle question — maths · physique · chimie · SVT · informatique · anglais.<br />
+                    Pose-moi n&apos;importe quelle question — maths · physique · chimie · SVT .francais .economie .gestion · informatique · anglais.<br />
                     Je peux <strong style={{ color: '#a78bfa' }}>tracer des courbes</strong>, dessiner des <strong style={{ color: '#f59e0b' }}>figures géométriques</strong>, et expliquer tous les chapitres du programme.</p>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', gap: 9, maxWidth: 620, margin: '0 auto' }}>
                     {STARTERS.map((s, i) => (
