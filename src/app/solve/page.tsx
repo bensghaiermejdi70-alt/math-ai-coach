@@ -1339,11 +1339,17 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     // 1) Rendre les blocs $$...$$ MÊME multi-lignes, AVANT le découpage en lignes
     const mathBlocks: string[] = []
     collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
+      const m = math.trim()
+      // Garde-fou anti "$$ mal apparié" : un vrai bloc maths ne contient ni titre (#),
+      // ni citation (>), ni ligne vide. Sinon on laisse le texte au pipeline ligne-par-ligne.
+      if (/(^|\n)\s*#{1,4}\s/.test(m) || /(^|\n)\s*>\s/.test(m) || /\n\s*\n/.test(m) || m.length > 700) {
+        return '\n' + m + '\n'
+      }
       try {
-        const html = `<div class="katex-display-wrap">${katex.renderToString(math.trim(), { throwOnError: false, displayMode: true })}</div>`
+        const html = `<div class="katex-display-wrap">${katex.renderToString(m, { throwOnError: false, displayMode: true })}</div>`
         mathBlocks.push(html)
         return `\n[[MATHBLOCK:${mathBlocks.length - 1}]]\n`
-      } catch { return math }
+      } catch { return '\n' + m + '\n' }
     })
 
     // 2) Traiter ligne par ligne (titres, listes, résultats…) + inline $...$
@@ -1396,6 +1402,11 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('- '))   return `<li>${ep(ln.slice(2))}</li>`
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
+    // Ligne d'équation SANS délimiteurs $ : si elle ressemble à du LaTeX, la rendre en bloc KaTeX
+    const _k = (window as any).katex
+    if (_k && !ln.includes('$') && /\\(frac|sqrt|overrightarrow|overline|widehat|vec|angle|left|right|begin|sum|int|prod|lim|cdot|times|div|pi|alpha|beta|gamma|theta|lambda|mu|Delta|nabla|partial|infty|leq|geq|neq|approx|equiv|forall|exists|mathbb|mathcal|displaystyle)\b/.test(ln)) {
+      try { return `<div class="katex-display-wrap">${_k.renderToString(ln.trim(), { throwOnError: false, displayMode: true })}</div>` } catch {}
+    }
     return `<p>${ep(ln)}</p>`
   }
 
