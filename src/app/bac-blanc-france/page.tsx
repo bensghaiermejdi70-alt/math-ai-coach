@@ -2330,7 +2330,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:1100,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:1100,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header */}
         <div style={{marginBottom:28}}>
@@ -2687,7 +2687,7 @@ function PhaseChoixMatiereFR({
   return (
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:720,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:720,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header */}
         <div style={{textAlign:'center',marginBottom:36}}>
@@ -2828,7 +2828,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:660,margin:'0 auto',padding:'80px 20px 40px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:660,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:40}}>
 
         {/* Hero */}
         <div style={{textAlign:'center',marginBottom:40}}>
@@ -4246,7 +4246,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:900,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:900,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header bilan */}
         <div style={{marginBottom:32,textAlign:'center'}}>

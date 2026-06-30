@@ -615,13 +615,13 @@ RÉPONSE JSON OBLIGATOIRE :
 // ════════════════════════════════════════════════════════════════
 // GÉNÉRATION BAC BLANC INFORMATIQUE
 // ════════════════════════════════════════════════════════════════
-async function generateBacBlancInfo(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancInfo(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', variant: 'algo'|'bd' = 'algo'): Promise<BacExam> {
   const today = new Date()
   const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`
-  const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${today.getFullYear()}`
+  const seed = `BAC_BLANC_INFO_JOUR_${dayNum}_${candidat.sectionKey}_${variant}_${today.getFullYear()}`
 
   const isTic = candidat.sectionKey === 'autres'
-  const infoIsBDWeb = !isTic && (dayNum % 2 === 0)
+  const infoIsBDWeb = !isTic && variant === 'bd'
   const secLbl = isTic ? 'Sections Maths / Sc. expérimentales / Sc. techniques (TIC)' : 'Section Sciences de l\'informatique'
 
   const system = isTic
@@ -2082,7 +2082,7 @@ function PageStatistiques({onBack}:{onBack:()=>void}){
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:1100,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:1100,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header */}
         <div style={{marginBottom:28}}>
@@ -2869,7 +2869,7 @@ function PhaseChoixMatiere({
   return (
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:720,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:720,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header */}
         <div style={{textAlign:'center',marginBottom:36}}>
@@ -3069,7 +3069,7 @@ function PhaseInscription({onSubmit,onStatistiques}:{onSubmit:(c:Candidat)=>void
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:660,margin:'0 auto',padding:'80px 20px 40px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:660,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:40}}>
 
         {/* Hero */}
         <div style={{textAlign:'center',marginBottom:40}}>
@@ -4413,7 +4413,7 @@ function PhaseAnalysis({analysis,exam,candidat,onRestart}:{analysis:AnalysisResu
   return(
     <div style={{minHeight:'100vh',background:'#0a0a1a',color:'white',fontFamily:'system-ui'}}>
       <Navbar/>
-      <div style={{maxWidth:900,margin:'0 auto',padding:'80px 20px 60px'}}>
+      <style>{`.bb-wrap{padding-top:120px}@media(max-width:900px){.bb-wrap{padding-top:68px}}`}</style><div className="bb-wrap" style={{maxWidth:900,margin:'0 auto',paddingLeft:20,paddingRight:20,paddingBottom:60}}>
 
         {/* Header bilan */}
         <div style={{marginBottom:32,textAlign:'center'}}>
@@ -4623,6 +4623,7 @@ function BacBlancInner() {
 
   const [phase, setPhase] = useState<Phase>('inscription')
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen')
+  const [infoVariant, setInfoVariant] = useState<'algo'|'bd'>('algo')
   const [pendingMatiere, setPendingMatiere] = useState<string>('')
   const pickMatiere = (key: string) => { setPendingMatiere(key); setPhase('choix-difficulte') }
   const [candidat, setCandidat] = useState<Candidat|null>(null)
@@ -4773,7 +4774,7 @@ function BacBlancInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancInfo(candidat, dayNum, difficulty)
+      const e = await generateBacBlancInfo(candidat, dayNum, difficulty, infoVariant)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('informatique')
@@ -4781,7 +4782,7 @@ function BacBlancInner() {
     } catch (err) {
       console.error('[BacBlanc] generation echouee:', err); alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, infoVariant])
 
 
   // ── Lancer le bac blanc Anglais ─────────────────────────────────────
@@ -5060,6 +5061,31 @@ function BacBlancInner() {
               <span style={{fontSize:12,color:'rgba(255,255,255,0.75)'}}>{candidat.section}</span>
             </div>
           </div>
+          {pendingMatiere==='info' && candidat.sectionKey!=='autres' && (
+            <div style={{marginBottom:22}}>
+              <div style={{fontSize:13,fontWeight:800,color:'#fca5a5',marginBottom:10,textAlign:'center'}}>Type d'épreuve · Sciences de l'informatique</div>
+              <div style={{display:'flex',gap:12}}>
+                {(([['algo','⚙️','Algorithmique','Récursivité · Tableaux · Matrices · Problème'],['bd','🗄️','Base de données','SQL · Schéma relationnel · Web (HTML/CSS/JS)']]) as ['algo'|'bd',string,string,string][]).map(([val,emo,label,desc])=>{
+                  const on = infoVariant===val
+                  return (
+                    <button key={val} onClick={()=>setInfoVariant(val)} style={{
+                      flex:1,textAlign:'left',cursor:'pointer',fontFamily:'inherit',
+                      background: on?'rgba(99,102,241,0.15)':'rgba(255,255,255,0.03)',
+                      border: on?'2px solid #6366f1':'2px solid rgba(255,255,255,0.1)',
+                      borderRadius:14,padding:'14px 16px',transition:'all .15s'
+                    }}>
+                      <span style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                        <span style={{fontSize:20}}>{emo}</span>
+                        <span style={{fontSize:14,fontWeight:800,color: on?'#a5b4fc':'#e2e8f0'}}>{label}</span>
+                        {on && <span style={{marginLeft:'auto',fontSize:15,color:'#6366f1'}}>✓</span>}
+                      </span>
+                      <span style={{display:'block',fontSize:11,color:'rgba(255,255,255,0.5)',lineHeight:1.4}}>{desc}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
           <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:26}}>
             {opts.map(([val,emo,label,desc])=>{
               const col = val==='facile'?'#10b981':val==='difficile'?'#ef4444':'#f59e0b'
