@@ -1020,6 +1020,33 @@ function KaTeXLoader() {
 // ══════════════════════════════════════════════════════════════════════
 // PDF COLORÉ
 // ══════════════════════════════════════════════════════════════════════
+function cleanLatex(s: string): string {
+  if (!s) return s
+  let t = s
+  t = t.replace(/\\dfrac/g, '\\frac').replace(/\\tfrac/g, '\\frac').replace(/\\cfrac/g, '\\frac')
+  t = t.replace(/\\parallel/g, '\u2225').replace(/\\perp/g, '\u22A5').replace(/\\angle/g, '\u2220').replace(/\\simeq/g, '\u2243').replace(/\\cong/g, '\u2245').replace(/\\propto/g, '\u221D')
+  t = t.replace(/[\[\]*\s]*FIN_CORRECTION[\[\]*\s]*/g, ' ').replace(/\**\[?\[?FIN[_A-Z]*$/g, '')
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$\n]+?)\$/g, '$1')
+  t = t.replace(/\\left|\\right|\\!|\\;|\\:|\\displaystyle/g, '').replace(/\\,/g, ' ').replace(/\\quad|\\qquad/g, '  ')
+       .replace(/\\text\s*\{([^}]*)\}/g, '$1').replace(/\\mathrm\s*\{([^}]*)\}/g, '$1').replace(/\\operatorname\s*\{([^}]*)\}/g, '$1')
+  t = t.replace(/\\lim_?\s*\{([^}]*)\}/g, 'lim($1)').replace(/\\lim\b/g, 'lim')
+       .replace(/\\sum_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u03A3[$1\u2192$2]').replace(/\\sum\b/g, '\u03A3')
+       .replace(/\\int_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u222B[$1\u2192$2]').replace(/\\int\b/g, '\u222B')
+       .replace(/\\sqrt\s*\{([^}]*)\}/g, '\u221A($1)').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '($1)/($2)')
+       .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '$1\u20D7').replace(/\\vec\s*\{([^}]*)\}/g, '$1\u20D7')
+  const sym: Record<string, string> = { 'to':'\u2192','rightarrow':'\u2192','Rightarrow':'\u21D2','infty':'\u221E','cdot':'\u00B7','times':'\u00D7','div':'\u00F7','pm':'\u00B1','mp':'\u2213','leq':'\u2264','le':'\u2264','geq':'\u2265','ge':'\u2265','neq':'\u2260','approx':'\u2248','equiv':'\u2261','notin':'\u2209','in':'\u2208','subset':'\u2282','cup':'\u222A','cap':'\u2229','forall':'\u2200','exists':'\u2203','partial':'\u2202','nabla':'\u2207','alpha':'\u03B1','beta':'\u03B2','gamma':'\u03B3','delta':'\u03B4','theta':'\u03B8','lambda':'\u03BB','mu':'\u00B5','pi':'\u03C0','rho':'\u03C1','sigma':'\u03C3','tau':'\u03C4','phi':'\u03C6','omega':'\u03C9','Delta':'\u0394','Omega':'\u03A9','Sigma':'\u03A3','Phi':'\u03A6' }
+  for (const k of Object.keys(sym)) t = t.replace(new RegExp('\\\\' + k + '\\b', 'g'), sym[k])
+  t = t.replace(/\\mathbb\s*\{R\}/g, '\u211D').replace(/\\mathbb\s*\{N\}/g, '\u2115').replace(/\\mathbb\s*\{Z\}/g, '\u2124').replace(/\\mathbb\s*\{Q\}/g, '\u211A').replace(/\\mathbb\s*\{C\}/g, '\u2102')
+  const sup: Record<string, string> = { '0':'\u2070','1':'\u00B9','2':'\u00B2','3':'\u00B3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','+':'\u207A','-':'\u207B','n':'\u207F','i':'\u2071' }
+  const sub: Record<string, string> = { '0':'\u2080','1':'\u2081','2':'\u2082','3':'\u2083','4':'\u2084','5':'\u2085','6':'\u2086','7':'\u2087','8':'\u2088','9':'\u2089','n':'\u2099','i':'\u1D62','k':'\u2096','+':'\u208A','-':'\u208B' }
+  t = t.replace(/\^\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sup) ? [...g].map((c: string) => sup[c]).join('') : '^(' + g + ')')
+       .replace(/\^([0-9])/g, (_m: string, g: string) => sup[g] || ('^' + g))
+       .replace(/_\{([^}]*)\}/g, (_m: string, g: string) => [...g].every((c: string) => c in sub) ? [...g].map((c: string) => sub[c]).join('') : '_' + g)
+       .replace(/_([0-9nik])/g, (_m: string, g: string) => sub[g] || ('_' + g))
+  t = t.replace(/\\\\/g, ' ').replace(/\\[a-zA-Z]+/g, (m: string) => m.slice(1))
+  return t
+}
+
 function buildSolutionHtml(exercise: string, solution: string, mode: string, preRenderedBody?: string, action: 'print' | 'download' = 'print'): string {
   const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
   const modeLabel = mode === 'verify' ? 'Vérification de solution' : 'Résolution complète'
@@ -1081,15 +1108,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <head>
 <meta charset="UTF-8">
 <title>mathbac.ai — ${modeLabel}</title>
-<!-- KaTeX : CSS + JS + auto-render pour rendre les formules dans la fenêtre d'impression -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<style>
-  .math-display { margin: 10px 0; text-align: center; overflow-x: auto; overflow-y: hidden; }
-  .katex { font-size: 1.05em; }
-  .katex-display { margin: 8px 0 !important; }
-</style>
+<!-- Rendu math : texte Unicode propre (cleanLatex), aucune dépendance externe -->
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -1276,27 +1295,10 @@ ${bodyLines}
     });
   }
   var dlb=document.getElementById('dl-btn'); if(dlb) dlb.addEventListener('click', downloadPdf);
-  function renderAllMath(done){
-    try {
-      if (window.renderMathInElement) {
-        renderMathInElement(document.body, {
-          delimiters: [
-            {left:'$$', right:'$$', display:true},
-            {left:'\\[', right:'\\]', display:true},
-            {left:'$', right:'$', display:false},
-            {left:'\\(', right:'\\)', display:false}
-          ],
-          throwOnError: false,
-          ignoredClasses: ['graph-img','graph-note']
-        });
-      }
-    } catch(e) {}
-    setTimeout(done, 250);
-  }
   window.addEventListener('load', function(){
-    renderAllMath(function(){
-      ${action === 'download' ? 'downloadPdf();' : 'window.print();'}
-    });
+    ${action === 'download'
+      ? 'setTimeout(downloadPdf, 450);'
+      : "setTimeout(function(){ window.print(); }, 300);"}
   });
 <\/script>
 </body>
@@ -1347,35 +1349,21 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
   // (utilise le KaTeX déjà chargé dans la page principale)
   function preRenderLatex(sol: string): string {
     let collapsed = collapseGraphBlocks(sol)
-    // Protéger les blocs d'affichage MULTI-LIGNES AVANT le découpage en lignes,
-    // pour que KaTeX auto-render (fenêtre d'impression) les voie d'un seul tenant.
-    const blocks: string[] = []
-    const stash = (latex: string) => { blocks.push('$$\n' + latex.trim() + '\n$$'); return `\n[[MBLOCK:${blocks.length - 1}]]\n` }
+    // \[ \] -> $$ , \( \) -> $   (cleanLatex retire ensuite les délimiteurs)
     collapsed = collapsed
-      .replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => stash(m))
-      .replace(/\\\[([\s\S]+?)\\\]/g, (_: string, m: string) => stash(m))
-      .replace(/\\begin\{(bmatrix|pmatrix|vmatrix|Vmatrix|matrix|cases|aligned|align|array|gathered|split)\}[\s\S]*?\\end\{\1\}/g, (m: string) => stash(m))
-    return collapsed.split('\n').map((ln: string) => {
-      const mb = ln.trim().match(/^\[\[MBLOCK:(\d+)\]\]$/)
-      if (mb) return `<div class="math-display">${blocks[Number(mb[1])] || ''}</div>`
-      return convertLineForPdf(ln)
-    }).join('\n')
+      .replace(/\\\[/g, () => '$$').replace(/\\\]/g, () => '$$')
+      .replace(/\\\(/g, () => '$').replace(/\\\)/g, () => '$')
+    // Replier les blocs $$...$$ multi-lignes sur UNE ligne (cleanLatex traite ligne par ligne)
+    collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => '$$' + m.replace(/\s*\n\s*/g, ' ') + '$$')
+    return collapsed.split('\n').map(convertLineForPdf).join('\n')
   }
 
   function convertLineForPdf(ln: string): string {
-    // Échappe le HTML mais PRÉSERVE les formules $...$ et \(...\) (rendues par auto-render),
-    // et applique le gras **...** MÊME quand il entoure une formule.
+    // Texte : LaTeX/$...$ -> Unicode propre (cleanLatex), échappement HTML, gras **..**
     function ep(s: string): string {
-      const math: string[] = []
-      // 1) Mettre de côté les formules inline \(...\) puis $...$
-      let t = s.replace(/\\\(([^\n]*?)\\\)/g, (_: string, m: string) => { math.push('\\(' + m + '\\)'); return `\uE000${math.length - 1}\uE000` })
-      t = t.replace(/\$([^$\n]+?)\$/g, (m: string) => { math.push(m); return `\uE000${math.length - 1}\uE000` })
-      // 2) Échapper le HTML du texte restant
+      let t = cleanLatex(s)
       t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      // 3) Gras markdown
       t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // 4) Restaurer les formules intactes (pour auto-render)
-      t = t.replace(/\uE000(\d+)\uE000/g, (_: string, i: string) => math[Number(i)] || '')
       return t
     }
     const gimg = ln.match(/^\[\[GRAPHIMG:(\d+)\]\]/)
@@ -1393,10 +1381,6 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('- '))   return `<li>${ep(ln.slice(2))}</li>`
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
-    // Ligne d'équation SANS $ mais qui ressemble à du LaTeX : l'entourer de $$ pour auto-render
-    if (!ln.includes('$') && /\\(d?frac|sqrt|overrightarrow|overline|widehat|vec|left|right|begin|end|sum|int|prod|lim|cdot|times|div|pi|alpha|beta|gamma|theta|lambda|mu|Delta|nabla|partial|infty|leq|geq|neq|approx|equiv|forall|exists|mathbb|mathcal|displaystyle|det)\b/.test(ln)) {
-      return `<div class="math-display">$$${ln.trim()}$$</div>`
-    }
     return `<p>${ep(ln)}</p>`
   }
 
