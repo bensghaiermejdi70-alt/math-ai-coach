@@ -427,7 +427,7 @@ function AbonnementDropdown({ pathname }: { pathname: string }) {
 const WHATSAPP     = '21699268970'
 const CONTACT_MAIL = 'bensghaiermejdi70@gmail.com'
 const YOUTUBE_URL  = 'https://www.youtube.com/@mathbacai'
-const DEMO_URL     = 'https://www.youtube.com/watch?v=_6atlDlzhwI'  // démo complète 25 min
+const DEMO_URL     = 'https://www.youtube.com/watch?v=z3uMDJwvu7Q'  // présentation globale du site
 
 // ─── Dropdown Contact (WhatsApp + Email) ───
 function ContactDropdown() {
