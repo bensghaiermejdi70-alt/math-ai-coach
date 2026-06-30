@@ -27,6 +27,7 @@ TYPE 3 — ASCII (pile/circuit/synapse) : [GRAPH: {"type":"ascii","title":"Titre
 TYPE 4 — TABLEAU : [GRAPH: {"type":"table","title":"Titre","headers":["col1","col2"],"rows":[["v1","v2"]]}]
 TYPE 5 — BARRES : [GRAPH: {"type":"bar","title":"Titre","categories":["A","B"],"values":[12,8]}]
 RÈGLE : fonction→TYPE1 | géo→TYPE2 | pile/circuit/bio→TYPE3 | tableau→TYPE4 | histo→TYPE5
+GÉOMÉTRIE (triangle, rotation, symétrie, points, droites) : commence TOUJOURS la résolution par une figure TYPE 2 (geometry) qui place les points et objets de l'énoncé. Évite une résolution uniquement par matrices sans figure.
 JAMAIS expressions:[] vide · JAMAIS x^2 · JAMAIS [FIGURE:...] texte`
 
 
@@ -1027,6 +1028,17 @@ function cleanLatex(s: string): string {
   t = t.replace(/\\parallel/g, '\u2225').replace(/\\perp/g, '\u22A5').replace(/\\angle/g, '\u2220').replace(/\\simeq/g, '\u2243').replace(/\\cong/g, '\u2245').replace(/\\propto/g, '\u221D')
   t = t.replace(/[\[\]*\s]*FIN_CORRECTION[\[\]*\s]*/g, ' ').replace(/\**\[?\[?FIN[_A-Z]*$/g, '')
   t = t.replace(/\$\$([\s\S]*?)\$\$/g, ' $1 ').replace(/\$([^$\n]+?)\$/g, '$1')
+  // Matrices et environnements -> forme texte lisible : ( a, b ; c, d )
+  t = t.replace(/\\begin\{(p|b|v|V|B)?matrix\}([\s\S]*?)\\end\{(?:p|b|v|V|B)?matrix\}/g, (_m: string, kind: string, body: string) => {
+    const rows = body.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.split('&').map((c: string) => c.trim()).join(', ')).map((r: string) => r.trim()).filter(Boolean).join(' ; ')
+    const o = (kind === 'v' || kind === 'V') ? '|' : (kind === 'b' || kind === 'B') ? '[' : '('
+    const cl = (kind === 'v' || kind === 'V') ? '|' : (kind === 'b' || kind === 'B') ? ']' : ')'
+    return ' ' + o + ' ' + rows + ' ' + cl + ' '
+  })
+  t = t.replace(/\\begin\{cases\}([\s\S]*?)\\end\{cases\}/g, (_m: string, body: string) => ' { ' + body.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.replace(/&/g, ' ').trim()).filter(Boolean).join(' ; ') + ' } ')
+  t = t.replace(/\\begin\{array\}\{[^}]*\}([\s\S]*?)\\end\{array\}/g, (_m: string, body: string) => ' [ ' + body.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.split('&').map((c: string) => c.trim()).join(', ')).map((r: string) => r.trim()).filter(Boolean).join(' ; ') + ' ] ')
+  t = t.replace(/\\begin\{align(?:ed|\*)?\}([\s\S]*?)\\end\{align(?:ed|\*)?\}/g, (_m: string, body: string) => body.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.replace(/&/g, '').trim()).filter(Boolean).join('  '))
+  t = t.replace(/\\circ\b/g, '\u2218').replace(/\\mapsto\b/g, '\u21A6').replace(/\\cdots\b/g, '\u22EF').replace(/\\ldots\b/g, '\u2026').replace(/\\dots\b/g, '\u2026')
   t = t.replace(/\\left|\\right|\\!|\\;|\\:|\\displaystyle/g, '').replace(/\\,/g, ' ').replace(/\\quad|\\qquad/g, '  ')
        .replace(/\\text\s*\{([^}]*)\}/g, '$1').replace(/\\mathrm\s*\{([^}]*)\}/g, '$1').replace(/\\operatorname\s*\{([^}]*)\}/g, '$1')
   t = t.replace(/\\lim_?\s*\{([^}]*)\}/g, 'lim($1)').replace(/\\lim\b/g, 'lim')
@@ -1084,7 +1096,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   function convertLine(ln: string): string {
     // Ignorer les graphiques
-    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application mathbac.ai : http://app.mathsbac.com</div>'
+    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application mathbac.ai : http://mathbacai.com</div>'
     // Titres
     if (ln.startsWith('## '))  return `<h2>${escPreservingLatex(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${escPreservingLatex(ln.slice(4))}</h3>`
@@ -1241,7 +1253,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   <div class="header">
     <div class="header-left">
       <div class="brand">MATHBAC.AI</div>
-      <a class="brand-url" href="http://app.mathsbac.com">http://app.mathsbac.com</a>
+      <a class="brand-url" href="http://mathbacai.com">http://mathbacai.com</a>
       <div class="htitle">${icon} ${modeLabel}</div>
     </div>
     <div class="header-right">
@@ -1256,7 +1268,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   <!-- SOLUTION -->
   <div class="sol-box">
-    <div class="sol-label">✅ ${modeLabel} — mathbac.ai : http://app.mathsbac.com</div>
+    <div class="sol-label">✅ ${modeLabel} — mathbac.ai : http://mathbacai.com</div>
     <div id="solution-body">
 ${bodyLines}
     </div>
@@ -1264,7 +1276,7 @@ ${bodyLines}
 
   <!-- PIED DE PAGE -->
   <div class="footer">
-    <span><strong>MATHBAC.AI</strong> · http://app.mathsbac.com</span>
+    <span><strong>MATHBAC.AI</strong> · http://mathbacai.com</span>
     <span>Page 1/1</span>
   </div>
 
@@ -1371,9 +1383,9 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
       const im = graphImgs[Number(gimg[1])]
       return im
         ? `<div class="graph-img"><img src="${im}" alt="graphique"/></div>`
-        : '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://app.mathsbac.com</div>'
+        : '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://mathbacai.com</div>'
     }
-    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://app.mathsbac.com</div>'
+    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Graphique interactif — disponible dans l&#39;application sur http://mathbacai.com</div>'
     if (ln.startsWith('## '))  return `<h2>${ep(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${ep(ln.slice(4))}</h3>`
     if (ln.startsWith('#### ')) return `<h4>${ep(ln.slice(5))}</h4>`
@@ -3148,7 +3160,7 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
                       const collapsedSol = (() => {
                         try {
                           return parseGraphSegments(solution)
-                            .map(s => s.type === 'graph' ? '\n[Graphique interactif : voir http://app.mathsbac.com]\n' : s.content)
+                            .map(s => s.type === 'graph' ? '\n[Graphique interactif : voir http://mathbacai.com]\n' : s.content)
                             .join('')
                         } catch { return solution }
                       })()
