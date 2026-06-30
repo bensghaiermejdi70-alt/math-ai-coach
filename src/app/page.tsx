@@ -11,7 +11,15 @@ import Link from 'next/link'
 //  Palette : encre #0A0B0F · indigo #5B6CFF · violet #9D7BFF
 // ═══════════════════════════════════════════════════════════════
 
-const VIDEO_ID = '_6atlDlzhwI'
+const HOWTO_VIDEOS = [
+  { id: 'z3uMDJwvu7Q', title: 'Présentation globale du site', tag: 'Découverte' },
+  { id: '96f6b0ighJc', title: 'Cours — Tunisie & France', tag: 'Cours' },
+  { id: 'O9aaUVxGuMo', title: 'Examens', tag: 'Examens' },
+  { id: 'wf6StspCeVA', title: 'Simulation IA', tag: 'Simulation' },
+  { id: 'wf6StspCeVA', title: 'Solveur pas à pas', tag: 'Solveur' },
+  { id: 'kR5us0OfYLo', title: 'Chat IA', tag: 'Chat IA' },
+  { id: 'QVoxa7KN5h8', title: 'Bac Blanc', tag: 'Bac Blanc' },
+]
 
 const MATIERES = [
   { icon: '🧮', label: 'Mathématiques', color: '#5B6CFF', href: '/bac/maths' },
@@ -94,22 +102,27 @@ function StatCounter({ value, label, sub }: { value: string; label: string; sub:
   )
 }
 
-function VideoPlayer() {
+function VideoCard({ id, title, tag }: { id: string; title: string; tag: string }) {
   const [playing, setPlaying] = useState(false)
   return (
-    <div className="v2-video">
-      {!playing ? (
-        <button className="v2-video-thumb" onClick={() => setPlaying(true)} aria-label="Lire la vidéo de démonstration">
-          <img src={`https://img.youtube.com/vi/${VIDEO_ID}/maxresdefault.jpg`} alt="Démonstration MathBac.AI" />
-          <span className="v2-video-play"><span className="v2-video-tri" /></span>
-          <span className="v2-video-cap">Voir MathBac.AI en action · 25 min</span>
-        </button>
-      ) : (
-        <iframe
-          src={`https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
-          title="MathBac.AI" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
-        />
-      )}
+    <div className="v2-vid-card">
+      <div className="v2-vid-frame">
+        {!playing ? (
+          <button className="v2-vid-thumb" onClick={() => setPlaying(true)} aria-label={`Lire la vidéo : ${title}`}>
+            <img src={`https://img.youtube.com/vi/${id}/hqdefault.jpg`} alt={title} loading="lazy" />
+            <span className="v2-vid-play"><span className="v2-vid-tri" /></span>
+          </button>
+        ) : (
+          <iframe
+            src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`}
+            title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen
+          />
+        )}
+      </div>
+      <div className="v2-vid-meta">
+        <span className="v2-vid-tag">{tag}</span>
+        <h3 className="v2-vid-title">{title}</h3>
+      </div>
     </div>
   )
 }
@@ -305,13 +318,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ─────────────────────────── DÉMO VIDÉO */}
+        {/* ─────────────────────────── COMMENT ÇA MARCHE — VIDÉOS */}
         <section className="v2-section reveal">
           <div className="v2-head">
-            <span className="v2-label">Voir en action</span>
-            <h2 className="v2-h2">La démo complète en vidéo</h2>
+            <span className="v2-label">Comment ça marche</span>
+            <h2 className="v2-h2">Découvrez chaque page en vidéo</h2>
           </div>
-          <VideoPlayer />
+          <div className="v2-vid-grid">
+            {HOWTO_VIDEOS.map((v, i) => (
+              <VideoCard key={i} id={v.id} title={v.title} tag={v.tag} />
+            ))}
+          </div>
         </section>
 
         {/* ─────────────────────────── FEATURES */}
@@ -537,6 +554,24 @@ const V2_CSS = `
 .v2-video-thumb:hover .v2-video-play{ transform:scale(1.08); }
 .v2-video-tri{ width:0; height:0; border-left:22px solid #fff; border-top:14px solid transparent; border-bottom:14px solid transparent; margin-left:6px; }
 .v2-video-cap{ position:absolute; left:0; right:0; bottom:18px; text-align:center; font-size:13px; font-weight:600; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+
+/* galerie comment ça marche (7 vidéos) */
+.v2-vid-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1180px; margin:0 auto; }
+.v2-vid-card{ border-radius:18px; overflow:hidden; background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); border:1px solid var(--line); transition:transform .22s,border-color .22s,box-shadow .22s; }
+.v2-vid-card:hover{ transform:translateY(-5px); border-color:color-mix(in srgb,var(--indigo) 45%,transparent); box-shadow:0 20px 50px rgba(91,108,255,.16); }
+.v2-vid-frame{ position:relative; aspect-ratio:16/9; background:#000; overflow:hidden; }
+.v2-vid-frame iframe,.v2-vid-frame img{ width:100%; height:100%; object-fit:cover; border:0; display:block; }
+.v2-vid-thumb{ position:relative; width:100%; height:100%; padding:0; border:0; cursor:pointer; background:#000; }
+.v2-vid-thumb img{ opacity:.72; transition:opacity .3s,transform .5s; }
+.v2-vid-thumb:hover img{ opacity:.9; transform:scale(1.04); }
+.v2-vid-play{ position:absolute; inset:0; margin:auto; width:60px; height:60px; border-radius:50%; display:grid; place-items:center; background:linear-gradient(135deg,var(--indigo),var(--violet)); box-shadow:0 10px 32px rgba(91,108,255,.55); transition:transform .25s; }
+.v2-vid-thumb:hover .v2-vid-play{ transform:scale(1.1); }
+.v2-vid-tri{ width:0; height:0; border-left:17px solid #fff; border-top:11px solid transparent; border-bottom:11px solid transparent; margin-left:5px; }
+.v2-vid-meta{ padding:14px 18px 16px; }
+.v2-vid-tag{ display:inline-block; font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--violet); margin-bottom:6px; }
+.v2-vid-title{ font-size:15.5px; font-weight:800; margin:0; line-height:1.35; }
+@media(max-width:920px){ .v2-vid-grid{ grid-template-columns:repeat(2,1fr); } }
+@media(max-width:600px){ .v2-vid-grid{ grid-template-columns:1fr; } }
 
 /* features */
 .v2-features{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
