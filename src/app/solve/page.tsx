@@ -1081,8 +1081,15 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <head>
 <meta charset="UTF-8">
 <title>mathbac.ai — ${modeLabel}</title>
-<!-- KaTeX CSS pour les formules pré-rendues -->
+<!-- KaTeX : CSS + JS + auto-render pour rendre les formules dans la fenêtre d'impression -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+  .math-display { margin: 10px 0; text-align: center; overflow-x: auto; overflow-y: hidden; }
+  .katex { font-size: 1.05em; }
+  .katex-display { margin: 8px 0 !important; }
+</style>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -1269,10 +1276,27 @@ ${bodyLines}
     });
   }
   var dlb=document.getElementById('dl-btn'); if(dlb) dlb.addEventListener('click', downloadPdf);
+  function renderAllMath(done){
+    try {
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'\\[', right:'\\]', display:true},
+            {left:'$', right:'$', display:false},
+            {left:'\\(', right:'\\)', display:false}
+          ],
+          throwOnError: false,
+          ignoredClasses: ['graph-img','graph-note']
+        });
+      }
+    } catch(e) {}
+    setTimeout(done, 250);
+  }
   window.addEventListener('load', function(){
-    ${action === 'download'
-      ? 'setTimeout(downloadPdf, 450);'
-      : "setTimeout(function(){ window.print(); }, 300);"}
+    renderAllMath(function(){
+      ${action === 'download' ? 'downloadPdf();' : 'window.print();'}
+    });
   });
 <\/script>
 </body>
@@ -1322,70 +1346,37 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
   // Pré-rendre le LaTeX avec KaTeX AVANT d'ouvrir la fenêtre
   // (utilise le KaTeX déjà chargé dans la page principale)
   function preRenderLatex(sol: string): string {
-    const katex = (window as any).katex
     let collapsed = collapseGraphBlocks(sol)
-    // Convertir les délimiteurs \[...\] et \(...\) en $$...$$ / $...$
+    // Protéger les blocs d'affichage MULTI-LIGNES AVANT le découpage en lignes,
+    // pour que KaTeX auto-render (fenêtre d'impression) les voie d'un seul tenant.
+    const blocks: string[] = []
+    const stash = (latex: string) => { blocks.push('$$\n' + latex.trim() + '\n$$'); return `\n[[MBLOCK:${blocks.length - 1}]]\n` }
     collapsed = collapsed
-      .replace(/\\\[/g, () => '$$')
-      .replace(/\\\]/g, () => '$$')
-      .replace(/\\\(/g, () => '$')
-      .replace(/\\\)/g, () => '$')
-
-    if (!katex) {
-      // Pas de KaTeX : au moins retirer les $ pour ne pas les afficher
-      return collapsed.split('\n').map(convertLineForPdf).map(l => l.replace(/\$/g, '')).join('\n')
-    }
-
-    // 1) Rendre les blocs $$...$$ MÊME multi-lignes, AVANT le découpage en lignes
-    const mathBlocks: string[] = []
-    collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
-      const m = math.trim()
-      // Garde-fou anti "$$ mal apparié" : un vrai bloc maths ne contient ni titre (#),
-      // ni citation (>), ni ligne vide. Sinon on laisse le texte au pipeline ligne-par-ligne.
-      if (/(^|\n)\s*#{1,4}\s/.test(m) || /(^|\n)\s*>\s/.test(m) || /\n\s*\n/.test(m) || m.length > 700) {
-        return '\n' + m + '\n'
-      }
-      try {
-        const html = `<div class="katex-display-wrap">${katex.renderToString(m, { throwOnError: false, displayMode: true })}</div>`
-        mathBlocks.push(html)
-        return `\n[[MATHBLOCK:${mathBlocks.length - 1}]]\n`
-      } catch { return '\n' + m + '\n' }
-    })
-
-    // 2) Traiter ligne par ligne (titres, listes, résultats…) + inline $...$
+      .replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => stash(m))
+      .replace(/\\\[([\s\S]+?)\\\]/g, (_: string, m: string) => stash(m))
+      .replace(/\\begin\{(bmatrix|pmatrix|vmatrix|Vmatrix|matrix|cases|aligned|align|array|gathered|split)\}[\s\S]*?\\end\{\1\}/g, (m: string) => stash(m))
     return collapsed.split('\n').map((ln: string) => {
-      if (!ln.trim()) return '<div class="spacer"></div>'
-      const mb = ln.trim().match(/^\[\[MATHBLOCK:(\d+)\]\]$/)
-      if (mb) return mathBlocks[Number(mb[1])] || ''
-      let processed = convertLineForPdf(ln)
-      processed = processed.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
-        try { return katex.renderToString(math.trim(), { throwOnError: false, displayMode: false }) }
-        catch { return math }
-      })
-      // Retirer les $ résiduels (délimiteurs non appariés) pour ne jamais les afficher
-      processed = processed.replace(/\$/g, '')
-      return processed
+      const mb = ln.trim().match(/^\[\[MBLOCK:(\d+)\]\]$/)
+      if (mb) return `<div class="math-display">${blocks[Number(mb[1])] || ''}</div>`
+      return convertLineForPdf(ln)
     }).join('\n')
   }
 
   function convertLineForPdf(ln: string): string {
-    const esc2 = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Échappe le HTML mais PRÉSERVE les formules $...$ et \(...\) (rendues par auto-render),
+    // et applique le gras **...** MÊME quand il entoure une formule.
     function ep(s: string): string {
-      // Préserver $..$ sans échapper leur contenu
-      const parts: string[] = []
-      let i = 0
-      while (i < s.length) {
-        if (s[i]==='$' && s[i+1]==='$') {
-          const e=s.indexOf('$$',i+2); if(e>i){parts.push(s.slice(i,e+2));i=e+2;continue}
-        }
-        if (s[i]==='$') {
-          const e=s.indexOf('$',i+1); if(e>i&&!s.slice(i+1,e).includes('\n')){parts.push(s.slice(i,e+1));i=e+1;continue}
-        }
-        const nd=s.indexOf('$',i); const chunk=nd>i?s.slice(i,nd):s.slice(i)
-        parts.push(esc2(chunk).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'))
-        i+=chunk.length; if(nd<=i&&nd>-1)continue; break
-      }
-      return parts.join('')
+      const math: string[] = []
+      // 1) Mettre de côté les formules inline \(...\) puis $...$
+      let t = s.replace(/\\\(([^\n]*?)\\\)/g, (_: string, m: string) => { math.push('\\(' + m + '\\)'); return `\uE000${math.length - 1}\uE000` })
+      t = t.replace(/\$([^$\n]+?)\$/g, (m: string) => { math.push(m); return `\uE000${math.length - 1}\uE000` })
+      // 2) Échapper le HTML du texte restant
+      t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      // 3) Gras markdown
+      t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // 4) Restaurer les formules intactes (pour auto-render)
+      t = t.replace(/\uE000(\d+)\uE000/g, (_: string, i: string) => math[Number(i)] || '')
+      return t
     }
     const gimg = ln.match(/^\[\[GRAPHIMG:(\d+)\]\]/)
     if (gimg) {
@@ -1402,10 +1393,9 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('- '))   return `<li>${ep(ln.slice(2))}</li>`
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
-    // Ligne d'équation SANS délimiteurs $ : si elle ressemble à du LaTeX, la rendre en bloc KaTeX
-    const _k = (window as any).katex
-    if (_k && !ln.includes('$') && /\\(frac|sqrt|overrightarrow|overline|widehat|vec|angle|left|right|begin|sum|int|prod|lim|cdot|times|div|pi|alpha|beta|gamma|theta|lambda|mu|Delta|nabla|partial|infty|leq|geq|neq|approx|equiv|forall|exists|mathbb|mathcal|displaystyle)\b/.test(ln)) {
-      try { return `<div class="katex-display-wrap">${_k.renderToString(ln.trim(), { throwOnError: false, displayMode: true })}</div>` } catch {}
+    // Ligne d'équation SANS $ mais qui ressemble à du LaTeX : l'entourer de $$ pour auto-render
+    if (!ln.includes('$') && /\\(d?frac|sqrt|overrightarrow|overline|widehat|vec|left|right|begin|end|sum|int|prod|lim|cdot|times|div|pi|alpha|beta|gamma|theta|lambda|mu|Delta|nabla|partial|infty|leq|geq|neq|approx|equiv|forall|exists|mathbb|mathcal|displaystyle|det)\b/.test(ln)) {
+      return `<div class="math-display">$$${ln.trim()}$$</div>`
     }
     return `<p>${ep(ln)}</p>`
   }
