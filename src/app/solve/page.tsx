@@ -1079,6 +1079,7 @@ function cleanLatex(s: string): string {
        .replace(/\\int_?\s*\{([^}]*)\}\s*\^\s*\{([^}]*)\}/g, '\u222B[$1\u2192$2]').replace(/\\int\b/g, '\u222B')
        .replace(/\\sqrt\s*\{([^}]*)\}/g, '\u221A($1)').replace(/\\frac\s*\{([^}]*)\}\s*\{([^}]*)\}/g, '($1)/($2)')
        .replace(/\\overrightarrow\s*\{([^}]*)\}/g, '$1\u20D7').replace(/\\vec\s*\{([^}]*)\}/g, '$1\u20D7')
+       .replace(/\\p?mod\s*\{([^}]*)\}/g, ' (mod $1)')
   const sym: Record<string, string> = { 'to':'\u2192','rightarrow':'\u2192','Rightarrow':'\u21D2','infty':'\u221E','cdot':'\u00B7','times':'\u00D7','div':'\u00F7','pm':'\u00B1','mp':'\u2213','leq':'\u2264','le':'\u2264','geq':'\u2265','ge':'\u2265','neq':'\u2260','approx':'\u2248','equiv':'\u2261','notin':'\u2209','in':'\u2208','subset':'\u2282','cup':'\u222A','cap':'\u2229','forall':'\u2200','exists':'\u2203','partial':'\u2202','nabla':'\u2207','alpha':'\u03B1','beta':'\u03B2','gamma':'\u03B3','delta':'\u03B4','theta':'\u03B8','lambda':'\u03BB','mu':'\u00B5','pi':'\u03C0','rho':'\u03C1','sigma':'\u03C3','tau':'\u03C4','phi':'\u03C6','omega':'\u03C9','Delta':'\u0394','Omega':'\u03A9','Sigma':'\u03A3','Phi':'\u03A6' }
   for (const k of Object.keys(sym)) t = t.replace(new RegExp('\\\\' + k + '\\b', 'g'), sym[k])
   t = t.replace(/\\mathbb\s*\{R\}/g, '\u211D').replace(/\\mathbb\s*\{N\}/g, '\u2115').replace(/\\mathbb\s*\{Z\}/g, '\u2124').replace(/\\mathbb\s*\{Q\}/g, '\u211A').replace(/\\mathbb\s*\{C\}/g, '\u2102')
@@ -1131,6 +1132,9 @@ function mathHtml(input: string): string {
           if (name === 'mathbb') { const [b, i2] = grp(s, ni); const BB: Record<string, string> = { R:'ℝ', N:'ℕ', Z:'ℤ', Q:'ℚ', C:'ℂ', K:'𝕂' }; out += (BB[b.trim()] ?? render(b)); i = i2; continue }
           if (name === 'text' || name === 'mathrm' || name === 'mathbf' || name === 'operatorname') { const [b, i2] = grp(s, ni); out += render(b); i = i2; continue }
           if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr') { i = ni; continue }
+          if (name === 'quad') { out += '&nbsp;&nbsp;&nbsp;&nbsp;'; i = ni; continue }
+          if (name === 'qquad') { out += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'; i = ni; continue }
+          if (name === 'pmod' || name === 'mod' || name === 'pod') { const [b, i2] = grp(s, ni); out += '&nbsp;(mod&nbsp;' + render(b) + ')'; i = i2; continue }
           if (SYM[name] !== undefined) { out += SYM[name]; i = ni; continue }
           out += name; i = ni; continue
         } else {
