@@ -1060,7 +1060,7 @@ function cleanLatex(s: string): string {
 }
 
 function mathHtml(input: string): string {
-  const SYM: Record<string, string> = { pi:'π',alpha:'α',beta:'β',gamma:'γ',delta:'δ',Delta:'Δ',theta:'θ',lambda:'λ',mu:'µ',sigma:'σ',Sigma:'Σ',omega:'ω',Omega:'Ω',phi:'φ',rho:'ρ',tau:'τ',epsilon:'ε',infty:'∞',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',leq:'≤',geq:'≥',neq:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',to:'→',rightarrow:'→',Rightarrow:'⇒',leftarrow:'←',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',cup:'∪',cap:'∩',forall:'∀',exists:'∃',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',ldots:'…',cdots:'⋯',dots:'…' }
+  const SYM: Record<string, string> = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',varepsilon:'ε',zeta:'ζ',eta:'η',theta:'θ',vartheta:'ϑ',iota:'ι',kappa:'κ',lambda:'λ',mu:'µ',nu:'ν',xi:'ξ',pi:'π',varpi:'ϖ',rho:'ρ',varrho:'ϱ',sigma:'σ',varsigma:'ς',tau:'τ',upsilon:'υ',phi:'φ',varphi:'φ',chi:'χ',psi:'ψ',omega:'ω',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Xi:'Ξ',Pi:'Π',Sigma:'Σ',Upsilon:'Υ',Phi:'Φ',Psi:'Ψ',Omega:'Ω',infty:'∞',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',ast:'∗',star:'⋆',bullet:'•',leq:'≤',geq:'≥',le:'≤',ge:'≥',neq:'≠',ne:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',degree:'°',to:'→',rightarrow:'→',longrightarrow:'⟶',Rightarrow:'⇒',Leftrightarrow:'⇔',leftrightarrow:'↔',leftarrow:'←',longleftarrow:'⟵',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',notin:'∉',ni:'∋',subset:'⊂',supset:'⊃',subseteq:'⊆',supseteq:'⊇',cup:'∪',cap:'∩',emptyset:'∅',varnothing:'∅',setminus:'∖',forall:'∀',exists:'∃',nexists:'∄',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',oint:'∮',ldots:'…',cdots:'⋯',vdots:'⋮',dots:'…',prime:'′',checkmark:'✓',check:'✓',wedge:'∧',vee:'∨',land:'∧',lor:'∨',neg:'¬',lnot:'¬',oplus:'⊕',otimes:'⊗',ell:'ℓ',Re:'ℜ',Im:'ℑ',aleph:'ℵ',hbar:'ℏ',mid:'∣',nmid:'∤',cong2:'≅' }
   const esc = (c: string): string => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c
   const brace = (s: string, i: number): [string, number] => { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '{') d++; else if (s[j] === '}') { d--; if (d === 0) return [s.slice(i + 1, j), j + 1] } } return [s.slice(i + 1), s.length] }
   const grp = (s: string, i: number): [string, number] => { while (i < s.length && s[i] === ' ') i++; if (s[i] === '{') return brace(s, i); return [s[i] || '', i + 1] }
@@ -1089,7 +1089,8 @@ function mathHtml(input: string): string {
           if (name === 'end') { const em = /^\{[a-zA-Z]+\*?\}/.exec(s.slice(ni)); i = ni + (em ? em[0].length : 0); continue }
           if (name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac') { const [nu, i2] = grp(s, ni); const [de, i3] = grp(s, i2); out += '<span class="mfrac"><span class="mnum">' + render(nu) + '</span><span class="mden">' + render(de) + '</span></span>'; i = i3; continue }
           if (name === 'sqrt') { let j = ni; while (j < s.length && s[j] === ' ') j++; if (s[j] === '[') { const k = s.indexOf(']', j); if (k >= 0) j = k + 1 } const [b, i2] = grp(s, j); out += '<span class="msqrt"><span class="msqrt-sign">√</span><span class="msqrt-bar">' + render(b) + '</span></span>'; i = i2; continue }
-          if (name === 'overrightarrow' || name === 'vec') { const [b, i2] = grp(s, ni); out += render(b) + '\u20D7'; i = i2; continue }
+          if (name === 'overrightarrow' || name === 'vec' || name === 'overleftarrow') { const [b, i2] = grp(s, ni); out += '<span class="mvec"><span class="mvbar"></span><span class="mvhead"></span>' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'boxed' || name === 'fbox') { const [b, i2] = grp(s, ni); out += '<span class="mboxed">' + render(b) + '</span>'; i = i2; continue }
           if (name === 'overline') { const [b, i2] = grp(s, ni); out += '<span class="mover">' + render(b) + '</span>'; i = i2; continue }
           if (name === 'text' || name === 'mathrm' || name === 'mathbf' || name === 'operatorname') { const [b, i2] = grp(s, ni); out += render(b); i = i2; continue }
           if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr') { i = ni; continue }
@@ -1184,6 +1185,10 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   .msqrt > .msqrt-sign{ display:inline-block; }
   .msqrt > .msqrt-bar{ display:inline-block; border-top:1.4px solid currentColor; padding:1px 3px 0; }
   .mover{ display:inline-block; border-top:1.4px solid currentColor; padding-top:1px; }
+  .mvec{ display:inline-block; position:relative; padding-top:6px; }
+  .mvec > .mvbar{ position:absolute; top:2px; left:1px; right:4px; border-top:1.3px solid currentColor; }
+  .mvec > .mvhead{ position:absolute; top:-1px; right:0; width:0; height:0; border-left:5px solid currentColor; border-top:3px solid transparent; border-bottom:3px solid transparent; }
+  .mboxed{ display:inline-block; border:1.2px solid currentColor; border-radius:3px; padding:1px 6px; margin:0 2px; }
   sup{ font-size:.72em; vertical-align:super; line-height:0; }
   sub{ font-size:.72em; vertical-align:sub; line-height:0; }
   .mmatrix{ display:inline-block; vertical-align:middle; margin:0 3px; padding:2px 5px; border-left:1.6px solid currentColor; border-right:1.6px solid currentColor; }
@@ -1335,7 +1340,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   <!-- EXERCICE -->
   <div class="ex-label">📝 Énoncé de l'exercice</div>
-  <div class="ex-box">${esc(exercise.replace(/\\\[/g, ' ').replace(/\\\]/g, ' ').replace(/\\\(/g, ' ').replace(/\\\)/g, ' ').replace(/\$\$/g, ' ').replace(/\$/g, ''))}</div>
+  <div class="ex-box">${mathHtml(exercise.replace(/\\\[/g, ' ').replace(/\\\]/g, ' ').replace(/\\\(/g, ' ').replace(/\\\)/g, ' ').replace(/\$\$/g, ' ').replace(/\$/g, ''))}</div>
 
   <!-- SOLUTION -->
   <div class="sol-box">
@@ -1451,7 +1456,10 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     function ep(s: string): string {
       const math: string[] = []
       let t = s.replace(/\$([^$\n]+?)\$/g, (_x: string, m: string) => { math.push(mathHtml(m)); return `\uE000${math.length - 1}\uE000` })
-      t = cleanLatex(t)
+      // vecteurs et boxed BRUTS (hors $) -> mathHtml (flèche CSS, jamais de caractère combinant tofu)
+      t = t.replace(/\\(?:overrightarrow|overleftarrow|vec)\s*\{([^{}]*)\}/g, (_x: string, m: string) => { math.push(mathHtml('\\overrightarrow{' + m + '}')); return `\uE000${math.length - 1}\uE000` })
+      t = t.replace(/\\boxed\s*\{([^{}]*)\}/g, (_x: string, m: string) => { math.push(mathHtml('\\boxed{' + m + '}')); return `\uE000${math.length - 1}\uE000` })
+      t = cleanLatex(t).replace(/\$/g, '')
       t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       t = t.replace(/\uE000(\d+)\uE000/g, (_x: string, i: string) => '<span class="minline">' + (math[Number(i)] || '') + '</span>')
