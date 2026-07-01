@@ -1059,6 +1059,60 @@ function cleanLatex(s: string): string {
   return t
 }
 
+function mathHtml(input: string): string {
+  const SYM: Record<string, string> = { pi:'π',alpha:'α',beta:'β',gamma:'γ',delta:'δ',Delta:'Δ',theta:'θ',lambda:'λ',mu:'µ',sigma:'σ',Sigma:'Σ',omega:'ω',Omega:'Ω',phi:'φ',rho:'ρ',tau:'τ',epsilon:'ε',infty:'∞',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',leq:'≤',geq:'≥',neq:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',to:'→',rightarrow:'→',Rightarrow:'⇒',leftarrow:'←',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',cup:'∪',cap:'∩',forall:'∀',exists:'∃',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',ldots:'…',cdots:'⋯',dots:'…' }
+  const esc = (c: string): string => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c
+  const brace = (s: string, i: number): [string, number] => { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '{') d++; else if (s[j] === '}') { d--; if (d === 0) return [s.slice(i + 1, j), j + 1] } } return [s.slice(i + 1), s.length] }
+  const grp = (s: string, i: number): [string, number] => { while (i < s.length && s[i] === ' ') i++; if (s[i] === '{') return brace(s, i); return [s[i] || '', i + 1] }
+  const render = (s: string): string => {
+    let out = '', i = 0
+    while (i < s.length) {
+      const ch = s[i]
+      if (ch === '\\') {
+        const m = /^\\([a-zA-Z]+)\*?/.exec(s.slice(i))
+        if (m) {
+          const name = m[1]; const ni = i + m[0].length
+          if (name === 'begin') {
+            const em = /^\{([a-zA-Z]+)\*?\}/.exec(s.slice(ni))
+            if (em) {
+              const env = em[1]; const bi = ni + em[0].length
+              const endTok = '\\end{' + env + '}'; const ei = s.indexOf(endTok, bi)
+              const body = ei >= 0 ? s.slice(bi, ei) : s.slice(bi); const after = ei >= 0 ? ei + endTok.length : s.length
+              let bc = body
+              if (env === 'array') { const cm = /^\s*\{[^}]*\}/.exec(bc); if (cm) bc = bc.slice(cm[0].length) }
+              const rows = bc.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.trim()).filter((r: string) => r !== '')
+              const trs = rows.map((r: string) => '<tr>' + r.split('&').map((c: string) => '<td>' + render(c.trim()) + '</td>').join('') + '</tr>').join('')
+              const cls = (env === 'vmatrix' || env === 'Vmatrix') ? 'mm-det' : (env === 'cases') ? 'mm-cases' : 'mm-par'
+              out += '<span class="mmatrix ' + cls + '"><table>' + trs + '</table></span>'; i = after; continue
+            }
+          }
+          if (name === 'end') { const em = /^\{[a-zA-Z]+\*?\}/.exec(s.slice(ni)); i = ni + (em ? em[0].length : 0); continue }
+          if (name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac') { const [nu, i2] = grp(s, ni); const [de, i3] = grp(s, i2); out += '<span class="mfrac"><span class="mnum">' + render(nu) + '</span><span class="mden">' + render(de) + '</span></span>'; i = i3; continue }
+          if (name === 'sqrt') { let j = ni; while (j < s.length && s[j] === ' ') j++; if (s[j] === '[') { const k = s.indexOf(']', j); if (k >= 0) j = k + 1 } const [b, i2] = grp(s, j); out += '<span class="msqrt"><span class="msqrt-sign">√</span><span class="msqrt-bar">' + render(b) + '</span></span>'; i = i2; continue }
+          if (name === 'overrightarrow' || name === 'vec') { const [b, i2] = grp(s, ni); out += render(b) + '\u20D7'; i = i2; continue }
+          if (name === 'overline') { const [b, i2] = grp(s, ni); out += '<span class="mover">' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'text' || name === 'mathrm' || name === 'mathbf' || name === 'operatorname') { const [b, i2] = grp(s, ni); out += render(b); i = i2; continue }
+          if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr') { i = ni; continue }
+          if (SYM[name] !== undefined) { out += SYM[name]; i = ni; continue }
+          out += name; i = ni; continue
+        } else {
+          const c = s[i + 1]
+          if (c === '\\') { out += ' '; i += 2; continue }
+          if (c === ',' || c === ';' || c === ':' || c === '!' || c === ' ') { out += ' '; i += 2; continue }
+          if (c === '{' || c === '}') { out += esc(c); i += 2; continue }
+          i++; continue
+        }
+      }
+      if (ch === '^') { const [g, i2] = grp(s, i + 1); out += '<sup>' + render(g) + '</sup>'; i = i2; continue }
+      if (ch === '_') { const [g, i2] = grp(s, i + 1); out += '<sub>' + render(g) + '</sub>'; i = i2; continue }
+      if (ch === '{' || ch === '}') { i++; continue }
+      out += esc(ch); i++
+    }
+    return out
+  }
+  return render(input)
+}
+
 function buildSolutionHtml(exercise: string, solution: string, mode: string, preRenderedBody?: string, action: 'print' | 'download' = 'print'): string {
   const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
   const modeLabel = mode === 'verify' ? 'Vérification de solution' : 'Résolution complète'
@@ -1120,7 +1174,24 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <head>
 <meta charset="UTF-8">
 <title>mathbac.ai — ${modeLabel}</title>
-<!-- Rendu math : texte Unicode propre (cleanLatex), aucune dépendance externe -->
+<!-- Rendu math NATIF : fractions empilées, racines, matrices — aucune dépendance externe -->
+<style>
+  .minline{ white-space:normal; }
+  .mfrac{ display:inline-block; vertical-align:middle; text-align:center; margin:0 3px; }
+  .mfrac > .mnum{ display:block; padding:0 6px 1px; border-bottom:1.4px solid currentColor; }
+  .mfrac > .mden{ display:block; padding:1px 6px 0; }
+  .msqrt{ display:inline-block; white-space:nowrap; }
+  .msqrt > .msqrt-sign{ display:inline-block; }
+  .msqrt > .msqrt-bar{ display:inline-block; border-top:1.4px solid currentColor; padding:1px 3px 0; }
+  .mover{ display:inline-block; border-top:1.4px solid currentColor; padding-top:1px; }
+  sup{ font-size:.72em; vertical-align:super; line-height:0; }
+  sub{ font-size:.72em; vertical-align:sub; line-height:0; }
+  .mmatrix{ display:inline-block; vertical-align:middle; margin:0 3px; padding:2px 5px; border-left:1.6px solid currentColor; border-right:1.6px solid currentColor; }
+  .mmatrix.mm-cases{ border-right:none; }
+  .mmatrix > table{ border-collapse:collapse; }
+  .mmatrix td{ padding:2px 8px; text-align:center; }
+  .math-display{ text-align:center; margin:12px 0; font-size:1.06em; overflow-x:auto; }
+</style>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -1361,21 +1432,29 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
   // (utilise le KaTeX déjà chargé dans la page principale)
   function preRenderLatex(sol: string): string {
     let collapsed = collapseGraphBlocks(sol)
-    // \[ \] -> $$ , \( \) -> $   (cleanLatex retire ensuite les délimiteurs)
+    // \[ \] -> $$ , \( \) -> $
     collapsed = collapsed
       .replace(/\\\[/g, () => '$$').replace(/\\\]/g, () => '$$')
       .replace(/\\\(/g, () => '$').replace(/\\\)/g, () => '$')
-    // Replier les blocs $$...$$ multi-lignes sur UNE ligne (cleanLatex traite ligne par ligne)
-    collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => '$$' + m.replace(/\s*\n\s*/g, ' ') + '$$')
-    return collapsed.split('\n').map(convertLineForPdf).join('\n')
+    // extraire les blocs display $$...$$ (multi-lignes) pour les rendre en bloc centré
+    const blocks: string[] = []
+    collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_x: string, m: string) => { blocks.push(m); return `\n\u0001D${blocks.length - 1}\u0001\n` })
+    return collapsed.split('\n').map((ln: string) => {
+      const d = ln.trim().match(/^\u0001D(\d+)\u0001$/)
+      if (d) return `<div class="math-display">${mathHtml(blocks[Number(d[1])] || '')}</div>`
+      return convertLineForPdf(ln)
+    }).join('\n')
   }
 
   function convertLineForPdf(ln: string): string {
-    // Texte : LaTeX/$...$ -> Unicode propre (cleanLatex), échappement HTML, gras **..**
+    // Rendu math NATIF (fractions empilées, racines, matrices) via mathHtml ; prose nettoyée par cleanLatex.
     function ep(s: string): string {
-      let t = cleanLatex(s)
+      const math: string[] = []
+      let t = s.replace(/\$([^$\n]+?)\$/g, (_x: string, m: string) => { math.push(mathHtml(m)); return `\uE000${math.length - 1}\uE000` })
+      t = cleanLatex(t)
       t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      t = t.replace(/\uE000(\d+)\uE000/g, (_x: string, i: string) => '<span class="minline">' + (math[Number(i)] || '') + '</span>')
       return t
     }
     const gimg = ln.match(/^\[\[GRAPHIMG:(\d+)\]\]/)
@@ -1393,6 +1472,10 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('- '))   return `<li>${ep(ln.slice(2))}</li>`
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
+    // ligne d'équation sans $ mais riche en LaTeX -> bloc math centré
+    if (!ln.includes('$') && /\\(d?frac|sqrt|begin|overrightarrow|vec|overline|sum|int|prod|lim|cdot|times|pi|alpha|beta|gamma|theta|lambda|Delta|leq|geq|neq|approx)\b/.test(ln)) {
+      return `<div class="math-display">${mathHtml(ln)}</div>`
+    }
     return `<p>${ep(ln)}</p>`
   }
 
