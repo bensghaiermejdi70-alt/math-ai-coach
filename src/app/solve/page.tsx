@@ -883,9 +883,20 @@ function stripIncompleteGraph(text: string): string {
   }
   return out
 }
+// Même garde-fou anti-prose que côté PDF (évite qu'un "$" isolé — devise, coquille —
+// ne fasse passer une portion de phrase française pour une formule KaTeX à l'écran)
+const RLL_FR_STOPWORDS = /\b(pour|avec|dans|donc|soit|sont|être|alors|ainsi|car|dont|produit|prix|dinars?|euros?|client|remise|solde)\b/i
+function rllLooksLikeMath(m: string): boolean {
+  const t = m.trim()
+  if (!t) return false
+  if (t.length > 240) return false
+  if (/[.!?]\s+[A-ZÀ-Ý]/.test(t)) return false
+  const withoutText = t.replace(/\\(?:text|mathrm|operatorname)\s*\{[^}]*\}/g, '')
+  if (RLL_FR_STOPWORDS.test(withoutText)) return false
+  return true
+}
 function renderLatexLine(line: string): string {
   // Remplace $$...$$ (block) puis $...$ (inline) par du HTML KaTeX
-  // On utilise une approche simple : convertir en HTML via pattern matching
   let result = line
 
   // Convertir les délimiteurs \[...\] et \(...\) en $$...$$ / $...$ (rendus ensuite)
@@ -898,6 +909,9 @@ function renderLatexLine(line: string): string {
   // Bold markdown → HTML
   result = result.replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e2e8f0;font-weight:700">$1</strong>')
 
+  // Protéger les "\$" échappés (montant littéral voulu) avant toute extraction
+  result = result.replace(/\\\$/g, '\u0002')
+
   // $$...$$ → formule bloc centrée
   result = result.replace(/\$\$([^$]+?)\$\$/g, (_: string, math: string) => {
     try {
@@ -906,16 +920,35 @@ function renderLatexLine(line: string): string {
     } catch { return math }
   })
 
-  // $...$ → formule inline
-  result = result.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
-    try {
-      // @ts-ignore
-      return (window as any).katex?.renderToString(math.trim(), {throwOnError:false,displayMode:false}) ?? math
-    } catch { return math }
-  })
+  // $...$ → formule inline, avec appariement robuste (ignore les "$" isolés/mal formés
+  // au lieu de leur faire avaler la phrase suivante)
+  let out = '', i = 0
+  while (i < result.length) {
+    if (result[i] === '$') {
+      let j = result.indexOf('$', i + 1)
+      let matched = false
+      while (j !== -1) {
+        const content = result.slice(i + 1, j)
+        if (content.length > 0 && rllLooksLikeMath(content)) {
+          try {
+            // @ts-ignore
+            out += (window as any).katex?.renderToString(content.trim(), {throwOnError:false,displayMode:false}) ?? content
+          } catch { out += content }
+          i = j + 1
+          matched = true
+          break
+        }
+        j = result.indexOf('$', j + 1)
+      }
+      if (!matched) { i++ }  // "$" isolé -> jamais affiché (voir strip final)
+      continue
+    }
+    out += result[i]; i++
+  }
+  result = out
 
-  // Retirer les éventuels '$' résiduels (délimiteurs non appariés) pour ne jamais les afficher
-  result = result.replace(/\$/g, '')
+  // Restaurer les "\$" littéraux protégés puis retirer tout '$' résiduel (jamais affiché à l'écran)
+  result = result.replace(/\u0002/g, '').replace(/\$/g, '')
 
   return result
 }
@@ -1061,7 +1094,7 @@ function cleanLatex(s: string): string {
 
 function mathHtml(input: string): string {
   const SYM: Record<string, string> = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',varepsilon:'ε',zeta:'ζ',eta:'η',theta:'θ',vartheta:'ϑ',iota:'ι',kappa:'κ',lambda:'λ',mu:'µ',nu:'ν',xi:'ξ',pi:'π',varpi:'ϖ',rho:'ρ',varrho:'ϱ',sigma:'σ',varsigma:'ς',tau:'τ',upsilon:'υ',phi:'φ',varphi:'φ',chi:'χ',psi:'ψ',omega:'ω',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Xi:'Ξ',Pi:'Π',Sigma:'Σ',Upsilon:'Υ',Phi:'Φ',Psi:'Ψ',Omega:'Ω',infty:'∞',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',ast:'∗',star:'⋆',bullet:'•',leq:'≤',geq:'≥',le:'≤',ge:'≥',neq:'≠',ne:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',degree:'°',to:'→',rightarrow:'→',longrightarrow:'⟶',Rightarrow:'⇒',Leftrightarrow:'⇔',leftrightarrow:'↔',leftarrow:'←',longleftarrow:'⟵',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',notin:'∉',ni:'∋',subset:'⊂',supset:'⊃',subseteq:'⊆',supseteq:'⊇',cup:'∪',cap:'∩',emptyset:'∅',varnothing:'∅',setminus:'∖',forall:'∀',exists:'∃',nexists:'∄',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',oint:'∮',ldots:'…',cdots:'⋯',vdots:'⋮',dots:'…',prime:'′',checkmark:'✓',check:'✓',wedge:'∧',vee:'∨',land:'∧',lor:'∨',neg:'¬',lnot:'¬',oplus:'⊕',otimes:'⊗',ell:'ℓ',Re:'ℜ',Im:'ℑ',aleph:'ℵ',hbar:'ℏ',mid:'∣',nmid:'∤',cong2:'≅' }
-  const esc = (c: string): string => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c
+  const esc = (c: string): string => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '$' ? '' : c  // filet ultime : un "$" ne doit JAMAIS survivre au rendu mathHtml
   const brace = (s: string, i: number): [string, number] => { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '{') d++; else if (s[j] === '}') { d--; if (d === 0) return [s.slice(i + 1, j), j + 1] } } return [s.slice(i + 1), s.length] }
   const grp = (s: string, i: number): [string, number] => { while (i < s.length && s[i] === ' ') i++; if (s[i] === '{') return brace(s, i); return [s[i] || '', i + 1] }
   const render = (s: string): string => {
@@ -1485,6 +1518,28 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     }
     return out
   }
+  // Découpe le texte en blocs aux frontières structurelles (titre #, citation >, --- , liste -, tableau |,
+  // ligne vide, placeholder graphique) et n'extrait les formules $...$ QUE dans chaque bloc séparément.
+  // Empêche structurellement qu'un "$" mal fermé ne fasse fusionner un titre/une section avec une formule.
+  function extractInlineMathBlockAware(text: string, store: string[]): string {
+    const lines = text.split('\n')
+    const out: string[] = []
+    let buffer: string[] = []
+    const isBoundaryLine = (t: string): boolean =>
+      /^#{1,6}\s/.test(t) || /^>\s/.test(t) || /^-{3,}\s*$/.test(t) || /^[-*•]\s/.test(t) || /^\|/.test(t) ||
+      /^\[\[GRAPHIMG:/.test(t) || /^\[GRAPH:/.test(t)
+    const flush = () => {
+      if (buffer.length) { out.push(extractInlineMath(buffer.join('\n'), store)); buffer = [] }
+    }
+    for (const line of lines) {
+      const t = line.trim()
+      if (t === '') { flush(); out.push(line) }
+      else if (isBoundaryLine(t)) { flush(); out.push(extractInlineMath(line, store)) }
+      else { buffer.push(line) }
+    }
+    flush()
+    return out.join('\n')
+  }
   const inlineMathStore: string[] = []
 
   // Pré-rendre le LaTeX AVANT d'ouvrir la fenêtre (rendu natif via mathHtml, robuste au html2canvas)
@@ -1499,8 +1554,9 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     // extraire les blocs display $$...$$ (multi-lignes) pour les rendre en bloc centré
     const blocks: string[] = []
     collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_x: string, m: string) => { blocks.push(m); return `\n\u0001D${blocks.length - 1}\u0001\n` })
-    // extraire les formules inline $...$ sur le texte ENTIER (avant découpage en lignes)
-    collapsed = extractInlineMath(collapsed, inlineMathStore)
+    // extraire les formules inline $...$ PAR BLOC (jamais à travers un titre/---/liste/citation) :
+    // empêche un "$" mal fermé d'« avaler » un titre ### ou une section entière
+    collapsed = extractInlineMathBlockAware(collapsed, inlineMathStore)
     // restaurer les "\$" littéraux protégés
     collapsed = collapsed.replace(/\u0002/g, '$')
     return collapsed.split('\n').map((ln: string) => {
@@ -1540,6 +1596,7 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('- '))   return `<li>${ep(ln.slice(2))}</li>`
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
+    if (ln.trim() === '---')   return '<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0">'
     // ligne d'équation sans $ mais riche en LaTeX -> bloc math centré
     if (!ln.includes('$') && /\\(d?frac|sqrt|begin|overrightarrow|vec|overline|mathbb|widehat|hat|binom|sum|int|prod|lim|cdot|times|pi|alpha|beta|gamma|theta|lambda|Delta|leq|geq|neq|approx)\b/.test(ln)) {
       return `<div class="math-display">${mathHtml(ln)}</div>`
