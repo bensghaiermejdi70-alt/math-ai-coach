@@ -1089,9 +1089,13 @@ function mathHtml(input: string): string {
           if (name === 'end') { const em = /^\{[a-zA-Z]+\*?\}/.exec(s.slice(ni)); i = ni + (em ? em[0].length : 0); continue }
           if (name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac') { const [nu, i2] = grp(s, ni); const [de, i3] = grp(s, i2); out += '<span class="mfrac"><span class="mnum">' + render(nu) + '</span><span class="mden">' + render(de) + '</span></span>'; i = i3; continue }
           if (name === 'sqrt') { let j = ni; while (j < s.length && s[j] === ' ') j++; if (s[j] === '[') { const k = s.indexOf(']', j); if (k >= 0) j = k + 1 } const [b, i2] = grp(s, j); out += '<span class="msqrt"><span class="msqrt-sign">√</span><span class="msqrt-bar">' + render(b) + '</span></span>'; i = i2; continue }
-          if (name === 'overrightarrow' || name === 'vec' || name === 'overleftarrow') { const [b, i2] = grp(s, ni); out += '<span class="mvec"><span class="mvbar"></span><span class="mvhead"></span>' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'overrightarrow' || name === 'vec') { const [b, i2] = grp(s, ni); out += '<span class="mb-vec">' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'overleftarrow') { const [b, i2] = grp(s, ni); out += '<span class="mb-vec mb-vec-left">' + render(b) + '</span>'; i = i2; continue }
           if (name === 'boxed' || name === 'fbox') { const [b, i2] = grp(s, ni); out += '<span class="mboxed">' + render(b) + '</span>'; i = i2; continue }
-          if (name === 'overline') { const [b, i2] = grp(s, ni); out += '<span class="mover">' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'overline' || name === 'bar') { const [b, i2] = grp(s, ni); out += '<span class="mover">' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'widehat' || name === 'hat') { const [b, i2] = grp(s, ni); out += '<span class="mhat">' + render(b) + '</span>'; i = i2; continue }
+          if (name === 'binom' || name === 'choose') { const [a2, i2] = grp(s, ni); const [b2, i3] = grp(s, i2); out += '(<span class="mfrac mbinom"><span class="mnum">' + render(a2) + '</span><span class="mden">' + render(b2) + '</span></span>)'; i = i3; continue }
+          if (name === 'mathbb') { const [b, i2] = grp(s, ni); const BB: Record<string, string> = { R:'ℝ', N:'ℕ', Z:'ℤ', Q:'ℚ', C:'ℂ', K:'𝕂' }; out += (BB[b.trim()] ?? render(b)); i = i2; continue }
           if (name === 'text' || name === 'mathrm' || name === 'mathbf' || name === 'operatorname') { const [b, i2] = grp(s, ni); out += render(b); i = i2; continue }
           if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr') { i = ni; continue }
           if (SYM[name] !== undefined) { out += SYM[name]; i = ni; continue }
@@ -1185,9 +1189,14 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   .msqrt > .msqrt-sign{ display:inline-block; }
   .msqrt > .msqrt-bar{ display:inline-block; border-top:1.4px solid currentColor; padding:1px 3px 0; }
   .mover{ display:inline-block; border-top:1.4px solid currentColor; padding-top:1px; }
-  .mvec{ display:inline-block; position:relative; padding-top:6px; }
-  .mvec > .mvbar{ position:absolute; top:2px; left:1px; right:4px; border-top:1.3px solid currentColor; }
-  .mvec > .mvhead{ position:absolute; top:-1px; right:0; width:0; height:0; border-left:5px solid currentColor; border-top:3px solid transparent; border-bottom:3px solid transparent; }
+  .mb-vec{ position:relative; display:inline-block; white-space:nowrap; padding-top:.5em; margin:0 1px; }
+  .mb-vec::before{ content:''; position:absolute; left:0; right:.18em; top:.08em; border-top:1.4px solid currentColor; }
+  .mb-vec::after{ content:''; position:absolute; right:-.06em; top:-.06em; border-left:.4em solid currentColor; border-top:.22em solid transparent; border-bottom:.22em solid transparent; }
+  .mb-vec-left::before{ left:.18em; right:0; }
+  .mb-vec-left::after{ right:auto; left:-.06em; border-left:none; border-right:.4em solid currentColor; }
+  .mhat{ position:relative; display:inline-block; padding-top:.7em; }
+  .mhat::before{ content:'⌢'; position:absolute; left:50%; top:-.1em; transform:translateX(-50%); font-size:.8em; line-height:1; }
+  .mfrac.mbinom > .mnum{ border-bottom:none; padding-bottom:0; }
   .mboxed{ display:inline-block; border:1.2px solid currentColor; border-radius:3px; padding:1px 6px; margin:0 2px; }
   sup{ font-size:.72em; vertical-align:super; line-height:0; }
   sub{ font-size:.72em; vertical-align:sub; line-height:0; }
@@ -1433,17 +1442,67 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
       return parseGraphSegments(sol).map(s => s.type === 'graph' ? `\n[[GRAPHIMG:${++gi}]]\n` : s.content).join('')
     } catch { return sol }
   }
-  // Pré-rendre le LaTeX avec KaTeX AVANT d'ouvrir la fenêtre
-  // (utilise le KaTeX déjà chargé dans la page principale)
+  // ── Détection robuste : ce contenu entre $...$ ressemble-t-il vraiment à des maths ? ──
+  // (évite qu'un "$" isolé — devise, faute de frappe IA — ne fasse "avaler" une phrase entière
+  //  comme formule, et évite qu'un "$" résiduel ne s'affiche jamais tel quel dans le PDF)
+  const FR_STOPWORDS = /\b(pour|avec|dans|donc|soit|sont|être|alors|ainsi|car|dont|produit|prix|dinars?|euros?|client|remise|solde|seulement|toutefois)\b/i
+  function looksLikeMath(m: string): boolean {
+    const t = m.trim()
+    if (!t) return false
+    if (t.length > 240) return false
+    if (/[.!?]\s+[A-ZÀ-Ý]/.test(t)) return false   // ponctuation de fin de phrase à l'intérieur
+    if (/\n\s*\n/.test(t)) return false             // ligne vide à l'intérieur -> pas une formule
+    if ((t.match(/\n/g) || []).length > 3) return false
+    // ignorer \text{...}/\mathrm{...} (unités légitimes en français) avant le test anti-prose
+    const withoutText = t.replace(/\\(?:text|mathrm|operatorname)\s*\{[^}]*\}/g, '')
+    if (FR_STOPWORDS.test(withoutText)) return false     // mots de prose française -> pas une formule
+    return true
+  }
+  // Extrait les formules $...$ au niveau du PARAGRAPHE ENTIER (pas ligne par ligne) :
+  // supporte les formules réparties sur plusieurs lignes et évite les mauvais appariements
+  // quand un "$" isolé (devise, coquille) traîne dans le texte.
+  function extractInlineMath(text: string, store: string[]): string {
+    let out = '', i = 0
+    while (i < text.length) {
+      if (text[i] === '$') {
+        let j = text.indexOf('$', i + 1)
+        let matched = false
+        while (j !== -1) {
+          const content = text.slice(i + 1, j)
+          if (content.length > 0 && looksLikeMath(content)) {
+            store.push(mathHtml(content))
+            out += `\uE000${store.length - 1}\uE000`
+            i = j + 1
+            matched = true
+            break
+          }
+          j = text.indexOf('$', j + 1)
+        }
+        if (!matched) { out += text[i]; i++ }
+        continue
+      }
+      out += text[i]; i++
+    }
+    return out
+  }
+  const inlineMathStore: string[] = []
+
+  // Pré-rendre le LaTeX AVANT d'ouvrir la fenêtre (rendu natif via mathHtml, robuste au html2canvas)
   function preRenderLatex(sol: string): string {
     let collapsed = collapseGraphBlocks(sol)
     // \[ \] -> $$ , \( \) -> $
     collapsed = collapsed
       .replace(/\\\[/g, () => '$$').replace(/\\\]/g, () => '$$')
       .replace(/\\\(/g, () => '$').replace(/\\\)/g, () => '$')
+    // Protéger les "\$" échappés (montant en devise voulu littéralement) avant toute extraction
+    collapsed = collapsed.replace(/\\\$/g, '\u0002')
     // extraire les blocs display $$...$$ (multi-lignes) pour les rendre en bloc centré
     const blocks: string[] = []
     collapsed = collapsed.replace(/\$\$([\s\S]+?)\$\$/g, (_x: string, m: string) => { blocks.push(m); return `\n\u0001D${blocks.length - 1}\u0001\n` })
+    // extraire les formules inline $...$ sur le texte ENTIER (avant découpage en lignes)
+    collapsed = extractInlineMath(collapsed, inlineMathStore)
+    // restaurer les "\$" littéraux protégés
+    collapsed = collapsed.replace(/\u0002/g, '$')
     return collapsed.split('\n').map((ln: string) => {
       const d = ln.trim().match(/^\u0001D(\d+)\u0001$/)
       if (d) return `<div class="math-display">${mathHtml(blocks[Number(d[1])] || '')}</div>`
@@ -1452,17 +1511,18 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
   }
 
   function convertLineForPdf(ln: string): string {
-    // Rendu math NATIF (fractions empilées, racines, matrices) via mathHtml ; prose nettoyée par cleanLatex.
+    // Rendu math NATIF (fractions empilées, racines, matrices, vecteurs, ensembles) via mathHtml ;
+    // prose nettoyée par cleanLatex. Les formules $...$ ont déjà été extraites en amont (paragraphe entier).
     function ep(s: string): string {
-      const math: string[] = []
-      let t = s.replace(/\$([^$\n]+?)\$/g, (_x: string, m: string) => { math.push(mathHtml(m)); return `\uE000${math.length - 1}\uE000` })
-      // vecteurs et boxed BRUTS (hors $) -> mathHtml (flèche CSS, jamais de caractère combinant tofu)
-      t = t.replace(/\\(?:overrightarrow|overleftarrow|vec)\s*\{([^{}]*)\}/g, (_x: string, m: string) => { math.push(mathHtml('\\overrightarrow{' + m + '}')); return `\uE000${math.length - 1}\uE000` })
-      t = t.replace(/\\boxed\s*\{([^{}]*)\}/g, (_x: string, m: string) => { math.push(mathHtml('\\boxed{' + m + '}')); return `\uE000${math.length - 1}\uE000` })
+      const localMath: string[] = []
+      // vecteurs et boxed BRUTS (hors $, cas rare où l'IA oublie les délimiteurs) -> mathHtml
+      let t = s.replace(/\\(?:overrightarrow|overleftarrow|vec)\s*\{([^{}]*)\}/g, (_x: string, m: string) => { localMath.push(mathHtml('\\overrightarrow{' + m + '}')); return `\uE001${localMath.length - 1}\uE001` })
+      t = t.replace(/\\boxed\s*\{([^{}]*)\}/g, (_x: string, m: string) => { localMath.push(mathHtml('\\boxed{' + m + '}')); return `\uE001${localMath.length - 1}\uE001` })
       t = cleanLatex(t).replace(/\$/g, '')
       t = t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      t = t.replace(/\uE000(\d+)\uE000/g, (_x: string, i: string) => '<span class="minline">' + (math[Number(i)] || '') + '</span>')
+      t = t.replace(/\uE000(\d+)\uE000/g, (_x: string, i: string) => '<span class="minline">' + (inlineMathStore[Number(i)] || '') + '</span>')
+      t = t.replace(/\uE001(\d+)\uE001/g, (_x: string, i: string) => '<span class="minline">' + (localMath[Number(i)] || '') + '</span>')
       return t
     }
     const gimg = ln.match(/^\[\[GRAPHIMG:(\d+)\]\]/)
@@ -1481,7 +1541,7 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
     if (ln.startsWith('|'))    return `<div class="tbl-row">${ep(ln)}</div>`
     if (!ln.trim())            return '<div class="spacer"></div>'
     // ligne d'équation sans $ mais riche en LaTeX -> bloc math centré
-    if (!ln.includes('$') && /\\(d?frac|sqrt|begin|overrightarrow|vec|overline|sum|int|prod|lim|cdot|times|pi|alpha|beta|gamma|theta|lambda|Delta|leq|geq|neq|approx)\b/.test(ln)) {
+    if (!ln.includes('$') && /\\(d?frac|sqrt|begin|overrightarrow|vec|overline|mathbb|widehat|hat|binom|sum|int|prod|lim|cdot|times|pi|alpha|beta|gamma|theta|lambda|Delta|leq|geq|neq|approx)\b/.test(ln)) {
       return `<div class="math-display">${mathHtml(ln)}</div>`
     }
     return `<p>${ep(ln)}</p>`
