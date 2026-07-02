@@ -2452,6 +2452,42 @@ type AnneeData  = { year: number; exercices: ExData[]; note?: string }
 // ════════════════════════════════════════════════════════════════
 const linksGenerale: Record<number, AnneeLinks> = {
 
+  // ─── 2026 ───────────────────────────────────────────────────── (source sujetdebac.fr, session juin 2026)
+  2026: { sessions: [
+    { label:'Métropole — Jour 1 · 16 juin 2026', flag:'🇫🇷',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-metropole-1-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-metropole-1-corrige.pdf` },
+    { label:'Métropole — Jour 2 · 17 juin 2026', flag:'🇫🇷',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-metropole-2-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-metropole-2-corrige.pdf` },
+    { label:'Amérique du Nord — Jour 1', flag:'🌎',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-amerique-nord-1-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-amerique-nord-1-corrige.pdf` },
+    { label:'Amérique du Nord — Jour 2', flag:'🌎',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-amerique-nord-2-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-amerique-nord-2-corrige.pdf` },
+    { label:'Asie — Jour 1', flag:'🌏',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-asie-1-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-asie-1-corrige.pdf` },
+    { label:'Asie — Jour 2', flag:'🌏',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-asie-2-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-asie-2-corrige.pdf` },
+    { label:'Centres étrangers — Jour 1', flag:'🌍',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-centres-etranger-1-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-centres-etranger-1-corrige.pdf` },
+    { label:'Centres étrangers — Jour 2', flag:'🌍',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-centres-etranger-2-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-centres-etranger-2-corrige.pdf` },
+    { label:'Antilles-Guyane — Jour 1', flag:'🌴',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-antilles-guyane-1-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane — Jour 2', flag:'🌴',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-antilles-guyane-2-sujet-officiel.pdf` },
+    { label:'Polynésie — Jour 1', flag:'🏝️',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-polynesie-1-sujet-officiel.pdf` },
+    { label:'Polynésie — Jour 2', flag:'🏝️',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-polynesie-2-sujet-officiel.pdf` },
+  ]},
+
   // ─── 2025 ─────────────────────────────────────────────────────
   2025: { sessions: [
     // Métropole juin
@@ -2668,6 +2704,12 @@ const linksGenerale: Record<number, AnneeLinks> = {
 //  DONNÉES EXERCICES — Terminale Générale
 // ════════════════════════════════════════════════════════════════
 const dataGenerale: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:"Ex 1 — Probabilités", theme:"Réservations de familles sur une traversée en bateau : probabilités conditionnelles, variables aléatoires, coûts avec réduction, estimation sur un échantillon.", pts:5},
+    {titre:"Ex 2 — Vrai/Faux", theme:"Affirmations de géométrie dans l'espace à justifier, puis dénombrement (escape game, digicodes).", pts:5},
+    {titre:"Ex 3 — Éq. diff. · Suites", theme:"Température d'une pièce avec chauffage automatique : équation différentielle (chauffage), suite et programme Python (refroidissement).", pts:5},
+    {titre:"Ex 4 — Analyse · ln", theme:"Fonction avec logarithme lue sur un graphique : paramètres, variations, asymptote, résolution d'équation, calcul d'aire.", pts:5},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:"Ex 1 — Analyse · ln", theme:'f(x)=x[2(lnx)²−3lnx+2] : dérivée, convexité, tangente. Python : seuil sur suite récurrente. Modèle posidonie (bactéries marines).', pts:5},
     {titre:"Ex 2 — Probabilités",theme:'Loi binomiale B(100;0,0714), espérance 7,14. Inégalité de Bienaymé-Tchebychev. Détermination rang N minimal.', pts:5},
@@ -2705,6 +2747,14 @@ const dataGenerale: AnneeData[] = [
 //  URLs : page apmep intégrale + sujets directs trouvés
 // ════════════════════════════════════════════════════════════════
 const linksTechno: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ───────────────────────────────────────────────────── (sujetdebac.fr, session juin 2026)
+  2026: { sessions: [
+    { label:'STI2D — Métropole · 16 juin 2026', flag:'⚙️',
+      sujet:      `${SD}/2026/sti2d-spe-physique-chimie-mathematiques-2026-metropole-sujet-officiel.pdf`,
+      correction: `${SD}/2026/sti2d-spe-physique-chimie-mathematiques-2026-metropole-corrige.pdf` },
+  ]},
+
   2025: { sessions: [
     { label:'STI2D — Métropole · 17 juin 2025', flag:'⚙️',
       sujet:      `${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-sujet-officiel.pdf`,
@@ -2754,6 +2804,17 @@ const linksTechno: Record<number, AnneeLinks> = {
 // NOTE : Maths Expertes = option bac général (pas de PDF distinct pour 2024/2025)
 // Les sujets 2021/2022/2023 étaient en mars (avant réforme juin 2024)
 const linksExpertes: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ───────────────────────────────────────────────────── (sujets Métropole spé maths, session juin 2026)
+  2026: { sessions: [
+    { label:'Métropole — Jour 1 · 16 juin 2026', flag:'⭐',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-metropole-1-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-metropole-1-corrige.pdf` },
+    { label:'Métropole — Jour 2 · 17 juin 2026', flag:'⭐',
+      sujet:      `${SD}/2026/spe-mathematiques-2026-metropole-2-sujet-officiel.pdf`,
+      correction: `${SD}/2026/spe-mathematiques-2026-metropole-2-corrige.pdf` },
+  ]},
+
   2025: { sessions: [
     { label:'Maths Expertes — Métropole J1 · 17 juin 2025', flag:'⭐',
       sujet:      `${AP}/Metro_J1_17_06_2025_DV.pdf`,
@@ -2809,6 +2870,12 @@ const linksExpertes: Record<number, AnneeLinks> = {
 //  EXERCICES PAR ANNÉE — Terminale Techno + Expertes
 // ════════════════════════════════════════════════════════════════
 const dataTechno: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:"Ex 1 — Refroidir une boisson", theme:"Glaçons de matières variées (plastique, acier inoxydable, granit) comparés aux glaçons d'eau : transferts thermiques, énergie.", pts:5},
+    {titre:"Ex 2 — Tiny House", theme:"Étude d'une mini-maison compacte : isolation, énergie, matériaux.", pts:5},
+    {titre:"Ex 3 — Mathématiques", theme:"Quatre questions indépendantes de mathématiques (suites, fonctions, calcul).", pts:4},
+    {titre:"Ex 4 — Pile à combustible", theme:"Rouler avec une pile à combustible : énergie, rendement, chimie.", pts:6},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:"Ex 1 — Suites (STMG)",       theme:'Suites géométriques, intérêts composés, valeur acquise, mensualités. Algorithme de seuil.', pts:7},
     {titre:"Ex 2 — Probabilités (STMG)", theme:'Probabilités conditionnelles, arbres, variable aléatoire X, espérance E(X). Binomiale B(n,p).', pts:6},
@@ -2837,6 +2904,12 @@ const dataTechno: AnneeData[] = [
 ]
 
 const dataExpertes: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:"Ex 1 — Probabilités", theme:"Réservations de familles sur une traversée en bateau : probabilités conditionnelles, variables aléatoires (Métropole J1 2026).", pts:5},
+    {titre:"Ex 2 — Géo. espace / Dénombrement", theme:"Vrai-faux : géométrie dans l'espace, puis dénombrement (escape game, digicodes).", pts:5},
+    {titre:"Ex 3 — Éq. diff. · Suites", theme:"Température d'une pièce avec chauffage : équation différentielle, suite et Python.", pts:5},
+    {titre:"Ex 4 — Analyse · ln", theme:"Étude d'une fonction avec logarithme : variations, asymptote, aire.", pts:5},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:"Ex 1 — Arithmétique", theme:'PGCD (Euclide). Bézout : au+bv=PGCD(a,b). Équations diophantiennes ax+by=c dans ℤ.', pts:7},
     {titre:"Ex 2 — Complexes",   theme:'Forme exponentielle reⁱᶿ, Euler : eⁱᶿ=cosθ+isinθ, De Moivre, racines n-ièmes. Polygones.', pts:7},
@@ -5588,6 +5661,20 @@ Il faut contrôler au moins 1112 pièces.`
 
 const linksPhysiqueChimie: Record<number, AnneeLinks> = {
 
+  // ─── 2026 ─ 10 sujets (sujetdebac.fr, corrigés à venir) ──────
+  2026: { sessions: [
+    { label:'Métropole France 1 · 16 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-physique-chimie-2026-metropole-1-sujet-officiel.pdf` },
+    { label:'Métropole France 2 · 17 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-physique-chimie-2026-metropole-2-sujet-officiel.pdf` },
+    { label:'Amérique du Nord 1 · 20 mai 2026', flag:'🌎', sujet:`${SDB}/2026/spe-physique-chimie-2026-amerique-nord-1-sujet-officiel.pdf` },
+    { label:'Amérique du Nord 2 · mai 2026', flag:'🌎', sujet:`${SDB}/2026/spe-physique-chimie-2026-amerique-nord-2-sujet-officiel.pdf` },
+    { label:'Asie 1 · 9 juin 2026', flag:'🌏', sujet:`${SDB}/2026/spe-physique-chimie-2026-asie-1-sujet-officiel.pdf` },
+    { label:'Asie 2 · juin 2026', flag:'🌏', sujet:`${SDB}/2026/spe-physique-chimie-2026-asie-2-sujet-officiel.pdf` },
+    { label:'Centres étrangers 1 · juin 2026', flag:'🌍', sujet:`${SDB}/2026/spe-physique-chimie-2026-centres-etranger-1-sujet-officiel.pdf` },
+    { label:'Centres étrangers 2 · juin 2026', flag:'🌍', sujet:`${SDB}/2026/spe-physique-chimie-2026-centres-etranger-2-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 1 · juin 2026', flag:'🌴', sujet:`${SDB}/2026/spe-physique-chimie-2026-antilles-guyane-1-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 2 · juin 2026', flag:'🌴', sujet:`${SDB}/2026/spe-physique-chimie-2026-antilles-guyane-2-sujet-officiel.pdf` },
+  ]},
+
   // ─── 2025 ─ 19 sujets · 12 corrections ──────────────────────
   2025: { sessions: [
     { label:'Métropole France 1 · 17 juin 2025', flag:'🇫🇷',
@@ -5818,6 +5905,17 @@ const linksPhysiqueChimie: Record<number, AnneeLinks> = {
 
 // ── Exercices par année — PC Terminale (thèmes réels vérifiés) ──
 const dataPhysiqueChimie: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    { titre:'Ex 1 — Physique · Lave-linge',
+      theme:"Étude d'un lave-linge : remplissage de la cuve et chauffage de l'eau, durées des phases du cycle de lavage.",
+      pts:7 },
+    { titre:'Ex 2 — Chimie · Odeur de jasmin',
+      theme:"Huile essentielle de jasmin et éthanoate de benzyle : identification, synthèse organique, analyse spectroscopique.",
+      pts:7 },
+    { titre:'Ex 3 — Physique',
+      theme:"Troisième exercice (mécanique, ondes ou énergie) selon le centre d'examen.",
+      pts:6 },
+  ]},
   { year:2025, note:'🆕', exercices:[
     { titre:'Ex 1 — Chimie · Indicateur coloré & Titrages',
       theme:'Emballage intelligent avec bleu de bromophénol (BBP). Indicateur acide-base, domaine de virage, pKa. Titrage pH-métrique et spectrophotométrique.',
@@ -7674,6 +7772,24 @@ const CHAPITRES_PREMIERE_PC: ChapitreData[] = [
 // ════════════════════════════════════════════════════════════════
 
 const linksFrancaisTerminale: Record<number, AnneeLinks> = {
+  // ─── 2026 ─── Métropole (sujetdebac.fr) ──────────────────────────────────────
+  2026: { sessions: [
+    { label:'Philosophie · Métropole France · 15 juin 2026', flag:'🇫🇷',
+      sujet:`${SDB}/2026/philosophie-2026-metropole-sujet-officiel.pdf`,
+      correction:`${SDB}/2026/philosophie-2026-metropole-corrige.pdf` },
+    { label:'Philosophie · Amérique du Nord · 19 mai 2026', flag:'🌎',
+      sujet:`${SDB}/2026/philosophie-2026-amerique-nord-sujet-officiel.pdf`,
+      correction:`${SDB}/2026/philosophie-2026-amerique-nord-corrige.pdf` },
+    { label:'Philosophie · Asie · 8 juin 2026', flag:'🌏',
+      sujet:`${SDB}/2026/philosophie-2026-asie-sujet-officiel.pdf`,
+      correction:`${SDB}/2026/philosophie-2026-asie-corrige.pdf` },
+    { label:'Philosophie · Centres étrangers Afrique · 9 juin 2026', flag:'🌍',
+      sujet:`${SDB}/2026/philosophie-2026-centres-etranger-sujet-officiel.pdf`,
+      correction:`${SDB}/2026/philosophie-2026-centres-etranger-corrige.pdf` },
+    { label:'Philosophie · Antilles-Guyane · juin 2026', flag:'🌴',
+      sujet:`${SDB}/2026/philosophie-2026-antilles-guyane-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
   // ─── 2025 ─── URLs vérifiées 200 OK ──────────────────────────────────────────
   2025: { sessions: [
     { label:'Philosophie · Métropole France · 16 juin 2025', flag:'🇫🇷',
@@ -7724,6 +7840,11 @@ const linksFrancaisTerminale: Record<number, AnneeLinks> = {
   ]},
 }
 const dataFrancaisTerminale: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Dissertation 1', theme:"Avons-nous la maîtrise de nos paroles ? · 4h · Coef. 8", pts:20},
+    {titre:'Dissertation 2', theme:"Peut-on être heureux quand les autres ne le sont pas ?", pts:20},
+    {titre:'Explication de texte', theme:"Friedrich Nietzsche, Humain, trop humain (1878) · sciences, raison, vérité", pts:20},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:'Dissertation — Série Générale', theme:'Sujet type : "La conscience est-elle un obstacle à la liberté ?" · Sartre, Freud, Kant · 4h · Coef. 8', pts:20},
     {titre:'Explication de texte — Série Générale', theme:'Extrait philosophique au programme (Descartes, Hegel, Marx, Spinoza) · Analyse linéaire et portée philosophique', pts:20},
@@ -8569,6 +8690,25 @@ const CHAPITRES_PREMIERE_FRANCAIS: ChapitreData[] = [
   },
 ]
 
+const dataFrancaisPremiere: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Commentaire de texte', theme:"Louise d'Épinay, Histoire de Madame de Montbrillant (1818) — objet d'étude : la littérature d'idées du XVIe au XVIIIe siècle.", pts:20},
+    {titre:'Dissertation — Sujet A', theme:"Arthur Rimbaud, Cahier de Douai : est-ce seulement par la révolte que Rimbaud s'émancipe ? (parcours : émancipations créatrices)", pts:20},
+    {titre:'Dissertation — Sujet B', theme:"Francis Ponge, La rage de l'expression : Ponge, un « mécanicien » qui cherche à « réparer, articuler, faire fonctionner » ?", pts:20},
+  ]},
+]
+
+const linksFrancaisPremiere: Record<number, AnneeLinks> = {
+  // ─── 2026 ─ Épreuve anticipée de français (EAF), Métropole, voie générale ─────
+  2026: { sessions: [
+    { label:'EAF · Métropole · Voie générale · 11 juin 2026', flag:'🇫🇷',
+      sujet:`${SDB}/2026/francais-premiere-2026-metropole-sujet-officiel.pdf` },
+    { label:'EAF · Asie', flag:'🌏',
+      sujet:`${SDB}/2026/francais-premiere-2026-asie-sujet-officiel.pdf`,
+      correction:`${SDB}/2026/francais-premiere-2026-asie-corrige.pdf` },
+  ]},
+}
+
 const SECTIONS_FRANCAIS: {
   key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
   data:AnneeData[]; links:Record<number,AnneeLinks>;
@@ -8579,8 +8719,8 @@ const SECTIONS_FRANCAIS: {
     data:dataFrancaisTerminale, links:linksFrancaisTerminale },
   { key:'premiere-francais',
     label:'Première · EAF', icon:'📗', color:'#10b981', coeff:'EAF coef.5+2',
-    desc:'Français Première · EAF · 5 objets d\'étude · Commentaire · Dissertation · Analyse linéaire · Grand Oral · 100 exercices corrigés',
-    data:[], links:{} as Record<number,AnneeLinks> },
+    desc:'🆕 Épreuve anticipée de français 2026 (Métropole) · Commentaire · Dissertation · 5 objets d\'étude · Grand Oral · 100 exercices corrigés',
+    data:dataFrancaisPremiere, links:linksFrancaisPremiere },
   { key:'seconde-francais',
     label:'Seconde · Français', icon:'📘', color:'#ec4899', coeff:'4h/semaine',
     desc:'Français Seconde · 4 objets d\'étude · Poésie · Littérature d\'idées · Roman · Théâtre · 76 exercices corrigés',
@@ -8595,6 +8735,11 @@ type SKey = 'terminale-nsi' | 'premiere-nsi' | 'seconde-snt' | 'terminale-genera
 //  URLs : sujetdebac.fr · 2021–2025
 // ════════════════════════════════════════════════════════════════
 const dataSTI2DPC: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Ex 1 — Refroidir une boisson', theme:"Glaçons de matières variées : transferts thermiques, énergie.", pts:7},
+    {titre:'Ex 2 — Tiny House', theme:"Étude énergétique d'une mini-maison compacte : isolation, matériaux.", pts:7},
+    {titre:'Ex 3 — Mathématiques', theme:"Questions indépendantes (suites, fonctions, calcul).", pts:6},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:'PC — Oscillations électriques', theme:"Oscillations libres circuit LC. Énergie électromagnétique. Période propre T₀=2π√(LC).", pts:7},
     {titre:'PC — Ondes mécaniques', theme:"Ondes progressives sinusoïdales. Célérité, longueur onde, diffraction.", pts:7},
@@ -8623,6 +8768,14 @@ const dataSTI2DPC: AnneeData[] = [
 ]
 
 const linksSTI2DPC: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ─ Métropole (sujetdebac.fr) ────────────────────────
+  2026: { sessions: [
+    { label:'STI2D — Métropole · 16 juin 2026', flag:'⚙️',
+      sujet:`${SD}/2026/sti2d-spe-physique-chimie-mathematiques-2026-metropole-sujet-officiel.pdf`,
+      correction:`${SD}/2026/sti2d-spe-physique-chimie-mathematiques-2026-metropole-corrige.pdf` },
+  ]},
+
   2025: { sessions: [
     { label:'STI2D — Métropole · 17 juin 2025', flag:'⚙️',
       sujet:`${SD}/2025/sti2d-spe-physique-chimie-mathematiques-2025-metropole-sujet-officiel.pdf`,
@@ -8666,6 +8819,10 @@ const linksSTI2DPC: Record<number, AnneeLinks> = {
 }
 
 const dataSTESPC: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Partie 1 — Chimie & Biochimie', theme:"Espèces chimiques et biomolécules en lien avec la santé : analyses, réactions.", pts:10},
+    {titre:'Partie 2 — Physiopathologie humaine', theme:"Étude d'une situation clinique : mécanismes physiologiques et pathologiques.", pts:10},
+  ]},
   { year:2025, note:'🆕', exercices:[
     {titre:'Partie Chimie — CBPH', theme:"Alimentation & Santé : molécules organiques, réactions chimiques biologiques, pH des fluides corporels.", pts:10},
     {titre:'Partie Biologie — CBPH', theme:"Défense de l'organisme : immunité, microbiologie, analyses médicales, physiologie humaine.", pts:10},
@@ -8692,6 +8849,14 @@ const dataSTESPC: AnneeData[] = [
 ]
 
 const linksSTESPC: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ─ Métropole (sujetdebac.fr) ────────────────────────
+  2026: { sessions: [
+    { label:'ST2S · Spé CBPH · Métropole · juin 2026', flag:'🏥',
+      sujet:`https://www.sujetdebac.fr/annales-pdf/2026/st2s-spe-chimie-bio-physiopat-humaines-2026-metropole-sujet-officiel.pdf`,
+      correction:undefined },
+  ]},
+
   2025: { sessions: [
     { label:'ST2S · Spé CBPH · Métropole · juin 2025', flag:'🏥',
       sujet:`https://www.sujetdebac.fr/annales-pdf/2025/st2s-spe-chimie-bio-physiopat-humaines-2025-metropole-sujet-officiel.pdf`,
@@ -8765,6 +8930,28 @@ const SDI = 'https://www.annabac.com/annales-bac/annales-pdf'
 type NSILinks = Record<number, Record<string, {sujet:string; correction?:string; label?:string}[]>>
 
 const linksNSITerminale: NSILinks = {
+  // ─── 2026 ─ 9 sujets (sujetdebac.fr, corrigés à venir) ────────────
+  2026: {
+    'Métropole — Juin': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-metropole-1-sujet-officiel.pdf', label:'26-NSIJ1ME1 · Jour 1 · 16 juin 2026' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-metropole-2-sujet-officiel.pdf', label:'26-NSIJ2ME1 · Jour 2 · 17 juin 2026' },
+    ],
+    'Amérique du Nord': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-amerique-nord-1-sujet-officiel.pdf', label:'Jour 1 · mai 2026' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-amerique-nord-2-sujet-officiel.pdf', label:'Jour 2 · mai 2026' },
+    ],
+    'Asie': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-asie-1-sujet-officiel.pdf', label:'Jour 1 · 9 juin 2026' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-asie-2-sujet-officiel.pdf', label:'Jour 2 · juin 2026' },
+    ],
+    'Centres étrangers Afrique': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-centres-etranger-1-sujet-officiel.pdf', label:'Groupe 1 · Jour 1 · 10 juin 2026' },
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-centres-etranger-2-sujet-officiel.pdf', label:'Groupe 1 · Jour 2 · juin 2026' },
+    ],
+    'Antilles-Guyane': [
+      { sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-numerique-informatique-2026-antilles-guyane-1-sujet-officiel.pdf', label:'Jour 1 · juin 2026' },
+    ],
+  },
   // ─── 2025 ─────────────────────────────────────────────────────────
   2025: {
     'Métropole — Juin': [
@@ -8837,6 +9024,7 @@ const linksNSIPremiereAnticipee: NSILinks = {
 }
 
 const dataNSITerminale: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[{titre:'Exercice 1 — Réseaux & Sécurité',theme:'Réseaux, protocoles de routage, sécurisation des communications',pts:6},{titre:'Exercice 2 — Binaire, Graphes, Récursivité',theme:'Représentation binaire, graphes, algorithmes récursifs',pts:6},{titre:'Exercice 3 — Bases de données & Structures',theme:'SQL, files, graphes',pts:8}]},
   { year:2025, exercices:[{titre:'Exercice 1 — Structures de données',theme:'Piles, Files, Arbres binaires',pts:7},{titre:'Exercice 2 — Bases de données SQL',theme:'JOIN, GROUP BY, HAVING, sous-requêtes',pts:6},{titre:'Exercice 3 — Algorithmique Python',theme:'Tri fusion, récursivité, complexité',pts:7}]},
   { year:2024, exercices:[{titre:'Exercice 1 — Graphes',theme:'DFS / BFS — parcours et plus court chemin',pts:7},{titre:'Exercice 2 — SQL',theme:'Normalisation, jointures, sous-requêtes',pts:6},{titre:'Exercice 3 — POO Python',theme:'Classes, héritage, polymorphisme',pts:7}]},
   { year:2023, exercices:[{titre:'Exercice 1 — Récursivité',theme:'Arbres binaires, parcours préfixe/infixe',pts:7},{titre:'Exercice 2 — Bases de données',theme:'Modèle E/A, SQL SELECT avec jointures',pts:6},{titre:'Exercice 3 — Algorithmes de tri',theme:'Tri fusion, complexité Big-O',pts:7}]},
@@ -9208,6 +9396,15 @@ const CHAPITRES_PREMIERE_NSI: ChapitreData[] = [
 
 const linksAnglaisTerminale: Record<number, AnneeLinks> = {
 
+  // ─── 2026 — 5 centres (sujetdebac.fr) ─────────────────────────
+  2026: { sessions: [
+    { label:'LLCER Anglais · Métropole · 17 juin 2026', flag:'🇫🇷', sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-llcer-anglais-2026-metropole-sujet-officiel.pdf' },
+    { label:'LLCER Anglais · Amérique du Nord · 21 mai 2026', flag:'🌎', sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-llcer-anglais-2026-amerique-nord-sujet-officiel.pdf' },
+    { label:'LLCER Anglais · Asie', flag:'🌏', sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-llcer-anglais-2026-asie-sujet-officiel.pdf' },
+    { label:'LLCER Anglais · Centres étrangers Afrique', flag:'🌍', sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-llcer-anglais-2026-centres-etrangers-sujet-officiel.pdf' },
+    { label:'LLCER Anglais · Antilles-Guyane', flag:'🌴', sujet:'https://www.sujetdebac.fr/annales-pdf/2026/spe-llcer-anglais-2026-antilles-guyane-sujet-officiel.pdf' },
+  ]},
+
   // ─── 2025 — 9 centres vérifiés ✅ ────────────────────────────
   2025: { sessions: [
     { label:'LLCER Anglais · Métropole · 18 juin 2025', flag:'🇫🇷',
@@ -9316,6 +9513,11 @@ const linksAnglaisPremiereAnticipee: Record<number, AnneeLinks> = {
 }
 
 const dataAnglaisTerminale: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    { titre:'Synthèse — Sujet 1', theme:"Voyages, territoires, frontières — Dances with Wolves, My Ántonia, The Godfather II", pts:16 },
+    { titre:'Synthèse — Sujet 2', theme:"Arts et débats d'idées — Shakespeare's presence and heritage today", pts:16 },
+    { titre:'Traduction / Transposition', theme:"Traduction ou transposition d'un passage du dossier", pts:4 },
+  ]},
   { year:2025, exercices:[
     { titre:'Synthèse — Sujet 1', theme:'Expression et construction de soi — Women\'s place in American society', pts:16 },
     { titre:'Synthèse — Sujet 2', theme:'Voyages, territoires — Impact of industrialization in the UK', pts:16 },
@@ -9351,6 +9553,21 @@ const dataAnglaisPremiereAnticipee: AnneeData[] = [
 //  URLs Terminale vérifiées 200 OK sur sujetdebac.fr
 // ════════════════════════════════════════════════════════════════
 const linksTerminaleSVT: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ─ 10 sujets · 2 corrigés (sujetdebac.fr) ──────────
+  2026: { sessions: [
+    { label:'Métropole France 1 · 16 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-metropole-1-sujet-officiel.pdf`, correction:`${SDB}/2026/spe-sciences-vie-terre-2026-metropole-1-corrige.pdf` },
+    { label:'Métropole France 2 · 17 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-metropole-2-sujet-officiel.pdf`, correction:`${SDB}/2026/spe-sciences-vie-terre-2026-metropole-2-corrige.pdf` },
+    { label:'Amérique du Nord 1 · mai 2026', flag:'🌎', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-amerique-nord-1-sujet-officiel.pdf` },
+    { label:'Amérique du Nord 2 · mai 2026', flag:'🌎', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-amerique-nord-2-sujet-officiel.pdf` },
+    { label:'Asie 1 · juin 2026', flag:'🌏', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-asie-1-sujet-officiel.pdf` },
+    { label:'Asie 2 · juin 2026', flag:'🌏', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-asie-2-sujet-officiel.pdf` },
+    { label:'Centres étrangers Afrique 1 · 11 juin 2026', flag:'🌍', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-centres-etranger-1-sujet-officiel.pdf` },
+    { label:'Centres étrangers Afrique 2 · 11 juin 2026', flag:'🌍', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-centres-etranger-2-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 1 · juin 2026', flag:'🌴', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-antilles-guyane-1-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 2 · juin 2026', flag:'🌴', sujet:`${SDB}/2026/spe-sciences-vie-terre-2026-antilles-guyane-2-sujet-officiel.pdf` },
+  ]},
+
   2025: { sessions: [
     { label:'Métropole France 1 · juin 2025', flag:'🇫🇷', sujet:`${SDB}/2025/spe-sciences-vie-terre-2025-metropole-1-sujet-officiel.pdf`, correction:`${SDB}/2025/spe-sciences-vie-terre-2025-metropole-1-corrige.pdf` },
     { label:'Métropole France 2 · juin 2025', flag:'🇫🇷', sujet:`${SDB}/2025/spe-sciences-vie-terre-2025-metropole-2-sujet-officiel.pdf`, correction:`${SDB}/2025/spe-sciences-vie-terre-2025-metropole-2-corrige.pdf` },
@@ -9373,6 +9590,10 @@ const linksTerminaleSVT: Record<number, AnneeLinks> = {
   ]},
 }
 const dataTerminaleSVT: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    { titre:'Exercice 1 — Corps humain & Santé', theme:"Stress et fuite : rôle du système nerveux dans la réaction de stress et le mouvement volontaire pour fuir un danger.", pts:7 },
+    { titre:'Exercice 2 — Enjeux planétaires', theme:"Effets d'éruptions volcaniques majeures (trapps, aérosols soufrés, albédo, CO₂) sur la température atmosphérique.", pts:8 },
+  ]},
   { year:2025, note:'🆕', exercices:[
     { titre:'Exercice 1 — Génétique & Évolution', theme:'Méiose · brassage génétique · recombinaison', pts:7 },
     { titre:'Exercice 2 — Plantes & Paléoclimats', theme:'Photosynthèse · domestication · paléoclimats (δ¹⁸O)', pts:7 },
@@ -10383,6 +10604,26 @@ const SECTIONS_NSI: {
   { key:'seconde-snt',   label:'Seconde SNT',   icon:'📘', color:'#10b981', coeff:'Épreuve commune', desc:'SNT Seconde · 7 thèmes · Internet · Web · Données · IA', data:[], links:{} as NSILinks },
 ]
 
+const dataMathsPremiere: AnneeData[] = [
+  { year:2026, note:'🆕 Nouveauté', exercices:[
+    {titre:"Automatismes — QCM", theme:"8 questions rapides : calcul, lecture graphique, pourcentages, proportionnalité, fonctions.", pts:6},
+    {titre:"Ex 1 — Probabilités", theme:"Loueur de bicyclettes (vélo traditionnel/électrique, assurance) : arbre pondéré, probabilité conditionnelle.", pts:7},
+    {titre:"Ex 2 — Vrai/Faux", theme:"Équation du second degré, suite géométrique, tangente à la courbe de l'exponentielle.", pts:7},
+  ]},
+]
+
+const linksMathsPremiere: Record<number, AnneeLinks> = {
+  // ─── 2026 ───────────────────────────────────────────────────── Épreuve anticipée nationale (nouveauté 2026), Métropole
+  2026: { sessions: [
+    { label:'Métropole — Voie générale AVEC spé maths · 12 juin 2026', flag:'🇫🇷',
+      sujet:      `${SD}/2026/mathematiques-spe-premiere-2026-metropole-sujet-officiel.pdf`,
+      correction: `${SD}/2026/mathematiques-spe-premiere-2026-metropole-corrige.pdf` },
+    { label:'Métropole — Voie générale SANS spé maths · 12 juin 2026', flag:'🇫🇷',
+      sujet:      `${SD}/2026/mathematiques-non-spe-premiere-2026-metropole-sujet-officiel.pdf`,
+      correction: `${SD}/2026/mathematiques-non-spe-premiere-2026-metropole-corrige.pdf` },
+  ]},
+}
+
 const SECTIONS: {
   key:SKey; label:string; icon:string; color:string; coeff:string; desc:string;
   data:AnneeData[]; links:Record<number,AnneeLinks>;
@@ -10403,9 +10644,9 @@ const SECTIONS: {
     label:'Terminale · Expertes', icon:'⭐', color:'#8b5cf6', coeff:'Option · Coef. 2 · 3h',
     desc:'Option Maths Expertes · Arithmétique · Complexes · Matrices & Graphes',
     data:dataExpertes, links:linksExpertes },
-  { key:'premiere-specialite', label:'Première · Maths', icon:'📗', color:'#f59e0b', coeff:'DS lycées · 2h',
-    desc:"Pas d'examen national en Première. Choisissez un chapitre pour vous entraîner.",
-    data:[], links:{} },
+  { key:'premiere-specialite', label:'Première · Maths', icon:'📗', color:'#f59e0b', coeff:'Épreuve anticipée · 2h · Coef. 2',
+    desc:'🆕 Nouvelle épreuve anticipée nationale de mathématiques (session 2026) · Automatismes · Probabilités · Suites · Fonctions',
+    data:dataMathsPremiere, links:linksMathsPremiere },
   { key:'seconde-maths', label:'Seconde · Maths', icon:'📘', color:'#10b981', coeff:'Enseignement commun',
     desc:'Mathématiques Seconde · Enseignement commun · Fonctions · Géométrie · Probabilités · Statistiques',
     data:[], links:{} },
@@ -10692,6 +10933,21 @@ function PremiereView({ chapitres }: { chapitres: ChapitreData[] }) {
 //  Slug officiel : spe-sciences-eco-sociales
 // ════════════════════════════════════════════════════════════════
 const linksTerminaleECO: Record<number, AnneeLinks> = {
+
+  // ─── 2026 ─ 10 sujets (sujetdebac.fr, corrigés à venir) ─────
+  2026: { sessions: [
+    { label:'Métropole France 1 · 16 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-metropole-1-sujet-officiel.pdf` },
+    { label:'Métropole France 2 · 17 juin 2026', flag:'🇫🇷', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-metropole-2-sujet-officiel.pdf` },
+    { label:'Amérique du Nord 1', flag:'🌎', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-amerique-nord-1-sujet-officiel.pdf` },
+    { label:'Amérique du Nord 2', flag:'🌎', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-amerique-nord-2-sujet-officiel.pdf` },
+    { label:'Asie 1', flag:'🌏', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-asie-1-sujet-officiel.pdf` },
+    { label:'Asie 2', flag:'🌏', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-asie-2-sujet-officiel.pdf` },
+    { label:'Centres étrangers Afrique 1', flag:'🌍', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-centres-etranger-1-sujet-officiel.pdf` },
+    { label:'Centres étrangers Afrique 2', flag:'🌍', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-centres-etranger-2-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 1', flag:'🌴', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-antilles-guyane-1-sujet-officiel.pdf` },
+    { label:'Antilles-Guyane 2', flag:'🌴', sujet:`${SDB}/2026/spe-sciences-eco-sociales-2026-antilles-guyane-2-sujet-officiel.pdf` },
+  ]},
+
   2025: { sessions: [
     { label:'Métropole France 1 · 17 juin 2025', flag:'🇫🇷', sujet:`${SDB}/2025/spe-sciences-eco-sociales-2025-metropole-1-sujet-officiel.pdf` },
     { label:'Métropole France 2 · 18 juin 2025', flag:'🇫🇷', sujet:`${SDB}/2025/spe-sciences-eco-sociales-2025-metropole-2-sujet-officiel.pdf` },
@@ -10714,6 +10970,10 @@ const linksTerminaleECO: Record<number, AnneeLinks> = {
   ]},
 }
 const dataTerminaleECO: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet A — Dissertation', theme:"Comment les questions environnementales peuvent-elles devenir un problème public ? (dossier documentaire) · 4h · Coef. 16", pts:20},
+    {titre:'Sujet B — Épreuve composée', theme:"Mobilisation des connaissances (chocs asymétriques, zone euro) · étude d'un document · raisonnement appuyé sur un dossier documentaire.", pts:20},
+  ]},
   { year:2025, note:'🆕', exercices:[
     { titre:'Dissertation', theme:'Classes sociales & structure sociale · Politiques monétaire et budgétaire dans la zone euro', pts:20 },
     { titre:'Épreuve composée (EC1·EC2·EC3)', theme:'Asymétries d\'information & chômage structurel · PGF & croissance · structure socioprofessionnelle', pts:20 },
@@ -12435,7 +12695,7 @@ const SECTIONS_ECO_EXAM: {
   data:AnneeData[]; links:Record<number,AnneeLinks>;
 }[] = [
   { key:'terminale-eco-gestion', label:'Terminale · SES', icon:'📊', color:'#14b8a6', coeff:'Coef. 16 · 4h',
-    desc:'Spécialité SES · annales 2021→2025 · Métropole France 1 & 2 (sujet + corrigé)',
+    desc:'Spécialité SES · annales 2021→2026 · 10 centres 2026 · Métropole (sujet + corrigé)',
     data:dataTerminaleECO, links:linksTerminaleECO },
   { key:'seconde-eco-gestion', label:'Seconde · SES', icon:'📘', color:'#10b981', coeff:'Tronc commun',
     desc:'SES Seconde · 5 chapitres · questions de cours & calculs (VA, PIB, taux…)',
@@ -12940,9 +13200,35 @@ export default function ExamensFrancePage() {
           {activeSec === 'seconde-maths' ? (
             <PremiereView chapitres={CHAPITRES_SECONDE}/>
           ) : activeSec === 'premiere-specialite' ? (
-            <PremiereView chapitres={CHAPITRES_PREMIERE}/>
+            <>
+              {sec.links[2026] && (
+                <div style={{background:`${sec.color}0d`,border:`2px solid ${sec.color}40`,borderRadius:18,padding:'20px 22px',marginBottom:26}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:6}}>
+                    <span style={{fontSize:22}}>🆕</span>
+                    <h3 style={{margin:0,fontSize:17}}>Épreuve anticipée de mathématiques — Session 2026</h3>
+                    <span style={{fontSize:11,background:`${sec.color}1f`,color:sec.color,border:`1px solid ${sec.color}55`,padding:'3px 10px',borderRadius:10,fontWeight:700}}>Nouveauté · Métropole</span>
+                  </div>
+                  <p style={{fontSize:12.5,color:'var(--muted)',margin:'0 0 16px'}}>Première épreuve nationale anticipée (2h) : automatismes, probabilités, suites, fonctions.</p>
+                  <SessionsBlock lnk={sec.links[2026]} color={sec.color} year={2026} onOpen={openPdf} />
+                </div>
+              )}
+              <PremiereView chapitres={CHAPITRES_PREMIERE}/>
+            </>
           ) : activeSec === 'premiere-francais' ? (
-            <PremiereView chapitres={CHAPITRES_PREMIERE_FRANCAIS}/>
+            <>
+              {sec.links[2026] && (
+                <div style={{background:`${sec.color}0d`,border:`2px solid ${sec.color}40`,borderRadius:18,padding:'20px 22px',marginBottom:26}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:6}}>
+                    <span style={{fontSize:22}}>🆕</span>
+                    <h3 style={{margin:0,fontSize:17}}>Épreuve anticipée de français (EAF) — Session 2026</h3>
+                    <span style={{fontSize:11,background:`${sec.color}1f`,color:sec.color,border:`1px solid ${sec.color}55`,padding:'3px 10px',borderRadius:10,fontWeight:700}}>Métropole · 11 juin 2026</span>
+                  </div>
+                  <p style={{fontSize:12.5,color:'var(--muted)',margin:'0 0 16px'}}>Épreuve écrite (4h, coef. 5) : au choix commentaire de texte ou dissertation sur œuvre.</p>
+                  <SessionsBlock lnk={sec.links[2026]} color={sec.color} year={2026} onOpen={openPdf} />
+                </div>
+              )}
+              <PremiereView chapitres={CHAPITRES_PREMIERE_FRANCAIS}/>
+            </>
           ) : activeSec === 'seconde-francais' ? (
             <PremiereView chapitres={CHAPITRES_SECONDE_FRANCAIS}/>
           ) : activeSec === 'seconde-physique-chimie' ? (
