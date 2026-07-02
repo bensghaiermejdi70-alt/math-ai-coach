@@ -15,8 +15,8 @@ const HOWTO_VIDEOS = [
   { id: 'z3uMDJwvu7Q', title: 'Présentation globale du site', tag: 'Découverte' },
   { id: '96f6b0ighJc', title: 'Cours — Tunisie & France', tag: 'Cours' },
   { id: 'O9aaUVxGuMo', title: 'Examens', tag: 'Examens' },
-  { id: 'wf6StspCeVA', title: 'Simulation IA', tag: 'Simulation' },
-  { id: 'wf6StspCeVA', title: 'Solveur pas à pas', tag: 'Solveur' },
+  { id: 'WuWGk0bgydw', title: 'Simulation IA', tag: 'Simulation' },
+  { id: 'lleFgjTIrZ4', title: 'Solveur pas à pas', tag: 'Solveur' },
   { id: 'kR5us0OfYLo', title: 'Chat IA', tag: 'Chat IA' },
   { id: 'QVoxa7KN5h8', title: 'Bac Blanc', tag: 'Bac Blanc' },
 ]
@@ -458,13 +458,13 @@ const V2_CSS = `
 .v2 .reveal.revealed{ opacity:1; transform:none; }
 
 /* ── HERO ── */
-.v2-hero{ position:relative; padding:clamp(108px,13vh,128px) clamp(20px,5vw,64px) 0; overflow:hidden; }
+.v2-hero{ position:relative; padding:clamp(108px,13vh,128px) clamp(20px,4vw,52px) 0; overflow:hidden; }
 .v2-aurora{ position:absolute; inset:-20% -10% auto; height:560px;
   background:radial-gradient(60% 60% at 25% 30%,rgba(91,108,255,.30),transparent 70%),radial-gradient(50% 50% at 80% 20%,rgba(157,123,255,.22),transparent 70%);
   filter:blur(40px); pointer-events:none; }
 .v2-grid-bg{ position:absolute; inset:0; background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
   background-size:54px 54px; mask-image:radial-gradient(circle at 50% 30%,#000,transparent 75%); opacity:.5; pointer-events:none; }
-.v2-hero-inner{ position:relative; max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; }
+.v2-hero-inner{ position:relative; max-width:1120px; margin:0 auto; display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:center; }
 .v2-eyebrow{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
   color:var(--violet); background:rgba(157,123,255,.10); border:1px solid rgba(157,123,255,.28); padding:7px 14px; border-radius:100px; margin-bottom:14px; }
 .v2-h1{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(28px,4.4vw,52px); line-height:1.05; letter-spacing:-.02em; margin:0 0 14px; }
@@ -509,7 +509,7 @@ const V2_CSS = `
   color:var(--c); background:color-mix(in srgb,var(--c) 12%,transparent); border:1px solid color-mix(in srgb,var(--c) 32%,transparent); }
 
 /* sections */
-.v2-section{ max-width:1180px; margin:0 auto; padding:clamp(56px,9vh,100px) clamp(20px,5vw,64px); }
+.v2-section{ max-width:1120px; margin:0 auto; padding:clamp(56px,9vh,100px) clamp(20px,4vw,52px); }
 .v2-head{ text-align:center; margin-bottom:48px; }
 .v2-label{ display:inline-block; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--violet); margin-bottom:14px; }
 .v2-h2{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(26px,3.6vw,44px); line-height:1.1; letter-spacing:-.02em; margin:0 0 14px; }
@@ -556,7 +556,7 @@ const V2_CSS = `
 .v2-video-cap{ position:absolute; left:0; right:0; bottom:18px; text-align:center; font-size:13px; font-weight:600; color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.6); }
 
 /* galerie comment ça marche (7 vidéos) */
-.v2-vid-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1180px; margin:0 auto; }
+.v2-vid-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1120px; margin:0 auto; }
 .v2-vid-card{ border-radius:18px; overflow:hidden; background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); border:1px solid var(--line); transition:transform .22s,border-color .22s,box-shadow .22s; }
 .v2-vid-card:hover{ transform:translateY(-5px); border-color:color-mix(in srgb,var(--indigo) 45%,transparent); box-shadow:0 20px 50px rgba(91,108,255,.16); }
 .v2-vid-frame{ position:relative; aspect-ratio:16/9; background:#000; overflow:hidden; }
