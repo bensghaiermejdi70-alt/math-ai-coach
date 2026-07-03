@@ -155,7 +155,18 @@ const ARCHIVES_EXP: Archive[] = [
   { id:'ex-2021-m1', year:2021, session:'Expertes Métropole J1 · 7 juin',  section:'Option Maths Expertes', sectionKey:'expertes', color:'#8b5cf6', icon:'★', url:`${AP}/specialite_metropole_juin2021_jcs_1_.pdf`,          themes:['Nombres premiers · Ératosthène · Fermat','Complexes · Moivre · linéarisation','Matrices carrées · inverse · puissances'] },
   { id:'ex-2021-m2', year:2021, session:'Expertes Métropole J2 · 8 juin',  section:'Option Maths Expertes', sectionKey:'expertes', color:'#8b5cf6', icon:'★', url:`${AP}/metropole_specialite_sujet2_8_juin_2021_dv_1_.pdf`,  themes:['Arithmétique & Bézout','Complexes & argument','Graphes & Chaînes de Markov'] },
 ]
-const ARCHIVES: Archive[] = [...ARCHIVES_TERM,...ARCHIVES_TECHNO,...ARCHIVES_EXP]
+// ─ Première Générale — Épreuve anticipée de mathématiques (2026) ─
+const ARCHIVES_PREM: Archive[] = [
+  { id:'pg-2026-m1', year:2026, session:'Métropole · 12 juin 2026 · AVEC spé maths',
+    section:'Première Générale', sectionKey:'premiere', color:'#4f6ef7', icon:'📗',
+    url:`${SD}/2026/mathematiques-spe-premiere-2026-metropole-sujet-officiel.pdf`,
+    themes:['Automatismes (QCM 6 pts)','Probabilités conditionnelles','Suites & Second degré','Produit scalaire · Géométrie repérée'] },
+  { id:'pg-2026-m2', year:2026, session:'Métropole · 12 juin 2026 · SANS spé maths',
+    section:'Première Générale', sectionKey:'premiere', color:'#4f6ef7', icon:'📗',
+    url:`${SD}/2026/mathematiques-non-spe-premiere-2026-metropole-sujet-officiel.pdf`,
+    themes:['Automatismes (QCM)','Probabilités','Fonctions & Suites','Géométrie repérée'] },
+]
+const ARCHIVES: Archive[] = [...ARCHIVES_TERM,...ARCHIVES_PREM,...ARCHIVES_TECHNO,...ARCHIVES_EXP]
 
 // ── Types ──────────────────────────────────────────────────────────
 interface GeneratedExam {
@@ -525,6 +536,7 @@ async function generateOneExam(
   const isPhysique = matiere === 'physique'
   const isSvt = matiere === 'svt'
   const isInfo = matiere === 'informatique'
+  const isPremiere = /premi[eè]re/i.test(String(section))
   const annee = new Date().getFullYear()
   const n1 = annee - 1
 
@@ -815,7 +827,29 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
   ]
 }`
     : isFrancais
-    ? `Crée un sujet de PHILOSOPHIE (Terminale, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
+    ? (isPremiere
+    ? `Crée un sujet de FRANÇAIS — ÉPREUVE ANTICIPÉE DE FRANÇAIS (EAF, Première, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
+${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+
+STRUCTURE OFFICIELLE — Bac général Français (écrit anticipé) · 4h · coefficient 5 · 20 points :
+Le candidat traite, AU CHOIX, l'UN des deux sujets. Présente les DEUX :
+- SUJET 1 — COMMENTAIRE (20 pts) · objet d'étude : la littérature d'idées du XVIe au XVIIIe siècle. Fournis un TEXTE AUTHENTIQUE (≈200-320 mots) d'un auteur réel (Montaigne, La Bruyère, Montesquieu, Voltaire, Diderot, Rousseau, Louise d'Épinay, Olympe de Gouges…), attribué (Auteur, Titre, année), suivi de « Vous commenterez le texte suivant ». 1-2 notes de bas de page possibles.
+- SUJET 2 — DISSERTATION (20 pts) · objet d'étude au choix : poésie XIXe-XXIe, OU roman, OU théâtre. Propose une œuvre réelle au programme + parcours associé + question de dissertation (ex. Rimbaud « Cahier de Douai » / émancipations créatrices ; Ponge « La rage de l'expression » / dans l'atelier du poète ; Hélène Dorion « Mes forêts » / la poésie, la nature, l'intime).
+
+RÈGLES : Sujets ORIGINAUX (jamais une copie) ; œuvres/auteurs/questions DIFFÉRENTS à chaque variante ; le texte du SUJET 1 est un VRAI extrait d'une œuvre réelle ; AUCUN graphique (graph: null) ; français impeccable.
+
+Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
+{
+  "title": "Français EAF — Simulation IA Variante ${idx+1}",
+  "section": "Première — EAF",
+  "duration": 240,
+  "totalPoints": 20,
+  "exercises": [
+    { "num":1, "title":"Sujet 1 — Commentaire", "theme":"[Littérature d'idées XVIe-XVIIIe]", "points":20, "graph":null, "statement":"COMMENTAIRE\n\nObjet d'étude : la littérature d'idées du XVIe au XVIIIe siècle.\n\nVous commenterez le texte suivant :\n\n[Extrait authentique ≈200-320 mots]\n\n— [Auteur, Titre, année]\n\n[Notes : 1. … 2. …]" },
+    { "num":2, "title":"Sujet 2 — Dissertation", "theme":"[Œuvre + parcours]", "points":20, "graph":null, "statement":"DISSERTATION\n\nObjet d'étude : [poésie XIXe-XXIe / roman / théâtre].\n\nŒuvre : [Auteur, Titre]\nParcours associé : [parcours]\n\n[Question de dissertation sur l'œuvre]\n\nVous répondrez dans un développement organisé, en vous appuyant sur l'œuvre, les textes du parcours et votre culture personnelle." }
+  ]
+}`
+    : `Crée un sujet de PHILOSOPHIE (Terminale, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
 ${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
 
 STRUCTURE OFFICIELLE — Bac général Philosophie · 4h · coefficient 8 · 20 points :
@@ -840,7 +874,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
     { "num":2, "title":"Sujet 2 — Dissertation", "theme":"[Notion 2 différente]", "points":20, "graph":null, "statement":"DISSERTATION\n\n[Autre question philosophique sur une notion différente]" },
     { "num":3, "title":"Sujet 3 — Explication de texte", "theme":"[Auteur]", "points":20, "graph":null, "statement":"EXPLICATION DE TEXTE\n\nExpliquer le texte suivant :\n\n[Extrait authentique ≈180-260 mots]\n\n— [Auteur, Titre, année]\n\n[Notes éventuelles : 1. … 2. …]\n\nLa connaissance de la doctrine de l'auteur n'est pas requise. Il faut et il suffit que l'explication rende compte, par la compréhension précise du texte, du problème dont il est question." }
   ]
-}`
+}`)
     : isInfo
     ? `Crée un sujet de NSI (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
@@ -943,10 +977,17 @@ Ex1=Suites ou Fonctions (7 pts), Ex2=Probabilités (6 pts), Ex3=Analyse STI2D ex
 Si section Maths Expertes → 3 exercices (7+7+6=20) :
 Ex1=Arithmétique (7 pts), Ex2=Complexes (7 pts), Ex3=Matrices/Graphes/Markov (6 pts)
 
+Si section Première Générale → ÉPREUVE ANTICIPÉE · 2h · coefficient 2 · SANS calculatrice · programme de PREMIÈRE UNIQUEMENT (INTERDIT : ln, intégrale, loi normale, géométrie dans l'espace, nombres complexes, équations différentielles) :
+- Exercice num 1 = AUTOMATISMES (QCM, 6 pts) : 8 questions à choix multiple numérotées Q1 à Q8, chacune 4 propositions (a, b, c, d), UNE seule bonne réponse, SANS justification. Thèmes : identités remarquables/calcul littéral, lecture graphique d'équation de droite, pourcentages & proportions, coefficient multiplicateur, ordre de grandeur, conversions (durée/débit), appartenance à une parabole, puissances de 10.
+- Exercice num 2 = PROBABILITÉS (5 pts) : arbre pondéré à compléter, probabilités conditionnelles, probabilités totales, fraction irréductible.
+- Exercice num 3 = VRAI/FAUX justifié (5 pts) : 3 affirmations indépendantes (second degré/discriminant, suite géométrique, tangente à une courbe d'exponentielle).
+- Exercice num 4 = GÉOMÉTRIE REPÉRÉE & PRODUIT SCALAIRE (4 pts) : coordonnées et norme de vecteurs, produit scalaire, angle, mise en équation.
+Utilise les 4 slots "exercises" avec points 6, 5, 5, 4 (total 20) et duration 120.
+
 {
   "title": "${section} — Simulation IA Variante ${idx+1}",
   "section": "${section}",
-  "duration": 180,
+  "duration": ${isPremiere ? 120 : 180},
   "totalPoints": ${totalPts},
   "exercises": [
     {
@@ -3572,6 +3613,15 @@ const SECTION_CONFIGS_FRANCAIS_FR = [
 ]
 
 const ARCHIVES_FRANCAIS_FR: Archive[] = [
+  // ─ Première EAF — épreuve anticipée de français (sujetdebac.fr) ─
+  { id:'pfr-2026-m1', year:2026, session:'Première · EAF · Métropole · 11 juin 2026 (Voie générale)',
+    section:'Première — EAF', sectionKey:'premiere-francais', color:'#10b981', icon:'📗',
+    url:`${SD}/2026/francais-premiere-2026-metropole-sujet-officiel.pdf`,
+    themes:['Commentaire (littérature d\'idées)','Dissertation (poésie XIXe-XXIe)','Rimbaud · Ponge · Dorion','4h · Coef. 5'] },
+  { id:'pfr-2026-as', year:2026, session:'Première · EAF · Asie · juin 2026',
+    section:'Première — EAF', sectionKey:'premiere-francais', color:'#10b981', icon:'📗',
+    url:`${SD}/2026/francais-premiere-2026-asie-sujet-officiel.pdf`,
+    themes:['Commentaire','Dissertation','Objets d\'étude Première','4h · Coef. 5'] },
   // ── Terminale Philosophie — Métropole (sujetdebac.fr, URLs vérifiées 200 OK) ─
   { id:'tphilo-2025-m1', year:2025, session:'Terminale · Philosophie · Métropole · 16 juin 2025 (Série Générale)',
     section:'Terminale — Philosophie', sectionKey:'terminale-francais',
