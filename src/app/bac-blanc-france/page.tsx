@@ -1394,11 +1394,9 @@ async function generateBacBlancFrancais(candidat: Candidat, dayNum: number, diff
     { ex1:'Le politique et la société',      ex2:'Explication de texte (Rousseau ou Hobbes)', note:'Dissertation + Explication de texte · 4h · Coef. 8' },
   ]
   const THEMES_EAF = [
-    { ex1:'Commentaire composé',           ex2:'Dissertation littéraire',  ex3:'Question sur corpus', note:'EAF Écrit · 4h · Coef. 5' },
-    { ex1:'Analyse linéaire — Poésie',     ex2:'Dissertation EAF',         ex3:'Présentation Grand Oral', note:'EAF Écrit · 4h · Coef. 5' },
-    { ex1:'Commentaire — Roman',           ex2:'Essai argumentatif',       ex3:'Texte du corpus', note:'EAF Écrit · 4h · Coef. 5' },
-    { ex1:'Analyse linéaire — Théâtre',    ex2:'Dissertation EAF',         ex3:'Objet d\'étude — Théâtre', note:'EAF Écrit · 4h · Coef. 5' },
-    { ex1:'Commentaire — Littérature d\'idées', ex2:'Dissertation EAF',   ex3:'Texte argumentatif', note:'EAF Écrit · 4h · Coef. 5' },
+    { ex1:'Commentaire — Littérature d\'idées (XVIe-XVIIIe)', ex2:'Dissertation — Poésie (XIXe-XXIe)', ex3:'', note:'EAF Écrit · 4h · Coef. 5 · au choix' },
+    { ex1:'Commentaire — Littérature d\'idées',            ex2:'Dissertation — Roman',           ex3:'', note:'EAF Écrit · 4h · Coef. 5 · au choix' },
+    { ex1:'Commentaire — Littérature d\'idées',            ex2:'Dissertation — Théâtre',         ex3:'', note:'EAF Écrit · 4h · Coef. 5 · au choix' },
   ]
   const THEMES_SECONDE = [
     { ex1:'Commentaire de texte',          ex2:'Écriture d\'invention',    ex3:'Question de grammaire', note:'Évaluation Seconde · 2h' },
@@ -1430,7 +1428,7 @@ NOTATION FRANÇAIS OBLIGATOIRE :
   const structure   = isTerminale
     ? `Exercice 1 — DISSERTATION PHILOSOPHIQUE (10 points) : Sujet : "${ex1Theme}"\nExercice 2 — EXPLICATION DE TEXTE (10 points) : ${ex2Theme}`
     : isPremiere
-    ? `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)${ex3Theme ? '\nExercice 3 — ' + ex3Theme + ' (bonus/aide)' : ''}`
+    ? `AU CHOIX (le candidat ne traite qu'UN sujet) :\nSUJET 1 — COMMENTAIRE (20 points) - littérature d'idées du XVIe au XVIIIe siècle\nSUJET 2 — DISSERTATION (20 points) - ${ex2Theme} (œuvre + parcours associé)`
     : `Exercice 1 — ${ex1Theme} (10 points)\nExercice 2 — ${ex2Theme} (10 points)`
 
   let prompt = 'Crée un sujet BAC BLANC ' + isPhiloStr + ' ORIGINAL pour ' + secLabel + '. Graine : ' + seed + '.\n\n'
@@ -1449,11 +1447,10 @@ NOTATION FRANÇAIS OBLIGATOIRE :
         + '- Questions d\'analyse : thèse du texte, structure argumentative, portée\n'
         + '- Minimum 150 mots de consignes\n\n'
       : isPremiere
-      ? 'RÈGLES EAF :\n'
-        + '- Texte(s) du corpus de 200-300 mots (extrait littéraire adapté au niveau)\n'
-        + '- Questions progressives : identification, analyse, interprétation\n'
-        + '- Dissertation avec plan dialectique attendu\n'
-        + '- Minimum 200 mots par exercice\n\n'
+      ? 'RÈGLES EAF (épreuve anticipée de français, écrit, 4h, coef 5) :\n'
+        + '- SUJET 1 COMMENTAIRE : fournis un TEXTE AUTHENTIQUE (200-320 mots) d\'un auteur RÉEL de la littérature d\'idées XVIe-XVIIIe (Montaigne, La Bruyère, Montesquieu, Voltaire, Diderot, Rousseau, Louise d\'Épinay, Olympe de Gouges), attribué (Auteur, Titre, année), suivi de la consigne Vous commenterez le texte suivant.\n'
+        + '- SUJET 2 DISSERTATION : une œuvre RÉELLE au programme + un parcours associé + une question portant sur l\'œuvre (ex. Rimbaud Cahier de Douai / émancipations créatrices ; Ponge La rage de l\'expression ; H. Dorion Mes forêts).\n'
+        + '- Sujets ORIGINAUX, français impeccable, AUCUN corpus multi-textes. Minimum 200 mots.\n\n'
       : 'RÈGLES SECONDE :\n'
         + '- Texte de 150-200 mots (extrait romanesque ou poétique)\n'
         + '- Questions progressives de compréhension et d\'analyse\n'
@@ -1470,8 +1467,8 @@ NOTATION FRANÇAIS OBLIGATOIRE :
     + '  "totalPoints": 20,\n'
     + '  "duration": ' + secDuration + ',\n'
     + '  "exercises": [\n'
-    + '    { "num": 1, "theme": "' + ex1Theme + '", "title": "' + (isTerminale ? 'Dissertation — ' + ex1Theme : ex1Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'SUJET : \\\"' + ex1Theme + '\\\"\\n\\nDéfinissez les termes du sujet, posez la problématique, proposez un plan en 3 parties avec arguments et exemples philosophiques.' : 'TEXTE DU CORPUS :\\n[Extrait littéraire 200 mots]\\n\\n1. Questions d\'analyse\\n2. Exercice principal') + '" },\n'
-    + '    { "num": 2, "theme": "' + ex2Theme + '", "title": "' + (isTerminale ? 'Explication de texte — ' + ex2Theme : ex2Theme) + '", "points": 10, "statement": "' + (isTerminale ? 'TEXTE :\\n[Extrait philosophique 180 mots]\\n\\n1. Dégagez la thèse et la structure argumentative\\n2. Expliquez et discutez les arguments\\n3. Portée et actualité du texte' : 'SUJET DE DISSERTATION :\\n[Sujet EAF]\\n\\nProposez un plan détaillé puis rédigez l\'introduction et au moins une partie.') + '" }\n'
+    + '    { "num": 1, "theme": "' + ex1Theme + '", "title": "' + (isTerminale ? 'Dissertation — ' + ex1Theme : ex1Theme) + '", "points": ' + (isPremiere ? 20 : 10) + ', "statement": "' + (isTerminale ? 'SUJET : \\\"' + ex1Theme + '\\\"\\n\\nDéfinissez les termes du sujet, posez la problématique, proposez un plan en 3 parties avec arguments et exemples philosophiques.' : (isPremiere ? 'COMMENTAIRE\\n\\nObjet d\'étude : la littérature d\'idées du XVIe au XVIIIe siècle.\\n\\nVous commenterez le texte suivant :\\n\\n[Extrait AUTHENTIQUE d\'un auteur réel (Montaigne, Voltaire, Diderot, Rousseau, Louise d\'Épinay, Olympe de Gouges...), ≈200-320 mots]\\n\\n— [Auteur, Titre, année]' : 'TEXTE DU CORPUS :\\n[Extrait littéraire 200 mots]\\n\\n1. Questions d\'analyse\\n2. Exercice principal')) + '" },\n'
+    + '    { "num": 2, "theme": "' + ex2Theme + '", "title": "' + (isTerminale ? 'Explication de texte — ' + ex2Theme : ex2Theme) + '", "points": ' + (isPremiere ? 20 : 10) + ', "statement": "' + (isTerminale ? 'TEXTE :\\n[Extrait philosophique 180 mots]\\n\\n1. Dégagez la thèse et la structure argumentative\\n2. Expliquez et discutez les arguments\\n3. Portée et actualité du texte' : (isPremiere ? 'DISSERTATION\\n\\nObjet d\'étude : [la poésie du XIXe au XXIe siècle / le roman / le théâtre].\\n\\nŒuvre : [Auteur, Titre]\\nParcours associé : [parcours]\\n\\n[Question de dissertation portant sur l\'œuvre]\\n\\nVous répondrez dans un développement organisé, en vous appuyant sur l\'œuvre, les textes du parcours et votre culture personnelle.' : 'SUJET DE DISSERTATION :\\n[Sujet EAF]\\n\\nProposez un plan détaillé puis rédigez l\'introduction et au moins une partie.')) + '" }\n'
     + '  ]\n'
     + '}'
 
@@ -2195,16 +2192,23 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
   const dateStr = dd + '/' + mm + '/' + yyyy
   const seed = 'BBFR_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
 
-  const isShort = candidat.sectionKey === 'premiere' || candidat.sectionKey === 'expertes'
-  const nEx: number = isShort ? 3 : 4
+  const isPrem = candidat.sectionKey === 'premiere'
+  const isShort = candidat.sectionKey === 'expertes'
+  const nEx: number = isPrem ? 4 : isShort ? 3 : 4
   let ptsArr: number[]
   if (candidat.sectionKey === 'techno')   ptsArr = [7, 6, 7]
   else if (candidat.sectionKey === 'expertes') ptsArr = [7, 7, 6]
-  else if (candidat.sectionKey === 'premiere') ptsArr = [7, 7, 6]
+  else if (isPrem) ptsArr = [6, 5, 5, 4]
   else ptsArr = [5, 5, 5, 5]
   const totalPts = ptsArr.reduce((a, b) => a + b, 0)
 
-  const prog = sec.programme.slice(0, nEx)
+  const PROG_PREMIERE = [
+    {theme:'Automatismes (QCM)', sousTh:'8 questions QCM a 4 choix : identites remarquables, lecture graphique equation de droite, pourcentages, coefficient multiplicateur, ordre de grandeur, conversions, appartenance a une parabole, puissances de 10'},
+    {theme:'Probabilites',       sousTh:'Arbre pondere a completer, probabilites conditionnelles, probabilites totales, fraction irreductible'},
+    {theme:'Vrai/Faux justifie', sousTh:'3 affirmations independantes : second degre/discriminant, suite geometrique, tangente a une courbe d exponentielle'},
+    {theme:'Geometrie reperee',  sousTh:'Coordonnees et norme de vecteurs, produit scalaire, angle, mise en equation'},
+  ]
+  const prog = (isPrem ? PROG_PREMIERE : sec.programme).slice(0, nEx)
 
   // Construire les lignes de programme (sans template literals imbriqués)
   const progParts: string[] = prog.map((p, i) =>
@@ -2263,7 +2267,8 @@ RÈGLES GRAPHIQUES :
 - Géométrie dans l'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace) → "graph":null et décrire la figure en mots (le rendu est 2D uniquement).
 - Le graphique va dans le champ "graph" SÉPARÉ (PAS dans statement), guillemets internes échappés \"type\". Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt. Valeur : "[GRAPH: {JSON_VALIDE}]" ou null.`
 
-  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\\n\\nProgramme a couvrir :\\n' + progStr + '\\n\\n' + graphRules + '\\n\\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac, ajoute le champ graph quand pertinent) :\\n' + jsonTemplate
+  const premDir = isPrem ? 'FORMAT PREMIERE - EPREUVE ANTICIPEE (2h, coef 2, SANS calculatrice, programme de PREMIERE UNIQUEMENT - INTERDIT : ln, integrale, loi normale, geometrie dans l espace, nombres complexes, equations differentielles) :\nExercice 1 = AUTOMATISMES : QCM de 8 questions numerotees Q1 a Q8, chacune 4 propositions (a, b, c, d), UNE seule bonne reponse, SANS justification (6 pts).\nExercice 2 = PROBABILITES : arbre pondere, probabilites conditionnelles et totales, fraction irreductible (5 pts).\nExercice 3 = VRAI/FAUX justifie : 3 affirmations independantes (5 pts).\nExercice 4 = GEOMETRIE REPEREE et PRODUIT SCALAIRE : vecteurs, norme, produit scalaire, angle (4 pts).\n\n' : ''
+  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\\n\\nProgramme a couvrir :\\n' + progStr + '\\n\\n' + premDir + graphRules + '\\n\\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac, ajoute le champ graph quand pertinent) :\\n' + jsonTemplate
 
   const raw = await askClaude(prompt, system + difficultyBloc(difficulty), 8500)
 
