@@ -427,6 +427,7 @@ function AbonnementDropdown({ pathname }: { pathname: string }) {
 const WHATSAPP     = '21699268970'
 const CONTACT_MAIL = 'bensghaiermejdi70@gmail.com'
 const YOUTUBE_URL  = 'https://www.youtube.com/@mathbacai'
+const FACEBOOK_URL = 'https://www.facebook.com/bac2027mathbacai/'
 const DEMO_URL     = 'https://www.youtube.com/watch?v=z3uMDJwvu7Q'  // présentation globale du site
 
 // ─── Dropdown Contact (WhatsApp + Email) ───
@@ -545,6 +546,11 @@ export default function Navbar() {
             <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',borderRadius:50,background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.35)',color:'#f87171',fontSize:13,fontWeight:600,textDecoration:'none',fontFamily:'var(--font-body)',whiteSpace:'nowrap'}}
               onMouseEnter={e=>e.currentTarget.style.background='rgba(239,68,68,0.18)'}
               onMouseLeave={e=>e.currentTarget.style.background='rgba(239,68,68,0.1)'}>▶ YouTube</a>
+
+            {/* Facebook */}
+            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 12px',borderRadius:50,background:'rgba(24,119,242,0.1)',border:'1px solid rgba(24,119,242,0.35)',color:'#60a5fa',fontSize:13,fontWeight:600,textDecoration:'none',fontFamily:'var(--font-body)',whiteSpace:'nowrap'}}
+              onMouseEnter={e=>e.currentTarget.style.background='rgba(24,119,242,0.18)'}
+              onMouseLeave={e=>e.currentTarget.style.background='rgba(24,119,242,0.1)'}><span style={{fontWeight:900}}>f</span> Facebook</a>
 
             {/* Contact */}
             <ContactDropdown />
@@ -690,6 +696,7 @@ export default function Navbar() {
             ? <a href={DEMO_URL} target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(79,110,247,0.08)',border:'1px solid rgba(79,110,247,0.25)',color:'var(--accent)',textDecoration:'none',fontSize:14,fontWeight:700}}><span>▶</span> Comment ça marche</a>
             : <Link href={DEMO_URL} onClick={()=>setOpen(false)} style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(79,110,247,0.08)',border:'1px solid rgba(79,110,247,0.25)',color:'var(--accent)',textDecoration:'none',fontSize:14,fontWeight:700}}><span>▶</span> Comment ça marche</Link>}
           <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.25)',color:'#f87171',textDecoration:'none',fontSize:14,fontWeight:700}}><span>▶</span> YouTube</a>
+          <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(24,119,242,0.08)',border:'1px solid rgba(24,119,242,0.25)',color:'#60a5fa',textDecoration:'none',fontSize:14,fontWeight:700}}><span style={{fontWeight:900}}>f</span> Facebook</a>
           <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noopener noreferrer" style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(6,214,160,0.08)',border:'1px solid rgba(6,214,160,0.25)',color:'var(--teal)',textDecoration:'none',fontSize:14,fontWeight:700}}><span>💬</span> WhatsApp</a>
           <a href={`mailto:${CONTACT_MAIL}`} style={{display:'flex',alignItems:'center',gap:8,padding:'12px 16px',borderRadius:10,background:'rgba(255,255,255,0.03)',border:'1px solid var(--border2)',color:'var(--text2)',textDecoration:'none',fontSize:14,fontWeight:700}}><span>✉️</span> Email</a>
 

@@ -397,7 +397,7 @@ export default function HomePage() {
           <div className="v2-head">
             <span className="v2-label">On reste en contact</span>
             <h2 className="v2-h2">Une question ? On répond en 2h</h2>
-            <p className="v2-p">Support disponible 7j/7. Suis-nous aussi sur YouTube pour les nouveautés et tutos.</p>
+            <p className="v2-p">Support disponible 7j/7. Suis-nous sur YouTube et Facebook pour les nouveautés et tutos.</p>
           </div>
           <div className="v2-contact">
             <a href="https://wa.me/21699268970" target="_blank" rel="noopener noreferrer" className="v2-contact-card" style={{ ['--c' as any]: '#25D366' }}>
@@ -417,6 +417,12 @@ export default function HomePage() {
               <span className="v2-contact-t">YouTube</span>
               <span className="v2-contact-v">@mathbacai</span>
               <span className="v2-contact-go">S'abonner →</span>
+            </a>
+            <a href="https://www.facebook.com/bac2027mathbacai/" target="_blank" rel="noopener noreferrer" className="v2-contact-card" style={{ ['--c' as any]: '#1877F2' }}>
+              <span className="v2-contact-icon">f</span>
+              <span className="v2-contact-t">Facebook</span>
+              <span className="v2-contact-v">@bac2027mathbacai</span>
+              <span className="v2-contact-go">Suivre →</span>
             </a>
           </div>
         </section>
