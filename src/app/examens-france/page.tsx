@@ -13209,7 +13209,7 @@ export default function ExamensFrancePage() {
                     <span style={{fontSize:11,background:`${sec.color}1f`,color:sec.color,border:`1px solid ${sec.color}55`,padding:'3px 10px',borderRadius:10,fontWeight:700}}>Nouveauté · Métropole</span>
                   </div>
                   <p style={{fontSize:12.5,color:'var(--muted)',margin:'0 0 16px'}}>Première épreuve nationale anticipée (2h) : automatismes, probabilités, suites, fonctions.</p>
-                  <SessionsBlock lnk={sec.links[2026]} color={sec.color} year={2026} onOpen={openPdf} />
+                  <SessionsBlock lnk={sec.links[2026] as AnneeLinks} color={sec.color} year={2026} onOpen={openPdf} />
                 </div>
               )}
               <PremiereView chapitres={CHAPITRES_PREMIERE}/>
@@ -13224,7 +13224,7 @@ export default function ExamensFrancePage() {
                     <span style={{fontSize:11,background:`${sec.color}1f`,color:sec.color,border:`1px solid ${sec.color}55`,padding:'3px 10px',borderRadius:10,fontWeight:700}}>Métropole · 11 juin 2026</span>
                   </div>
                   <p style={{fontSize:12.5,color:'var(--muted)',margin:'0 0 16px'}}>Épreuve écrite (4h, coef. 5) : au choix commentaire de texte ou dissertation sur œuvre.</p>
-                  <SessionsBlock lnk={sec.links[2026]} color={sec.color} year={2026} onOpen={openPdf} />
+                  <SessionsBlock lnk={sec.links[2026] as AnneeLinks} color={sec.color} year={2026} onOpen={openPdf} />
                 </div>
               )}
               <PremiereView chapitres={CHAPITRES_PREMIERE_FRANCAIS}/>
