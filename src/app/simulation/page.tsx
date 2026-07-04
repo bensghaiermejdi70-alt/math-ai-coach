@@ -2150,15 +2150,17 @@ function sanitizeExpr(expr: string): string {
     .replace(/×/g, '*')           // × multiplication
     .replace(/÷/g, '/')           // ÷ division
     .replace(/·/g, '*')           // · point centré
-    .replace(/²/g, '*x')          // ² exposant (contexte x²)
-    .replace(/³/g, '*x*x')        // ³ exposant
-    .replace(/\u00b2/g, '*x')
-    .replace(/\u00b3/g, '*x*x')
+    .replace(/²/g, '^2')          // ² exposant → puissance
+    .replace(/³/g, '^3')        // ³ exposant → puissance
+    .replace(/\u00b2/g, '^2')
+    .replace(/\u00b3/g, '^3')
     .replace(/\u221e/g, '1e15')   // ∞ → grande valeur
     .replace(/\u03c0/g, 'Math.PI')// π
     .replace(/\u03c4/g, '6.2832') // τ (tau = 2π, souvent constante RC)
     .replace(/\u03bb/g, '0.693')  // λ (lambda, constante désintégration)
     .replace(/\u03c9/g, 'x')      // ω souvent = variable fréquence
+    .replace(/√\s*\(([^()]+)\)/g, 'Math.sqrt($1)')  // √(...) unicode
+    .replace(/√\s*(\d+(?:\.\d+)?)/g, 'Math.sqrt($1)') // √2 etc.
 
   // ── 2. LaTeX → JS ──────────────────────────────────────────────────
   e = e
@@ -2181,6 +2183,9 @@ function sanitizeExpr(expr: string): string {
     .replace(/\\[a-zA-Z]+\*/g, '')
     .replace(/\\\\/g, '')
     .replace(/\{/g, '(').replace(/\}/g, ')')
+
+  // ── 2b. Exponentielle e^(...) → exp(...) (gère l'imbrication) ──
+  e = e.replace(/e\^\(/g, 'exp(').replace(/e\^(-?[a-zA-Z0-9.]+)/g, (_, a) => 'exp(' + a + ')')
 
   // ── 3. Puissances → Math.pow ────────────────────────────────────────
   // Ordre important : du plus spécifique au plus général
