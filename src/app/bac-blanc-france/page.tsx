@@ -2209,7 +2209,44 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
     {theme:'Vrai/Faux justifie', sousTh:'3 affirmations independantes : second degre/discriminant, suite geometrique, tangente a une courbe d exponentielle'},
     {theme:'Geometrie reperee',  sousTh:'Coordonnees et norme de vecteurs, produit scalaire, angle, mise en equation'},
   ]
-  const prog = (isPrem ? PROG_PREMIERE : sec.programme).slice(0, nEx)
+  // Terminale : 4 domaines (Analyse - Complexes - Probabilites - Geometrie espace),
+  // chapitres reels du programme, ROTATION PAR JOUR -> examen different chaque jour, equilibre.
+  const TERM_DOMAINS: {theme:string,sousTh:string}[][] = [
+    // Domaine 1 - Analyse (CH suites/limites/derivation/ln/integration/eq diff)
+    [
+      {theme:'Suites et convergence',       sousTh:'Limites, theoreme des gendarmes, suites monotones bornees, recurrence, arithmetico-geometriques'},
+      {theme:'Limites et continuite',       sousTh:'Limites de fonctions, continuite, theoreme des valeurs intermediaires (TVI), dichotomie'},
+      {theme:'Derivation et convexite',     sousTh:'Derivees composees, derivee seconde, convexite, point d inflexion, etude complete de fonction'},
+      {theme:'Logarithme neperien',         sousTh:'Fonction ln, proprietes algebriques, limites, derivee, equations, etude de fonction'},
+      {theme:'Integration',                 sousTh:'Primitives, integrale, integration par parties, valeur moyenne, calcul d aire'},
+      {theme:'Equations differentielles',   sousTh:'y prime = a y + b, condition initiale, modeles RC et refroidissement, exponentielle'},
+    ],
+    // Domaine 2 - Nombres complexes
+    [
+      {theme:'Nombres complexes (algebrique)', sousTh:'Forme algebrique, conjugue, module, equations du second degre dans C'},
+      {theme:'Complexes (trigo/expo)',      sousTh:'Formes trigonometrique et exponentielle, formule de Moivre, racines n-iemes'},
+      {theme:'Complexes et geometrie',      sousTh:'Affixes, rotations, ensembles de points, configurations du plan complexe'},
+    ],
+    // Domaine 3 - Probabilites (CH loi binomiale/normale/echantillonnage)
+    [
+      {theme:'Loi binomiale',               sousTh:'Schema de Bernoulli, loi binomiale B(n,p), esperance, variance, calculs de probabilites'},
+      {theme:'Loi normale',                 sousTh:'Loi normale N(mu, sigma^2), calculs P(a<=X<=b), intervalle de fluctuation'},
+      {theme:'Echantillonnage et estimation', sousTh:'Intervalle de confiance, concentration (Bienayme-Tchebychev), loi des grands nombres'},
+      {theme:'Probabilites conditionnelles', sousTh:'Arbre pondere, probabilites totales, formule de Bayes, independance'},
+    ],
+    // Domaine 4 - Geometrie dans l espace (CH vecteurs/droites-plans)
+    [
+      {theme:'Vecteurs et reperes (espace)', sousTh:'Vecteurs 3D, colinearite, coplanarite, reperes, coordonnees'},
+      {theme:'Droites et plans (espace)',   sousTh:'Representation parametrique, equation cartesienne, vecteur normal, produit scalaire 3D'},
+      {theme:'Distances et intersections',  sousTh:'Distance point-plan, intersection droite/plan, projete orthogonal, orthogonalite'},
+    ],
+  ]
+  const isTerm = candidat.sectionKey === 'terminale'
+  const prog = isPrem
+    ? PROG_PREMIERE.slice(0, nEx)
+    : isTerm
+    ? TERM_DOMAINS.map(d => d[(dayNum - 1) % d.length]).slice(0, nEx)
+    : sec.programme.slice(0, nEx)
 
   // Construire les lignes de programme (sans template literals imbriqués)
   const progParts: string[] = prog.map((p, i) =>
