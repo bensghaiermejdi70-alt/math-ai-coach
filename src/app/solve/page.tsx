@@ -151,10 +151,11 @@ function sanitizeExpr(expr: string): string {
   if (e.length > 300) e = e.slice(0, 300)
   // ── Unicode math → ASCII ─────────────────────────────────────────
   e = e.replace(/−/g,'-').replace(/×/g,'*').replace(/÷/g,'/').replace(/·/g,'*')
-       .replace(/²/g,'*x').replace(/³/g,'*x*x')
-       .replace(/\u00b2/g,'*x').replace(/\u00b3/g,'*x*x')
+       .replace(/²/g,'^2').replace(/³/g,'^3')
+       .replace(/\u00b2/g,'^2').replace(/\u00b3/g,'^3')
        .replace(/\u221e/g,'1e15').replace(/\u03c0/g,'Math.PI')
        .replace(/\u03c4/g,'6.2832').replace(/\u03bb/g,'0.693')
+       .replace(/√\s*\(([^()]+)\)/g,'Math.sqrt($1)').replace(/√\s*(\d+(?:\.\d+)?)/g,'Math.sqrt($1)')
   // ── LaTeX → JS ────────────────────────────────────────────────────
   e = e.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g,'($1)/($2)')
        .replace(/\\sqrt\{([^{}]+)\}/g,'Math.sqrt($1)')
@@ -166,8 +167,8 @@ function sanitizeExpr(expr: string): string {
        .replace(/\\tan\b/g,'Math.tan').replace(/\\exp\b/g,'Math.exp')
        .replace(/\\pi\b/gi,'Math.PI').replace(/\{/g,'(').replace(/\}/g,')')
   // ── Notation physique e^(...) ────────────────────────────────────
-  e = e.replace(/e\^\(([^)]+)\)/g,(_,a)=>'Math.exp('+a+')')
-       .replace(/e\^(-?[a-zA-Z0-9.*/]+)/g,(_,a)=>'Math.exp('+a+')')
+  e = e.replace(/e\^\(/g,'exp(')
+       .replace(/e\^(-?[a-zA-Z0-9.]+)/g,(_,a)=>'exp('+a+')')
   // ── Valeur absolue ───────────────────────────────────────────────
   e = e.replace(/\|([^|]+)\|/g,(_,a)=>'Math.abs('+a+')')
   // ── Puissances ───────────────────────────────────────────────────
@@ -207,7 +208,7 @@ function sanitizeExpr(expr: string): string {
   ]
   for(const [re,repl] of fns) e=e.replace(re,repl)
   // ── Constantes ───────────────────────────────────────────────────
-  e = e.replace(/\bpi\b/gi,'Math.PI').replace(/π/g,'Math.PI')
+  e = e.replace(/(?<![a-zA-Z.])pi(?![a-zA-Z])/gi,'Math.PI').replace(/π/g,'Math.PI')
        .replace(/(?<![a-zA-Z0-9_.])e(?![a-zA-Z0-9_(])/g,'Math.E')
        .replace(/\s+/g,'')
   return e || '0'
