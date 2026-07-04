@@ -1668,6 +1668,12 @@ const PROGRAMME_JOUR_PHYSIQUE_FR: Record<string, {
   ex2: { theme: string; sousTh: string }
   ex3: { theme: string; sousTh: string }
 }[]> = {
+  // ST2S — Physique-Chimie pour la santé (5 chapitres du programme, 3 jours rotatifs)
+  'terminale-st2s': [
+    {ex1:{theme:"Biophysique & fluides biologiques",sousTh:"Pression artérielle, débit sanguin (loi de Poiseuille), viscosité, dissolution des gaz, osmose et dialyse, thermorégulation"},ex2:{theme:"Analyses médicales",sousTh:"Concentration molaire/massique, dilutions, dosages, pH sanguin, glycémie, spectrophotométrie (loi de Beer-Lambert A=εℓc)"},ex3:{theme:"Optique & imagerie médicale",sousTh:"Réfraction, lentilles, œil et corrections, échographie (ultrasons), radiographie X, IRM, principe des techniques d'imagerie"}},
+    {ex1:{theme:"Propriétés des médicaments",sousTh:"Groupes caractéristiques, principe actif, formulation, dose, concentration plasmatique, demi-vie d'élimination, biodisponibilité"},ex2:{theme:"Rayonnements ionisants en médecine",sousTh:"Radioactivité α/β/γ, N(t)=N₀e^(-λt), demi-vie t½=ln2/λ, dose, radiothérapie, scintigraphie, radioprotection"},ex3:{theme:"Biophysique & énergétique",sousTh:"Transferts thermiques, chaleur latente, bilan énergétique du corps, effort et dépense énergétique, métabolisme"}},
+    {ex1:{theme:"Analyses médicales",sousTh:"Chromatographie, électrophorèse, titrages acido-basiques, marqueurs biologiques, dosage enzymatique, contrôle qualité"},ex2:{theme:"Optique & imagerie médicale",sousTh:"Scanner (rayons X), échographie Doppler, IRM, fibroscopie, comparaison des techniques, résolution et contraste"},ex3:{theme:"Propriétés des médicaments",sousTh:"Solubilité, acido-basicité, stéréochimie, interactions, voie d'administration, pharmacocinétique"}},
+  ],
   terminale: [
     {ex1:{theme:"Mécanique",sousTh:"2ème loi Newton ΣF=ma, plan incliné, frottement, énergie cinétique Ec=½mv², travail W=F·d·cosθ"},ex2:{theme:"Physique quantique",sousTh:"Photon E=hf, effet photoélectrique, dualité onde-corpuscule, modèle de Bohr, niveaux énergie"},ex3:{theme:"Chimie organique",sousTh:"Familles fonctionnelles, isomérie, estérification-hydrolyse, mécanismes substitution et addition"}},
     {ex1:{theme:"Gravitation",sousTh:"Loi de gravitation F=Gm₁m₂/r², champ gravitationnel g=GM/r², satellites Kepler T²/R³=cte, vitesse de libération"},ex2:{theme:"Optique ondulatoire",sousTh:"Interférences Young i=λD/a, diffraction θ≈λ/a, réseau nλ=d·sinθ, cohérence, polarisation"},ex3:{theme:"Cinétique chimique",sousTh:"Vitesse réaction, facteurs cinétiques (T, concentration, catalyseur), t₁/₂, suivi spectrophotométrique Beer-Lambert"}},
@@ -1709,7 +1715,7 @@ const PROGRAMME_JOUR_PHYSIQUE_FR: Record<string, {
 function getProgrammeJourPhysiqueFR(sectionKey: string, dayNum: number) {
   // Terminale et expertes → même programme physique terminale
   const physKey = (sectionKey === 'expertes') ? 'terminale' : sectionKey
-  const prog = PROGRAMME_JOUR_PHYSIQUE_FR[physKey]
+  const prog = PROGRAMME_JOUR_PHYSIQUE_FR[physKey] || PROGRAMME_JOUR_PHYSIQUE_FR['terminale']
   if (!prog || prog.length === 0) return null
   return prog[(dayNum - 1) % prog.length]
 }
@@ -1855,7 +1861,36 @@ async function generateBacBlancInformatique(candidat: Candidat, dayNum: number, 
   const nEx = candidat.sectionKey==='seconde-snt' ? 2 : 3
   const ptsArr = nEx===2 ? [10,10] : [7,7,6]
   const totalPts = ptsArr.reduce((a,b)=>a+b, 0)
-  const prog = secNSI.programme.slice(0, nEx)
+  // Terminale NSI : 3 domaines (Structures/Algo - SQL - Programmation/Reseaux), rotation par jour
+  // -> tous les chapitres D01-D05 couverts, examen different chaque jour et equilibre.
+  const TERM_NSI_DOMAINS: {theme:string,sousTh:string}[][] = [
+    // Domaine 1 - Structures de donnees & Algorithmes (D01 + D02)
+    [
+      {theme:'Piles, files et listes',   sousTh:'Piles LIFO (push/pop), files FIFO (enfiler/defiler), implementation Python, applications, complexite'},
+      {theme:'Arbres binaires & ABR',    sousTh:'Arbre binaire (racine, feuilles, hauteur, taille), parcours prefixe/infixe/suffixe/largeur, ABR insertion/recherche'},
+      {theme:'Graphes',                  sousTh:'Graphe oriente/non-oriente, matrice et listes d adjacence, parcours DFS et BFS, plus court chemin (Dijkstra)'},
+      {theme:'Tris & complexite',        sousTh:'Tri fusion O(n log n), tri rapide (pivot), comparaison de couts, invariant de boucle, notation Big-O'},
+      {theme:'Recursivite & diviser-pour-regner', sousTh:'Fonctions recursives (cas de base), pile d appels, dichotomie recursive, diviser-pour-regner'},
+      {theme:'Prog. dynamique & gloutons', sousTh:'Memoisation, sous-problemes, rendu de monnaie glouton, sac a dos, comparaison des approches'},
+    ],
+    // Domaine 2 - Bases de donnees SQL (D03)
+    [
+      {theme:'SQL - requetes SELECT',    sousTh:'SELECT/FROM/WHERE/ORDER BY/DISTINCT, jointures JOIN entre tables, alias, filtres multiples'},
+      {theme:'SQL - agregats',           sousTh:'COUNT/SUM/AVG/MIN/MAX, GROUP BY, HAVING, sous-requetes imbriquees'},
+      {theme:'Modele relationnel & MAJ', sousTh:'Schema relationnel, cle primaire/etrangere, integrite referentielle, INSERT/UPDATE/DELETE, normalisation'},
+    ],
+    // Domaine 3 - Programmation, POO, Architecture & Reseaux (D04 + D05)
+    [
+      {theme:'POO Python',               sousTh:'Classes, attributs, methodes, __init__ self, encapsulation, heritage super(), polymorphisme, __str__/__repr__'},
+      {theme:'Architecture & OS',        sousTh:'Modele de Von Neumann (UAL/UC/memoire/bus), cycle fetch-decode-execute, processus, ordonnancement, interblocage'},
+      {theme:'Reseaux',                  sousTh:'Adressage IPv4, masque de sous-reseau, adresse reseau/diffusion, routage (RIP, OSPF), protocoles TCP/IP, encapsulation'},
+      {theme:'Programmation & tests',    sousTh:'Fonctions, modules, gestion d erreurs try/except, assertions, jeux de tests, mise au point'},
+    ],
+  ]
+  const _pN = secNSI.programme; const _sN = ((dayNum - 1) % _pN.length + _pN.length) % _pN.length
+  const prog = candidat.sectionKey === 'terminale-nsi'
+    ? TERM_NSI_DOMAINS.map(d => d[(dayNum - 1) % d.length]).slice(0, nEx)
+    : [..._pN.slice(_sN), ..._pN.slice(0, _sN)].slice(0, nEx)
 
   const progStr = prog.map((p,i)=>'- Exercice '+(i+1)+' ('+ptsArr[i]+'pts) : '+p.theme+' | '+p.sousTh).join('\n')
   const exJson = prog.map((p,i)=>'    {"num":'+(i+1)+',"title":"Exercice '+(i+1)+' - '+p.theme+'","theme":"'+p.theme+'","points":'+ptsArr[i]+',"statement":"TODO","graph":null}').join(',\n')
@@ -2194,7 +2229,7 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
   const seed = 'BBFR_' + candidat.sectionKey + '_J' + dayNum + '_' + yyyy
 
   const isPrem = candidat.sectionKey === 'premiere'
-  const isShort = candidat.sectionKey === 'expertes'
+  const isShort = candidat.sectionKey === 'expertes' || candidat.sectionKey === 'techno'
   const nEx: number = isPrem ? 4 : isShort ? 3 : 4
   let ptsArr: number[]
   if (candidat.sectionKey === 'techno')   ptsArr = [7, 6, 7]
@@ -2241,12 +2276,62 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Distances et intersections',  sousTh:'Distance point-plan, intersection droite/plan, projete orthogonal, orthogonalite'},
     ],
   ]
+  // Techno (STMG + STI2D/STL) : 3 domaines (Analyse - Probas/Stats - Applications/Geometrie), rotation par jour
+  const TECHNO_DOMAINS: {theme:string,sousTh:string}[][] = [
+    // Domaine 1 - Analyse (STMG + STI2D)
+    [
+      {theme:'Suites (STMG/STI2D)',        sousTh:'Suites arithmetiques et geometriques, interets composes, amortissements, modelisation, seuil'},
+      {theme:'Exponentielle & Logarithme', sousTh:'exp et ln, croissances comparees, decharge RC, refroidissement de Newton, equations'},
+      {theme:'Integration (STI2D)',        sousTh:'Primitives, integrale definie, valeur moyenne, calcul d aire et de travail'},
+      {theme:'Equations differentielles',  sousTh:'y prime = a y + b, condition initiale, modeles physiques RC/RL, solutions'},
+      {theme:'Fonctions (STMG)',           sousTh:'Etude de fonctions, derivee, variations, optimisation, lecture graphique'},
+    ],
+    // Domaine 2 - Probabilites & Statistiques
+    [
+      {theme:'Probabilites conditionnelles', sousTh:'Arbre pondere, probabilites conditionnelles et totales, independance, loi binomiale B(n,p)'},
+      {theme:'Statistiques a 2 variables (STMG)', sousTh:'Nuage de points, regression lineaire (moindres carres), coefficient de correlation r, previsions'},
+      {theme:'Probabilites continues (STI2D)', sousTh:'Loi a densite, loi uniforme, loi exponentielle, loi normale N(mu,sigma^2), calculs'},
+      {theme:'Statistiques inferentielles (STI2D)', sousTh:'Intervalle de confiance, estimation d une proportion, fluctuation d echantillonnage'},
+    ],
+    // Domaine 3 - Applications & Geometrie
+    [
+      {theme:'Pourcentages & evolutions (STMG)', sousTh:'Taux d evolution, coefficient multiplicateur, evolutions successives et reciproques, indices'},
+      {theme:'Calculs financiers (STMG)',  sousTh:'Interets simples et composes, valeur acquise, actualisation, emprunts et amortissements'},
+      {theme:'Geometrie dans l espace (STI2D)', sousTh:'Vecteurs 3D, produit scalaire, representations, sections planes, volumes'},
+    ],
+  ]
+  // Expertes : 3 domaines (Arithmetique - Complexes - Graphes/Matrices), rotation par jour
+  const EXPERTES_DOMAINS: {theme:string,sousTh:string}[][] = [
+    // Domaine 1 - Arithmetique
+    [
+      {theme:'Divisibilite dans Z',      sousTh:'Divisibilite, division euclidienne, congruences modulo n, criteres, resolution modulaire'},
+      {theme:'PGCD, Bezout & Gauss',     sousTh:'Algorithme d Euclide, identite de Bezout au+bv=d, theoreme de Gauss, equations diophantiennes'},
+      {theme:'Nombres premiers & Fermat', sousTh:'Crible, decomposition en facteurs premiers, petit theoreme de Fermat, tests de primalite'},
+    ],
+    // Domaine 2 - Nombres complexes
+    [
+      {theme:'Complexes : formes & Moivre', sousTh:'Forme exponentielle, formule de Moivre, racines n-iemes de l unite, applications geometriques'},
+      {theme:'Polynomes dans C',         sousTh:'Racines d un polynome, factorisation dans C, relations coefficients-racines, equations'},
+    ],
+    // Domaine 3 - Graphes & Matrices
+    [
+      {theme:'Theorie des graphes',      sousTh:'Matrice d adjacence, chemins de longueur n (M^n), connexite, coloration, graphe eulerien/hamiltonien'},
+      {theme:'Calcul matriciel',         sousTh:'Operations, matrice inverse, puissances M^n, systemes lineaires, suites vectorielles V(n+1)=M*V(n)'},
+      {theme:'Chaines de Markov',        sousTh:'Matrice de transition, evolution P(n)=P0*M^n, etat stable pi=pi*M, convergence, graphe probabiliste'},
+    ],
+  ]
   const isTerm = candidat.sectionKey === 'terminale'
+  const isTechno = candidat.sectionKey === 'techno'
+  const isExpertes = candidat.sectionKey === 'expertes'
   const prog = isPrem
     ? PROG_PREMIERE.slice(0, nEx)
     : isTerm
     ? TERM_DOMAINS.map(d => d[(dayNum - 1) % d.length]).slice(0, nEx)
-    : sec.programme.slice(0, nEx)
+    : isTechno
+    ? TECHNO_DOMAINS.map(d => d[(dayNum - 1) % d.length]).slice(0, nEx)
+    : isExpertes
+    ? EXPERTES_DOMAINS.map(d => d[(dayNum - 1) % d.length]).slice(0, nEx)
+    : (() => { const _p = sec.programme; const _s = ((dayNum - 1) % _p.length + _p.length) % _p.length; return [..._p.slice(_s), ..._p.slice(0, _s)].slice(0, nEx) })()
 
   // Construire les lignes de programme (sans template literals imbriqués)
   const progParts: string[] = prog.map((p, i) =>
