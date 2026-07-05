@@ -3508,18 +3508,23 @@ const CHAPITRES_PAR_SECTION: Record<string, {
   chapitres:{slug:string;titre:string;badge:string;desc:string}[]
 }> = {
 
-  // ─── Terminale Générale — 13 chapitres (source: /bac-france/terminale-generale/[slug]) ───
+  // ─── Terminale Générale — 18 chapitres (source: /bac-france/terminale-generale/[slug]) ───
   terminale: { key:'terminale', label:'Terminale Générale — Spécialité Maths', color:'#f59e0b', icon:'🎓',
     chapitres: [
       { slug:'suites-limites',         titre:'Suites — Limites et Convergence',          badge:'Algèbre',   desc:'Limites de suites, suites bornées monotones, suites récurrentes definies par recurrence, comparaison, raisonnement par recurrence avance.' },
       { slug:'nombres-complexes',       titre:'Nombres complexes',                         badge:'Algèbre',   desc:'Formes algebrique, trigonometrique et exponentielle, module, argument, formule de Moivre, racines n-iemes de l unite, equations dans C.' },
+      { slug:'combinatoire-denombrement', titre:'Combinatoire et Denombrement',             badge:'Algebre',   desc:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p)=n!/(n-p)!, combinaisons C(n,p)=n!/(p!(n-p)!), triangle de Pascal, binome de Newton (a+b)^n.' },
       { slug:'limites-continuite',      titre:'Limites et Continuite',                     badge:'Analyse',   desc:'Limites finies et infinies, operations sur les limites, formes indeterminees, continuite sur un intervalle, TVI, asymptotes.' },
       { slug:'derivation-avancee',      titre:'Derivation avancee',                        badge:'Analyse',   desc:'Derivees composees f(g(x)), convexite et inflexion, tangente, etude complete de fonctions, extrema globaux et locaux, inequalites.' },
+      { slug:'exponentielle',           titre:'Fonction exponentielle',                     badge:'Analyse',   desc:'Definition unique f prime=f et f(0)=1, nombre e, proprietes algebriques e^(a+b)=e^a*e^b, derivee de e^u, limites, croissances comparees, etude de x*e^(-x), inegalite e^x >= x+1.' },
       { slug:'logarithme-neperien',     titre:'Logarithme neperien',                       badge:'Analyse',   desc:'Definition comme primitive de 1/x, proprietes algebriques, derivee de ln(u), etude de fonctions, equations, croissances comparees.' },
       { slug:'integration',             titre:'Integration',                                badge:'Analyse',   desc:'Primitives usuelles, integrale definie, relation de Chasles, IPP, calcul d aires entre courbes, valeur moyenne, suites d integrales.' },
       { slug:'equations-differentielles', titre:'Equations differentielles',               badge:'Analyse',   desc:'y prime = ay solution C*exp(ax), y prime = ay+b, condition initiale, modeles : circuits RC, refroidissement Newton, croissance.' },
       { slug:'vecteurs-espace',         titre:'Vecteurs et Reperes dans l espace',         badge:'Geometrie', desc:'Vecteurs 3D, combinaison lineaire, coplanarité, produit scalaire 3D, orthogonalite, distances et angles dans l espace.' },
       { slug:'droites-plans',           titre:'Droites et Plans — Equations cartesiennes',  badge:'Geometrie', desc:'Vecteur normal, equation ax+by+cz+d=0, representation parametrique de droite, positions relatives, distance d un point a un plan.' },
+      { slug:'produit-scalaire',        titre:'Produit scalaire dans l espace',             badge:'Geometrie', desc:'Produit scalaire u.v=x1x2+y1y2+z1z2, formule angulaire ||u||*||v||*cos(theta), orthogonalite u.v=0, distance point-plan |ax0+by0+cz0+d|/sqrt(a2+b2+c2), angles entre droites et plans.' },
+      { slug:'variables-aleatoires',    titre:'Variables aleatoires',                       badge:'Probas',    desc:'Variable aleatoire reelle, loi de probabilite, esperance E(X), variance V(X)=E(X2)-(E(X))2, ecart-type sigma, linearite E(aX+b)=aE(X)+b, V(aX+b)=a2*V(X).' },
+      { slug:'lois-continues',          titre:'Lois a densite (continues)',                 badge:'Probas',    desc:'Fonction densite f>=0 integrale=1, P(a<=X<=b)=integrale f(x)dx, repartition F(x)=P(X<=x), loi uniforme U[a,b] E=(a+b)/2, loi exponentielle E=1/lambda, propriete sans memoire.' },
       { slug:'loi-normale',             titre:'Loi normale (Gauss)',                        badge:'Probas',    desc:'Loi normale N(mu, sigma2), standardisation Z=(X-mu)/sigma, intervalles mu+/-k*sigma, approximation de la loi binomiale, TCL.' },
       { slug:'loi-binomiale',           titre:'Loi binomiale B(n,p)',                       badge:'Probas',    desc:'Schema de Bernoulli, P(X=k)=C(n,k)*p^k*(1-p)^(n-k), esperance np, variance np(1-p), inegalite de Bienayme-Tchebychev.' },
       { slug:'echantillonnage',         titre:'Echantillonnage et Estimation',              badge:'Probas',    desc:'Fluctuation d echantillonnage, intervalle de confiance a 95%, estimation d une frequence, taille d echantillon minimale.' },
