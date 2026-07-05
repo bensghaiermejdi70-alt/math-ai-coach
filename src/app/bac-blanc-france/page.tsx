@@ -1,3 +1,4 @@
+
 'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
@@ -2247,33 +2248,33 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
   // Terminale : 4 domaines (Analyse - Complexes - Probabilites - Geometrie espace),
   // chapitres reels du programme, ROTATION PAR JOUR -> examen different chaque jour, equilibre.
   const TERM_DOMAINS: {theme:string,sousTh:string}[][] = [
-    // Domaine 1 - Analyse (CH suites/limites/derivation/ln/integration/eq diff)
+    // Domaine 1 - Analyse (7 chapitres)
     [
       {theme:'Suites et convergence',       sousTh:'Limites, theoreme des gendarmes, suites monotones bornees, recurrence, arithmetico-geometriques'},
       {theme:'Limites et continuite',       sousTh:'Limites de fonctions, continuite, theoreme des valeurs intermediaires (TVI), dichotomie'},
       {theme:'Derivation et convexite',     sousTh:'Derivees composees, derivee seconde, convexite, point d inflexion, etude complete de fonction'},
-      {theme:'Fonction exponentielle',       sousTh:'Definition unique f prime=f et f(0)=1, nombre e, proprietes e^(a+b)=e^a*e^b, derivee de e^u, limites, croissances comparees, etude de x*e^(-x), inegalite e^x>=x+1'},
+      {theme:'Fonction exponentielle',      sousTh:'Definition unique f prime=f et f(0)=1, nombre e, proprietes e^(a+b)=e^a*e^b, derivee de e^u, limites, croissances comparees, etude de x*e^(-x), inegalite e^x>=x+1'},
       {theme:'Logarithme neperien',         sousTh:'Fonction ln, proprietes algebriques, limites, derivee, equations, etude de fonction'},
       {theme:'Integration',                 sousTh:'Primitives, integrale, integration par parties, valeur moyenne, calcul d aire'},
       {theme:'Equations differentielles',   sousTh:'y prime = a y + b, condition initiale, modeles RC et refroidissement, exponentielle'},
     ],
-    // Domaine 2 - Nombres complexes
-      {theme:'Combinatoire et denombrement',  sousTh:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p)=n!/(n-p)!, combinaisons C(n,p)=n!/(p!(n-p)!), triangle de Pascal, binome de Newton (a+b)^n'},
+    // Domaine 2 - Complexes et Combinatoire (4 chapitres)
     [
+      {theme:'Combinatoire et denombrement', sousTh:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p), combinaisons C(n,p), triangle de Pascal, binome de Newton (a+b)^n'},
       {theme:'Nombres complexes (algebrique)', sousTh:'Forme algebrique, conjugue, module, equations du second degre dans C'},
       {theme:'Complexes (trigo/expo)',      sousTh:'Formes trigonometrique et exponentielle, formule de Moivre, racines n-iemes'},
       {theme:'Complexes et geometrie',      sousTh:'Affixes, rotations, ensembles de points, configurations du plan complexe'},
     ],
-    // Domaine 3 - Probabilites (CH loi binomiale/normale/echantillonnage)
-      {theme:'Variables aleatoires',         sousTh:'Loi de probabilite, esperance E(X)=sum(xi*P(X=xi)), variance V(X)=E(X2)-(E(X))2, ecart-type sigma(X), linearite E(aX+b)=aE(X)+b, V(aX+b)=a2*V(X)'},
-      {theme:'Lois a densite (continues)',   sousTh:'Fonction densite f>=0 integrale=1, P(a<=X<=b)=integrale f(x)dx, repartition F(x)=P(X<=x), loi uniforme U[a,b] E=(a+b)/2, loi exponentielle E=1/lambda, propriete sans memoire'},
+    // Domaine 3 - Probabilites et Variables aleatoires (6 chapitres)
     [
+      {theme:'Variables aleatoires',        sousTh:'Loi de probabilite, esperance E(X), variance V(X)=E(X2)-(E(X))2, ecart-type sigma, linearite E(aX+b)=aE(X)+b, V(aX+b)=a2*V(X)'},
+      {theme:'Lois a densite (continues)',  sousTh:'Fonction densite f>=0 integrale=1, P(a<=X<=b)=integrale f(x)dx, repartition F(x), loi uniforme U[a,b], loi exponentielle E=1/lambda, propriete sans memoire'},
       {theme:'Loi binomiale',               sousTh:'Schema de Bernoulli, loi binomiale B(n,p), esperance, variance, calculs de probabilites'},
       {theme:'Loi normale',                 sousTh:'Loi normale N(mu, sigma^2), calculs P(a<=X<=b), intervalle de fluctuation'},
       {theme:'Echantillonnage et estimation', sousTh:'Intervalle de confiance, concentration (Bienayme-Tchebychev), loi des grands nombres'},
       {theme:'Probabilites conditionnelles', sousTh:'Arbre pondere, probabilites totales, formule de Bayes, independance'},
     ],
-    // Domaine 4 - Geometrie dans l espace (CH vecteurs/droites-plans)
+    // Domaine 4 - Geometrie dans l espace (4 chapitres)
     [
       {theme:'Vecteurs et reperes (espace)', sousTh:'Vecteurs 3D, colinearite, coplanarite, reperes, coordonnees'},
       {theme:'Droites et plans (espace)',   sousTh:'Representation parametrique, equation cartesienne, vecteur normal, produit scalaire 3D'},
@@ -2281,7 +2282,6 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Distances et intersections',  sousTh:'Distance point-plan, intersection droite/plan, projete orthogonal, orthogonalite'},
     ],
   ]
-  // Techno (STMG + STI2D/STL) : 3 domaines (Analyse - Probas/Stats - Applications/Geometrie), rotation par jour
   const TECHNO_DOMAINS: {theme:string,sousTh:string}[][] = [
     // Domaine 1 - Analyse (STMG + STI2D)
     [
@@ -2306,7 +2306,7 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
     ],
   ]
   // Expertes : 3 domaines (Arithmetique - Complexes - Graphes/Matrices), rotation par jour
-  const EXPERTES_DOMAINS: {theme:string,sousTh:string}[][] = [
+    const EXPERTES_DOMAINS: {theme:string,sousTh:string}[][] = [
     // Domaine 1 - Arithmetique
     [
       {theme:'Divisibilite dans Z',      sousTh:'Divisibilite, division euclidienne, congruences modulo n, criteres, resolution modulaire'},
@@ -2314,7 +2314,6 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Nombres premiers & Fermat', sousTh:'Crible, decomposition en facteurs premiers, petit theoreme de Fermat, tests de primalite'},
     ],
     // Domaine 2 - Nombres complexes
-      {theme:'Combinatoire et denombrement',  sousTh:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p)=n!/(n-p)!, combinaisons C(n,p)=n!/(p!(n-p)!), triangle de Pascal, binome de Newton (a+b)^n'},
     [
       {theme:'Complexes : formes & Moivre', sousTh:'Forme exponentielle, formule de Moivre, racines n-iemes de l unite, applications geometriques'},
       {theme:'Polynomes dans C',         sousTh:'Racines d un polynome, factorisation dans C, relations coefficients-racines, equations'},
@@ -2326,8 +2325,8 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Chaines de Markov',        sousTh:'Matrice de transition, evolution P(n)=P0*M^n, etat stable pi=pi*M, convergence, graphe probabiliste'},
     ],
   ]
-  const isTerm = candidat.sectionKey === 'terminale'
   const isTechno = candidat.sectionKey === 'techno'
+  const isTerm = candidat.sectionKey === 'terminale'
   const isExpertes = candidat.sectionKey === 'expertes'
   const prog = isPrem
     ? PROG_PREMIERE.slice(0, nEx)
