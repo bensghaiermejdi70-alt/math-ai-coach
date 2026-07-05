@@ -2252,17 +2252,21 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Suites et convergence',       sousTh:'Limites, theoreme des gendarmes, suites monotones bornees, recurrence, arithmetico-geometriques'},
       {theme:'Limites et continuite',       sousTh:'Limites de fonctions, continuite, theoreme des valeurs intermediaires (TVI), dichotomie'},
       {theme:'Derivation et convexite',     sousTh:'Derivees composees, derivee seconde, convexite, point d inflexion, etude complete de fonction'},
+      {theme:'Fonction exponentielle',       sousTh:'Definition unique f prime=f et f(0)=1, nombre e, proprietes e^(a+b)=e^a*e^b, derivee de e^u, limites, croissances comparees, etude de x*e^(-x), inegalite e^x>=x+1'},
       {theme:'Logarithme neperien',         sousTh:'Fonction ln, proprietes algebriques, limites, derivee, equations, etude de fonction'},
       {theme:'Integration',                 sousTh:'Primitives, integrale, integration par parties, valeur moyenne, calcul d aire'},
       {theme:'Equations differentielles',   sousTh:'y prime = a y + b, condition initiale, modeles RC et refroidissement, exponentielle'},
     ],
     // Domaine 2 - Nombres complexes
+      {theme:'Combinatoire et denombrement',  sousTh:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p)=n!/(n-p)!, combinaisons C(n,p)=n!/(p!(n-p)!), triangle de Pascal, binome de Newton (a+b)^n'},
     [
       {theme:'Nombres complexes (algebrique)', sousTh:'Forme algebrique, conjugue, module, equations du second degre dans C'},
       {theme:'Complexes (trigo/expo)',      sousTh:'Formes trigonometrique et exponentielle, formule de Moivre, racines n-iemes'},
       {theme:'Complexes et geometrie',      sousTh:'Affixes, rotations, ensembles de points, configurations du plan complexe'},
     ],
     // Domaine 3 - Probabilites (CH loi binomiale/normale/echantillonnage)
+      {theme:'Variables aleatoires',         sousTh:'Loi de probabilite, esperance E(X)=sum(xi*P(X=xi)), variance V(X)=E(X2)-(E(X))2, ecart-type sigma(X), linearite E(aX+b)=aE(X)+b, V(aX+b)=a2*V(X)'},
+      {theme:'Lois a densite (continues)',   sousTh:'Fonction densite f>=0 integrale=1, P(a<=X<=b)=integrale f(x)dx, repartition F(x)=P(X<=x), loi uniforme U[a,b] E=(a+b)/2, loi exponentielle E=1/lambda, propriete sans memoire'},
     [
       {theme:'Loi binomiale',               sousTh:'Schema de Bernoulli, loi binomiale B(n,p), esperance, variance, calculs de probabilites'},
       {theme:'Loi normale',                 sousTh:'Loi normale N(mu, sigma^2), calculs P(a<=X<=b), intervalle de fluctuation'},
@@ -2273,6 +2277,7 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
     [
       {theme:'Vecteurs et reperes (espace)', sousTh:'Vecteurs 3D, colinearite, coplanarite, reperes, coordonnees'},
       {theme:'Droites et plans (espace)',   sousTh:'Representation parametrique, equation cartesienne, vecteur normal, produit scalaire 3D'},
+      {theme:'Produit scalaire dans l espace', sousTh:'u.v=x1x2+y1y2+z1z2, formule angulaire cos(theta), orthogonalite u.v=0, distance point-plan |ax0+by0+cz0+d|/sqrt(a2+b2+c2), angles entre droites et plans'},
       {theme:'Distances et intersections',  sousTh:'Distance point-plan, intersection droite/plan, projete orthogonal, orthogonalite'},
     ],
   ]
@@ -2309,6 +2314,7 @@ async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: 
       {theme:'Nombres premiers & Fermat', sousTh:'Crible, decomposition en facteurs premiers, petit theoreme de Fermat, tests de primalite'},
     ],
     // Domaine 2 - Nombres complexes
+      {theme:'Combinatoire et denombrement',  sousTh:'Principes additif et multiplicatif, factorielle n!, arrangements A(n,p)=n!/(n-p)!, combinaisons C(n,p)=n!/(p!(n-p)!), triangle de Pascal, binome de Newton (a+b)^n'},
     [
       {theme:'Complexes : formes & Moivre', sousTh:'Forme exponentielle, formule de Moivre, racines n-iemes de l unite, applications geometriques'},
       {theme:'Polynomes dans C',         sousTh:'Racines d un polynome, factorisation dans C, relations coefficients-racines, equations'},
