@@ -16,32 +16,38 @@ const C = { thm:'#4f6ef7', def:'#06d6a0', formule:'#f59e0b', prop:'#8b5cf6', met
 const L: Record<string,string> = { thm:'Théorème', def:'Définition', formule:'Formule clé', prop:'Propriété', methode:'Méthode', corollaire:'Corollaire' }
 
 const NAV_ORDER = [
-  'suites-limites','nombres-complexes',
-  'limites-continuite','derivation-avancee','logarithme-neperien','integration','equations-differentielles',
-  'vecteurs-espace','droites-plans',
-  'loi-normale','loi-binomiale','echantillonnage',
+  'suites-limites','nombres-complexes','combinatoire-denombrement',
+  'limites-continuite','derivation-avancee','exponentielle','logarithme-neperien','integration','equations-differentielles',
+  'vecteurs-espace','droites-plans','produit-scalaire',
+  'variables-aleatoires','lois-continues','loi-normale','loi-binomiale','echantillonnage',
   'python-avance',
 ]
 const TITRES_NAV: Record<string,string> = {
-  'suites-limites':           'CH 01 — Suites & Convergence',
-  'nombres-complexes':        'CH 02 — Nombres Complexes',
-  'limites-continuite':       'CH 03 — Limites & Continuité',
-  'derivation-avancee':       'CH 04 — Dérivation Avancée',
-  'logarithme-neperien':      'CH 05 — Logarithme Népérien',
-  'integration':              'CH 06 — Intégration',
-  'equations-differentielles':'CH 07 — Équations Différentielles',
-  'vecteurs-espace':          "CH 08 — Vecteurs & Repères",
-  'droites-plans':            'CH 09 — Droites & Plans',
-  'loi-normale':              'CH 10 — Loi Normale',
-  'loi-binomiale':            'CH 11 — Loi Binomiale',
-  'echantillonnage':          'CH 12 — Échantillonnage',
-  'python-avance':            'CH 13 — Python & Algorithmique',
+  'suites-limites':              'CH 01 — Suites & Convergence',
+  'nombres-complexes':           'CH 02 — Nombres Complexes',
+  'combinatoire-denombrement':   'CH 03 — Combinatoire & Dénombrement',
+  'limites-continuite':          'CH 04 — Limites & Continuité',
+  'derivation-avancee':          'CH 05 — Dérivation Avancée',
+  'exponentielle':               'CH 06 — Fonction Exponentielle',
+  'logarithme-neperien':         'CH 07 — Logarithme Népérien',
+  'integration':                 'CH 08 — Intégration',
+  'equations-differentielles':   'CH 09 — Équations Différentielles',
+  'vecteurs-espace':             'CH 10 — Vecteurs & Repères',
+  'droites-plans':               'CH 11 — Droites & Plans',
+  'produit-scalaire':            'CH 12 — Produit Scalaire',
+  'variables-aleatoires':        'CH 13 — Variables Aléatoires',
+  'lois-continues':              'CH 14 — Lois à Densité',
+  'loi-normale':                 'CH 15 — Loi Normale',
+  'loi-binomiale':               'CH 16 — Loi Binomiale',
+  'echantillonnage':             'CH 17 — Échantillonnage',
+  'python-avance':               'CH 18 — Python & Algorithmique',
 }
 const SEC_COLORS: Record<string,string> = {
-  'suites-limites':'#4f6ef7','nombres-complexes':'#4f6ef7',
-  'limites-continuite':'#06d6a0','derivation-avancee':'#06d6a0','logarithme-neperien':'#06d6a0',
-  'integration':'#06d6a0','equations-differentielles':'#06d6a0',
-  'vecteurs-espace':'#f59e0b','droites-plans':'#f59e0b',
+  'suites-limites':'#4f6ef7','nombres-complexes':'#4f6ef7','combinatoire-denombrement':'#4f6ef7',
+  'limites-continuite':'#06d6a0','derivation-avancee':'#06d6a0','exponentielle':'#06d6a0',
+  'logarithme-neperien':'#06d6a0','integration':'#06d6a0','equations-differentielles':'#06d6a0',
+  'vecteurs-espace':'#f59e0b','droites-plans':'#f59e0b','produit-scalaire':'#f59e0b',
+  'variables-aleatoires':'#8b5cf6','lois-continues':'#8b5cf6',
   'loi-normale':'#8b5cf6','loi-binomiale':'#8b5cf6','echantillonnage':'#8b5cf6',
   'python-avance':'#ec4899',
 }
@@ -899,6 +905,281 @@ const ALL_CHAPTERS: Record<string,Chap> = {
   ]
 },
 
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 03 — COMBINATOIRE & DÉNOMBREMENT
+// ─────────────────────────────────────────────────────────────────────
+'combinatoire-denombrement': {
+  id:'combinatoire-denombrement', emoji:'C(n,p)', badge:'Algèbre', color:'#4f6ef7',
+  titre:'Combinatoire & Dénombrement',
+  desc:'Principes de dénombrement, factorielle, arrangements, combinaisons C(n,p), triangle de Pascal, coefficients binomiaux, binôme de Newton.',
+  souschapitres:[
+    {
+      id:'sc-comb-1', titre:'3.1 Principes fondamentaux',
+      notions:['Principe additif : |A∪B|=|A|+|B| si A∩B=∅','Principe multiplicatif : |A×B|=|A|×|B|','Arbre de dénombrement','Factorielle : n!=1×2×…×n'],
+      blocs:[
+        {
+          notion:'🔢 Principes et factorielle',
+          theoremes:[
+            { id:'D-CB1', type:'def', nom:'Factorielle',
+              enonce:"n! = 1×2×3×…×n (n≥1)  ;  0!=1\n\nPropriétés :\n(n+1)! = (n+1)×n!\nn!/( n−1)! = n\n\nValeurs : 0!=1, 1!=1, 2!=2, 3!=6, 4!=24, 5!=120, 6!=720, 7!=5040" },
+            { id:'P-CB1', type:'prop', nom:'Principes de dénombrement',
+              enonce:"PRINCIPE ADDITIF :\nSi A et B sont disjoints : |A∪B|=|A|+|B|\nGénéralisation : |A₁∪…∪Aₖ|=|A₁|+…+|Aₖ|\n\nPRINCIPE MULTIPLICATIF :\nChoix successifs indépendants : n₁×n₂×…×nₖ possibilités\n\nExemple : codes de 4 chiffres (0-9) → 10⁴=10000",
+              remarque:"Toujours vérifier si les choix sont avec ou sans remise, et avec ou sans ordre." },
+          ],
+          exercices:[
+            { id:'EX-CB1', niveau:'Facile', titre:'Calcul de factorielles',
+              enonce:"Calculer 5!/3! et 7!/(5!×2!)",
+              correction:"5!/3!=120/6=20\n7!/(5!×2!)=5040/(120×2)=21" },
+            { id:'EX-CB2', niveau:'Intermédiaire', titre:'Principe multiplicatif',
+              enonce:"Un code est formé de 2 lettres (A-Z) puis 3 chiffres (0-9). Combien de codes différents ?",
+              correction:"26×26×10×10×10=26²×10³=676×1000=676 000 codes." },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-comb-2', titre:'3.2 Arrangements et combinaisons',
+      notions:['Arrangements : A(n,p)=n!/(n-p)!','Combinaisons : C(n,p)=n!/(p!(n-p)!)','Triangle de Pascal : C(n,p)=C(n-1,p-1)+C(n-1,p)','Symétrie : C(n,p)=C(n,n-p)'],
+      blocs:[
+        {
+          notion:'🎯 Arrangements et combinaisons',
+          theoremes:[
+            { id:'D-CB2', type:'def', nom:'Arrangements',
+              enonce:"Arranger p éléments parmi n (ordre important, sans répétition) :\nA(n,p) = n×(n-1)×…×(n-p+1) = n!/(n-p)!\n\nCas particulier : permutations de n éléments = A(n,n)=n!\n\nAvec répétition : nᵖ façons de choisir p éléments parmi n" },
+            { id:'D-CB3', type:'def', nom:'Combinaisons',
+              enonce:"Choisir p éléments parmi n (ordre non important, sans répétition) :\nC(n,p) = n!/(p!(n-p)!)\n\nNotation : aussi noté ⟨n/p⟩ ou C_n^p\n\nPropriétés :\nC(n,0)=C(n,n)=1\nC(n,1)=C(n,n-1)=n\nC(n,p)=C(n,n-p)  [symétrie]\nC(n,p)=C(n-1,p-1)+C(n-1,p)  [Pascal]" },
+            { id:'T-CB1', type:'thm', nom:'Binôme de Newton',
+              enonce:"(a+b)ⁿ = Σₖ₌₀ⁿ C(n,k)·aⁿ⁻ᵏ·bᵏ\n\n(a+b)² = a²+2ab+b²\n(a+b)³ = a³+3a²b+3ab²+b³\n\nCas particuliers :\n(1+x)ⁿ = 1+C(n,1)x+C(n,2)x²+…+xⁿ\n\nTriangle de Pascal :\nn=0 :         1\nn=1 :       1   1\nn=2 :     1   2   1\nn=3 :   1   3   3   1\nn=4 : 1   4   6   4   1",
+              remarque:"La somme de la ligne n du triangle de Pascal vaut 2ⁿ : C(n,0)+C(n,1)+…+C(n,n)=2ⁿ." },
+          ],
+          exercices:[
+            { id:'EX-CB3', niveau:'Facile', titre:'Calcul de combinaisons',
+              enonce:"Calculer C(6,2), C(8,3) et C(10,10).",
+              correction:"C(6,2)=6!/(2!4!)=15\nC(8,3)=8!/(3!5!)=56\nC(10,10)=1" },
+            { id:'EX-CB4', niveau:'Intermédiaire', titre:'Comité de délégués',
+              enonce:"Dans une classe de 30 élèves, on choisit 4 délégués. Combien y a-t-il de choix possibles ?",
+              correction:"C(30,4)=30!/(4!×26!)=(30×29×28×27)/(4×3×2×1)=657720/24=27 405." },
+            { id:'EX-CB5', niveau:'Difficile', titre:'Binôme de Newton',
+              enonce:"Développer (2x−3)⁴.",
+              correction:"(2x−3)⁴=C(4,0)(2x)⁴+C(4,1)(2x)³(−3)+C(4,2)(2x)²(−3)²+C(4,3)(2x)(−3)³+C(4,4)(−3)⁴\n=16x⁴−96x³+216x²−216x+81" },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 06 — FONCTION EXPONENTIELLE
+// ─────────────────────────────────────────────────────────────────────
+'exponentielle': {
+  id:'exponentielle', emoji:'eˣ', badge:'Analyse', color:'#06d6a0',
+  titre:'Fonction exponentielle',
+  desc:'Définition de exp, nombre e, positivité, croissance, dérivabilité, règles algébriques, limites, croissances comparées, équations et étude de fonctions.',
+  souschapitres:[
+    {
+      id:'sc-exp-1', titre:'6.1 Définition et propriétés',
+      notions:['exp est la seule fonction f telle que f\'=f et f(0)=1','e=exp(1)≈2,718','exp(a+b)=exp(a)·exp(b)','exp est toujours >0, strictement croissante'],
+      blocs:[
+        {
+          notion:'📐 Définition et règles algébriques',
+          theoremes:[
+            { id:'D-EX1', type:'def', nom:'Fonction exponentielle',
+              enonce:"Il existe une unique fonction f telle que :\nf\'=f  et  f(0)=1\nCette fonction est la fonction exponentielle : x↦exp(x)=eˣ\n\ne = exp(1) ≈ 2,71828…  (irrationnel)\n\nNotation : exp(x) = eˣ" },
+            { id:'P-EX1', type:'prop', nom:'Propriétés algébriques',
+              enonce:"Pour tous réels a, b :\neᵃ⁺ᵇ = eᵃ·eᵇ\neᵃ⁻ᵇ = eᵃ/eᵇ\n(eᵃ)ⁿ = eⁿᵃ\ne⁻ᵃ = 1/eᵃ\n(eᵃ)ᵇ = eᵃᵇ\ne⁰ = 1\n\nPropriétés de la courbe :\n• Toujours >0 : eˣ>0 pour tout x∈ℝ\n• Strictement croissante sur ℝ\n• Courbe passe par (0,1) et (1,e)",
+              remarque:"eˣ>0 pour TOUT x réel, même très négatif. Ne jamais écrire eˣ=0." },
+            { id:'T-EX1', type:'thm', nom:'Dérivée et convexité',
+              enonce:"(eˣ)\' = eˣ\n(eᵘ)\' = u\'·eᵘ  (dérivation en chaîne)\n\nConséquences :\n• eˣ est dérivable sur ℝ\n• (eˣ)\'=eˣ>0 : strictement croissante\n• (eˣ)\'\'=eˣ>0 : convexe sur ℝ\n\nTangente en x₀ : y=eˣ⁰(x−x₀+1)\nEn x₀=0 : tangente y=x+1" },
+          ],
+          exercices:[
+            { id:'EX-EX1', niveau:'Facile', titre:'Calculs avec exp',
+              enonce:"Simplifier : e²·e³, e⁵/e², (e³)², e⁻¹.",
+              correction:"e²·e³=e⁵\ne⁵/e²=e³\n(e³)²=e⁶\ne⁻¹=1/e≈0,368" },
+            { id:'EX-EX2', niveau:'Intermédiaire', titre:'Équation exponentielle',
+              enonce:"Résoudre eˣ=e²ˣ⁻¹.",
+              correction:"eˣ=e²ˣ⁻¹ ⟺ x=2x−1 ⟺ x=1.\nSolution : {1}" },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-exp-2', titre:'6.2 Limites et étude de fonctions',
+      notions:['lim eˣ (x→+∞)=+∞ ; lim eˣ (x→-∞)=0','Croissances comparées : xⁿeˣ→+∞, xⁿe⁻ˣ→0','Étude de f(x)=xe^(-x), f(x)=e^(x²)'],
+      blocs:[
+        {
+          notion:'📊 Limites et croissances comparées',
+          theoremes:[
+            { id:'T-EX2', type:'thm', nom:'Limites fondamentales',
+              enonce:"lim(x→+∞) eˣ = +∞\nlim(x→−∞) eˣ = 0  (axe des abscisses : asymptote horizontale)\n\nCROISSANCES COMPARÉES (à savoir par cœur) :\nlim(x→+∞) eˣ/xⁿ = +∞  (exp l'emporte sur tout polynôme)\nlim(x→+∞) xⁿe⁻ˣ = 0   (exp écrase tout polynôme)\nlim(x→−∞) xⁿeˣ = 0   (exp→0 plus vite que tout polynôme)\nlim(x→0, x>0) eˣ/x = +∞",
+              remarque:"Moyen mnémotechnique : exp TOUJOURS gagne contre les puissances, dans les deux sens." },
+            { id:'M-EX1', type:'methode', nom:'Étude de f(x)=eᵘ⁽ˣ⁾',
+              enonce:"1. Domaine : ℝ entier (exp définie partout)\n2. Dérivée : f\'(x)=u\'(x)·eᵘ⁽ˣ⁾\n   Signe de f\' = signe de u\' (car eᵘ>0)\n3. Tableau de variations de u → tableau de f\n4. Limites aux bornes : composer avec lim de eˣ\n5. Asymptotes : chercher lim f(x) = 0 → asymptote y=0\n\nFonctions classiques :\nf(x)=xe⁻ˣ : maximum en x=1, vaut 1/e\nf(x)=e⁻ˣ² : cloche de Gauss, max en x=0" },
+          ],
+          exercices:[
+            { id:'EX-EX3', niveau:'Intermédiaire', titre:'Étude de f(x)=xe⁻ˣ',
+              enonce:"Étudier les variations de f(x)=xe⁻ˣ et dresser le tableau de variations.",
+              correction:"f\'(x)=e⁻ˣ+x(−e⁻ˣ)=e⁻ˣ(1−x)\ne⁻ˣ>0 donc signe f\'=signe(1−x) : f\'>0 si x<1, f\'<0 si x>1\nMax en x=1 : f(1)=e⁻¹=1/e\nlim(x→−∞) xe⁻ˣ=−∞ ; lim(x→+∞) xe⁻ˣ=0 (croissances comp.)\nAsymptote y=0 en +∞." },
+            { id:'EX-EX4', niveau:'Difficile', titre:'Inégalité avec exp',
+              enonce:"Montrer que eˣ≥x+1 pour tout x∈ℝ.",
+              correction:"Soit g(x)=eˣ−x−1.\ng\'(x)=eˣ−1 ; g\'(x)=0 ⟺ x=0.\ng décroît sur ]−∞,0[ et croît sur ]0,+∞[.\nMin en x=0 : g(0)=1−0−1=0.\nDonc g(x)≥0 pour tout x, soit eˣ≥x+1." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 12 — PRODUIT SCALAIRE DANS L'ESPACE
+// ─────────────────────────────────────────────────────────────────────
+'produit-scalaire': {
+  id:'produit-scalaire', emoji:'u⃗·v⃗', badge:'Géométrie', color:'#f59e0b',
+  titre:'Produit scalaire dans l\'espace',
+  desc:'Produit scalaire en coordonnées, orthogonalité, distances point-droite et point-plan, angles entre droites et plans, projections.',
+  souschapitres:[
+    {
+      id:'sc-ps-1', titre:'12.1 Définition et propriétés',
+      notions:['u⃗·v⃗=x₁x₂+y₁y₂+z₁z₂ en coordonnées','u⃗·v⃗=||u⃗||·||v⃗||·cos θ','u⃗⊥v⃗ ⟺ u⃗·v⃗=0','Bilinéarité, symétrie'],
+      blocs:[
+        {
+          notion:'🔷 Produit scalaire',
+          theoremes:[
+            { id:'D-PS1', type:'def', nom:'Produit scalaire dans l\'espace',
+              enonce:"Si u⃗=(x₁,y₁,z₁) et v⃗=(x₂,y₂,z₂) :\nu⃗·v⃗ = x₁x₂+y₁y₂+z₁z₂\n\nFormule angulaire :\nu⃗·v⃗ = ||u⃗||·||v⃗||·cos(θ)  où θ=angle entre u⃗ et v⃗\n\nNorme : ||u⃗||=√(x²+y²+z²)\n||u⃗||²=u⃗·u⃗" },
+            { id:'P-PS1', type:'prop', nom:'Propriétés algébriques',
+              enonce:"Symétrie : u⃗·v⃗=v⃗·u⃗\nBilinéarité : (u⃗+v⃗)·w⃗=u⃗·w⃗+v⃗·w⃗\nHomogénéité : (λu⃗)·v⃗=λ(u⃗·v⃗)\n\nIdentités remarquables :\n||u⃗+v⃗||²=||u⃗||²+2u⃗·v⃗+||v⃗||²\n||u⃗−v⃗||²=||u⃗||²−2u⃗·v⃗+||v⃗||²\n(u⃗+v⃗)·(u⃗−v⃗)=||u⃗||²−||v⃗||²\n\nORTHOGONALITÉ :\nu⃗⊥v⃗ ⟺ u⃗·v⃗=0" },
+          ],
+          exercices:[
+            { id:'EX-PS1', niveau:'Facile', titre:'Calcul de produit scalaire',
+              enonce:"u⃗=(2,−1,3) et v⃗=(1,4,−2). Calculer u⃗·v⃗, ||u⃗|| et l'angle entre u⃗ et v⃗.",
+              correction:"u⃗·v⃗=2×1+(−1)×4+3×(−2)=2−4−6=−8\n||u⃗||=√(4+1+9)=√14\n||v⃗||=√(1+16+4)=√21\ncos θ=−8/(√14×√21)=−8/√294≈−0,467\nθ≈117,8°" },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-ps-2', titre:'12.2 Distances et angles',
+      notions:['Distance point-plan : d=|ax₀+by₀+cz₀+d|/√(a²+b²+c²)','Angle droite/plan, plan/plan','Vecteur normal à un plan'],
+      blocs:[
+        {
+          notion:'📏 Distances et orthogonalité',
+          theoremes:[
+            { id:'T-PS1', type:'formule', nom:'Distance point-plan',
+              enonce:"Plan π : ax+by+cz+d=0  de vecteur normal n⃗=(a,b,c)\nPoint A(x₀,y₀,z₀)\n\nd(A,π) = |ax₀+by₀+cz₀+d| / √(a²+b²+c²)\n\nCas particulier — distance point-droite :\nDroite D de vecteur directeur u⃗, passant par B :\nd(A,D) = ||BA⃗ ∧ u⃗|| / ||u⃗||  (produit vectoriel)\n\nOU : d(A,D)=√(||BA⃗||²−(BA⃗·u⃗/||u⃗||)²)",
+              remarque:"Le vecteur normal n⃗=(a,b,c) se lit directement sur l'équation cartésienne du plan ax+by+cz+d=0." },
+            { id:'T-PS2', type:'thm', nom:'Angles entre plans et droites',
+              enonce:"ANGLE ENTRE DEUX PLANS de normales n⃗₁ et n⃗₂ :\ncos θ = |n⃗₁·n⃗₂| / (||n⃗₁||·||n⃗₂||)\n\nANGLE DROITE/PLAN (u⃗ direct. de droite, n⃗ normal au plan) :\nsin φ = |u⃗·n⃗| / (||u⃗||·||n⃗||)\n\nORTHOGONALITÉ :\nDeux plans ⊥ ⟺ n⃗₁·n⃗₂=0\nDroite ⊥ plan ⟺ vecteur directeur ∥ vecteur normal" },
+          ],
+          exercices:[
+            { id:'EX-PS2', niveau:'Intermédiaire', titre:'Distance point-plan',
+              enonce:"Calculer la distance du point A(1,2,−1) au plan 2x−y+2z+3=0.",
+              correction:"d=|2×1+(−1)×2+2×(−1)+3|/√(4+1+4)\n=|2−2−2+3|/3=|1|/3=1/3" },
+            { id:'EX-PS3', niveau:'Difficile', titre:'Plan perpendiculaire',
+              enonce:"Trouver l'équation du plan passant par A(1,0,2) et perpendiculaire aux plans x+y−z=1 et 2x−y+z=0.",
+              correction:"n⃗ doit être ⊥ à n⃗₁=(1,1,−1) et n⃗₂=(2,−1,1).\nn⃗=n⃗₁∧n⃗₂=(1×1−(−1)×(−1), (−1)×2−1×1, 1×(−1)−1×2)=(0,−3,−3)\nOn peut prendre n⃗=(0,1,1).\nPlan : 0(x−1)+1(y−0)+1(z−2)=0 → y+z−2=0." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 13 — VARIABLES ALÉATOIRES
+// ─────────────────────────────────────────────────────────────────────
+'variables-aleatoires': {
+  id:'variables-aleatoires', emoji:'E(X)', badge:'Probas', color:'#8b5cf6',
+  titre:'Variables aléatoires',
+  desc:'Variable aléatoire réelle, loi de probabilité, espérance E(X), variance V(X), écart-type σ(X), linéarité, variance d\'une somme.',
+  souschapitres:[
+    {
+      id:'sc-va-1', titre:'13.1 Loi de probabilité',
+      notions:['Variable aléatoire X : valeurs x₁,…,xₙ avec P(X=xᵢ)','Σ P(X=xᵢ)=1','Tableau de la loi','Espérance, variance, écart-type'],
+      blocs:[
+        {
+          notion:'🎲 Variable aléatoire et loi',
+          theoremes:[
+            { id:'D-VA1', type:'def', nom:'Variable aléatoire réelle',
+              enonce:"Une variable aléatoire X associe à chaque issue ω de l'univers Ω un réel X(ω).\n\nLoi de probabilité : tableau donnant\n P(X=x₁), P(X=x₂), …, P(X=xₙ)\navec Σᵢ P(X=xᵢ)=1\n\nEspérance :\nE(X) = Σᵢ xᵢ·P(X=xᵢ)\n= 'valeur moyenne' de X sur un grand nombre d'expériences" },
+            { id:'D-VA2', type:'def', nom:'Variance et écart-type',
+              enonce:"Variance :\nV(X) = E((X−E(X))²) = Σᵢ (xᵢ−E(X))²·P(X=xᵢ)\n\nFormule de calcul (plus pratique) :\nV(X) = E(X²) − (E(X))²\noù E(X²)=Σᵢ xᵢ²·P(X=xᵢ)\n\nÉcart-type :\nσ(X) = √V(X)\n\nInterprétation : σ(X) mesure la dispersion autour de la moyenne.",
+              remarque:"V(X)≥0 toujours ; V(X)=0 ssi X est constante (presque sûrement)." },
+            { id:'P-VA1', type:'prop', nom:'Linéarité de l\'espérance',
+              enonce:"Pour toutes variables X, Y et réels a, b :\nE(aX+b) = aE(X)+b\nE(X+Y) = E(X)+E(Y)  (toujours vrai)\n\nVariance :\nV(aX+b) = a²V(X)\nV(X+Y) = V(X)+V(Y)  (si X et Y indépendantes)\n\nÉcart-type :\nσ(aX+b) = |a|·σ(X)" },
+          ],
+          exercices:[
+            { id:'EX-VA1', niveau:'Facile', titre:'Calcul de E(X) et V(X)',
+              enonce:"X prend les valeurs 1, 2, 3 avec P(X=1)=0,5 ; P(X=2)=0,3 ; P(X=3)=0,2. Calculer E(X) et V(X).",
+              correction:"E(X)=1×0,5+2×0,3+3×0,2=0,5+0,6+0,6=1,7\nE(X²)=1×0,5+4×0,3+9×0,2=0,5+1,2+1,8=3,5\nV(X)=3,5−1,7²=3,5−2,89=0,61\nσ(X)=√0,61≈0,781" },
+            { id:'EX-VA2', niveau:'Intermédiaire', titre:'Jeu de dé',
+              enonce:"On lance un dé équilibré. X est le gain : +2€ si on obtient 6, −1€ sinon. Calculer E(X). Le jeu est-il favorable ?",
+              correction:"P(X=2)=1/6 ; P(X=−1)=5/6\nE(X)=2×(1/6)+(−1)×(5/6)=2/6−5/6=−3/6=−0,5€\nE(X)<0 : jeu défavorable au joueur." },
+          ]
+        },
+      ]
+    },
+  ]
+},
+
+// ─────────────────────────────────────────────────────────────────────
+// CH 14 — LOIS À DENSITÉ (CONTINUES)
+// ─────────────────────────────────────────────────────────────────────
+'lois-continues': {
+  id:'lois-continues', emoji:'∫f(x)dx', badge:'Probas', color:'#8b5cf6',
+  titre:'Lois à densité (continues)',
+  desc:'Fonction densité, probabilité comme aire, fonction de répartition, loi uniforme, loi exponentielle (λ, durée de vie, propriété sans mémoire).',
+  souschapitres:[
+    {
+      id:'sc-lc-1', titre:'14.1 Densité et répartition',
+      notions:['f densité : f≥0, ∫f=1','P(a≤X≤b)=∫ₐᵇf(x)dx','Fonction de répartition F(x)=P(X≤x)','E(X)=∫xf(x)dx'],
+      blocs:[
+        {
+          notion:'📉 Lois continues — concepts',
+          theoremes:[
+            { id:'D-LC1', type:'def', nom:'Fonction densité',
+              enonce:"f est une densité de probabilité si :\n• f(x)≥0 pour tout x\n• ∫₋∞^(+∞) f(x)dx = 1\n\nProbabilité :\nP(a≤X≤b) = ∫ₐᵇ f(x)dx\n\nREMARQUE : P(X=x₀)=0 pour toute valeur isolée x₀\n→ P(a≤X≤b)=P(a<X<b)=P(a≤X<b)=P(a<X≤b)" },
+            { id:'D-LC2', type:'def', nom:'Fonction de répartition',
+              enonce:"F(x) = P(X≤x) = ∫₋∞ˣ f(t)dt\n\nPropriétés :\n• F croissante sur ℝ\n• lim(x→−∞) F(x)=0 ; lim(x→+∞) F(x)=1\n• F\'(x)=f(x)\n• P(a<X≤b)=F(b)−F(a)\n\nEspérance : E(X)=∫₋∞^(+∞) xf(x)dx\nVariance : V(X)=∫x²f(x)dx−(E(X))²" },
+          ],
+          exercices:[
+            { id:'EX-LC1', niveau:'Intermédiaire', titre:'Vérification de densité',
+              enonce:"f(x)=3x² sur [0,1], 0 ailleurs. Vérifier que f est une densité, puis calculer P(0≤X≤1/2).",
+              correction:"∫₀¹ 3x²dx=[x³]₀¹=1 ✓ et f≥0 ✓\nP(0≤X≤1/2)=∫₀^(1/2) 3x²dx=[x³]₀^(1/2)=(1/2)³=1/8" },
+          ]
+        },
+      ]
+    },
+    {
+      id:'sc-lc-2', titre:'14.2 Loi uniforme et loi exponentielle',
+      notions:['Loi U[a,b] : densité 1/(b-a)','Loi exp(λ) : densité λe^(-λx) sur [0,+∞)','E(loi exp)=1/λ','Propriété sans mémoire'],
+      blocs:[
+        {
+          notion:'📊 Lois usuelles continues',
+          theoremes:[
+            { id:'T-LC1', type:'thm', nom:'Loi uniforme U[a,b]',
+              enonce:"X suit la loi uniforme sur [a,b] :\nf(x) = 1/(b−a) sur [a,b], 0 ailleurs\n\nE(X) = (a+b)/2\nV(X) = (b−a)²/12\n\nP(c≤X≤d) = (d−c)/(b−a)  pour a≤c≤d≤b\n\nInterprétation : toutes les valeurs de [a,b] sont équiprobables." },
+            { id:'T-LC2', type:'thm', nom:'Loi exponentielle de paramètre λ',
+              enonce:"X suit la loi exponentielle de paramètre λ>0 :\nf(x) = λe^(−λx) sur [0,+∞), 0 ailleurs\n\nF(x) = 1−e^(−λx)  pour x≥0\nP(X>x) = e^(−λx)\n\nE(X) = 1/λ  (durée de vie moyenne)\nV(X) = 1/λ²\nσ(X) = 1/λ\n\nPROPRIÉTÉ SANS MÉMOIRE :\nP(X>s+t | X>s) = P(X>t)\n→ Le passé n'influence pas l'avenir (modèle de durée de vie).",
+              remarque:"La loi exponentielle modélise la durée de vie d'un composant, le temps d'attente d'un appel, etc. Sa propriété sans mémoire est unique parmi les lois continues." },
+          ],
+          exercices:[
+            { id:'EX-LC2', niveau:'Facile', titre:'Loi uniforme',
+              enonce:"Un bus arrive à une heure uniforme sur [0,20] minutes. Quelle est la probabilité d'attendre plus de 12 minutes ?",
+              correction:"X~U[0,20]\nP(X>12)=(20−12)/(20−0)=8/20=0,4" },
+            { id:'EX-LC3', niveau:'Intermédiaire', titre:'Loi exponentielle',
+              enonce:"La durée de vie (en années) d'une ampoule suit une loi exponentielle de paramètre λ=0,5. Calculer la durée de vie moyenne et P(X>3).",
+              correction:"E(X)=1/λ=1/0,5=2 ans\nP(X>3)=e^(−0,5×3)=e^(−1,5)≈0,223" },
+            { id:'EX-LC4', niveau:'Difficile', titre:'Propriété sans mémoire',
+              enonce:"Même ampoule. Sachant qu'elle a déjà fonctionné 2 ans, quelle est la probabilité qu'elle fonctionne encore plus de 3 ans ?",
+              correction:"Par la propriété sans mémoire :\nP(X>5 | X>2)=P(X>3)=e^(−1,5)≈0,223\nLa durée déjà écoulée n'a aucune influence." },
+          ]
+        },
+      ]
+    },
+  ]
+},
 } // fin ALL_CHAPTERS
 
 // ══════════════════════════════════════════════════════════════════════
@@ -953,11 +1234,11 @@ export default function TerminaleGeneraleSlugPage() {
   const secColor = SEC_COLORS[slug] || '#4f6ef7'
 
   const GROUPS = [
-    { label:'Section 1 — Algèbre & Géométrie', slugs:NAV_ORDER.slice(0,2) },
-    { label:'Section 2 — Analyse', slugs:NAV_ORDER.slice(2,7) },
-    { label:'Section 3 — Géométrie espace', slugs:NAV_ORDER.slice(7,9) },
-    { label:'Section 4 — Probabilités', slugs:NAV_ORDER.slice(9,12) },
-    { label:'Section 5 — Algorithmique', slugs:NAV_ORDER.slice(12) },
+    { label:'Section 1 — Algèbre & Géométrie', slugs:NAV_ORDER.slice(0,3) },
+    { label:'Section 2 — Analyse', slugs:NAV_ORDER.slice(3,9) },
+    { label:'Section 3 — Géométrie espace', slugs:NAV_ORDER.slice(9,12) },
+    { label:'Section 4 — Probabilités & Stats', slugs:NAV_ORDER.slice(12,17) },
+    { label:'Section 5 — Algorithmique', slugs:NAV_ORDER.slice(17) },
   ]
 
   return (
