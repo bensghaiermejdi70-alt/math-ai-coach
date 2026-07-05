@@ -93,9 +93,9 @@ const SECTIONS = [
 // Couvre TOUT le programme officiel sur 31 jours
 const PROGRAMME_JOUR: Record<string, {
   ex1: { theme: string; sousTh: string; typeFunc?: string }
-  ex2: { theme: string; sousTh: string }
-  ex3: { theme: string; sousTh: string }
-  ex4: { theme: string; sousTh: string }
+  ex2: { theme: string; sousTh: string; typeFunc?: string }
+  ex3: { theme: string; sousTh: string; typeFunc?: string }
+  ex4: { theme: string; sousTh: string; typeFunc?: string }
 }[]> = {
   maths: [
     { ex1:{theme:"Analyse",sousTh:"Étude de fonction exponentielle f(x)=ae^(bx)+c",typeFunc:"exp"}, ex2:{theme:"Complexes",sousTh:"Module, argument, forme trigonométrique"}, ex3:{theme:"Probabilités",sousTh:"Loi binomiale"}, ex4:{theme:"Géométrie espace",sousTh:"Vecteurs et coplanéité"} },
