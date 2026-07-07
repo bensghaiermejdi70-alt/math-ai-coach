@@ -286,7 +286,7 @@ export default function ExamensTunisiePage({ data }: { data: ExamDataMod }) {
           </div>
 
           {/* ── NIVEAU 1 : MATIÈRE ── */}
-          <div style={{display:'flex',gap:8,marginBottom:20,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:6,width:'fit-content'}}>
+          <div style={{display:'flex',gap:8,marginBottom:20,background:'var(--surface)',border:'1px solid var(--border)',borderRadius:16,padding:6,width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
             {([
               { key:'maths'        as Matiere, icon:'🧮', label:'Mathématiques',   color:'#4f6ef7' },
               { key:'physique'     as Matiere, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0' },
@@ -298,7 +298,7 @@ export default function ExamensTunisiePage({ data }: { data: ExamDataMod }) {
               { key:'gestion'      as Matiere, icon:'💼', label:'Gestion',         color:'#f43f5e' },
             ]).map(m => (
               <button key={m.key} onClick={() => switchMatiere(m.key)}
-                style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:14,fontWeight:700,transition:'all 0.2s',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
+                style={{display:'flex',alignItems:'center',gap:6,padding:'10px 14px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'var(--font-body)',fontSize:13,fontWeight:700,transition:'all 0.2s',flexShrink:0,whiteSpace:'nowrap',background:activeMatiere===m.key?m.color:'transparent',color:activeMatiere===m.key?'white':'var(--muted)',boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none'}}>
                 <span style={{fontSize:18}}>{m.icon}</span>
                 <span>{m.label}</span>
               </button>
