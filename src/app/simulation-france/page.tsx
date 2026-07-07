@@ -7355,7 +7355,7 @@ Vos abonnements actifs : ${matieresList}
 
           {/* ── ONGLETS MATIÈRE ── */}
           {phase === 'select' && (
-            <div style={{display:'flex',gap:8,marginBottom:24,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'fit-content'}}>
+            <div style={{display:'flex',gap:8,marginBottom:24,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
               {([
                 { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#f59e0b', matiere:'mathematiques' },
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
@@ -7368,7 +7368,7 @@ Vos abonnements actifs : ${matieresList}
                 const locked = false
                 return (
                 <button key={m.key} onClick={() => { if(!locked) setActiveMatiere(m.key) }}
-                  style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
+                  style={{display:'flex',alignItems:'center',gap:6,padding:'10px 14px',borderRadius:12,border:'none',cursor:'pointer',fontFamily:'inherit',fontSize:13,fontWeight:700,transition:'all 0.2s',flexShrink:0,whiteSpace:'nowrap',
                     background:activeMatiere===m.key?m.color:'transparent',
                     color:activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',
                     boxShadow:activeMatiere===m.key?`0 4px 20px ${m.color}40`:'none',

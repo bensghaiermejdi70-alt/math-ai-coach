@@ -7135,7 +7135,7 @@ function SimulationIAPageInner() {
                       setActiveMatiere(m.key); setChapitresMode(false); setSelectedChapitres([])
                     }}
                     title={m.label}
-                    style={{display:'flex',alignItems:'center',gap:8,padding:'11px 22px',borderRadius:12,border:'none',
+                    style={{display:'flex',alignItems:'center',gap:6,padding:'10px 14px',borderRadius:12,border:'none',flexShrink:0,whiteSpace:'nowrap',
                       cursor:'pointer',fontFamily:'inherit',fontSize:14,fontWeight:700,transition:'all 0.2s',
                       background: activeMatiere===m.key?m.color:'transparent',
                       color: activeMatiere===m.key?'white':'rgba(255,255,255,0.45)',

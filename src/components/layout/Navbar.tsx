@@ -674,7 +674,7 @@ export default function Navbar() {
 
       {/* ── Menu mobile ── */}
       {open && (
-        <div style={{position:'fixed',top:73,left:0,right:0,zIndex:99,background:'rgba(7,8,15,0.98)',backdropFilter:'blur(20px)',borderBottom:'1px solid rgba(79,110,247,0.15)',padding:20,display:'flex',flexDirection:'column',gap:4,animation:'fadeInDown 0.2s ease both'}}>
+        <div style={{position:'fixed',top:73,left:0,right:0,bottom:0,zIndex:99,background:'rgba(7,8,15,0.98)',backdropFilter:'blur(20px)',overflowY:'auto',WebkitOverflowScrolling:'touch',padding:20,paddingBottom:40,display:'flex',flexDirection:'column',gap:4,animation:'fadeInDown 0.2s ease both'}}>
           {navLinks.map(l => {
             const isActive = pathname.startsWith(l.href) && l.href !== '/'
             return (
