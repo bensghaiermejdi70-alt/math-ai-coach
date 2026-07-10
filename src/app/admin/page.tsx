@@ -27,7 +27,8 @@ export default function AdminPage() {
   const [loading,    setLoading]    = useState(true)
   const [activating, setActivating] = useState<string|null>(null)
   const [notes,      setNotes]      = useState<Record<string,string>>({})
-  const [matieres,   setMatieres]   = useState<Record<string,string>>({})  // subId → matiere
+  const [matieres,   setMatieres]   = useState<Record<string,string>>({})
+  const [usageLogs,  setUsageLogs]  = useState<any[]>([])  // subId → matiere
 
   useEffect(() => { if (!isLoading && !isAdmin) router.push('/') }, [isAdmin, isLoading])
   useEffect(() => { if (isAdmin) loadAll() }, [isAdmin])
@@ -47,6 +48,8 @@ export default function AdminPage() {
       pending: s.data.filter((x:any) => x.status==='pending').length,
       revenue: s.data.filter((x:any) => x.status==='active').reduce((sum:number,x:any) => sum+(x.price_paid||0), 0),
     })
+    const { data: logs } = await supabase.from('usage_logs').select('*').order('created_at',{ascending:false}).limit(500)
+    setUsageLogs(logs || [])
     setLoading(false)
   }
 
@@ -115,10 +118,10 @@ export default function AdminPage() {
       <aside style={{ width:240, minHeight:'100vh', background:'var(--surface)', borderRight:'1px solid var(--border)', padding:24, position:'sticky', top:0, display:'flex', flexDirection:'column' }}>
         <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none', marginBottom:32 }}>
           <div style={{ width:36, height:36, background:'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <span style={{ color:'white', fontFamily:'var(--font-display)', fontWeight:800 }}>B</span>
+            <span style={{ color:'white', fontFamily:'var(--font-display)', fontWeight:800 }}>M</span>
           </div>
           <div>
-            <div style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:16, color:'var(--text)' }}>Bac.AI</div>
+            <div style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:16, color:'var(--text)' }}>MathBac.AI</div>
             <div style={{ fontSize:10, color:'var(--accent)', fontFamily:'var(--font-mono)', letterSpacing:'0.08em' }}>ADMIN PANEL</div>
           </div>
         </Link>
@@ -149,6 +152,15 @@ export default function AdminPage() {
             </button>
           ))}
         </nav>
+
+        {/* Lien vers gestion paiements */}
+        <div style={{marginTop:'auto',paddingTop:24,borderTop:'1px solid var(--border)'}}>
+          <a href="/admin/payments" style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'rgba(79,110,247,0.08)',border:'1px solid rgba(79,110,247,0.2)',color:'var(--accent)',fontSize:13,fontWeight:600,textDecoration:'none',transition:'all 0.2s'}}
+            onMouseEnter={e=>e.currentTarget.style.background='rgba(79,110,247,0.16)'}
+            onMouseLeave={e=>e.currentTarget.style.background='rgba(79,110,247,0.08)'}>
+            💳 Gérer les paiements
+          </a>
+        </div>
       </aside>
 
       {/* Main */}
@@ -277,28 +289,146 @@ export default function AdminPage() {
         )}
 
         {tab === 'stats' && (
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
-            {[
-              { title:'Par plan × matière', items: [
-                  ...['mathematiques','physique','svt','anglais','informatique','francais','economie','gestion'].flatMap(mat =>
-                    ['mensuel','annuel','sprint_bac'].map(plan => ({
-                      label: `${plan==='sprint_bac'?'Sprint':plan==='annuel'?'Annuel':'Mensuel'} ${mat==='mathematiques'?'Maths':mat==='physique'?'PC':mat==='informatique'?'Info':mat==='francais'?'Français':mat==='economie'?'Éco':mat==='gestion'?'Gestion':mat.toUpperCase()}`,
-                      count: allSubs.filter(s=>(s.plan_type===`${plan}_${mat}`||s.plan_type===plan)&&s.status==='active').length
-                    }))
-                  ).filter(x => x.count > 0)
-                ]},
-              { title:'Par méthode', items: ['d17','konnect','flouci','recharge_mobile'].map(m => ({ label:m, count:allSubs.filter(s=>s.payment_method===m).length })) },
-            ].map((block, i) => (
-              <div key={i} className="card" style={{ padding:24 }}>
-                <h3 style={{ fontFamily:'var(--font-display)', fontSize:16, marginBottom:16, color:'var(--text)' }}>{block.title}</h3>
-                {block.items.map(item => (
-                  <div key={item.label} style={{ display:'flex', justifyContent:'space-between', padding:'9px 0', borderBottom:'1px solid var(--border)', fontSize:13 }}>
-                    <span style={{ color:'var(--text2)', textTransform:'capitalize' }}>{item.label}</span>
-                    <span style={{ fontFamily:'var(--font-mono)', color:'var(--text)', fontWeight:700 }}>{item.count}</span>
-                  </div>
-                ))}
+          <div style={{display:'flex',flexDirection:'column',gap:24}}>
+
+            {/* KPI revenus */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:16}}>
+              {[
+                {icon:'💰',label:'Revenu total (DT)',value:allSubs.filter(s=>s.status==='active').reduce((sum:number,s:any)=>sum+(s.price_paid||0),0).toFixed(0),color:'#22c55e'},
+                {icon:'📅',label:'Revenu 30 jours',value:allSubs.filter(s=>s.status==='active'&&s.created_at&&new Date(s.created_at)>new Date(Date.now()-30*86400000)).reduce((sum:number,s:any)=>sum+(s.price_paid||0),0).toFixed(0),color:'#06d6a0'},
+                {icon:'✅',label:'Abonnés actifs',value:allSubs.filter(s=>s.status==='active').length,color:'#4f6ef7'},
+                {icon:'⏳',label:'En attente',value:allSubs.filter(s=>s.status==='pending').length,color:'#f59e0b'},
+                {icon:'❌',label:'Annulés',value:allSubs.filter(s=>s.status==='cancelled').length,color:'#ef4444'},
+                {icon:'📊',label:'Taux conversion',value:allSubs.length>0?((allSubs.filter(s=>s.status==='active').length/allSubs.length)*100).toFixed(0)+'%':'—',color:'#8b5cf6'},
+              ].map(k=>(
+                <div key={k.label} className="card" style={{padding:20,textAlign:'center'}}>
+                  <div style={{fontSize:24,marginBottom:6}}>{k.icon}</div>
+                  <div style={{fontSize:24,fontWeight:900,color:k.color,fontFamily:'var(--font-mono)',marginBottom:4}}>{k.value}</div>
+                  <div style={{fontSize:10,color:'var(--muted)',textTransform:'uppercase',letterSpacing:'0.06em'}}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Matières + Plans */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+              <div className="card" style={{padding:24}}>
+                <h3 style={{fontSize:14,fontWeight:700,marginBottom:16}}>🏆 Matières populaires</h3>
+                {['mathematiques','physique','svt','informatique','anglais','francais','economie','gestion'].map(mat=>{
+                  const cnt=allSubs.filter(s=>s.status==='active'&&(s.plan_type||'').includes(mat)).length
+                  const total=Math.max(1,allSubs.filter(s=>s.status==='active').length)
+                  const pct=Math.round(cnt/total*100)
+                  const labels:Record<string,string>={mathematiques:'🧮 Maths',physique:'⚗️ Physique',svt:'🌱 SVT',informatique:'💻 Info',anglais:'🇬🇧 Anglais',francais:'📚 Français',economie:'📈 Éco',gestion:'💼 Gestion'}
+                  return cnt>0?(
+                    <div key={mat} style={{marginBottom:10}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}}>
+                        <span style={{color:'var(--text2)'}}>{labels[mat]}</span>
+                        <span style={{fontFamily:'var(--font-mono)',fontWeight:700}}>{cnt} <span style={{color:'var(--muted)',fontWeight:400}}>({pct}%)</span></span>
+                      </div>
+                      <div style={{height:5,background:'var(--surface2)',borderRadius:4}}>
+                        <div style={{height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#4f6ef7,#7c3aed)',borderRadius:4}}/>
+                      </div>
+                    </div>
+                  ):null
+                })}
               </div>
-            ))}
+              <div className="card" style={{padding:24}}>
+                <h3 style={{fontSize:14,fontWeight:700,marginBottom:16}}>💳 Plans & Paiements</h3>
+                {[{key:'mensuel',label:'Mensuel',icon:'📅'},{key:'annuel',label:'Annuel',icon:'🏆'},{key:'sprint_bac',label:'Sprint Bac',icon:'⚡'}].map(p=>{
+                  const cnt=allSubs.filter(s=>s.status==='active'&&(s.plan_type||'').startsWith(p.key)).length
+                  const rev=allSubs.filter(s=>s.status==='active'&&(s.plan_type||'').startsWith(p.key)).reduce((sum:number,s:any)=>sum+(s.price_paid||0),0)
+                  return(
+                    <div key={p.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid var(--border)'}}>
+                      <div><div style={{fontSize:13,fontWeight:600}}>{p.icon} {p.label}</div><div style={{fontSize:11,color:'var(--muted)'}}>{cnt} abonné{cnt>1?'s':''}</div></div>
+                      <div style={{fontFamily:'var(--font-mono)',fontWeight:700,color:'#22c55e'}}>{rev.toFixed(0)} DT</div>
+                    </div>
+                  )
+                })}
+                <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)'}}>
+                  {['d17','konnect','flouci','recharge_mobile','stripe','virement'].map(m=>{
+                    const cnt=allSubs.filter(s=>s.payment_method===m).length
+                    return cnt>0?(<div key={m} style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'4px 0'}}>
+                      <span style={{color:'var(--muted)',textTransform:'capitalize'}}>{m.replace('_',' ')}</span>
+                      <span style={{fontFamily:'var(--font-mono)',fontWeight:700}}>{cnt}</span>
+                    </div>):null
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Graphique 30 jours abonnements */}
+            <div className="card" style={{padding:24}}>
+              <h3 style={{fontSize:14,fontWeight:700,marginBottom:16}}>📈 Nouveaux abonnements — 30 derniers jours</h3>
+              <div style={{display:'flex',alignItems:'flex-end',gap:4,height:80}}>
+                {Array.from({length:30},(_,i)=>{
+                  const d=new Date(); d.setDate(d.getDate()-29+i)
+                  const ds=d.toISOString().slice(0,10)
+                  const cnt=allSubs.filter(s=>s.created_at&&s.created_at.slice(0,10)===ds).length
+                  const max=Math.max(1,...Array.from({length:30},(_,j)=>{const d2=new Date();d2.setDate(d2.getDate()-29+j);return allSubs.filter(s=>s.created_at&&s.created_at.slice(0,10)===d2.toISOString().slice(0,10)).length}))
+                  const h=Math.max(3,Math.round(cnt/max*70))
+                  return(
+                    <div key={ds} title={`${d.getDate()}/${d.getMonth()+1} : ${cnt}`} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+                      <span style={{fontSize:8,color:'var(--muted)',fontFamily:'var(--font-mono)'}}>{cnt>0?cnt:''}</span>
+                      <div style={{width:'100%',height:h,background:cnt>0?'linear-gradient(180deg,#4f6ef7,#7c3aed)':'var(--surface2)',borderRadius:'3px 3px 0 0'}}/>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Simulations usage_logs */}
+            <div className="card" style={{padding:24}}>
+              <h3 style={{fontSize:14,fontWeight:700,marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
+                🤖 <span>Simulations lancées</span>
+                <span style={{marginLeft:'auto',fontSize:12,color:'var(--muted)',fontFamily:'var(--font-mono)'}}>{usageLogs.length} événements</span>
+              </h3>
+              {usageLogs.length===0?(
+                <div style={{textAlign:'center',padding:'20px 0',color:'var(--muted)',fontSize:13}}>
+                  Aucune simulation loggée encore. Lance une simulation pour voir les stats ici.
+                </div>
+              ):(
+                <>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:12,marginBottom:16}}>
+                    {[
+                      {icon:'🇫🇷',label:'France',value:usageLogs.filter(l=>l.platform==='france').length,color:'#4f6ef7'},
+                      {icon:'🇹🇳',label:'Tunisie',value:usageLogs.filter(l=>l.platform==='tunisie').length,color:'#f59e0b'},
+                      {icon:'📚',label:'Archive',value:usageLogs.filter(l=>l.mode==='archive').length,color:'#06d6a0'},
+                      {icon:'📖',label:'Chapitre',value:usageLogs.filter(l=>l.mode==='chapitre').length,color:'#8b5cf6'},
+                    ].map(k=>(
+                      <div key={k.label} style={{textAlign:'center',padding:'12px',background:'var(--surface2)',borderRadius:10}}>
+                        <div style={{fontSize:20,marginBottom:4}}>{k.icon}</div>
+                        <div style={{fontSize:20,fontWeight:900,color:k.color,fontFamily:'var(--font-mono)'}}>{k.value}</div>
+                        <div style={{fontSize:10,color:'var(--muted)'}}>{k.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                    {Object.entries(usageLogs.reduce((acc:Record<string,number>,l)=>{if(l.matiere){acc[l.matiere]=(acc[l.matiere]||0)+1};return acc},{})).sort(([,a],[,b])=>b-a).slice(0,8).map(([mat,cnt])=>(
+                      <span key={mat} style={{padding:'4px 10px',background:'rgba(79,110,247,0.12)',border:'1px solid rgba(79,110,247,0.25)',borderRadius:16,fontSize:11}}>
+                        {mat} <strong style={{color:'#818cf8'}}>{String(cnt)}</strong>
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* 10 dernières activations */}
+            <div className="card" style={{padding:24}}>
+              <h3 style={{fontSize:14,fontWeight:700,marginBottom:16}}>🕐 10 dernières activations</h3>
+              {allSubs.filter(s=>s.status==='active').sort((a:any,b:any)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,10).map((s:any)=>(
+                <div key={s.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--border)',fontSize:12}}>
+                  <div>
+                    <div style={{fontWeight:600}}>{s.profiles?.email?.split('@')[0]||'—'}</div>
+                    <div style={{color:'var(--muted)',fontSize:11}}>{s.plan_type||'—'}</div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontFamily:'var(--font-mono)',color:'#22c55e',fontWeight:700}}>{s.price_paid||0} DT</div>
+                    <div style={{color:'var(--muted)',fontSize:10}}>{s.created_at?new Date(s.created_at).toLocaleDateString('fr-TN',{day:'numeric',month:'short'}):''}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
           </div>
         )}
       </main>

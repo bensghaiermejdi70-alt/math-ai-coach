@@ -237,15 +237,21 @@ export default function AdminPaymentsPage() {
       <div style={{ maxWidth:1100, margin:'0 auto' }}>
 
         {/* Header */}
+        {/* ── Header avec navigation retour dashboard ── */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:32, flexWrap:'wrap', gap:12 }}>
           <div>
-            <h1 style={{ fontWeight:900, fontSize:24, margin:'0 0 4px' }}>⚙️ Panel Admin</h1>
-            <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Gérer tous les abonnements</p>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+              <Link href="/admin" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:8, background:'rgba(79,110,247,0.12)', border:'1px solid rgba(79,110,247,0.3)', color:'#818cf8', fontSize:12, fontWeight:600, textDecoration:'none' }}>
+                ← Dashboard
+              </Link>
+              <Link href="/admin?tab=stats" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 12px', borderRadius:8, background:'rgba(139,92,246,0.12)', border:'1px solid rgba(139,92,246,0.3)', color:'#a78bfa', fontSize:12, fontWeight:600, textDecoration:'none' }}>
+                📊 Statistiques
+              </Link>
+            </div>
+            <h1 style={{ fontWeight:900, fontSize:24, margin:'0 0 4px' }}>💳 Gestion des abonnements</h1>
+            <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Activer · Refuser · Changer matière</p>
           </div>
           <div style={{ display:'flex', gap:10 }}>
-            <Link href="/admin/payments" style={{ padding:'8px 16px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, fontWeight:600, textDecoration:'none' }}>
-              💳 Paiements
-            </Link>
             <button onClick={loadAll}
               style={{ padding:'8px 16px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', background:'rgba(255,255,255,0.06)', color:'white', fontSize:13, fontWeight:600, cursor:'pointer' }}>
               🔄 Rafraîchir

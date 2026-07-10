@@ -1035,6 +1035,24 @@ function blocDonneesTunisie(): string {
   return 'DONNÉES OFFICIELLES TUNISIE (sources ' + DONNEES_TUNISIE.source + ', jusqu\'à ' + DONNEES_TUNISIE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document chiffré. NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : reprends les valeurs et années EXACTES ; choisis la série qui colle au thème ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
 }
 
+// ── Log usage simulation (fire-and-forget) ─────────────────────────
+async function logUsage(params: {
+  user_id?: string|null
+  platform: string
+  matiere?: string
+  section?: string
+  mode?: string
+  metadata?: Record<string,unknown>
+}) {
+  try {
+    await fetch('/api/log-usage', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ event_type:'simulation_launch', ...params })
+    })
+  } catch { /* silencieux */ }
+}
+
 async function generateOneExam(
   archives: Archive[], customText: string, idx: number, onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
@@ -7014,6 +7032,16 @@ function SimulationIAPageInner() {
     } else {
       setChapitresMode(false)
     }
+    // ── Log lancement simulation Tunisie ──────────────────────────
+    const _uid = (typeof window !== 'undefined' && (window as any).__authUser?.id) || null
+    logUsage({
+      user_id: _uid,
+      platform: 'tunisie',
+      matiere: activeMatiere,
+      section: arcs[0]?.section ?? undefined,
+      mode: chapitres && chapitres.length > 0 ? 'chapitre' : 'archive',
+      metadata: { nb_archives: arcs.length }
+    })
     setArchives(arcs); setCustomText(txt); setPhase('generating')
   },[isAdmin, hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, activeMatiere, checkQuota, incrementQuota])
 

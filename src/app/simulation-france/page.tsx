@@ -519,6 +519,24 @@ function blocDonneesFrance(): string {
   return 'DONNÉES OFFICIELLES FRANCE (sources ' + DONNEES_FRANCE.source + ', jusqu\'à ' + DONNEES_FRANCE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document statistique (SES). NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : valeurs et années EXACTES ; choisis la série qui colle au thème ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
 }
 
+// ── Log usage simulation (fire-and-forget) ─────────────────────────
+async function logUsage(params: {
+  user_id?: string|null
+  platform: string
+  matiere?: string
+  section?: string
+  mode?: string
+  metadata?: Record<string,unknown>
+}) {
+  try {
+    await fetch('/api/log-usage', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ event_type:'simulation_launch', ...params })
+    })
+  } catch { /* silencieux */ }
+}
+
 async function generateOneExam(
   archives: Archive[], customText: string, idx: number, matiere: string = 'mathematiques', onDelta?: (full: string) => void
 ): Promise<GeneratedExam> {
@@ -7255,6 +7273,16 @@ Vos abonnements actifs : ${matieresList}
     } else {
       setChapitresMode(false)
     }
+    // ── Log lancement simulation France ───────────────────────────
+    const _uid = (typeof window !== 'undefined' && (window as any).__authUser?.id) || null
+    logUsage({
+      user_id: _uid,
+      platform: 'france',
+      matiere: activeMatiere,
+      section: arcs[0]?.section ?? undefined,
+      mode: chapitres && chapitres.length > 0 ? 'chapitre' : 'archive',
+      metadata: { nb_archives: arcs.length, nb_chapitres: chapitres?.length ?? 0 }
+    })
     setArchives(arcs); setCustomText(txt); setPhase('generating')
   },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere])
 
