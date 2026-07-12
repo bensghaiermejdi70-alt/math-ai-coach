@@ -7188,7 +7188,7 @@ function SimulationIAPageInner() {
 
           {/* ── ONGLETS MATIÈRE : MATHS / PHYSIQUE-CHIMIE ── */}
           {phase === 'select' && (
-            <div style={{display:'flex',gap:8,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:6,width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
+            <div style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:8,marginBottom:28,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:16,padding:'12px 10px',width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'thin'}}>
               {([
                 { key:'maths'        as const, icon:'🧮', label:'Mathématiques',   color:'#6366f1', matiere:'mathematiques' },
                 { key:'physique'     as const, icon:'⚗️', label:'Physique-Chimie', color:'#06d6a0', matiere:'physique' },
