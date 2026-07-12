@@ -643,7 +643,7 @@ Respond EXACTLY with this JSON (no text before or after):
     ? (sesDissertation
     ? `Crée un sujet de SES — DISSERTATION s'appuyant sur un dossier documentaire — ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Terminale Spécialité SES · DISSERTATION · 4h · 20 points :
 UN seul sujet de dissertation s'appuyant sur un dossier de 3 à 4 documents.
@@ -678,7 +678,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
 }`
     : `Crée un sujet de Bac SES/STMG ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 Règles STRICTES :
 - NOUVEAU sujet ORIGINAL, jamais une copie. Change toujours thèmes, données chiffrées, documents, contexte
@@ -772,7 +772,7 @@ Ex3 = Gestion-Finance : calculs sur données chiffrées d'une entreprise fictive
     : isPhysique
     ? `Crée un sujet de PHYSIQUE-CHIMIE (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Bac général Physique-Chimie (spécialité) · 3h30 · 20 points :
 - 3 exercices INDÉPENDANTS, chacun ancré dans une SITUATION CONCRÈTE réaliste avec un titre évocateur (ex. « Un emballage intelligent au rayon poissonnerie », « Datation d'une roche », « Viscosimètre à chute de bille »).
@@ -810,7 +810,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
     : isSvt
     ? `Crée un sujet de SVT (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Bac général SVT (spécialité), épreuve écrite · 3h30 · 20 points :
 Le candidat traite OBLIGATOIREMENT les DEUX exercices.
@@ -847,7 +847,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
     : isFrancais
     ? (isPremiere
     ? `Crée un sujet de FRANÇAIS — ÉPREUVE ANTICIPÉE DE FRANÇAIS (EAF, Première, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Bac général Français (écrit anticipé) · 4h · coefficient 5 · 20 points :
 Le candidat traite, AU CHOIX, l'UN des deux sujets. Présente les DEUX :
@@ -868,7 +868,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
   ]
 }`
     : `Crée un sujet de PHILOSOPHIE (Terminale, séries générales) ORIGINAL numéro ${idx+1} (sur 5 variantes).
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Bac général Philosophie · 4h · coefficient 8 · 20 points :
 Le candidat traite, AU CHOIX, l'UN des trois sujets. Présente les TROIS :
@@ -896,7 +896,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
     : isInfo
     ? `Crée un sujet de NSI (spécialité) ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 STRUCTURE OFFICIELLE — Bac général NSI (spécialité), épreuve écrite · 3h30 · 20 points :
 Le sujet est composé de TROIS exercices INDÉPENDANTS ; le candidat traite les trois.
@@ -936,7 +936,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
 }`
     : `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 Règles STRICTES :
 - NOUVEAU sujet ORIGINAL, jamais une copie. Change toujours fonctions, valeurs, contexte
@@ -4308,12 +4308,13 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere, isSubscribed=false }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
   archives?: Archive[]
   chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
   sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
   matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'
+  isSubscribed?: boolean
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION
@@ -4349,6 +4350,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   const [selected, setSelected]           = useState<Archive[]>([])
   const [customText, setCustomText]       = useState('')
   const [fileName, setFileName]           = useState('')
+  const [customInstructions, setCustomInstructions] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ── Onglet Par Chapitre ──
@@ -4498,8 +4500,29 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             {canStartArchive&&<p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>
               L'IA va créer <strong style={{color:'#a5b4fc'}}>10 examens originaux</strong> en quelques secondes
             </p>}
+
+            {/* ── Instructions personnalisées ── */}
+            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                <span style={{fontSize:14}}>✏️</span>
+                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+              </div>
+              <textarea
+                value={customInstructions}
+                onChange={e=>setCustomInstructions(e.target.value)}
+                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
+                rows={3}
+                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+              />
+              {customInstructions.trim().length>0&&(
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                  <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
+                  <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
+                </div>
+              )}
+            </div>
             {diffSelector}
-            <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected,customText)} disabled={!canStartArchive}>
+            <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected, customInstructions.trim()?customInstructions:customText)} disabled={!canStartArchive}>
               🧠 Générer mes examens →
             </PrimaryBtn>
           </div>
@@ -4600,9 +4623,30 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             ) : (
               <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',margin:0}}>Sélectionne entre 1 et 4 chapitres</p>
             )}
+
+            {/* ── Instructions personnalisées ── */}
+            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                <span style={{fontSize:14}}>✏️</span>
+                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+              </div>
+              <textarea
+                value={customInstructions}
+                onChange={e=>setCustomInstructions(e.target.value)}
+                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
+                rows={3}
+                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+              />
+              {customInstructions.trim().length>0&&(
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                  <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
+                  <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
+                </div>
+              )}
+            </div>
             {diffSelector}
             <PrimaryBtn
-              onClick={()=>canStartChap&&onStart([],`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
+              onClick={()=>canStartChap&&onStart([],customInstructions.trim()?customInstructions:`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
               disabled={!canStartChap}>
               📚 Générer l'examen par chapitre →
             </PrimaryBtn>
@@ -7153,7 +7197,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }
 
 function SimulationFrancePageInner() {
-  const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin } = useAuth()
+  const { isSubscribed, matiereActive, activeMatieres, checkMatiereAccess, isAdmin } = useAuth()
   // NE PAS écraser globalMatiere ici — le useEffect ci-dessous le gère correctement
 
   // ── Matière : maths, physique, informatique ou anglais ──────────
@@ -7212,7 +7256,7 @@ function SimulationFrancePageInner() {
         return
       }
       // Vérification abonnement — correction directe compte comme 1 simulation
-      if (!isAdmin && hasActiveSubscription) {
+      if (!isAdmin && isSubscribed) {
         const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion' }[activeMatiere] || activeMatiere
         if (!checkMatiereAccess(matiereUIKey as any)) {
           const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
@@ -7250,7 +7294,7 @@ Vos abonnements actifs : ${matieresList}
       return
     }
     // Vérification abonnement : checkMatiereAccess gère les abonnements multiples
-    if (!isAdmin && hasActiveSubscription) {
+    if (!isAdmin && isSubscribed) {
       const _mapCheck: Record<string,string> = {
         maths:'mathematiques', physique:'physique', informatique:'informatique',
         anglais:'anglais', svt:'svt', francais:'francais', 'eco-gestion':'eco-gestion'
@@ -7284,7 +7328,7 @@ Vos abonnements actifs : ${matieresList}
       metadata: { nb_archives: arcs.length, nb_chapitres: chapitres?.length ?? 0 }
     })
     setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[isAdmin, hasActiveSubscription, matiereActive, activeMatiere])
+  },[isAdmin, isSubscribed, matiereActive, activeMatiere])
 
   const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
     setGeneratedExams(exams); setPhase('choose-exam')

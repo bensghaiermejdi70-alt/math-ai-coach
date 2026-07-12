@@ -1195,7 +1195,7 @@ Structure officielle : CHIMIE (9 pts) puis PHYSIQUE (11 pts).
 
   const prompt = `Crée un sujet de Bac ORIGINAL numéro ${idx+1} (sur 5 variantes) inspiré de ces sources :
 ${contextLines}
-${customText ? `\nTexte fourni par l'élève (contenu référence) :\n${customText.substring(0,800)}` : ''}
+${customText ? (customText.startsWith('Chapitres :') ? `\nCHAPITRES IMPOSÉS : ${customText}` : `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n`) : ''}
 
 Règles STRICTES :
 - NOUVEAU sujet ORIGINAL, jamais une copie. Change toujours fonctions, valeurs, contexte
@@ -3986,12 +3986,13 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere, isSubscribed=false }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
   matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'
+  isSubscribed?: boolean
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
@@ -4028,6 +4029,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
   const [selected, setSelected]           = useState<Archive[]>([])
   const [customText, setCustomText]       = useState('')
   const [fileName, setFileName]           = useState('')
+  const [customInstructions, setCustomInstructions] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   // ── Onglet Par Chapitre ──
@@ -4094,7 +4096,7 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
       </div>
 
       {/* Tabs — 3 onglets */}
-      <div style={{display:'flex',gap:4,marginBottom:24,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,padding:4,width:'fit-content'}}>
+      <div style={{display:'flex',gap:4,marginBottom:24,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,padding:4,width:'100%',overflowX:'auto',WebkitOverflowScrolling:'touch',scrollbarWidth:'none'}}>
         {([
           ['archive','🗂️ Archives officielles'],
           ['chapitre','📚 Par Chapitre'],
@@ -4181,8 +4183,29 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             {canStartArchive&&<p style={{fontSize:12,color:'rgba(255,255,255,0.4)',margin:0}}>
               L'IA va créer <strong style={{color:'#a5b4fc'}}>10 examens originaux</strong> en quelques secondes
             </p>}
+
+            {/* ── Instructions personnalisées ── */}
+            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                <span style={{fontSize:14}}>✏️</span>
+                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+              </div>
+              <textarea
+                value={customInstructions}
+                onChange={e=>setCustomInstructions(e.target.value)}
+                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
+                rows={3}
+                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+              />
+              {customInstructions.trim().length>0&&(
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                  <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
+                  <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
+                </div>
+              )}
+            </div>
             {diffSelector}
-            <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected,customText)} disabled={!canStartArchive}>
+            <PrimaryBtn onClick={()=>canStartArchive&&onStart(selected,customInstructions.trim()?customInstructions:customText)} disabled={!canStartArchive}>
               🧠 Générer mes examens →
             </PrimaryBtn>
           </div>
@@ -4283,9 +4306,30 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             ) : (
               <p style={{fontSize:12,color:'rgba(255,255,255,0.3)',margin:0}}>Sélectionne entre 1 et 3 chapitres</p>
             )}
+
+            {/* ── Instructions personnalisées ── */}
+            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                <span style={{fontSize:14}}>✏️</span>
+                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+              </div>
+              <textarea
+                value={customInstructions}
+                onChange={e=>setCustomInstructions(e.target.value)}
+                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
+                rows={3}
+                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+              />
+              {customInstructions.trim().length>0&&(
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                  <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
+                  <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
+                </div>
+              )}
+            </div>
             {diffSelector}
             <PrimaryBtn
-              onClick={()=>canStartChap&&onStart([],`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
+              onClick={()=>canStartChap&&onStart([],customInstructions.trim()?customInstructions:`Chapitres : ${selectedChaps.map(c=>c.titre).join(', ')}`,selectedChaps,currentSecData?.label)}
               disabled={!canStartChap}>
               📚 Générer l'examen par chapitre →
             </PrimaryBtn>
@@ -6909,7 +6953,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
 }
 
 function SimulationIAPageInner() {
-  const { hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, isAdmin, checkQuota, incrementQuota } = useAuth()
+  const { isSubscribed, matiereActive, activeMatieres, checkMatiereAccess, isAdmin, checkQuota, incrementQuota } = useAuth()
 
   // ── Matière active : maths ou physique (lu depuis ?subject=) ──
   const [activeMatiere, setActiveMatiere] = useState<'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'>(() => {
@@ -6951,7 +6995,7 @@ function SimulationIAPageInner() {
       if (!isAdmin && !checkQuota('simulations')) return
 
       // 2. Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
-      if (!isAdmin && hasActiveSubscription) {
+      if (!isAdmin && isSubscribed) {
         const matiereUIKey = { maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion' }[activeMatiere] || activeMatiere
         if (!checkMatiereAccess(matiereUIKey as any)) {
           const matieresList = activeMatieres.length > 0 ? activeMatieres.join(', ') : matiereActive || 'votre matière'
@@ -7013,7 +7057,7 @@ function SimulationIAPageInner() {
       return
     }
     // Vérification abonnement — checkMatiereAccess supporte les abonnements multiples
-    if (!isAdmin && hasActiveSubscription) {
+    if (!isAdmin && isSubscribed) {
       const matiereMapCheck: Record<string,string> = {
         maths:'mathematiques', physique:'physique', informatique:'informatique',
         anglais:'anglais', svt:'svt', francais:'francais', economie:'economie', gestion:'gestion'
@@ -7043,7 +7087,7 @@ function SimulationIAPageInner() {
       metadata: { nb_archives: arcs.length }
     })
     setArchives(arcs); setCustomText(txt); setPhase('generating')
-  },[isAdmin, hasActiveSubscription, matiereActive, activeMatieres, checkMatiereAccess, activeMatiere, checkQuota, incrementQuota])
+  },[isAdmin, isSubscribed, matiereActive, activeMatieres, checkMatiereAccess, activeMatiere, checkQuota, incrementQuota])
 
   const handleExamsReady = useCallback((exams: GeneratedExam[]) => {
     setGeneratedExams(exams); setPhase('choose-exam')
