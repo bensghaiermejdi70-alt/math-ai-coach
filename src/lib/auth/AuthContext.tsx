@@ -80,6 +80,7 @@ interface AuthContextType {
   isSprint: boolean
 
   hasActiveSubscription: boolean
+  isSubscribed: boolean
   daysRemaining: number | null
   matiereActive: MatiereType   // matière de l'abonnement actif
   quotaVersion: number          // Incrémenté après chaque mise à jour de quota
@@ -622,6 +623,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isSprint,
 
         hasActiveSubscription,
+        isSubscribed: hasActiveSubscription,
         daysRemaining,
         matiereActive,
         quotaVersion,
