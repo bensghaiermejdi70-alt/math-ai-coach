@@ -4308,13 +4308,12 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere, isSubscribed=false }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
   archives?: Archive[]
   chapitresParSection?: Record<string, { key:string; label:string; color:string; icon:string; chapitres:{slug:string;titre:string;badge:string;desc:string}[] }>
   sectionConfigs?: {key:string;label:string;color:string;icon:string;themes:string[]}[]
   matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'eco-gestion'
-  isSubscribed?: boolean
 }) {
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
   const CHAPITRES_ACTIVE   = chapProp     ?? CHAPITRES_PAR_SECTION

@@ -3986,13 +3986,12 @@ ${chapitres.map((c,i)=>`    {
 // ═══════════════════════════════════════════════════════════════════
 // PHASE 1 — SÉLECTION DES SOURCES (3 onglets)
 // ═══════════════════════════════════════════════════════════════════
-function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere, isSubscribed=false }: {
+function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: chapProp, sectionConfigs: scProp, matiere }: {
   onStart:(archives:Archive[], customText:string, chapitres?:{titre:string;badge:string;desc:string}[], sectionLabel?:string)=>void
   archives?: Archive[]
   chapitresParSection?: typeof CHAPITRES_PAR_SECTION
   sectionConfigs?: typeof SECTION_CONFIGS
   matiere?: 'maths'|'physique'|'informatique'|'anglais'|'svt'|'francais'|'economie'|'gestion'
-  isSubscribed?: boolean
 }) {
   // Utiliser les props passés ou les valeurs par défaut (maths)
   const ARCHIVES_ACTIVE    = archivesProp ?? ARCHIVES
