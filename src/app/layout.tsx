@@ -5,7 +5,7 @@ import { AuthProvider } from '@/lib/auth/AuthContext'
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mathbacai.com'),
 
-  title: 'MathBac.AI — Ton Professeur IA qui ne dort jamais | Tunisie & France',
+  title: "MathBac.AI — Ton Professeur IA qui ne dort jamais | Bac Tunisie, Seconde, Première & Terminale France",
 
   description:
     "Révise avec l'IA en Tunisie et en France : Bac toutes sections en Tunisie, Seconde, Première et Terminale en France. Simulations d'examens, solveur étape par étape, Chat IA Professeur, Bac Blanc quotidien et plan de révision personnalisé.",
