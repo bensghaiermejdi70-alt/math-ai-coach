@@ -25,7 +25,7 @@ export default function Footer() {
           fontSize: 16,
         }}
       >
-        MathBac.<span style={{ color: 'var(--accent)' }}>AI</span>
+        Math<span style={{color:"var(--accent)"}}>BacAI</span>
 
         <div
           style={{
@@ -71,7 +71,7 @@ export default function Footer() {
 
       {/* COPYRIGHT */}
       <div style={{ color: 'var(--muted)', fontSize: 12 }}>
-        © 2026 MathBac.AI
+        © 2026 MathBacAI
       </div>
     </footer>
   )

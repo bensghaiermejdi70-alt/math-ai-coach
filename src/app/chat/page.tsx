@@ -157,7 +157,7 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
         if (img) {
           return `<div style="margin:12px 0;text-align:center"><img src="${img}" style="max-width:100%;border-radius:8px;border:1px solid #e2e8f0" alt="Graphique"/></div>`
         }
-        return '<div style="background:#f0f4ff;border-left:3px solid #4f6ef7;padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;font-style:italic;color:#4f6ef7;font-size:12px">📊 Graphique — ouvrir dans MathBac.AI pour visualiser</div>'
+        return '<div style="background:#f0f4ff;border-left:3px solid #4f6ef7;padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;font-style:italic;color:#4f6ef7;font-size:12px">📊 Graphique — ouvrir dans MathBacAI pour visualiser</div>'
       })
     const bodyLines = cleanContent.split('\n').map(convertLine).join('')
     return `
@@ -176,7 +176,7 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>MathBac.AI — Chat Prof IA</title>
+<title>MathBacAI — Chat Prof IA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -202,7 +202,7 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   </div>
   <div class="header">
     <div class="header-left">
-      <div class="brand">🤖 MathBac.AI · Chat Prof IA</div>
+      <div class="brand">🤖 MathBacAI · Chat Prof IA</div>
       <div class="htitle">Conversation mathématiques</div>
       <div style="font-size:11px;color:#4f6ef7;font-weight:600;margin-top:4px">http://app.mathsbac.com</div>
     </div>
@@ -214,8 +214,8 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   </div>
   ${msgHtml}
   <div class="footer">
-    <span><strong>MathBac.AI</strong> — Chat Prof IA · http://app.mathsbac.com</span>
-    <span>MathBac.AI ${new Date().getFullYear()}</span>
+    <span><strong>MathBacAI</strong> — Chat Prof IA · http://app.mathsbac.com</span>
+    <span>MathBacAI ${new Date().getFullYear()}</span>
   </div>
 </div>
 <script>
@@ -323,7 +323,7 @@ function fallbackCopy(text: string): Promise<void> {
   })
 }
 
-const SYSTEM_PROMPT = `Tu es le Professeur IA de MathBac.AI — enseignant polyvalent expert, couvrant TOUTES les matières du Bac tunisien ET du Bac français.
+const SYSTEM_PROMPT = `Tu es le Professeur IA de MathBacAI — enseignant polyvalent expert, couvrant TOUTES les matières du Bac tunisien ET du Bac français.
 Tu maîtrises : Mathématiques, Physique-Chimie, SVT, Informatique, Anglais, Littérature française, Français.
 Tu réponds en français ET en anglais selon la langue de la question de l'élève.
 

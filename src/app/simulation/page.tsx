@@ -3634,7 +3634,7 @@ ${MB_VEC_CSS}</style>
   </div>
 
   <div class="doc-title">
-    <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBAC.AI</div>
+    <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBACAI</div>
     <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://mathbacai.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
     <h1>${esc(exam.title)}</h1>
     <div class="sub">Correction IA détaillée · ${exam.totalPoints}/20 pts · ${new Date().toLocaleDateString('fr-FR')}</div>
@@ -3644,7 +3644,7 @@ ${MB_VEC_CSS}</style>
 
   ${bodyHtml}
 
-  <div class="footer">MATHBAC.AI · http://app.mathsbac.com — Correction générée par IA</div>
+  <div class="footer">MATHBACAI · http://app.mathsbac.com — Correction générée par IA</div>
 </div>
 <script>
   function telechargerPDF(){
@@ -5126,7 +5126,7 @@ function PhaseExam({ exam, onSubmit }: {
 <div class="header-official">
   <div class="header-top">
     <div class="header-left">
-      <strong>MathBac.AI</strong><br>
+      <strong>MathBacAI</strong><br>
       Simulation IA — Préparation Bac<br>
       <strong>Variante n°${exam.index+1}</strong>
     </div>
@@ -5160,7 +5160,7 @@ function PhaseExam({ exam, onSubmit }: {
 </div>
 ${exHtml}
 <div class="footer">
-  <span>MathBac.AI — Simulation IA</span>
+  <span>MathBacAI — Simulation IA</span>
   <span class="footer-center">${esc2(exam.title)}</span>
   <span>${new Date().toLocaleDateString('fr-FR')}</span>
 </div>

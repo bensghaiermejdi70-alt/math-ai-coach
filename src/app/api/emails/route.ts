@@ -15,7 +15,7 @@ import {
   emailRenouvellement,
 } from '@/lib/emails/templates'
 
-const FROM = 'MathBac.AI <noreply@bacai.tn>'
+const FROM = 'MathBacAI <noreply@mathbacai.com>'
 const SITE = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 function getResend() {
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'bienvenue':
         html = emailBienvenue(data.nom)
-        subject = '🎓 Bienvenue sur MathBac.AI !'
+        subject = '🎓 Bienvenue sur MathBacAI !'
         break
 
       case 'confirmation_abonnement':

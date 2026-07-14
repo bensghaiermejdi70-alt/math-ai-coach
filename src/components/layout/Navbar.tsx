@@ -529,9 +529,38 @@ export default function Navbar() {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', width:'100%', gap:16 }}>
 
           {/* Logo */}
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',fontFamily:'var(--font-display)',fontWeight:800,fontSize:20,color:'var(--text)'}}>
-            <div style={{width:36,height:36,background:'linear-gradient(135deg,#4f6ef7,#7c3aed)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}}>∑</div>
-            Math<span style={{color:'var(--accent)'}}>Bac</span>.AI
+          <Link
+            href="/"
+            style={{
+              display:'flex',
+              alignItems:'center',
+              gap:10,
+              textDecoration:'none',
+              fontFamily:'var(--font-display)',
+              fontWeight:800,
+              fontSize:20,
+              color:'var(--text)'
+            }}
+          >
+            <div
+              style={{
+                width:36,
+                height:36,
+                background:'linear-gradient(135deg,#4f6ef7,#7c3aed)',
+                borderRadius:10,
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'center',
+                fontSize:18
+              }}
+            >
+              ∑
+            </div>
+
+            <span>
+              <span style={{ color:'var(--text)' }}>Math</span>
+              <span style={{ color:'var(--accent)' }}>BacAI</span>
+            </span>
           </Link>
 
           {/* Utilitaires + Auth (desktop) */}

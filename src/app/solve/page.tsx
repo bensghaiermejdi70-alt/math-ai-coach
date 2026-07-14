@@ -1193,7 +1193,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   function convertLine(ln: string): string {
     // Ignorer les graphiques
-    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application mathbac.ai : http://mathbacai.com</div>'
+    if (ln.match(/^\[GRAPH:/)) return '<div class="graph-note">📊 Voir le graphique dans l&#39;application MathBacAI : http://mathbacai.com</div>'
     // Titres
     if (ln.startsWith('## '))  return `<h2>${escPreservingLatex(ln.slice(3))}</h2>`
     if (ln.startsWith('### ')) return `<h3>${escPreservingLatex(ln.slice(4))}</h3>`
@@ -1216,7 +1216,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>mathbac.ai — ${modeLabel}</title>
+<title>MathBacAI — ${modeLabel}</title>
 <!-- Rendu math NATIF : fractions empilées, racines, matrices — aucune dépendance externe -->
 <style>
   .minline{ white-space:normal; }
@@ -1375,7 +1375,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   <!-- EN-TÊTE -->
   <div class="header">
     <div class="header-left">
-      <div class="brand">MATHBAC.AI</div>
+      <div class="brand">MATHBACAI</div>
       <a class="brand-url" href="http://mathbacai.com">http://mathbacai.com</a>
       <div class="htitle">${icon} ${modeLabel}</div>
     </div>
@@ -1391,7 +1391,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
 
   <!-- SOLUTION -->
   <div class="sol-box">
-    <div class="sol-label">✅ ${modeLabel} — mathbac.ai : http://mathbacai.com</div>
+    <div class="sol-label">✅ ${modeLabel} — MathBacAI : http://mathbacai.com</div>
     <div id="solution-body">
 ${bodyLines}
     </div>
@@ -1399,7 +1399,7 @@ ${bodyLines}
 
   <!-- PIED DE PAGE -->
   <div class="footer">
-    <span><strong>MATHBAC.AI</strong> · http://mathbacai.com</span>
+    <span><strong>MATHBACAI</strong> · http://mathbacai.com</span>
     <span>Page 1/1</span>
   </div>
 

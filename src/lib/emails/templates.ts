@@ -40,10 +40,10 @@ function templateBase(content: string, title: string) {
 </head>
 <body>
   <div class="wrap">
-    <div class="logo">📘 MathBac.AI</div>
+    <div class="logo">📘 MathBacAI</div>
     ${content}
     <div class="footer">
-      © ${new Date().getFullYear()} MathBac.AI - Bac Tunisien<br>
+      © ${new Date().getFullYear()} MathBacAI - Bac Tunisien<br>
       <a href="${SITE}">${SITE}</a>
     </div>
   </div>
@@ -59,7 +59,7 @@ export function emailBienvenue(nom: string) {
   return templateBase(`
     <div class="card">
       <h1>🎓 Bienvenue ${nom}</h1>
-      <p>Ton compte MathBac.AI est maintenant actif.</p>
+      <p>Ton compte MathBacAI est maintenant actif.</p>
       <p>Tu peux commencer à utiliser ton coach IA pour réviser le Bac.</p>
       <a href="${SITE}" class="btn">Commencer</a>
     </div>
