@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -8,13 +8,17 @@ export default function AuthCallback() {
   const router = useRouter()
   const [error, setError] = useState('')
   const [status, setStatus] = useState('Initialisation...')
+  
+  const hasProcessed = useRef(false)
 
   useEffect(() => {
+    if (hasProcessed.current) return
+    hasProcessed.current = true
+
     const supabase = createClient()
 
     const handle = async () => {
       try {
-        setStatus('Analyse de l\'URL...')
         const url = new URL(window.location.href)
         const token_hash = url.searchParams.get('token_hash')
         const type = url.searchParams.get('type')
@@ -23,92 +27,106 @@ export default function AuthCallback() {
         console.log('🔍 URL:', window.location.href)
         console.log('🔍 Token:', token_hash?.slice(0, 40))
         console.log('🔍 Type:', type)
+        console.log('🔍 Code présent:', !!code)
 
         // ── Recovery password ─────────────────────────────────────
         if (type === 'recovery' && token_hash) {
           setStatus('Vérification du token de récupération...')
           
-          // ✅ NOUVELLE APPROCHE : Nettoyer le token pkce_ et utiliser verifyOtp
-          // Le token pkce_XXXX est au format pkce_verifier + hash
-          // On doit extraire la partie après pkce_
-          
           let cleanToken = token_hash
           if (token_hash.startsWith('pkce_')) {
-            cleanToken = token_hash.substring(5) // Enlever "pkce_"
-            console.log('📝 Token nettoyé:', cleanToken.slice(0, 30))
+            cleanToken = token_hash.substring(5)
           }
 
-          // Essayer verifyOtp avec le token nettoyé
-          setStatus('Vérification OTP...')
-          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+          const { error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: cleanToken,
             type: 'recovery',
           })
 
           if (verifyError) {
-            console.error('❌ verifyOtp error:', verifyError.message)
-            
-            // Si ça échoue, essayer avec le token complet (au cas où)
-            console.log('🔄 Retry avec token complet...')
             const { error: retryError } = await supabase.auth.verifyOtp({
-              token_hash: token_hash, // Token original avec pkce_
+              token_hash: token_hash,
               type: 'recovery',
             })
             
             if (retryError) {
-              setError('Lien invalide ou expiré. Veuillez demander un nouveau lien.')
-              setTimeout(() => {
-                router.push('/login?error=lien_expire')
-              }, 3000)
+              setError('Lien invalide ou expiré.')
+              setTimeout(() => router.push('/login?error=lien_expire'), 3000)
               return
             }
           }
 
-          console.log('✅ OTP verified, session:', data?.session ? 'présente' : 'absente')
-          setStatus('Session établie, redirection...')
-
-          // Attendre que les cookies soient écrits
           await new Promise(r => setTimeout(r, 800))
-          
-          // Vérifier que la session est bien là
           const { data: { session } } = await supabase.auth.getSession()
-          
-          if (session) {
-            console.log('✅ Session confirmée, redirection update-password')
-            router.push('/auth/update-password')
-          } else {
-            console.error('❌ Session non trouvée après verifyOtp')
-            setError('Erreur de session. Veuillez réessayer.')
-            setTimeout(() => {
-              router.push('/login?error=session_error')
-            }, 3000)
-          }
+          router.push(session ? '/auth/update-password' : '/login?error=session_error')
           return
         }
 
         // ── Google OAuth ────────────────────────────────────────
         if (code) {
-          setStatus('Connexion Google...')
-          const { error: oauthError } = await supabase.auth.exchangeCodeForSession(code)
-          if (oauthError) {
-            router.push('/login')
+          setStatus('Connexion Google en cours...')
+          
+          // ✅ APPROCHE DÉFINITIVE : Utiliser onAuthStateChange
+          // Le client Supabase traite le code automatiquement avec detectSessionInUrl
+          // On écoute l'événement SIGNED_IN qui est émis quand c'est prêt
+
+          let resolved = false
+
+          // 1. S'abonner à l'événement auth
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+              console.log('🔄 Auth event:', event)
+              
+              if (resolved) return
+              
+              if (event === 'SIGNED_IN' && session) {
+                resolved = true
+                console.log('✅ SIGNED_IN reçu, user:', session.user.email)
+                subscription.unsubscribe()
+                router.push('/')
+              }
+              
+              if (event === 'SIGNED_OUT') {
+                resolved = true
+                subscription.unsubscribe()
+                setError('Connexion annulée.')
+                setTimeout(() => router.push('/login'), 3000)
+              }
+            }
+          )
+
+          // 2. Vérification immédiate (au cas où l'événement est déjà passé)
+          const { data: { session: existingSession } } = await supabase.auth.getSession()
+          if (existingSession && !resolved) {
+            resolved = true
+            console.log('✅ Session déjà présente')
+            subscription.unsubscribe()
+            router.push('/')
             return
           }
-          router.push('/')
+
+          // 3. Timeout de sécurité (10 secondes)
+          setTimeout(() => {
+            if (!resolved) {
+              resolved = true
+              subscription.unsubscribe()
+              console.error('⏱️ Timeout - aucun événement auth reçu')
+              setError('La connexion a pris trop de temps.')
+              setTimeout(() => router.push('/login?error=timeout'), 3000)
+            }
+          }, 10000)
+
           return
         }
 
         // ── Fallback ────────────────────────────────────────────
-        setStatus('Vérification session existante...')
         const { data: { session } } = await supabase.auth.getSession()
         router.push(session ? '/' : '/login')
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('💥 Error:', err)
-        setError('Erreur inattendue')
-        setTimeout(() => {
-          router.push('/login?error=erreur_systeme')
-        }, 2000)
+        setError('Erreur: ' + (err?.message || 'Inconnue'))
+        setTimeout(() => router.push('/login?error=erreur'), 2000)
       }
     }
 

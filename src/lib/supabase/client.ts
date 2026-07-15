@@ -1,4 +1,3 @@
-// src/lib/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
 
 // Singleton global — survit aux re-renders et hot reloads de Next.js
@@ -23,9 +22,10 @@ export function createClient() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         auth: {
-          detectSessionInUrl: true,
+          detectSessionInUrl: true,        // ✅ CRITIQUE : détecte le code OAuth dans l'URL
           autoRefreshToken: true,
           persistSession: true,
+          flowType: 'pkce',               // ✅ Recommandé pour OAuth sécurisé
           lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
             // Désactiver le Web Lock API — évite les conflits entre instances
             return fn()
