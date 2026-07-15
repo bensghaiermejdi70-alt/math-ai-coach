@@ -22,7 +22,7 @@ const MULTI_SESSION_EMAILS = [
   'mourad.essghaier@hotmail.fr',    // Abonné multi-appareils
 ]
 
-// ✅ NOUVEAU : Détecte si l'appareil est PC ou Mobile
+// Détecte si l'appareil est PC ou Mobile
 function getDeviceType(): 'pc' | 'mobile' {
   const userAgent = navigator.userAgent.toLowerCase()
   const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent)
@@ -79,9 +79,9 @@ interface AuthContextType {
   hasActiveSubscription: boolean
   isSubscribed: boolean
   daysRemaining: number | null
-  matiereActive: MatiereType   // matière de l'abonnement actif
-  quotaVersion: number          // Incrémenté après chaque mise à jour de quota
-  getUsed: (type: QuotaType) => number  // Retourne le nombre d'utilisations (toujours frais)
+  matiereActive: MatiereType
+  quotaVersion: number
+  getUsed: (type: QuotaType) => number
   checkMatiereAccess: (matiere: MatiereType) => boolean
   getSubjectQuotaLimit: (type: QuotaType, matiere?: MatiereType) => number
   activePlanTypes: string[]
@@ -107,14 +107,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [quotas, setQuotas] = useState<Record<MatiereType, UserQuotas> | null>(null)
-  const [quotaVersion, setQuotaVersion] = useState(0) // Force re-render après incrément
+  const [quotaVersion, setQuotaVersion] = useState(0)
   const [activePlanTypes, setActivePlanTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // REF pour tracker le changement d'utilisateur
   const previousUserId = useRef<string | null>(null)
-
-  // Évite les vérifications pendant un callback OAuth
   const authTransitionRef = useRef(false)
   const loadingProfileRef = useRef(false)
   const loadingQuotaRef = useRef(false)
@@ -129,13 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasActiveSubscription =
     isAdmin ||
-    activePlanTypes.length > 0 ||  // ← multi-abonnements actifs depuis subscriptions
+    activePlanTypes.length > 0 ||
     (profile?.is_active === true &&
       subscriptionEnd !== null &&
       subscriptionEnd.getTime() > Date.now())
-
-  // Debug (désactivé en prod)
-  // if (profile) console.log('[Auth] hasActiveSubscription:', hasActiveSubscription, activePlanTypes)
 
   const activeMatieres = normalizeActiveMatieres(activePlanTypes)
 
@@ -144,12 +138,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile?.plan_type === 'sprint_bac' || profile?.plan_type?.startsWith('sprint_bac_')
   )
 
-  // Matière de l'abonnement actif (représentative)
   const matiereActive: MatiereType = hasActiveSubscription
     ? activeMatieres[0] ?? extractMatiere(profile?.plan_type)
     : 'mathematiques'
 
-  // Vérifier si l'utilisateur a accès à une matière donnée
   function checkMatiereAccess(matiere: MatiereType): boolean {
     if (isAdmin) return true
     if (!hasActiveSubscription) return false
@@ -178,7 +170,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
     if (isAdmin) return true
-    // Si pas encore de quotas chargés mais abonnement actif → autoriser
     if (!quotas) return hasActiveSubscription ? true : false
 
     const limitKey: Record<QuotaType, string> = {
@@ -188,10 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       remediation: 'remediation_per_week',
       analyses:    'analyses_per_week',
     }
-    // Quota cumulé = somme de tous les abonnements actifs
     const limit = (quotaLimits as any)[limitKey[type]] as number
-
-    // Usage cumulé = somme de toutes les matières
     const totalQuotas = sumQuotasAcrossMatiere(quotas)
     const usedKey: Record<QuotaType, string> = {
       simulations: 'simulations_used',
@@ -205,7 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return used < limit
   }
 
-  // Helper pour afficher le quota total dans les messages d'alerte
   function getUsed(type: QuotaType): number {
     const usedKey: Record<QuotaType, keyof UserQuotas> = {
       simulations: 'simulations_used',
@@ -241,9 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const daysRemaining =
     hasActiveSubscription && subscriptionEnd
-      ? Math.ceil(
-          (subscriptionEnd.getTime() - Date.now()) / 86400000
-        )
+      ? Math.ceil((subscriptionEnd.getTime() - Date.now()) / 86400000)
       : null
 
   async function loadProfile(userId: string) {
@@ -251,7 +236,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       while (loadingProfileRef.current) {
         await new Promise(resolve => setTimeout(resolve, 50))
       }
-
       return
     }
 
@@ -265,11 +249,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        // PGRST116 = profil inexistant → le créer automatiquement
         if (error.code === 'PGRST116') {
           const { data: { user: authUser } } = await supabase.auth.getUser()
-          // INSERT uniquement si le profil n'existe vraiment pas
-          // NE PAS utiliser upsert qui écraserait is_active si le profil existe
           const { data: newProfile } = await supabase
             .from('profiles')
             .insert({
@@ -279,6 +260,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: 'user',
               is_active: false,
               plan_type: null,
+              pc_session_a: null,
+              pc_session_b: null,
+              mobile_session_a: null,
+              mobile_session_b: null,
               created_at: new Date().toISOString(),
             })
             .select()
@@ -286,10 +271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (newProfile) setProfile(newProfile)
           return
         }
-        // Toute autre erreur (lock conflict, timeout) → NE PAS toucher le profil
-        // Garder le profil actuel en mémoire si disponible
         console.error('Erreur chargement profil (non critique):', error.code, error.message)
-        // Ne pas faire setProfile(null) — ça tuerait l'abonnement affiché
         return
       }
 
@@ -297,7 +279,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: data?.email,
         is_active: data?.is_active,
         plan_type: data?.plan_type,
-        subscription_end: data?.subscription_end,
       })
 
       let finalProfile = data
@@ -312,10 +293,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .limit(20)
 
       const activeSubscriptions = (subscriptions || []).filter((sub: any) => {
-        // Accepter si date future OU si is_active=true sans date (abonnement permanent/admin)
         const endsAt = sub?.ends_at || sub?.subscription_end
         if (endsAt) return new Date(endsAt) > new Date()
-        return sub?.is_active === true  // fallback: is_active sans date
+        return sub?.is_active === true
       })
 
       const activePlanTypesList = Array.from(new Set<string>(
@@ -341,7 +321,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_end: latestEnd ? latestEnd.toISOString() : data.subscription_end,
         }
       } else if (!data?.is_active || !data?.subscription_end || new Date(data.subscription_end) <= new Date()) {
-        // Si aucun abonnement actif n'est trouvé, on garde le profil tel quel
         finalProfile = data
       }
 
@@ -354,7 +333,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function loadQuotas(userId: string) {
     if (loadingQuotaRef.current) return
-
     loadingQuotaRef.current = true
 
     try {
@@ -379,19 +357,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const key = (q.matiere as MatiereType) || 'mathematiques'
           quotasMap[key] = q
         })
-        // Si pas de colonne matiere (1 seul enregistrement sans matiere):
-        // NE PAS dupliquer — sumQuotasAcrossMatiere compterait x3
-        // Stocker seulement sous 'mathematiques' pour usage global
-        // Spread pour garantir une nouvelle référence → React détecte le changement
         setQuotas({ ...quotasMap } as Record<MatiereType, UserQuotas>)
-        setQuotaVersion(v => v + 1) // Forcer re-render des composants
+        setQuotaVersion(v => v + 1)
       }
     } finally {
       loadingQuotaRef.current = false
     }
   }
 
-  // FONCTION: Nettoyer completement le state
   function clearState() {
     setUser(null)
     setProfile(null)
@@ -399,7 +372,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     previousUserId.current = null
   }
 
-  // ✅ CORRIGÉ : signIn avec gestion PC/Mobile + 1 changement max
+  // ✅ LOGIQUE FINALE : 2 sessions max par device (A et B), non abonné = illimité
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -410,58 +383,104 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       const isMultiSession = isMultiSessionUser(data.user.email)
 
-      // Si changement d'utilisateur, nettoyer d'abord
       if (previousUserId.current && previousUserId.current !== data.user.id) {
         clearState()
       }
 
-      // ✅ NOUVEAU : Gérer session locale par device (PC/Mobile) avec 1 changement max
+      // ✅ SI NON ABONNÉ → aucune restriction
       if (!isMultiSession) {
-        const deviceType = getDeviceType()        // 'pc' ou 'mobile'
-        const sessionId = crypto.randomUUID()       // NOUVEAU id à chaque connexion
-
-        // Récupérer le profil pour vérifier si un changement a déjà été fait
-        const { data: prof } = await supabase
+        // Vérifier si abonné avant d'appliquer les restrictions
+        const { data: profCheck } = await supabase
           .from('profiles')
-          .select('current_session_pc_id, current_session_mobile_id, pc_changed_count, mobile_changed_count')
+          .select('is_active, subscription_end')
           .eq('id', data.user.id)
           .single()
 
-        const changedCountKey = `${deviceType}_changed_count`
-        const currentChangedCount = (prof as any)?.[changedCountKey] || 0
+        const isSubscribed = profCheck?.is_active === true && 
+          profCheck?.subscription_end && 
+          new Date(profCheck.subscription_end) > new Date()
 
-        // Vérifier si c'est un NOUVEAU device (session_id différent ou null)
-        const dbSessionId = (prof as any)?.[`current_session_${deviceType}_id`]
-        const isNewDevice = dbSessionId && dbSessionId !== localStorage.getItem('mathbac_session_id')
+        // Si PAS abonné → pas de restriction de session
+        if (!isSubscribed) {
+          console.log('[Auth] Non abonné → sessions illimitées')
+          authTransitionRef.current = true
+          try {
+            setUser(data.user)
+            previousUserId.current = data.user.id
+            await loadProfile(data.user.id)
+            await loadQuotas(data.user.id)
+            window.location.replace('/')
+            return { error: null, user: data.user }
+          } finally {
+            authTransitionRef.current = false
+          }
+        }
 
-        // ✅ BLOCAGE : Si déjà 1 changement et c'est encore un nouveau device → refuser
-        if (isNewDevice && currentChangedCount >= 1) {
-          await supabase.auth.signOut()
-          return { 
-            error: 'Vous avez déjà changé de ' + (deviceType === 'pc' ? 'ordinateur' : 'mobile') + ' une fois. Retournez sur votre appareil principal.', 
-            user: null 
+        // ✅ SI ABONNÉ → logique 2 sessions max (A et B)
+        const deviceType = getDeviceType()
+        const sessionId = crypto.randomUUID()
+
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('pc_session_a, pc_session_b, mobile_session_a, mobile_session_b')
+          .eq('id', data.user.id)
+          .single()
+
+        const sessionAKey = `${deviceType}_session_a`
+        const sessionBKey = `${deviceType}_session_b`
+        const sessionA = (prof as any)?.[sessionAKey]
+        const sessionB = (prof as any)?.[sessionBKey]
+
+        // Vérifier si c'est une session déjà connue (A ou B)
+        const isKnownSession = sessionId === sessionA || sessionId === sessionB
+
+        // Si ce n'est pas une session connue ET les 2 slots sont pleins → bloquer
+        if (!isKnownSession && sessionA && sessionB) {
+          // Vérifier si c'est un retour à A ou B (comparaison avec localStorage)
+          const localSessionId = localStorage.getItem('mathbac_session_id')
+          const isReturningA = localSessionId === sessionA
+          const isReturningB = localSessionId === sessionB
+
+          if (!isReturningA && !isReturningB) {
+            console.log('❌ BLOCAGE : 2 sessions', deviceType, 'déjà utilisées')
+            await supabase.auth.signOut()
+            return { 
+              error: 'Vous avez atteint la limite de 2 ' + (deviceType === 'pc' ? 'ordinateurs' : 'mobiles') + '. Retournez sur un appareil déjà utilisé.', 
+              user: null 
+            }
+          }
+        }
+
+        // Déterminer dans quel slot stocker
+        let targetSlot: string
+
+        if (!sessionA) {
+          // Slot A vide → utiliser A
+          targetSlot = sessionAKey
+        } else if (!sessionB) {
+          // Slot B vide → utiliser B
+          targetSlot = sessionBKey
+        } else {
+          // Les 2 slots pleins → remplacer le plus ancien (celui qui n'est pas le localStorage)
+          const localSessionId = localStorage.getItem('mathbac_session_id')
+          if (localSessionId === sessionA) {
+            targetSlot = sessionBKey  // Remplacer B
+          } else {
+            targetSlot = sessionAKey  // Remplacer A
           }
         }
 
         localStorage.setItem('mathbac_session_id', sessionId)
         localStorage.setItem('mathbac_device_type', deviceType)
 
-        // Mettre à jour la DB : ÉCRASE l'ancien session_id de ce device
         const updateData: any = {}
-        updateData[`current_session_${deviceType}_id`] = sessionId
-
-        // ✅ Incrémenter le compteur de changement SI c'est un nouveau device
-        if (isNewDevice && dbSessionId) {
-          updateData[changedCountKey] = currentChangedCount + 1
-        }
-        // Si c'est la première connexion (dbSessionId null), initialiser à 0
-        if (!dbSessionId) {
-          updateData[changedCountKey] = 0
-        }
+        updateData[targetSlot] = sessionId
 
         await supabase.from('profiles')
           .update(updateData)
           .eq('id', data.user.id)
+
+        console.log('[Auth] Session', deviceType, 'stockée dans', targetSlot)
       } else {
         localStorage.removeItem('mathbac_session_id')
         localStorage.removeItem('mathbac_device_type')
@@ -473,7 +492,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         previousUserId.current = data.user.id
         await loadProfile(data.user.id)
         await loadQuotas(data.user.id)
-
         window.location.replace('/')
         return { error: null, user: data.user }
       } finally {
@@ -500,8 +518,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error)
       return { error: translateAuthError(error.message) }
 
-    // Créer le profil dans profiles dès l'inscription
-    // (même avant confirmation email — sera accessible après connexion)
     if (authData.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -514,14 +530,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'user',
           is_active: false,
           plan_type: null,
-          pc_changed_count: 0,        // ✅ Initialiser compteur PC
-          mobile_changed_count: 0,    // ✅ Initialiser compteur Mobile
+          pc_session_a: null,
+          pc_session_b: null,
+          mobile_session_a: null,
+          mobile_session_b: null,
           created_at: new Date().toISOString(),
         }, { onConflict: 'id' })
 
       if (profileError) {
         console.error('Erreur création profil:', profileError)
-        // On ne bloque pas l'inscription pour autant
       }
     }
 
@@ -560,23 +577,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null }
   }
 
-  // ✅ CORRIGÉ : signOut nettoie le session_id du bon device dans la DB
   async function signOut() {
     const deviceType = localStorage.getItem('mathbac_device_type') as 'pc' | 'mobile' | null
+    const localSessionId = localStorage.getItem('mathbac_session_id')
+
+    if (user && deviceType && localSessionId) {
+      try {
+        // Supprimer la session correspondante (A ou B)
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('pc_session_a, pc_session_b, mobile_session_a, mobile_session_b')
+          .eq('id', user.id)
+          .single()
+
+        const updateData: any = {}
+
+        if ((prof as any)?.[`${deviceType}_session_a`] === localSessionId) {
+          updateData[`${deviceType}_session_a`] = null
+        } else if ((prof as any)?.[`${deviceType}_session_b`] === localSessionId) {
+          updateData[`${deviceType}_session_b`] = null
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from('profiles').update(updateData).eq('id', user.id)
+        }
+      } catch (_) {}
+    }
 
     localStorage.removeItem('mathbac_session_id')
     localStorage.removeItem('mathbac_device_type')
-
-    if (user && deviceType) {
-      try {
-        const updateData: any = {}
-        updateData[`current_session_${deviceType}_id`] = null
-
-        await supabase.from('profiles')
-          .update(updateData)
-          .eq('id', user.id)
-      } catch (_) {}
-    }
 
     authTransitionRef.current = true
 
@@ -600,15 +629,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function incrementQuota(type: QuotaType, matiere: MatiereType = matiereActive) {
     if (!user) return
-    // L'incrément est désormais fait CÔTÉ SERVEUR (proxy /api/anthropic), non contournable.
-    // Ici on se contente de rafraîchir l'affichage des quotas après la réponse.
-    // (type & matiere restent dans la signature pour ne rien changer aux appelants.)
     await loadQuotas(user.id)
   }
-
-  // Note: Le rechargement des quotas se fait via refreshSubscription()
-  // appelé explicitement par les composants qui en ont besoin
-  // On évite visibilitychange/focus car ils causent des rechargements intempestifs
 
   useEffect(() => {
     const {
@@ -624,9 +646,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           previousUserId.current = currentUser.id
-
           setUser(currentUser)
-
           authTransitionRef.current = true
 
           try {
@@ -644,20 +664,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     )
 
-    // ✅ CORRIGÉ : Vérification par device (PC/Mobile) avec délai 10s
     let signingOut = false
 
     const verifySingleSession = async () => {
       if (signingOut) return
-
-      // Google OAuth ou reset password en cours
-      if (
-        authTransitionRef.current ||
-        window.location.pathname.startsWith('/auth/callback')
-      ) {
-        return
-      }
-
+      if (authTransitionRef.current) return
+      if (window.location.pathname.startsWith('/auth/callback')) return
       if (verifyingSessionRef.current) return
 
       verifyingSessionRef.current = true
@@ -667,21 +679,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!session?.user) return
 
         const currentUser = session.user
-
         if (isMultiSessionUser(currentUser.email)) return
+
+        // ✅ Vérifier si abonné avant de faire quoi que ce soit
+        const { data: profCheck } = await supabase
+          .from('profiles')
+          .select('is_active, subscription_end')
+          .eq('id', currentUser.id)
+          .single()
+
+        const isSubscribed = profCheck?.is_active === true && 
+          profCheck?.subscription_end && 
+          new Date(profCheck.subscription_end) > new Date()
+
+        // Si PAS abonné → pas de vérification de session
+        if (!isSubscribed) return
 
         const localId = localStorage.getItem('mathbac_session_id')
         const deviceType = localStorage.getItem('mathbac_device_type') as 'pc' | 'mobile' | null
 
         if (!localId || !deviceType) {
-          // Pas de session locale enregistrée → en créer une nouvelle
+          // Pas de session locale → en créer une nouvelle
           const newSessionId = crypto.randomUUID()
           const newDeviceType = getDeviceType()
           localStorage.setItem('mathbac_session_id', newSessionId)
           localStorage.setItem('mathbac_device_type', newDeviceType)
 
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('pc_session_a, pc_session_b, mobile_session_a, mobile_session_b')
+            .eq('id', currentUser.id)
+          .single()
+
+          const sessionAKey = `${newDeviceType}_session_a`
+          const sessionBKey = `${newDeviceType}_session_b`
+          const sessionA = (prof as any)?.[sessionAKey]
+          const sessionB = (prof as any)?.[sessionBKey]
+
+          let targetSlot = sessionAKey
+          if (sessionA && !sessionB) targetSlot = sessionBKey
+          else if (sessionA && sessionB) targetSlot = sessionAKey // Remplacer A par défaut
+
           const updateData: any = {}
-          updateData[`current_session_${newDeviceType}_id`] = newSessionId
+          updateData[targetSlot] = newSessionId
 
           await supabase.from('profiles')
             .update(updateData)
@@ -689,33 +729,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        // ✅ Vérifier le session_id pour CE device spécifique (PC ou Mobile)
+        // ✅ Vérifier si la session locale est toujours valide (A ou B)
         const { data: prof } = await supabase
           .from('profiles')
-          .select('current_session_pc_id, current_session_mobile_id, is_active')
+          .select('pc_session_a, pc_session_b, mobile_session_a, mobile_session_b, is_active')
           .eq('id', currentUser.id)
           .single()
 
         if (!prof) return
 
-        const dbSessionId = (prof as any)[`current_session_${deviceType}_id`]
+        const sessionA = (prof as any)?.[`${deviceType}_session_a`]
+        const sessionB = (prof as any)?.[`${deviceType}_session_b`]
 
-        // Pas de restriction enregistrée pour ce device → en créer une
-        if (!dbSessionId) {
-          const updateData: any = {}
-          updateData[`current_session_${deviceType}_id`] = localId
+        // Si la session locale correspond à A ou B → OK
+        if (localId === sessionA || localId === sessionB) return
 
-          await supabase.from('profiles')
-            .update(updateData)
-            .eq('id', currentUser.id)
-          return
-        }
-
-        // Session correspondante → OK
-        if (dbSessionId === localId) return
-
-        // Session différente → quelqu'un d'autre s'est connecté sur ce device
-        // Déconnecter UNIQUEMENT si l'abonnement est actif
+        // Session non reconnue → déconnecter
         if (prof?.is_active === true) {
           signingOut = true
           localStorage.removeItem('mathbac_session_id')
@@ -730,7 +759,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     window.addEventListener('focus', verifySingleSession)
-    // ✅ CORRIGÉ : Délai réduit de 30000ms à 10000ms (10 secondes)
     const interval = setInterval(verifySingleSession, 10000)
 
     return () => {
@@ -788,9 +816,8 @@ export function useAuth() {
 }
 
 function getWeekStart(): string {
-  // Utiliser UTC pour correspondre exactement à PostgreSQL (serveur en UTC)
   const now = new Date()
-  const dowUTC = now.getUTCDay() // 0=dim, 1=lun...6=sam en UTC
+  const dowUTC = now.getUTCDay()
   const diffUTC = now.getUTCDate() - dowUTC + (dowUTC === 0 ? -6 : 1)
   const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diffUTC))
   const yyyy = monday.getUTCFullYear()
