@@ -22,6 +22,13 @@ const MULTI_SESSION_EMAILS = [
   'mourad.essghaier@hotmail.fr',    // Abonné multi-appareils
 ]
 
+// ✅ NOUVEAU : Détecte si l'appareil est PC ou Mobile
+function getDeviceType(): 'pc' | 'mobile' {
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(userAgent)
+  return isMobile ? 'mobile' : 'pc'
+}
+
 // Vérifier si un email bénéficie de multi-sessions
 function isMultiSessionUser(email: string | undefined): boolean {
   if (!email) return false
@@ -103,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [quotaVersion, setQuotaVersion] = useState(0) // Force re-render après incrément
   const [activePlanTypes, setActivePlanTypes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  
+
   // REF pour tracker le changement d'utilisateur
   const previousUserId = useRef<string | null>(null)
 
@@ -392,6 +399,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     previousUserId.current = null
   }
 
+  // ✅ CORRIGÉ : signIn avec gestion PC/Mobile + 1 changement max
   async function signIn(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -401,34 +409,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (data.user) {
       const isMultiSession = isMultiSessionUser(data.user.email)
-      
+
       // Si changement d'utilisateur, nettoyer d'abord
       if (previousUserId.current && previousUserId.current !== data.user.id) {
         clearState()
       }
-      
-      // Gérer session locale
+
+      // ✅ NOUVEAU : Gérer session locale par device (PC/Mobile) avec 1 changement max
       if (!isMultiSession) {
-        const sessionId = crypto.randomUUID()
+        const deviceType = getDeviceType()        // 'pc' ou 'mobile'
+        const sessionId = crypto.randomUUID()       // NOUVEAU id à chaque connexion
+
+        // Récupérer le profil pour vérifier si un changement a déjà été fait
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('current_session_pc_id, current_session_mobile_id, pc_changed_count, mobile_changed_count')
+          .eq('id', data.user.id)
+          .single()
+
+        const changedCountKey = `${deviceType}_changed_count`
+        const currentChangedCount = (prof as any)?.[changedCountKey] || 0
+
+        // Vérifier si c'est un NOUVEAU device (session_id différent ou null)
+        const dbSessionId = (prof as any)?.[`current_session_${deviceType}_id`]
+        const isNewDevice = dbSessionId && dbSessionId !== localStorage.getItem('mathbac_session_id')
+
+        // ✅ BLOCAGE : Si déjà 1 changement et c'est encore un nouveau device → refuser
+        if (isNewDevice && currentChangedCount >= 1) {
+          await supabase.auth.signOut()
+          return { 
+            error: 'Vous avez déjà changé de ' + (deviceType === 'pc' ? 'ordinateur' : 'mobile') + ' une fois. Retournez sur votre appareil principal.', 
+            user: null 
+          }
+        }
+
         localStorage.setItem('mathbac_session_id', sessionId)
+        localStorage.setItem('mathbac_device_type', deviceType)
+
+        // Mettre à jour la DB : ÉCRASE l'ancien session_id de ce device
+        const updateData: any = {}
+        updateData[`current_session_${deviceType}_id`] = sessionId
+
+        // ✅ Incrémenter le compteur de changement SI c'est un nouveau device
+        if (isNewDevice && dbSessionId) {
+          updateData[changedCountKey] = currentChangedCount + 1
+        }
+        // Si c'est la première connexion (dbSessionId null), initialiser à 0
+        if (!dbSessionId) {
+          updateData[changedCountKey] = 0
+        }
+
+        await supabase.from('profiles')
+          .update(updateData)
+          .eq('id', data.user.id)
       } else {
         localStorage.removeItem('mathbac_session_id')
+        localStorage.removeItem('mathbac_device_type')
       }
-      
+
       authTransitionRef.current = true
       try {
         setUser(data.user)
         previousUserId.current = data.user.id
         await loadProfile(data.user.id)
         await loadQuotas(data.user.id)
-        
+
         window.location.replace('/')
         return { error: null, user: data.user }
       } finally {
         authTransitionRef.current = false
       }
     }
-    
+
     return { error: null, user: null }
   }
 
@@ -462,6 +514,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'user',
           is_active: false,
           plan_type: null,
+          pc_changed_count: 0,        // ✅ Initialiser compteur PC
+          mobile_changed_count: 0,    // ✅ Initialiser compteur Mobile
           created_at: new Date().toISOString(),
         }, { onConflict: 'id' })
 
@@ -506,12 +560,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: null }
   }
 
+  // ✅ CORRIGÉ : signOut nettoie le session_id du bon device dans la DB
   async function signOut() {
+    const deviceType = localStorage.getItem('mathbac_device_type') as 'pc' | 'mobile' | null
+
     localStorage.removeItem('mathbac_session_id')
-    if (user) {
+    localStorage.removeItem('mathbac_device_type')
+
+    if (user && deviceType) {
       try {
+        const updateData: any = {}
+        updateData[`current_session_${deviceType}_id`] = null
+
         await supabase.from('profiles')
-          .update({ current_session_id: null })
+          .update(updateData)
           .eq('id', user.id)
       } catch (_) {}
     }
@@ -554,7 +616,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(
       async (_event: any, session: any) => {
         const currentUser = session?.user ?? null
-        
+
         if (currentUser) {
           if (previousUserId.current === currentUser.id) {
             setIsLoading(false)
@@ -577,12 +639,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           clearState()
         }
-        
+
         setIsLoading(false)
       }
     )
 
-    // Verification periodique
+    // ✅ CORRIGÉ : Vérification par device (PC/Mobile) avec délai 10s
     let signingOut = false
 
     const verifySingleSession = async () => {
@@ -605,52 +667,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!session?.user) return
 
         const currentUser = session.user
-        
+
         if (isMultiSessionUser(currentUser.email)) return
 
         const localId = localStorage.getItem('mathbac_session_id')
-        
-        if (!localId) {
+        const deviceType = localStorage.getItem('mathbac_device_type') as 'pc' | 'mobile' | null
+
+        if (!localId || !deviceType) {
+          // Pas de session locale enregistrée → en créer une nouvelle
           const newSessionId = crypto.randomUUID()
+          const newDeviceType = getDeviceType()
           localStorage.setItem('mathbac_session_id', newSessionId)
+          localStorage.setItem('mathbac_device_type', newDeviceType)
+
+          const updateData: any = {}
+          updateData[`current_session_${newDeviceType}_id`] = newSessionId
+
           await supabase.from('profiles')
-            .update({ current_session_id: newSessionId })
+            .update(updateData)
             .eq('id', currentUser.id)
           return
         }
 
+        // ✅ Vérifier le session_id pour CE device spécifique (PC ou Mobile)
         const { data: prof } = await supabase
           .from('profiles')
-          .select('current_session_id, is_active')
+          .select('current_session_pc_id, current_session_mobile_id, is_active')
           .eq('id', currentUser.id)
           .single()
 
-        if (!prof?.current_session_id) {
-          // current_session_id NULL = pas de restriction active
-          // NE PAS modifier profiles ici pour éviter de déclencher des triggers
-          // Juste s'assurer que le localStorage est propre
-          if (!localId) {
-            localStorage.setItem('mathbac_session_id', crypto.randomUUID())
-          }
+        if (!prof) return
+
+        const dbSessionId = (prof as any)[`current_session_${deviceType}_id`]
+
+        // Pas de restriction enregistrée pour ce device → en créer une
+        if (!dbSessionId) {
+          const updateData: any = {}
+          updateData[`current_session_${deviceType}_id`] = localId
+
+          await supabase.from('profiles')
+            .update(updateData)
+            .eq('id', currentUser.id)
           return
         }
-        
-        if (prof.current_session_id === localId) return
-        
-        // Ne déconnecter que si DB a un session_id NON-NULL différent
-        // Si current_session_id est NULL en DB (ex: activation manuelle),
-        // on met juste à jour sans déconnecter
-        // Déconnecter UNIQUEMENT si l'abonnement est actif ET session différente
-        // Si is_active=false (abonnement expiré/gratuit) → ne jamais déconnecter pour session
-        if (prof?.is_active === true && prof.current_session_id !== null && prof.current_session_id !== localId) {
+
+        // Session correspondante → OK
+        if (dbSessionId === localId) return
+
+        // Session différente → quelqu'un d'autre s'est connecté sur ce device
+        // Déconnecter UNIQUEMENT si l'abonnement est actif
+        if (prof?.is_active === true) {
           signingOut = true
           localStorage.removeItem('mathbac_session_id')
+          localStorage.removeItem('mathbac_device_type')
           clearState()
           await supabase.auth.signOut()
           window.location.replace('/login?error=session_dupliquee')
-        } else if (!prof?.is_active || prof?.current_session_id === null) {
-          // Pas actif OU session_id null → ne rien faire, laisser l'accès
-          return
         }
       } finally {
         verifyingSessionRef.current = false
@@ -658,7 +730,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     window.addEventListener('focus', verifySingleSession)
-    const interval = setInterval(verifySingleSession, 30000)
+    // ✅ CORRIGÉ : Délai réduit de 30000ms à 10000ms (10 secondes)
+    const interval = setInterval(verifySingleSession, 10000)
 
     return () => {
       subscription.unsubscribe()
