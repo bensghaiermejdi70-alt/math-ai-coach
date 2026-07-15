@@ -74,7 +74,7 @@ export default function AuthCallback() {
 
           // 1. S'abonner à l'événement auth
           const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
+            (event: string, session: any) => {
               console.log('🔄 Auth event:', event)
               
               if (resolved) return
