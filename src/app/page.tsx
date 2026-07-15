@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 
 // ═══════════════════════════════════════════════════════════════
-//  MathBac.AI — HOME V2  (design inspiré des meilleurs EdTech mondiaux)
+//  MathBacAI — HOME V2  (design inspiré des meilleurs EdTech mondiaux)
 //  Palette : encre #0A0B0F · indigo #5B6CFF · violet #9D7BFF
 // ═══════════════════════════════════════════════════════════════
 
