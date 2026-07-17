@@ -19,8 +19,28 @@ export default function AuthCallback() {
 
     const finalizeLogin = async (session: any) => {
       try {
-        const claim = await claimDeviceSlot(supabase, session.user.id, session.user.email)
+        // IMPORTANT : on borne l'appel avec un timeout. Sans ça, si
+        // claim_device_session traine ou reste bloque (verrou, reseau lent),
+        // la page reste sur le spinner indefiniment — alors que la connexion
+        // Supabase elle-meme a deja reussi (d'ou l'impression "je sors, je
+        // reviens, je suis deja connecte").
+        const claim = await Promise.race([
+          claimDeviceSlot(supabase, session.user.id, session.user.email),
+          new Promise<{ ok: false; error: string }>((resolve) =>
+            setTimeout(() => resolve({ ok: false, error: 'TIMEOUT' }), 8000)
+          ),
+        ])
+
         if (!claim.ok) {
+          if (claim.error === 'TIMEOUT') {
+            // Timeout : on ne bloque pas l'utilisateur pour un probleme de
+            // lenteur reseau/serveur — on le laisse entrer. Si l'appareil est
+            // vraiment en trop, le prochain verify_device_session (poll ou
+            // Realtime) le detectera et l'interrompra proprement.
+            console.warn('Timeout claim_device_session — entree autorisee, verification differee au polling')
+            router.push('/')
+            return
+          }
           console.warn('BLOCAGE (device limit):', claim.error)
           clearAllSupabaseStorage()
           markAsKicked()
