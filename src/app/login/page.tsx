@@ -2,12 +2,14 @@
 import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import Navbar from '@/components/layout/Navbar'
 
 function LoginInner() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
+  const { signIn } = useAuth()
 
   const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
@@ -30,46 +32,38 @@ function LoginInner() {
     }
   }, [searchParams])
 
+  // Client Supabase local, utilise uniquement pour Google OAuth et le reset
+  // password ci-dessous, qui ne passent pas par la limitation d'appareils.
   const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError(''); setLoading(true)
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    // IMPORTANT : on passe TOUJOURS par AuthContext.signIn(), qui est le SEUL
+    // endroit qui appelle claimDeviceSlot() / la fonction RPC atomique
+    // claim_device_session. L'ancienne version de cette page faisait son
+    // propre supabase.auth.signInWithPassword() + ecrivait a la main dans une
+    // colonne `current_session_id` qui n'existe plus (renommee en
+    // `current_session_pc_id`) : la limitation d'appareils n'etait donc
+    // JAMAIS appliquee pour les connexions email/mot de passe, et le premier
+    // poll de verification kickait l'appareil car il n'avait jamais ete
+    // enregistre nulle part ("session_dupliquee" des la 1ere session).
+    const { error } = await signIn(email, password, redirectTo)
 
     if (error) {
-      setError(
-        error.message.includes('Invalid login credentials')
-          ? 'Email ou mot de passe incorrect'
-          : error.message
-      )
+      setError(error)
       setLoading(false)
       return
     }
-
-    if (data.user) {
-      const isUserAdmin = data.user.email === 'bensghaiermejdi70@gmail.com'
-      
-      if (!isUserAdmin) {
-        // 🔧 CORRECTION: Créer TOUJOURS une nouvelle session au login
-        // Cela écrase l'ancienne session (l'ancien appareil sera déconnecté au prochain check)
-        const sessionId = crypto.randomUUID()
-        localStorage.setItem('mathbac_session_id', sessionId)
-        await supabase.from('profiles')
-          .update({ current_session_id: sessionId })
-          .eq('id', data.user.id)
-      }
-      
-      // Redirection après connexion réussie
-      window.location.href = redirectTo !== '/' ? redirectTo : '/'
-    }
+    // Succes : signIn() gere deja la redirection (router.push) en interne.
   }
 
   async function handleGoogle() {
     setGoogleL(true)
-    
-    // Pour Google OAuth, la session sera créée dans AuthContext après le callback
+
+    // Pour Google OAuth, la session sera créée dans le callback
+    // (src/app/auth/callback/page.tsx), qui appelle claimDeviceSlot()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },

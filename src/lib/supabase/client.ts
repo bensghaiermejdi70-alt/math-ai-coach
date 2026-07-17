@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { clearAllSupabaseStorage, markAsKicked, verifyStillValid } from '@/lib/auth/deviceSession'
 
 // Singleton global — survit aux re-renders et hot reloads de Next.js
 declare global {
@@ -22,12 +23,12 @@ export function createClient() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         auth: {
-          detectSessionInUrl: true,        // ✅ CRITIQUE : détecte le code OAuth dans l'URL
+          detectSessionInUrl: true,        // CRITIQUE : detecte le code OAuth dans l'URL
           autoRefreshToken: true,
           persistSession: true,
-          flowType: 'pkce',               // ✅ Recommandé pour OAuth sécurisé
+          flowType: 'pkce',               // Recommande pour OAuth securise
           lock: async (_name: string, _acquireTimeout: number, fn: () => Promise<any>) => {
-            // Désactiver le Web Lock API — évite les conflits entre instances
+            // Desactiver le Web Lock API — evite les conflits entre instances
             return fn()
           },
         }
@@ -38,44 +39,41 @@ export function createClient() {
   return globalThis.__supabase_client
 }
 
-// 🔒 Fonction utilitaire pour forcer la déconnexion propre
+/**
+ * Deconnexion propre — nettoie TOUT le stockage local + marque comme kicke.
+ * A utiliser pour la deconnexion manuelle ou le kick de session.
+ */
 export async function forceSignOut() {
   const client = createClient()
-  
-  // Nettoyer le localStorage de notre système de session
-  localStorage.removeItem('mathbac_session_id')
-  
-  // Déconnexion Supabase
-  await client.auth.signOut()
-  
-  // Redirection
+
+  // 1. Nettoyer le stockage Supabase complet
+  clearAllSupabaseStorage()
+
+  // 2. Marquer comme kicke (empeche reconnexion auto)
+  markAsKicked()
+
+  // 3. Deconnexion Supabase
+  await client.auth.signOut().catch(() => {})
+
+  // 4. Redirection
   if (typeof window !== 'undefined') {
     window.location.href = '/login'
   }
 }
 
-// 🔒 Fonction pour vérifier si la session locale est valide
+/**
+ * Verifie si la session locale est valide.
+ * Delegue entierement a verifyStillValid() (deviceSession.ts) qui appelle la
+ * fonction RPC `verify_device_session` — c'est la SEULE source de verite
+ * pour cette logique, pour ne pas la dupliquer a 2 ou 3 endroits differents
+ * (c'etait une des causes de divergence/bug dans l'ancienne version).
+ */
 export async function validateLocalSession(): Promise<boolean> {
   const client = createClient()
-  
+
   const { data: { session } } = await client.auth.getSession()
   if (!session?.user) return false
-  
-  // Admin toujours valide
-  if (session.user.email === 'bensghaiermejdi70@gmail.com') return true
-  
-  const localId = localStorage.getItem('mathbac_session_id')
-  if (!localId) return false
-  
-  // Vérifier en base
-  const { data: prof } = await client
-    .from('profiles')
-    .select('current_session_id, is_active')
-    .eq('id', session.user.id)
-    .single()
-  
-  // Session valide si : pas d'abonnement actif OU session correspond
-  if (!prof?.is_active) return true
-  
-  return prof?.current_session_id === localId
+
+  const result = await verifyStillValid(client, session.user.id, session.user.email)
+  return !result.shouldSignOut
 }

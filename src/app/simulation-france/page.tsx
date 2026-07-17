@@ -4501,20 +4501,23 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             </p>}
 
             {/* ── Instructions personnalisées ── */}
-            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-                <span style={{fontSize:14}}>✏️</span>
-                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+            <div style={{marginTop:16,width:'100%',background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:16,padding:'20px 22px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <span style={{fontSize:16}}>✏️</span>
+                <span style={{fontSize:13,fontWeight:800,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
               </div>
+              <p style={{fontSize:12,color:'rgba(255,255,255,0.55)',lineHeight:1.6,margin:'0 0 12px'}}>
+                Tu peux choisir toi-même les exercices que tu veux voir apparaître, ainsi que leur <strong style={{color:'rgba(255,255,255,0.75)'}}>ordre</strong>. Exemple : « Ex 1 = étude de fonction exponentielle, Ex 2 = probabilités loi normale ». Précise aussi ce que tu veux éviter.
+              </p>
               <textarea
                 value={customInstructions}
-                onChange={e=>setCustomInstructions(e.target.value)}
-                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
-                rows={3}
-                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+                onChange={e=>setCustomInstructions(e.target.value.slice(0,500))}
+                placeholder={"Exemple :\nEx 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les nombres complexes"}
+                rows={7}
+                style={{width:'100%',minHeight:150,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'14px 16px',color:'var(--text)',fontSize:13,lineHeight:1.6,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
               />
               {customInstructions.trim().length>0&&(
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:8}}>
                   <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
                   <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
                 </div>
@@ -4624,20 +4627,23 @@ function PhaseSelect({ onStart, archives: archivesProp, chapitresParSection: cha
             )}
 
             {/* ── Instructions personnalisées ── */}
-            <div style={{marginTop:16,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:14,padding:'14px 16px'}}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
-                <span style={{fontSize:14}}>✏️</span>
-                <span style={{fontSize:12,fontWeight:700,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+            <div style={{marginTop:16,width:'100%',background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:16,padding:'20px 22px'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <span style={{fontSize:16}}>✏️</span>
+                <span style={{fontSize:13,fontWeight:800,color:'#a5b4fc'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
               </div>
+              <p style={{fontSize:12,color:'rgba(255,255,255,0.55)',lineHeight:1.6,margin:'0 0 12px'}}>
+                Tu peux choisir toi-même les exercices que tu veux voir apparaître, ainsi que leur <strong style={{color:'rgba(255,255,255,0.75)'}}>ordre</strong>. Exemple : « Ex 1 = étude de fonction exponentielle, Ex 2 = probabilités loi normale ». Précise aussi ce que tu veux éviter.
+              </p>
               <textarea
                 value={customInstructions}
-                onChange={e=>setCustomInstructions(e.target.value)}
-                placeholder={"Exemple : 'Ex 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les complexes'"}
-                rows={3}
-                style={{width:'100%',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:10,padding:'10px 12px',color:'var(--text)',fontSize:12,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
+                onChange={e=>setCustomInstructions(e.target.value.slice(0,500))}
+                placeholder={"Exemple :\nEx 1 = étude de fonction exponentielle\nEx 2 = probabilités loi normale\nÉvite les nombres complexes"}
+                rows={7}
+                style={{width:'100%',minHeight:150,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'14px 16px',color:'var(--text)',fontSize:13,lineHeight:1.6,fontFamily:'var(--font-body)',resize:'vertical',outline:'none',boxSizing:'border-box'}}
               />
               {customInstructions.trim().length>0&&(
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:6}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:8}}>
                   <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
                   <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0}}>✕ Effacer</button>
                 </div>

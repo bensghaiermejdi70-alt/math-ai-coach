@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
@@ -1281,7 +1280,7 @@ function difficultyBloc(d: Difficulty): string {
   return '\n\nNIVEAU DE DIFFICULTÉ : MOYEN — niveau bac standard, équilibré.'
 }
 
-async function generateBacBlancPhysiqueFR(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancPhysiqueFR(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
   const secLabel = sec?.label || candidat.section
   const secDuration = sec?.duration || 210
@@ -1307,6 +1306,7 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
     + 'Exercice 1 — PHYSIQUE (8 points) : ' + ex1Theme + '\n'
     + 'Exercice 2 — PHYSIQUE (6 points) : ' + ex2Theme + '\n'
     + 'Exercice 3 — CHIMIE (6 points) : ' + ex3Theme + '\n\n'
+    + (customText ? '⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l\'ORDRE des exercices) :\n' + customText.substring(0,500) + '\n\n' : '')
     + 'RÈGLES ABSOLUES :\n'
     + '- Sujet ORIGINAL, jamais une copie des annales\n'
     + '- Niveau exactement équivalent au vrai Bac France\n'
@@ -1368,7 +1368,7 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 //  BAC BLANC FRANÇAIS — Philosophie (Terminale) + EAF (Première)
 //  Structure officielle Bac France · Coef. 8 (Philo) · Coef. 5 (EAF)
 // ════════════════════════════════════════════════════════════════════
-async function generateBacBlancFrancais(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancFrancais(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)
   const secLabel  = sec?.label || candidat.section
   const today     = new Date()
@@ -1459,6 +1459,7 @@ NOTATION FRANÇAIS OBLIGATOIRE :
         + '- Écriture d\'invention avec contraintes précises\n'
         + '- Minimum 150 mots par exercice\n\n'
     )
+    + (customText ? '⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l\'ORDRE des exercices/sujets) :\n' + customText.substring(0,500) + '\n\n' : '')
     + 'RÉPONSE JSON EXACTE :\n'
     + '{\n'
     + '  "id": "bbfr-francais-' + dayNum + '-' + candidat.sectionKey + '",\n'
@@ -1765,7 +1766,7 @@ function getProgrammeJourSVTFR(sectionKey: string, dayNum: number) {
   return prog[(dayNum - 1) % prog.length]
 }
 
-async function generateBacBlancSVT(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancSVT(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s=>s.key===candidat.sectionKey)
   const secLabel = sec?.label || candidat.section
   const secDuration = sec?.duration || 210
@@ -1791,7 +1792,7 @@ STRUCTURE OFFICIELLE — Bac général SVT · ${secDuration/60}h · 20 points :
 Le candidat traite OBLIGATOIREMENT les DEUX exercices.
 - EXERCICE 1 — RESTITUTION ORGANISÉE DES CONNAISSANCES (8 points) : une QUESTION de synthèse (thème : ${ex1Theme}) à traiter sous forme de TEXTE ARGUMENTÉ structuré (introduction, développement organisé, conclusion). Consigne : « Vous rédigerez un texte argumenté. On attend des expériences, des observations, des exemples pour appuyer votre exposé. » Un schéma-bilan peut être attendu.
 - EXERCICE 2 — PRATIQUE DU RAISONNEMENT SCIENTIFIQUE / EXPLOITATION DE DOCUMENTS (12 points) : une situation-problème (thème : ${ex2Theme}) + un DOSSIER de 3 à 4 documents (résultats expérimentaux, GRAPHIQUES, cartes, tableaux) numérotés Document 1, 2, 3. Une QUESTION ouverte : « À partir de l'exploitation des documents et de vos connaissances, [caractériser / expliquer / proposer une hypothèse]… ». Consigne : « Vous organiserez votre réponse selon une démarche de votre choix intégrant des données des documents et les connaissances utiles. » AU MOINS un document chiffré exploitable rendu dans le champ "graph".
-
+${customText ? `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l'ORDRE des exercices) :\n${customText.substring(0,500)}\n` : ''}
 RÈGLES ABSOLUES :
 - Sujet ORIGINAL, jamais une copie. Données réalistes et cohérentes, exploitables par le raisonnement.
 - Minimum 120 mots par exercice.
@@ -1849,7 +1850,7 @@ Réponds EXACTEMENT avec ce JSON (aucun texte avant ou après) :
 }
 
 
-async function generateBacBlancInformatique(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancInformatique(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const secNSI = SECTIONS_NSI_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_NSI_FR[0]
   const secLabel = secNSI.label
   const today = new Date()
@@ -1906,7 +1907,7 @@ RÉPONDS UNIQUEMENT EN JSON VALIDE, sans backticks ni commentaires.`
 STRUCTURE BAC BLANC NSI FRANCE :
 Durée : ${secNSI.duration/60}h · Total : ${totalPts} points
 ${progStr}
-
+${customText ? `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l'ORDRE des exercices) :\n${customText.substring(0,500)}\n` : ''}
 RÈGLES :
 - Sujet ORIGINAL varié, jamais répétitif
 - Questions progressives a) b) c) avec sous-parties
@@ -1954,7 +1955,7 @@ ${exJson}
 }
 
 // ── Génération examen Bac Blanc LLCER Anglais France ─────────────
-async function generateBacBlancAnglais(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancAnglais(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const secAnglais = SECTIONS_ANGLAIS_FR.find(s=>s.key===candidat.sectionKey) || SECTIONS_ANGLAIS_FR[0]
   const secLabel = secAnglais.label
   const today = new Date()
@@ -2004,6 +2005,7 @@ async function generateBacBlancAnglais(candidat: Candidat, dayNum: number, diffi
     + ' Rules: create ORIGINAL documents (literary + journalistic + image).'
     + ' Each subject: Part 1 = synthesis in English ~500 words (16pts) | Part 2 = translation into French (4pts).'
     + ' ALL TEXT IN ENGLISH except translation instruction.'
+    + (customText ? ' ⚠️ STUDENT INSTRUCTIONS (ABSOLUTE PRIORITY — must be respected, including the CHOICE and ORDER of subjects/axes): ' + customText.substring(0,500) + '.' : '')
     + ' Respond with exactly this JSON: '
     + '{"id":"bbfr-anglais-' + dayNum + '-' + candidat.sectionKey + '"'
     + ',"day":' + dayNum
@@ -2103,7 +2105,7 @@ function blocDonneesFrance(): string {
   return 'DONNÉES OFFICIELLES FRANCE (sources ' + DONNEES_FRANCE.source + ', jusqu\'à ' + DONNEES_FRANCE.derniereAnnee + ') — à utiliser TELLES QUELLES pour le document statistique (SES). NE PAS inventer ni modifier ces chiffres :\n' + lignes + '\nRègles : valeurs et années EXACTES ; choisis la série qui colle au thème ; décimales avec la virgule ; les valeurs 2025 sont provisoires.'
 }
 
-async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlancEcoFR(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const secLabel = candidat.section || 'Terminale Spé SES'
   const sk = candidat.sectionKey
   const isStmg = sk === 'stmg-eco'
@@ -2153,7 +2155,7 @@ GRAPHIQUES SES — le document statistique va dans le champ "graph" SÉPARÉ, en
 ${structure}
 
 Durée : ${secDuration/60}h · Total : 20 points
-
+${customText ? `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l'ORDRE des exercices/dossiers) :\n${customText.substring(0,500)}\n` : ''}
 RÈGLES ABSOLUES :
 - Sujet ORIGINAL, jamais une copie des annales
 - Document statistique macro : reprends les chiffres EXACTS du bloc « DONNÉES OFFICIELLES FRANCE » (ne pas inventer). STMG Gestion-Finance : données d'entreprise fictive réalistes, dernier exercice clôturé.
@@ -2185,7 +2187,7 @@ UN seul sujet de dissertation s'appuyant sur un dossier de 3 à 4 documents.
 - Une QUESTION de dissertation (économie, sociologie OU science politique, programme de terminale ; thème : ${t1} / ${t3}).
 - Le dossier comporte 3-4 documents dont AU MOINS un document statistique (champ "graph" type "table" ou "bar"), les autres décrits dans le statement.
 - Utiliser les données chiffrées EXACTES du bloc « DONNÉES OFFICIELLES FRANCE » (ne pas inventer).
-
+${customText ? `\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement) :\n${customText.substring(0,500)}\n` : ''}
 RÈGLES : sujet ORIGINAL, problématique à élaborer, plan cohérent et équilibré.
 
 RÉPONSE JSON EXACTE :
@@ -2220,7 +2222,7 @@ RÉPONSE JSON EXACTE :
 }
 
 
-async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen'): Promise<BacExam> {
+async function generateBacBlanc(candidat: Candidat, dayNum: number, difficulty: Difficulty = 'moyen', customText: string = ''): Promise<BacExam> {
   const sec = SECTIONS_FR.find(s => s.key === candidat.sectionKey)!
   const today = new Date()
   const dd = String(today.getDate()).padStart(2,'0')
@@ -2396,7 +2398,8 @@ RÈGLES GRAPHIQUES :
 - Le graphique va dans le champ "graph" SÉPARÉ (PAS dans statement), guillemets internes échappés \"type\". Expressions JS : x*x (jamais x^2), 2*x (jamais 2x), Math.exp/Math.log/Math.sqrt. Valeur : "[GRAPH: {JSON_VALIDE}]" ou null.`
 
   const premDir = isPrem ? 'FORMAT PREMIERE - EPREUVE ANTICIPEE (2h, coef 2, SANS calculatrice, programme de PREMIERE UNIQUEMENT - INTERDIT : ln, integrale, loi normale, geometrie dans l espace, nombres complexes, equations differentielles) :\nExercice 1 = AUTOMATISMES : QCM de 8 questions numerotees Q1 a Q8, chacune 4 propositions (a, b, c, d), UNE seule bonne reponse, SANS justification (6 pts).\nExercice 2 = PROBABILITES : arbre pondere, probabilites conditionnelles et totales, fraction irreductible (5 pts).\nExercice 3 = VRAI/FAUX justifie : 3 affirmations independantes (5 pts).\nExercice 4 = GEOMETRIE REPEREE et PRODUIT SCALAIRE : vecteurs, norme, produit scalaire, angle (4 pts).\n\n' : ''
-  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\\n\\nProgramme a couvrir :\\n' + progStr + '\\n\\n' + premDir + graphRules + '\\n\\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac, ajoute le champ graph quand pertinent) :\\n' + jsonTemplate
+  const customTextBloc = customText ? '\\n\\n⚠️ INSTRUCTIONS ÉLÈVE (PRIORITÉ ABSOLUE — respecter impérativement, y compris pour le choix et l\'ORDRE des exercices) :\\n' + customText.substring(0,500) + '\\n' : ''
+  const prompt = 'Crée un sujet Bac France ORIGINAL pour ' + (sec?.label||candidat.section) + '. Graine : ' + seed + '.\\n\\nProgramme a couvrir :\\n' + progStr + customTextBloc + '\\n\\n' + premDir + graphRules + '\\n\\nReponds avec ce JSON exactement (remplace les enonces par de vrais exercices de niveau Bac, ajoute le champ graph quand pertinent) :\\n' + jsonTemplate
 
   const raw = await askClaude(prompt, system + difficultyBloc(difficulty), 8500)
 
@@ -4590,6 +4593,7 @@ function BacBlancFranceInner() {
   const [phase, setPhase] = useState<Phase>('inscription')
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen')
   const [pendingMatiere, setPendingMatiere] = useState<string>('')
+  const [customInstructions, setCustomInstructions] = useState('')
   const pickMatiere = (key: string) => { setPendingMatiere(key); setPhase('choix-difficulte') }
   const [candidat, setCandidat] = useState<Candidat|null>(null)
   const [liveGen, setLiveGen] = useState('') // concours qui s'écrit en direct (streaming)
@@ -4685,7 +4689,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlanc(candidat, dayNum, difficulty)
+      const e = await generateBacBlanc(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('mathematiques')
@@ -4693,7 +4697,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleStartPhysique = useCallback(async () => {
     if (!candidat) return
@@ -4723,7 +4727,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancPhysiqueFR(candidat, dayNum, difficulty)
+      const e = await generateBacBlancPhysiqueFR(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('physique')
@@ -4731,7 +4735,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleStartInfo = useCallback(async () => {
     if (!candidat) return
@@ -4759,7 +4763,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancInformatique(candidat, dayNum, difficulty)
+      const e = await generateBacBlancInformatique(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('informatique')
@@ -4767,7 +4771,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleStartAnglais = useCallback(async () => {
     if (!candidat) return
@@ -4795,7 +4799,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancAnglais(candidat, dayNum, difficulty)
+      const e = await generateBacBlancAnglais(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('anglais')
@@ -4803,7 +4807,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleStartSvt = useCallback(async () => {
     if (!candidat) return
@@ -4831,7 +4835,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancSVT(candidat, dayNum, difficulty)
+      const e = await generateBacBlancSVT(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('svt')
@@ -4839,7 +4843,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
 
 
@@ -4869,7 +4873,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancFrancais(candidat, dayNum, difficulty)
+      const e = await generateBacBlancFrancais(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('francais')
@@ -4877,7 +4881,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleStartEco = useCallback(async () => {
     if (!candidat) return
@@ -4905,7 +4909,7 @@ function BacBlancFranceInner() {
     }
     setPhase('generating'); setLiveGen(''); onStreamProgress = setLiveGen
     try {
-      const e = await generateBacBlancEcoFR(candidat, dayNum, difficulty)
+      const e = await generateBacBlancEcoFR(candidat, dayNum, difficulty, customInstructions)
       incrementQuotaSub('simulations').catch(() => {})  // arrière-plan : ne bloque plus l'affichage de l'examen (quota déjà compté côté serveur)
       incBbWeek()
       markPassedTodayForMatiere('eco-gestion')
@@ -4913,7 +4917,7 @@ function BacBlancFranceInner() {
     } catch (err) { console.error('[BacBlancFR] génération échouée:', err);
       alert('Erreur de génération. Réessayez.'); setPhase('choix-matiere')
     }
-  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub])
+  }, [candidat, dayNum, isAdmin, checkQuota, incrementQuotaSub, customInstructions])
 
   const handleSubmitExam = useCallback(async (ans: string) => {
     setAnswers(ans); setCorrections({}); setGradeResult(null); setPhase('grading')
@@ -4961,7 +4965,7 @@ function BacBlancFranceInner() {
 
   const handleRestart = () => {
     setPhase('inscription'); setExam(null); setCandidat(null)
-    setAnswers(''); setCorrections({}); setAnalysis(null); setGradeResult(null)
+    setAnswers(''); setCorrections({}); setAnalysis(null); setGradeResult(null); setCustomInstructions('')
   }
 
   if (phase === 'statistiques') return <PageStatistiques onBack={handleRestart}/>
@@ -5032,6 +5036,31 @@ function BacBlancFranceInner() {
               )
             })}
           </div>
+
+          {/* ── Instructions personnalisées (cadre agrandi) ── */}
+          <div style={{marginBottom:26,background:'rgba(79,110,247,0.06)',border:'1px solid rgba(79,110,247,0.22)',borderRadius:16,padding:'20px 22px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>✏️</span>
+              <span style={{fontSize:13,fontWeight:800,color:'#93c5fd'}}>Instructions personnalisées <span style={{fontWeight:400,color:'rgba(255,255,255,0.35)'}}>(optionnel)</span></span>
+            </div>
+            <p style={{fontSize:12,color:'rgba(255,255,255,0.55)',lineHeight:1.6,margin:'0 0 12px'}}>
+              Tu peux choisir toi-même les exercices que tu veux voir apparaître, ainsi que leur <strong style={{color:'rgba(255,255,255,0.75)'}}>ordre</strong>. Exemple pour les Maths : « Ex1 = Suites, Ex2 = Probabilités, Ex3 = Nombres complexes ». Pour une autre matière, précise simplement les thèmes voulus dans l'ordre souhaité. Tu peux aussi demander d'éviter un thème.
+            </p>
+            <textarea
+              value={customInstructions}
+              onChange={e=>setCustomInstructions(e.target.value.slice(0,500))}
+              placeholder={"Exemple :\nEx1 = Suites numériques\nEx2 = Probabilités\nEx3 = Nombres complexes\nÉvite la géométrie dans l'espace"}
+              rows={7}
+              style={{width:'100%',minHeight:150,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'14px 16px',color:'white',fontSize:13,lineHeight:1.6,fontFamily:'inherit',resize:'vertical',outline:'none',boxSizing:'border-box' as any}}
+            />
+            {customInstructions.trim().length>0&&(
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:8}}>
+                <span style={{fontSize:11,color:'rgba(255,255,255,0.3)'}}>{customInstructions.length}/500 caractères</span>
+                <button onClick={()=>setCustomInstructions('')} style={{fontSize:11,color:'#f87171',background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit'}}>✕ Effacer</button>
+              </div>
+            )}
+          </div>
+
           <button onClick={runGenerate} style={{
             width:'100%',padding:'16px',borderRadius:14,border:'none',cursor:'pointer',fontFamily:'inherit',
             fontSize:16,fontWeight:900,color:'#fff',background:'linear-gradient(135deg,#3b82f6,#6366f1)',
