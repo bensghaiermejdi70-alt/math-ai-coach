@@ -542,20 +542,13 @@ export default function Navbar() {
               color:'var(--text)'
             }}
           >
-            <div
-              style={{
-                width:36,
-                height:36,
-                background:'linear-gradient(135deg,#4f6ef7,#7c3aed)',
-                borderRadius:10,
-                display:'flex',
-                alignItems:'center',
-                justifyContent:'center',
-                fontSize:18
-              }}
-            >
-              ∑
-            </div>
+            <img
+              src="/logo-mathbac-ai-icon.svg"
+              alt="MathBac.AI"
+              width={36}
+              height={36}
+              style={{ borderRadius:10, display:'block', flexShrink:0 }}
+            />
 
             <span>
               <span style={{ color:'var(--text)' }}>Math</span>
