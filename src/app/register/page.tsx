@@ -14,6 +14,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [googleL, setGoogleL] = useState(false)
+  const [showPwd, setShowPwd] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const supabase = createClient()
 
   const set = (k: string, v: string) => { setForm(f => ({ ...f, [k]: v })); setError('') }
@@ -73,16 +75,12 @@ export default function RegisterPage() {
       <div style={{ width:'100%', maxWidth: isAdminEmail ? 440 : 500, position:'relative', zIndex:1, animation:'fadeInUp 0.6s ease both', transition:'max-width 0.3s' }}>
 
         {/* Logo */}
-        <Link href="/" style={{ display:'flex', alignItems:'center', gap:12, textDecoration:'none', justifyContent:'center', marginBottom:36 }}>
-          <div style={{ width:44, height:44, background:'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 0 24px rgba(79,110,247,0.4)' }}>
-            <span style={{ color:'white', fontFamily:'var(--font-display)', fontWeight:800, fontSize:20 }}>B</span>
-          </div>
-          <div>
-            <div style={{ fontFamily:'var(--font-display)', fontWeight:800, fontSize:22, color:'var(--text)', letterSpacing:'-0.02em' }}>
-              Bac<span style={{ color:'var(--accent)' }}>.AI</span>
-            </div>
-            <div style={{ fontSize:10, color:'var(--muted)', letterSpacing:'0.1em', textTransform:'uppercase' }}>Tunisie</div>
-          </div>
+        <Link href="/" style={{ display:'flex', justifyContent:'center', textDecoration:'none', marginBottom:36 }}>
+          <img
+            src="/logo-mathbac-ai-full.svg"
+            alt="MathBac.AI"
+            style={{ height:44, display:'block' }}
+          />
         </Link>
 
         <div className="card-glass" style={{ padding:'36px 40px', borderRadius:20 }}>
@@ -168,11 +166,23 @@ export default function RegisterPage() {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:24 }}>
               <div>
                 <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:500 }}>Mot de passe *</label>
-                <input type="password" value={form.password} onChange={e => set('password', e.target.value)} required placeholder="6 car. minimum" className="input" style={{ borderRadius:10 }} />
+                <div style={{ position:'relative' }}>
+                  <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => set('password', e.target.value)} required placeholder="6 car. minimum" className="input" style={{ borderRadius:10, paddingRight:40 }} />
+                  <button type="button" onClick={() => setShowPwd(!showPwd)}
+                    style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:15, color:'rgba(255,255,255,0.4)' }}>
+                    {showPwd ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
               <div>
                 <label style={{ display:'block', fontSize:12, color:'var(--text2)', marginBottom:7, fontWeight:500 }}>Confirmer *</label>
-                <input type="password" value={form.confirm} onChange={e => set('confirm', e.target.value)} required placeholder="Répéter" className="input" style={{ borderRadius:10 }} />
+                <div style={{ position:'relative' }}>
+                  <input type={showConfirm ? 'text' : 'password'} value={form.confirm} onChange={e => set('confirm', e.target.value)} required placeholder="Répéter" className="input" style={{ borderRadius:10, paddingRight:40 }} />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                    style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:15, color:'rgba(255,255,255,0.4)' }}>
+                    {showConfirm ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
             </div>
 

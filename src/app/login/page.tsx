@@ -101,10 +101,11 @@ function LoginInner() {
         <div style={{ width:'100%', maxWidth:400 }}>
 
           <div style={{ textAlign:'center', marginBottom:32 }}>
-            <div style={{ fontSize:36, marginBottom:8 }}>🎓</div>
-            <h1 style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:26, color:'white', margin:'0 0 6px' }}>
-              Math<strong style={{ color:'#4f6ef7' }}>Bac</strong>.AI
-            </h1>
+            <img
+              src="/logo-mathbac-ai-full.svg"
+              alt="MathBac.AI"
+              style={{ height:44, margin:'0 auto 14px', display:'block' }}
+            />
             <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, margin:0 }}>Connecte-toi à ton espace</p>
           </div>
 
