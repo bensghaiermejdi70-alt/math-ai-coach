@@ -2,84 +2,99 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 // ═══════════════════════════════════════════════════════════════
-//  MathBacAI — LANDING PAGE V10 (AR)
-//  Corrections :
-//  1. Hero image : décalée vers la gauche (mr-16 sur conteneur RTL)
-//  2. Features 2 & 4 : PHOTOS décalées vers la droite (ml-16 RTL)
-//  3. Section matières centrée sans CTA
+//  MathBacAI — LANDING PAGE V10 (FR) — reconstruite depuis l'historique
+//  de conversation (fichier écrasé par erreur par la V11 v0.app).
+//  Corrections cumulées :
+//  1. Hero image : décalée à droite via classe + <style> dédiée (mb-hero-photo)
+//  2. Features 2 & 4 : photos décalées à gauche (mr-16), texte décalé à
+//     droite via style inline (paddingLeft: 10rem, contourne un souci
+//     de cache Tailwind côté utilisateur)
+//  3. Section Matières : supprimée
+//  4. Section Programmes : ajoutée puis supprimée
+//  5. Badge "C'est maintenant" retiré de la CTA finale ; bouton agrandi
+//  6. Icônes YouTube/Facebook déplacées du footer vers la CTA finale
+//  7. Section "Méthode" (4 étapes) ajoutée, basée sur le guide officiel
+//  8. Nav en texte statique (plus de liens ancre)
 // ═══════════════════════════════════════════════════════════════
 
 const FEATURES = [
   {
     img: '/images/feat-simulation.jpg',
-    title: 'محاكاة الامتحان بالذكاء الاصطناعي',
-    desc: 'امتحانات أصلية مولدة بالذكاء الاصطناعي، مصححة تمريناً بتمرين مع علاج شخصي للأخطاء.',
+    title: 'Simulation d\u2019examen IA',
+    desc: 'Examens originaux générés par IA, corrigés exercice par exercice avec remédiation personnalisée.',
     accent: 'text-blue-700',
   },
   {
     img: '/images/feat-solveur.jpg',
-    title: 'محلل التمارين الذكي (Le solveur)',
-    desc: 'حل جميع أنواع التمارين والمعادلات بالتفصيل، مع شروحات واضحة في كل خطوة.',
+    title: 'Solveur d\u2019exercices',
+    desc: 'Résous en détail tous types d\u2019exercices et équations, avec des explications claires à chaque étape.',
     accent: 'text-violet-700',
   },
   {
     img: '/images/feat-chat.jpg',
-    title: 'دردشة الذكاء الاصطناعي - الأستاذ',
-    desc: 'اطرح جميع أسئلتك الدراسية بالفرنسية. الذكاء الاصطناعي يجيب كأستاذ، مع رسوم بيانية تفاعلية.',
+    title: 'Chat IA Professeur',
+    desc: 'Pose toutes tes questions de cours en français. L\u2019IA répond comme un enseignant, avec graphiques interactifs.',
     accent: 'text-emerald-700',
   },
   {
     img: '/images/feat-plan.jpg',
-    title: 'خطة مراجعة مخصصة',
-    desc: 'اكتشف نقاط قوتك وضعفك، ثم يولد تمارين مستهدفة وخطة مخصصة لك.',
+    title: 'Plan de révision personnalisé',
+    desc: 'Détecte tes points forts et tes lacunes, puis génère des exercices ciblés et un plan sur mesure.',
     accent: 'text-amber-700',
   },
   {
     img: '/images/feat-bacblanc.jpg',
-    title: 'لباكالوريا البيضاء يومياً bac blanc',
-    desc: 'من 1 مايو إلى 30 يونيو، مسابقة كل يوم: توقيت حقيقي، تصحيح ذكاء اصطناعي وتصنيف وطني.',
+    title: 'Bac Blanc quotidien',
+    desc: 'Du 1ᵉʳ mai au 30 juin, un concours chaque jour : chrono réel, correction IA et classement national.',
     accent: 'text-rose-700',
   },
 ]
 
 const STATS = [
-  { num: '+15K', label: 'تلميذ نشط' },
-  { num: '+500', label: 'تمارين مصححة' },
-  { num: '8', label: 'مواد مشمولة' },
-  { num: '4.9★', label: 'متوسط التقييم' },
+  { num: '15K+', label: 'Élèves actifs' },
+  { num: '500+', label: 'Exercices corrigés' },
+  { num: '8', label: 'Matières couvertes' },
+  { num: '4.9★', label: 'Note moyenne' },
 ]
 
-export default function LandingPageAr() {
+const STEPS = [
+  { n: '1', icon: '🚀', title: 'Crée ton compte', desc: 'Inscription 100% gratuite en quelques secondes.' },
+  { n: '2', icon: '🎁', title: 'Contenu gratuit', desc: 'Programmes officiels Tunisie & France, cours et examens accessibles gratuitement.' },
+  { n: '3', icon: '💳', title: 'Choisis ta matière', desc: 'Choisis la matière que tu veux étudier.' },
+  { n: '4', icon: '📈', title: 'Progresse avec l\u2019IA', desc: 'Entraîne-toi, corrige tes erreurs et suis un plan de révision personnalisé jusqu\u2019au Bac.' },
+]
+
+export default function LandingPage() {
   return (
-    <main className="bg-white text-slate-900 font-body overflow-x-hidden" dir="rtl">
+    <main className="bg-white text-slate-900 font-body overflow-x-hidden">
       {/* ═══════════════════════════ HEADER */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
-          <Link href="/ar" className="flex items-center gap-2.5 font-display font-extrabold text-xl tracking-tight">
+          <Link href="/" className="flex items-center gap-2.5 font-display font-extrabold text-xl tracking-tight">
             <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
               <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
             </div>
             MathBacAI
           </Link>
           <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-500">
-            <span>الميزات</span>
-            <span>باك blanc</span>
-            <span>المحاكاة</span>
-            <span>محلل التمارين الذكي (Le solveur)</span>
-            <span>دردشة الأستاذ</span>
+            <span>Fonctionnalités</span>
+            <span>Bac Blanc</span>
+            <span>Simulation</span>
+            <span>Solveur</span>
+            <span>Chat Prof</span>
           </nav>
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-1 rounded-full bg-slate-100 p-1">
-              <Link href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
-                FR
+              <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">FR</span>
+              <Link href="/ar" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
+                العربية
               </Link>
-              <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">العربية</span>
             </div>
             <Link
               href="/decouvrir"
               className="rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold px-5 py-2.5 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 transition-all duration-300"
             >
-              ابدأ الآن
+              Commencer
             </Link>
           </div>
         </div>
@@ -93,47 +108,48 @@ export default function LandingPageAr() {
         <div className="relative max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-20">
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
 
-            {/* يمين : Image (RTL) — DÉCALÉE VERS LA GAUCHE */}
-            <div className="relative order-2 md:order-1 flex justify-center md:justify-end md:mr-16">
+            <div className="relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
               <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/50 border border-white/10">
-                <Image src="/images/hero-etudiante.jpg" alt="تلميذ يُعدّ نفسه للباكالوريا مع MathBacAI" fill priority className="object-cover" />
+                <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-950/50 via-transparent to-transparent" />
               </div>
-              <div className="absolute -bottom-3 -left-1 md:left-4 bg-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
+              <div className="absolute -bottom-3 -right-1 md:right-4 bg-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">نسبة النجاح</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Taux de réussite</p>
                   <p className="text-lg font-extrabold text-slate-900">94%</p>
                 </div>
               </div>
-              <div className="absolute -top-3 right-4 md:right-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl px-3 py-2 shadow-lg shadow-amber-500/30 flex items-center gap-2">
+              <div className="absolute -top-3 left-4 md:left-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl px-3 py-2 shadow-lg shadow-amber-500/30 flex items-center gap-2">
                 <svg className="w-4 h-4 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                 <span className="text-slate-900 text-xs font-extrabold">Top Rated</span>
               </div>
             </div>
 
-            {/* يسار : Texte + CTA (RTL) */}
-            <div className="order-1 md:order-2 text-center md:text-right">
-              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/15 border border-blue-400/20 px-6 py-2.5 mb-6">
+            <div className="order-1 md:order-2 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/15 border border-blue-400/20 px-5 py-2 mb-6">
                 <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span className="text-blue-300 text-base font-bold uppercase tracking-wider">جديد · الذكاء الاصطناعي التوليدي</span>
+                <span className="text-blue-300 text-sm font-bold uppercase tracking-wider">Nouveau · IA Générative</span>
               </div>
 
               <h1 className="font-display font-extrabold text-white text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
-                حقق{' '}
+                Optimisez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400">
-                  نجاحك في الباكالوريا
+                  réussite au Bac
                 </span>
               </h1>
 
               <p className="mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-lg mx-auto md:mx-0 font-semibold">
-                هوّا أوّل موقع يستعمل الذكاء الاصطناعي وموجّه خصّيصًا للاساتذة  و لتلامذة الباكالوريا في تونس وفرنسا
-
-                           الموقع يشمل جميع شعب الباك ويغطّي البرنامج الرسمي في المواد التالية
-                    الرياضيات، الفيزياء، الإنجليزية، علوم الحياة والأرض، الإعلامية، الفرنسية، التصرّف والاقتصاد
-.
+                Le premier sit qui utilise l’intelligence artificielle IA conçu pour les     professeurs,les eleves de bac TUNISIE et FRANCE. Il englobe toutes les sections du bac avec le programme officiel pour la matiere de: mathématique./physique/anglais/svt/informatique
+francais/gestion/economie avec
+    
+ ✅ Solveur 
+ ✅ Simulations d'examen originales corrigées par IA
+ ✅ Chat professeur 
+ ✅ Plan de révision personnalisé selon tes lacunes
+ ✅ Bac Blanc quotidien du 1er mai au 30 juin.
               </p>
 
               <div className="mt-12 flex flex-wrap gap-3 justify-center md:justify-start">
@@ -141,13 +157,13 @@ export default function LandingPageAr() {
                   href="/decouvrir"
                   className="rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 font-bold px-8 py-3.5 text-[15px] hover:shadow-xl hover:shadow-yellow-500/40 hover:scale-105 transition-all duration-300"
                 >
-                  ← ابدأ الآن
+                  Commencer →
                 </Link>
                 <Link
                   href="/decouvrir"
                   className="rounded-full bg-white/15 backdrop-blur border-2 border-white/40 text-white font-bold px-7 py-3.5 text-[15px] hover:bg-white/25 hover:border-white/60 hover:scale-105 transition-all duration-300"
                 >
-                  اكتشف المزيد
+                  En savoir plus
                 </Link>
               </div>
             </div>
@@ -179,9 +195,9 @@ export default function LandingPageAr() {
       <section id="fonctionnalites" className="bg-slate-50 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-5 md:px-8">
           <div className="text-center mb-16">
-            <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">الميزات</p>
+            <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">Fonctionnalités</p>
             <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">
-              كل ما تحتاجه لنجاح <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">باكالورياك</span>
+              Tout ce qu&apos;il faut pour réussir <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">ton Bac</span>
             </h2>
           </div>
 
@@ -195,16 +211,14 @@ export default function LandingPageAr() {
                   i % 2 === 1 ? 'md:[&>*:first-child]:order-2' : ''
                 }`}
               >
-                {/* Image — sections 2 et 4 : décalée vers la droite (RTL) */}
-                <div className={`relative flex items-center justify-center p-6 md:p-10 bg-slate-50 ${i === 1 || i === 3 ? 'md:ml-16' : ''}`}>
+                <div className={`relative flex items-center justify-center p-6 md:p-10 bg-slate-50 ${i === 1 || i === 3 ? 'md:mr-16' : ''}`}>
                   <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-slate-300/50 border border-slate-200">
                     <Image src={f.img} alt={f.title} fill className="object-cover" />
                   </div>
                 </div>
-                {/* Content */}
                 <div
-                  className="p-8 md:py-14 md:pl-14 md:pr-14 flex flex-col justify-center"
-                  style={i === 1 || i === 3 ? { paddingRight: '10rem' } : undefined}
+                  className="p-8 md:py-14 md:pr-14 md:pl-14 flex flex-col justify-center"
+                  style={i === 1 || i === 3 ? { paddingLeft: '10rem' } : undefined}
                 >
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-bold text-xl mb-6 shadow-lg shadow-blue-500/25">
                     {i + 1}
@@ -219,8 +233,8 @@ export default function LandingPageAr() {
                     href="/decouvrir"
                     className="mt-6 inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:gap-3 transition-all group"
                   >
-                    جرّب الآن
-                    <span className="group-hover:translate-x-1 transition-transform">←</span>
+                    Essayer maintenant
+                    <span className="group-hover:translate-x-1 transition-transform">→</span>
                   </Link>
                 </div>
               </div>
@@ -230,42 +244,17 @@ export default function LandingPageAr() {
       </section>
 
 
-
-      {/* ═══════════════════════════ VIDÉO */}
-      <section className="bg-white py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
-          <h2 className="font-display font-extrabold text-2xl md:text-4xl text-slate-900 mb-8">دقيقة واحدة لاكتشاف المنصة</h2>
-          <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-slate-300/50 border border-slate-200" style={{ marginLeft: 'auto', marginRight: 'auto' }}>
-            <iframe
-              src="https://www.youtube.com/embed/I5LpqJvHD80"
-              title="MathBacAI"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          </div>
-        </div>
-      </section>
-
-
       {/* ═══════════════════════════ COMMENT ÇA MARCHE */}
       <section id="commentcamarche" className="bg-white py-16 md:py-24">
         <div className="max-w-6xl mx-auto px-5 md:px-8">
           <div className="text-center mb-16">
-            <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">كيف تعمل المنصة</p>
-            <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">4 خطوات نحو النجاح</h2>
+            <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">Comment ça marche</p>
+            <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">4 étapes vers la réussite</h2>
           </div>
 
           <div className="relative grid md:grid-cols-4 gap-10 md:gap-6">
             <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-0.5 bg-slate-200" />
-
-            {[
-              { n: '1', icon: '🚀', title: 'أنشئ حسابك', desc: 'تسجيل مجاني بالكامل في ثوانٍ.' },
-              { n: '2', icon: '🎁', title: 'محتوى مجاني', desc: 'البرنامج الرسمي لتونس وفرنسا، دروس وامتحانات متاحة مجانًا.' },
-              { n: '3', icon: '💳', title: 'اختر مادتك', desc: 'اختر المادة التي تريد دراستها.' },
-              { n: '4', icon: '📈', title: 'تقدّم مع الذكاء الاصطناعي', desc: 'تدرّب، صحّح أخطاءك، واتبع خطة مراجعة شخصية حتى البكالوريا.' },
-            ].map((s) => (
+            {STEPS.map((s) => (
               <div key={s.n} className="relative text-center">
                 <div className="relative z-10 w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-blue-500/25 mb-4">
                   {s.n}
@@ -290,22 +279,22 @@ export default function LandingPageAr() {
           backgroundSize: '30px 30px'
         }} />
 
-        <div className="relative max-w-4xl mx-auto px-5 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-right">
+        <div className="relative max-w-4xl mx-auto px-5 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-left">
           <div>
             <h2 className="font-display font-extrabold text-white text-3xl md:text-5xl mb-4">
-              باكالورياك تبدأ <span className="text-yellow-300">الآن</span>
+              Ton Bac commence <span className="text-yellow-300">maintenant</span>
             </h2>
 
             <p className="text-blue-200 text-base md:text-lg mb-10 max-w-xl mx-auto md:mx-0">
-              سجّل مجاناً.
+              Inscris-toi gratuitement.
             </p>
 
             <Link
               href="/decouvrir"
               className="inline-flex items-center gap-3 rounded-full bg-white/10 backdrop-blur border-2 border-white/40 text-white font-bold px-14 py-5 text-lg hover:bg-white/20 hover:border-white/60 hover:scale-105 transition-all duration-300"
             >
+              Voir la démo
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              شاهد العرض التوضيحي
             </Link>
           </div>
 
@@ -331,12 +320,18 @@ export default function LandingPageAr() {
           </div>
           <span>© 2026 MathBacAI · mathbacai.com</span>
           <span className="flex items-center gap-2">
-            <span>تونس 🇹🇳</span>
+            <span>Tunisie 🇹🇳</span>
             <span>·</span>
-            <span>فرنسا 🇫🇷</span>
+            <span>France 🇫🇷</span>
           </span>
         </div>
       </footer>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .mb-hero-photo { margin-left: 10rem; }
+        }
+      `}</style>
     </main>
   )
 }
