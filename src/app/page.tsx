@@ -142,9 +142,10 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-lg mx-auto md:mx-0 font-semibold">
-                Le premier sit qui utilise l’intelligence artificielle IA conçu pour les     professeurs,les eleves de bac TUNISIE et FRANCE.
- Il englobe toutes les sections du bac avec le programme officiel pour la matiere de: mathématique/physique/anglais/svt/informatique
-francais/gestion/economie 
+                Le premier site utilisant l'intelligence artificielle, spécialement conçu pour les enseignants et les élèves de Terminale (Baccalauréat) en Tunisie et en France.
+
+La plateforme couvre toutes les filières du baccalauréat et suit le programme officiel dans les matières suivantes :
+Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Informatique, Français, Gestion et Économie.
     
  
               </p>
