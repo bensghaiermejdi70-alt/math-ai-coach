@@ -69,7 +69,7 @@ export default function LandingPage() {
     <main className="bg-white text-slate-900 font-body overflow-x-hidden">
       {/* ═══════════════════════════ HEADER */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 font-display font-extrabold text-xl tracking-tight">
             <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
               <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
@@ -84,7 +84,7 @@ export default function LandingPage() {
             <span>Chat Prof</span>
           </nav>
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-1 rounded-full bg-slate-100 p-1">
+            <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
               <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">FR</span>
               <Link href="/ar" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
                 العربية
@@ -105,7 +105,7 @@ export default function LandingPage() {
         <div className="absolute top-10 right-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-        <div className="relative max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-20">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-20">
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
 
             <div className="relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
@@ -142,14 +142,11 @@ export default function LandingPage() {
               </h1>
 
               <p className="mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-lg mx-auto md:mx-0 font-semibold">
-                Le premier sit qui utilise l’intelligence artificielle IA conçu pour les     professeurs,les eleves de bac TUNISIE et FRANCE. Il englobe toutes les sections du bac avec le programme officiel pour la matiere de: mathématique./physique/anglais/svt/informatique
-francais/gestion/economie avec
+                Le premier sit qui utilise l’intelligence artificielle IA conçu pour les     professeurs,les eleves de bac TUNISIE et FRANCE.
+ Il englobe toutes les sections du bac avec le programme officiel pour la matiere de: mathématique/physique/anglais/svt/informatique
+francais/gestion/economie 
     
- ✅ Solveur 
- ✅ Simulations d'examen originales corrigées par IA
- ✅ Chat professeur 
- ✅ Plan de révision personnalisé selon tes lacunes
- ✅ Bac Blanc quotidien du 1er mai au 30 juin.
+ 
               </p>
 
               <div className="mt-12 flex flex-wrap gap-3 justify-center md:justify-start">
@@ -177,7 +174,7 @@ francais/gestion/economie avec
 
       {/* ═══════════════════════════ STATS BAR */}
       <section className="bg-white py-10 md:py-14">
-        <div className="max-w-7xl mx-auto px-5 md:px-8">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {STATS.map((stat) => (
               <div key={stat.label} className="p-4 rounded-2xl hover:bg-slate-50 transition-colors">
@@ -193,7 +190,7 @@ francais/gestion/economie avec
 
       {/* ═══════════════════════════ FONCTIONNALITÉS */}
       <section id="fonctionnalites" className="bg-slate-50 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-5 md:px-8">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="text-center mb-16">
             <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">Fonctionnalités</p>
             <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">
@@ -246,7 +243,7 @@ francais/gestion/economie avec
 
       {/* ═══════════════════════════ COMMENT ÇA MARCHE */}
       <section id="commentcamarche" className="bg-white py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-5 md:px-8">
+        <div className="max-w-6xl mx-auto px-6 md:px-8">
           <div className="text-center mb-16">
             <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">Comment ça marche</p>
             <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">4 étapes vers la réussite</h2>
@@ -279,7 +276,7 @@ francais/gestion/economie avec
           backgroundSize: '30px 30px'
         }} />
 
-        <div className="relative max-w-4xl mx-auto px-5 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-left">
+        <div className="relative max-w-4xl mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-left">
           <div>
             <h2 className="font-display font-extrabold text-white text-3xl md:text-5xl mb-4">
               Ton Bac commence <span className="text-yellow-300">maintenant</span>
@@ -311,7 +308,7 @@ francais/gestion/economie avec
 
       {/* ═══════════════════════════ FOOTER */}
       <footer className="bg-slate-950 text-slate-400 text-sm">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="relative w-7 h-7 rounded-lg overflow-hidden">
               <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />

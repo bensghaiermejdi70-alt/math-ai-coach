@@ -54,7 +54,7 @@ export default function LandingPageAr() {
     <main className="bg-white text-slate-900 font-body overflow-x-hidden" dir="rtl">
       {/* ═══════════════════════════ HEADER */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
           <Link href="/ar" className="flex items-center gap-2.5 font-display font-extrabold text-xl tracking-tight">
             <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
               <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
@@ -69,7 +69,7 @@ export default function LandingPageAr() {
             <span>دردشة الأستاذ</span>
           </nav>
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-1 rounded-full bg-slate-100 p-1">
+            <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
               <a href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
                 FR
               </a>
@@ -90,7 +90,7 @@ export default function LandingPageAr() {
         <div className="absolute top-10 right-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-        <div className="relative max-w-7xl mx-auto px-5 md:px-8 py-12 md:py-20">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-20">
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
 
             {/* يمين : Image (RTL) — DÉCALÉE VERS LA GAUCHE */}
@@ -161,7 +161,7 @@ export default function LandingPageAr() {
 
       {/* ═══════════════════════════ STATS BAR */}
       <section className="bg-white py-10 md:py-14">
-        <div className="max-w-7xl mx-auto px-5 md:px-8">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {STATS.map((stat) => (
               <div key={stat.label} className="p-4 rounded-2xl hover:bg-slate-50 transition-colors">
@@ -177,7 +177,7 @@ export default function LandingPageAr() {
 
       {/* ═══════════════════════════ FONCTIONNALITÉS */}
       <section id="fonctionnalites" className="bg-slate-50 py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-5 md:px-8">
+        <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="text-center mb-16">
             <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">الميزات</p>
             <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">
@@ -233,7 +233,7 @@ export default function LandingPageAr() {
 
       {/* ═══════════════════════════ VIDÉO */}
       <section className="bg-white py-16 md:py-24">
-        <div className="max-w-4xl mx-auto px-5 md:px-8 text-center">
+        <div className="max-w-4xl mx-auto px-6 md:px-8 text-center">
           <h2 className="font-display font-extrabold text-2xl md:text-4xl text-slate-900 mb-8">دقيقة واحدة لاكتشاف المنصة</h2>
           <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-slate-300/50 border border-slate-200" style={{ marginLeft: 'auto', marginRight: 'auto' }}>
             <iframe
@@ -251,7 +251,7 @@ export default function LandingPageAr() {
 
       {/* ═══════════════════════════ COMMENT ÇA MARCHE */}
       <section id="commentcamarche" className="bg-white py-16 md:py-24">
-        <div className="max-w-6xl mx-auto px-5 md:px-8">
+        <div className="max-w-6xl mx-auto px-6 md:px-8">
           <div className="text-center mb-16">
             <p className="text-blue-600 font-bold text-sm uppercase tracking-widest mb-3">كيف تعمل المنصة</p>
             <h2 className="font-display font-extrabold text-3xl md:text-5xl text-slate-900">4 خطوات نحو النجاح</h2>
@@ -290,7 +290,7 @@ export default function LandingPageAr() {
           backgroundSize: '30px 30px'
         }} />
 
-        <div className="relative max-w-4xl mx-auto px-5 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-right">
+        <div className="relative max-w-4xl mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-right">
           <div>
             <h2 className="font-display font-extrabold text-white text-3xl md:text-5xl mb-4">
               باكالورياك تبدأ <span className="text-yellow-300">الآن</span>
@@ -322,7 +322,7 @@ export default function LandingPageAr() {
 
       {/* ═══════════════════════════ FOOTER */}
       <footer className="bg-slate-950 text-slate-400 text-sm">
-        <div className="max-w-7xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="relative w-7 h-7 rounded-lg overflow-hidden">
               <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
