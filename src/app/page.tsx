@@ -68,15 +68,15 @@ export default function LandingPage() {
   return (
     <main className="bg-white text-slate-900 font-body overflow-x-hidden">
       {/* ═══════════════════════════ HEADER */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 font-display font-extrabold text-xl tracking-tight">
-            <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
-              <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
+            <div className="relative w-11 h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/25">
+              <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover hover:scale-105 transition duration-700" />
             </div>
             MathBacAI
           </Link>
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-500">
+          <nav className="hidden lg:flex items-center gap-10 text-sm font-semibold text-slate-500">
             <span>Fonctionnalités</span>
             <span>Bac Blanc</span>
             <span>Simulation</span>
@@ -92,7 +92,7 @@ export default function LandingPage() {
             </div>
             <Link
               href="/decouvrir"
-              className="rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold px-5 py-2.5 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 transition-all duration-300"
+              className="rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-bold px-7 py-3 hover:shadow-lg hover:shadow-blue-500/30 hover:scale-105 transition-all duration-300"
             >
               Commencer
             </Link>
@@ -102,18 +102,23 @@ export default function LandingPage() {
 
       {/* ═══════════════════════════ HERO */}
       <section className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="parallax-orb absolute top-24 left-8 w-72 h-72 rounded-full bg-blue-500/15 blur-3xl" />
+          <div className="parallax-orb delay-1 absolute top-14 right-10 w-80 h-80 rounded-full bg-violet-500/15 blur-3xl" />
+          <div className="parallax-orb delay-2 absolute bottom-12 left-1/3 w-64 h-64 rounded-full bg-cyan-400/10 blur-3xl" />
+        </div>
         <div className="absolute top-10 right-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-        <div className="relative max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-20">
-          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-8 py-20 md:py-28">
+          <div className="grid md:grid-cols-2 gap-16 md:gap-24 items-center">
 
-            <div className="relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
-              <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/50 border border-white/10">
-                <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover" />
+            <div className="group relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
+              <div className="hero-card relative w-full max-w-sm aspect-[3/4] rounded-[32px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,.45)] border border-white/10">
+                <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover transition duration-700 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-950/50 via-transparent to-transparent" />
               </div>
-              <div className="absolute -bottom-3 -right-1 md:right-4 bg-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
+              <div className="hero-badge absolute -bottom-3 -right-1 md:right-4 bg-white rounded-3xl backdrop-blur-md px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                 </div>
@@ -122,7 +127,7 @@ export default function LandingPage() {
                   <p className="text-lg font-extrabold text-slate-900">94%</p>
                 </div>
               </div>
-              <div className="absolute -top-3 left-4 md:left-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl px-3 py-2 shadow-lg shadow-amber-500/30 flex items-center gap-2">
+              <div className="hero-badge absolute -top-3 left-4 md:left-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl px-3 py-2 shadow-lg shadow-amber-500/30 flex items-center gap-2">
                 <svg className="w-4 h-4 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                 <span className="text-slate-900 text-xs font-extrabold">Top Rated</span>
               </div>
@@ -134,32 +139,31 @@ export default function LandingPage() {
                 <span className="text-blue-300 text-sm font-bold uppercase tracking-wider">Nouveau · IA Générative</span>
               </div>
 
-              <h1 className="font-display font-extrabold text-white text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight">
-                Optimisez votre{' '}
+              <h1 className="hero-title font-display font-extrabold text-white text-5xl md:text-6xl lg:text-7xl leading-[1.1] tracking-tight">
+                Réussissez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400">
-                  réussite au Bac
-                </span>
+                  Bac
+                </span>{' '}
+                avec l'Intelligence Artificielle
               </h1>
 
-              <p className="mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-lg mx-auto md:mx-0 font-semibold">
-                Le premier site utilisant l'intelligence artificielle, spécialement conçu pour les enseignants et les élèves de Terminale (Baccalauréat) en Tunisie et en France.
-
-La plateforme couvre toutes les filières du baccalauréat et suit le programme officiel dans les matières suivantes :
-Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Informatique, Français, Gestion et Économie.
-    
- 
+              <p className="hero-copy mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-xl mx-auto md:mx-0 font-semibold">
+                Le premier site utilisant l'intelligence artificielle, spécialement conçu pour les enseignants et les élèves de Terminale en Tunisie et en France.
+                <span className="mt-3 block text-white/80 text-sm md:text-base font-medium">
+                  Cours, examens officiels, simulations IA, Bac Blanc quotidien, solveur d'exercices et professeur IA réunis sur une seule plateforme.
+                </span>
               </p>
 
-              <div className="mt-12 flex flex-wrap gap-3 justify-center md:justify-start">
+              <div className="hero-actions mt-10 flex flex-wrap gap-3 justify-center md:justify-start">
                 <Link
                   href="/decouvrir"
-                  className="rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 font-bold px-8 py-3.5 text-[15px] hover:shadow-xl hover:shadow-yellow-500/40 hover:scale-105 transition-all duration-300"
+                  className="hero-btn-primary rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 font-bold px-8 py-3.5 text-[15px] shadow-xl shadow-yellow-500/30 hover:shadow-xl hover:shadow-yellow-500/40 hover:scale-105 transition-all duration-300"
                 >
                   Commencer →
                 </Link>
                 <Link
                   href="/decouvrir"
-                  className="rounded-full bg-white/15 backdrop-blur border-2 border-white/40 text-white font-bold px-7 py-3.5 text-[15px] hover:bg-white/25 hover:border-white/60 hover:scale-105 transition-all duration-300"
+                  className="hero-btn-secondary rounded-full bg-white/15 backdrop-blur border-2 border-white/40 text-white font-bold px-7 py-3.5 text-[15px] hover:bg-white/25 hover:border-white/60 hover:scale-105 transition-all duration-300"
                 >
                   En savoir plus
                 </Link>
@@ -178,7 +182,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {STATS.map((stat) => (
-              <div key={stat.label} className="p-4 rounded-2xl hover:bg-slate-50 transition-colors">
+              <div key={stat.label} className="p-7 rounded-3xl shadow-lg hover:-translate-y-2 duration-300 transition-all hover:bg-slate-50">
                 <p className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
                   {stat.num}
                 </p>
@@ -202,7 +206,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
-              className="mb-10 last:mb-0 rounded-3xl overflow-hidden shadow-xl shadow-slate-200/50 border border-slate-100 bg-white hover:shadow-2xl hover:shadow-slate-300/50 transition-shadow duration-500"
+              className="group mb-10 last:mb-0 rounded-[32px] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 bg-gradient-to-br from-white to-slate-50 hover:shadow-2xl hover:shadow-slate-300/50 hover:-translate-y-2 transition-all duration-300"
             >
               <div
                 className={`grid md:grid-cols-2 gap-0 items-stretch ${
@@ -211,7 +215,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
               >
                 <div className={`relative flex items-center justify-center p-6 md:p-10 bg-slate-50 ${i === 1 || i === 3 ? 'md:mr-16' : ''}`}>
                   <div className="relative w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden shadow-xl shadow-slate-300/50 border border-slate-200">
-                    <Image src={f.img} alt={f.title} fill className="object-cover" />
+                    <Image src={f.img} alt={f.title} fill className="object-cover transition duration-700 group-hover:scale-110" />
                   </div>
                 </div>
                 <div
@@ -229,7 +233,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
                   </p>
                   <Link
                     href="/decouvrir"
-                    className="mt-6 inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:gap-3 transition-all group"
+                    className="mt-6 inline-flex items-center gap-2 text-blue-600 font-bold text-sm hover:gap-3 hover:scale-105 transition-all group"
                   >
                     Essayer maintenant
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -253,8 +257,8 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
           <div className="relative grid md:grid-cols-4 gap-10 md:gap-6">
             <div className="hidden md:block absolute top-7 left-[12.5%] right-[12.5%] h-0.5 bg-slate-200" />
             {STEPS.map((s) => (
-              <div key={s.n} className="relative text-center">
-                <div className="relative z-10 w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-blue-500/25 mb-4">
+              <div key={s.n} className="group relative text-center rounded-3xl bg-white shadow-lg p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
+                <div className="relative z-10 w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-blue-500/25 mb-4">
                   {s.n}
                 </div>
                 <span className="text-3xl">{s.icon}</span>
@@ -279,7 +283,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
 
         <div className="relative max-w-4xl mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center justify-center gap-10 text-center md:text-left">
           <div>
-            <h2 className="font-display font-extrabold text-white text-3xl md:text-5xl mb-4">
+            <h2 className="font-display font-extrabold text-white text-4xl md:text-6xl mb-4">
               Ton Bac commence <span className="text-yellow-300">maintenant</span>
             </h2>
 
@@ -289,7 +293,7 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
 
             <Link
               href="/decouvrir"
-              className="inline-flex items-center gap-3 rounded-full bg-white/10 backdrop-blur border-2 border-white/40 text-white font-bold px-14 py-5 text-lg hover:bg-white/20 hover:border-white/60 hover:scale-105 transition-all duration-300"
+              className="inline-flex items-center gap-3 rounded-full bg-white/10 backdrop-blur border-2 border-white/40 text-white font-bold px-16 py-6 text-lg hover:bg-white/20 hover:border-white/60 hover:scale-105 hover:shadow-2xl transition-all duration-300"
             >
               Voir la démo
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -297,10 +301,10 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
           </div>
 
           <div className="flex md:flex-col items-center gap-4">
-            <a href="https://www.youtube.com/channel/UCKKpmwMPUOLmeIlupOJ8KPg" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <a href="https://www.youtube.com/channel/UCKKpmwMPUOLmeIlupOJ8KPg" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 hover:scale-110 flex items-center justify-center text-white transition-all duration-300">
               <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.4 31.4 0 000 12a31.4 31.4 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31.4 31.4 0 0024 12a31.4 31.4 0 00-.5-5.8zM9.6 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
             </a>
-            <a href="https://www.facebook.com/bac2027mathbacai" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <a href="https://www.facebook.com/bac2027mathbacai" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 hover:scale-110 flex items-center justify-center text-white transition-all duration-300">
               <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
             </a>
           </div>
@@ -309,10 +313,10 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
 
       {/* ═══════════════════════════ FOOTER */}
       <footer className="bg-slate-950 text-slate-400 text-sm">
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-14 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="relative w-7 h-7 rounded-lg overflow-hidden">
-              <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover" />
+            <div className="relative w-9 h-9 rounded-lg overflow-hidden">
+              <Image src="/images/logo-mathbac-ai-icon.png" alt="MathBacAI" fill className="object-cover hover:scale-105 transition duration-700" />
             </div>
             <span className="font-bold text-slate-200">MathBacAI</span>
           </div>
@@ -326,8 +330,80 @@ Mathématiques, Physique, Anglais, Sciences de la Vie et de la Terre (SVT), Info
       </footer>
 
       <style>{`
+        @keyframes floatOrb {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(0, -20px, 0) scale(1.04); }
+        }
+
+        @keyframes floatCard {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(-1deg); }
+        }
+
+        @keyframes driftBadge {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .parallax-orb {
+          animation: floatOrb 10s ease-in-out infinite;
+          will-change: transform;
+        }
+
+        .parallax-orb.delay-1 {
+          animation-delay: 1.5s;
+        }
+
+        .parallax-orb.delay-2 {
+          animation-delay: 3s;
+        }
+
+        .hero-card {
+          animation: floatCard 8s ease-in-out infinite;
+          transform-style: preserve-3d;
+        }
+
+        .hero-card:hover {
+          transform: perspective(1200px) rotateY(-5deg) translateY(-6px) scale(1.02);
+        }
+
+        .hero-badge {
+          animation: driftBadge 6s ease-in-out infinite;
+        }
+
+        .hero-title,
+        .hero-copy,
+        .hero-actions {
+          animation: fadeUp 900ms ease-out both;
+        }
+
+        .hero-copy {
+          animation-delay: 120ms;
+        }
+
+        .hero-actions {
+          animation-delay: 240ms;
+        }
+
         @media (min-width: 768px) {
           .mb-hero-photo { margin-left: 10rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .parallax-orb,
+          .hero-card,
+          .hero-badge,
+          .hero-title,
+          .hero-copy,
+          .hero-actions {
+            animation: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
     </main>
