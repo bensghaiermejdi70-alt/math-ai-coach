@@ -29,6 +29,27 @@ const PROTECTED_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // ═══ Redirection géo Tunisie → /ar (une seule fois, respecte le choix FR) ═══
+  if (pathname === '/') {
+    // L'utilisateur vient de cliquer "FR" dans le switcher de /ar : on mémorise son choix
+    if (request.nextUrl.searchParams.get('lang') === 'fr') {
+      const langResponse = NextResponse.redirect(new URL('/', request.url))
+      langResponse.cookies.set('lang_pref', 'fr', {
+        path: '/',
+        sameSite: 'lax',
+        secure: true,
+      })
+      return langResponse
+    }
+
+    const country = request.headers.get('cf-ipcountry')
+    const langPref = request.cookies.get('lang_pref')?.value
+
+    if (country === 'TN' && langPref !== 'fr') {
+      return NextResponse.redirect(new URL('/ar', request.url))
+    }
+  }
+
   const response = NextResponse.next()
 
   // 🔥 SUPABASE SSR CLIENT

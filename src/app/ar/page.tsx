@@ -70,9 +70,9 @@ export default function LandingPageAr() {
           </nav>
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-1 rounded-full bg-slate-100 p-1">
-              <Link href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
+              <a href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
                 FR
-              </Link>
+              </a>
               <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">العربية</span>
             </div>
             <Link
