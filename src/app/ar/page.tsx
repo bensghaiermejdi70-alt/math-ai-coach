@@ -43,7 +43,7 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { num: 'ازدياد متسارع', label: 'تلميذ نشط' },
+  { num: '10K', label: 'تلميذ نشط' },
   { num: 'عددها لا ينتهي', label: 'تمارين مولدة بالذكاء الاصطناعي ومصححة' },
   { num: '8', label: 'مواد مشمولة' },
   { num: '4.9★', label: 'متوسط التقييم' },
@@ -70,7 +70,7 @@ export default function LandingPageAr() {
           </nav>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
-              <Link href="/" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
+              <Link href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
                 Français
               </Link>
               <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">العربية</span>
@@ -211,7 +211,7 @@ export default function LandingPageAr() {
                   <h3 className="font-display font-extrabold text-slate-900 text-2xl md:text-3xl mb-4">
                     {f.title}
                   </h3>
-                  <p className={`${f.accent} text-base md:text-lg leading-relaxed font-semibold tracking-[0.01em]`}>
+                  <p className={`${f.accent} text-[1.02rem] md:text-[1.08rem] leading-8 font-semibold tracking-[0.01em] text-slate-700`}>
                     {f.desc}
                   </p>
                   <Link

@@ -51,7 +51,7 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { num: 'En croissance continu', label: 'Élèves actifs' },
+  { num: '10K', label: 'Élèves actifs' },
   { num: 'Nombre illimité ', label: 'Exercices generés et corrigés' },
   { num: '8', label: 'Matières couvertes' },
   { num: '4.9★', label: 'Note moyenne' },
