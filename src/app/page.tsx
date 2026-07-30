@@ -51,8 +51,8 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { num: '15K+', label: 'Élèves actifs' },
-  { num: '500+', label: 'Exercices corrigés' },
+  { num: 'En croissance continu', label: 'Élèves actifs' },
+  { num: 'Nombre illimité ', label: 'Exercices generés et corrigés' },
   { num: '8', label: 'Matières couvertes' },
   { num: '4.9★', label: 'Note moyenne' },
 ]
@@ -183,7 +183,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {STATS.map((stat) => (
               <div key={stat.label} className="p-7 rounded-3xl shadow-lg hover:-translate-y-2 duration-300 transition-all hover:bg-slate-50">
-                <p className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+                <p className="text-xl sm:text-2xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
                   {stat.num}
                 </p>
                 <p className="text-slate-500 text-sm font-semibold mt-1">{stat.label}</p>
@@ -228,7 +228,7 @@ export default function LandingPage() {
                   <h3 className="font-display font-extrabold text-slate-900 text-2xl md:text-3xl mb-4">
                     {f.title}
                   </h3>
-                  <p className={`${f.accent} text-base md:text-lg leading-relaxed font-medium`}>
+                  <p className={`${f.accent} text-base md:text-lg leading-relaxed font-semibold tracking-[0.01em]`}>
                     {f.desc}
                   </p>
                   <Link

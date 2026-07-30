@@ -43,8 +43,8 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { num: '+15K', label: 'تلميذ نشط' },
-  { num: '+500', label: 'تمارين مصححة' },
+  { num: 'ازدياد متسارع', label: 'تلميذ نشط' },
+  { num: 'عددها لا ينتهي', label: 'تمارين مولدة بالذكاء الاصطناعي ومصححة' },
   { num: '8', label: 'مواد مشمولة' },
   { num: '4.9★', label: 'متوسط التقييم' },
 ]
@@ -211,7 +211,7 @@ export default function LandingPageAr() {
                   <h3 className="font-display font-extrabold text-slate-900 text-2xl md:text-3xl mb-4">
                     {f.title}
                   </h3>
-                  <p className={`${f.accent} text-base md:text-lg leading-relaxed font-medium`}>
+                  <p className={`${f.accent} text-base md:text-lg leading-relaxed font-semibold tracking-[0.01em]`}>
                     {f.desc}
                   </p>
                   <Link
