@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 
 // ═══════════════════════════════════════════════════════════════
 //  MathBacAI — LANDING PAGE V10 (FR) — reconstruite depuis l'historique
@@ -63,6 +64,21 @@ const STEPS = [
   { n: '3', icon: '💳', title: 'Choisis ta matière', desc: 'Choisis la matière que tu veux étudier.' },
   { n: '4', icon: '📈', title: 'Progresse avec l\u2019IA', desc: 'Entraîne-toi, corrige tes erreurs et suis un plan de révision personnalisé jusqu\u2019au Bac.' },
 ]
+
+// ═══════════════════════════════════════════════════════════════
+//  SEO — hreflang FR ↔ AR (indique à Google que ces deux pages sont
+//  la même page dans deux langues, pour un ciblage correct par pays)
+// ═══════════════════════════════════════════════════════════════
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://www.mathbacai.com/',
+    languages: {
+      fr: 'https://www.mathbacai.com/',
+      ar: 'https://www.mathbacai.com/ar',
+      'x-default': 'https://www.mathbacai.com/',
+    },
+  },
+}
 
 export default function LandingPage() {
   return (

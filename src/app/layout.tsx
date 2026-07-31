@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth/AuthContext'
+import { headers } from 'next/headers'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.mathbacai.com'),
@@ -123,13 +124,20 @@ export const viewport: Viewport = {
   themeColor: '#07080f',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Lu depuis le header posé par le middleware (x-pathname) : permet de
+  // servir lang="ar" dir="rtl" sur /ar et lang="fr" dir="ltr" partout
+  // ailleurs, sans dupliquer le layout racine.
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') ?? ''
+  const isArabic = pathname === '/ar' || pathname.startsWith('/ar/')
+
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={isArabic ? 'ar' : 'fr'} dir={isArabic ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link

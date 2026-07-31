@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 
 // ═══════════════════════════════════════════════════════════════
 //  MathBacAI — LANDING PAGE V10 (AR)
@@ -48,6 +49,21 @@ const STATS = [
   { num: '8', label: 'مواد مشمولة' },
   { num: '4.9★', label: 'متوسط التقييم' },
 ]
+
+// ═══════════════════════════════════════════════════════════════
+//  SEO — hreflang FR ↔ AR (indique à Google que ces deux pages sont
+//  la même page dans deux langues, pour un ciblage correct par pays)
+// ═══════════════════════════════════════════════════════════════
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://www.mathbacai.com/ar',
+    languages: {
+      fr: 'https://www.mathbacai.com/',
+      ar: 'https://www.mathbacai.com/ar',
+      'x-default': 'https://www.mathbacai.com/',
+    },
+  },
+}
 
 export default function LandingPageAr() {
   return (

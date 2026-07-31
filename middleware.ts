@@ -59,7 +59,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next()
+  // Transmet le pathname au layout (Server Component) via un header, pour
+  // qu'il puisse choisir lang="ar"/dir="rtl" sur /ar et lang="fr"/dir="ltr"
+  // ailleurs, sans dupliquer le layout racine.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-pathname', pathname)
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
 
   // Mémorise la langue effectivement affichée pour le reste de la session.
   // '/' → l'utilisateur voit la page française → on retient "fr"
