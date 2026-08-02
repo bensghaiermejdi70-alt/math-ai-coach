@@ -147,7 +147,7 @@ export default function LandingPageAr() {
               <p className="mt-6 text-yellow-300 text-base md:text-lg leading-9 max-w-xl mx-auto md:mx-0 font-semibold">
                 أول منصة تعليمية تعتمد على الذكاء الاصطناعي، صُممت خصيصًا لأساتذة وتلاميذ البكالوريا في تونس و  
 في فرنساTerminale,Premiere et Secondaire.
-                <span className="mt-3 block text-white/80 text-sm md:text-base font-medium">
+                <span className="mt-3 block text-yellow-300 text-base md:text-lg font-semibold">
                   تغطي المنصة جميع شعب البكالوريا وفق البرنامج الرسمي في: الرياضيات، الفيزياء، الإنجليزية، علوم الحياة والأرض، الإعلامية، الفرنسية، التصرف والاقتصاد.
                 </span>
               </p>
