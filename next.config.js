@@ -1,4 +1,17 @@
 const path = require('path')
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  // Désactivé en dev : sinon le service worker met en cache le HMR de Next
+  // et tu vois du contenu périmé pendant que tu codes.
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  // Le nouveau SW prend le contrôle immédiatement (pas besoin de fermer tous
+  // les onglets ouverts pour qu'une mise à jour du site soit prise en compte)
+  workboxOptions: {
+    skipWaiting: true,
+    clientsClaim: true,
+  },
+})
 
 // ── En-têtes de sécurité appliqués à toutes les réponses ──
 // Sûrs (ne cassent pas une app Next classique). La CSP n'est PAS incluse
@@ -33,6 +46,11 @@ const nextConfig = {
         source: '/:path*',
         headers: securityHeaders,
       },
+      {
+        // le manifest doit être servable avec le bon type MIME
+        source: '/manifest.json',
+        headers: [{ key: 'Content-Type', value: 'application/manifest+json' }],
+      },
     ]
   },
 
@@ -49,4 +67,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withPWA(nextConfig)
