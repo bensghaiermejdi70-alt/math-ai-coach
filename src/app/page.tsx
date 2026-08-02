@@ -131,7 +131,7 @@ export default function LandingPage() {
 
             <div className="group relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
               <div className="hero-card relative w-full max-w-sm aspect-[3/4] rounded-[32px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,.45)] border border-white/10">
-             <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover transition duration-700 group-hover:scale-105" />
+             <Image src="/images/hero-etudiante-v2.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover transition duration-700 group-hover:scale-105" />
 
 
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-950/50 via-transparent to-transparent" />
