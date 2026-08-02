@@ -131,7 +131,9 @@ export default function LandingPage() {
 
             <div className="group relative order-2 md:order-1 flex justify-center md:justify-start mb-hero-photo">
               <div className="hero-card relative w-full max-w-sm aspect-[3/4] rounded-[32px] overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,.45)] border border-white/10">
-                <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover transition duration-700 group-hover:scale-105" />
+             <Image src="/images/hero-etudiante.jpg" alt="Élève qui révise le Bac avec MathBacAI" fill priority className="object-cover transition duration-700 group-hover:scale-105" />
+
+
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-950/50 via-transparent to-transparent" />
               </div>
               <div className="hero-badge absolute -bottom-3 -right-1 md:right-4 bg-white rounded-3xl backdrop-blur-md px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
@@ -164,7 +166,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="hero-copy mt-6 text-yellow-300 text-base md:text-lg leading-relaxed max-w-xl mx-auto md:mx-0 font-semibold">
-                Le premier site utilisant l'intelligence artificielle, spécialement conçu pour les enseignants et les élèves de Terminale en Tunisie et en France.
+                Le premier site utilisant l'intelligence artificielle, spécialement conçu pour les enseignants et les élèves de BAC en Tunisie et Terminale,Premiere et Seconde en France.
                 <span className="mt-3 block text-white/80 text-sm md:text-base font-medium">
                   Cours, examens officiels, simulations IA, Bac Blanc quotidien, solveur d'exercices et professeur IA réunis sur une seule plateforme.
                 </span>
