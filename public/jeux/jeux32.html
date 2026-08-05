@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyjo Futuriste 3D</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.5)); }
+            to { filter: drop-shadow(0 0 30px rgba(69, 183, 209, 0.8)); }
+        }
+
+        .language-selector {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 10px;
+        }
+
+        .language-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: bold;
+            outline: none;
+            min-width: 120px;
+        }
+
+        .language-select:hover, .language-select:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4ecdc4;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .language-select option {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .menu-screen, .game-screen, .rules-screen {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .menu-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 20px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .menu-btn:hover::before {
+            left: 100%;
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            perspective: 1000px;
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            transform-style: preserve-3d;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.hidden {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: transparent;
+        }
+
+        .card.hidden::after {
+            content: '?';
+            color: white;
+            font-size: 3rem;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-card h3 {
+            margin: 0 0 8px 0;
+            color: #4ecdc4;
+            font-size: 1rem;
+        }
+
+        .info-card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .ai-players {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ai-player {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .ai-player.active {
+            border-color: #4ecdc4;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+        }
+
+        .ai-player h4 {
+            margin: 0 0 10px 0;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .ai-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .rules-content {
+            color: white;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .rules-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .rules-content::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .rules-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .level-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .level-btn {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            border: none;
+            color: #333;
+            padding: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .level-btn:hover, .level-btn.active {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 3s ease-out forwards;
+        }
+
+        @keyframes particle-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0);
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(78, 205, 196, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+            
+            .game-board {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+            
+            .card {
+                font-size: 1.5rem;
+            }
+            
+            .language-selector {
+                position: static;
+                margin-bottom: 20px;
+            }
+        }
+        </style>
+    <style>
+    /* override: consistent global close button */
+    .global-close-btn { position: fixed !important; top: 14px !important; right: 14px !important; z-index: 99999 !important; background: linear-gradient(45deg,#ff3b3b,#ff0066) !important; color: #fff !important; border: none !important; width:52px !important; height:52px !important; border-radius:50% !important; font-size:22px !important; cursor:pointer !important; display:flex !important;align-items:center !important;justify-content:center !important; box-shadow:0 8px 22px rgba(255,59,59,0.28) !important; }
+    .global-close-btn:hover{ transform: scale(1.06); }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <div class="container">
+        <div class="header">
+            <h1 class="title" id="gameTitle">SKYJO FUTURISTE 3D</h1>
+            <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+            <script>
+            /* Canonical child-side overlay closer for platform pages */
+            function closePlatform(){
+                try{ console.debug('jeux32: closePlatform called'); }catch(e){}
+                if(window.parent && window.parent !== window){
+                    window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux32' }, '*');
+                    return;
+                }
+                if(window.opener && !window.opener.closed){
+                    try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux32' }, '*'); }catch(e){}
+                    try{ window.close(); }catch(e){}
+                    return;
+                }
+                window.location.href = '/global_platform.html';
+            }
+            window.closePlatform = closePlatform;
+            </script>
+            <div class="language-selector">
+                <select class="language-select" id="languageSelect" onchange="changeLanguage(this.value)">
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇺🇸 English</option>
+                    <option value="ar">🇸🇦 العربية</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Menu Principal -->
+        <div id="menuScreen" class="menu-screen">
+            <div class="menu-buttons">
+                <button class="menu-btn" onclick="showRules()">
+                    <span id="rulesBtn">📖 RÈGLES</span>
+                </button>
+                <button class="menu-btn" onclick="showGame()">
+                    <span id="startBtn">🚀 DÉMARRER</span>
+                </button>
+                <button class="menu-btn" onclick="showLevels()">
+                    <span id="levelsBtn">🎯 NIVEAUX</span>
+                </button>
+                <button class="menu-btn" onclick="newGame()">
+                    <span id="newGameBtn">✨ NOUVELLE PARTIE</span>
+                </button>
+                <button class="menu-btn" onclick="pauseGame()">
+                    <span id="pauseBtn">⏸️ PAUSE</span>
+                </button>
+            </div>
+            
+            <div id="levelSelector" class="level-selector hidden">
+                <button class="level-btn active" onclick="selectLevel(1)">
+                    <span id="level1">Débutant</span>
+                </button>
+                <button class="level-btn" onclick="selectLevel(2)">
+                    <span id="level2">Intermédiaire</span>
+                </button>
+                <button class="level-btn" onclick="selectLevel(3)">
+                    <span id="level3">Expert</span>
+                </button>
+                <button class="level-btn" onclick="selectLevel(4)">
+                    <span id="level4">Maître IA</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Écran des Règles -->
+        <div id="rulesScreen" class="rules-screen hidden">
+            <h2 id="rulesTitle">📖 RÈGLES DU JEU</h2>
+            <div class="rules-content" id="rulesContent">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 id="objectiveTitle">🎯 Objectif</h3>
+                    <button class="control-btn" onclick="showMenu()" style="padding: 8px 15px; font-size: 0.9rem;">
+                        <span id="closeBtn">✕ FERMER</span>
+                    </button>
+                </div>
+                <p id="objectiveText">Obtenez le score le plus bas possible en révélant et échangeant vos cartes stratégiquement.</p>
+                
+                <h3 id="howToPlayTitle">🎮 Comment jouer</h3>
+                <p id="howToPlayText1">• Chaque joueur a 12 cartes face cachée (4x3)</p>
+                <p id="howToPlayText2">• Révélez 2 cartes au début</p>
+                <p id="howToPlayText3">• À votre tour : piochez ou prenez la défausse</p>
+                <p id="howToPlayText4">• Remplacez une carte ou défaussez</p>
+                <p id="howToPlayText5">• Quand un joueur révèle toutes ses cartes, la manche se termine</p>
+                
+                <h3 id="scoringTitle">🏆 Scoring</h3>
+                <p id="scoringText1">• Cartes -2 à 12 : valeur faciale</p>
+                <p id="scoringText2">• 3 cartes identiques en colonne = 0 points</p>
+                <p id="scoringText3">• Le joueur avec le moins de points gagne</p>
+                
+                <h3 id="aiTitle">🤖 IA Avancée</h3>
+                <p id="aiText1">• L'IA analyse vos mouvements</p>
+                <p id="aiText2">• Stratégies adaptatives selon le niveau</p>
+                <p id="aiText3">• Apprentissage des patterns de jeu</p>
+            </div>
+            <div class="controls">
+                <button class="control-btn" onclick="showMenu()">
+                    <span id="backBtn">← RETOUR</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Écran de Jeu -->
+        <div id="gameScreen" class="game-screen hidden">
+            <div class="game-info">
+                <div class="info-card">
+                    <h3 id="scoreLabel">Score</h3>
+                    <div class="value" id="playerScore">0</div>
+                </div>
+                <div class="info-card">
+                    <h3 id="roundLabel">Manche</h3>
+                    <div class="value" id="currentRound">1</div>
+                </div>
+                <div class="info-card">
+                    <h3 id="levelLabel">Niveau</h3>
+                    <div class="value" id="currentLevel">1</div>
+                </div>
+                <div class="info-card">
+                    <h3 id="turnLabel">Tour</h3>
+                    <div class="value" id="currentTurn">Joueur</div>
+                </div>
+            </div>
+
+            <div class="ai-players" id="aiPlayers">
+                <!-- IA players will be generated here -->
+            </div>
+
+            <div class="game-board" id="gameBoard">
+                <!-- Cards will be generated here -->
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" id="drawBtn" onclick="drawCard()">
+                    <span id="drawLabel">PIOCHER</span>
+                </button>
+                <button class="control-btn" id="discardBtn" onclick="takeDiscard()" disabled>
+                    <span id="discardLabel">DÉFAUSSE</span>
+                </button>
+                <button class="control-btn" onclick="showMenu()">
+                    <span id="menuLabel">MENU</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Système de langues
+        const translations = {
+            fr: {
+                gameTitle: "SKYJO FUTURISTE 3D",
+                rulesBtn: "📖 RÈGLES",
+                startBtn: "🚀 DÉMARRER",
+                levelsBtn: "🎯 NIVEAUX", 
+                newGameBtn: "✨ NOUVELLE PARTIE",
+                pauseBtn: "⏸️ PAUSE",
+                level1: "Débutant",
+                level2: "Intermédiaire", 
+                level3: "Expert",
+                level4: "Maître IA",
+                rulesTitle: "📖 RÈGLES DU JEU",
+                backBtn: "← RETOUR",
+                closeBtn: "✕ FERMER",
+                scoreLabel: "Score",
+                roundLabel: "Manche",
+                levelLabel: "Niveau",
+                turnLabel: "Tour",
+                drawLabel: "PIOCHER",
+                discardLabel: "DÉFAUSSE",
+                menuLabel: "MENU",
+                playerTurn: "Joueur",
+                aiTurn: "IA",
+                objectiveTitle: "🎯 Objectif",
+                objectiveText: "Obtenez le score le plus bas possible en révélant et échangeant vos cartes stratégiquement.",
+                howToPlayTitle: "🎮 Comment jouer",
+                howToPlayText1: "• Chaque joueur a 12 cartes face cachée (4x3)",
+                howToPlayText2: "• Révélez 2 cartes au début",
+                howToPlayText3: "• À votre tour : piochez ou prenez la défausse",
+                howToPlayText4: "• Remplacez une carte ou défaussez",
+                howToPlayText5: "• Quand un joueur révèle toutes ses cartes, la manche se termine",
+                scoringTitle: "🏆 Scoring",
+                scoringText1: "• Cartes -2 à 12 : valeur faciale",
+                scoringText2: "• 3 cartes identiques en colonne = 0 points",
+                scoringText3: "• Le joueur avec le moins de points gagne",
+                aiTitle: "🤖 IA Avancée",
+                aiText1: "• L'IA analyse vos mouvements",
+                aiText2: "• Stratégies adaptatives selon le niveau",
+                aiText3: "• Apprentissage des patterns de jeu"
+            },
+            en: {
+                gameTitle: "FUTURISTIC SKYJO 3D",
+                rulesBtn: "📖 RULES",
+                startBtn: "🚀 START",
+                levelsBtn: "🎯 LEVELS",
+                newGameBtn: "✨ NEW GAME", 
+                pauseBtn: "⏸️ PAUSE",
+                level1: "Beginner",
+                level2: "Intermediate",
+                level3: "Expert", 
+                level4: "AI Master",
+                rulesTitle: "📖 GAME RULES",
+                backBtn: "← BACK",
+                closeBtn: "✕ CLOSE",
+                scoreLabel: "Score",
+                roundLabel: "Round",
+                levelLabel: "Level",
+                turnLabel: "Turn",
+                drawLabel: "DRAW",
+                discardLabel: "DISCARD",
+                menuLabel: "MENU",
+                playerTurn: "Player",
+                aiTurn: "AI",
+                objectiveTitle: "🎯 Objective",
+                objectiveText: "Get the lowest score possible by strategically revealing and exchanging your cards.",
+                howToPlayTitle: "🎮 How to Play",
+                howToPlayText1: "• Each player has 12 face-down cards (4x3)",
+                howToPlayText2: "• Reveal 2 cards at the start",
+                howToPlayText3: "• On your turn: draw or take from discard",
+                howToPlayText4: "• Replace a card or discard",
+                howToPlayText5: "• When a player reveals all cards, the round ends",
+                scoringTitle: "🏆 Scoring",
+                scoringText1: "• Cards -2 to 12: face value",
+                scoringText2: "• 3 identical cards in column = 0 points",
+                scoringText3: "• Player with lowest score wins",
+                aiTitle: "🤖 Advanced AI",
+                aiText1: "• AI analyzes your moves",
+                aiText2: "• Adaptive strategies by level",
+                aiText3: "• Learning gameplay patterns"
+            },
+            ar: {
+                gameTitle: "سكايجو المستقبلي ثلاثي الأبعاد",
+                rulesBtn: "📖 القواعد",
+                startBtn: "🚀 ابدأ",
+                levelsBtn: "🎯 المستويات",
+                newGameBtn: "✨ لعبة جديدة",
+                pauseBtn: "⏸️ توقف",
+                level1: "مبتدئ",
+                level2: "متوسط",
+                level3: "خبير",
+                level4: "سيد الذكاء الاصطناعي",
+                rulesTitle: "📖 قواعد اللعبة",
+                backBtn: "← رجوع",
+                closeBtn: "✕ إغلاق",
+                scoreLabel: "النقاط",
+                roundLabel: "الجولة",
+                levelLabel: "المستوى",
+                turnLabel: "الدور",
+                drawLabel: "اسحب",
+                discardLabel: "تخلص",
+                menuLabel: "القائمة",
+                playerTurn: "اللاعب",
+                aiTurn: "الذكاء الاصطناعي",
+                objectiveTitle: "🎯 الهدف",
+                objectiveText: "احصل على أقل نقاط ممكنة من خلال كشف وتبديل أوراقك بذكاء.",
+                howToPlayTitle: "🎮 كيفية اللعب",
+                howToPlayText1: "• كل لاعب لديه 12 ورقة مقلوبة (4×3)",
+                howToPlayText2: "• اكشف ورقتين في البداية",
+                howToPlayText3: "• في دورك: اسحب أو خذ من المهملات",
+                howToPlayText4: "• استبدل ورقة أو تخلص منها",
+                howToPlayText5: "• عندما يكشف لاعب جميع أوراقه، تنتهي الجولة",
+                scoringTitle: "🏆 النقاط",
+                scoringText1: "• الأوراق من -2 إلى 12: القيمة الظاهرة",
+                scoringText2: "• 3 أوراق متطابقة في العمود = 0 نقاط",
+                scoringText3: "• اللاعب بأقل نقاط يفوز",
+                aiTitle: "🤖 ذكاء اصطناعي متقدم",
+                aiText1: "• الذكاء الاصطناعي يحلل حركاتك",
+                aiText2: "• استراتيجيات تكيفية حسب المستوى",
+                aiText3: "• تعلم أنماط اللعب"
+            },
+            es: {
+                gameTitle: "SKYJO FUTURISTA 3D",
+                rulesBtn: "📖 REGLAS",
+                startBtn: "🚀 EMPEZAR",
+                levelsBtn: "🎯 NIVELES",
+                newGameBtn: "✨ NUEVO JUEGO",
+                pauseBtn: "⏸️ PAUSA",
+                level1: "Principiante",
+                level2: "Intermedio",
+                level3: "Experto",
+                level4: "Maestro IA",
+                rulesTitle: "📖 REGLAS DEL JUEGO",
+                backBtn: "← VOLVER",
+                closeBtn: "✕ CERRAR",
+                scoreLabel: "Puntuación",
+                roundLabel: "Ronda",
+                levelLabel: "Nivel",
+                turnLabel: "Turno",
+                drawLabel: "ROBAR",
+                discardLabel: "DESCARTAR",
+                menuLabel: "MENÚ",
+                playerTurn: "Jugador",
+                aiTurn: "IA",
+                objectiveTitle: "🎯 Objetivo",
+                objectiveText: "Consigue la puntuación más baja posible revelando e intercambiando tus cartas estratégicamente.",
+                howToPlayTitle: "🎮 Cómo jugar",
+                howToPlayText1: "• Cada jugador tiene 12 cartas boca abajo (4x3)",
+                howToPlayText2: "• Revela 2 cartas al inicio",
+                howToPlayText3: "• En tu turno: roba o toma del descarte",
+                howToPlayText4: "• Reemplaza una carta o descarta",
+                howToPlayText5: "• Cuando un jugador revela todas sus cartas, termina la ronda",
+                scoringTitle: "🏆 Puntuación",
+                scoringText1: "• Cartas -2 a 12: valor nominal",
+                scoringText2: "• 3 cartas idénticas en columna = 0 puntos",
+                scoringText3: "• El jugador con menos puntos gana",
+                aiTitle: "🤖 IA Avanzada",
+                aiText1: "• La IA analiza tus movimientos",
+                aiText2: "• Estrategias adaptativas por nivel",
+                aiText3: "• Aprendizaje de patrones de juego"
+            },
+            de: {
+                gameTitle: "FUTURISTISCHES SKYJO 3D",
+                rulesBtn: "📖 REGELN",
+                startBtn: "🚀 STARTEN",
+                levelsBtn: "🎯 LEVEL",
+                newGameBtn: "✨ NEUES SPIEL",
+                pauseBtn: "⏸️ PAUSE",
+                level1: "Anfänger",
+                level2: "Fortgeschritten",
+                level3: "Experte",
+                level4: "KI-Meister",
+                rulesTitle: "📖 SPIELREGELN",
+                backBtn: "← ZURÜCK",
+                closeBtn: "✕ SCHLIESSEN",
+                scoreLabel: "Punkte",
+                roundLabel: "Runde",
+                levelLabel: "Level",
+                turnLabel: "Zug",
+                drawLabel: "ZIEHEN",
+                discardLabel: "ABLEGEN",
+                menuLabel: "MENÜ",
+                playerTurn: "Spieler",
+                aiTurn: "KI",
+                objectiveTitle: "🎯 Ziel",
+                objectiveText: "Erreiche die niedrigste Punktzahl durch strategisches Aufdecken und Tauschen deiner Karten.",
+                howToPlayTitle: "🎮 Spielweise",
+                howToPlayText1: "• Jeder Spieler hat 12 verdeckte Karten (4x3)",
+                howToPlayText2: "• Decke 2 Karten zu Beginn auf",
+                howToPlayText3: "• In deinem Zug: ziehe oder nimm vom Ablagestapel",
+                howToPlayText4: "• Ersetze eine Karte oder lege ab",
+                howToPlayText5: "• Wenn ein Spieler alle Karten aufdeckt, endet die Runde",
+                scoringTitle: "🏆 Wertung",
+                scoringText1: "• Karten -2 bis 12: Nennwert",
+                scoringText2: "• 3 identische Karten in Spalte = 0 Punkte",
+                scoringText3: "• Spieler mit niedrigster Punktzahl gewinnt",
+                aiTitle: "🤖 Erweiterte KI",
+                aiText1: "• KI analysiert deine Züge",
+                aiText2: "• Adaptive Strategien je Level",
+                aiText3: "• Lernt Spielmuster"
+            },
+            zh: {
+                gameTitle: "未来天空约3D",
+                rulesBtn: "📖 规则",
+                startBtn: "🚀 开始",
+                levelsBtn: "🎯 等级",
+                newGameBtn: "✨ 新游戏",
+                pauseBtn: "⏸️ 暂停",
+                level1: "初学者",
+                level2: "中级",
+                level3: "专家",
+                level4: "AI大师",
+                rulesTitle: "📖 游戏规则",
+                backBtn: "← 返回",
+                closeBtn: "✕ 关闭",
+                scoreLabel: "得分",
+                roundLabel: "回合",
+                levelLabel: "等级",
+                turnLabel: "轮次",
+                drawLabel: "抽牌",
+                discardLabel: "弃牌",
+                menuLabel: "菜单",
+                playerTurn: "玩家",
+                aiTurn: "AI",
+                objectiveTitle: "🎯 目标",
+                objectiveText: "通过策略性地翻开和交换卡牌来获得尽可能低的分数。",
+                howToPlayTitle: "🎮 游戏玩法",
+                howToPlayText1: "• 每位玩家有12张背面朝上的卡牌 (4x3)",
+                howToPlayText2: "• 开始时翻开2张卡牌",
+                howToPlayText3: "• 轮到你时：抽牌或从弃牌堆取牌",
+                howToPlayText4: "• 替换一张卡牌或弃牌",
+                howToPlayText5: "• 当玩家翻开所有卡牌时，回合结束",
+                scoringTitle: "🏆 计分",
+                scoringText1: "• 卡牌-2到12：面值",
+                scoringText2: "• 一列3张相同卡牌 = 0分",
+                scoringText3: "• 得分最低的玩家获胜",
+                aiTitle: "🤖 高级AI",
+                aiText1: "• AI分析你的行动",
+                aiText2: "• 根据等级调整策略",
+                aiText3: "• 学习游戏模式"
+            }
+        };
+
+        // État du jeu
+        let gameState = {
+            currentLanguage: 'fr',
+            currentLevel: 1,
+            currentRound: 1,
+            playerScore: 0,
+            playerCards: [],
+            aiPlayers: [],
+            deck: [],
+            discardPile: [],
+            currentTurn: 'player',
+            gameActive: false,
+            selectedCard: null,
+            drawnCard: null
+        };
+
+        // Initialisation
+        function initGame() {
+            createDeck();
+            createAIPlayers();
+            dealCards();
+            updateDisplay();
+            gameState.gameActive = true;
+            showNotification(translations[gameState.currentLanguage].startBtn);
+        }
+
+        function createDeck() {
+            gameState.deck = [];
+            // Cartes -2 à 12, avec différentes quantités
+            const cardCounts = {'-2': 5, '-1': 10, '0': 15, '1': 10, '2': 10, '3': 10, '4': 10, '5': 10, '6': 10, '7': 10, '8': 10, '9': 10, '10': 10, '11': 10, '12': 10};
+            
+            for (let value in cardCounts) {
+                for (let i = 0; i < cardCounts[value]; i++) {
+                    gameState.deck.push(parseInt(value));
+                }
+            }
+            
+            // Mélanger le deck
+            for (let i = gameState.deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
+            }
+        }
+
+        function createAIPlayers() {
+            const aiCount = Math.min(3, gameState.currentLevel);
+            gameState.aiPlayers = [];
+            
+            for (let i = 0; i < aiCount; i++) {
+                gameState.aiPlayers.push({
+                    name: `IA ${i + 1}`,
+                    cards: [],
+                    score: 0,
+                    difficulty: gameState.currentLevel,
+                    strategy: Math.random() > 0.5 ? 'aggressive' : 'conservative'
+                });
+            }
+        }
+
+        function dealCards() {
+            // Distribuer 12 cartes au joueur
+            gameState.playerCards = [];
+            for (let i = 0; i < 12; i++) {
+                gameState.playerCards.push({
+                    value: gameState.deck.pop(),
+                    revealed: i < 2 // Révéler les 2 premières cartes
+                });
+            }
+            
+            // Distribuer aux IA
+            gameState.aiPlayers.forEach(ai => {
+                ai.cards = [];
+                for (let i = 0; i < 12; i++) {
+                    ai.cards.push({
+                        value: gameState.deck.pop(),
+                        revealed: i < 2
+                    });
+                }
+            });
+            
+            // Première carte de la défausse
+            gameState.discardPile = [gameState.deck.pop()];
+        }
+
+        function renderGameBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            gameState.playerCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = `card ${card.revealed ? '' : 'hidden'}`;
+                cardElement.textContent = card.revealed ? card.value : '';
+                cardElement.onclick = () => selectCard(index);
+                
+                if (gameState.selectedCard === index) {
+                    cardElement.style.border = '3px solid #4ecdc4';
+                }
+                
+                board.appendChild(cardElement);
+            });
+        }
+
+        function renderAIPlayers() {
+            const container = document.getElementById('aiPlayers');
+            container.innerHTML = '';
+            
+            gameState.aiPlayers.forEach((ai, index) => {
+                const aiElement = document.createElement('div');
+                aiElement.className = `ai-player ${gameState.currentTurn === `ai${index}` ? 'active' : ''}`;
+                aiElement.innerHTML = `
+                    <h4>${ai.name}</h4>
+                    <div class="ai-score">${ai.score}</div>
+                `;
+                container.appendChild(aiElement);
+            });
+        }
+
+        function selectCard(index) {
+            if (!gameState.gameActive || gameState.currentTurn !== 'player') return;
+            
+            gameState.selectedCard = index;
+            renderGameBoard();
+            createParticles(event.target);
+        }
+
+        function drawCard() {
+            if (!gameState.gameActive || gameState.currentTurn !== 'player' || gameState.drawnCard) return;
+            
+            if (gameState.deck.length === 0) {
+                // Remélanger la défausse
+                const topCard = gameState.discardPile.pop();
+                gameState.deck = [...gameState.discardPile];
+                gameState.discardPile = [topCard];
+                
+                for (let i = gameState.deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [gameState.deck[i], gameState.deck[j]] = [gameState.deck[j], gameState.deck[i]];
+                }
+            }
+            
+            gameState.drawnCard = gameState.deck.pop();
+            document.getElementById('drawBtn').disabled = true;
+            document.getElementById('discardBtn').disabled = false;
+            
+            showNotification(`Carte piochée: ${gameState.drawnCard}`);
+        }
+
+        function takeDiscard() {
+            if (!gameState.gameActive || gameState.currentTurn !== 'player') return;
+            
+            if (gameState.selectedCard !== null && gameState.drawnCard) {
+                // Remplacer la carte sélectionnée
+                const oldCard = gameState.playerCards[gameState.selectedCard];
+                gameState.playerCards[gameState.selectedCard] = {
+                    value: gameState.drawnCard,
+                    revealed: true
+                };
+                
+                gameState.discardPile.push(oldCard.value);
+                gameState.drawnCard = null;
+                gameState.selectedCard = null;
+                
+                document.getElementById('drawBtn').disabled = false;
+                document.getElementById('discardBtn').disabled = true;
+                
+                endPlayerTurn();
+            }
+        }
+
+        function endPlayerTurn() {
+            calculateScore();
+            gameState.currentTurn = 'ai0';
+            setTimeout(aiTurn, 1000);
+        }
+
+        function aiTurn() {
+            const aiIndex = parseInt(gameState.currentTurn.replace('ai', ''));
+            const ai = gameState.aiPlayers[aiIndex];
+            
+            if (!ai) {
+                gameState.currentTurn = 'player';
+                updateDisplay();
+                return;
+            }
+            
+            // IA sophistiquée basée sur le niveau
+            const strategy = getAIStrategy(ai);
+            executeAIMove(ai, strategy);
+            
+            // Passer au joueur suivant
+            const nextAI = aiIndex + 1;
+            if (nextAI < gameState.aiPlayers.length) {
+                gameState.currentTurn = `ai${nextAI}`;
+                setTimeout(aiTurn, 1500);
+            } else {
+                gameState.currentTurn = 'player';
+                updateDisplay();
+            }
+        }
+
+        function getAIStrategy(ai) {
+            const revealedCards = ai.cards.filter(c => c.revealed);
+            const hiddenCards = ai.cards.filter(c => !c.revealed);
+            const avgRevealed = revealedCards.reduce((sum, c) => sum + c.value, 0) / revealedCards.length;
+            
+            // Stratégie basée sur la difficulté et les cartes
+            if (ai.difficulty >= 3 && avgRevealed > 5) {
+                return 'aggressive'; // Révéler plus de cartes
+            } else if (ai.difficulty >= 2 && hiddenCards.length > 8) {
+                return 'balanced'; // Équilibrer révélation et échange
+            } else {
+                return 'conservative'; // Jouer prudemment
+            }
+        }
+
+        function executeAIMove(ai, strategy) {
+            // Simuler le mouvement de l'IA
+            const hiddenCards = ai.cards.map((c, i) => c.revealed ? null : i).filter(i => i !== null);
+            
+            if (hiddenCards.length > 0 && Math.random() > 0.3) {
+                // Révéler une carte cachée
+                const randomHidden = hiddenCards[Math.floor(Math.random() * hiddenCards.length)];
+                ai.cards[randomHidden].revealed = true;
+            }
+            
+            // Calculer le score de l'IA
+            ai.score = ai.cards.filter(c => c.revealed).reduce((sum, c) => sum + c.value, 0);
+            
+            renderAIPlayers();
+        }
+
+        function calculateScore() {
+            gameState.playerScore = 0;
+            
+            // Calculer le score des cartes révélées
+            gameState.playerCards.forEach(card => {
+                if (card.revealed) {
+                    gameState.playerScore += card.value;
+                }
+            });
+            
+            // Vérifier les colonnes identiques (bonus de 0 points)
+            for (let col = 0; col < 4; col++) {
+                const columnCards = [
+                    gameState.playerCards[col],
+                    gameState.playerCards[col + 4],
+                    gameState.playerCards[col + 8]
+                ];
+                
+                if (columnCards.every(c => c.revealed && c.value === columnCards[0].value)) {
+                    gameState.playerScore -= columnCards[0].value * 3; // Annuler les points de la colonne
+                }
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('playerScore').textContent = gameState.playerScore;
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+            document.getElementById('currentLevel').textContent = gameState.currentLevel;
+            document.getElementById('currentTurn').textContent = 
+                gameState.currentTurn === 'player' ? 
+                translations[gameState.currentLanguage].playerTurn : 
+                translations[gameState.currentLanguage].aiTurn;
+            
+            renderGameBoard();
+            renderAIPlayers();
+        }
+
+        function createParticles(element) {
+            const rect = element.getBoundingClientRect();
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = (rect.left + rect.width / 2) + 'px';
+                particle.style.top = (rect.top + rect.height / 2) + 'px';
+                particle.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                document.body.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 3000);
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Fonctions de navigation
+        function showMenu() {
+            document.getElementById('menuScreen').classList.remove('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('rulesScreen').classList.add('hidden');
+        }
+
+        function showGame() {
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('rulesScreen').classList.add('hidden');
+            
+            if (!gameState.gameActive) {
+                initGame();
+            }
+        }
+
+        function showRules() {
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('rulesScreen').classList.remove('hidden');
+        }
+
+        function showLevels() {
+            const selector = document.getElementById('levelSelector');
+            selector.classList.toggle('hidden');
+        }
+
+        function selectLevel(level) {
+            gameState.currentLevel = level;
+            document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            showNotification(`Niveau ${level} sélectionné`);
+            document.getElementById('levelSelector').classList.add('hidden');
+        }
+
+        function newGame() {
+            gameState.gameActive = false;
+            gameState.currentRound = 1;
+            gameState.playerScore = 0;
+            gameState.selectedCard = null;
+            gameState.drawnCard = null;
+            gameState.currentTurn = 'player';
+            
+            initGame();
+            showGame();
+        }
+
+        function pauseGame() {
+            gameState.gameActive = !gameState.gameActive;
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.innerHTML = gameState.gameActive ? '⏸️ PAUSE' : '▶️ REPRENDRE';
+            
+            showNotification(gameState.gameActive ? 'Jeu repris' : 'Jeu en pause');
+        }
+
+        // Système de langues
+        function changeLanguage(lang) {
+            gameState.currentLanguage = lang;
+            
+            // Mettre à jour le sélecteur de langue
+            document.getElementById('languageSelect').value = lang;
+            
+            // Mettre à jour tous les textes
+            const t = translations[lang];
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('rulesBtn').textContent = t.rulesBtn;
+            document.getElementById('startBtn').textContent = t.startBtn;
+            document.getElementById('levelsBtn').textContent = t.levelsBtn;
+            document.getElementById('newGameBtn').textContent = t.newGameBtn;
+            document.getElementById('pauseBtn').textContent = t.pauseBtn;
+            document.getElementById('level1').textContent = t.level1;
+            document.getElementById('level2').textContent = t.level2;
+            document.getElementById('level3').textContent = t.level3;
+            document.getElementById('level4').textContent = t.level4;
+            document.getElementById('rulesTitle').textContent = t.rulesTitle;
+            document.getElementById('backBtn').textContent = t.backBtn;
+            document.getElementById('closeBtn').textContent = t.closeBtn;
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('roundLabel').textContent = t.roundLabel;
+            document.getElementById('levelLabel').textContent = t.levelLabel;
+            document.getElementById('turnLabel').textContent = t.turnLabel;
+            document.getElementById('drawLabel').textContent = t.drawLabel;
+            document.getElementById('discardLabel').textContent = t.discardLabel;
+            document.getElementById('menuLabel').textContent = t.menuLabel;
+            
+            // Mettre à jour les règles
+            document.getElementById('objectiveTitle').textContent = t.objectiveTitle;
+            document.getElementById('objectiveText').textContent = t.objectiveText;
+            document.getElementById('howToPlayTitle').textContent = t.howToPlayTitle;
+            document.getElementById('howToPlayText1').textContent = t.howToPlayText1;
+            document.getElementById('howToPlayText2').textContent = t.howToPlayText2;
+            document.getElementById('howToPlayText3').textContent = t.howToPlayText3;
+            document.getElementById('howToPlayText4').textContent = t.howToPlayText4;
+            document.getElementById('howToPlayText5').textContent = t.howToPlayText5;
+            document.getElementById('scoringTitle').textContent = t.scoringTitle;
+            document.getElementById('scoringText1').textContent = t.scoringText1;
+            document.getElementById('scoringText2').textContent = t.scoringText2;
+            document.getElementById('scoringText3').textContent = t.scoringText3;
+            document.getElementById('aiTitle').textContent = t.aiTitle;
+            document.getElementById('aiText1').textContent = t.aiText1;
+            document.getElementById('aiText2').textContent = t.aiText2;
+            document.getElementById('aiText3').textContent = t.aiText3;
+            
+            updateDisplay();
+            showNotification(`Langue changée: ${lang.toUpperCase()}`);
+        }
+
+        // Sauvegarde locale des scores
+        function saveScore() {
+            const scores = JSON.parse(localStorage.getItem('skyjoScores') || '[]');
+            scores.push({
+                score: gameState.playerScore,
+                level: gameState.currentLevel,
+                date: new Date().toISOString(),
+                language: gameState.currentLanguage
+            });
+            
+            // Garder seulement les 10 meilleurs scores
+            scores.sort((a, b) => a.score - b.score);
+            scores.splice(10);
+            
+            localStorage.setItem('skyjoScores', JSON.stringify(scores));
+        }
+
+        // Contrôles clavier
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.gameActive) return;
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    if (gameState.currentTurn === 'player') {
+                        drawCard();
+                    }
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (gameState.drawnCard && gameState.selectedCard !== null) {
+                        takeDiscard();
+                    }
+                    break;
+                case 'Escape':
+                    showMenu();
+                    break;
+            }
+        });
+
+        // Initialisation au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            showMenu();
+        });
+    </script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux32' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

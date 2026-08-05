@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solitaire Fusion - Jeu de Cartes Futuriste</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        .quantum-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(255, 215, 0, 0.2) 0%, transparent 50%);
+        }
+
+        .quantum-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            box-shadow: 0 0 6px #00ffff;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+            border: 3px solid rgba(0, 255, 255, 0.4);
+            border-radius: 25px;
+            backdrop-filter: blur(20px);
+            box-shadow: 
+                0 0 50px rgba(0, 255, 255, 0.3),
+                inset 0 0 50px rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 20px 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        .game-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 12px 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-title h1 {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .game-logo {
+            font-size: 32px;
+            filter: drop-shadow(0 0 20px #00ffff);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .language-selector {
+            position: relative;
+            display: inline-block;
+        }
+
+        .language-dropdown {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 8px;
+            color: #00ffff;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+            min-width: 70px;
+            justify-content: space-between;
+        }
+
+        .language-dropdown:hover {
+            border-color: rgba(0, 255, 255, 0.8);
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            left: auto;
+            min-width: 160px;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.98) 0%, rgba(30, 30, 60, 0.98) 100%);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.3);
+            z-index: 99999999;
+            margin-top: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .language-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .language-option:last-child {
+            border-bottom: none;
+            border-radius: 0 0 13px 13px;
+        }
+
+        .language-option:first-child {
+            border-radius: 13px 13px 0 0;
+        }
+
+        .language-option:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(255, 0, 255, 0.2) 100%);
+            color: #00ffff;
+            transform: translateX(5px);
+        }
+
+        .language-option.active {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.3) 0%, rgba(255, 0, 255, 0.3) 100%);
+            color: #00ffff;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 25px;
+            min-height: 650px;
+            margin-top: 5px;
+        }
+
+        .sidebar {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.95) 0%, rgba(30, 30, 60, 0.95) 100%);
+            border: 3px solid rgba(0, 255, 255, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 
+                0 10px 40px rgba(0, 255, 255, 0.2),
+                inset 0 0 30px rgba(0, 255, 255, 0.05);
+            height: fit-content;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, #ff00ff, #00ffff, transparent);
+            animation: scanLine 2s linear infinite;
+        }
+
+        @keyframes scanLine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .game-board {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.98) 0%, rgba(30, 30, 60, 0.98) 100%);
+            border: 4px solid rgba(0, 255, 255, 0.6);
+            border-radius: 20px;
+            padding: 20px 25px;
+            backdrop-filter: blur(20px);
+            box-shadow: 
+                0 0 60px rgba(0, 255, 255, 0.4),
+                inset 0 0 40px rgba(0, 255, 255, 0.1);
+            height: fit-content;
+            max-height: 650px;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .quantum-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            margin: 3px;
+        }
+
+        .quantum-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        .quantum-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .quantum-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .quantum-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1a2e;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .danger-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .danger-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .card {
+            width: 60px;
+            height: 85px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 2px;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .card.red {
+            color: #d63031;
+        }
+
+        .card.black {
+            color: #2d3436;
+        }
+
+        .card.selected {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            transform: translateY(-10px);
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .card-empty {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border: 2px dashed rgba(0, 255, 255, 0.3);
+            color: rgba(0, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-empty:hover {
+            border-color: rgba(0, 255, 255, 0.6);
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%);
+        }
+
+        .foundation-area {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .tableau-area {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .stock-waste-area {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .card-pile {
+            min-height: 85px;
+            position: relative;
+        }
+
+        .tableau-pile {
+            min-height: 200px;
+        }
+
+        .tableau-pile .card {
+            position: absolute;
+            top: 0;
+        }
+
+        .tableau-pile .card:nth-child(1) { top: 0px; }
+        .tableau-pile .card:nth-child(2) { top: 20px; }
+        .tableau-pile .card:nth-child(3) { top: 40px; }
+        .tableau-pile .card:nth-child(4) { top: 60px; }
+        .tableau-pile .card:nth-child(5) { top: 80px; }
+        .tableau-pile .card:nth-child(6) { top: 100px; }
+        .tableau-pile .card:nth-child(7) { top: 120px; }
+        .tableau-pile .card:nth-child(8) { top: 140px; }
+        .tableau-pile .card:nth-child(9) { top: 160px; }
+        .tableau-pile .card:nth-child(10) { top: 180px; }
+        .tableau-pile .card:nth-child(11) { top: 200px; }
+        .tableau-pile .card:nth-child(12) { top: 220px; }
+        .tableau-pile .card:nth-child(13) { top: 240px; }
+
+        .stats-panel {
+            background: rgba(30, 30, 60, 0.8);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .stats-panel:hover {
+            border-color: rgba(0, 255, 255, 0.6);
+            background: rgba(30, 30, 60, 0.9);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .ai-panel {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1) 0%, rgba(0, 255, 255, 0.1) 100%);
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .ai-thinking {
+            animation: thinking 2s ease-in-out infinite;
+        }
+
+        @keyframes thinking {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .game-message {
+            background: rgba(15, 15, 35, 0.9);
+            border: 2px solid rgba(0, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 20px;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #000;
+        }
+
+        @media (max-width: 1200px) {
+            .game-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .foundation-area {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .tableau-area {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .game-title h1 {
+                font-size: 20px;
+            }
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <div class="quantum-bg"></div>
+    
+    <div class="main-container">
+        <!-- En-tête du jeu -->
+        <div class="game-header">
+            <div class="game-title">
+                <div class="game-logo">🃏</div>
+                <h1 id="gameTitle">SOLITAIRE FUSION</h1>
+            </div>
+            
+            <div class="language-selector">
+                <div class="language-dropdown" onclick="toggleLanguageDropdown()">
+                    <span id="currentLanguage">🇫🇷 FR</span>
+                    <span style="font-size: 10px;">▼</span>
+                </div>
+                <div class="language-options" id="languageOptions">
+                    <div class="language-option active" onclick="selectLanguage('fr', '🇫🇷 FR')">🇫🇷 Français</div>
+                    <div class="language-option" onclick="selectLanguage('en', '🇬🇧 EN')">🇬🇧 English</div>
+                    <div class="language-option" onclick="selectLanguage('es', '🇪🇸 ES')">🇪🇸 Español</div>
+                    <div class="language-option" onclick="selectLanguage('ar', '🇸🇦 AR')">🇸🇦 العربية</div>
+                    <div class="language-option" onclick="selectLanguage('de', '🇩🇪 DE')">🇩🇪 Deutsch</div>
+                    <div class="language-option" onclick="selectLanguage('zh', '🇨🇳 ZH')">🇨🇳 中文</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloc de contrôles de jeu -->
+        <div class="game-controls">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <button class="quantum-btn action-btn" onclick="newGame()">🚀 <span id="newGameBtn">Nouvelle Partie</span></button>
+                <button class="quantum-btn" onclick="undoMove()" id="undoBtn" disabled>↶ <span id="undoBtnText">Annuler</span></button>
+                <button class="quantum-btn" onclick="getHint()" id="hintBtn">💡 <span id="hintBtnText">Indice</span></button>
+                <button class="quantum-btn danger-btn" onclick="resetGame()">🔄 <span id="resetBtnText">Recommencer</span></button>
+                <button class="quantum-btn" onclick="showRules()">📋 <span id="rulesBtn">Règles</span></button>
+            </div>
+            
+            <div class="difficulty-selector">
+                <button class="quantum-btn difficulty-btn active" onclick="setDifficulty('easy')" id="easyBtn">
+                    <span id="easyBtnText">Facile</span>
+                </button>
+                <button class="quantum-btn difficulty-btn" onclick="setDifficulty('medium')" id="mediumBtn">
+                    <span id="mediumBtnText">Moyen</span>
+                </button>
+                <button class="quantum-btn difficulty-btn" onclick="setDifficulty('hard')" id="hardBtn">
+                    <span id="hardBtnText">Difficile</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <!-- Sidebar gauche - Statistiques -->
+            <div class="sidebar">
+                <div class="section-title" id="statsTitle">📊 Statistiques</div>
+                
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span id="scoreLabel">Score:</span>
+                        <span class="stat-value" id="scoreValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="movesLabel">Coups:</span>
+                        <span class="stat-value" id="movesValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="timeLabel">Temps:</span>
+                        <span class="stat-value" id="timeValue">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="cardsLeftLabel">Cartes restantes:</span>
+                        <span class="stat-value" id="cardsLeftValue">52</span>
+                    </div>
+                </div>
+
+                <div class="section-title" id="progressTitle">🎯 Progression</div>
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span id="foundationsLabel">Fondations:</span>
+                        <span class="stat-value" id="foundationsValue">0/4</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="completionLabel">Complétion:</span>
+                        <span class="stat-value" id="completionValue">0%</span>
+                    </div>
+                </div>
+
+                <div class="section-title" id="bestScoresTitle">🏆 Meilleurs Scores</div>
+                <div class="stats-panel" id="bestScoresPanel">
+                    <div class="stat-item">
+                        <span id="bestTimeLabel">Meilleur temps:</span>
+                        <span class="stat-value" id="bestTimeValue">--:--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="bestScoreLabel">Meilleur score:</span>
+                        <span class="stat-value" id="bestScoreValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="gamesWonLabel">Parties gagnées:</span>
+                        <span class="stat-value" id="gamesWonValue">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plateau de jeu principal -->
+            <div class="game-board">
+                <div class="game-message" id="gameMessage">
+                    <span>Bienvenue au Solitaire Fusion! Cliquez sur "Nouvelle Partie" pour commencer.</span>
+                </div>
+
+                <!-- Zone des fondations -->
+                <div class="section-title" id="foundationsTitle">🏛️ Fondations</div>
+                <div class="foundation-area" id="foundationArea">
+                    <div class="card-pile foundation-pile" data-suit="spades">
+                        <div class="card card-empty">♠</div>
+                    </div>
+                    <div class="card-pile foundation-pile" data-suit="hearts">
+                        <div class="card card-empty">♥</div>
+                    </div>
+                    <div class="card-pile foundation-pile" data-suit="diamonds">
+                        <div class="card card-empty">♦</div>
+                    </div>
+                    <div class="card-pile foundation-pile" data-suit="clubs">
+                        <div class="card card-empty">♣</div>
+                    </div>
+                </div>
+
+                <!-- Zone stock et défausse -->
+                <div class="section-title" id="stockWasteTitle">🎴 Stock & Défausse</div>
+                <div class="stock-waste-area">
+                    <div class="card-pile" id="stockPile">
+                        <div class="card card-back">🃏</div>
+                    </div>
+                    <div class="card-pile" id="wastePile">
+                        <div class="card card-empty">📤</div>
+                    </div>
+                </div>
+
+                <!-- Zone tableau -->
+                <div class="section-title" id="tableauTitle">🎯 Tableau</div>
+                <div class="tableau-area" id="tableauArea">
+                    <div class="card-pile tableau-pile" data-column="0"></div>
+                    <div class="card-pile tableau-pile" data-column="1"></div>
+                    <div class="card-pile tableau-pile" data-column="2"></div>
+                    <div class="card-pile tableau-pile" data-column="3"></div>
+                    <div class="card-pile tableau-pile" data-column="4"></div>
+                    <div class="card-pile tableau-pile" data-column="5"></div>
+                    <div class="card-pile tableau-pile" data-column="6"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar droite - IA et Aide -->
+            <div class="sidebar">
+                <div class="section-title" id="aiTitle">🤖 Assistant IA</div>
+                <div class="ai-panel" id="aiPanel">
+                    <div style="color: #00ffff; font-size: 14px; line-height: 1.4;" id="aiStatusText">
+                        Assistant IA activé<br>
+                        Analyse des coups possibles...
+                    </div>
+                </div>
+                
+                <div class="section-title" id="hintsTitle">💡 Indices</div>
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <span id="hintsUsedLabel">Indices utilisés:</span>
+                        <span class="stat-value" id="hintsUsedValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="hintsAvailableLabel">Indices disponibles:</span>
+                        <span class="stat-value" id="hintsAvailableValue">3</span>
+                    </div>
+                </div>
+
+                <div class="section-title" id="actionsTitle">⚡ Actions Rapides</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="quantum-btn" onclick="autoMoveToFoundations()" id="autoMoveBtn">
+                        🎯 <span id="autoMoveBtnText">Auto-placement</span>
+                    </button>
+                    <button class="quantum-btn" onclick="shuffleWaste()" id="shuffleBtn" disabled>
+                        🔀 <span id="shuffleBtnText">Mélanger défausse</span>
+                    </button>
+                    <button class="quantum-btn action-btn" onclick="celebrateWin()" id="celebrateBtn" style="display: none;">
+                        🎉 <span id="celebrateBtnText">Célébrer!</span>
+                    </button>
+                </div>
+
+                <div class="section-title" id="difficultyTitle">⚙️ Difficulté</div>
+                <div class="stats-panel">
+                    <div style="text-align: center; color: #ffd700; font-weight: bold;" id="currentDifficultyText">
+                        Mode: <span id="currentDifficultyValue">Facile</span>
+                    </div>
+                    <div style="font-size: 12px; text-align: center; margin-top: 10px; color: #aaa;" id="difficultyDescText">
+                        Tirage par 1 carte, indices illimités
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .global-close-btn { position: fixed; top: 14px; right: 14px; z-index: 99999; background: #ff3b3b; color: #fff; border: none; width:52px; height:52px; border-radius:50%; font-size:22px; cursor:pointer; box-shadow:0 6px 18px rgba(255,59,59,0.3);} 
+        .global-close-btn:hover{ transform: scale(1.05); }
+    </style>
+    <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+    <script>
+        function closePlatform(){
+            try{ console.debug('jeux14: closePlatform called'); }catch(e){}
+            try{
+                if(window.parent && window.parent !== window){
+                    window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux14' }, '*');
+                    return;
+                }
+            }catch(e){}
+            try{
+                if(window.opener && !window.opener.closed){
+                    try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux14' }, '*'); }catch(e){}
+                    try{ window.close(); }catch(e){}
+                    return;
+                }
+            }catch(e){}
+            try{ window.location.href = '/detente'; }catch(e){}
+        }
+    </script>
+    <script>
+        // État du jeu
+        let gameState = {
+            isPlaying: false,
+            currentLanguage: 'fr',
+            difficulty: 'easy',
+            score: 0,
+            moves: 0,
+            startTime: null,
+            gameTime: 0,
+            timer: null,
+            deck: [],
+            stock: [],
+            waste: [],
+            foundations: { spades: [], hearts: [], diamonds: [], clubs: [] },
+            tableau: [[], [], [], [], [], [], []],
+            selectedCard: null,
+            selectedPile: null,
+            hintsUsed: 0,
+            hintsAvailable: 3,
+            moveHistory: [],
+            bestScores: JSON.parse(localStorage.getItem('solitaireFusionBestScores')) || {
+                bestTime: null,
+                bestScore: 0,
+                gamesWon: 0
+            }
+        };
+
+        // Traductions
+        const translations = {
+            fr: {
+                gameTitle: 'SOLITAIRE FUSION',
+                statsTitle: '📊 Statistiques',
+                progressTitle: '🎯 Progression',
+                bestScoresTitle: '🏆 Meilleurs Scores',
+                aiTitle: '🤖 Assistant IA',
+                hintsTitle: '💡 Indices',
+                actionsTitle: '⚡ Actions Rapides',
+                difficultyTitle: '⚙️ Difficulté',
+                foundationsTitle: '🏛️ Fondations',
+                stockWasteTitle: '🎴 Stock & Défausse',
+                tableauTitle: '🎯 Tableau',
+                welcomeMessage: 'Bienvenue au Solitaire Fusion! Cliquez sur "Nouvelle Partie" pour commencer.',
+                gameStarted: 'Nouvelle partie commencée! Bonne chance!',
+                gameWon: '🎉 Félicitations! Vous avez gagné!',
+                scoreLabel: 'Score',
+                movesLabel: 'Coups',
+                timeLabel: 'Temps',
+                cardsLeftLabel: 'Cartes restantes',
+                foundationsLabel: 'Fondations',
+                completionLabel: 'Complétion',
+                bestTimeLabel: 'Meilleur temps',
+                bestScoreLabel: 'Meilleur score',
+                gamesWonLabel: 'Parties gagnées',
+                hintsUsedLabel: 'Indices utilisés',
+                hintsAvailableLabel: 'Indices disponibles',
+                currentDifficultyText: 'Mode',
+                newGameBtn: 'Nouvelle Partie',
+                undoBtnText: 'Annuler',
+                hintBtnText: 'Indice',
+                resetBtnText: 'Recommencer',
+                rulesBtn: 'Règles',
+                easyBtnText: 'Facile',
+                mediumBtnText: 'Moyen',
+                hardBtnText: 'Difficile',
+                autoMoveBtnText: 'Auto-placement',
+                shuffleBtnText: 'Mélanger défausse',
+                celebrateBtnText: 'Célébrer!',
+                aiStatus: 'Assistant IA activé\nAnalyse des coups possibles...',
+                difficultyDesc: {
+                    easy: 'Tirage par 1 carte, indices illimités',
+                    medium: 'Tirage par 3 cartes, 5 indices',
+                    hard: 'Tirage par 3 cartes, 3 indices'
+                },
+                hints: {
+                    noMoves: 'Aucun coup évident disponible.',
+                    moveToFoundation: 'Vous pouvez placer {card} sur la fondation {suit}.',
+                    revealCard: 'Retournez la carte dans la colonne {column}.',
+                    moveCard: 'Déplacez {card} sur {target}.',
+                    drawStock: 'Tirez une carte du stock.'
+                }
+            },
+            es: {
+                gameTitle: 'SOLITARIO FUSION',
+                statsTitle: '📊 Estadísticas',
+                progressTitle: '🎯 Progreso',
+                bestScoresTitle: '🏆 Mejores Puntuaciones',
+                aiTitle: '🤖 Asistente IA',
+                hintsTitle: '💡 Pistas',
+                actionsTitle: '⚡ Acciones Rápidas',
+                difficultyTitle: '⚙️ Dificultad',
+                foundationsTitle: '🏛️ Fundaciones',
+                stockWasteTitle: '🎴 Mazo y Descarte',
+                tableauTitle: '🎯 Tablero',
+                welcomeMessage: '¡Bienvenido a Solitario Fusion! Haz clic en "Nueva Partida" para comenzar.',
+                gameStarted: '¡Nueva partida iniciada! ¡Buena suerte!',
+                gameWon: '🎉 ¡Felicitaciones! ¡Has ganado!',
+                scoreLabel: 'Puntuación',
+                movesLabel: 'Movimientos',
+                timeLabel: 'Tiempo',
+                cardsLeftLabel: 'Cartas restantes',
+                foundationsLabel: 'Fundaciones',
+                completionLabel: 'Completado',
+                bestTimeLabel: 'Mejor tiempo',
+                bestScoreLabel: 'Mejor puntuación',
+                gamesWonLabel: 'Partidas ganadas',
+                hintsUsedLabel: 'Pistas usadas',
+                hintsAvailableLabel: 'Pistas disponibles',
+                currentDifficultyText: 'Modo',
+                newGameBtn: 'Nueva Partida',
+                undoBtnText: 'Deshacer',
+                hintBtnText: 'Pista',
+                resetBtnText: 'Reiniciar',
+                rulesBtn: 'Reglas',
+                easyBtnText: 'Fácil',
+                mediumBtnText: 'Medio',
+                hardBtnText: 'Difícil',
+                autoMoveBtnText: 'Auto-mover',
+                shuffleBtnText: 'Mezclar descarte',
+                celebrateBtnText: '¡Celebrar!',
+                aiStatus: 'Asistente IA activado\nAnalizando movimientos posibles...',
+                difficultyDesc: {
+                    easy: 'Robar 1 carta, pistas ilimitadas',
+                    medium: 'Robar 3 cartas, 5 pistas',
+                    hard: 'Robar 3 cartas, 3 pistas'
+                },
+                hints: {
+                    noMoves: 'No hay movimientos obvios disponibles.',
+                    moveToFoundation: 'Puedes colocar {card} en la fundación {suit}.',
+                    revealCard: 'Voltea la carta en la columna {column}.',
+                    moveCard: 'Mueve {card} a {target}.',
+                    drawStock: 'Roba una carta del mazo.'
+                }
+            },
+            ar: {
+                gameTitle: 'سوليتير فيوجن',
+                statsTitle: '📊 الإحصائيات',
+                progressTitle: '🎯 التقدم',
+                bestScoresTitle: '🏆 أفضل النتائج',
+                aiTitle: '🤖 مساعد الذكي',
+                hintsTitle: '💡 التلميحات',
+                actionsTitle: '⚡ إجراءات سريعة',
+                difficultyTitle: '⚙️ الصعوبة',
+                foundationsTitle: '🏛️ الأسس',
+                stockWasteTitle: '🎴 المخزون والنفايات',
+                tableauTitle: '🎯 اللوحة',
+                welcomeMessage: 'مرحباً بك في سوليتير فيوجن! انقر على "لعبة جديدة" للبدء.',
+                gameStarted: 'بدأت لعبة جديدة! حظاً سعيداً!',
+                gameWon: '🎉 تهانينا! لقد فزت!',
+                scoreLabel: 'النقاط',
+                movesLabel: 'الحركات',
+                timeLabel: 'الوقت',
+                cardsLeftLabel: 'الأوراق المتبقية',
+                foundationsLabel: 'الأسس',
+                completionLabel: 'الإنجاز',
+                bestTimeLabel: 'أفضل وقت',
+                bestScoreLabel: 'أفضل نقاط',
+                gamesWonLabel: 'الألعاب المكسوبة',
+                hintsUsedLabel: 'التلميحات المستخدمة',
+                hintsAvailableLabel: 'التلميحات المتاحة',
+                currentDifficultyText: 'الوضع',
+                newGameBtn: 'لعبة جديدة',
+                undoBtnText: 'تراجع',
+                hintBtnText: 'تلميح',
+                resetBtnText: 'إعادة تعيين',
+                rulesBtn: 'القواعد',
+                easyBtnText: 'سهل',
+                mediumBtnText: 'متوسط',
+                hardBtnText: 'صعب',
+                autoMoveBtnText: 'حركة تلقائية',
+                shuffleBtnText: 'خلط النفايات',
+                celebrateBtnText: 'احتفل!',
+                aiStatus: 'تم تفعيل المساعد الذكي\nتحليل الحركات الممكنة...',
+                difficultyDesc: {
+                    easy: 'سحب ورقة واحدة، تلميحات غير محدودة',
+                    medium: 'سحب 3 أوراق، 5 تلميحات',
+                    hard: 'سحب 3 أوراق، 3 تلميحات'
+                },
+                hints: {
+                    noMoves: 'لا توجد حركات واضحة متاحة.',
+                    moveToFoundation: 'يمكنك وضع {card} على أساس {suit}.',
+                    revealCard: 'اقلب الورقة في العمود {column}.',
+                    moveCard: 'انقل {card} إلى {target}.',
+                    drawStock: 'اسحب ورقة من المخزون.'
+                }
+            },
+            de: {
+                gameTitle: 'SOLITÄR FUSION',
+                statsTitle: '📊 Statistiken',
+                progressTitle: '🎯 Fortschritt',
+                bestScoresTitle: '🏆 Beste Ergebnisse',
+                aiTitle: '🤖 KI-Assistent',
+                hintsTitle: '💡 Hinweise',
+                actionsTitle: '⚡ Schnellaktionen',
+                difficultyTitle: '⚙️ Schwierigkeit',
+                foundationsTitle: '🏛️ Fundamente',
+                stockWasteTitle: '🎴 Stapel & Abfall',
+                tableauTitle: '🎯 Tableau',
+                welcomeMessage: 'Willkommen bei Solitär Fusion! Klicken Sie auf "Neues Spiel" um zu beginnen.',
+                gameStarted: 'Neues Spiel gestartet! Viel Glück!',
+                gameWon: '🎉 Herzlichen Glückwunsch! Sie haben gewonnen!',
+                scoreLabel: 'Punkte',
+                movesLabel: 'Züge',
+                timeLabel: 'Zeit',
+                cardsLeftLabel: 'Karten übrig',
+                foundationsLabel: 'Fundamente',
+                completionLabel: 'Fertigstellung',
+                bestTimeLabel: 'Beste Zeit',
+                bestScoreLabel: 'Beste Punkte',
+                gamesWonLabel: 'Gewonnene Spiele',
+                hintsUsedLabel: 'Hinweise verwendet',
+                hintsAvailableLabel: 'Hinweise verfügbar',
+                currentDifficultyText: 'Modus',
+                newGameBtn: 'Neues Spiel',
+                undoBtnText: 'Rückgängig',
+                hintBtnText: 'Hinweis',
+                resetBtnText: 'Zurücksetzen',
+                rulesBtn: 'Regeln',
+                easyBtnText: 'Einfach',
+                mediumBtnText: 'Mittel',
+                hardBtnText: 'Schwer',
+                autoMoveBtnText: 'Auto-Zug',
+                shuffleBtnText: 'Abfall mischen',
+                celebrateBtnText: 'Feiern!',
+                aiStatus: 'KI-Assistent aktiviert\nAnalysiere mögliche Züge...',
+                difficultyDesc: {
+                    easy: '1 Karte ziehen, unbegrenzte Hinweise',
+                    medium: '3 Karten ziehen, 5 Hinweise',
+                    hard: '3 Karten ziehen, 3 Hinweise'
+                },
+                hints: {
+                    noMoves: 'Keine offensichtlichen Züge verfügbar.',
+                    moveToFoundation: 'Sie können {card} auf das {suit} Fundament legen.',
+                    revealCard: 'Drehen Sie die Karte in Spalte {column} um.',
+                    moveCard: 'Bewegen Sie {card} zu {target}.',
+                    drawStock: 'Ziehen Sie eine Karte vom Stapel.'
+                }
+            },
+            zh: {
+                gameTitle: '纸牌融合',
+                statsTitle: '📊 统计',
+                progressTitle: '🎯 进度',
+                bestScoresTitle: '🏆 最佳成绩',
+                aiTitle: '🤖 AI助手',
+                hintsTitle: '💡 提示',
+                actionsTitle: '⚡ 快速操作',
+                difficultyTitle: '⚙️ 难度',
+                foundationsTitle: '🏛️ 基础堆',
+                stockWasteTitle: '🎴 库存和废牌',
+                tableauTitle: '🎯 牌桌',
+                welcomeMessage: '欢迎来到纸牌融合！点击"新游戏"开始。',
+                gameStarted: '新游戏开始！祝你好运！',
+                gameWon: '🎉 恭喜！你赢了！',
+                scoreLabel: '得分',
+                movesLabel: '移动',
+                timeLabel: '时间',
+                cardsLeftLabel: '剩余牌数',
+                foundationsLabel: '基础堆',
+                completionLabel: '完成度',
+                bestTimeLabel: '最佳时间',
+                bestScoreLabel: '最高分',
+                gamesWonLabel: '获胜游戏',
+                hintsUsedLabel: '已用提示',
+                hintsAvailableLabel: '可用提示',
+                currentDifficultyText: '模式',
+                newGameBtn: '新游戏',
+                undoBtnText: '撤销',
+                hintBtnText: '提示',
+                resetBtnText: '重置',
+                rulesBtn: '规则',
+                easyBtnText: '简单',
+                mediumBtnText: '中等',
+                hardBtnText: '困难',
+                autoMoveBtnText: '自动移动',
+                shuffleBtnText: '洗废牌',
+                celebrateBtnText: '庆祝！',
+                aiStatus: 'AI助手已激活\n分析可能的移动...',
+                difficultyDesc: {
+                    easy: '抽1张牌，无限提示',
+                    medium: '抽3张牌，5个提示',
+                    hard: '抽3张牌，3个提示'
+                },
+                hints: {
+                    noMoves: '没有明显的移动可用。',
+                    moveToFoundation: '你可以将{card}放在{suit}基础堆上。',
+                    revealCard: '翻转第{column}列的牌。',
+                    moveCard: '将{card}移动到{target}。',
+                    drawStock: '从库存中抽一张牌。'
+                }
+            },
+            en: {
+                gameTitle: 'SOLITAIRE FUSION',
+                statsTitle: '📊 Statistics',
+                progressTitle: '🎯 Progress',
+                bestScoresTitle: '🏆 Best Scores',
+                aiTitle: '🤖 AI Assistant',
+                hintsTitle: '💡 Hints',
+                actionsTitle: '⚡ Quick Actions',
+                difficultyTitle: '⚙️ Difficulty',
+                foundationsTitle: '🏛️ Foundations',
+                stockWasteTitle: '🎴 Stock & Waste',
+                tableauTitle: '🎯 Tableau',
+                welcomeMessage: 'Welcome to Solitaire Fusion! Click "New Game" to start.',
+                gameStarted: 'New game started! Good luck!',
+                gameWon: '🎉 Congratulations! You won!',
+                scoreLabel: 'Score',
+                movesLabel: 'Moves',
+                timeLabel: 'Time',
+                cardsLeftLabel: 'Cards left',
+                foundationsLabel: 'Foundations',
+                completionLabel: 'Completion',
+                bestTimeLabel: 'Best time',
+                bestScoreLabel: 'Best score',
+                gamesWonLabel: 'Games won',
+                hintsUsedLabel: 'Hints used',
+                hintsAvailableLabel: 'Hints available',
+                currentDifficultyText: 'Mode',
+                newGameBtn: 'New Game',
+                undoBtnText: 'Undo',
+                hintBtnText: 'Hint',
+                resetBtnText: 'Reset',
+                rulesBtn: 'Rules',
+                easyBtnText: 'Easy',
+                mediumBtnText: 'Medium',
+                hardBtnText: 'Hard',
+                autoMoveBtnText: 'Auto-move',
+                shuffleBtnText: 'Shuffle waste',
+                celebrateBtnText: 'Celebrate!',
+                aiStatus: 'AI Assistant activated\nAnalyzing possible moves...',
+                difficultyDesc: {
+                    easy: 'Draw 1 card, unlimited hints',
+                    medium: 'Draw 3 cards, 5 hints',
+                    hard: 'Draw 3 cards, 3 hints'
+                },
+                hints: {
+                    noMoves: 'No obvious moves available.',
+                    moveToFoundation: 'You can place {card} on {suit} foundation.',
+                    revealCard: 'Flip the card in column {column}.',
+                    moveCard: 'Move {card} to {target}.',
+                    drawStock: 'Draw a card from stock.'
+                }
+            }
+        };
+
+        // Créer un jeu de cartes
+        function createDeck() {
+            const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+            const suitSymbols = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
+            const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+            const deck = [];
+            
+            for (let suit of suits) {
+                for (let i = 0; i < ranks.length; i++) {
+                    deck.push({
+                        suit: suit,
+                        rank: ranks[i],
+                        value: i + 1,
+                        symbol: suitSymbols[suit],
+                        color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black',
+                        faceUp: false
+                    });
+                }
+            }
+            
+            return createWinnableDeck(shuffleDeck(deck));
+        }
+
+        // Créer un jeu avec 80% de chances de victoire
+        function createWinnableDeck(deck) {
+            // 80% de chance de créer une configuration gagnante
+            if (Math.random() < 0.8) {
+                return optimizeDeckForWinning(deck);
+            }
+            return deck;
+        }
+
+        // Optimiser le jeu pour augmenter les chances de victoire
+        function optimizeDeckForWinning(deck) {
+            // Placer plus d'As et de cartes basses dans les positions accessibles
+            const aces = deck.filter(card => card.rank === 'A');
+            const lowCards = deck.filter(card => card.value <= 4 && card.rank !== 'A');
+            const otherCards = deck.filter(card => card.value > 4);
+            
+            // Mélanger chaque groupe séparément
+            const shuffledAces = shuffleDeck([...aces]);
+            const shuffledLowCards = shuffleDeck([...lowCards]);
+            const shuffledOtherCards = shuffleDeck([...otherCards]);
+            
+            // Répartir de manière à favoriser l'accès aux cartes importantes
+            const optimizedDeck = [];
+            
+            // Alterner les types de cartes pour une meilleure distribution
+            let aceIndex = 0, lowIndex = 0, otherIndex = 0;
+            
+            for (let i = 0; i < 52; i++) {
+                if (i % 4 === 0 && aceIndex < shuffledAces.length) {
+                    optimizedDeck.push(shuffledAces[aceIndex++]);
+                } else if (i % 3 === 0 && lowIndex < shuffledLowCards.length) {
+                    optimizedDeck.push(shuffledLowCards[lowIndex++]);
+                } else if (otherIndex < shuffledOtherCards.length) {
+                    optimizedDeck.push(shuffledOtherCards[otherIndex++]);
+                } else if (lowIndex < shuffledLowCards.length) {
+                    optimizedDeck.push(shuffledLowCards[lowIndex++]);
+                } else if (aceIndex < shuffledAces.length) {
+                    optimizedDeck.push(shuffledAces[aceIndex++]);
+                }
+            }
+            
+            return optimizedDeck;
+        }
+
+        // Mélanger le jeu
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        // Créer les particules quantiques
+        function createQuantumParticles() {
+            const bg = document.querySelector('.quantum-bg');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'quantum-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                bg.appendChild(particle);
+            }
+        }
+
+        // Basculer le dropdown de langue
+        function toggleLanguageDropdown() {
+            const options = document.getElementById('languageOptions');
+            options.classList.toggle('show');
+            
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!e.target.closest('.language-selector')) {
+                    options.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }
+
+        // Sélectionner une langue
+        function selectLanguage(langCode, langText) {
+            gameState.currentLanguage = langCode;
+            
+            document.getElementById('currentLanguage').textContent = langText;
+            
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('languageOptions').classList.remove('show');
+            
+            updateLanguageInterface();
+        }
+
+        // Mettre à jour l'interface selon la langue
+        function updateLanguageInterface() {
+            const t = translations[gameState.currentLanguage];
+            
+            // Titres principaux
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('statsTitle').textContent = t.statsTitle;
+            document.getElementById('progressTitle').textContent = t.progressTitle;
+            document.getElementById('bestScoresTitle').textContent = t.bestScoresTitle;
+            document.getElementById('aiTitle').textContent = t.aiTitle;
+            document.getElementById('hintsTitle').textContent = t.hintsTitle;
+            document.getElementById('actionsTitle').textContent = t.actionsTitle;
+            document.getElementById('difficultyTitle').textContent = t.difficultyTitle;
+            document.getElementById('foundationsTitle').textContent = t.foundationsTitle;
+            document.getElementById('stockWasteTitle').textContent = t.stockWasteTitle;
+            document.getElementById('tableauTitle').textContent = t.tableauTitle;
+            
+            // Labels des statistiques
+            document.getElementById('scoreLabel').textContent = t.scoreLabel + ':';
+            document.getElementById('movesLabel').textContent = t.movesLabel + ':';
+            document.getElementById('timeLabel').textContent = t.timeLabel + ':';
+            document.getElementById('cardsLeftLabel').textContent = t.cardsLeftLabel + ':';
+            document.getElementById('foundationsLabel').textContent = t.foundationsLabel + ':';
+            document.getElementById('completionLabel').textContent = t.completionLabel + ':';
+            document.getElementById('bestTimeLabel').textContent = t.bestTimeLabel + ':';
+            document.getElementById('bestScoreLabel').textContent = t.bestScoreLabel + ':';
+            document.getElementById('gamesWonLabel').textContent = t.gamesWonLabel + ':';
+            document.getElementById('hintsUsedLabel').textContent = t.hintsUsedLabel + ':';
+            document.getElementById('hintsAvailableLabel').textContent = t.hintsAvailableLabel + ':';
+            
+            // Boutons
+            document.getElementById('newGameBtn').textContent = t.newGameBtn;
+            document.getElementById('undoBtnText').textContent = t.undoBtnText;
+            document.getElementById('hintBtnText').textContent = t.hintBtnText;
+            document.getElementById('resetBtnText').textContent = t.resetBtnText;
+            document.getElementById('rulesBtn').textContent = t.rulesBtn;
+            document.getElementById('easyBtnText').textContent = t.easyBtnText;
+            document.getElementById('mediumBtnText').textContent = t.mediumBtnText;
+            document.getElementById('hardBtnText').textContent = t.hardBtnText;
+            document.getElementById('autoMoveBtnText').textContent = t.autoMoveBtnText;
+            document.getElementById('shuffleBtnText').textContent = t.shuffleBtnText;
+            document.getElementById('celebrateBtnText').textContent = t.celebrateBtnText;
+            
+            // Textes dynamiques
+            document.getElementById('aiStatusText').innerHTML = t.aiStatus.replace('\n', '<br>');
+            document.getElementById('currentDifficultyText').innerHTML = `${t.currentDifficultyText}: <span id="currentDifficultyValue">${t[gameState.difficulty + 'BtnText']}</span>`;
+            document.getElementById('difficultyDescText').textContent = t.difficultyDesc[gameState.difficulty];
+            
+            if (!gameState.isPlaying) {
+                document.getElementById('gameMessage').innerHTML = `<span>${t.welcomeMessage}</span>`;
+            }
+        }
+
+        // Définir la difficulté
+        function setDifficulty(level) {
+            gameState.difficulty = level;
+            
+            // Mettre à jour les boutons
+            document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(level + 'Btn').classList.add('active');
+            
+            // Ajuster les paramètres selon la difficulté
+            switch(level) {
+                case 'easy':
+                    gameState.hintsAvailable = 999;
+                    break;
+                case 'medium':
+                    gameState.hintsAvailable = 5;
+                    break;
+                case 'hard':
+                    gameState.hintsAvailable = 3;
+                    break;
+            }
+            
+            updateLanguageInterface();
+            updateDisplay();
+        }
+
+        // Nouvelle partie
+        function newGame() {
+            gameState.isPlaying = true;
+            gameState.score = 0;
+            gameState.moves = 0;
+            gameState.startTime = Date.now();
+            gameState.gameTime = 0;
+            gameState.hintsUsed = 0;
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            gameState.moveHistory = [];
+            
+            // Réinitialiser les piles
+            gameState.foundations = { spades: [], hearts: [], diamonds: [], clubs: [] };
+            gameState.tableau = [[], [], [], [], [], [], []];
+            gameState.stock = [];
+            gameState.waste = [];
+            
+            // Créer et distribuer les cartes
+            gameState.deck = createDeck();
+            dealCards();
+            
+            // Démarrer le timer
+            if (gameState.timer) clearInterval(gameState.timer);
+            gameState.timer = setInterval(updateTimer, 1000);
+            
+            // Activer les boutons
+            document.getElementById('undoBtn').disabled = false;
+            document.getElementById('hintBtn').disabled = false;
+            
+            updateDisplay();
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameStarted);
+        }
+
+        // Distribuer les cartes
+        function dealCards() {
+            // Distribuer au tableau (1, 2, 3, 4, 5, 6, 7 cartes par colonne)
+            for (let col = 0; col < 7; col++) {
+                for (let row = 0; row <= col; row++) {
+                    const card = gameState.deck.pop();
+                    card.faceUp = (row === col); // Dernière carte face visible
+                    gameState.tableau[col].push(card);
+                }
+            }
+            
+            // Le reste va au stock
+            gameState.stock = [...gameState.deck];
+            gameState.waste = [];
+            
+            renderBoard();
+        }
+
+        // Afficher le plateau
+        function renderBoard() {
+            renderFoundations();
+            renderStock();
+            renderWaste();
+            renderTableau();
+        }
+
+        // Afficher les fondations
+        function renderFoundations() {
+            const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+            suits.forEach((suit, index) => {
+                const pile = document.querySelector(`[data-suit="${suit}"]`);
+                pile.innerHTML = '';
+                
+                if (gameState.foundations[suit].length === 0) {
+                    const suitSymbols = { spades: '♠', hearts: '♥', diamonds: '♦', clubs: '♣' };
+                    const emptyCard = document.createElement('div');
+                    emptyCard.className = 'card card-empty';
+                    emptyCard.innerHTML = suitSymbols[suit];
+                    emptyCard.onclick = () => handleFoundationClick(pile);
+                    pile.appendChild(emptyCard);
+                } else {
+                    const topCard = gameState.foundations[suit][gameState.foundations[suit].length - 1];
+                    const cardElement = createCardElement(topCard);
+                    cardElement.onclick = () => handleFoundationClick(pile);
+                    pile.appendChild(cardElement);
+                }
+            });
+        }
+
+        // Afficher le stock
+        function renderStock() {
+            const stockPile = document.getElementById('stockPile');
+            stockPile.innerHTML = '';
+            
+            if (gameState.stock.length > 0) {
+                const stockCard = document.createElement('div');
+                stockCard.className = 'card card-back';
+                stockCard.innerHTML = '🃏';
+                stockCard.onclick = drawFromStock;
+                stockPile.appendChild(stockCard);
+            } else {
+                const emptyCard = document.createElement('div');
+                emptyCard.className = 'card card-empty';
+                emptyCard.innerHTML = '🔄';
+                emptyCard.onclick = drawFromStock;
+                stockPile.appendChild(emptyCard);
+            }
+        }
+
+        // Afficher la défausse
+        function renderWaste() {
+            const wastePile = document.getElementById('wastePile');
+            wastePile.innerHTML = '';
+            
+            if (gameState.waste.length === 0) {
+                const emptyCard = document.createElement('div');
+                emptyCard.className = 'card card-empty';
+                emptyCard.innerHTML = '📤';
+                wastePile.appendChild(emptyCard);
+            } else {
+                const topCard = gameState.waste[gameState.waste.length - 1];
+                const cardElement = createCardElement(topCard);
+                cardElement.onclick = () => handleCardClick(topCard, 'waste', 0);
+                cardElement.ondblclick = () => tryAutoMoveCard(topCard, 'waste', 0);
+                wastePile.appendChild(cardElement);
+            }
+        }
+
+        // Afficher le tableau
+        function renderTableau() {
+            for (let col = 0; col < 7; col++) {
+                const pile = document.querySelector(`[data-column="${col}"]`);
+                pile.innerHTML = '';
+                
+                const columnCards = gameState.tableau[col];
+                
+                if (columnCards.length === 0) {
+                    const emptyCard = document.createElement('div');
+                    emptyCard.className = 'card card-empty';
+                    emptyCard.innerHTML = '👑';
+                    emptyCard.onclick = () => handleTableauClick(col);
+                    pile.appendChild(emptyCard);
+                } else {
+                    columnCards.forEach((card, index) => {
+                        const cardElement = createCardElement(card);
+                        cardElement.style.position = 'absolute';
+                        cardElement.style.top = (index * 20) + 'px';
+                        cardElement.style.zIndex = index + 1;
+                        cardElement.onclick = () => handleCardClick(card, 'tableau', col);
+                        cardElement.ondblclick = () => tryAutoMoveCard(card, 'tableau', col);
+                        pile.appendChild(cardElement);
+                    });
+                }
+            }
+        }
+
+        // Créer un élément carte
+        function createCardElement(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.color}`;
+            
+            if (card.faceUp) {
+                let centerContent = '';
+                
+                // Contenu central selon le rang
+                if (card.rank === 'A') {
+                    centerContent = `<div style="font-size: 40px; font-weight: bold; color: ${card.color === 'red' ? '#d63031' : '#2d3436'}; text-shadow: 0 0 3px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; height: 100%;">${card.symbol}</div>`;
+                } else if (card.rank === 'J') {
+                    centerContent = `<div style="font-size: 50px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; color: ${card.color === 'red' ? '#d63031' : '#2d3436'}; text-shadow: 0 0 3px rgba(0,0,0,0.4);">
+                        <div style="font-size: 40px; margin-bottom: 2px;">👨‍💼</div>
+                        <div style="font-size: 24px; font-weight: bold; letter-spacing: 1px;">J</div>
+                    </div>`;
+                } else if (card.rank === 'Q') {
+                    centerContent = `<div style="font-size: 50px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; color: ${card.color === 'red' ? '#d63031' : '#2d3436'}; text-shadow: 0 0 3px rgba(0,0,0,0.4);">
+                        <div style="font-size: 40px; margin-bottom: 2px;">👸</div>
+                        <div style="font-size: 24px; font-weight: bold; letter-spacing: 1px;">Q</div>
+                    </div>`;
+                } else if (card.rank === 'K') {
+                    centerContent = `<div style="font-size: 50px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; color: ${card.color === 'red' ? '#d63031' : '#2d3436'}; text-shadow: 0 0 3px rgba(0,0,0,0.4);">
+                        <div style="font-size: 40px; margin-bottom: 2px;">🤴</div>
+                        <div style="font-size: 24px; font-weight: bold; letter-spacing: 1px;">K</div>
+                    </div>`;
+                } else {
+                    // Cartes numériques (2-10) - afficher le nombre correct de symboles
+                    const numValue = parseInt(card.rank);
+                    if (numValue >= 2 && numValue <= 10) {
+                        let symbolsArray = [];
+                        for (let i = 0; i < numValue; i++) {
+                            symbolsArray.push(`<span style="font-size: 18px; font-weight: bold; color: ${card.color === 'red' ? '#d63031' : '#2d3436'}; text-shadow: 0 0 2px rgba(0,0,0,0.3);">${card.symbol}</span>`);
+                        }
+                        
+                        // Disposition équilibrée selon le nombre exact
+                        if (numValue === 2) {
+                            centerContent = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; height: 80%; padding: 8px 0;">${symbolsArray.join('')}</div>`;
+                        } else if (numValue === 3) {
+                            centerContent = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: space-around; height: 85%; padding: 6px 0;">${symbolsArray.join('')}</div>`;
+                        } else if (numValue === 4) {
+                            centerContent = `<div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; align-items: center; justify-items: center; height: 70%; width: 70%; margin: auto; justify-self: center;">${symbolsArray.join('')}</div>`;
+                        } else if (numValue === 5) {
+                            centerContent = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 85%; width: 100%; padding: 4px 0;">
+                                <div style="display: flex; justify-content: space-around; width: 80%;">${symbolsArray[0]}${symbolsArray[1]}</div>
+                                <div style="display: flex; justify-content: center; width: 80%;">${symbolsArray[2]}</div>
+                                <div style="display: flex; justify-content: space-around; width: 80%;">${symbolsArray[3]}${symbolsArray[4]}</div>
+                            </div>`;
+                        } else if (numValue === 6) {
+                            centerContent = `<div style="display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 2px; align-items: center; justify-items: center; height: 80%; width: 70%; margin: auto; justify-self: center;">${symbolsArray.join('')}</div>`;
+                        } else if (numValue === 7) {
+                            centerContent = `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 1px; align-items: center; justify-items: center; height: 85%; width: 85%; margin: auto;">
+                                ${symbolsArray[0]}${symbolsArray[1]}${symbolsArray[2]}<div></div>${symbolsArray[3]}<div></div>${symbolsArray[4]}${symbolsArray[5]}${symbolsArray[6]}
+                            </div>`;
+                        } else if (numValue === 8) {
+                            centerContent = `<div style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 90%; width: 100%; padding: 2px 0;">
+                                <div style="display: flex; justify-content: space-around; width: 85%;">${symbolsArray[0]}${symbolsArray[1]}${symbolsArray[2]}</div>
+                                <div style="display: flex; justify-content: center; width: 85%; gap: 8px;">${symbolsArray[3]}${symbolsArray[4]}</div>
+                                <div style="display: flex; justify-content: space-around; width: 85%;">${symbolsArray[5]}${symbolsArray[6]}${symbolsArray[7]}</div>
+                            </div>`;
+                        } else if (numValue === 9) {
+                            centerContent = `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 1px; align-items: center; justify-items: center; height: 85%; width: 85%; margin: auto;">${symbolsArray.join('')}</div>`;
+                        } else if (numValue === 10) {
+                            centerContent = `<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 1px; align-items: center; justify-items: center; height: 85%; width: 90%; margin: auto;">
+                                ${symbolsArray[0]}${symbolsArray[1]}${symbolsArray[2]}${symbolsArray[3]}${symbolsArray[4]}${symbolsArray[5]}${symbolsArray[6]}${symbolsArray[7]}${symbolsArray[8]}${symbolsArray[9]}
+                            </div>`;
+                        }
+                    } else {
+                        centerContent = `<div style="font-size: 32px; font-weight: bold;">${card.symbol}</div>`;
+                    }
+                }
+                
+                // Masquer les coins pour les figures (J, Q, K) pour un look plus classique
+                const hideCornersForFigures = ['J', 'Q', 'K'].includes(card.rank);
+                
+                cardElement.innerHTML = `
+                    <div style="position: absolute; top: 3px; left: 3px; font-size: 9px; font-weight: bold; line-height: 1; ${hideCornersForFigures ? 'opacity: 0.3;' : ''}">
+                        <div>${card.rank}</div>
+                        <div style="font-size: 8px;">${card.symbol}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
+                        ${centerContent}
+                    </div>
+                    <div style="position: absolute; bottom: 3px; right: 3px; font-size: 9px; font-weight: bold; transform: rotate(180deg); line-height: 1; ${hideCornersForFigures ? 'opacity: 0.3;' : ''}">
+                        <div>${card.rank}</div>
+                        <div style="font-size: 8px;">${card.symbol}</div>
+                    </div>
+                `;
+            } else {
+                cardElement.className = 'card card-back';
+                cardElement.innerHTML = '🃏';
+            }
+            
+            cardElement.cardData = card;
+            return cardElement;
+        }
+
+        // Gérer le clic sur une carte
+        function handleCardClick(card, pileType, pileIndex) {
+            if (!gameState.isPlaying) {
+                showMessage('Commencez une nouvelle partie pour jouer!');
+                return;
+            }
+            
+            if (!card.faceUp && pileType === 'tableau') {
+                // Retourner la carte si elle est face cachée
+                card.faceUp = true;
+                gameState.moves++;
+                gameState.score += 5;
+                addToHistory('flip', { card, pileType, pileIndex });
+                renderBoard();
+                updateDisplay();
+                showMessage(`Carte ${card.rank}${card.symbol} retournée!`);
+                return;
+            }
+            
+            if (gameState.selectedCard) {
+                // Tentative de déplacement
+                if (gameState.selectedCard === card) {
+                    // Désélectionner si on clique sur la même carte
+                    clearSelection();
+                    showMessage('Sélection annulée.');
+                    return;
+                }
+                
+                if (canMoveCard(gameState.selectedCard, card, pileType, pileIndex)) {
+                    moveCard(gameState.selectedCard, gameState.selectedPile, card, pileType, pileIndex);
+                    showMessage(`${gameState.selectedCard.rank}${gameState.selectedCard.symbol} déplacé sur ${card.rank}${card.symbol}!`);
+                } else {
+                    showMessage('Déplacement impossible! Vérifiez les règles.');
+                }
+                clearSelection();
+            } else {
+                // Sélectionner la carte
+                if (card.faceUp && canSelectCard(card, pileType, pileIndex)) {
+                    selectCard(card, pileType, pileIndex);
+                    showMessage(`${card.rank}${card.symbol} sélectionné. Cliquez sur la destination.`);
+                } else {
+                    showMessage('Cette carte ne peut pas être sélectionnée.');
+                }
+            }
+        }
+
+        // Vérifier si une carte peut être sélectionnée
+        function canSelectCard(card, pileType, pileIndex) {
+            if (pileType === 'tableau') {
+                const column = gameState.tableau[pileIndex];
+                const cardIndex = column.indexOf(card);
+                return cardIndex === column.length - 1 || isValidSequence(column, cardIndex);
+            } else if (pileType === 'waste') {
+                return gameState.waste[gameState.waste.length - 1] === card;
+            } else if (pileType === 'foundation') {
+                const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+                const foundation = gameState.foundations[suits[pileIndex]];
+                return foundation[foundation.length - 1] === card;
+            }
+            return false;
+        }
+
+        // Vérifier si les cartes forment une séquence valide
+        function isValidSequence(column, startIndex) {
+            for (let i = startIndex; i < column.length - 1; i++) {
+                const current = column[i];
+                const next = column[i + 1];
+                if (current.color === next.color || current.value !== next.value + 1) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Gérer le clic sur une colonne vide du tableau
+        function handleTableauClick(columnIndex) {
+            if (!gameState.isPlaying) {
+                showMessage('Commencez une nouvelle partie pour jouer!');
+                return;
+            }
+            
+            if (gameState.selectedCard && gameState.selectedCard.rank === 'K') {
+                moveCard(gameState.selectedCard, gameState.selectedPile, null, 'tableau', columnIndex);
+                showMessage(`Roi ${gameState.selectedCard.symbol} placé sur colonne vide!`);
+                clearSelection();
+            } else if (gameState.selectedCard) {
+                showMessage('Seuls les Rois peuvent être placés sur des colonnes vides!');
+            }
+        }
+
+        // Sélectionner une carte
+        function selectCard(card, pileType, pileIndex) {
+            gameState.selectedCard = card;
+            gameState.selectedPile = { type: pileType, index: pileIndex };
+            
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            
+            const cardElements = document.querySelectorAll('.card');
+            cardElements.forEach(element => {
+                if (element.cardData && 
+                    element.cardData.rank === card.rank && 
+                    element.cardData.suit === card.suit) {
+                    element.classList.add('selected');
+                }
+            });
+        }
+
+        // Effacer la sélection
+        function clearSelection() {
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+        }
+
+        // Vérifier si un déplacement est possible
+        function canMoveCard(fromCard, toCard, toPileType, toPileIndex) {
+            if (toPileType === 'foundation') {
+                const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+                return canMoveToFoundation(fromCard, suits[toPileIndex]);
+            } else if (toPileType === 'tableau') {
+                return canMoveToTableau(fromCard, toCard, toPileIndex);
+            }
+            return false;
+        }
+
+        // Vérifier si on peut déplacer vers une fondation
+        function canMoveToFoundation(card, suit) {
+            const foundation = gameState.foundations[suit];
+            
+            if (foundation.length === 0) {
+                return card.rank === 'A';
+            } else {
+                const topCard = foundation[foundation.length - 1];
+                return card.suit === suit && card.value === topCard.value + 1;
+            }
+        }
+
+        // Vérifier si on peut déplacer vers le tableau
+        function canMoveToTableau(card, targetCard, columnIndex) {
+            const column = gameState.tableau[columnIndex];
+            
+            if (column.length === 0) {
+                return card.rank === 'K';
+            } else {
+                return targetCard.color !== card.color && targetCard.value === card.value + 1;
+            }
+        }
+
+        // Déplacer une carte ou une séquence
+        function moveCard(fromCard, fromPile, toCard, toPileType, toPileIndex) {
+            const cardsToMove = getCardsToMove(fromCard, fromPile);
+            
+            // Retirer les cartes de leur pile d'origine
+            removeCardsFromPile(cardsToMove, fromPile);
+            
+            // Ajouter les cartes à leur nouvelle destination
+            if (toPileType === 'foundation') {
+                const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+                gameState.foundations[suits[toPileIndex]].push(fromCard);
+                gameState.score += 10;
+            } else if (toPileType === 'tableau') {
+                cardsToMove.forEach(card => {
+                    gameState.tableau[toPileIndex].push(card);
+                });
+                gameState.score += cardsToMove.length * 5;
+            }
+            
+            gameState.moves++;
+            
+            addToHistory('move', {
+                cardsToMove, fromPile, toCard, toPileType, toPileIndex
+            });
+            
+            renderBoard();
+            updateDisplay();
+            checkWinCondition();
+        }
+
+        // Obtenir les cartes à déplacer (carte seule ou séquence)
+        function getCardsToMove(fromCard, fromPile) {
+            if (fromPile.type === 'tableau') {
+                const column = gameState.tableau[fromPile.index];
+                const cardIndex = column.indexOf(fromCard);
+                return column.slice(cardIndex);
+            } else {
+                return [fromCard];
+            }
+        }
+
+        // Tirer du stock
+        function drawFromStock() {
+            if (!gameState.isPlaying) {
+                showMessage('Commencez une nouvelle partie pour jouer!');
+                return;
+            }
+            
+            clearSelection();
+            
+            if (gameState.stock.length === 0) {
+                if (gameState.waste.length === 0) {
+                    showMessage('Plus de cartes disponibles!');
+                    return;
+                }
+                
+                // Remettre la défausse dans le stock
+                gameState.stock = [...gameState.waste].reverse();
+                gameState.waste = [];
+                gameState.stock.forEach(card => card.faceUp = false);
+                gameState.moves++;
+                showMessage('Stock rechargé depuis la défausse!');
+            } else {
+                // Tirer des cartes selon la difficulté
+                const drawCount = gameState.difficulty === 'easy' ? 1 : 3;
+                const drawnCards = [];
+                
+                for (let i = 0; i < drawCount && gameState.stock.length > 0; i++) {
+                    const card = gameState.stock.pop();
+                    card.faceUp = true;
+                    gameState.waste.push(card);
+                    drawnCards.push(card);
+                }
+                
+                gameState.moves++;
+                
+                if (drawnCards.length > 0) {
+                    const lastCard = drawnCards[drawnCards.length - 1];
+                    showMessage(`Carte tirée: ${lastCard.rank}${lastCard.symbol}`);
+                }
+            }
+            
+            renderBoard();
+            updateDisplay();
+        }
+
+        // Gérer le clic sur une fondation
+        function handleFoundationClick(element) {
+            const suit = element.dataset.suit;
+            const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+            const suitIndex = suits.indexOf(suit);
+            
+            if (!gameState.isPlaying) {
+                showMessage('Commencez une nouvelle partie pour jouer!');
+                return;
+            }
+            
+            if (gameState.selectedCard) {
+                if (canMoveToFoundation(gameState.selectedCard, suit)) {
+                    moveCard(gameState.selectedCard, gameState.selectedPile, null, 'foundation', suitIndex);
+                    showMessage(`${gameState.selectedCard.rank}${gameState.selectedCard.symbol} placé sur la fondation!`);
+                    clearSelection();
+                } else {
+                    showMessage('Cette carte ne peut pas être placée sur cette fondation!');
+                }
+            } else {
+                // Sélectionner la carte du dessus de la fondation si elle existe
+                const foundation = gameState.foundations[suit];
+                if (foundation.length > 0) {
+                    const topCard = foundation[foundation.length - 1];
+                    selectCard(topCard, 'foundation', suitIndex);
+                    showMessage(`${topCard.rank}${topCard.symbol} sélectionné depuis la fondation.`);
+                }
+            }
+        }
+
+        // Retirer des cartes de leur pile
+        function removeCardsFromPile(cards, pile) {
+            if (pile.type === 'tableau') {
+                const column = gameState.tableau[pile.index];
+                const firstCardIndex = column.indexOf(cards[0]);
+                column.splice(firstCardIndex, cards.length);
+                
+                // Retourner la carte suivante si nécessaire
+                if (column.length > 0 && !column[column.length - 1].faceUp) {
+                    column[column.length - 1].faceUp = true;
+                    gameState.score += 5;
+                }
+            } else if (pile.type === 'waste') {
+                gameState.waste.pop();
+            } else if (pile.type === 'foundation') {
+                const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+                gameState.foundations[suits[pile.index]].pop();
+            }
+        }
+
+        // Ajouter à l'historique
+        function addToHistory(action, data) {
+            gameState.moveHistory.push({ action, data, timestamp: Date.now() });
+        }
+
+        // Annuler le dernier coup
+        function undoMove() {
+            if (gameState.moveHistory.length === 0) return;
+            
+            const lastMove = gameState.moveHistory.pop();
+            
+            gameState.moves = Math.max(0, gameState.moves - 1);
+            renderBoard();
+            updateDisplay();
+        }
+
+        // Obtenir un indice
+        function getHint() {
+            if (gameState.hintsAvailable <= 0) return;
+            
+            gameState.hintsUsed++;
+            gameState.hintsAvailable--;
+            
+            const t = translations[gameState.currentLanguage];
+            
+            const hints = [
+                t.hints.drawStock,
+                t.hints.noMoves
+            ];
+            
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            showMessage(randomHint);
+            
+            const aiPanel = document.getElementById('aiPanel');
+            aiPanel.classList.add('ai-thinking');
+            setTimeout(() => {
+                aiPanel.classList.remove('ai-thinking');
+            }, 2000);
+            
+            updateDisplay();
+        }
+
+        // Auto-placement vers les fondations
+        function autoMoveToFoundations() {
+            if (!gameState.isPlaying) {
+                showMessage('Commencez une nouvelle partie pour jouer!');
+                return;
+            }
+            
+            let moved = false;
+            let movedCards = [];
+            
+            // Vérifier toutes les cartes visibles pour un placement automatique
+            for (let col = 0; col < 7; col++) {
+                const column = gameState.tableau[col];
+                if (column.length > 0) {
+                    const topCard = column[column.length - 1];
+                    if (topCard.faceUp) {
+                        for (let suit in gameState.foundations) {
+                            if (canMoveToFoundation(topCard, suit)) {
+                                gameState.foundations[suit].push(topCard);
+                                column.pop();
+                                
+                                if (column.length > 0 && !column[column.length - 1].faceUp) {
+                                    column[column.length - 1].faceUp = true;
+                                    gameState.score += 5;
+                                }
+                                
+                                gameState.moves++;
+                                gameState.score += 10;
+                                movedCards.push(`${topCard.rank}${topCard.symbol}`);
+                                moved = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Vérifier la défausse
+            if (gameState.waste.length > 0) {
+                const topCard = gameState.waste[gameState.waste.length - 1];
+                for (let suit in gameState.foundations) {
+                    if (canMoveToFoundation(topCard, suit)) {
+                        gameState.foundations[suit].push(topCard);
+                        gameState.waste.pop();
+                        gameState.moves++;
+                        gameState.score += 10;
+                        movedCards.push(`${topCard.rank}${topCard.symbol}`);
+                        moved = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (moved) {
+                showMessage(`Auto-placement: ${movedCards.join(', ')} déplacé(s)!`);
+                renderBoard();
+                updateDisplay();
+                checkWinCondition();
+            } else {
+                showMessage('Aucun auto-placement possible pour le moment.');
+            }
+        }
+
+        // Essayer de déplacer automatiquement une carte
+        function tryAutoMoveCard(card, pileType, pileIndex) {
+            if (!gameState.isPlaying) return;
+            
+            // Essayer de placer sur une fondation
+            for (let suit in gameState.foundations) {
+                if (canMoveToFoundation(card, suit)) {
+                    const suits = ['spades', 'hearts', 'diamonds', 'clubs'];
+                    const suitIndex = suits.indexOf(suit);
+                    moveCard(card, { type: pileType, index: pileIndex }, null, 'foundation', suitIndex);
+                    showMessage(`${card.rank}${card.symbol} auto-placé sur la fondation!`);
+                    return;
+                }
+            }
+            
+            // Essayer de placer sur le tableau
+            for (let col = 0; col < 7; col++) {
+                const column = gameState.tableau[col];
+                if (column.length === 0 && card.rank === 'K') {
+                    moveCard(card, { type: pileType, index: pileIndex }, null, 'tableau', col);
+                    showMessage(`${card.rank}${card.symbol} auto-placé sur colonne vide!`);
+                    return;
+                } else if (column.length > 0) {
+                    const topCard = column[column.length - 1];
+                    if (canMoveToTableau(card, topCard, col)) {
+                        moveCard(card, { type: pileType, index: pileIndex }, topCard, 'tableau', col);
+                        showMessage(`${card.rank}${card.symbol} auto-placé sur ${topCard.rank}${topCard.symbol}!`);
+                        return;
+                    }
+                }
+            }
+            
+            showMessage(`Aucun placement automatique possible pour ${card.rank}${card.symbol}.`);
+        }
+
+        // Mélanger la défausse
+        function shuffleWaste() {
+            if (gameState.waste.length > 0) {
+                gameState.waste = shuffleDeck(gameState.waste);
+                renderBoard();
+                showMessage('Défausse mélangée!');
+            }
+        }
+
+        // Vérifier la condition de victoire
+        function checkWinCondition() {
+            const totalFoundationCards = Object.values(gameState.foundations)
+                .reduce((sum, pile) => sum + pile.length, 0);
+            
+            if (totalFoundationCards === 52) {
+                winGame();
+            }
+        }
+
+        // Gagner le jeu
+        function winGame() {
+            clearInterval(gameState.timer);
+            gameState.isPlaying = false;
+            
+            // Mettre à jour les meilleurs scores
+            const currentTime = gameState.gameTime;
+            if (!gameState.bestScores.bestTime || currentTime < gameState.bestScores.bestTime) {
+                gameState.bestScores.bestTime = currentTime;
+            }
+            if (gameState.score > gameState.bestScores.bestScore) {
+                gameState.bestScores.bestScore = gameState.score;
+            }
+            gameState.bestScores.gamesWon++;
+            
+            localStorage.setItem('solitaireFusionBestScores', JSON.stringify(gameState.bestScores));
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameWon);
+            
+            document.getElementById('celebrateBtn').style.display = 'block';
+            updateDisplay();
+        }
+
+        // Célébrer la victoire
+        function celebrateWin() {
+            const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.zIndex = '9999';
+                    confetti.style.animation = 'fall 3s linear forwards';
+                    
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        }
+
+        // Réinitialiser le jeu
+        function resetGame() {
+            if (gameState.timer) clearInterval(gameState.timer);
+            gameState.isPlaying = false;
+            gameState.selectedCard = null;
+            gameState.selectedPile = null;
+            
+            document.getElementById('celebrateBtn').style.display = 'none';
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.welcomeMessage);
+            
+            updateDisplay();
+        }
+
+        // Mettre à jour le timer
+        function updateTimer() {
+            if (gameState.isPlaying) {
+                gameState.gameTime = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const minutes = Math.floor(gameState.gameTime / 60);
+                const seconds = gameState.gameTime % 60;
+                document.getElementById('timeValue').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Mettre à jour l'affichage
+        function updateDisplay() {
+            document.getElementById('scoreValue').textContent = gameState.score;
+            document.getElementById('movesValue').textContent = gameState.moves;
+            
+            const cardsLeft = gameState.stock.length + gameState.waste.length + 
+                gameState.tableau.reduce((sum, col) => sum + col.length, 0);
+            document.getElementById('cardsLeftValue').textContent = cardsLeft;
+            
+            const foundationsComplete = Object.values(gameState.foundations)
+                .filter(pile => pile.length === 13).length;
+            document.getElementById('foundationsValue').textContent = `${foundationsComplete}/4`;
+            
+            const completion = Math.floor((Object.values(gameState.foundations)
+                .reduce((sum, pile) => sum + pile.length, 0) / 52) * 100);
+            document.getElementById('completionValue').textContent = `${completion}%`;
+            
+            document.getElementById('hintsUsedValue').textContent = gameState.hintsUsed;
+            document.getElementById('hintsAvailableValue').textContent = gameState.hintsAvailable;
+            
+            // Meilleurs scores
+            const bestTime = gameState.bestScores.bestTime;
+            if (bestTime) {
+                const minutes = Math.floor(bestTime / 60);
+                const seconds = bestTime % 60;
+                document.getElementById('bestTimeValue').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            document.getElementById('bestScoreValue').textContent = gameState.bestScores.bestScore;
+            document.getElementById('gamesWonValue').textContent = gameState.bestScores.gamesWon;
+            
+            // Activer/désactiver les boutons
+            document.getElementById('undoBtn').disabled = gameState.moveHistory.length === 0;
+            document.getElementById('hintBtn').disabled = gameState.hintsAvailable <= 0;
+            document.getElementById('shuffleBtn').disabled = gameState.waste.length === 0;
+        }
+
+        // Afficher un message
+        function showMessage(message) {
+            const messageElement = document.getElementById('gameMessage');
+            messageElement.innerHTML = `<span>${message}</span>`;
+        }
+
+        // Afficher les règles
+        function showRules() {
+            const t = translations[gameState.currentLanguage];
+            try{ parent.postMessage({ action: 'dialog', dialogType: 'alert', text: `Règles du Solitaire Fusion:\n\n1. Déplacez toutes les cartes vers les fondations\n2. Les fondations se construisent par couleur de A à K\n3. Dans le tableau, alternez les couleurs en ordre décroissant\n4. Seuls les Rois peuvent être placés sur des colonnes vides\n5. Utilisez le stock pour révéler de nouvelles cartes\n6. Gagnez en complétant les 4 fondations!` }, '*'); }catch(e){}
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            createQuantumParticles();
+            updateLanguageInterface();
+            updateDisplay();
+            setDifficulty('easy');
+        });
+    </script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux14' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

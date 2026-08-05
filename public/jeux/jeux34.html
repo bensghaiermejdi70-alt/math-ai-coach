@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Nexus 3D - Brainova</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0a0a, #001122, #002244);
+            color: #00ffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(0,20,40,0.9);
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #00ffff;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+        }
+        
+        .language-selector {
+            position: relative;
+        }
+        
+        .lang-btn {
+            background: linear-gradient(45deg, #003366, #006699);
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn:hover {
+            background: linear-gradient(45deg, #006699, #0099cc);
+            box-shadow: 0 0 15px rgba(0,255,255,0.5);
+        }
+        
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(0,20,40,0.95);
+            border: 1px solid #00ffff;
+            border-radius: 10px;
+            min-width: 120px;
+            display: none;
+            z-index: 200;
+        }
+        
+        .lang-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-bottom: 1px solid rgba(0,255,255,0.2);
+        }
+        
+        .lang-option:hover {
+            background: rgba(0,255,255,0.1);
+        }
+        
+        .lang-option:last-child {
+            border-bottom: none;
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stat-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .game-btn {
+            background: linear-gradient(45deg, #004466, #0066aa);
+            color: #ffffff;
+            border: 1px solid #00ffff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        .game-btn:hover {
+            background: linear-gradient(45deg, #0066aa, #0088cc);
+            box-shadow: 0 0 20px rgba(0,255,255,0.4);
+            transform: translateY(-2px);
+        }
+        
+        .game-btn:active {
+            transform: translateY(0);
+        }
+        
+        .game-btn.primary {
+            background: linear-gradient(45deg, #00aa44, #00cc66);
+            border-color: #00ff88;
+        }
+        
+        .game-btn.primary:hover {
+            background: linear-gradient(45deg, #00cc66, #00ff88);
+            box-shadow: 0 0 20px rgba(0,255,136,0.4);
+        }
+        
+        .game-btn.danger {
+            background: linear-gradient(45deg, #cc4400, #ff6600);
+            border-color: #ff8844;
+        }
+        
+        .game-btn.danger:hover {
+            background: linear-gradient(45deg, #ff6600, #ff8844);
+            box-shadow: 0 0 20px rgba(255,136,68,0.4);
+        }
+        
+        #game-canvas {
+            flex: 1;
+            background: transparent;
+        }
+        
+        .game-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,20,40,0.95);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            min-width: 400px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(0,255,255,0.3);
+            display: none;
+        }
+        
+        .overlay-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+        }
+        
+        .overlay-content {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #ffffff;
+        }
+        
+        .level-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .level-btn {
+            background: linear-gradient(45deg, #003366, #006699);
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Orbitron', monospace;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .level-btn:hover, .level-btn.selected {
+            background: linear-gradient(45deg, #006699, #0099cc);
+            box-shadow: 0 0 15px rgba(0,255,255,0.5);
+        }
+        
+        .sequence-display {
+            position: absolute;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,20,40,0.9);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid #00ffff;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+            z-index: 50;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 8px;
+            background: rgba(0,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #00ff88);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ffff;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 3s linear infinite;
+        }
+        
+        @keyframes particleFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(0.5);
+            }
+        }
+        
+        .score-popup {
+            position: absolute;
+            background: linear-gradient(45deg, #00aa44, #00ff88);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 18px;
+            z-index: 150;
+            animation: scorePopup 2s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes scorePopup {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            50% {
+                transform: scale(1.2) translateY(-20px);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8) translateY(-40px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            
+            .header-top {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .game-stats {
+                gap: 15px;
+                font-size: 12px;
+            }
+            
+            .controls {
+                gap: 10px;
+            }
+            
+            .game-btn {
+                padding: 8px 15px;
+                font-size: 11px;
+            }
+            
+            .game-overlay {
+                min-width: 300px;
+                padding: 20px;
+            }
+            
+            .overlay-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">🧠 NEURAL NEXUS 3D</div>
+                <div class="language-selector">
+                    <button class="lang-btn" onclick="toggleLanguageDropdown()">
+                        <span id="current-lang">🇫🇷 Français</span> ▼
+                    </button>
+                    <div class="lang-dropdown" id="lang-dropdown">
+                        <div class="lang-option" onclick="setLanguage('fr')">🇫🇷 Français</div>
+                        <div class="lang-option" onclick="setLanguage('en')">🇺🇸 English</div>
+                        <div class="lang-option" onclick="setLanguage('es')">🇪🇸 Español</div>
+                        <div class="lang-option" onclick="setLanguage('de')">🇩🇪 Deutsch</div>
+                        <div class="lang-option" onclick="setLanguage('zh')">🇨🇳 中文</div>
+                        <div class="lang-option" onclick="setLanguage('ar')">🇸🇦 العربية</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-top">
+                <div class="game-stats">
+                    <div class="stat">
+                        <span data-text="score">Score:</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat">
+                        <span data-text="level">Niveau:</span>
+                        <span class="stat-value" id="level">1</span>
+                    </div>
+                    <div class="stat">
+                        <span data-text="sequence">Séquence:</span>
+                        <span class="stat-value" id="sequence-length">3</span>
+                    </div>
+                    <div class="stat">
+                        <span data-text="time">Temps:</span>
+                        <span class="stat-value" id="time">00:00</span>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="game-btn primary" onclick="startGame()" data-text="start">Démarrer</button>
+                    <button class="game-btn" onclick="pauseGame()" data-text="pause">Pause</button>
+                    <button class="game-btn danger" onclick="resetGame()" data-text="reset">Reset</button>
+                    <button class="game-btn" onclick="showRules()" data-text="rules">Règles</button>
+                    <button class="game-btn" onclick="showLevels()" data-text="levels">Niveaux</button>
+                </div>
+            </div>
+        </div>
+        
+        <canvas id="game-canvas"></canvas>
+        
+        <div class="sequence-display" id="sequence-display">
+            <span data-text="watch-sequence">Regardez la séquence...</span>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <!-- Game Overlays -->
+        <div class="game-overlay" id="rules-overlay">
+            <div class="overlay-title" data-text="rules-title">🎮 Règles du Jeu</div>
+            <div class="overlay-content" data-text="rules-content">
+                <p><strong>Objectif :</strong> Mémorisez et reproduisez les séquences de cubes 3D qui s'illuminent.</p><br>
+                <p><strong>Comment jouer :</strong></p>
+                <p>1. Observez la séquence de cubes qui s'illuminent</p>
+                <p>2. Cliquez sur les cubes dans le même ordre</p>
+                <p>3. Plus vous progressez, plus la séquence devient longue</p><br>
+                <p><strong>Niveaux :</strong></p>
+                <p>• <span style="color: #00ff88;">Débutant</span> : 3-5 cubes, vitesse lente</p>
+                <p>• <span style="color: #ffaa00;">Intermédiaire</span> : 4-7 cubes, vitesse normale</p>
+                <p>• <span style="color: #ff4444;">Expert</span> : 5-10 cubes, vitesse rapide</p>
+            </div>
+            <button class="game-btn primary" onclick="hideOverlay('rules-overlay')" data-text="understood">Compris !</button>
+        </div>
+        
+        <div class="game-overlay" id="levels-overlay">
+            <div class="overlay-title" data-text="choose-level">🎯 Choisir le Niveau</div>
+            <div class="level-selector">
+                <button class="level-btn selected" onclick="selectLevel(1)" data-level="1">
+                    <div data-text="beginner">Débutant</div>
+                    <div style="font-size: 12px; color: #00ff88;">3-5 cubes</div>
+                </button>
+                <button class="level-btn" onclick="selectLevel(2)" data-level="2">
+                    <div data-text="intermediate">Intermédiaire</div>
+                    <div style="font-size: 12px; color: #ffaa00;">4-7 cubes</div>
+                </button>
+                <button class="level-btn" onclick="selectLevel(3)" data-level="3">
+                    <div data-text="expert">Expert</div>
+                    <div style="font-size: 12px; color: #ff4444;">5-10 cubes</div>
+                </button>
+            </div>
+            <button class="game-btn primary" onclick="hideOverlay('levels-overlay')" data-text="start-level">Commencer ce niveau</button>
+        </div>
+        
+        <div class="game-overlay" id="game-over-overlay">
+            <div class="overlay-title" data-text="game-over">🎊 Partie Terminée !</div>
+            <div class="overlay-content">
+                <p data-text="final-score">Score final: <span id="final-score">0</span></p>
+                <p data-text="sequences-completed">Séquences réussies: <span id="sequences-completed">0</span></p>
+                <p data-text="time-played">Temps de jeu: <span id="time-played">00:00</span></p>
+                <p data-text="iq-estimate">QI estimé: <span id="iq-estimate">100</span></p>
+            </div>
+            <div class="controls">
+                <button class="game-btn primary" onclick="restartGame()" data-text="play-again">Rejouer</button>
+                <button class="game-btn" onclick="hideOverlay('game-over-overlay')" data-text="close">Fermer</button>
+            </div>
+        </div>
+        
+        <div class="game-overlay" id="pause-overlay">
+            <div class="overlay-title" data-text="game-paused">⏸️ Jeu en Pause</div>
+            <div class="overlay-content">
+                <p data-text="pause-message">Le jeu est actuellement en pause.</p>
+                <p data-text="pause-stats">Score actuel: <span id="pause-score">0</span></p>
+                <p data-text="pause-level">Niveau: <span id="pause-level">1</span></p>
+            </div>
+            <div class="controls">
+                <button class="game-btn primary" onclick="resumeGame()" data-text="resume-game">Reprendre</button>
+                <button class="game-btn danger" onclick="resetGame()" data-text="quit-game">Quitter</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SYSTÈME DE LANGUES ====================
+        const languages = {
+            fr: {
+                'score': 'Score:',
+                'level': 'Niveau:',
+                'sequence': 'Séquence:',
+                'time': 'Temps:',
+                'start': 'Démarrer',
+                'pause': 'Pause',
+                'reset': 'Reset',
+                'rules': 'Règles',
+                'levels': 'Niveaux',
+                'watch-sequence': 'Regardez la séquence...',
+                'your-turn': 'À votre tour !',
+                'rules-title': '🎮 Règles du Jeu',
+                'rules-content': '<p><strong>Objectif :</strong> Mémorisez et reproduisez les séquences de cubes 3D qui s\'illuminent.</p><br><p><strong>Comment jouer :</strong></p><p>1. Observez la séquence de cubes qui s\'illuminent</p><p>2. Cliquez sur les cubes dans le même ordre</p><p>3. Plus vous progressez, plus la séquence devient longue</p><br><p><strong>Niveaux :</strong></p><p>• <span style="color: #00ff88;">Débutant</span> : 3-5 cubes, vitesse lente</p><p>• <span style="color: #ffaa00;">Intermédiaire</span> : 4-7 cubes, vitesse normale</p><p>• <span style="color: #ff4444;">Expert</span> : 5-10 cubes, vitesse rapide</p>',
+                'understood': 'Compris !',
+                'choose-level': '🎯 Choisir le Niveau',
+                'beginner': 'Débutant',
+                'intermediate': 'Intermédiaire',
+                'expert': 'Expert',
+                'start-level': 'Commencer ce niveau',
+                'game-over': '🎊 Partie Terminée !',
+                'final-score': 'Score final:',
+                'sequences-completed': 'Séquences réussies:',
+                'time-played': 'Temps de jeu:',
+                'iq-estimate': 'QI estimé:',
+                'play-again': 'Rejouer',
+                'close': 'Fermer',
+                'correct': 'Correct !',
+                'wrong': 'Erreur !',
+                'excellent': 'Excellent !',
+                'perfect': 'Parfait !',
+                'game-paused': '⏸️ Jeu en Pause',
+                'pause-message': 'Le jeu est actuellement en pause.',
+                'pause-stats': 'Score actuel:',
+                'pause-level': 'Niveau:',
+                'resume-game': 'Reprendre',
+                'quit-game': 'Quitter'
+            },
+            en: {
+                'score': 'Score:',
+                'level': 'Level:',
+                'sequence': 'Sequence:',
+                'time': 'Time:',
+                'start': 'Start',
+                'pause': 'Pause',
+                'reset': 'Reset',
+                'rules': 'Rules',
+                'levels': 'Levels',
+                'watch-sequence': 'Watch the sequence...',
+                'your-turn': 'Your turn!',
+                'rules-title': '🎮 Game Rules',
+                'rules-content': '<p><strong>Objective:</strong> Memorize and reproduce the sequences of 3D cubes that light up.</p><br><p><strong>How to play:</strong></p><p>1. Watch the sequence of cubes that light up</p><p>2. Click on the cubes in the same order</p><p>3. As you progress, the sequence gets longer</p><br><p><strong>Levels:</strong></p><p>• <span style="color: #00ff88;">Beginner</span>: 3-5 cubes, slow speed</p><p>• <span style="color: #ffaa00;">Intermediate</span>: 4-7 cubes, normal speed</p><p>• <span style="color: #ff4444;">Expert</span>: 5-10 cubes, fast speed</p>',
+                'understood': 'Got it!',
+                'choose-level': '🎯 Choose Level',
+                'beginner': 'Beginner',
+                'intermediate': 'Intermediate',
+                'expert': 'Expert',
+                'start-level': 'Start this level',
+                'game-over': '🎊 Game Over!',
+                'final-score': 'Final score:',
+                'sequences-completed': 'Sequences completed:',
+                'time-played': 'Time played:',
+                'iq-estimate': 'Estimated IQ:',
+                'play-again': 'Play Again',
+                'close': 'Close',
+                'correct': 'Correct!',
+                'wrong': 'Wrong!',
+                'excellent': 'Excellent!',
+                'perfect': 'Perfect!'
+            },
+            es: {
+                'score': 'Puntuación:',
+                'level': 'Nivel:',
+                'sequence': 'Secuencia:',
+                'time': 'Tiempo:',
+                'start': 'Iniciar',
+                'pause': 'Pausa',
+                'reset': 'Reiniciar',
+                'rules': 'Reglas',
+                'levels': 'Niveles',
+                'watch-sequence': 'Observa la secuencia...',
+                'your-turn': '¡Tu turno!',
+                'rules-title': '🎮 Reglas del Juego',
+                'rules-content': '<p><strong>Objetivo:</strong> Memoriza y reproduce las secuencias de cubos 3D que se iluminan.</p><br><p><strong>Cómo jugar:</strong></p><p>1. Observa la secuencia de cubos que se iluminan</p><p>2. Haz clic en los cubos en el mismo orden</p><p>3. A medida que avances, la secuencia se hace más larga</p><br><p><strong>Niveles:</strong></p><p>• <span style="color: #00ff88;">Principiante</span>: 3-5 cubos, velocidad lenta</p><p>• <span style="color: #ffaa00;">Intermedio</span>: 4-7 cubos, velocidad normal</p><p>• <span style="color: #ff4444;">Experto</span>: 5-10 cubos, velocidad rápida</p>',
+                'understood': '¡Entendido!',
+                'choose-level': '🎯 Elegir Nivel',
+                'beginner': 'Principiante',
+                'intermediate': 'Intermedio',
+                'expert': 'Experto',
+                'start-level': 'Comenzar este nivel',
+                'game-over': '🎊 ¡Juego Terminado!',
+                'final-score': 'Puntuación final:',
+                'sequences-completed': 'Secuencias completadas:',
+                'time-played': 'Tiempo jugado:',
+                'iq-estimate': 'CI estimado:',
+                'play-again': 'Jugar de Nuevo',
+                'close': 'Cerrar',
+                'correct': '¡Correcto!',
+                'wrong': '¡Error!',
+                'excellent': '¡Excelente!',
+                'perfect': '¡Perfecto!'
+            },
+            de: {
+                'score': 'Punkte:',
+                'level': 'Level:',
+                'sequence': 'Sequenz:',
+                'time': 'Zeit:',
+                'start': 'Start',
+                'pause': 'Pause',
+                'reset': 'Zurücksetzen',
+                'rules': 'Regeln',
+                'levels': 'Level',
+                'watch-sequence': 'Beobachte die Sequenz...',
+                'your-turn': 'Du bist dran!',
+                'rules-title': '🎮 Spielregeln',
+                'rules-content': '<p><strong>Ziel:</strong> Merke dir und reproduziere die Sequenzen von 3D-Würfeln, die aufleuchten.</p><br><p><strong>Wie zu spielen:</strong></p><p>1. Beobachte die Sequenz der aufleuchtenden Würfel</p><p>2. Klicke die Würfel in derselben Reihenfolge</p><p>3. Je weiter du kommst, desto länger wird die Sequenz</p><br><p><strong>Level:</strong></p><p>• <span style="color: #00ff88;">Anfänger</span>: 3-5 Würfel, langsame Geschwindigkeit</p><p>• <span style="color: #ffaa00;">Fortgeschritten</span>: 4-7 Würfel, normale Geschwindigkeit</p><p>• <span style="color: #ff4444;">Experte</span>: 5-10 Würfel, schnelle Geschwindigkeit</p>',
+                'understood': 'Verstanden!',
+                'choose-level': '🎯 Level Wählen',
+                'beginner': 'Anfänger',
+                'intermediate': 'Fortgeschritten',
+                'expert': 'Experte',
+                'start-level': 'Dieses Level starten',
+                'game-over': '🎊 Spiel Beendet!',
+                'final-score': 'Endpunktzahl:',
+                'sequences-completed': 'Sequenzen abgeschlossen:',
+                'time-played': 'Spielzeit:',
+                'iq-estimate': 'Geschätzter IQ:',
+                'play-again': 'Nochmal Spielen',
+                'close': 'Schließen',
+                'correct': 'Richtig!',
+                'wrong': 'Falsch!',
+                'excellent': 'Ausgezeichnet!',
+                'perfect': 'Perfekt!'
+            },
+            zh: {
+                'score': '分数：',
+                'level': '等级：',
+                'sequence': '序列：',
+                'time': '时间：',
+                'start': '开始',
+                'pause': '暂停',
+                'reset': '重置',
+                'rules': '规则',
+                'levels': '等级',
+                'watch-sequence': '观察序列...',
+                'your-turn': '轮到你了！',
+                'rules-title': '🎮 游戏规则',
+                'rules-content': '<p><strong>目标：</strong>记住并重现发光的3D立方体序列。</p><br><p><strong>如何游戏：</strong></p><p>1. 观察发光的立方体序列</p><p>2. 按相同顺序点击立方体</p><p>3. 随着进展，序列变得更长</p><br><p><strong>等级：</strong></p><p>• <span style="color: #00ff88;">初学者</span>：3-5个立方体，慢速</p><p>• <span style="color: #ffaa00;">中级</span>：4-7个立方体，正常速度</p><p>• <span style="color: #ff4444;">专家</span>：5-10个立方体，快速</p>',
+                'understood': '明白了！',
+                'choose-level': '🎯 选择等级',
+                'beginner': '初学者',
+                'intermediate': '中级',
+                'expert': '专家',
+                'start-level': '开始此等级',
+                'game-over': '🎊 游戏结束！',
+                'final-score': '最终分数：',
+                'sequences-completed': '完成序列：',
+                'time-played': '游戏时间：',
+                'iq-estimate': '估计智商：',
+                'play-again': '再玩一次',
+                'close': '关闭',
+                'correct': '正确！',
+                'wrong': '错误！',
+                'excellent': '优秀！',
+                'perfect': '完美！'
+            },
+            ar: {
+                'score': 'النتيجة:',
+                'level': 'المستوى:',
+                'sequence': 'التسلسل:',
+                'time': 'الوقت:',
+                'start': 'بدء',
+                'pause': 'إيقاف مؤقت',
+                'reset': 'إعادة تعيين',
+                'rules': 'القواعد',
+                'levels': 'المستويات',
+                'watch-sequence': 'راقب التسلسل...',
+                'your-turn': 'دورك!',
+                'rules-title': '🎮 قواعد اللعبة',
+                'rules-content': '<p><strong>الهدف:</strong> احفظ وأعد إنتاج تسلسلات المكعبات ثلاثية الأبعاد التي تضيء.</p><br><p><strong>كيفية اللعب:</strong></p><p>1. راقب تسلسل المكعبات التي تضيء</p><p>2. انقر على المكعبات بنفس الترتيب</p><p>3. كلما تقدمت، يصبح التسلسل أطول</p><br><p><strong>المستويات:</strong></p><p>• <span style="color: #00ff88;">مبتدئ</span>: 3-5 مكعبات، سرعة بطيئة</p><p>• <span style="color: #ffaa00;">متوسط</span>: 4-7 مكعبات، سرعة عادية</p><p>• <span style="color: #ff4444;">خبير</span>: 5-10 مكعبات، سرعة سريعة</p>',
+                'understood': 'فهمت!',
+                'choose-level': '🎯 اختر المستوى',
+                'beginner': 'مبتدئ',
+                'intermediate': 'متوسط',
+                'expert': 'خبير',
+                'start-level': 'ابدأ هذا المستوى',
+                'game-over': '🎊 انتهت اللعبة!',
+                'final-score': 'النتيجة النهائية:',
+                'sequences-completed': 'التسلسلات المكتملة:',
+                'time-played': 'وقت اللعب:',
+                'iq-estimate': 'معدل الذكاء المقدر:',
+                'play-again': 'العب مرة أخرى',
+                'close': 'إغلاق',
+                'correct': 'صحيح!',
+                'wrong': 'خطأ!',
+                'excellent': 'ممتاز!',
+                'perfect': 'مثالي!'
+            }
+        };
+
+        let currentLanguage = 'fr';
+        const langFlags = {
+            fr: '🇫🇷 Français',
+            en: '🇺🇸 English', 
+            es: '🇪🇸 Español',
+            de: '🇩🇪 Deutsch',
+            zh: '🇨🇳 中文',
+            ar: '🇸🇦 العربية'
+        };
+
+        function toggleLanguageDropdown() {
+            const dropdown = document.getElementById('lang-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('current-lang').textContent = langFlags[lang];
+            document.getElementById('lang-dropdown').style.display = 'none';
+            
+            // Update all text elements
+            document.querySelectorAll('[data-text]').forEach(element => {
+                const key = element.getAttribute('data-text');
+                if (languages[lang][key]) {
+                    if (element.tagName === 'INPUT' || element.tagName === 'BUTTON') {
+                        element.textContent = languages[lang][key];
+                    } else {
+                        element.innerHTML = languages[lang][key];
+                    }
+                }
+            });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.language-selector')) {
+                document.getElementById('lang-dropdown').style.display = 'none';
+            }
+        });
+
+        // ==================== VARIABLES DU JEU ====================
+        let scene, camera, renderer, cubes = [];
+        let gameState = 'menu'; // 'menu', 'playing', 'watching', 'userTurn', 'paused', 'gameOver'
+        let previousGameState = 'playing'; // Store state before pause
+        let sequence = [];
+        let userSequence = [];
+        let currentLevel = 1;
+        let score = 0;
+        let sequenceLength = 3;
+        let gameTime = 0;
+        let gameTimer;
+        let sequencesCompleted = 0;
+        let isPaused = false;
+
+        // Level settings
+        const levelSettings = {
+            1: { minLength: 3, maxLength: 5, speed: 1000, name: 'beginner' },
+            2: { minLength: 4, maxLength: 7, speed: 800, name: 'intermediate' }, 
+            3: { minLength: 5, maxLength: 10, speed: 600, name: 'expert' }
+        };
+
+        // ==================== INITIALISATION 3D ====================
+        function init3D() {
+            const canvas = document.getElementById('game-canvas');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000510);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, 8);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight - 120);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x00ffff, 1);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // Create cubes in a grid
+            createCubes();
+            
+            // Raycaster for mouse interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+            
+            // Event listeners
+            canvas.addEventListener('click', onCanvasClick);
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start render loop
+            animate();
+        }
+
+        function createCubes() {
+            const gridSize = 3;
+            const spacing = 2.5;
+            
+            for (let x = 0; x < gridSize; x++) {
+                for (let z = 0; z < gridSize; z++) {
+                    const geometry = new THREE.BoxGeometry(1, 1, 1);
+                    const material = new THREE.MeshPhongMaterial({ 
+                        color: 0x003366,
+                        transparent: true,
+                        opacity: 0.8
+                    });
+                    
+                    const cube = new THREE.Mesh(geometry, material);
+                    cube.position.set(
+                        (x - 1) * spacing,
+                        0,
+                        (z - 1) * spacing
+                    );
+                    cube.castShadow = true;
+                    cube.receiveShadow = true;
+                    
+                    // Add glow effect
+                    const glowGeometry = new THREE.BoxGeometry(1.1, 1.1, 1.1);
+                    const glowMaterial = new THREE.MeshBasicMaterial({ 
+                        color: 0x00ffff,
+                        transparent: true,
+                        opacity: 0.2
+                    });
+                    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                    cube.add(glow);
+                    
+                    cube.userData = { 
+                        id: x * gridSize + z,
+                        originalColor: 0x003366,
+                        glowMesh: glow
+                    };
+                    
+                    cubes.push(cube);
+                    scene.add(cube);
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate cubes slightly
+            cubes.forEach(cube => {
+                cube.rotation.y += 0.005;
+                cube.rotation.x += 0.002;
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        // ==================== GESTION DES ÉVÉNEMENTS ====================
+        let raycaster, mouse;
+
+        function onCanvasClick(event) {
+            if (gameState !== 'userTurn') return;
+            
+            const rect = event.target.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(cubes);
+            
+            if (intersects.length > 0) {
+                const clickedCube = intersects[0].object;
+                handleCubeClick(clickedCube.userData.id);
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / (window.innerHeight - 120);
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight - 120);
+        }
+
+        // ==================== LOGIQUE DU JEU ====================
+        function startGame() {
+            if (gameState === 'paused') {
+                resumeGame();
+                return;
+            }
+            
+            gameState = 'playing';
+            score = 0;
+            gameTime = 0;
+            sequencesCompleted = 0;
+            
+            const settings = levelSettings[currentLevel];
+            sequenceLength = settings.minLength;
+            
+            updateDisplay();
+            startTimer();
+            generateSequence();
+        }
+
+        function pauseGame() {
+            if (isPaused) {
+                // Resume game
+                resumeGame();
+                return;
+            }
+            
+            if (gameState === 'playing' || gameState === 'userTurn' || gameState === 'watching') {
+                isPaused = true;
+                previousGameState = gameState; // Store current state
+                gameState = 'paused';
+                clearInterval(gameTimer);
+                document.querySelector('[data-text="pause"]').textContent = 'Resume';
+                
+                // Show pause overlay
+                showPauseOverlay();
+            }
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            gameState = previousGameState || 'playing'; // Restore previous state
+            startTimer();
+            document.querySelector('[data-text="pause"]').textContent = languages[currentLanguage]['pause'];
+            hidePauseOverlay();
+        }
+
+        function resetGame() {
+            gameState = 'menu';
+            clearInterval(gameTimer);
+            score = 0;
+            gameTime = 0;
+            sequencesCompleted = 0;
+            sequenceLength = levelSettings[currentLevel].minLength;
+            sequence = [];
+            userSequence = [];
+            isPaused = false;
+            
+            updateDisplay();
+            resetAllCubes();
+            hideSequenceDisplay();
+            document.querySelector('[data-text="pause"]').textContent = languages[currentLanguage]['pause'];
+        }
+
+        function generateSequence() {
+            sequence = [];
+            for (let i = 0; i < sequenceLength; i++) {
+                sequence.push(Math.floor(Math.random() * cubes.length));
+            }
+            userSequence = [];
+            gameState = 'watching';
+            showSequence();
+        }
+
+        function showSequence() {
+            document.getElementById('sequence-display').style.display = 'block';
+            document.querySelector('[data-text="watch-sequence"]').textContent = languages[currentLanguage]['watch-sequence'];
+            
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index > 0) {
+                    resetCube(sequence[index - 1]);
+                }
+                
+                if (index < sequence.length) {
+                    highlightCube(sequence[index]);
+                    createParticleEffect(cubes[sequence[index]].position);
+                    index++;
+                } else {
+                    setTimeout(() => {
+                        resetCube(sequence[sequence.length - 1]);
+                        gameState = 'userTurn';
+                        document.querySelector('[data-text="watch-sequence"]').textContent = languages[currentLanguage]['your-turn'];
+                        setTimeout(() => hideSequenceDisplay(), 1000);
+                    }, levelSettings[currentLevel].speed);
+                    clearInterval(interval);
+                }
+            }, levelSettings[currentLevel].speed);
+        }
+
+        function highlightCube(cubeIndex) {
+            const cube = cubes[cubeIndex];
+            cube.material.color.setHex(0x00ffff);
+            cube.material.emissive.setHex(0x004444);
+            cube.userData.glowMesh.material.opacity = 0.6;
+            cube.scale.set(1.2, 1.2, 1.2);
+        }
+
+        function resetCube(cubeIndex) {
+            const cube = cubes[cubeIndex];
+            cube.material.color.setHex(cube.userData.originalColor);
+            cube.material.emissive.setHex(0x000000);
+            cube.userData.glowMesh.material.opacity = 0.2;
+            cube.scale.set(1, 1, 1);
+        }
+
+        function resetAllCubes() {
+            cubes.forEach((cube, index) => resetCube(index));
+        }
+
+        function handleCubeClick(cubeIndex) {
+            userSequence.push(cubeIndex);
+            
+            // Temporary highlight
+            highlightCube(cubeIndex);
+            setTimeout(() => resetCube(cubeIndex), 200);
+            
+            // Check if correct
+            const currentIndex = userSequence.length - 1;
+            if (userSequence[currentIndex] !== sequence[currentIndex]) {
+                // Wrong!
+                gameOver();
+                showScorePopup(languages[currentLanguage]['wrong'], '#ff4444');
+                return;
+            }
+            
+            // Correct so far
+            showScorePopup(languages[currentLanguage]['correct'], '#00ff88');
+            
+            if (userSequence.length === sequence.length) {
+                // Sequence completed!
+                sequenceCompleted();
+            }
+        }
+
+        function sequenceCompleted() {
+            sequencesCompleted++;
+            
+            // Calculate score
+            const baseScore = sequenceLength * 10;
+            const levelMultiplier = currentLevel;
+            const timeBonus = Math.max(0, 30 - gameTime % 60);
+            const totalScore = Math.floor(baseScore * levelMultiplier + timeBonus);
+            
+            score += totalScore;
+            
+            showScorePopup(languages[currentLanguage]['excellent'] + ' +' + totalScore, '#00ff88');
+            
+            // Increase difficulty
+            const settings = levelSettings[currentLevel];
+            if (sequenceLength < settings.maxLength) {
+                sequenceLength++;
+            }
+            
+            updateDisplay();
+            
+            setTimeout(() => {
+                generateSequence();
+            }, 1500);
+        }
+
+        function gameOver() {
+            gameState = 'gameOver';
+            clearInterval(gameTimer);
+            
+            // Calculate IQ estimate
+            const iqEstimate = Math.min(150, 80 + (sequencesCompleted * 5) + (currentLevel * 10));
+            
+            // Update final stats
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('sequences-completed').textContent = sequencesCompleted;
+            document.getElementById('time-played').textContent = formatTime(gameTime);
+            document.getElementById('iq-estimate').textContent = iqEstimate;
+            
+            setTimeout(() => {
+                showOverlay('game-over-overlay');
+            }, 1000);
+        }
+
+        function restartGame() {
+            hideOverlay('game-over-overlay');
+            resetGame();
+            startGame();
+        }
+
+        // ==================== UTILITAIRES ====================
+        function startTimer() {
+            gameTimer = setInterval(() => {
+                if (!isPaused) {
+                    gameTime++;
+                    updateDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = currentLevel;
+            document.getElementById('sequence-length').textContent = sequenceLength;
+            document.getElementById('time').textContent = formatTime(gameTime);
+            
+            // Update progress
+            const progress = (userSequence.length / sequenceLength) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        function hideSequenceDisplay() {
+            document.getElementById('sequence-display').style.display = 'none';
+        }
+
+        function showOverlay(overlayId) {
+            document.getElementById(overlayId).style.display = 'block';
+        }
+
+        function hideOverlay(overlayId) {
+            document.getElementById(overlayId).style.display = 'none';
+        }
+
+        function showRules() {
+            showOverlay('rules-overlay');
+        }
+
+        function showLevels() {
+            showOverlay('levels-overlay');
+        }
+
+        function selectLevel(level) {
+            currentLevel = level;
+            
+            // Update UI
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-level="${level}"]`).classList.add('selected');
+            
+            // Update sequence length
+            sequenceLength = levelSettings[level].minLength;
+            updateDisplay();
+        }
+
+        function createParticleEffect(position) {
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * window.innerWidth + 'px';
+                particle.style.top = Math.random() * window.innerHeight + 'px';
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 3000);
+            }
+        }
+
+        function showScorePopup(text, color) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = text;
+            popup.style.background = color;
+            popup.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+            popup.style.top = Math.random() * (window.innerHeight - 100) + 200 + 'px';
+            
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.remove();
+            }, 2000);
+        }
+
+        function showPauseOverlay() {
+            document.getElementById('pause-score').textContent = score;
+            document.getElementById('pause-level').textContent = currentLevel;
+            showOverlay('pause-overlay');
+        }
+
+        function hidePauseOverlay() {
+            hideOverlay('pause-overlay');
+        }
+
+        // ==================== INITIALISATION ====================
+        window.addEventListener('load', () => {
+            init3D();
+            setLanguage('fr');
+        });
+    </script>
+
+<button class="global-close-btn mbai-close-btn" title="Quitter" aria-label="Quitter" onclick="closePlatform()"
+  style="position:fixed; top:12px; right:12px; z-index:9999; background:rgba(10,20,40,0.75); border:2px solid rgba(255,255,255,0.15); color:#fff; font-size:18px; width:36px; height:36px; border-radius:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux34' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>

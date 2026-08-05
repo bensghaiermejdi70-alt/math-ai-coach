@@ -1,0 +1,2370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Bubbles</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Effet de particules quantiques en arrière-plan */
+        .quantum-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+            box-shadow: 0 0 6px #00ffff;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-logo {
+            font-size: 4rem;
+            animation: quantumPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px #00ffff);
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff88);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: quantumGlow 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        @keyframes quantumPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        @keyframes quantumGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #00ffff;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-btn {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            border: 2px solid #00ffff;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-btn:hover {
+            background: linear-gradient(45deg, #2a5298, #1e3c72);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 60, 114, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            margin-top: 5px;
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .language-dropdown.show {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-radius: 10px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .language-option:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .left-panel, .right-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            color: #00ffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            padding: 12px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .level-btn:hover, .level-btn.active {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+
+        .rules-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .ai-hint-btn {
+            background: linear-gradient(45deg, #ffa500, #ff8c00);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        .pause-btn {
+            background: linear-gradient(45deg, #9c27b0, #673ab7);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px currentColor;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .bubble.quantum {
+            animation: quantumFloat 3s ease-in-out infinite;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        @keyframes quantumFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+        }
+
+        .shooter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #00ffff, #0099cc);
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 20px #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .shooter:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 0 30px #00ffff;
+        }
+
+        .trajectory-line {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(to top, #00ffff, transparent);
+            transform-origin: bottom;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ff4757;
+            transform: scale(1.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #00ffff;
+        }
+
+        .explosion-effect {
+            position: absolute;
+            pointer-events: none;
+            animation: explode 0.6s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+
+        @keyframes slideIn {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+
+        @keyframes trailFade {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.5); }
+        }
+
+        @keyframes bounceRing {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+            100% { transform: scale(0.5) rotate(360deg); opacity: 0; }
+        }
+
+        @keyframes comboFloat {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.2); opacity: 0; }
+        }
+
+        @keyframes precisionGlow {
+            0% { transform: scale(0.8); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        @keyframes scoreRise {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes placementPulse {
+            0% { transform: scale(0.8); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        @keyframes warningPulse {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+        }
+
+        @media (max-width: 1024px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .left-panel, .right-panel {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+            
+            .level-selector {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .level-btn {
+                flex: 1;
+                min-width: 100px;
+            }
+            
+            .control-btn {
+                flex: 1;
+                min-width: 150px;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .game-logo {
+                font-size: 3rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .game-canvas {
+                height: 400px;
+            }
+        }
+        </style>
+    <style>
+    /* override: consistent global close button */
+    .global-close-btn { position: fixed !important; top: 14px !important; right: 14px !important; z-index: 99999 !important; background: linear-gradient(45deg,#ff3b3b,#ff0066) !important; color: #fff !important; border: none !important; width:52px !important; height:52px !important; border-radius:50% !important; font-size:22px !important; cursor:pointer !important; display:flex !important;align-items:center !important;justify-content:center !important; box-shadow:0 8px 22px rgba(255,59,59,0.28) !important; }
+    .global-close-btn:hover{ transform: scale(1.06); }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <!-- Particules quantiques -->
+    <div class="quantum-particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-section">
+                <div class="game-logo">�</div>
+                <div>
+                    <h1 class="title">QUANTUM BUBBLES</h1>
+                    <p class="subtitle" id="subtitle">Éclatez les bulles quantiques avec l'IA</p>
+                </div>
+            </div>
+            <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+            <div class="language-selector">
+                <button class="language-btn" id="languageBtn">🌐 Français</button>
+                <div class="language-dropdown" id="languageDropdown">
+                    <div class="language-option" data-lang="fr">🇫🇷 Français</div>
+                    <div class="language-option" data-lang="en">🇬🇧 English</div>
+                    <div class="language-option" data-lang="ar">🇸🇦 العربية</div>
+                    <div class="language-option" data-lang="es">🇪🇸 Español</div>
+                    <div class="language-option" data-lang="de">🇩🇪 Deutsch</div>
+                    <div class="language-option" data-lang="zh">🇨🇳 中文</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-layout">
+            <div class="left-panel">
+                <h3 class="panel-title" id="levelsTitle">Niveaux Quantiques</h3>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="1" id="level1">Novice</button>
+                    <button class="level-btn" data-level="2" id="level2">Expert</button>
+                    <button class="level-btn" data-level="3" id="level3">Maître</button>
+                    <button class="level-btn" data-level="4" id="level4">Légende</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="scoreLabel">Score</div>
+                        <div id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="levelLabel">Niveau</div>
+                        <div id="currentLevel">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="game-info">
+                    <div class="info-item">
+                        <span id="partLabel">Partie:</span> <span id="currentPart">1/100</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="bubblesLabel">Bulles:</span> <span id="bubblesCount">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="shotsLabel">Tirs:</span> <span id="shotsCount">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="timeLabel">Temps:</span> <span id="time">00:00</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="comboLabel">Combo:</span> <span id="combo">x1</span>
+                    </div>
+                </div>
+                
+                <div class="game-canvas" id="gameCanvas">
+                    <div class="shooter" id="shooter">⚛️</div>
+                    <div class="trajectory-line" id="trajectoryLine" style="display: none;"></div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <h3 class="panel-title" id="actionsTitle">Actions Quantiques</h3>
+                <button class="control-btn rules-btn" id="rulesBtn">📋 Règles</button>
+                <button class="control-btn start-btn" id="startBtn">🚀 Commencer</button>
+                <button class="control-btn start-btn" id="newGameBtn">🎮 Nouveau Jeu</button>
+                <button class="control-btn ai-hint-btn" id="aiHintBtn">🤖 Indice IA</button>
+                <button class="control-btn pause-btn" id="pauseBtn">⏸️ Pause</button>
+                
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-item">
+                        <div id="accuracyLabel">Précision</div>
+                        <div id="accuracy">100%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="powerLabel">Puissance</div>
+                        <div id="power">⚡⚡⚡</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal des règles -->
+    <div class="modal" id="rulesModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeRules">&times;</button>
+            <h2 id="rulesTitle">Règles du Jeu</h2>
+            <div id="rulesContent">
+                <p><strong>Objectif:</strong> Éliminez toutes les bulles quantiques en créant des groupes de 3 bulles ou plus de la même couleur.</p>
+                <p><strong>Comment jouer:</strong></p>
+                <ul>
+                    <li>Cliquez pour viser et tirer des bulles</li>
+                    <li>Formez des groupes de 3+ bulles identiques</li>
+                    <li>Les bulles quantiques ont des propriétés spéciales</li>
+                    <li>Utilisez l'IA pour des conseils stratégiques</li>
+                    <li>Plus vous éliminez de bulles d'un coup, plus vous gagnez de points</li>
+                </ul>
+                <p><strong>Niveaux:</strong></p>
+                <ul>
+                    <li><strong>Novice:</strong> 5 couleurs, vitesse normale</li>
+                    <li><strong>Expert:</strong> 6 couleurs, bulles quantiques</li>
+                    <li><strong>Maître:</strong> 7 couleurs, effets spéciaux</li>
+                    <li><strong>Légende:</strong> 8 couleurs, chaos quantique</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Traductions
+        const translations = {
+            fr: {
+                subtitle: "Éclatez les bulles quantiques avec l'IA",
+                levelsTitle: "Niveaux Quantiques",
+                actionsTitle: "Actions Quantiques",
+                rules: "📋 Règles",
+                start: "🚀 Commencer",
+                newGame: "🎮 Nouveau Jeu",
+                aiHint: "🤖 Indice IA",
+                pause: "⏸️ Pause",
+                resume: "▶️ Reprendre",
+                scoreLabel: "Score",
+                levelLabel: "Niveau",
+                partLabel: "Partie:",
+                bubblesLabel: "Bulles:",
+                shotsLabel: "Tirs:",
+                timeLabel: "Temps:",
+                comboLabel: "Combo:",
+                accuracyLabel: "Précision",
+                powerLabel: "Puissance",
+                rulesTitle: "Règles du Jeu",
+                levels: ["Novice", "Expert", "Maître", "Légende"],
+                rulesContent: `
+                    <p><strong>Objectif:</strong> Éliminez toutes les bulles quantiques en créant des groupes de 3 bulles ou plus de la même couleur.</p>
+                    <p><strong>Comment jouer:</strong></p>
+                    <ul>
+                        <li>Cliquez pour viser et tirer des bulles</li>
+                        <li>Formez des groupes de 3+ bulles identiques</li>
+                        <li>Les bulles quantiques ont des propriétés spéciales</li>
+                        <li>Utilisez l'IA pour des conseils stratégiques</li>
+                        <li>Plus vous éliminez de bulles d'un coup, plus vous gagnez de points</li>
+                    </ul>
+                    <p><strong>Niveaux:</strong></p>
+                    <ul>
+                        <li><strong>Novice:</strong> 5 couleurs, vitesse normale</li>
+                        <li><strong>Expert:</strong> 6 couleurs, bulles quantiques</li>
+                        <li><strong>Maître:</strong> 7 couleurs, effets spéciaux</li>
+                        <li><strong>Légende:</strong> 8 couleurs, chaos quantique</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 Visez les groupes de bulles de même couleur",
+                    "🎯 Utilisez les murs pour faire rebondir vos tirs",
+                    "⚡ Les combos donnent plus de points",
+                    "🔮 Planifiez plusieurs coups à l'avance"
+                ]
+            },
+            en: {
+                subtitle: "Pop quantum bubbles with AI assistance",
+                levelsTitle: "Quantum Levels",
+                actionsTitle: "Quantum Actions",
+                rules: "📋 Rules",
+                start: "🚀 Start",
+                newGame: "🎮 New Game",
+                aiHint: "🤖 AI Hint",
+                pause: "⏸️ Pause",
+                resume: "▶️ Resume",
+                scoreLabel: "Score",
+                levelLabel: "Level",
+                partLabel: "Part:",
+                bubblesLabel: "Bubbles:",
+                shotsLabel: "Shots:",
+                timeLabel: "Time:",
+                comboLabel: "Combo:",
+                accuracyLabel: "Accuracy",
+                powerLabel: "Power",
+                rulesTitle: "Game Rules",
+                levels: ["Novice", "Expert", "Master", "Legend"],
+                rulesContent: `
+                    <p><strong>Objective:</strong> Eliminate all quantum bubbles by creating groups of 3 or more bubbles of the same color.</p>
+                    <p><strong>How to play:</strong></p>
+                    <ul>
+                        <li>Click to aim and shoot bubbles</li>
+                        <li>Form groups of 3+ identical bubbles</li>
+                        <li>Quantum bubbles have special properties</li>
+                        <li>Use AI for strategic advice</li>
+                        <li>The more bubbles you eliminate at once, the more points you earn</li>
+                    </ul>
+                    <p><strong>Levels:</strong></p>
+                    <ul>
+                        <li><strong>Novice:</strong> 5 colors, normal speed</li>
+                        <li><strong>Expert:</strong> 6 colors, quantum bubbles</li>
+                        <li><strong>Master:</strong> 7 colors, special effects</li>
+                        <li><strong>Legend:</strong> 8 colors, quantum chaos</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 Aim for groups of same-colored bubbles",
+                    "🎯 Use walls to bounce your shots",
+                    "⚡ Combos give more points",
+                    "🔮 Plan several moves ahead"
+                ]
+            },
+            ar: {
+                subtitle: "انفجر الفقاعات الكمية بمساعدة الذكاء الاصطناعي",
+                levelsTitle: "المستويات الكمية",
+                actionsTitle: "الإجراءات الكمية",
+                rules: "📋 القواعد",
+                start: "🚀 ابدأ",
+                newGame: "🎮 لعبة جديدة",
+                aiHint: "🤖 تلميح الذكاء الاصطناعي",
+                pause: "⏸️ إيقاف",
+                resume: "▶️ استئناف",
+                scoreLabel: "النقاط",
+                levelLabel: "المستوى",
+                partLabel: "الجزء:",
+                bubblesLabel: "الفقاعات:",
+                shotsLabel: "الطلقات:",
+                timeLabel: "الوقت:",
+                comboLabel: "التسلسل:",
+                accuracyLabel: "الدقة",
+                powerLabel: "القوة",
+                rulesTitle: "قواعد اللعبة",
+                levels: ["مبتدئ", "خبير", "أستاذ", "أسطورة"],
+                rulesContent: `
+                    <p><strong>الهدف:</strong> تخلص من جميع الفقاعات الكمية عن طريق إنشاء مجموعات من 3 فقاعات أو أكثر من نفس اللون.</p>
+                    <p><strong>كيفية اللعب:</strong></p>
+                    <ul>
+                        <li>انقر للتصويب وإطلاق الفقاعات</li>
+                        <li>شكل مجموعات من 3+ فقاعات متطابقة</li>
+                        <li>الفقاعات الكمية لها خصائص خاصة</li>
+                        <li>استخدم الذكاء الاصطناعي للنصائح الاستراتيجية</li>
+                        <li>كلما تخلصت من فقاعات أكثر دفعة واحدة، كلما حصلت على نقاط أكثر</li>
+                    </ul>
+                    <p><strong>المستويات:</strong></p>
+                    <ul>
+                        <li><strong>مبتدئ:</strong> 5 ألوان، سرعة عادية</li>
+                        <li><strong>خبير:</strong> 6 ألوان، فقاعات كمية</li>
+                        <li><strong>أستاذ:</strong> 7 ألوان، تأثيرات خاصة</li>
+                        <li><strong>أسطورة:</strong> 8 ألوان، فوضى كمية</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 استهدف مجموعات الفقاعات من نفس اللون",
+                    "🎯 استخدم الجدران لارتداد طلقاتك",
+                    "⚡ التسلسلات تعطي نقاط أكثر",
+                    "🔮 خطط لعدة حركات مسبقاً"
+                ]
+            },
+            es: {
+                subtitle: "Revienta burbujas cuánticas con asistencia de IA",
+                levelsTitle: "Niveles Cuánticos",
+                actionsTitle: "Acciones Cuánticas",
+                rules: "📋 Reglas",
+                start: "🚀 Comenzar",
+                newGame: "🎮 Nuevo Juego",
+                aiHint: "🤖 Pista IA",
+                pause: "⏸️ Pausa",
+                resume: "▶️ Reanudar",
+                scoreLabel: "Puntuación",
+                levelLabel: "Nivel",
+                partLabel: "Parte:",
+                bubblesLabel: "Burbujas:",
+                shotsLabel: "Disparos:",
+                timeLabel: "Tiempo:",
+                comboLabel: "Combo:",
+                accuracyLabel: "Precisión",
+                powerLabel: "Poder",
+                rulesTitle: "Reglas del Juego",
+                levels: ["Novato", "Experto", "Maestro", "Leyenda"],
+                rulesContent: `
+                    <p><strong>Objetivo:</strong> Elimina todas las burbujas cuánticas creando grupos de 3 o más burbujas del mismo color.</p>
+                    <p><strong>Cómo jugar:</strong></p>
+                    <ul>
+                        <li>Haz clic para apuntar y disparar burbujas</li>
+                        <li>Forma grupos de 3+ burbujas idénticas</li>
+                        <li>Las burbujas cuánticas tienen propiedades especiales</li>
+                        <li>Usa la IA para consejos estratégicos</li>
+                        <li>Cuantas más burbujas elimines de una vez, más puntos ganarás</li>
+                    </ul>
+                    <p><strong>Niveles:</strong></p>
+                    <ul>
+                        <li><strong>Novato:</strong> 5 colores, velocidad normal</li>
+                        <li><strong>Experto:</strong> 6 colores, burbujas cuánticas</li>
+                        <li><strong>Maestro:</strong> 7 colores, efectos especiales</li>
+                        <li><strong>Leyenda:</strong> 8 colores, caos cuántico</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 Apunta a grupos de burbujas del mismo color",
+                    "🎯 Usa las paredes para rebotar tus disparos",
+                    "⚡ Los combos dan más puntos",
+                    "🔮 Planifica varios movimientos por adelantado"
+                ]
+            },
+            de: {
+                subtitle: "Platze Quantenblasen mit KI-Unterstützung",
+                levelsTitle: "Quanten-Level",
+                actionsTitle: "Quanten-Aktionen",
+                rules: "📋 Regeln",
+                start: "🚀 Starten",
+                newGame: "🎮 Neues Spiel",
+                aiHint: "🤖 KI-Hinweis",
+                pause: "⏸️ Pause",
+                resume: "▶️ Fortsetzen",
+                scoreLabel: "Punkte",
+                levelLabel: "Level",
+                partLabel: "Teil:",
+                bubblesLabel: "Blasen:",
+                shotsLabel: "Schüsse:",
+                timeLabel: "Zeit:",
+                comboLabel: "Combo:",
+                accuracyLabel: "Genauigkeit",
+                powerLabel: "Kraft",
+                rulesTitle: "Spielregeln",
+                levels: ["Anfänger", "Experte", "Meister", "Legende"],
+                rulesContent: `
+                    <p><strong>Ziel:</strong> Eliminiere alle Quantenblasen, indem du Gruppen von 3 oder mehr Blasen derselben Farbe bildest.</p>
+                    <p><strong>Spielweise:</strong></p>
+                    <ul>
+                        <li>Klicke zum Zielen und Schießen von Blasen</li>
+                        <li>Bilde Gruppen von 3+ identischen Blasen</li>
+                        <li>Quantenblasen haben besondere Eigenschaften</li>
+                        <li>Nutze die KI für strategische Ratschläge</li>
+                        <li>Je mehr Blasen du auf einmal eliminierst, desto mehr Punkte erhältst du</li>
+                    </ul>
+                    <p><strong>Level:</strong></p>
+                    <ul>
+                        <li><strong>Anfänger:</strong> 5 Farben, normale Geschwindigkeit</li>
+                        <li><strong>Experte:</strong> 6 Farben, Quantenblasen</li>
+                        <li><strong>Meister:</strong> 7 Farben, Spezialeffekte</li>
+                        <li><strong>Legende:</strong> 8 Farben, Quantenchaos</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 Ziele auf Gruppen gleichfarbiger Blasen",
+                    "🎯 Nutze Wände, um deine Schüsse abprallen zu lassen",
+                    "⚡ Combos geben mehr Punkte",
+                    "🔮 Plane mehrere Züge im Voraus"
+                ]
+            },
+            zh: {
+                subtitle: "在AI协助下爆破量子泡泡",
+                levelsTitle: "量子等级",
+                actionsTitle: "量子操作",
+                rules: "📋 规则",
+                start: "🚀 开始",
+                newGame: "🎮 新游戏",
+                aiHint: "🤖 AI提示",
+                pause: "⏸️ 暂停",
+                resume: "▶️ 继续",
+                scoreLabel: "分数",
+                levelLabel: "等级",
+                partLabel: "部分:",
+                bubblesLabel: "泡泡:",
+                shotsLabel: "射击:",
+                timeLabel: "时间:",
+                comboLabel: "连击:",
+                accuracyLabel: "精确度",
+                powerLabel: "力量",
+                rulesTitle: "游戏规则",
+                levels: ["新手", "专家", "大师", "传奇"],
+                rulesContent: `
+                    <p><strong>目标:</strong> 通过创建3个或更多相同颜色的泡泡组来消除所有量子泡泡。</p>
+                    <p><strong>游戏方法:</strong></p>
+                    <ul>
+                        <li>点击瞄准和射击泡泡</li>
+                        <li>形成3+个相同泡泡的组合</li>
+                        <li>量子泡泡具有特殊属性</li>
+                        <li>使用AI获取战略建议</li>
+                        <li>一次消除的泡泡越多，获得的分数越高</li>
+                    </ul>
+                    <p><strong>等级:</strong></p>
+                    <ul>
+                        <li><strong>新手:</strong> 5种颜色，正常速度</li>
+                        <li><strong>专家:</strong> 6种颜色，量子泡泡</li>
+                        <li><strong>大师:</strong> 7种颜色，特殊效果</li>
+                        <li><strong>传奇:</strong> 8种颜色，量子混沌</li>
+                    </ul>
+                `,
+                hints: [
+                    "💡 瞄准相同颜色的泡泡组",
+                    "🎯 利用墙壁反弹你的射击",
+                    "⚡ 连击给予更多分数",
+                    "🔮 提前计划几步"
+                ]
+            }
+        };
+
+        // Variables du jeu
+        let currentLanguage = 'fr';
+        let currentLevel = 1;
+        let currentPart = 1;
+        let totalParts = 100;
+        let score = 0;
+        let gameTime = 0;
+        let gameTimer = null;
+        let bubbles = [];
+        let shotsCount = 0;
+        let bubblesCount = 0;
+        let combo = 1;
+        let accuracy = 100;
+        let gamePaused = false;
+        let gameStarted = false;
+        let currentBubble = null;
+        let levelScore = 0;
+        let partScore = 0;
+
+        // Couleurs des bulles par niveau
+        const bubbleColors = [
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'], // Niveau 1: 5 couleurs
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'], // Niveau 2: 6 couleurs
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'], // Niveau 3: 7 couleurs
+            ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'] // Niveau 4: 8 couleurs
+        ];
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGame();
+            setupEventListeners();
+            createParticles();
+        });
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function setupEventListeners() {
+            // Sélecteur de langue
+            document.getElementById('languageBtn').addEventListener('click', function() {
+                const dropdown = document.getElementById('languageDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            // Options de langue
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    changeLanguage(lang);
+                    document.getElementById('languageDropdown').classList.remove('show');
+                });
+            });
+
+            // Boutons de niveau
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLevel = parseInt(this.dataset.level);
+                    document.getElementById('currentLevel').textContent = currentLevel;
+                    if (gameStarted) {
+                        initializeGame();
+                    }
+                });
+            });
+
+            // Boutons de contrôle
+            document.getElementById('rulesBtn').addEventListener('click', showRules);
+            document.getElementById('startBtn').addEventListener('click', startNewGame);
+            document.getElementById('newGameBtn').addEventListener('click', startCompletelyNewGame);
+            document.getElementById('closeRules').addEventListener('click', hideRules);
+            document.getElementById('aiHintBtn').addEventListener('click', showAIHint);
+            document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+            // Contrôles du jeu
+            document.getElementById('gameCanvas').addEventListener('mousemove', updateTrajectory);
+            document.getElementById('gameCanvas').addEventListener('click', shootBubble);
+
+            // Fermer dropdown en cliquant ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.language-selector')) {
+                    document.getElementById('languageDropdown').classList.remove('show');
+                }
+            });
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            // Mettre à jour les textes
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('levelsTitle').textContent = t.levelsTitle;
+            document.getElementById('actionsTitle').textContent = t.actionsTitle;
+            document.getElementById('rulesBtn').innerHTML = t.rules;
+            document.getElementById('startBtn').innerHTML = t.start;
+            document.getElementById('newGameBtn').innerHTML = t.newGame;
+            document.getElementById('aiHintBtn').innerHTML = t.aiHint;
+            document.getElementById('pauseBtn').innerHTML = gamePaused ? t.resume : t.pause;
+            
+            // Labels
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('levelLabel').textContent = t.levelLabel;
+            document.getElementById('partLabel').textContent = t.partLabel;
+            document.getElementById('bubblesLabel').textContent = t.bubblesLabel;
+            document.getElementById('shotsLabel').textContent = t.shotsLabel;
+            document.getElementById('timeLabel').textContent = t.timeLabel;
+            document.getElementById('comboLabel').textContent = t.comboLabel;
+            document.getElementById('accuracyLabel').textContent = t.accuracyLabel;
+            document.getElementById('powerLabel').textContent = t.powerLabel;
+            
+            // Boutons de niveau
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`level${i + 1}`).textContent = t.levels[i];
+            }
+            
+            // Bouton de langue
+            const flags = { fr: '🇫🇷', en: '🇬🇧', ar: '🇸🇦', es: '🇪🇸', de: '🇩🇪', zh: '🇨🇳' };
+            const names = { fr: 'Français', en: 'English', ar: 'العربية', es: 'Español', de: 'Deutsch', zh: '中文' };
+            document.getElementById('languageBtn').innerHTML = `🌐 ${names[lang]}`;
+        }
+
+        function initializeGame() {
+            bubbles = [];
+            if (!gameStarted) {
+                score = 0;
+                levelScore = 0;
+                currentPart = 1;
+            }
+            partScore = 0;
+            gameTime = 0;
+            shotsCount = 0;
+            combo = 1;
+            accuracy = 100;
+            
+            if (gameTimer) clearInterval(gameTimer);
+            
+            generateBubbles();
+            generateCurrentBubble();
+            updateDisplay();
+            
+            // Afficher les instructions si le jeu n'a pas encore commencé
+            if (!gameStarted) {
+                showNotification("🎮 Cliquez sur 'Commencer' pour débuter l'aventure quantique!", 'info');
+            } else {
+                showNotification(`🎯 Partie ${currentPart}/${totalParts} - Niveau ${currentLevel}`, 'info');
+            }
+        }
+
+        function generateBubbles() {
+            const canvas = document.getElementById('gameCanvas');
+            canvas.innerHTML = '<div class="shooter" id="shooter">⚛️</div><div class="trajectory-line" id="trajectoryLine" style="display: none;"></div>';
+            
+            bubbles = [];
+            const colors = bubbleColors[currentLevel - 1];
+            const rows = 8 + currentLevel;
+            const bubblesPerRow = 12;
+            const bubbleSize = 35;
+            
+            for (let row = 0; row < Math.min(rows, 6); row++) {
+                for (let col = 0; col < bubblesPerRow - (row % 2); col++) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    bubble.style.background = `radial-gradient(circle, ${color}, ${color}aa)`;
+                    bubble.style.color = color;
+                    bubble.style.width = bubbleSize + 'px';
+                    bubble.style.height = bubbleSize + 'px';
+                    bubble.style.left = (col * (bubbleSize + 2) + (row % 2) * (bubbleSize / 2 + 1)) + 'px';
+                    bubble.style.top = (row * (bubbleSize + 2)) + 'px';
+                    
+                    // Ajouter des effets quantiques pour les niveaux élevés
+                    if (currentLevel >= 2 && Math.random() < 0.2) {
+                        bubble.classList.add('quantum');
+                        bubble.innerHTML = '⚛️';
+                    } else {
+                        bubble.innerHTML = '●';
+                    }
+                    
+                    bubble.dataset.color = color;
+                    bubble.dataset.row = row;
+                    bubble.dataset.col = col;
+                    
+                    canvas.appendChild(bubble);
+                    bubbles.push({
+                        element: bubble,
+                        color: color,
+                        row: row,
+                        col: col,
+                        isQuantum: bubble.classList.contains('quantum')
+                    });
+                }
+            }
+            
+            bubblesCount = bubbles.length;
+            updateDisplay();
+        }
+
+        function generateCurrentBubble() {
+            const colors = bubbleColors[currentLevel - 1];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            currentBubble = {
+                color: color,
+                isQuantum: currentLevel >= 2 && Math.random() < 0.1
+            };
+            
+            const shooter = document.getElementById('shooter');
+            shooter.style.background = `radial-gradient(circle, ${color}, ${color}aa)`;
+            shooter.innerHTML = currentBubble.isQuantum ? '⚛️' : '●';
+        }
+
+        function updateTrajectory(event) {
+            if (gamePaused || !gameStarted) return;
+            
+            const canvas = document.getElementById('gameCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const shooter = document.getElementById('shooter');
+            const trajectoryLine = document.getElementById('trajectoryLine');
+            
+            const shooterRect = shooter.getBoundingClientRect();
+            const shooterX = shooterRect.left + shooterRect.width / 2 - rect.left;
+            const shooterY = shooterRect.top + shooterRect.height / 2 - rect.top;
+            
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            
+            const angle = Math.atan2(mouseY - shooterY, mouseX - shooterX);
+            const length = Math.min(200, Math.sqrt(Math.pow(mouseX - shooterX, 2) + Math.pow(mouseY - shooterY, 2)));
+            
+            trajectoryLine.style.display = 'block';
+            trajectoryLine.style.left = shooterX + 'px';
+            trajectoryLine.style.bottom = (canvas.offsetHeight - shooterY) + 'px';
+            trajectoryLine.style.height = length + 'px';
+            trajectoryLine.style.transform = `rotate(${angle - Math.PI / 2}rad)`;
+        }
+
+        function shootBubble(event) {
+            if (gamePaused || !gameStarted || !currentBubble) return;
+            
+            const canvas = document.getElementById('gameCanvas');
+            const rect = canvas.getBoundingClientRect();
+            const shooter = document.getElementById('shooter');
+            
+            const shooterRect = shooter.getBoundingClientRect();
+            const shooterX = shooterRect.left + shooterRect.width / 2 - rect.left;
+            const shooterY = shooterRect.top + shooterRect.height / 2 - rect.top;
+            
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+            
+            // Ne pas tirer vers le bas
+            if (mouseY >= shooterY) return;
+            
+            // Créer la bulle tirée avec effets avancés
+            const shotBubble = document.createElement('div');
+            shotBubble.className = 'bubble shot-bubble';
+            shotBubble.style.background = `radial-gradient(circle, ${currentBubble.color}, ${currentBubble.color}aa)`;
+            shotBubble.style.color = currentBubble.color;
+            shotBubble.style.width = '35px';
+            shotBubble.style.height = '35px';
+            shotBubble.style.left = (shooterX - 17.5) + 'px';
+            shotBubble.style.top = (shooterY - 17.5) + 'px';
+            shotBubble.style.zIndex = '100';
+            shotBubble.style.boxShadow = `0 0 15px ${currentBubble.color}`;
+            shotBubble.innerHTML = currentBubble.isQuantum ? '⚛️' : '●';
+            
+            // Effet de traînée quantique
+            if (currentBubble.isQuantum) {
+                shotBubble.style.animation = 'quantumFloat 0.5s ease-in-out infinite';
+            }
+            
+            canvas.appendChild(shotBubble);
+            
+            // Animation du tir avec physique améliorée
+            const angle = Math.atan2(mouseY - shooterY, mouseX - shooterX);
+            const speed = 12;
+            let x = shooterX - 17.5;
+            let y = shooterY - 17.5;
+            let vx = Math.cos(angle) * speed;
+            let vy = Math.sin(angle) * speed;
+            
+            shotsCount++;
+            updateDisplay();
+            
+            // Créer effet de traînée
+            createTrailEffect(shotBubble, currentBubble.color);
+            
+            const animateShot = () => {
+                x += vx;
+                y += vy;
+                
+                // Rebond sur les murs avec effet sonore visuel
+                if (x <= 0 || x >= canvas.offsetWidth - 35) {
+                    vx = -vx;
+                    x = Math.max(0, Math.min(canvas.offsetWidth - 35, x));
+                    createBounceEffect(x, y);
+                }
+                
+                shotBubble.style.left = x + 'px';
+                shotBubble.style.top = y + 'px';
+                
+                // Vérifier les collisions avec détection améliorée
+                let collision = false;
+                let nearestBubble = null;
+                let minDistance = Infinity;
+                
+                for (let bubble of bubbles) {
+                    const bubbleX = parseFloat(bubble.element.style.left) + 17.5;
+                    const bubbleY = parseFloat(bubble.element.style.top) + 17.5;
+                    const shotX = x + 17.5;
+                    const shotY = y + 17.5;
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(bubbleX - shotX, 2) + Math.pow(bubbleY - shotY, 2)
+                    );
+                    
+                    if (distance < 32 && distance < minDistance) {
+                        minDistance = distance;
+                        nearestBubble = bubble;
+                        collision = true;
+                    }
+                }
+                
+                if (collision && nearestBubble) {
+                    handleBubbleCollision(shotBubble, nearestBubble);
+                } else if (y > 0 && y < canvas.offsetHeight - 35) {
+                    requestAnimationFrame(animateShot);
+                } else {
+                    shotBubble.remove();
+                    generateCurrentBubble();
+                }
+            };
+            
+            requestAnimationFrame(animateShot);
+        }
+
+        function handleBubbleCollision(shotBubble, targetBubble) {
+            // Trouver la meilleure position pour placer la nouvelle bulle
+            const bestPosition = findBestPosition(shotBubble, targetBubble);
+            const bubbleSize = 35;
+            
+            // Créer une nouvelle bulle dans la grille
+            const newBubble = {
+                element: shotBubble,
+                color: currentBubble.color,
+                row: bestPosition.row,
+                col: bestPosition.col,
+                isQuantum: currentBubble.isQuantum
+            };
+            
+            // Repositionner la bulle avec animation
+            shotBubble.style.transition = 'all 0.3s ease-out';
+            shotBubble.style.left = (bestPosition.col * (bubbleSize + 2) + (bestPosition.row % 2) * (bubbleSize / 2 + 1)) + 'px';
+            shotBubble.style.top = (bestPosition.row * (bubbleSize + 2)) + 'px';
+            shotBubble.style.zIndex = '10';
+            shotBubble.classList.remove('shot-bubble');
+            
+            // Ajouter à la liste des bulles
+            bubbles.push(newBubble);
+            
+            // Trouver les bulles connectées de même couleur
+            const connectedBubbles = findConnectedBubbles(newBubble, currentBubble.color);
+            
+            if (connectedBubbles.length >= 3) {
+                // Effet de succès
+                createSuccessEffect(shotBubble);
+                
+                // Calculer le score avec bonus avancés
+                let points = connectedBubbles.length * 10 * combo;
+                let bonusMultiplier = 1;
+                
+                // Vérifier les bulles dorées dans le groupe
+                const goldenBubbles = connectedBubbles.filter(b => b.isGolden);
+                if (goldenBubbles.length > 0) {
+                    bonusMultiplier *= 3;
+                    createGoldenExplosion(shotBubble);
+                    showNotification("💎 BULLE DORÉE ÉLIMINÉE! Triple points!", 'golden');
+                }
+                
+                // Bonus quantique
+                if (currentBubble.isQuantum) {
+                    bonusMultiplier *= 2;
+                    createQuantumExplosion(shotBubble);
+                }
+                
+                // Bonus de combo
+                if (combo >= 5) {
+                    bonusMultiplier *= 1.5;
+                    createComboEffect(shotBubble, combo);
+                }
+                
+                // Bonus de précision
+                if (accuracy >= 90) {
+                    bonusMultiplier *= 1.2;
+                    createPrecisionBonus(shotBubble);
+                }
+                
+                points = Math.floor(points * bonusMultiplier);
+                score += points;
+                combo = Math.min(combo + 1, 10);
+                
+                // Afficher le score gagné
+                showScorePopup(shotBubble, points);
+                
+                // Exploser les bulles connectées avec délai pour l'effet
+                setTimeout(() => {
+                    explodeBubbles(connectedBubbles);
+                    
+                    // Vérifier les bulles flottantes
+                    removeFloatingBubbles();
+                    
+                    // Vérifier la victoire de la partie
+                    if (bubbles.length === 0) {
+                        setTimeout(() => endPart(true), 1000);
+                        return;
+                    }
+                    
+                    // Vérifier la défaite de la partie
+                    if (checkGameOver()) {
+                        setTimeout(() => endPart(false), 1000);
+                        return;
+                    }
+                }, 500);
+                
+            } else {
+                combo = 1;
+                // Effet de placement simple
+                createPlacementEffect(shotBubble);
+            }
+            
+            generateCurrentBubble();
+            updateDisplay();
+            
+            // Ajouter de nouvelles lignes avec progression dynamique
+            if (shotsCount % (15 - currentLevel * 2) === 0 && currentLevel >= 2) {
+                addNewRow();
+                showWarning("Nouvelle ligne ajoutée!");
+            }
+            
+            // Événements spéciaux selon le niveau
+            handleSpecialEvents();
+        }
+
+        function findConnectedBubbles(startBubble, color) {
+            const connected = [];
+            const visited = new Set();
+            const queue = [startBubble];
+            
+            while (queue.length > 0) {
+                const bubble = queue.shift();
+                if (visited.has(bubble) || bubble.color !== color) continue;
+                
+                visited.add(bubble);
+                connected.push(bubble);
+                
+                // Trouver les bulles adjacentes avec logique hexagonale
+                const neighbors = bubbles.filter(b => {
+                    if (visited.has(b)) return false;
+                    return isAdjacent(bubble, b);
+                });
+                
+                queue.push(...neighbors);
+            }
+            
+            return connected;
+        }
+
+        function isAdjacent(bubble1, bubble2) {
+            const dx = Math.abs(bubble1.col - bubble2.col);
+            const dy = Math.abs(bubble1.row - bubble2.row);
+            
+            // Logique hexagonale pour les bulles
+            if (dy === 0) return dx === 1;
+            if (dy === 1) {
+                if (bubble1.row % 2 === 0) {
+                    return dx === 0 || dx === 1;
+                } else {
+                    return dx === 0 || dx === -1;
+                }
+            }
+            return false;
+        }
+
+        function removeFloatingBubbles() {
+            // Marquer toutes les bulles connectées au plafond
+            const connectedToTop = new Set();
+            const queue = [];
+            
+            // Ajouter toutes les bulles de la première ligne
+            bubbles.forEach(bubble => {
+                if (bubble.row === 0) {
+                    connectedToTop.add(bubble);
+                    queue.push(bubble);
+                }
+            });
+            
+            // Propager la connexion
+            while (queue.length > 0) {
+                const bubble = queue.shift();
+                const neighbors = bubbles.filter(b => 
+                    !connectedToTop.has(b) && isAdjacent(bubble, b)
+                );
+                
+                neighbors.forEach(neighbor => {
+                    connectedToTop.add(neighbor);
+                    queue.push(neighbor);
+                });
+            }
+            
+            // Supprimer les bulles flottantes
+            const floatingBubbles = bubbles.filter(b => !connectedToTop.has(b));
+            floatingBubbles.forEach(bubble => {
+                // Animation de chute
+                animateFallingBubble(bubble.element);
+                score += 5; // Bonus pour les bulles qui tombent
+            });
+            
+            // Retirer les bulles flottantes de la liste
+            bubbles = bubbles.filter(b => connectedToTop.has(b));
+            bubblesCount = bubbles.length;
+        }
+
+        function animateFallingBubble(element) {
+            element.style.transition = 'transform 1s ease-in';
+            element.style.transform = 'translateY(600px) rotate(360deg)';
+            element.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.remove();
+                }
+            }, 1000);
+        }
+
+        function createQuantumExplosion(element) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion-effect';
+            explosion.innerHTML = '⚛️💥⚛️';
+            explosion.style.left = element.style.left;
+            explosion.style.top = element.style.top;
+            explosion.style.fontSize = '3rem';
+            explosion.style.color = '#00ffff';
+            explosion.style.textShadow = '0 0 20px #00ffff';
+            
+            document.getElementById('gameCanvas').appendChild(explosion);
+            
+            setTimeout(() => explosion.remove(), 800);
+        }
+
+        function addNewRow() {
+            const colors = bubbleColors[currentLevel - 1];
+            const bubblesPerRow = 12;
+            const bubbleSize = 35;
+            
+            // Décaler toutes les bulles existantes vers le bas
+            bubbles.forEach(bubble => {
+                bubble.row++;
+                bubble.element.style.top = (bubble.row * (bubbleSize + 2)) + 'px';
+            });
+            
+            // Ajouter une nouvelle ligne en haut
+            for (let col = 0; col < bubblesPerRow; col++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                bubble.style.background = `radial-gradient(circle, ${color}, ${color}aa)`;
+                bubble.style.color = color;
+                bubble.style.width = bubbleSize + 'px';
+                bubble.style.height = bubbleSize + 'px';
+                bubble.style.left = (col * (bubbleSize + 2)) + 'px';
+                bubble.style.top = '0px';
+                
+                if (currentLevel >= 2 && Math.random() < 0.15) {
+                    bubble.classList.add('quantum');
+                    bubble.innerHTML = '⚛️';
+                } else {
+                    bubble.innerHTML = '●';
+                }
+                
+                bubble.dataset.color = color;
+                bubble.dataset.row = '0';
+                bubble.dataset.col = col;
+                
+                document.getElementById('gameCanvas').appendChild(bubble);
+                bubbles.push({
+                    element: bubble,
+                    color: color,
+                    row: 0,
+                    col: col,
+                    isQuantum: bubble.classList.contains('quantum')
+                });
+            }
+            
+            bubblesCount = bubbles.length;
+        }
+
+        function checkGameOver() {
+            // Vérifier si des bulles ont atteint le bas
+            const maxRow = Math.max(...bubbles.map(b => b.row));
+            return maxRow >= 15; // Limite de lignes
+        }
+
+        function explodeBubbles(bubblesToExplode) {
+            bubblesToExplode.forEach(bubble => {
+                bubble.element.remove();
+                bubbles = bubbles.filter(b => b !== bubble);
+            });
+            
+            bubblesCount = bubbles.length;
+        }
+
+        function createExplosionEffect(element) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion-effect';
+            explosion.innerHTML = '💥';
+            explosion.style.left = element.style.left;
+            explosion.style.top = element.style.top;
+            explosion.style.fontSize = '2rem';
+            explosion.style.color = '#ffff00';
+            
+            document.getElementById('gameCanvas').appendChild(explosion);
+            
+            setTimeout(() => explosion.remove(), 600);
+        }
+
+        function startNewGame() {
+            gameStarted = true;
+            gamePaused = false;
+            
+            if (gameTimer) clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                if (!gamePaused) {
+                    gameTime++;
+                    updateDisplay();
+                }
+            }, 1000);
+            
+            initializeGame();
+            
+            const t = translations[currentLanguage];
+            document.getElementById('pauseBtn').innerHTML = t.pause;
+        }
+
+        function startCompletelyNewGame() {
+            // Réinitialiser complètement le jeu
+            gameStarted = false;
+            gamePaused = false;
+            currentLevel = 1;
+            currentPart = 1;
+            score = 0;
+            levelScore = 0;
+            partScore = 0;
+            gameTime = 0;
+            shotsCount = 0;
+            combo = 1;
+            accuracy = 100;
+            
+            if (gameTimer) clearInterval(gameTimer);
+            
+            // Réinitialiser l'interface
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.level) === 1) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            initializeGame();
+            
+            const t = translations[currentLanguage];
+            showNotification(`🎮 ${t.newGame} - Tout recommence à zéro!`, 'info');
+        }
+
+        function togglePause() {
+            if (!gameStarted) return;
+            
+            gamePaused = !gamePaused;
+            const t = translations[currentLanguage];
+            
+            if (gamePaused) {
+                if (gameTimer) clearInterval(gameTimer);
+                document.getElementById('pauseBtn').innerHTML = t.resume;
+            } else {
+                gameTimer = setInterval(() => {
+                    gameTime++;
+                    updateDisplay();
+                }, 1000);
+                document.getElementById('pauseBtn').innerHTML = t.pause;
+            }
+        }
+
+        function updateDisplay() {
+            // Animation du score si il a changé
+            const scoreElement = document.getElementById('score');
+            const oldScore = parseInt(scoreElement.textContent) || 0;
+            if (score > oldScore) {
+                scoreElement.style.transform = 'scale(1.2)';
+                scoreElement.style.color = '#00ff88';
+                setTimeout(() => {
+                    scoreElement.style.transform = 'scale(1)';
+                    scoreElement.style.color = 'inherit';
+                }, 300);
+            }
+            scoreElement.textContent = score.toLocaleString();
+            
+            document.getElementById('currentLevel').textContent = currentLevel;
+            document.getElementById('currentPart').textContent = `${currentPart}/${totalParts}`;
+            document.getElementById('bubblesCount').textContent = bubblesCount;
+            document.getElementById('shotsCount').textContent = shotsCount;
+            
+            // Animation du combo
+            const comboElement = document.getElementById('combo');
+            comboElement.textContent = 'x' + combo;
+            if (combo > 3) {
+                comboElement.style.color = '#ff6b6b';
+                comboElement.style.textShadow = '0 0 10px #ff6b6b';
+            } else {
+                comboElement.style.color = 'inherit';
+                comboElement.style.textShadow = 'none';
+            }
+            
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            document.getElementById('time').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Calculer la précision améliorée
+            if (shotsCount > 0) {
+                const hits = Math.max(0, shotsCount - (bubbles.length - bubblesCount));
+                accuracy = Math.round((hits / shotsCount) * 100);
+                accuracy = Math.max(0, Math.min(100, accuracy));
+            }
+            
+            const accuracyElement = document.getElementById('accuracy');
+            accuracyElement.textContent = accuracy + '%';
+            if (accuracy >= 80) {
+                accuracyElement.style.color = '#00ff88';
+            } else if (accuracy >= 60) {
+                accuracyElement.style.color = '#feca57';
+            } else {
+                accuracyElement.style.color = '#ff6b6b';
+            }
+            
+            // Afficher la puissance basée sur le combo avec effets
+            const powerLevel = Math.min(5, Math.floor(combo / 2) + 1);
+            const powerElement = document.getElementById('power');
+            powerElement.textContent = '⚡'.repeat(powerLevel);
+            if (powerLevel >= 4) {
+                powerElement.style.textShadow = '0 0 15px #ffff00';
+                powerElement.style.animation = 'quantumPulse 1s ease-in-out infinite';
+            } else {
+                powerElement.style.textShadow = 'none';
+                powerElement.style.animation = 'none';
+            }
+        }
+
+        function showRules() {
+            const modal = document.getElementById('rulesModal');
+            const t = translations[currentLanguage];
+            
+            document.getElementById('rulesTitle').textContent = t.rulesTitle;
+            document.getElementById('rulesContent').innerHTML = t.rulesContent;
+            
+            modal.style.display = 'block';
+        }
+
+        function hideRules() {
+            document.getElementById('rulesModal').style.display = 'none';
+        }
+
+        function showAIHint() {
+            if (!gameStarted || gamePaused) return;
+            
+            const t = translations[currentLanguage];
+            const aiHint = generateSmartHint();
+            
+            // Créer une notification stylée au lieu d'une alerte
+            showNotification(aiHint, 'ai-hint');
+        }
+
+        function generateSmartHint() {
+            const t = translations[currentLanguage];
+            
+            // Analyser la situation actuelle
+            const colorCounts = {};
+            bubbles.forEach(bubble => {
+                colorCounts[bubble.color] = (colorCounts[bubble.color] || 0) + 1;
+            });
+            
+            // Trouver la couleur la plus fréquente
+            const mostFrequentColor = Object.keys(colorCounts).reduce((a, b) => 
+                colorCounts[a] > colorCounts[b] ? a : b
+            );
+            
+            // Vérifier s'il y a des groupes de 2 bulles de la couleur actuelle
+            const currentColorGroups = findNearMatches(currentBubble.color);
+            
+            if (currentColorGroups.length > 0) {
+                return `🎯 ${t.hints[0]} - Visez les groupes de ${currentBubble.color === mostFrequentColor ? 'cette couleur' : 'couleur similaire'}!`;
+            } else if (combo > 3) {
+                return `🔥 ${t.hints[2]} - Votre combo est à x${combo}! Continuez!`;
+            } else if (accuracy < 70) {
+                return `🎯 ${t.hints[1]} - Utilisez les rebonds pour améliorer votre précision!`;
+            } else {
+                return t.hints[Math.floor(Math.random() * t.hints.length)];
+            }
+        }
+
+        function findNearMatches(color) {
+            const matches = [];
+            bubbles.forEach(bubble => {
+                if (bubble.color === color) {
+                    const neighbors = bubbles.filter(b => 
+                        b.color === color && isAdjacent(bubble, b)
+                    );
+                    if (neighbors.length >= 1) {
+                        matches.push(bubble);
+                    }
+                }
+            });
+            return matches;
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(45deg, #1e3c72, #2a5298);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                border: 2px solid #00ffff;
+                box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+                z-index: 1000;
+                max-width: 300px;
+                font-size: 0.9rem;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function endPart(victory) {
+            partScore = score - levelScore;
+            levelScore = score;
+            
+            if (victory) {
+                // Partie réussie
+                currentPart++;
+                
+                if (currentPart > totalParts) {
+                    // Niveau terminé
+                    endLevel(true);
+                } else {
+                    // Passer à la partie suivante
+                    showPartCompleteModal(true);
+                }
+            } else {
+                // Partie échouée
+                showPartCompleteModal(false);
+            }
+        }
+
+        function endLevel(victory) {
+            if (victory && currentLevel < 4) {
+                // Passer au niveau suivant
+                showLevelCompleteModal();
+            } else {
+                // Jeu terminé
+                endGame(victory);
+            }
+        }
+
+        function endGame(victory) {
+            gameStarted = false;
+            gamePaused = false;
+            if (gameTimer) clearInterval(gameTimer);
+            
+            const t = translations[currentLanguage];
+            
+            // Calculer les statistiques finales
+            const finalStats = {
+                score: score,
+                time: gameTime,
+                accuracy: accuracy,
+                level: currentLevel,
+                part: currentPart,
+                shots: shotsCount,
+                maxCombo: combo
+            };
+            
+            // Créer un modal de fin de jeu stylé
+            showGameOverModal(victory, finalStats);
+            
+            // Réinitialiser les boutons
+            document.getElementById('startBtn').innerHTML = t.start;
+            document.getElementById('pauseBtn').innerHTML = t.pause;
+        }
+
+        function showPartCompleteModal(victory) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            const title = victory ? '✨ Partie Réussie!' : '💥 Partie Échouée';
+            const subtitle = victory ? 
+                `Partie ${currentPart-1}/${totalParts} terminée!` : 
+                `Partie ${currentPart}/${totalParts} échouée`;
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2 style="color: ${victory ? '#00ff88' : '#ff6b6b'}; text-align: center; margin-bottom: 10px;">${title}</h2>
+                    <p style="text-align: center; margin-bottom: 30px; color: #00ffff;">${subtitle}</p>
+                    
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-item">
+                            <div>Score de la Partie</div>
+                            <div style="font-size: 1.5rem; color: #00ff88;">${partScore.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Score Total</div>
+                            <div style="font-size: 1.2rem; color: #feca57;">${score.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Progression</div>
+                            <div>${victory ? currentPart-1 : currentPart}/${totalParts}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Niveau</div>
+                            <div>${currentLevel}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        ${victory ? `
+                        <button onclick="nextPart(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #00ff88, #00cc6a); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            ➡️ Partie Suivante
+                        </button>
+                        ` : `
+                        <button onclick="retryPart(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #ff6b6b, #ee5a24); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🔄 Réessayer
+                        </button>
+                        `}
+                        <button onclick="startNewGame(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🏠 Menu Principal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function showLevelCompleteModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2 style="color: #ffd700; text-align: center; margin-bottom: 10px;">🏆 NIVEAU ${currentLevel} TERMINÉ!</h2>
+                    <p style="text-align: center; margin-bottom: 30px; color: #00ffff;">Toutes les 100 parties complétées avec succès!</p>
+                    
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-item">
+                            <div>Score du Niveau</div>
+                            <div style="font-size: 1.8rem; color: #ffd700;">${levelScore.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Score Total</div>
+                            <div style="font-size: 1.5rem; color: #00ff88;">${score.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Parties Complétées</div>
+                            <div style="color: #00ff88;">100/100 ✅</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Niveau Actuel</div>
+                            <div>${currentLevel}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        ${currentLevel < 4 ? `
+                        <button onclick="nextLevel(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #000; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🚀 Niveau ${currentLevel + 1}
+                        </button>
+                        ` : `
+                        <button onclick="endGame(true); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #ffd700, #ffed4e); color: #000; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🎉 Jeu Terminé!
+                        </button>
+                        `}
+                        <button onclick="startNewGame(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🏠 Menu Principal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        function showGameOverModal(victory, stats) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            const t = translations[currentLanguage];
+            const title = victory ? '🎉 JEU TERMINÉ!' : '💥 Fin de Partie';
+            const subtitle = victory ? 
+                `Tous les niveaux complétés avec ${stats.score.toLocaleString()} points!` : 
+                'Les bulles ont envahi l\'écran!';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2 style="color: ${victory ? '#ffd700' : '#ff6b6b'}; text-align: center; margin-bottom: 10px;">${title}</h2>
+                    <p style="text-align: center; margin-bottom: 30px; color: #00ffff;">${subtitle}</p>
+                    
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-item">
+                            <div>Score Final</div>
+                            <div style="font-size: 1.8rem; color: #ffd700;">${stats.score.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Temps Total</div>
+                            <div>${Math.floor(stats.time / 60)}:${(stats.time % 60).toString().padStart(2, '0')}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Précision</div>
+                            <div style="color: ${stats.accuracy >= 80 ? '#00ff88' : stats.accuracy >= 60 ? '#feca57' : '#ff6b6b'}">${stats.accuracy}%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Tirs Total</div>
+                            <div>${stats.shots}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Niveau Atteint</div>
+                            <div>${stats.level}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Parties Complétées</div>
+                            <div>${stats.part-1}/${totalParts}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="startNewGame(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #00ff88, #00cc6a); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🚀 Nouvelle Partie
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Animation d'entrée
+            setTimeout(() => {
+                modal.querySelector('.modal-content').style.animation = 'slideIn 0.5s ease-out';
+            }, 100);
+        }
+
+        function nextPart() {
+            initializeGame();
+        }
+
+        function retryPart() {
+            // Remettre à la partie précédente si échec
+            if (currentPart > 1) {
+                currentPart--;
+            }
+            initializeGame();
+        }
+
+        function nextLevel() {
+            if (currentLevel < 4) {
+                currentLevel++;
+                currentPart = 1;
+                levelScore = score;
+                
+                document.querySelectorAll('.level-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.level) === currentLevel) {
+                        btn.classList.add('active');
+                    }
+                });
+                document.getElementById('currentLevel').textContent = currentLevel;
+                initializeGame();
+            }
+        }
+
+        // Fonctions d'effets visuels avancés
+        function createTrailEffect(element, color) {
+            const trail = document.createElement('div');
+            trail.style.cssText = `
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                background: radial-gradient(circle, ${color}44, transparent);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 99;
+                animation: trailFade 0.5s ease-out forwards;
+            `;
+            
+            const updateTrail = () => {
+                if (element.parentNode) {
+                    trail.style.left = element.style.left;
+                    trail.style.top = element.style.top;
+                    document.getElementById('gameCanvas').appendChild(trail);
+                    setTimeout(() => trail.remove(), 500);
+                }
+            };
+            
+            setTimeout(updateTrail, 50);
+        }
+
+        function createBounceEffect(x, y) {
+            const bounce = document.createElement('div');
+            bounce.style.cssText = `
+                position: absolute;
+                left: ${x}px;
+                top: ${y}px;
+                width: 40px;
+                height: 40px;
+                border: 3px solid #00ffff;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 98;
+                animation: bounceRing 0.4s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(bounce);
+            setTimeout(() => bounce.remove(), 400);
+        }
+
+        function findBestPosition(shotBubble, targetBubble) {
+            // Logique pour trouver la meilleure position adjacente
+            const targetRow = targetBubble.row;
+            const targetCol = targetBubble.col;
+            
+            // Positions possibles autour de la bulle cible
+            const possiblePositions = [
+                { row: targetRow - 1, col: targetCol },
+                { row: targetRow - 1, col: targetCol + (targetRow % 2 === 0 ? 1 : -1) },
+                { row: targetRow, col: targetCol - 1 },
+                { row: targetRow, col: targetCol + 1 },
+                { row: targetRow + 1, col: targetCol },
+                { row: targetRow + 1, col: targetCol + (targetRow % 2 === 0 ? 1 : -1) }
+            ];
+            
+            // Trouver la première position libre
+            for (let pos of possiblePositions) {
+                if (pos.row >= 0 && pos.col >= 0) {
+                    const occupied = bubbles.some(b => b.row === pos.row && b.col === pos.col);
+                    if (!occupied) {
+                        return pos;
+                    }
+                }
+            }
+            
+            // Si aucune position libre, utiliser la position de la cible
+            return { row: targetRow, col: targetCol };
+        }
+
+        function createSuccessEffect(element) {
+            const success = document.createElement('div');
+            success.innerHTML = '✨';
+            success.style.cssText = `
+                position: absolute;
+                left: ${element.style.left};
+                top: ${element.style.top};
+                font-size: 2rem;
+                pointer-events: none;
+                z-index: 101;
+                animation: successPop 0.8s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(success);
+            setTimeout(() => success.remove(), 800);
+        }
+
+        function createComboEffect(element, comboValue) {
+            const comboEffect = document.createElement('div');
+            comboEffect.innerHTML = `COMBO x${comboValue}!`;
+            comboEffect.style.cssText = `
+                position: absolute;
+                left: ${element.style.left};
+                top: ${parseFloat(element.style.top) - 30}px;
+                color: #ff6b6b;
+                font-weight: bold;
+                font-size: 1.2rem;
+                pointer-events: none;
+                z-index: 102;
+                text-shadow: 0 0 10px #ff6b6b;
+                animation: comboFloat 1s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(comboEffect);
+            setTimeout(() => comboEffect.remove(), 1000);
+        }
+
+        function createPrecisionBonus(element) {
+            const precision = document.createElement('div');
+            precision.innerHTML = 'PRÉCISION!';
+            precision.style.cssText = `
+                position: absolute;
+                left: ${element.style.left};
+                top: ${parseFloat(element.style.top) - 50}px;
+                color: #00ff88;
+                font-weight: bold;
+                font-size: 1rem;
+                pointer-events: none;
+                z-index: 102;
+                text-shadow: 0 0 10px #00ff88;
+                animation: precisionGlow 1s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(precision);
+            setTimeout(() => precision.remove(), 1000);
+        }
+
+        function showScorePopup(element, points) {
+            const scorePopup = document.createElement('div');
+            scorePopup.innerHTML = `+${points.toLocaleString()}`;
+            scorePopup.style.cssText = `
+                position: absolute;
+                left: ${parseFloat(element.style.left) + 40}px;
+                top: ${element.style.top};
+                color: #feca57;
+                font-weight: bold;
+                font-size: 1.5rem;
+                pointer-events: none;
+                z-index: 103;
+                text-shadow: 0 0 10px #feca57;
+                animation: scoreRise 1.2s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(scorePopup);
+            setTimeout(() => scorePopup.remove(), 1200);
+        }
+
+        function createPlacementEffect(element) {
+            const placement = document.createElement('div');
+            placement.style.cssText = `
+                position: absolute;
+                left: ${element.style.left};
+                top: ${element.style.top};
+                width: 35px;
+                height: 35px;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 100;
+                animation: placementPulse 0.5s ease-out forwards;
+            `;
+            
+            document.getElementById('gameCanvas').appendChild(placement);
+            setTimeout(() => placement.remove(), 500);
+        }
+
+        function showWarning(message) {
+            const warning = document.createElement('div');
+            warning.innerHTML = `⚠️ ${message}`;
+            warning.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 15px;
+                font-weight: bold;
+                font-size: 1.2rem;
+                z-index: 1001;
+                box-shadow: 0 4px 20px rgba(255, 107, 107, 0.5);
+                animation: warningPulse 2s ease-out forwards;
+            `;
+            
+            document.body.appendChild(warning);
+            setTimeout(() => warning.remove(), 2000);
+        }
+
+        function handleSpecialEvents() {
+            // Événement de chaos quantique (niveau 4)
+            if (currentLevel === 4 && shotsCount % 20 === 0) {
+                createQuantumChaos();
+            }
+            
+            // Événement de bonus temporel (tous niveaux)
+            if (shotsCount % 25 === 0) {
+                createTimeBonus();
+            }
+            
+            // Événement de bulles dorées (niveaux 3+)
+            if (currentLevel >= 3 && Math.random() < 0.05) {
+                createGoldenBubble();
+            }
+        }
+
+        function createQuantumChaos() {
+            showNotification("🌀 CHAOS QUANTIQUE ACTIVÉ! Les bulles changent de couleur!", 'quantum');
+            
+            // Changer aléatoirement la couleur de quelques bulles
+            const bubblesToChange = bubbles.slice(0, Math.min(5, bubbles.length));
+            const colors = bubbleColors[currentLevel - 1];
+            
+            bubblesToChange.forEach(bubble => {
+                const newColor = colors[Math.floor(Math.random() * colors.length)];
+                bubble.color = newColor;
+                bubble.element.style.background = `radial-gradient(circle, ${newColor}, ${newColor}aa)`;
+                bubble.element.style.color = newColor;
+                
+                // Effet visuel de changement
+                bubble.element.style.animation = 'quantumFloat 2s ease-in-out';
+                setTimeout(() => {
+                    bubble.element.style.animation = '';
+                }, 2000);
+            });
+        }
+
+        function createTimeBonus() {
+            showNotification("⏰ BONUS TEMPS! +10 secondes de réflexion", 'time');
+            // Ralentir légèrement le jeu pendant 10 secondes
+            document.getElementById('gameCanvas').style.filter = 'hue-rotate(45deg)';
+            setTimeout(() => {
+                document.getElementById('gameCanvas').style.filter = '';
+            }, 10000);
+        }
+
+        function createGoldenBubble() {
+            if (bubbles.length === 0) return;
+            
+            const randomBubble = bubbles[Math.floor(Math.random() * bubbles.length)];
+            randomBubble.element.style.background = 'radial-gradient(circle, #ffd700, #ffed4e)';
+            randomBubble.element.innerHTML = '💎';
+            randomBubble.element.style.animation = 'quantumPulse 1s ease-in-out infinite';
+            randomBubble.isGolden = true;
+            
+            showNotification("💎 BULLE DORÉE APPARUE! Triple points si éliminée!", 'golden');
+        }
+
+        function createGoldenExplosion(element) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion-effect';
+            explosion.innerHTML = '💎✨💎✨💎';
+            explosion.style.left = element.style.left;
+            explosion.style.top = element.style.top;
+            explosion.style.fontSize = '2.5rem';
+            explosion.style.color = '#ffd700';
+            explosion.style.textShadow = '0 0 20px #ffd700';
+            explosion.style.animation = 'explode 1s ease-out forwards';
+            
+            document.getElementById('gameCanvas').appendChild(explosion);
+            
+            setTimeout(() => explosion.remove(), 1000);
+        }
+    </script>
+<script>
+/* Canonical child-side overlay closer for platform pages */
+function closePlatform(){
+    try{ console.debug('jeux25: closePlatform called'); }catch(e){}
+    if(window.parent && window.parent !== window){
+        window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux25' }, '*');
+        return;
+    }
+    if(window.opener && !window.opener.closed){
+        try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux25' }, '*'); }catch(e){}
+        try{ window.close(); }catch(e){}
+        return;
+    }
+    window.location.href = '/detente';
+}
+window.closePlatform = closePlatform;
+
+(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98749160856be167',t:'MTc1OTI0NDE5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux25' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

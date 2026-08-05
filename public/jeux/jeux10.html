@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 DEMO PLAYGROUND - Terrain d'Entraînement Futuriste</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+box-sizing: border-box;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 30%, #2d1b69 70%, #4c1d95 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Particules futuristes d'arrière-plan */
+        .cyber-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cyber-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: cyberFloat 20s infinite linear;
+            box-shadow: 0 0 20px #00ffff, 0 0 40px #0080ff;
+        }
+
+        @keyframes cyberFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) translateX(50px) rotate(90deg) scale(1);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-60px) rotate(180deg) scale(1.8);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(10vh) translateX(80px) rotate(270deg) scale(1);
+            }
+            100% {
+                transform: translateY(-10vh) translateX(120px) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Grille cyber de fond */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 100px 100px;
+            animation: cyberGridPulse 25s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes cyberGridPulse {
+            0%, 100% { 
+                transform: translate(0, 0) scale(1);
+                opacity: 0.2;
+            }
+            50% { 
+                transform: translate(50px, 50px) scale(1.1);
+                opacity: 0.4;
+            }
+        }
+
+        /* Container principal */
+        .playground-container {
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 200px 1fr 200px;
+            grid-template-rows: 1fr;
+            gap: 20px;
+            min-height: 100vh;
+            padding: 20px;
+            max-width: 100%;
+            margin: 0;
+        }
+
+        .game-panel {
+            background: linear-gradient(145deg, 
+                rgba(15, 15, 35, 0.95) 0%,
+                rgba(26, 26, 62, 0.95) 30%,
+                rgba(45, 27, 105, 0.95) 70%,
+                rgba(76, 29, 149, 0.95) 100%);
+            backdrop-filter: blur(40px);
+            border-radius: 30px;
+            padding: 30px;
+            width: 100%;
+            height: fit-content;
+            box-shadow: 
+                0 40px 80px rgba(0, 0, 0, 0.9),
+                0 0 150px rgba(0, 255, 255, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            border: 4px solid rgba(0, 255, 255, 0.5);
+            animation: cyberPanelGlow 6s ease-in-out infinite alternate;
+            grid-column: 2;
+        }
+
+        .left-panel, .right-panel {
+            background: linear-gradient(145deg, 
+                rgba(15, 15, 35, 0.95) 0%,
+                rgba(26, 26, 62, 0.95) 30%,
+                rgba(45, 27, 105, 0.95) 70%,
+                rgba(76, 29, 149, 0.95) 100%);
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            padding: 18px;
+            height: fit-content;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.7),
+                0 0 80px rgba(0, 255, 255, 0.2),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(0, 255, 255, 0.4);
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel-section {
+            margin-bottom: 18px;
+        }
+
+        @keyframes cyberPanelGlow {
+            from { 
+                box-shadow: 
+                    0 40px 80px rgba(0, 0, 0, 0.9),
+                    0 0 150px rgba(0, 255, 255, 0.3),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            }
+            to { 
+                box-shadow: 
+                    0 45px 90px rgba(0, 0, 0, 0.9),
+                    0 0 200px rgba(0, 255, 255, 0.4),
+                    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* En-tête du jeu */
+        .cyber-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid rgba(0, 255, 255, 0.5);
+        }
+
+        .cyber-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .cyber-title h1 {
+            color: #00ffff;
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.9);
+            animation: cyberTitlePulse 5s infinite alternate;
+        }
+
+        @keyframes cyberTitlePulse {
+            from { 
+                text-shadow: 0 0 50px rgba(0, 255, 255, 0.9);
+                transform: scale(1);
+            }
+            to { 
+                text-shadow: 0 0 70px rgba(0, 255, 255, 1);
+                transform: scale(1.08);
+            }
+        }
+
+        .cyber-icon {
+            font-size: 24px;
+            animation: cyberIconRotate 8s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px #00ffff);
+        }
+
+        @keyframes cyberIconRotate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(90deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+            75% { transform: scale(1.2) rotate(270deg); }
+        }
+
+        .cyber-badge {
+            background: linear-gradient(45deg, #00ffff, #0080ff, #4040ff, #8000ff);
+            background-size: 400% 400%;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            animation: cyberBadgeShine 6s ease-in-out infinite;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+        }
+
+        @keyframes cyberBadgeShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        /* Sélecteur de langue personnalisé */
+        .language-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .language-selector {
+            background: linear-gradient(145deg, 
+                rgba(15, 15, 35, 0.95) 0%,
+                rgba(26, 26, 62, 0.95) 30%,
+                rgba(45, 27, 105, 0.95) 70%,
+                rgba(0, 255, 255, 0.95) 100%);
+            color: #00ffff;
+            border: 4px solid rgba(0, 255, 255, 0.6);
+            border-radius: 25px;
+            padding: 18px 25px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.4s ease;
+            box-shadow: 
+                0 0 40px rgba(0, 255, 255, 0.4),
+                0 0 60px rgba(0, 128, 255, 0.2),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            min-width: 200px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .language-selector:hover {
+            background: linear-gradient(145deg, 
+                rgba(0, 255, 255, 0.9) 0%,
+                rgba(0, 128, 255, 0.9) 30%,
+                rgba(64, 64, 255, 0.9) 70%,
+                rgba(128, 0, 255, 0.9) 100%);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 15px 40px rgba(0, 255, 255, 0.6),
+                0 0 80px rgba(0, 128, 255, 0.4),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            color: white;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+        }
+
+        .language-dropdown-arrow {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .language-dropdown.open .language-dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .language-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: linear-gradient(145deg, 
+                rgba(15, 15, 35, 0.98) 0%,
+                rgba(26, 26, 62, 0.98) 50%,
+                rgba(45, 27, 105, 0.98) 100%);
+            backdrop-filter: blur(40px);
+            border: 4px solid rgba(0, 255, 255, 0.6);
+            border-radius: 20px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.9),
+                0 0 80px rgba(0, 255, 255, 0.4);
+            min-width: 220px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-15px);
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .language-dropdown.open .language-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 18px 25px;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .language-option:last-child {
+            border-bottom: none;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .language-option:first-child {
+            border-radius: 16px 16px 0 0;
+        }
+
+        .language-option:hover {
+            background: rgba(0, 255, 255, 0.3);
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .language-option.active {
+            background: rgba(0, 255, 255, 0.5);
+            color: white;
+        }
+
+        /* Sélecteur compact pour la difficulté */
+        .compact-selector {
+            background: linear-gradient(145deg, 
+                rgba(15, 15, 35, 0.95) 0%,
+                rgba(26, 26, 62, 0.95) 30%,
+                rgba(45, 27, 105, 0.95) 70%,
+                rgba(0, 255, 255, 0.95) 100%);
+            color: #00ffff;
+            border: 3px solid rgba(0, 255, 255, 0.6);
+            border-radius: 15px;
+            padding: 12px 18px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.4s ease;
+            box-shadow: 
+                0 0 25px rgba(0, 255, 255, 0.3),
+                0 0 40px rgba(0, 128, 255, 0.1),
+                inset 0 2px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .compact-selector option {
+            background: rgba(15, 15, 35, 0.98);
+            color: #00ffff;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .compact-selector:hover {
+            background: linear-gradient(145deg, 
+                rgba(0, 255, 255, 0.8) 0%,
+                rgba(0, 128, 255, 0.8) 30%,
+                rgba(64, 64, 255, 0.8) 70%,
+                rgba(128, 0, 255, 0.8) 100%);
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(0, 255, 255, 0.5),
+                0 0 50px rgba(0, 128, 255, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.2);
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Panneau de titre des sections */
+        .panel-title {
+            color: #00ffff;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+            border-bottom: 3px solid rgba(0, 255, 255, 0.4);
+            padding-bottom: 10px;
+        }
+
+        /* Zone de jeu principale */
+        .playground-arena {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 4px solid rgba(0, 255, 255, 0.6);
+            box-shadow: 
+                0 0 50px rgba(0, 255, 255, 0.4),
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            gap: 3px;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .grid-cell {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(145deg, #1a1a3e, #0f0f23);
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .grid-cell:hover {
+            background: linear-gradient(145deg, #00ffff, #0080ff);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            transform: scale(1.1);
+            border-color: #00ffff;
+        }
+
+        .grid-cell.player {
+            background: linear-gradient(145deg, #00ff00, #008000);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .grid-cell.ai {
+            background: linear-gradient(145deg, #ff0080, #800040);
+            box-shadow: 0 0 30px rgba(255, 0, 128, 0.8);
+            color: white;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+
+        .grid-cell.target {
+            background: linear-gradient(145deg, #ffff00, #ff8000);
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+            animation: targetPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes targetPulse {
+            from { 
+                box-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 0 40px rgba(255, 255, 0, 1);
+                transform: scale(1.05);
+            }
+        }
+
+        /* Contrôles du jeu */
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .cyber-btn {
+            padding: 20px 40px;
+            background: linear-gradient(145deg, #00ffff, #0080ff);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            min-width: 180px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .compact-btn {
+            padding: 12px 20px;
+            font-size: 12px;
+            min-width: 120px;
+            letter-spacing: 1px;
+        }
+
+        .cyber-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .cyber-btn:hover::before {
+            left: 100%;
+        }
+
+        .cyber-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 255, 255, 0.6);
+            background: linear-gradient(145deg, #0080ff, #4040ff);
+        }
+
+        .cyber-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .start-btn {
+            background: linear-gradient(145deg, #00ff00, #008000);
+        }
+
+        .start-btn:hover {
+            background: linear-gradient(145deg, #008000, #004000);
+        }
+
+        .reset-btn {
+            background: linear-gradient(145deg, #ff4040, #800020);
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(145deg, #800020, #400010);
+        }
+
+        /* Statistiques du jeu */
+        .game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.3), transparent);
+            animation: statCyberScan 6s linear infinite;
+        }
+
+        @keyframes statCyberScan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .stat-label {
+            display: block;
+            color: #a1a1aa;
+            font-size: 10px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            display: block;
+            color: #00ffff;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.9);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Messages de jeu */
+        .game-message {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(0, 255, 255, 0.15);
+            border: 3px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* IA Status */
+        .ai-thinking {
+            animation: aiThinking 2.5s ease-in-out infinite;
+        }
+
+        @keyframes aiThinking {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Niveaux de difficulté */
+        .difficulty-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-dot.active {
+            background: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .playground-container {
+                grid-template-columns: 180px 1fr 180px;
+                gap: 15px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .playground-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 20px;
+            }
+            
+            .left-panel {
+                grid-row: 2;
+            }
+            
+            .right-panel {
+                grid-row: 3;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-panel {
+                padding: 25px;
+            }
+            
+            .cyber-title h1 {
+                font-size: 24px;
+            }
+            
+            .playground-arena {
+                max-width: 450px;
+                padding: 20px;
+            }
+            
+            .game-grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+            }
+            
+            .grid-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .cyber-btn {
+                min-width: 160px;
+                padding: 18px 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .playground-arena {
+                max-width: 350px;
+            }
+            
+            .grid-cell {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .cyber-title {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .cyber-title h1 {
+                font-size: 20px;
+            }
+        }
+
+        /* Animations de victoire */
+        .victory-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(25px);
+        }
+
+        .victory-content {
+            background: linear-gradient(145deg, rgba(15, 15, 35, 0.95), rgba(45, 27, 105, 0.95));
+            border: 5px solid #00ffff;
+            border-radius: 30px;
+            padding: 60px;
+            text-align: center;
+            color: white;
+            font-size: 26px;
+            font-weight: bold;
+            max-width: 700px;
+            box-shadow: 0 0 80px rgba(0, 255, 255, 0.8);
+            animation: victoryPulse 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes victoryPulse {
+            from { 
+                box-shadow: 0 0 80px rgba(0, 255, 255, 0.8);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 0 120px rgba(0, 255, 255, 1);
+                transform: scale(1.08);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particules cyber d'arrière-plan -->
+    <div class="cyber-particles" id="cyberParticles"></div>
+    
+    <!-- Grille cyber -->
+    <div class="cyber-grid"></div>
+    
+    <!-- Container principal -->
+    <div class="playground-container">
+        <!-- Panneau gauche -->
+        <div class="left-panel">
+            <div class="panel-section">
+                <div class="panel-title" id="statsTitle">📊 Statistiques</div>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-label" id="scoreLabel">Score</span>
+                        <span class="stat-value" id="scoreValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="levelLabel">Niveau</span>
+                        <span class="stat-value" id="levelValue">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="movesLabel">Mouvements</span>
+                        <span class="stat-value" id="movesValue">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="timeLabel">Temps</span>
+                        <span class="stat-value" id="timeValue">00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="controlsTitle">⚡ Contrôles Cyber</div>
+                <div style="display: grid; gap: 18px;">
+                    <button class="cyber-btn start-btn compact-btn" onclick="startGame()">
+                        🚀 <span id="startGameText">Démarrer Mission</span>
+                    </button>
+                    <button class="cyber-btn reset-btn compact-btn" onclick="resetGame()" id="resetBtn">
+                        🔄 <span id="resetText">Reset Arena</span>
+                    </button>
+                    <button class="cyber-btn compact-btn" onclick="getHint()" id="hintBtn">
+                        🧠 <span id="hintText">Analyse IA</span>
+                    </button>
+                    <button class="cyber-btn compact-btn" onclick="pauseGame()" id="pauseBtn">
+                        <span id="pauseIcon">⏸️</span> <span id="pauseText">Pause</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="difficultyTitle">🎯 Niveau Mission</div>
+                <select id="difficultySelector" onchange="changeDifficulty()" class="compact-selector" style="width: 100%; text-align: center; margin-bottom: 15px;">
+                    <option value="1">🟢 Recrue</option>
+                    <option value="2">🟡 Soldat</option>
+                    <option value="3" selected>🟠 Vétéran</option>
+                    <option value="4">🔴 Elite</option>
+                    <option value="5">🟣 Légende</option>
+                </select>
+                <div class="difficulty-indicator" id="difficultyIndicator">
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau central -->
+        <div class="game-panel">
+            <!-- En-tête -->
+            <div class="cyber-header">
+                <div class="cyber-title">
+                    <span class="cyber-icon">🚀</span>
+                    <h1 id="gameTitle">DEMO PLAYGROUND</h1>
+                    <span class="cyber-badge" id="cyberBadge">🤖 IA FUTURISTE</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 30px;">
+                    <div class="language-dropdown" id="languageDropdown">
+                        <div class="language-selector" onclick="toggleLanguageDropdown()">
+                            <span id="selectedLanguage">🇫🇷 Français</span>
+                            <span class="language-dropdown-arrow">▼</span>
+                        </div>
+                        <div class="language-dropdown-menu" id="languageMenu">
+                            <div class="language-option active" onclick="selectLanguage('fr', '🇫🇷 Français')">🇫🇷 Français</div>
+                            <div class="language-option" onclick="selectLanguage('en', '🇺🇸 English')">🇺🇸 English</div>
+                            <div class="language-option" onclick="selectLanguage('ar', '🇸🇦 العربية')">🇸🇦 العربية</div>
+                            <div class="language-option" onclick="selectLanguage('es', '🇪🇸 Español')">🇪🇸 Español</div>
+                            <div class="language-option" onclick="selectLanguage('de', '🇩🇪 Deutsch')">🇩🇪 Deutsch</div>
+                            <div class="language-option" onclick="selectLanguage('zh', '🇨🇳 中文')">🇨🇳 中文</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message de jeu -->
+            <div class="game-message" id="gameMessage">
+                <span id="welcomeMessage">🚀 Bienvenue dans le Terrain d'Entraînement Futuriste</span>
+            </div>
+
+            <!-- Zone de jeu principale -->
+            <div class="playground-arena" id="playgroundArena">
+                <div class="game-grid" id="gameGrid">
+                    <!-- Les cellules seront générées par JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau droit -->
+        <div class="right-panel">
+            <div class="panel-section">
+                <div class="panel-title" id="missionTitle">🎯 Objectif Mission</div>
+                <div style="color: #a1a1aa; font-size: 15px; line-height: 2;">
+                    <p id="missionText">
+                        • Collectez tous les orbes d'énergie<br>
+                        • Évitez les sentinelles IA<br>
+                        • Atteignez la zone d'extraction<br>
+                        • Optimisez votre score temporel<br>
+                        • Maîtrisez chaque niveau progressif
+                    </p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="strategiesTitle">🧠 Stratégies</div>
+                <div style="color: #a1a1aa; font-size: 14px; line-height: 1.8;">
+                    <div style="margin-bottom: 12px;">
+                        <span style="color: #00ff00;">🟢</span> <span id="strategy1Text">Planifiez vos mouvements</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span style="color: #00ffff;">🔵</span> <span id="strategy2Text">Analysez les patterns IA</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span style="color: #ffff00;">🟡</span> <span id="strategy3Text">Optimisez le temps</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span style="color: #ff0080;">🟣</span> <span id="strategy4Text">Adaptez-vous aux niveaux</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="aiStatusTitle">🤖 État IA</div>
+                <div id="aiStatus" style="color: #00ffff; font-size: 15px; text-align: center; padding: 18px;">
+                    <span id="aiStatusText">Système IA Initialisé</span>
+                </div>
+                <div style="color: #a1a1aa; font-size: 13px; text-align: center; margin-top: 15px;" id="aiAnalysis">
+                    <span id="aiAnalysisText">Analyse comportementale en cours...</span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="achievementsTitle">🏆 Succès</div>
+                <div id="achievementsList" style="color: #a1a1aa; font-size: 12px; max-height: 140px; overflow-y: auto; line-height: 1.6;">
+                    <div id="achievementsContent">Aucun succès débloqué</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .global-close-btn { position: fixed; top: 14px; right: 14px; z-index: 99999; background: #ff3b3b; color: #fff; border: none; width:52px; height:52px; border-radius:50%; font-size:22px; cursor:pointer; box-shadow:0 6px 18px rgba(255,59,59,0.3);} 
+        .global-close-btn:hover{ transform: scale(1.05); }
+    </style>
+    <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+    <script>
+        function closePlatform(){
+            try{ console.debug('jeux10: closePlatform called'); }catch(e){}
+            try{
+                if(window.parent && window.parent !== window){
+                    window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux10' }, '*');
+                    return;
+                }
+            }catch(e){}
+            try{
+                if(window.opener && !window.opener.closed){
+                    try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux10' }, '*'); }catch(e){}
+                    try{ window.close(); }catch(e){}
+                    return;
+                }
+            }catch(e){}
+            try{ window.location.href = '/detente'; }catch(e){}
+        }
+    </script>
+    <script>
+        // Traductions multilingues
+        const translations = {
+            fr: {
+                gameTitle: "DEMO PLAYGROUND",
+                cyberBadge: "🤖 IA FUTURISTE",
+                controlsTitle: "⚡ Contrôles Cyber",
+                statsTitle: "📊 Statistiques",
+                difficultyTitle: "🎯 Niveau Mission",
+                missionTitle: "🎯 Objectif Mission",
+                strategiesTitle: "🧠 Stratégies",
+                aiStatusTitle: "🤖 État IA",
+                achievementsTitle: "🏆 Succès",
+                startGameText: "Démarrer Mission",
+                resetText: "Reset Arena",
+                hintText: "Analyse IA",
+                pauseText: "Pause",
+                resumeText: "Reprendre",
+                scoreLabel: "Score",
+                levelLabel: "Niveau",
+                movesLabel: "Mouvements",
+                timeLabel: "Temps",
+                welcomeMessage: "🚀 Bienvenue dans le Terrain d'Entraînement Futuriste",
+                missionText: "• Collectez tous les orbes d'énergie<br>• Évitez les sentinelles IA<br>• Atteignez la zone d'extraction<br>• Optimisez votre score temporel<br>• Maîtrisez chaque niveau progressif",
+                strategy1Text: "Planifiez vos mouvements",
+                strategy2Text: "Analysez les patterns IA",
+                strategy3Text: "Optimisez le temps",
+                strategy4Text: "Adaptez-vous aux niveaux",
+                aiStatusText: "Système IA Initialisé",
+                aiAnalysisText: "Analyse comportementale en cours...",
+                achievementsContent: "Aucun succès débloqué",
+                gameStarted: "🚀 Mission commencée - Collectez les orbes !",
+                gameWon: "🎉 Mission accomplie ! Niveau suivant débloqué !",
+                gameLost: "💥 Mission échouée ! Réessayez pour améliorer votre score !",
+                gamePaused: "⏸️ Mission en pause - Cliquez pour reprendre",
+                hintMessage: "💡 Conseil Tactique: Analysez les mouvements IA",
+                levelUp: "⬆️ Niveau supérieur ! Difficulté augmentée !",
+                perfectScore: "⭐ Score parfait ! Maîtrise totale !",
+                speedBonus: "⚡ Bonus vitesse ! Exécution rapide !",
+                energyBoostMessage: "⚡ BOOST D'ÉNERGIE ACTIVÉ! Sentinelles ralenties! ⚡",
+                difficultyLevels: {
+                    1: "🟢 Recrue",
+                    2: "🟡 Soldat", 
+                    3: "🟠 Vétéran",
+                    4: "🔴 Elite",
+                    5: "🟣 Légende"
+                }
+            },
+            en: {
+                gameTitle: "DEMO PLAYGROUND",
+                cyberBadge: "🤖 FUTURISTIC AI",
+                controlsTitle: "⚡ Cyber Controls",
+                statsTitle: "📊 Statistics",
+                difficultyTitle: "🎯 Mission Level",
+                missionTitle: "🎯 Mission Objective",
+                strategiesTitle: "🧠 Strategies",
+                aiStatusTitle: "🤖 AI Status",
+                achievementsTitle: "🏆 Achievements",
+                startGameText: "Start Mission",
+                resetText: "Reset Arena",
+                hintText: "AI Analysis",
+                pauseText: "Pause",
+                resumeText: "Resume",
+                scoreLabel: "Score",
+                levelLabel: "Level",
+                movesLabel: "Moves",
+                timeLabel: "Time",
+                welcomeMessage: "🚀 Welcome to the Futuristic Training Ground",
+                missionText: "• Collect all energy orbs<br>• Avoid AI sentinels<br>• Reach extraction zone<br>• Optimize time score<br>• Master each progressive level",
+                strategy1Text: "Plan your movements",
+                strategy2Text: "Analyze AI patterns",
+                strategy3Text: "Optimize timing",
+                strategy4Text: "Adapt to levels",
+                aiStatusText: "AI System Initialized",
+                aiAnalysisText: "Behavioral analysis in progress...",
+                achievementsContent: "No achievements unlocked",
+                gameStarted: "🚀 Mission started - Collect the orbs!",
+                gameWon: "🎉 Mission accomplished! Next level unlocked!",
+                gameLost: "💥 Mission failed! Try again to improve your score!",
+                gamePaused: "⏸️ Mission paused - Click to resume",
+                hintMessage: "💡 Tactical Advice: Analyze AI movements",
+                levelUp: "⬆️ Level up! Difficulty increased!",
+                perfectScore: "⭐ Perfect score! Total mastery!",
+                speedBonus: "⚡ Speed bonus! Fast execution!",
+                energyBoostMessage: "⚡ ENERGY BOOST ACTIVATED! Sentinels slowed! ⚡",
+                difficultyLevels: {
+                    1: "🟢 Recruit",
+                    2: "🟡 Soldier",
+                    3: "🟠 Veteran", 
+                    4: "🔴 Elite",
+                    5: "🟣 Legend"
+                }
+            },
+            ar: {
+                gameTitle: "ساحة التدريب التجريبية",
+                cyberBadge: "🤖 ذكاء مستقبلي",
+                controlsTitle: "⚡ تحكم سايبر",
+                statsTitle: "📊 إحصائيات",
+                difficultyTitle: "🎯 مستوى المهمة",
+                missionTitle: "🎯 هدف المهمة",
+                strategiesTitle: "🧠 استراتيجيات",
+                aiStatusTitle: "🤖 حالة الذكاء",
+                achievementsTitle: "🏆 إنجازات",
+                startGameText: "بدء المهمة",
+                resetText: "إعادة تعيين الساحة",
+                hintText: "تحليل ذكاء",
+                pauseText: "إيقاف مؤقت",
+                resumeText: "استئناف",
+                scoreLabel: "النقاط",
+                levelLabel: "المستوى",
+                movesLabel: "الحركات",
+                timeLabel: "الوقت",
+                welcomeMessage: "🚀 مرحباً في ساحة التدريب المستقبلية",
+                missionText: "• اجمع جميع كرات الطاقة<br>• تجنب حراس الذكاء<br>• اوصل لمنطقة الإخلاء<br>• حسن نقاط الوقت<br>• أتقن كل مستوى تدريجي",
+                strategy1Text: "خطط لحركاتك",
+                strategy2Text: "حلل أنماط الذكاء",
+                strategy3Text: "حسن التوقيت",
+                strategy4Text: "تكيف مع المستويات",
+                aiStatusText: "نظام الذكاء مهيأ",
+                aiAnalysisText: "تحليل سلوكي جاري...",
+                achievementsContent: "لا توجد إنجازات مفتوحة",
+                gameStarted: "🚀 بدأت المهمة - اجمع الكرات!",
+                gameWon: "🎉 تمت المهمة! المستوى التالي مفتوح!",
+                gameLost: "💥 فشلت المهمة! حاول مرة أخرى لتحسين نقاطك!",
+                gamePaused: "⏸️ المهمة متوقفة - اضغط للمتابعة",
+                hintMessage: "💡 نصيحة تكتيكية: حلل حركات الذكاء",
+                levelUp: "⬆️ مستوى أعلى! زادت الصعوبة!",
+                perfectScore: "⭐ نقاط مثالية! إتقان تام!",
+                speedBonus: "⚡ مكافأة سرعة! تنفيذ سريع!",
+                energyBoostMessage: "⚡ تم تفعيل دفعة الطاقة! تباطأ الحراس! ⚡",
+                difficultyLevels: {
+                    1: "🟢 مجند",
+                    2: "🟡 جندي",
+                    3: "🟠 محارب قديم",
+                    4: "🔴 نخبة", 
+                    5: "🟣 أسطورة"
+                }
+            },
+            es: {
+                gameTitle: "DEMO PLAYGROUND",
+                cyberBadge: "🤖 IA FUTURISTA",
+                controlsTitle: "⚡ Controles Cyber",
+                statsTitle: "📊 Estadísticas",
+                difficultyTitle: "🎯 Nivel Misión",
+                missionTitle: "🎯 Objetivo Misión",
+                strategiesTitle: "🧠 Estrategias",
+                aiStatusTitle: "🤖 Estado IA",
+                achievementsTitle: "🏆 Logros",
+                startGameText: "Iniciar Misión",
+                resetText: "Reset Arena",
+                hintText: "Análisis IA",
+                pauseText: "Pausa",
+                resumeText: "Reanudar",
+                scoreLabel: "Puntuación",
+                levelLabel: "Nivel",
+                movesLabel: "Movimientos",
+                timeLabel: "Tiempo",
+                welcomeMessage: "🚀 Bienvenido al Campo de Entrenamiento Futurista",
+                missionText: "• Recolecta todos los orbes de energía<br>• Evita los centinelas IA<br>• Alcanza la zona de extracción<br>• Optimiza tu puntuación temporal<br>• Domina cada nivel progresivo",
+                strategy1Text: "Planifica tus movimientos",
+                strategy2Text: "Analiza patrones IA",
+                strategy3Text: "Optimiza el tiempo",
+                strategy4Text: "Adáptate a los niveles",
+                aiStatusText: "Sistema IA Inicializado",
+                aiAnalysisText: "Análisis comportamental en curso...",
+                achievementsContent: "Ningún logro desbloqueado",
+                gameStarted: "🚀 Misión iniciada - ¡Recolecta los orbes!",
+                gameWon: "🎉 ¡Misión cumplida! ¡Siguiente nivel desbloqueado!",
+                gameLost: "💥 ¡Misión fallida! ¡Inténtalo de nuevo para mejorar tu puntuación!",
+                gamePaused: "⏸️ Misión pausada - Haz clic para reanudar",
+                hintMessage: "💡 Consejo Táctico: Analiza movimientos IA",
+                levelUp: "⬆️ ¡Subir nivel! ¡Dificultad aumentada!",
+                perfectScore: "⭐ ¡Puntuación perfecta! ¡Dominio total!",
+                speedBonus: "⚡ ¡Bonus velocidad! ¡Ejecución rápida!",
+                energyBoostMessage: "⚡ ¡IMPULSO DE ENERGÍA ACTIVADO! ¡Centinelas ralentizados! ⚡",
+                difficultyLevels: {
+                    1: "🟢 Recluta",
+                    2: "🟡 Soldado",
+                    3: "🟠 Veterano",
+                    4: "🔴 Elite",
+                    5: "🟣 Leyenda"
+                }
+            },
+            de: {
+                gameTitle: "DEMO PLAYGROUND",
+                cyberBadge: "🤖 FUTURISTISCHE KI",
+                controlsTitle: "⚡ Cyber Steuerung",
+                statsTitle: "📊 Statistiken",
+                difficultyTitle: "🎯 Missions Level",
+                missionTitle: "🎯 Missions Ziel",
+                strategiesTitle: "🧠 Strategien",
+                aiStatusTitle: "🤖 KI Status",
+                achievementsTitle: "🏆 Erfolge",
+                startGameText: "Mission Starten",
+                resetText: "Arena Reset",
+                hintText: "KI Analyse",
+                pauseText: "Pause",
+                resumeText: "Fortsetzen",
+                scoreLabel: "Punkte",
+                levelLabel: "Level",
+                movesLabel: "Züge",
+                timeLabel: "Zeit",
+                welcomeMessage: "🚀 Willkommen im Futuristischen Trainingsgelände",
+                missionText: "• Sammle alle Energie-Orbs<br>• Vermeide KI-Wächter<br>• Erreiche die Extraktionszone<br>• Optimiere deine Zeitpunkte<br>• Meistere jedes progressive Level",
+                strategy1Text: "Plane deine Bewegungen",
+                strategy2Text: "Analysiere KI-Muster",
+                strategy3Text: "Optimiere das Timing",
+                strategy4Text: "Passe dich an Level an",
+                aiStatusText: "KI-System Initialisiert",
+                aiAnalysisText: "Verhaltensanalyse läuft...",
+                achievementsContent: "Keine Erfolge freigeschaltet",
+                gameStarted: "🚀 Mission gestartet - Sammle die Orbs!",
+                gameWon: "🎉 Mission erfüllt! Nächstes Level freigeschaltet!",
+                gameLost: "💥 Mission fehlgeschlagen! Versuche es erneut für bessere Punkte!",
+                gamePaused: "⏸️ Mission pausiert - Klicken zum Fortsetzen",
+                hintMessage: "💡 Taktischer Rat: Analysiere KI-Bewegungen",
+                levelUp: "⬆️ Level up! Schwierigkeit erhöht!",
+                perfectScore: "⭐ Perfekte Punkte! Totale Meisterschaft!",
+                speedBonus: "⚡ Geschwindigkeitsbonus! Schnelle Ausführung!",
+                energyBoostMessage: "⚡ ENERGIE-BOOST AKTIVIERT! Wächter verlangsamt! ⚡",
+                difficultyLevels: {
+                    1: "🟢 Rekrut",
+                    2: "🟡 Soldat",
+                    3: "🟠 Veteran",
+                    4: "🔴 Elite",
+                    5: "🟣 Legende"
+                }
+            },
+            zh: {
+                gameTitle: "演示游乐场",
+                cyberBadge: "🤖 未来人工智能",
+                controlsTitle: "⚡ 网络控制",
+                statsTitle: "📊 统计",
+                difficultyTitle: "🎯 任务等级",
+                missionTitle: "🎯 任务目标",
+                strategiesTitle: "🧠 策略",
+                aiStatusTitle: "🤖 AI状态",
+                achievementsTitle: "🏆 成就",
+                startGameText: "开始任务",
+                resetText: "重置竞技场",
+                hintText: "AI分析",
+                pauseText: "暂停",
+                resumeText: "继续",
+                scoreLabel: "分数",
+                levelLabel: "等级",
+                movesLabel: "移动",
+                timeLabel: "时间",
+                welcomeMessage: "🚀 欢迎来到未来训练场",
+                missionText: "• 收集所有能量球<br>• 避开AI哨兵<br>• 到达撤离区<br>• 优化时间分数<br>• 掌握每个渐进级别",
+                strategy1Text: "规划你的移动",
+                strategy2Text: "分析AI模式",
+                strategy3Text: "优化时机",
+                strategy4Text: "适应级别",
+                aiStatusText: "AI系统已初始化",
+                aiAnalysisText: "行为分析进行中...",
+                achievementsContent: "没有解锁成就",
+                gameStarted: "🚀 任务开始 - 收集能量球！",
+                gameWon: "🎉 任务完成！下一级别解锁！",
+                gameLost: "💥 任务失败！再试一次提高分数！",
+                gamePaused: "⏸️ 任务暂停 - 点击继续",
+                hintMessage: "💡 战术建议：分析AI移动",
+                levelUp: "⬆️ 升级！难度增加！",
+                perfectScore: "⭐ 完美分数！完全掌握！",
+                speedBonus: "⚡ 速度奖励！快速执行！",
+                energyBoostMessage: "⚡ 能量提升激活！哨兵减速！⚡",
+                difficultyLevels: {
+                    1: "🟢 新兵",
+                    2: "🟡 士兵",
+                    3: "🟠 老兵",
+                    4: "🔴 精英",
+                    5: "🟣 传奇"
+                }
+            }
+        };
+
+        // État du jeu
+        let gameState = {
+            currentLanguage: 'fr',
+            isPlaying: false,
+            isPaused: false,
+            score: 0,
+            level: 1,
+            moves: 0,
+            startTime: null,
+            elapsedTime: 0,
+            difficulty: 3,
+            gridSize: 8,
+            playerPos: {x: 0, y: 0},
+            targets: [],
+            obstacles: [],
+            aiEntities: [],
+            gameTimer: null,
+            achievements: [],
+            energyBoostTurns: 0, // Tours restants du boost d'énergie
+            levelAttempts: {}, // Compteur de tentatives par niveau
+            speedBoosts: {} // Bonus de vitesse accumulés par niveau
+        };
+
+        // Créer les particules cyber
+        function createCyberParticles() {
+            const container = document.getElementById('cyberParticles');
+            
+            for(let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'cyber-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (20 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Fonctions du sélecteur de langue
+        function toggleLanguageDropdown() {
+            const dropdown = document.getElementById('languageDropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        function selectLanguage(langCode, langText) {
+            gameState.currentLanguage = langCode;
+            document.getElementById('selectedLanguage').textContent = langText;
+            
+            const options = document.querySelectorAll('.language-option');
+            options.forEach(option => option.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('languageDropdown').classList.remove('open');
+            changeLanguage();
+        }
+
+        // Fermer le dropdown si on clique ailleurs
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('languageDropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Fonction de changement de langue
+        function changeLanguage() {
+            const selectedLang = gameState.currentLanguage;
+            const t = translations[selectedLang];
+            
+            // Mettre à jour tous les textes
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('cyberBadge').textContent = t.cyberBadge;
+            document.getElementById('controlsTitle').textContent = t.controlsTitle;
+            document.getElementById('statsTitle').textContent = t.statsTitle;
+            document.getElementById('difficultyTitle').textContent = t.difficultyTitle;
+            document.getElementById('missionTitle').textContent = t.missionTitle;
+            document.getElementById('strategiesTitle').textContent = t.strategiesTitle;
+            document.getElementById('aiStatusTitle').textContent = t.aiStatusTitle;
+            document.getElementById('achievementsTitle').textContent = t.achievementsTitle;
+            
+            document.getElementById('startGameText').textContent = t.startGameText;
+            document.getElementById('resetText').textContent = t.resetText;
+            document.getElementById('hintText').textContent = t.hintText;
+            
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('levelLabel').textContent = t.levelLabel;
+            document.getElementById('movesLabel').textContent = t.movesLabel;
+            document.getElementById('timeLabel').textContent = t.timeLabel;
+            
+            // Mettre à jour le message selon l'état du jeu
+            if (!gameState.isPlaying) {
+                document.getElementById('welcomeMessage').textContent = t.welcomeMessage;
+            }
+            
+            document.getElementById('missionText').innerHTML = t.missionText;
+            document.getElementById('strategy1Text').textContent = t.strategy1Text;
+            document.getElementById('strategy2Text').textContent = t.strategy2Text;
+            document.getElementById('strategy3Text').textContent = t.strategy3Text;
+            document.getElementById('strategy4Text').textContent = t.strategy4Text;
+            document.getElementById('achievementsContent').textContent = t.achievementsContent;
+            
+            // Mettre à jour le sélecteur de difficulté
+            updateDifficultySelector();
+            
+            // Mettre à jour le bouton pause selon l'état actuel
+            updatePauseButton();
+            
+            // Mettre à jour le statut IA avec la nouvelle langue
+            updateAIStatus();
+        }
+
+        // Mettre à jour le sélecteur de difficulté
+        function updateDifficultySelector() {
+            const t = translations[gameState.currentLanguage];
+            const selector = document.getElementById('difficultySelector');
+            const currentValue = selector.value || gameState.difficulty;
+            selector.innerHTML = `
+                <option value="1">${t.difficultyLevels[1]}</option>
+                <option value="2">${t.difficultyLevels[2]}</option>
+                <option value="3">${t.difficultyLevels[3]}</option>
+                <option value="4">${t.difficultyLevels[4]}</option>
+                <option value="5">${t.difficultyLevels[5]}</option>
+            `;
+            selector.value = currentValue;
+        }
+
+        // Changer la difficulté
+        function changeDifficulty() {
+            const selector = document.getElementById('difficultySelector');
+            gameState.difficulty = parseInt(selector.value);
+            updateDifficultyIndicator();
+            
+            if (gameState.isPlaying) {
+                resetGame();
+            }
+        }
+
+        // Mettre à jour l'indicateur de difficulté
+        function updateDifficultyIndicator() {
+            const dots = document.querySelectorAll('.difficulty-dot');
+            dots.forEach((dot, index) => {
+                if (index < gameState.difficulty) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        // Initialiser la grille de jeu
+        function initializeGrid() {
+            const grid = document.getElementById('gameGrid');
+            grid.innerHTML = '';
+            
+            // Ajuster la taille de la grille selon la difficulté
+            const size = Math.max(6, Math.min(10, 6 + gameState.difficulty));
+            gameState.gridSize = size;
+            
+            grid.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            grid.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+            
+            // Créer les cellules
+            for(let row = 0; row < size; row++) {
+                for(let col = 0; col < size; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        // Démarrer le jeu
+        function startGame() {
+            if (gameState.isPaused) {
+                resumeGame();
+                return;
+            }
+            
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            gameState.score = 0;
+            gameState.moves = 0;
+            gameState.startTime = Date.now();
+            
+            // Incrémenter le compteur de tentatives pour ce niveau
+            const currentLevelKey = `${gameState.difficulty}_${gameState.level}`;
+            if (!gameState.levelAttempts[currentLevelKey]) {
+                gameState.levelAttempts[currentLevelKey] = 0;
+            }
+            gameState.levelAttempts[currentLevelKey]++;
+            
+            // Calculer le bonus de vitesse après 2 tentatives
+            if (gameState.levelAttempts[currentLevelKey] >= 2) {
+                const extraAttempts = gameState.levelAttempts[currentLevelKey] - 1;
+                gameState.speedBoosts[currentLevelKey] = extraAttempts * 0.08; // +8% par tentative supplémentaire
+            }
+            
+            initializeGrid();
+            generateLevel();
+            startGameTimer();
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameStarted);
+            
+            updateStats();
+            updatePauseButton(); // Mettre à jour le bouton pause
+            updateAIStatus(); // Mettre à jour le statut IA avec les infos de vitesse
+        }
+
+        // Générer un niveau
+        function generateLevel() {
+            const size = gameState.gridSize;
+            
+            // Position du joueur (coin supérieur gauche)
+            gameState.playerPos = {x: 0, y: 0};
+            
+            // Générer des cibles selon la difficulté
+            gameState.targets = [];
+            const numTargets = Math.min(gameState.difficulty + 2, size * size / 4);
+            
+            for(let i = 0; i < numTargets; i++) {
+                let pos;
+                do {
+                    pos = {
+                        x: Math.floor(Math.random() * size),
+                        y: Math.floor(Math.random() * size)
+                    };
+                } while ((pos.x === 0 && pos.y === 0) || 
+                         gameState.targets.some(t => t.x === pos.x && t.y === pos.y));
+                
+                gameState.targets.push(pos);
+            }
+            
+            // Générer des entités IA selon la difficulté
+            gameState.aiEntities = [];
+            const numAI = Math.max(1, Math.floor(gameState.difficulty / 2));
+            
+            for(let i = 0; i < numAI; i++) {
+                let pos;
+                do {
+                    pos = {
+                        x: Math.floor(Math.random() * size),
+                        y: Math.floor(Math.random() * size)
+                    };
+                } while ((pos.x === 0 && pos.y === 0) || 
+                         gameState.targets.some(t => t.x === pos.x && t.y === pos.y) ||
+                         gameState.aiEntities.some(ai => ai.x === pos.x && ai.y === pos.y));
+                
+                gameState.aiEntities.push(pos);
+            }
+            
+            updateGridDisplay();
+        }
+
+        // Mettre à jour l'affichage de la grille
+        function updateGridDisplay() {
+            const cells = document.querySelectorAll('.grid-cell');
+            
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                
+                // Réinitialiser la cellule
+                cell.className = 'grid-cell';
+                cell.textContent = '';
+                
+                // Position du joueur
+                if (row === gameState.playerPos.y && col === gameState.playerPos.x) {
+                    cell.classList.add('player');
+                    cell.textContent = '🚀';
+                }
+                
+                // Cibles
+                else if (gameState.targets.some(t => t.x === col && t.y === row)) {
+                    cell.classList.add('target');
+                    cell.textContent = '⚡';
+                }
+                
+                // Entités IA
+                else if (gameState.aiEntities.some(ai => ai.x === col && ai.y === row)) {
+                    cell.classList.add('ai');
+                    cell.textContent = '🤖';
+                }
+            });
+        }
+
+        // Gérer le clic sur une cellule
+        function handleCellClick(row, col) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            // Vérifier si le mouvement est valide (adjacent)
+            const dx = Math.abs(col - gameState.playerPos.x);
+            const dy = Math.abs(row - gameState.playerPos.y);
+            
+            if (dx + dy !== 1) return; // Mouvement non adjacent
+            
+            // Déplacer le joueur
+            gameState.playerPos.x = col;
+            gameState.playerPos.y = row;
+            gameState.moves++;
+            
+            // Vérifier collision avec cible (orbe d'énergie)
+            const targetIndex = gameState.targets.findIndex(t => t.x === col && t.y === row);
+            if (targetIndex !== -1) {
+                gameState.targets.splice(targetIndex, 1);
+                gameState.score += 100 * gameState.difficulty;
+                
+                // Bonus orbe d'énergie : ralentir temporairement les sentinelles
+                gameState.energyBoostTurns = 3; // 3 tours de ralentissement
+                
+                // Mettre à jour l'affichage immédiatement pour faire disparaître l'orbe
+                updateGridDisplay();
+                
+                // Effet visuel pour indiquer le bonus
+                showEnergyBoostEffect();
+                
+                // Vérifier victoire après un petit délai pour voir l'orbe disparaître
+                if (gameState.targets.length === 0) {
+                    setTimeout(() => {
+                        winLevel();
+                    }, 100);
+                    return;
+                }
+            }
+            
+            // Vérifier collision avec IA
+            if (gameState.aiEntities.some(ai => ai.x === col && ai.y === row)) {
+                loseGame();
+                return;
+            }
+            
+            // Déplacer les entités IA
+            moveAIEntities();
+            
+            updateGridDisplay();
+            updateStats();
+        }
+
+        // Déplacer les entités IA
+        function moveAIEntities() {
+            // Décrémenter le boost d'énergie
+            if (gameState.energyBoostTurns > 0) {
+                gameState.energyBoostTurns--;
+            }
+            
+            gameState.aiEntities.forEach((ai, index) => {
+                // Calculer la probabilité de mouvement basée sur le niveau
+                // Niveau 1: 55%, Niveau 2: 65%, Niveau 3: 75%, etc.
+                let baseMoveChance = 0.55; // 55% de base (vitesse plus rapide)
+                const levelBonus = (gameState.level - 1) * 0.10; // +10% par niveau
+                
+                // Ajouter le bonus de vitesse progressif après plusieurs tentatives
+                const currentLevelKey = `${gameState.difficulty}_${gameState.level}`;
+                const speedBoost = gameState.speedBoosts[currentLevelKey] || 0;
+                
+                let moveChance = Math.min(0.95, baseMoveChance + levelBonus + speedBoost); // Maximum 95%
+                
+                // Appliquer le ralentissement du boost d'énergie
+                if (gameState.energyBoostTurns > 0) {
+                    moveChance *= 0.25; // Réduire la vitesse de 75% pendant le boost
+                }
+                
+                // Chaque sentinelle a sa propre chance de bouger
+                if (Math.random() > moveChance) {
+                    return; // Cette sentinelle ne bouge pas ce tour
+                }
+                
+                // IA simple : se rapprocher du joueur
+                const dx = gameState.playerPos.x - ai.x;
+                const dy = gameState.playerPos.y - ai.y;
+                
+                // Probabilité de mouvement intelligent vs aléatoire (aussi augmentée par les tentatives)
+                const baseSmartChance = 0.70 + (gameState.level - 1) * 0.08;
+                const smartMoveChance = Math.min(0.90, baseSmartChance + speedBoost * 0.5); // Intelligence aussi améliorée
+                
+                if (Math.random() < smartMoveChance) {
+                    // Mouvement intelligent : se rapprocher du joueur
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        ai.x += dx > 0 ? 1 : -1;
+                    } else {
+                        ai.y += dy > 0 ? 1 : -1;
+                    }
+                } else {
+                    // Mouvement aléatoire
+                    const moves = [{x: 0, y: 1}, {x: 0, y: -1}, {x: 1, y: 0}, {x: -1, y: 0}];
+                    const move = moves[Math.floor(Math.random() * moves.length)];
+                    ai.x += move.x;
+                    ai.y += move.y;
+                }
+                
+                // Garder dans les limites
+                ai.x = Math.max(0, Math.min(gameState.gridSize - 1, ai.x));
+                ai.y = Math.max(0, Math.min(gameState.gridSize - 1, ai.y));
+            });
+            
+            // Vérifier collision après mouvement IA
+            if (gameState.aiEntities.some(ai => ai.x === gameState.playerPos.x && ai.y === gameState.playerPos.y)) {
+                loseGame();
+            }
+        }
+
+        // Gagner le niveau
+        function winLevel() {
+            gameState.level++;
+            gameState.score += 500 * gameState.difficulty;
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameWon);
+            
+            // Générer le niveau suivant après un délai
+            setTimeout(() => {
+                generateLevel();
+                const currentT = translations[gameState.currentLanguage]; // Récupérer les traductions actuelles
+                showMessage(currentT.levelUp);
+            }, 2000);
+        }
+
+        // Perdre le jeu
+        function loseGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.gameTimer);
+            
+            // Faire disparaître la fusée mais garder les sentinelles
+            gameState.playerPos = {x: -1, y: -1}; // Position hors grille pour faire disparaître la fusée
+            updateGridDisplay(); // Mettre à jour l'affichage immédiatement
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameLost);
+            
+            // Mettre à jour le statut IA après la défaite
+            updateAIStatus();
+            
+            setTimeout(() => {
+                showVictoryScreen(false);
+            }, 2000);
+        }
+
+        // Réinitialiser le jeu
+        function resetGame() {
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.moves = 0;
+            gameState.elapsedTime = 0;
+            gameState.energyBoostTurns = 0;
+            
+            if (gameState.gameTimer) {
+                clearInterval(gameState.gameTimer);
+            }
+            
+            initializeGrid();
+            updateStats();
+            updatePauseButton();
+            updateAIStatus();
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.welcomeMessage);
+        }
+
+        // Mettre à jour le statut IA avec les informations de vitesse
+        function updateAIStatus() {
+            const currentLevelKey = `${gameState.difficulty}_${gameState.level}`;
+            const attempts = gameState.levelAttempts[currentLevelKey] || 0;
+            const speedBoost = gameState.speedBoosts[currentLevelKey] || 0;
+            
+            const t = translations[gameState.currentLanguage];
+            
+            let statusText = t.aiStatusText;
+            let analysisText = t.aiAnalysisText;
+            
+            if (attempts > 0) {
+                const baseSpeed = 55 + (gameState.level - 1) * 10;
+                const currentSpeed = Math.min(95, baseSpeed + speedBoost * 100);
+                
+                if (gameState.currentLanguage === 'fr') {
+                    statusText = `Sentinelles: ${Math.round(currentSpeed)}% vitesse`;
+                    analysisText = attempts === 1 ? 
+                        "Première tentative - Vitesse normale" : 
+                        `Tentative ${attempts} - Vitesse augmentée (+${Math.round(speedBoost * 100)}%)`;
+                } else if (gameState.currentLanguage === 'en') {
+                    statusText = `Sentinels: ${Math.round(currentSpeed)}% speed`;
+                    analysisText = attempts === 1 ? 
+                        "First attempt - Normal speed" : 
+                        `Attempt ${attempts} - Increased speed (+${Math.round(speedBoost * 100)}%)`;
+                } else if (gameState.currentLanguage === 'ar') {
+                    statusText = `الحراس: ${Math.round(currentSpeed)}% سرعة`;
+                    analysisText = attempts === 1 ? 
+                        "المحاولة الأولى - سرعة عادية" : 
+                        `المحاولة ${attempts} - سرعة متزايدة (+${Math.round(speedBoost * 100)}%)`;
+                } else if (gameState.currentLanguage === 'es') {
+                    statusText = `Centinelas: ${Math.round(currentSpeed)}% velocidad`;
+                    analysisText = attempts === 1 ? 
+                        "Primer intento - Velocidad normal" : 
+                        `Intento ${attempts} - Velocidad aumentada (+${Math.round(speedBoost * 100)}%)`;
+                } else if (gameState.currentLanguage === 'de') {
+                    statusText = `Wächter: ${Math.round(currentSpeed)}% Geschwindigkeit`;
+                    analysisText = attempts === 1 ? 
+                        "Erster Versuch - Normale Geschwindigkeit" : 
+                        `Versuch ${attempts} - Erhöhte Geschwindigkeit (+${Math.round(speedBoost * 100)}%)`;
+                } else if (gameState.currentLanguage === 'zh') {
+                    statusText = `哨兵: ${Math.round(currentSpeed)}% 速度`;
+                    analysisText = attempts === 1 ? 
+                        "第一次尝试 - 正常速度" : 
+                        `第${attempts}次尝试 - 速度提升 (+${Math.round(speedBoost * 100)}%)`;
+                }
+            }
+            
+            document.getElementById('aiStatusText').textContent = statusText;
+            document.getElementById('aiAnalysisText').textContent = analysisText;
+        }
+
+        // Mettre à jour le bouton pause selon l'état et la langue
+        function updatePauseButton() {
+            const t = translations[gameState.currentLanguage];
+            
+            if (gameState.isPaused) {
+                document.getElementById('pauseIcon').textContent = '▶️';
+                document.getElementById('pauseText').textContent = t.resumeText;
+            } else {
+                document.getElementById('pauseIcon').textContent = '⏸️';
+                document.getElementById('pauseText').textContent = t.pauseText;
+            }
+        }
+
+        // Mettre en pause
+        function pauseGame() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            const t = translations[gameState.currentLanguage];
+            
+            if (gameState.isPaused) {
+                clearInterval(gameState.gameTimer);
+                showMessage(t.gamePaused);
+            } else {
+                startGameTimer();
+                showMessage(t.gameStarted);
+            }
+            
+            updatePauseButton();
+        }
+
+        // Reprendre le jeu
+        function resumeGame() {
+            gameState.isPaused = false;
+            startGameTimer();
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.gameStarted);
+            updatePauseButton();
+        }
+
+        // Obtenir un indice
+        function getHint() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            
+            const t = translations[gameState.currentLanguage];
+            showMessage(t.hintMessage, 3000);
+            
+            // Mettre en évidence la cible la plus proche
+            if (gameState.targets.length > 0) {
+                let closestTarget = gameState.targets[0];
+                let minDistance = Math.abs(closestTarget.x - gameState.playerPos.x) + 
+                                Math.abs(closestTarget.y - gameState.playerPos.y);
+                
+                gameState.targets.forEach(target => {
+                    const distance = Math.abs(target.x - gameState.playerPos.x) + 
+                                   Math.abs(target.y - gameState.playerPos.y);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestTarget = target;
+                    }
+                });
+                
+                // Mettre en évidence la cible
+                const cells = document.querySelectorAll('.grid-cell');
+                cells.forEach(cell => {
+                    const row = parseInt(cell.dataset.row);
+                    const col = parseInt(cell.dataset.col);
+                    
+                    if (row === closestTarget.y && col === closestTarget.x) {
+                        cell.style.border = '4px solid #ffff00';
+                        cell.style.boxShadow = '0 0 30px rgba(255, 255, 0, 1)';
+                        
+                        setTimeout(() => {
+                            cell.style.border = '2px solid rgba(0, 255, 255, 0.3)';
+                            cell.style.boxShadow = '';
+                        }, 2500);
+                    }
+                });
+            }
+        }
+
+        // Démarrer le timer du jeu
+        function startGameTimer() {
+            gameState.gameTimer = setInterval(() => {
+                if (!gameState.isPaused) {
+                    gameState.elapsedTime = Date.now() - gameState.startTime;
+                    updateTimeDisplay();
+                }
+            }, 1000);
+        }
+
+        // Mettre à jour l'affichage du temps
+        function updateTimeDisplay() {
+            const seconds = Math.floor(gameState.elapsedTime / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const displaySeconds = seconds % 60;
+            
+            const timeString = `${minutes.toString().padStart(2, '0')}:${displaySeconds.toString().padStart(2, '0')}`;
+            document.getElementById('timeValue').textContent = timeString;
+        }
+
+        // Mettre à jour les statistiques
+        function updateStats() {
+            document.getElementById('scoreValue').textContent = gameState.score;
+            document.getElementById('levelValue').textContent = gameState.level;
+            document.getElementById('movesValue').textContent = gameState.moves;
+        }
+
+        // Afficher un message
+        function showMessage(message, duration = 0) {
+            const messageElement = document.getElementById('gameMessage');
+            messageElement.innerHTML = `<span>${message}</span>`;
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (!gameState.isPlaying) {
+                        const currentT = translations[gameState.currentLanguage]; // Toujours récupérer la langue actuelle
+                        messageElement.innerHTML = `<span>${currentT.welcomeMessage}</span>`;
+                    }
+                }, duration);
+            }
+        }
+
+        // Effet visuel du boost d'énergie
+        function showEnergyBoostEffect() {
+            const currentT = translations[gameState.currentLanguage]; // Toujours récupérer la langue actuelle
+            const boostMessage = currentT.energyBoostMessage;
+            showMessage(boostMessage, 2000);
+            
+            // Effet visuel sur toute la grille
+            const grid = document.getElementById('gameGrid');
+            grid.style.boxShadow = '0 0 50px rgba(0, 255, 0, 0.8), inset 0 0 30px rgba(0, 255, 0, 0.3)';
+            grid.style.border = '4px solid rgba(0, 255, 0, 0.8)';
+            
+            setTimeout(() => {
+                grid.style.boxShadow = '0 0 50px rgba(0, 255, 255, 0.4), inset 0 0 30px rgba(0, 255, 255, 0.1)';
+                grid.style.border = '2px solid rgba(0, 255, 255, 0.3)';
+            }, 2000);
+        }
+
+        // Afficher l'écran de victoire/défaite
+        function showVictoryScreen(won) {
+            const currentT = translations[gameState.currentLanguage]; // Toujours récupérer la langue actuelle
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'victory-animation';
+            
+            const content = document.createElement('div');
+            content.className = 'victory-content';
+            
+            const title = won ? currentT.gameWon : currentT.gameLost;
+            const scoreText = `Score Final: ${gameState.score}`;
+            const levelText = `Niveau Atteint: ${gameState.level}`;
+            const timeText = `Temps: ${document.getElementById('timeValue').textContent}`;
+            
+            content.innerHTML = `
+                <h2>${title}</h2>
+                <p style="margin: 30px 0;">${scoreText}</p>
+                <p style="margin: 20px 0; color: #00ffff;">${levelText}</p>
+                <p style="margin: 20px 0; color: #00ffff;">${timeText}</p>
+                <button onclick="resetGame(); document.body.removeChild(document.querySelector('.victory-animation'))" style="
+                    margin: 30px 20px 20px 20px;
+                    padding: 20px 40px;
+                    background: linear-gradient(145deg, #00ffff, #0080ff);
+                    color: white;
+                    border: none;
+                    border-radius: 25px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                ">${currentT.startGameText}</button>
+            `;
+            
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            createCyberParticles();
+            initializeGrid();
+            updateStats();
+            updateDifficultyIndicator();
+            updateDifficultySelector();
+        });
+    </script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux10' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>

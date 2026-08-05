@@ -98,6 +98,9 @@ export default function LandingPage() {
             <span>Simulation</span>
             <span>Solveur</span>
             <span>Chat Prof</span>
+            <Link href="/detente" className="hover:text-blue-600 transition-colors">
+              Détente 🎮
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
@@ -184,6 +187,22 @@ export default function LandingPage() {
                   className="hero-btn-secondary rounded-full bg-white/15 backdrop-blur border-2 border-white/40 text-white font-bold px-7 py-3.5 text-[15px] hover:bg-white/25 hover:border-white/60 hover:scale-105 transition-all duration-300"
                 >
                   En savoir plus
+                </Link>
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-white/10">
+                <p className="text-white font-bold text-base md:text-lg mb-1">
+                  Fatigué ? Prenez un moment de détente.
+                </p>
+                <p className="text-white/60 text-sm md:text-base mb-4">
+                  Stimulez votre mémoire et vos réflexes et jouez avec nos 36 jeux gratuits.
+                </p>
+                <Link
+                  href="/detente"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold px-6 py-2.5 text-sm shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300"
+                >
+                  Jouer
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                 </Link>
               </div>
             </div>

@@ -1,0 +1,3482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♛ Brainova Quantum Chess - IA Quantique</title>
+    <script>
+        (function(){
+            if(window.__platform_nonblocking_dialogs) return; window.__platform_nonblocking_dialogs=true;
+            try{
+                const _alert = window.alert.bind(window);
+                const _confirm = window.confirm.bind(window);
+                const _prompt = window.prompt.bind(window);
+                function send(type,text){ try{ if(window.parent && window.parent!==window) parent.postMessage({action:'dialog', dialogType:type, text:String(text||'')}, '*'); }catch(e){} }
+                window.alert = function(msg){ if(window.parent && window.parent!==window){ send('alert', msg); } else { _alert(msg); } };
+                window.confirm = function(msg){ if(window.parent && window.parent!==window){ send('confirm', msg); return true; } else { return _confirm(msg); } };
+                window.prompt = function(msg, def){ if(window.parent && window.parent!==window){ send('prompt', msg+'\n(default: '+(def||'')+')'); return def||null; } else { return _prompt(msg, def); } };
+            }catch(e){ }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+box-sizing: border-box;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 30%, #16213e 70%, #0f3460 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Particules quantiques d'arrière-plan */
+        .quantum-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .quantum-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00d4ff;
+            border-radius: 50%;
+            animation: quantumFloat 12s infinite linear;
+            box-shadow: 0 0 8px #00d4ff, 0 0 16px #00d4ff;
+        }
+
+        @keyframes quantumFloat {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) translateX(20px) rotate(45deg) scale(1);
+            }
+            50% {
+                transform: translateY(50vh) translateX(-30px) rotate(180deg) scale(1.5);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(10vh) translateX(50px) rotate(315deg) scale(1);
+            }
+            100% {
+                transform: translateY(-10vh) translateX(100px) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Lignes d'énergie futuristes */
+        .energy-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .energy-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+            animation: energyFlow 8s infinite linear;
+            box-shadow: 0 0 10px #00d4ff;
+        }
+
+        @keyframes energyFlow {
+            0% {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+        }
+
+        /* Cercles d'énergie pulsants */
+        .energy-circles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .energy-circle {
+            position: absolute;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+            animation: energyPulse 6s infinite ease-in-out;
+        }
+
+        @keyframes energyPulse {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+                border-color: rgba(0, 212, 255, 0.8);
+            }
+            50% {
+                transform: scale(1) rotate(180deg);
+                opacity: 0.5;
+                border-color: rgba(0, 212, 255, 0.4);
+            }
+            100% {
+                transform: scale(2) rotate(360deg);
+                opacity: 0;
+                border-color: rgba(0, 212, 255, 0.1);
+            }
+        }
+
+        /* Vagues d'énergie */
+        .energy-waves {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .energy-wave {
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 200%;
+            height: 200px;
+            background: linear-gradient(45deg, 
+                transparent 0%, 
+                rgba(0, 212, 255, 0.1) 25%, 
+                rgba(0, 212, 255, 0.2) 50%, 
+                rgba(0, 212, 255, 0.1) 75%, 
+                transparent 100%);
+            animation: waveFlow 15s infinite linear;
+            transform-origin: center bottom;
+        }
+
+        @keyframes waveFlow {
+            0% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            100% {
+                transform: translateX(50%) rotate(360deg);
+            }
+        }
+
+        /* Hexagones futuristes */
+        .hex-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.1;
+        }
+
+        .hex-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(0, 212, 255, 0.3) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(0, 212, 255, 0.2) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: hexMove 20s infinite linear;
+        }
+
+        @keyframes hexMove {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -30px) rotate(90deg); }
+            50% { transform: translate(0, -60px) rotate(180deg); }
+            75% { transform: translate(-30px, -30px) rotate(270deg); }
+            100% { transform: translate(0, 0) rotate(360deg); }
+        }
+
+        /* Rayons laser */
+        .laser-beams {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .laser-beam {
+            position: absolute;
+            width: 2px;
+            height: 100vh;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                rgba(0, 212, 255, 0.8) 20%, 
+                rgba(0, 212, 255, 0.4) 50%, 
+                rgba(0, 212, 255, 0.8) 80%, 
+                transparent 100%);
+            animation: laserScan 12s infinite linear;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+
+        @keyframes laserScan {
+            0% {
+                transform: translateX(-10px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+        }
+
+        /* Orbes d'énergie flottants */
+        .energy-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .energy-orb {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.8) 0%, rgba(0, 212, 255, 0.2) 70%, transparent 100%);
+            border-radius: 50%;
+            animation: orbFloat 18s infinite ease-in-out;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+        }
+
+        @keyframes orbFloat {
+            0% {
+                transform: translate(0, 100vh) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            25% {
+                transform: translate(200px, 75vh) scale(1);
+            }
+            50% {
+                transform: translate(-100px, 50vh) scale(1.2);
+            }
+            75% {
+                transform: translate(150px, 25vh) scale(0.8);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50px, -10vh) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        /* Grille quantique de fond */
+        .quantum-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: quantumGridMove 25s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes quantumGridMove {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 30px) rotate(1deg); }
+            100% { transform: translate(60px, 60px) rotate(0deg); }
+        }
+
+        /* Container principal */
+        .quantum-chess-container {
+            position: relative;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: 200px 1fr 200px;
+            gap: 10px;
+            min-height: 100vh;
+            padding: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        .left-panel, .right-panel {
+            background: linear-gradient(145deg, 
+                rgba(26, 26, 46, 0.95) 0%,
+                rgba(22, 33, 62, 0.95) 50%,
+                rgba(15, 15, 35, 0.95) 100%);
+            backdrop-filter: blur(25px);
+            border-radius: 15px;
+            padding: 10px;
+            height: fit-content;
+            box-shadow: 
+                0 15px 30px rgba(0, 0, 0, 0.6),
+                0 0 60px rgba(0, 212, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            animation: quantumPanelGlow 4s ease-in-out infinite alternate;
+        }
+
+        .game-panel {
+            background: linear-gradient(145deg, 
+                rgba(26, 26, 46, 0.95) 0%,
+                rgba(22, 33, 62, 0.95) 50%,
+                rgba(15, 15, 35, 0.95) 100%);
+            backdrop-filter: blur(25px);
+            border-radius: 18px;
+            padding: 15px;
+            width: 100%;
+            height: fit-content;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.6),
+                0 0 80px rgba(0, 212, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.4);
+            animation: quantumPanelGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes quantumPanelGlow {
+            from { 
+                box-shadow: 
+                    0 25px 50px rgba(0, 0, 0, 0.6),
+                    0 0 100px rgba(0, 212, 255, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+            to { 
+                box-shadow: 
+                    0 30px 60px rgba(0, 0, 0, 0.6),
+                    0 0 120px rgba(0, 212, 255, 0.25),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        /* En-tête du jeu */
+        .quantum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.4);
+        }
+
+        .quantum-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quantum-title h1 {
+            color: #00d4ff;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            text-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+            animation: quantumTitlePulse 3s infinite alternate;
+        }
+
+        @keyframes quantumTitlePulse {
+            from { 
+                text-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+                transform: scale(1);
+            }
+            to { 
+                text-shadow: 0 0 35px rgba(0, 212, 255, 1);
+                transform: scale(1.02);
+            }
+        }
+
+        .quantum-icon {
+            font-size: 22px;
+            animation: quantumIconSpin 6s linear infinite;
+            filter: drop-shadow(0 0 15px #00d4ff);
+            color: #e0e0e0;
+            text-shadow: 
+                0 0 10px rgba(224, 224, 224, 0.8),
+                0 0 20px rgba(224, 224, 224, 0.6),
+                0 0 30px rgba(224, 224, 224, 0.4);
+        }
+
+        @keyframes quantumIconSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .quantum-badge {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7aa, #6c5ce7);
+            background-size: 300% 300%;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 9px;
+            font-weight: bold;
+            animation: quantumBadgeShine 4s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
+        }
+
+        @keyframes quantumBadgeShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .close-btn {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            color: #ff6b6b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
+        }
+
+        /* Sélecteur de langue */
+        .language-selector {
+            background: linear-gradient(145deg, #74b9ff, #0984e3);
+            color: white;
+            border: 2px solid rgba(116, 185, 255, 0.4);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(116, 185, 255, 0.4);
+            backdrop-filter: blur(10px);
+            min-width: 140px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .language-selector:hover {
+            background: linear-gradient(145deg, #81c7ff, #2d96ff);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.6);
+            border-color: rgba(116, 185, 255, 0.6);
+        }
+
+        .language-selector:focus {
+            outline: none;
+            box-shadow: 0 0 30px rgba(116, 185, 255, 0.8);
+            border-color: rgba(116, 185, 255, 0.8);
+        }
+
+        .language-selector option {
+            background: #1a1a2e;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            font-size: 12px;
+        }
+
+        .language-selector option:hover {
+            background: #74b9ff;
+        }
+
+        /* Contrôles de mode de jeu */
+        .game-mode-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            background: linear-gradient(145deg, #4ecdc4, #45b7aa);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-width: 110px;
+        }
+
+        .mode-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .mode-btn:hover::before {
+            left: 100%;
+        }
+
+        .mode-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.5);
+            background: linear-gradient(145deg, #5fd4d4, #4ecdc4);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(145deg, #6c5ce7, #5f3dc4);
+            box-shadow: 0 0 25px rgba(108, 92, 231, 0.6);
+        }
+
+        .mode-btn.active:hover {
+            background: linear-gradient(145deg, #7c6ce7, #6f4dc4);
+        }
+
+        /* Plateau d'échecs quantique */
+        .quantum-chessboard-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 8px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .quantum-chessboard {
+            width: 520px;
+            height: 520px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 4px solid rgba(0, 212, 255, 0.8);
+            border-radius: 16px;
+            box-shadow: 
+                0 0 35px rgba(0, 212, 255, 0.6),
+                0 0 70px rgba(0, 212, 255, 0.3),
+                inset 0 0 25px rgba(0, 212, 255, 0.2);
+            animation: quantumBoardGlow 5s ease-in-out infinite alternate;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes quantumBoardGlow {
+            from { 
+                box-shadow: 
+                    0 0 25px rgba(0, 212, 255, 0.4),
+                    0 0 50px rgba(0, 212, 255, 0.2),
+                    inset 0 0 15px rgba(0, 212, 255, 0.1);
+            }
+            to { 
+                box-shadow: 
+                    0 0 35px rgba(0, 212, 255, 0.6),
+                    0 0 70px rgba(0, 212, 255, 0.3),
+                    inset 0 0 25px rgba(0, 212, 255, 0.2);
+            }
+        }
+
+        .chess-square {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chess-square.light {
+            background: linear-gradient(145deg, #D6D8DB, #ADB5BD);
+            box-shadow: 
+                inset 0 0 15px rgba(255, 255, 255, 0.4),
+                inset 0 0 8px rgba(0, 212, 255, 0.15);
+        }
+
+        .chess-square.dark {
+            background: linear-gradient(145deg, #2C3E50, #1A252F);
+            box-shadow: 
+                inset 0 0 15px rgba(0, 0, 0, 0.6),
+                inset 0 0 8px rgba(0, 212, 255, 0.25);
+        }
+
+        .chess-square:hover {
+            transform: scale(1.05);
+            z-index: 10;
+            box-shadow: 
+                0 0 25px rgba(0, 212, 255, 0.8),
+                inset 0 0 20px rgba(0, 212, 255, 0.2);
+            border: 2px solid rgba(0, 212, 255, 0.6);
+        }
+
+        .chess-square.selected {
+            background: linear-gradient(145deg, #FFD700, #FFA500) !important;
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 1),
+                inset 0 0 20px rgba(255, 215, 0, 0.3),
+                0 0 50px rgba(255, 215, 0, 0.5);
+            transform: scale(1.1);
+            z-index: 20;
+            border: 3px solid #FFD700;
+            animation: selectedPulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes selectedPulse {
+            from { 
+                box-shadow: 
+                    0 0 30px rgba(255, 215, 0, 1),
+                    inset 0 0 20px rgba(255, 215, 0, 0.3),
+                    0 0 50px rgba(255, 215, 0, 0.5);
+            }
+            to { 
+                box-shadow: 
+                    0 0 40px rgba(255, 215, 0, 1),
+                    inset 0 0 30px rgba(255, 215, 0, 0.4),
+                    0 0 70px rgba(255, 215, 0, 0.7);
+            }
+        }
+
+        .chess-square.possible-move {
+            background: linear-gradient(145deg, #00FF7F, #32CD32) !important;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 127, 0.8),
+                inset 0 0 15px rgba(0, 255, 127, 0.2);
+            border: 2px solid #00FF7F;
+            animation: possibleMovePulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes possibleMovePulse {
+            from { 
+                box-shadow: 
+                    0 0 20px rgba(0, 255, 127, 0.8),
+                    inset 0 0 15px rgba(0, 255, 127, 0.2);
+            }
+            to { 
+                box-shadow: 
+                    0 0 30px rgba(0, 255, 127, 1),
+                    inset 0 0 25px rgba(0, 255, 127, 0.3);
+            }
+        }
+
+        .chess-square.quantum-state {
+            background: linear-gradient(145deg, #FF1493, #DC143C) !important;
+            box-shadow: 
+                0 0 25px rgba(255, 20, 147, 1),
+                inset 0 0 20px rgba(255, 20, 147, 0.3);
+            animation: quantumPulse 1s infinite alternate;
+            border: 2px solid #FF1493;
+        }
+
+        @keyframes quantumPulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* Pièces d'échecs */
+        .chess-piece {
+            font-size: 38px;
+            text-shadow: 
+                4px 4px 8px rgba(0, 0, 0, 0.9),
+                2px 2px 4px rgba(0, 0, 0, 0.7),
+                0 0 2px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            z-index: 5;
+            font-weight: 900;
+            filter: contrast(1.2) brightness(1.1);
+        }
+
+        .chess-piece:hover {
+            transform: scale(1.3);
+            filter: contrast(1.3) brightness(1.2) drop-shadow(0 0 20px currentColor);
+            animation: pieceGlow 0.5s ease-in-out;
+        }
+
+        @keyframes pieceGlow {
+            0% { transform: scale(1.3); }
+            50% { transform: scale(1.35); }
+            100% { transform: scale(1.3); }
+        }
+
+        .chess-piece.white {
+            color: #FFD700;
+            text-shadow: 
+                4px 4px 8px rgba(0, 0, 0, 0.95),
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(255, 215, 0, 0.8),
+                0 0 30px rgba(255, 215, 0, 0.4),
+                0 0 2px rgba(0, 0, 0, 0.6);
+            -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .chess-piece.white:hover {
+            color: #FFF700;
+            text-shadow: 
+                4px 4px 8px rgba(0, 0, 0, 0.95),
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(255, 247, 0, 1),
+                0 0 40px rgba(255, 247, 0, 0.6),
+                0 0 2px rgba(0, 0, 0, 0.6);
+        }
+
+        .chess-piece.black {
+            color: #FF4757;
+            text-shadow: 
+                4px 4px 8px rgba(0, 0, 0, 0.95),
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(255, 71, 87, 0.8),
+                0 0 30px rgba(255, 71, 87, 0.4),
+                0 0 2px rgba(0, 0, 0, 0.6);
+            -webkit-text-stroke: 1px rgba(0, 0, 0, 0.3);
+        }
+
+        .chess-piece.black:hover {
+            color: #FF3742;
+            text-shadow: 
+                4px 4px 8px rgba(0, 0, 0, 0.95),
+                2px 2px 4px rgba(0, 0, 0, 0.8),
+                0 0 20px rgba(255, 55, 66, 1),
+                0 0 40px rgba(255, 55, 66, 0.6),
+                0 0 2px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Panneau de titre des sections */
+        .panel-title {
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+            border-bottom: 2px solid rgba(0, 212, 255, 0.4);
+            padding-bottom: 8px;
+        }
+
+        /* Contrôles quantiques */
+        .quantum-controls {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .quantum-btn {
+            padding: 10px 15px;
+            background: linear-gradient(145deg, #4ecdc4, #45b7aa);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quantum-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .quantum-btn:hover::before {
+            left: 100%;
+        }
+
+        .quantum-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+            background: linear-gradient(145deg, #5fd4d4, #4ecdc4);
+        }
+
+        .quantum-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .quantum-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Boutons spécialisés */
+        .ai-btn {
+            background: linear-gradient(145deg, #6c5ce7, #5f3dc4);
+        }
+
+        .ai-btn:hover {
+            background: linear-gradient(145deg, #7c6ce7, #6f4dc4);
+        }
+
+        .reset-btn {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(145deg, #f74c3c, #d0392b);
+        }
+
+        .quantum-special-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+        }
+
+        .quantum-special-btn:hover {
+            background: linear-gradient(145deg, #ff7b7b, #fe6a62);
+        }
+
+        /* Bouton statut du joueur */
+        .player-status-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: linear-gradient(145deg, #4ecdc4, #45b7aa);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 10px rgba(78, 205, 196, 0.4);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .player-status-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .player-status-btn:hover::before {
+            left: 100%;
+        }
+
+        .player-status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.6);
+            background: linear-gradient(145deg, #5fd4d4, #4ecdc4);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .player-status-btn:active {
+            transform: translateY(0px);
+        }
+
+        .player-status-btn.yellow-player {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            border-color: rgba(241, 196, 15, 0.5);
+            color: #2c3e50;
+        }
+
+        .player-status-btn.yellow-player:hover {
+            background: linear-gradient(145deg, #f4d03f, #f5b041);
+            border-color: rgba(241, 196, 15, 0.7);
+            box-shadow: 0 8px 25px rgba(241, 196, 15, 0.6);
+        }
+
+        .player-status-btn.red-player {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border-color: rgba(231, 76, 60, 0.5);
+            color: white;
+        }
+
+        .player-status-btn.red-player:hover {
+            background: linear-gradient(145deg, #ec7063, #cb4335);
+            border-color: rgba(231, 76, 60, 0.7);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.6);
+        }
+
+        .player-status-btn #currentPlayer {
+            font-size: 16px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        /* IA Quantique Status */
+        .quantum-ai-status {
+            margin-bottom: 15px;
+            text-align: center;
+            min-height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-thinking {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #4ecdc4;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            background: rgba(78, 205, 196, 0.15);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(78, 205, 196, 0.4);
+        }
+
+        .ai-thinking.active {
+            opacity: 1;
+        }
+
+        .quantum-pulse {
+            width: 12px;
+            height: 12px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            animation: quantumAIPulse 2s infinite;
+            box-shadow: 0 0 15px #4ecdc4;
+        }
+
+        @keyframes quantumAIPulse {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1; 
+            }
+            50% { 
+                transform: scale(1.8); 
+                opacity: 0.3; 
+            }
+        }
+
+        /* Statistiques du jeu */
+        .game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 8px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+            animation: statQuantumScan 4s linear infinite;
+        }
+
+        @keyframes statQuantumScan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .stat-label {
+            display: block;
+            color: #888;
+            font-size: 9px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            display: block;
+            color: #00d4ff;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 12px rgba(0, 212, 255, 0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Historique des coups */
+        .move-history {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .move-item {
+            color: #00d4ff;
+            font-size: 11px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #00d4ff;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .quantum-chess-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .left-panel, .right-panel {
+                display: none;
+            }
+            
+            .quantum-chessboard {
+                width: 480px;
+                height: 480px;
+            }
+            
+            .chess-piece {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-panel {
+                padding: 12px;
+                margin: 6px;
+            }
+            
+            .game-mode-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .quantum-title h1 {
+                font-size: 16px;
+            }
+            
+            .quantum-chessboard {
+                width: 420px;
+                height: 420px;
+            }
+            
+            .chess-piece {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quantum-chessboard {
+                width: 360px;
+                height: 360px;
+            }
+            
+            .chess-piece {
+                font-size: 28px;
+            }
+            
+            .game-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <!-- Particules quantiques d'arrière-plan -->
+    <div class="quantum-particles" id="quantumParticles"></div>
+    
+    <!-- Grille quantique -->
+    <div class="quantum-grid"></div>
+    
+    <!-- Lignes d'énergie futuristes -->
+    <div class="energy-lines" id="energyLines"></div>
+    
+    <!-- Cercles d'énergie pulsants -->
+    <div class="energy-circles" id="energyCircles"></div>
+    
+    <!-- Vagues d'énergie -->
+    <div class="energy-waves" id="energyWaves"></div>
+    
+    <!-- Hexagones futuristes -->
+    <div class="hex-pattern">
+        <div class="hex-grid"></div>
+    </div>
+    
+    <!-- Rayons laser -->
+    <div class="laser-beams" id="laserBeams"></div>
+    
+    <!-- Orbes d'énergie flottants -->
+    <div class="energy-orbs" id="energyOrbs"></div>
+    
+    <!-- Container principal -->
+    <div class="quantum-chess-container">
+        <!-- Panneau gauche -->
+        <div class="left-panel">
+            <div class="panel-section">
+                <div class="panel-title" id="controlsTitle">🎮 Contrôles Quantiques</div>
+                <div class="quantum-controls">
+                    <button class="quantum-btn ai-btn" onclick="makeAIMove()" id="aiMoveBtn">
+                        🤖 <span id="aiMoveText">Coup IA Quantique</span>
+                    </button>
+                    <button class="quantum-btn" onclick="undoMove()" id="undoBtn">
+                        ↶ <span id="undoText">Annuler Coup</span>
+                    </button>
+                    <button class="quantum-btn quantum-special-btn" onclick="activateQuantumMode()" id="quantumBtn">
+                        ⚛️ <span id="quantumModeText">Mode Quantique</span>
+                    </button>
+                    <button class="quantum-btn reset-btn" onclick="resetGame()">
+                        🔄 <span id="newGameText">Nouvelle Partie</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="statsTitle">📊 Statistiques</div>
+                <div class="game-stats">
+                    <div class="stat-item">
+                        <span class="stat-label" id="movesLabel">Coups Joués</span>
+                        <span class="stat-value" id="moveCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="aiLevelLabel">Niveau IA</span>
+                        <span class="stat-value" id="aiLevel">5</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="timeLabel">Temps</span>
+                        <span class="stat-value" id="gameTime">00:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" id="scoreLabel">Score</span>
+                        <span class="stat-value" id="gameScore">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau central -->
+        <div class="game-panel">
+            <!-- En-tête -->
+            <div class="quantum-header">
+                <div class="quantum-title">
+                    <span class="quantum-icon">♛</span>
+                    <h1 id="gameTitle">Brainova Quantum Chess</h1>
+                    <span class="quantum-badge" id="quantumBadge">🚀 IA QUANTIQUE</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <select id="languageSelector" onchange="changeLanguage()" class="language-selector">
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                    <button class="close-btn" onclick="window.close()" id="closeBtn" title="Fermer">✕</button>
+                </div>
+            </div>
+
+
+
+            <!-- Boutons de contrôle en haut -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <!-- Bouton pause à gauche -->
+                <button class="quantum-btn" id="pauseBtn" onclick="togglePause()" style="min-width: 120px;">
+                    <span id="pauseText">⏸️ Pause</span>
+                </button>
+                
+                <!-- Bouton statut du joueur à droite -->
+                <button class="player-status-btn" id="playerStatusBtn" onclick="switchPlayer()">
+                    <span id="currentPlayer">♔</span>
+                    <span id="playerName">Joueur Blanc</span>
+                </button>
+            </div>
+
+            <!-- Plateau d'échecs quantique -->
+            <div class="quantum-chessboard-container">
+                <div class="quantum-chessboard" id="chessboard">
+                    <!-- Les cases seront générées dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Statut IA Quantique -->
+            <div class="quantum-ai-status">
+                <div class="ai-thinking" id="aiThinking">
+                    <span class="quantum-pulse"></span>
+                    <span id="aiMessage">IA Quantique en analyse...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panneau droit -->
+        <div class="right-panel">
+            <div class="panel-section">
+                <div class="panel-title" id="historyTitle">📜 Historique</div>
+                <div class="move-history" id="moveHistory">
+                    <div class="move-item" id="gameStarted"></div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="gameModeTitle">🎮 Mode de Jeu</div>
+                <div class="quantum-controls">
+                    <button class="mode-btn active" onclick="setGameMode('ai')" id="aiModeBtn">
+                        🤖 <span id="aiModeText">Jouer vs IA</span>
+                    </button>
+                    <button class="mode-btn" onclick="setGameMode('human')" id="humanModeBtn">
+                        👥 <span id="humanModeText">2 Joueurs</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-title" id="optionsTitle">⚙️ Options IA</div>
+                <div class="quantum-controls">
+                    <button class="quantum-btn" onclick="changeDifficulty()" id="difficultyBtn">
+                        🎯 <span id="difficultyText">Difficulté: Expert</span>
+                    </button>
+                    <button class="quantum-btn ai-btn" onclick="toggleAIAnalysis()" id="analysisBtn">
+                        🔍 <span id="analysisText">Analyse IA</span>
+                    </button>
+                    <button class="quantum-btn quantum-special-btn" onclick="showBestMoves()" id="hintBtn">
+                        💡 <span id="hintText">Meilleurs Coups</span>
+                    </button>
+                    <button class="quantum-btn" onclick="saveGame()" id="saveBtn">
+                        💾 <span id="saveText">Sauvegarder</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Traductions multilingues
+        const translations = {
+            fr: {
+                gameTitle: "Brainova Échecs Quantiques",
+                quantumBadge: "🚀 IA QUANTIQUE",
+                controlsTitle: "🎮 Contrôles Quantiques",
+                gameModeTitle: "🎮 Mode de Jeu",
+                aiMoveText: "Coup IA Quantique",
+                undoText: "Annuler Coup",
+                quantumModeText: "Mode Quantique",
+                newGameText: "Nouvelle Partie",
+                statsTitle: "📊 Statistiques",
+                movesLabel: "Coups Joués",
+                aiLevelLabel: "Niveau IA",
+                timeLabel: "Temps",
+                scoreLabel: "Score",
+                aiModeText: "Jouer vs IA",
+                humanModeText: "2 Joueurs",
+                gameStatus: "Nouvelle partie - Blancs commencent",
+                playerWhite: "Joueur Jaune",
+                playerBlack: "Joueur Rouge",
+                aiPlayer: "IA Quantique",
+                historyTitle: "📜 Historique",
+                gameStarted: "Partie commencée",
+                optionsTitle: "⚙️ Options IA",
+                difficultyText: "Difficulté: Expert",
+                analysisText: "Analyse IA",
+                hintText: "Meilleurs Coups",
+                saveText: "Sauvegarder",
+                aiThinking: "IA Quantique en analyse...",
+                closeBtn: "Fermer",
+                turnOf: "Tour du",
+                gameEnded: "Partie terminée",
+                newGameStarted: "Nouvelle partie commencée",
+                quantumActivated: "Mode Quantique activé ! Les pièces peuvent se téléporter !",
+                quantumDeactivated: "Mode Quantique désactivé",
+                gameSaved: "Partie sauvegardée !",
+                gameLoaded: "Partie chargée !",
+                loadSavedGame: "Voulez-vous charger la partie sauvegardée ?",
+                welcome: "Bienvenue dans Brainova Échecs Quantiques ! Choisissez votre mode de jeu.",
+                aiCalculating: "IA Quantique calcule le meilleur coup...",
+                undoInDevelopment: "Fonction d'annulation en développement",
+                aiAnalyzing: "Analyse IA en cours...",
+                bestMovesCalculating: "Calcul des meilleurs coups...",
+                suggestion: "Suggestion:",
+                noMovesAvailable: "Aucun coup disponible",
+                difficultyChanged: "Difficulté changée:",
+                whiteAdvantage: "Avantage significatif aux Blancs",
+                blackAdvantage: "Avantage significatif aux Noirs",
+                slightWhiteAdvantage: "Léger avantage aux Blancs",
+                slightBlackAdvantage: "Léger avantage aux Noirs",
+                balancedPosition: "Position équilibrée",
+                victory: "Victoire des",
+                whites: "Blancs",
+                blacks: "Noirs",
+                difficulties: {
+                    easy: "facile",
+                    normal: "normal",
+                    hard: "difficile",
+                    expert: "expert"
+                },
+                pauseText: "⏸️ Pause",
+                resumeText: "▶️ Reprendre",
+                gamePaused: "Jeu en pause",
+                gameResumed: "Jeu repris"
+            },
+            en: {
+                gameTitle: "Brainova Quantum Chess",
+                quantumBadge: "🚀 QUANTUM AI",
+                controlsTitle: "🎮 Quantum Controls",
+                gameModeTitle: "🎮 Game Mode",
+                aiMoveText: "Quantum AI Move",
+                undoText: "Undo Move",
+                quantumModeText: "Quantum Mode",
+                newGameText: "New Game",
+                statsTitle: "📊 Statistics",
+                movesLabel: "Moves Played",
+                aiLevelLabel: "AI Level",
+                timeLabel: "Time",
+                scoreLabel: "Score",
+                aiModeText: "Play vs AI",
+                humanModeText: "2 Players",
+                gameStatus: "New game - Whites start",
+                playerWhite: "Yellow Player",
+                playerBlack: "Red Player",
+                aiPlayer: "Quantum AI",
+                historyTitle: "📜 History",
+                gameStarted: "Game started",
+                optionsTitle: "⚙️ AI Options",
+                difficultyText: "Difficulty: Expert",
+                analysisText: "AI Analysis",
+                hintText: "Best Moves",
+                saveText: "Save Game",
+                aiThinking: "Quantum AI analyzing...",
+                closeBtn: "Close",
+                turnOf: "Turn of",
+                gameEnded: "Game ended",
+                newGameStarted: "New game started",
+                quantumActivated: "Quantum Mode activated! Pieces can teleport!",
+                quantumDeactivated: "Quantum Mode deactivated",
+                gameSaved: "Game saved!",
+                gameLoaded: "Game loaded!",
+                loadSavedGame: "Do you want to load the saved game?",
+                welcome: "Welcome to Brainova Quantum Chess! Choose your game mode.",
+                aiCalculating: "Quantum AI calculating best move...",
+                undoInDevelopment: "Undo function in development",
+                aiAnalyzing: "AI analysis in progress...",
+                bestMovesCalculating: "Calculating best moves...",
+                suggestion: "Suggestion:",
+                noMovesAvailable: "No moves available",
+                difficultyChanged: "Difficulty changed:",
+                whiteAdvantage: "Significant advantage to White",
+                blackAdvantage: "Significant advantage to Black",
+                slightWhiteAdvantage: "Slight advantage to White",
+                slightBlackAdvantage: "Slight advantage to Black",
+                balancedPosition: "Balanced position",
+                victory: "Victory for",
+                whites: "White",
+                blacks: "Black",
+                difficulties: {
+                    easy: "easy",
+                    normal: "normal",
+                    hard: "hard",
+                    expert: "expert"
+                },
+                pauseText: "⏸️ Pause",
+                resumeText: "▶️ Resume",
+                gamePaused: "Game paused",
+                gameResumed: "Game resumed"
+            },
+            ar: {
+                gameTitle: "برينوفا شطرنج كمي",
+                quantumBadge: "🚀 ذكاء كمي",
+                controlsTitle: "🎮 تحكم كمي",
+                gameModeTitle: "🎮 وضع اللعب",
+                aiMoveText: "حركة الذكاء الكمي",
+                undoText: "تراجع عن الحركة",
+                quantumModeText: "الوضع الكمي",
+                newGameText: "لعبة جديدة",
+                statsTitle: "📊 إحصائيات",
+                movesLabel: "الحركات المُلعبة",
+                aiLevelLabel: "مستوى الذكاء",
+                timeLabel: "الوقت",
+                scoreLabel: "النقاط",
+                aiModeText: "العب ضد الذكاء",
+                humanModeText: "لاعبان",
+                gameStatus: "لعبة جديدة - الأبيض يبدأ",
+                playerWhite: "اللاعب الأبيض",
+                playerBlack: "اللاعب الأسود",
+                aiPlayer: "الذكاء الكمي",
+                historyTitle: "📜 التاريخ",
+                gameStarted: "بدأت اللعبة",
+                optionsTitle: "⚙️ خيارات الذكاء",
+                difficultyText: "الصعوبة: خبير",
+                analysisText: "تحليل الذكاء",
+                hintText: "أفضل الحركات",
+                saveText: "حفظ اللعبة",
+                aiThinking: "الذكاء الكمي يحلل...",
+                closeBtn: "إغلاق",
+                turnOf: "دور",
+                gameEnded: "انتهت اللعبة",
+                newGameStarted: "بدأت لعبة جديدة",
+                quantumActivated: "تم تفعيل الوضع الكمي! يمكن للقطع الانتقال الفوري!",
+                quantumDeactivated: "تم إلغاء الوضع الكمي",
+                gameSaved: "تم حفظ اللعبة!",
+                gameLoaded: "تم تحميل اللعبة!",
+                loadSavedGame: "هل تريد تحميل اللعبة المحفوظة؟",
+                welcome: "مرحباً بك في برينوفا شطرنج كمي! اختر وضع اللعب.",
+                aiCalculating: "الذكاء الكمي يحسب أفضل حركة...",
+                undoInDevelopment: "وظيفة التراجع قيد التطوير",
+                aiAnalyzing: "تحليل الذكاء جاري...",
+                bestMovesCalculating: "حساب أفضل الحركات...",
+                suggestion: "اقتراح:",
+                noMovesAvailable: "لا توجد حركات متاحة",
+                difficultyChanged: "تم تغيير الصعوبة:",
+                whiteAdvantage: "ميزة كبيرة للأبيض",
+                blackAdvantage: "ميزة كبيرة للأسود",
+                slightWhiteAdvantage: "ميزة طفيفة للأبيض",
+                slightBlackAdvantage: "ميزة طفيفة للأسود",
+                balancedPosition: "موقف متوازن",
+                victory: "انتصار",
+                whites: "الأبيض",
+                blacks: "الأسود",
+                difficulties: {
+                    easy: "سهل",
+                    normal: "عادي",
+                    hard: "صعب",
+                    expert: "خبير"
+                },
+                pauseText: "⏸️ إيقاف",
+                resumeText: "▶️ استئناف",
+                gamePaused: "اللعبة متوقفة",
+                gameResumed: "تم استئناف اللعبة"
+            },
+            es: {
+                gameTitle: "Brainova Ajedrez Cuántico",
+                quantumBadge: "🚀 IA CUÁNTICA",
+                controlsTitle: "🎮 Controles Cuánticos",
+                gameModeTitle: "🎮 Modo de Juego",
+                aiMoveText: "Movimiento IA Cuántica",
+                undoText: "Deshacer Movimiento",
+                quantumModeText: "Modo Cuántico",
+                newGameText: "Nueva Partida",
+                statsTitle: "📊 Estadísticas",
+                movesLabel: "Movimientos Jugados",
+                aiLevelLabel: "Nivel IA",
+                timeLabel: "Tiempo",
+                scoreLabel: "Puntuación",
+                aiModeText: "Jugar vs IA",
+                humanModeText: "2 Jugadores",
+                gameStatus: "Nueva partida - Blancas empiezan",
+                playerWhite: "Jugador Blanco",
+                playerBlack: "Jugador Negro",
+                aiPlayer: "IA Cuántica",
+                historyTitle: "📜 Historial",
+                gameStarted: "Partida iniciada",
+                optionsTitle: "⚙️ Opciones IA",
+                difficultyText: "Dificultad: Experto",
+                analysisText: "Análisis IA",
+                hintText: "Mejores Movimientos",
+                saveText: "Guardar Partida",
+                aiThinking: "IA Cuántica analizando...",
+                closeBtn: "Cerrar",
+                turnOf: "Turno de",
+                gameEnded: "Partida terminada",
+                newGameStarted: "Nueva partida iniciada",
+                quantumActivated: "¡Modo Cuántico activado! ¡Las piezas pueden teletransportarse!",
+                quantumDeactivated: "Modo Cuántico desactivado",
+                gameSaved: "¡Partida guardada!",
+                gameLoaded: "¡Partida cargada!",
+                loadSavedGame: "¿Quieres cargar la partida guardada?",
+                welcome: "¡Bienvenido a Brainova Ajedrez Cuántico! Elige tu modo de juego.",
+                aiCalculating: "IA Cuántica calculando mejor movimiento...",
+                undoInDevelopment: "Función de deshacer en desarrollo",
+                aiAnalyzing: "Análisis IA en progreso...",
+                bestMovesCalculating: "Calculando mejores movimientos...",
+                suggestion: "Sugerencia:",
+                noMovesAvailable: "No hay movimientos disponibles",
+                difficultyChanged: "Dificultad cambiada:",
+                whiteAdvantage: "Ventaja significativa para Blancas",
+                blackAdvantage: "Ventaja significativa para Negras",
+                slightWhiteAdvantage: "Ligera ventaja para Blancas",
+                slightBlackAdvantage: "Ligera ventaja para Negras",
+                balancedPosition: "Posición equilibrada",
+                victory: "Victoria de",
+                whites: "Blancas",
+                blacks: "Negras",
+                difficulties: {
+                    easy: "fácil",
+                    normal: "normal",
+                    hard: "difícil",
+                    expert: "experto"
+                },
+                pauseText: "⏸️ Pausa",
+                resumeText: "▶️ Reanudar",
+                gamePaused: "Juego pausado",
+                gameResumed: "Juego reanudado"
+            },
+            de: {
+                gameTitle: "Brainova Quanten-Schach",
+                quantumBadge: "🚀 QUANTEN-KI",
+                controlsTitle: "🎮 Quanten-Steuerung",
+                gameModeTitle: "🎮 Spielmodus",
+                aiMoveText: "Quanten-KI Zug",
+                undoText: "Zug rückgängig",
+                quantumModeText: "Quanten-Modus",
+                newGameText: "Neues Spiel",
+                statsTitle: "📊 Statistiken",
+                movesLabel: "Gespielte Züge",
+                aiLevelLabel: "KI-Level",
+                timeLabel: "Zeit",
+                scoreLabel: "Punkte",
+                aiModeText: "Gegen KI spielen",
+                humanModeText: "2 Spieler",
+                gameStatus: "Neues Spiel - Weiß beginnt",
+                playerWhite: "Weißer Spieler",
+                playerBlack: "Schwarzer Spieler",
+                aiPlayer: "Quanten-KI",
+                historyTitle: "📜 Verlauf",
+                gameStarted: "Spiel gestartet",
+                optionsTitle: "⚙️ KI-Optionen",
+                difficultyText: "Schwierigkeit: Experte",
+                analysisText: "KI-Analyse",
+                hintText: "Beste Züge",
+                saveText: "Spiel speichern",
+                aiThinking: "Quanten-KI analysiert...",
+                closeBtn: "Schließen",
+                turnOf: "Zug von",
+                gameEnded: "Spiel beendet",
+                newGameStarted: "Neues Spiel gestartet",
+                quantumActivated: "Quanten-Modus aktiviert! Figuren können sich teleportieren!",
+                quantumDeactivated: "Quanten-Modus deaktiviert",
+                gameSaved: "Spiel gespeichert!",
+                gameLoaded: "Spiel geladen!",
+                loadSavedGame: "Möchten Sie das gespeicherte Spiel laden?",
+                welcome: "Willkommen bei Brainova Quanten-Schach! Wählen Sie Ihren Spielmodus.",
+                aiCalculating: "Quanten-KI berechnet besten Zug...",
+                undoInDevelopment: "Rückgängig-Funktion in Entwicklung",
+                aiAnalyzing: "KI-Analyse läuft...",
+                bestMovesCalculating: "Berechne beste Züge...",
+                suggestion: "Vorschlag:",
+                noMovesAvailable: "Keine Züge verfügbar",
+                difficultyChanged: "Schwierigkeit geändert:",
+                whiteAdvantage: "Signifikanter Vorteil für Weiß",
+                blackAdvantage: "Signifikanter Vorteil für Schwarz",
+                slightWhiteAdvantage: "Leichter Vorteil für Weiß",
+                slightBlackAdvantage: "Leichter Vorteil für Schwarz",
+                balancedPosition: "Ausgeglichene Position",
+                victory: "Sieg für",
+                whites: "Weiß",
+                blacks: "Schwarz",
+                difficulties: {
+                    easy: "einfach",
+                    normal: "normal",
+                    hard: "schwer",
+                    expert: "experte"
+                },
+                pauseText: "⏸️ Pause",
+                resumeText: "▶️ Fortsetzen",
+                gamePaused: "Spiel pausiert",
+                gameResumed: "Spiel fortgesetzt"
+            },
+            nl: {
+                gameTitle: "Brainova Quantum Schaak",
+                quantumBadge: "🚀 QUANTUM AI",
+                controlsTitle: "🎮 Quantum Besturing",
+                aiMoveText: "Quantum AI Zet",
+                undoText: "Zet Ongedaan",
+                quantumModeText: "Quantum Modus",
+                newGameText: "Nieuw Spel",
+                statsTitle: "📊 Statistieken",
+                movesLabel: "Gespeelde Zetten",
+                aiLevelLabel: "AI Niveau",
+                timeLabel: "Tijd",
+                scoreLabel: "Score",
+                aiModeText: "Speel tegen AI",
+                humanModeText: "2 Spelers",
+                gameStatus: "Nieuw spel - Wit begint",
+                playerWhite: "Witte Speler",
+                playerBlack: "Zwarte Speler",
+                aiPlayer: "Quantum AI",
+                historyTitle: "📜 Geschiedenis",
+                gameStarted: "Spel gestart",
+                optionsTitle: "⚙️ AI Opties",
+                difficultyText: "Moeilijkheid: Expert",
+                analysisText: "AI Analyse",
+                hintText: "Beste Zetten",
+                saveText: "Spel Opslaan",
+                aiThinking: "Quantum AI analyseert...",
+                closeBtn: "Sluiten",
+                turnOf: "Beurt van",
+                gameEnded: "Spel beëindigd",
+                newGameStarted: "Nieuw spel gestart",
+                quantumActivated: "Quantum Modus geactiveerd! Stukken kunnen teleporteren!",
+                quantumDeactivated: "Quantum Modus gedeactiveerd",
+                gameSaved: "Spel opgeslagen!",
+                gameLoaded: "Spel geladen!",
+                loadSavedGame: "Wilt u het opgeslagen spel laden?",
+                welcome: "Welkom bij Brainova Quantum Schaak! Kies uw spelmodus.",
+                aiCalculating: "Quantum AI berekent beste zet...",
+                undoInDevelopment: "Ongedaan maken functie in ontwikkeling",
+                aiAnalyzing: "AI analyse bezig...",
+                bestMovesCalculating: "Beste zetten berekenen...",
+                suggestion: "Suggestie:",
+                noMovesAvailable: "Geen zetten beschikbaar",
+                difficultyChanged: "Moeilijkheid gewijzigd:",
+                whiteAdvantage: "Significant voordeel voor Wit",
+                blackAdvantage: "Significant voordeel voor Zwart",
+                slightWhiteAdvantage: "Licht voordeel voor Wit",
+                slightBlackAdvantage: "Licht voordeel voor Zwart",
+                balancedPosition: "Gebalanceerde positie",
+                victory: "Overwinning voor",
+                whites: "Wit",
+                blacks: "Zwart",
+                difficulties: {
+                    easy: "makkelijk",
+                    normal: "normaal",
+                    hard: "moeilijk",
+                    expert: "expert"
+                },
+                pauseText: "⏸️ Pauze",
+                resumeText: "▶️ Hervatten",
+                gamePaused: "Spel gepauzeerd",
+                gameResumed: "Spel hervat"
+            },
+            sv: {
+                gameTitle: "Brainova Kvantschack",
+                quantumBadge: "🚀 KVANT AI",
+                controlsTitle: "🎮 Kvantkontroller",
+                aiMoveText: "Kvant AI Drag",
+                undoText: "Ångra Drag",
+                quantumModeText: "Kvantläge",
+                newGameText: "Nytt Spel",
+                statsTitle: "📊 Statistik",
+                movesLabel: "Spelade Drag",
+                aiLevelLabel: "AI Nivå",
+                timeLabel: "Tid",
+                scoreLabel: "Poäng",
+                aiModeText: "Spela mot AI",
+                humanModeText: "2 Spelare",
+                gameStatus: "Nytt spel - Vit börjar",
+                playerWhite: "Vit Spelare",
+                playerBlack: "Svart Spelare",
+                aiPlayer: "Kvant AI",
+                historyTitle: "📜 Historia",
+                gameStarted: "Spel startat",
+                optionsTitle: "⚙️ AI Alternativ",
+                difficultyText: "Svårighet: Expert",
+                analysisText: "AI Analys",
+                hintText: "Bästa Drag",
+                saveText: "Spara Spel",
+                aiThinking: "Kvant AI analyserar...",
+                closeBtn: "Stäng",
+                turnOf: "Tur för",
+                gameEnded: "Spel avslutat",
+                newGameStarted: "Nytt spel startat",
+                quantumActivated: "Kvantläge aktiverat! Pjäser kan teleportera!",
+                quantumDeactivated: "Kvantläge deaktiverat",
+                gameSaved: "Spel sparat!",
+                gameLoaded: "Spel laddat!",
+                loadSavedGame: "Vill du ladda det sparade spelet?",
+                welcome: "Välkommen till Brainova Kvantschack! Välj ditt spelläge.",
+                aiCalculating: "Kvant AI beräknar bästa drag...",
+                undoInDevelopment: "Ångra-funktion under utveckling",
+                aiAnalyzing: "AI analys pågår...",
+                bestMovesCalculating: "Beräknar bästa drag...",
+                suggestion: "Förslag:",
+                noMovesAvailable: "Inga drag tillgängliga",
+                difficultyChanged: "Svårighet ändrad:",
+                whiteAdvantage: "Betydande fördel för Vit",
+                blackAdvantage: "Betydande fördel för Svart",
+                slightWhiteAdvantage: "Liten fördel för Vit",
+                slightBlackAdvantage: "Liten fördel för Svart",
+                balancedPosition: "Balanserad position",
+                victory: "Seger för",
+                whites: "Vit",
+                blacks: "Svart",
+                difficulties: {
+                    easy: "lätt",
+                    normal: "normal",
+                    hard: "svår",
+                    expert: "expert"
+                }
+            },
+            no: {
+                gameTitle: "Brainova Kvantsjakk",
+                quantumBadge: "🚀 KVANTE AI",
+                controlsTitle: "🎮 Kvantekontroller",
+                aiMoveText: "Kvante AI Trekk",
+                undoText: "Angre Trekk",
+                quantumModeText: "Kvantemodus",
+                newGameText: "Nytt Spill",
+                statsTitle: "📊 Statistikk",
+                movesLabel: "Spilte Trekk",
+                aiLevelLabel: "AI Nivå",
+                timeLabel: "Tid",
+                scoreLabel: "Poeng",
+                aiModeText: "Spill mot AI",
+                humanModeText: "2 Spillere",
+                gameStatus: "Nytt spill - Hvit begynner",
+                playerWhite: "Hvit Spiller",
+                playerBlack: "Svart Spiller",
+                aiPlayer: "Kvante AI",
+                historyTitle: "📜 Historie",
+                gameStarted: "Spill startet",
+                optionsTitle: "⚙️ AI Alternativer",
+                difficultyText: "Vanskelighet: Ekspert",
+                analysisText: "AI Analyse",
+                hintText: "Beste Trekk",
+                saveText: "Lagre Spill",
+                aiThinking: "Kvante AI analyserer...",
+                closeBtn: "Lukk",
+                turnOf: "Tur for",
+                gameEnded: "Spill avsluttet",
+                newGameStarted: "Nytt spill startet",
+                quantumActivated: "Kvantemodus aktivert! Brikker kan teleportere!",
+                quantumDeactivated: "Kvantemodus deaktivert",
+                gameSaved: "Spill lagret!",
+                gameLoaded: "Spill lastet!",
+                loadSavedGame: "Vil du laste det lagrede spillet?",
+                welcome: "Velkommen til Brainova Kvantsjakk! Velg spillmodus.",
+                aiCalculating: "Kvante AI beregner beste trekk...",
+                undoInDevelopment: "Angre-funksjon under utvikling",
+                aiAnalyzing: "AI analyse pågår...",
+                bestMovesCalculating: "Beregner beste trekk...",
+                suggestion: "Forslag:",
+                noMovesAvailable: "Ingen trekk tilgjengelig",
+                difficultyChanged: "Vanskelighet endret:",
+                whiteAdvantage: "Betydelig fordel for Hvit",
+                blackAdvantage: "Betydelig fordel for Svart",
+                slightWhiteAdvantage: "Liten fordel for Hvit",
+                slightBlackAdvantage: "Liten fordel for Svart",
+                balancedPosition: "Balansert posisjon",
+                victory: "Seier for",
+                whites: "Hvit",
+                blacks: "Svart",
+                difficulties: {
+                    easy: "lett",
+                    normal: "normal",
+                    hard: "vanskelig",
+                    expert: "ekspert"
+                }
+            },
+            da: {
+                gameTitle: "Brainova Kvanteskak",
+                quantumBadge: "🚀 KVANTE AI",
+                controlsTitle: "🎮 Kvantekontroller",
+                aiMoveText: "Kvante AI Træk",
+                undoText: "Fortryd Træk",
+                quantumModeText: "Kvantetilstand",
+                newGameText: "Nyt Spil",
+                statsTitle: "📊 Statistik",
+                movesLabel: "Spillede Træk",
+                aiLevelLabel: "AI Niveau",
+                timeLabel: "Tid",
+                scoreLabel: "Score",
+                aiModeText: "Spil mod AI",
+                humanModeText: "2 Spillere",
+                gameStatus: "Nyt spil - Hvid begynder",
+                playerWhite: "Hvid Spiller",
+                playerBlack: "Sort Spiller",
+                aiPlayer: "Kvante AI",
+                historyTitle: "📜 Historie",
+                gameStarted: "Spil startet",
+                optionsTitle: "⚙️ AI Muligheder",
+                difficultyText: "Sværhedsgrad: Ekspert",
+                analysisText: "AI Analyse",
+                hintText: "Bedste Træk",
+                saveText: "Gem Spil",
+                aiThinking: "Kvante AI analyserer...",
+                closeBtn: "Luk",
+                turnOf: "Tur for",
+                gameEnded: "Spil afsluttet",
+                newGameStarted: "Nyt spil startet",
+                quantumActivated: "Kvantetilstand aktiveret! Brikker kan teleportere!",
+                quantumDeactivated: "Kvantetilstand deaktiveret",
+                gameSaved: "Spil gemt!",
+                gameLoaded: "Spil indlæst!",
+                loadSavedGame: "Vil du indlæse det gemte spil?",
+                welcome: "Velkommen til Brainova Kvanteskak! Vælg din spiltilstand.",
+                aiCalculating: "Kvante AI beregner bedste træk...",
+                undoInDevelopment: "Fortryd-funktion under udvikling",
+                aiAnalyzing: "AI analyse i gang...",
+                bestMovesCalculating: "Beregner bedste træk...",
+                suggestion: "Forslag:",
+                noMovesAvailable: "Ingen træk tilgængelige",
+                difficultyChanged: "Sværhedsgrad ændret:",
+                whiteAdvantage: "Betydelig fordel til Hvid",
+                blackAdvantage: "Betydelig fordel til Sort",
+                slightWhiteAdvantage: "Lille fordel til Hvid",
+                slightBlackAdvantage: "Lille fordel til Sort",
+                balancedPosition: "Balanceret position",
+                victory: "Sejr til",
+                whites: "Hvid",
+                blacks: "Sort",
+                difficulties: {
+                    easy: "let",
+                    normal: "normal",
+                    hard: "svær",
+                    expert: "ekspert"
+                }
+            },
+            fi: {
+                gameTitle: "Brainova Kvanttishakki",
+                quantumBadge: "🚀 KVANTTI AI",
+                controlsTitle: "🎮 Kvanttiohjaimet",
+                aiMoveText: "Kvantti AI Siirto",
+                undoText: "Peru Siirto",
+                quantumModeText: "Kvanttitila",
+                newGameText: "Uusi Peli",
+                statsTitle: "📊 Tilastot",
+                movesLabel: "Pelatut Siirrot",
+                aiLevelLabel: "AI Taso",
+                timeLabel: "Aika",
+                scoreLabel: "Pisteet",
+                aiModeText: "Pelaa AI:ta vastaan",
+                humanModeText: "2 Pelaajaa",
+                gameStatus: "Uusi peli - Valkoinen aloittaa",
+                playerWhite: "Valkoinen Pelaaja",
+                playerBlack: "Musta Pelaaja",
+                aiPlayer: "Kvantti AI",
+                historyTitle: "📜 Historia",
+                gameStarted: "Peli aloitettu",
+                optionsTitle: "⚙️ AI Asetukset",
+                difficultyText: "Vaikeus: Asiantuntija",
+                analysisText: "AI Analyysi",
+                hintText: "Parhaat Siirrot",
+                saveText: "Tallenna Peli",
+                aiThinking: "Kvantti AI analysoi...",
+                closeBtn: "Sulje",
+                turnOf: "Vuoro:",
+                gameEnded: "Peli päättynyt",
+                newGameStarted: "Uusi peli aloitettu",
+                quantumActivated: "Kvanttitila aktivoitu! Nappulat voivat teleportata!",
+                quantumDeactivated: "Kvanttitila deaktivoitu",
+                gameSaved: "Peli tallennettu!",
+                gameLoaded: "Peli ladattu!",
+                loadSavedGame: "Haluatko ladata tallennetun pelin?",
+                welcome: "Tervetuloa Brainova Kvanttishakkiin! Valitse pelitila.",
+                aiCalculating: "Kvantti AI laskee parasta siirtoa...",
+                undoInDevelopment: "Peru-toiminto kehitteillä",
+                aiAnalyzing: "AI analyysi käynnissä...",
+                bestMovesCalculating: "Lasketaan parhaita siirtoja...",
+                suggestion: "Ehdotus:",
+                noMovesAvailable: "Ei siirtoja saatavilla",
+                difficultyChanged: "Vaikeus muutettu:",
+                whiteAdvantage: "Merkittävä etu Valkoiselle",
+                blackAdvantage: "Merkittävä etu Mustalle",
+                slightWhiteAdvantage: "Pieni etu Valkoiselle",
+                slightBlackAdvantage: "Pieni etu Mustalle",
+                balancedPosition: "Tasapainoinen asema",
+                victory: "Voitto:",
+                whites: "Valkoinen",
+                blacks: "Musta",
+                difficulties: {
+                    easy: "helppo",
+                    normal: "normaali",
+                    hard: "vaikea",
+                    expert: "asiantuntija"
+                }
+            },
+            pl: {
+                gameTitle: "Brainova Szachy Kwantowe",
+                quantumBadge: "🚀 KWANTOWE AI",
+                controlsTitle: "🎮 Kontrole Kwantowe",
+                aiMoveText: "Ruch Kwantowego AI",
+                undoText: "Cofnij Ruch",
+                quantumModeText: "Tryb Kwantowy",
+                newGameText: "Nowa Gra",
+                statsTitle: "📊 Statystyki",
+                movesLabel: "Zagrane Ruchy",
+                aiLevelLabel: "Poziom AI",
+                timeLabel: "Czas",
+                scoreLabel: "Wynik",
+                aiModeText: "Graj przeciw AI",
+                humanModeText: "2 Graczy",
+                gameStatus: "Nowa gra - Białe zaczynają",
+                playerWhite: "Gracz Biały",
+                playerBlack: "Gracz Czarny",
+                aiPlayer: "Kwantowe AI",
+                historyTitle: "📜 Historia",
+                gameStarted: "Gra rozpoczęta",
+                optionsTitle: "⚙️ Opcje AI",
+                difficultyText: "Trudność: Ekspert",
+                analysisText: "Analiza AI",
+                hintText: "Najlepsze Ruchy",
+                saveText: "Zapisz Grę",
+                aiThinking: "Kwantowe AI analizuje...",
+                closeBtn: "Zamknij",
+                turnOf: "Tura:",
+                gameEnded: "Gra zakończona",
+                newGameStarted: "Nowa gra rozpoczęta",
+                quantumActivated: "Tryb Kwantowy aktywowany! Figury mogą się teleportować!",
+                quantumDeactivated: "Tryb Kwantowy dezaktywowany",
+                gameSaved: "Gra zapisana!",
+                gameLoaded: "Gra wczytana!",
+                loadSavedGame: "Czy chcesz wczytać zapisaną grę?",
+                welcome: "Witaj w Brainova Szachy Kwantowe! Wybierz tryb gry.",
+                aiCalculating: "Kwantowe AI oblicza najlepszy ruch...",
+                undoInDevelopment: "Funkcja cofania w rozwoju",
+                aiAnalyzing: "Analiza AI w toku...",
+                bestMovesCalculating: "Obliczanie najlepszych ruchów...",
+                suggestion: "Sugestia:",
+                noMovesAvailable: "Brak dostępnych ruchów",
+                difficultyChanged: "Trudność zmieniona:",
+                whiteAdvantage: "Znacząca przewaga Białych",
+                blackAdvantage: "Znacząca przewaga Czarnych",
+                slightWhiteAdvantage: "Niewielka przewaga Białych",
+                slightBlackAdvantage: "Niewielka przewaga Czarnych",
+                balancedPosition: "Zrównoważona pozycja",
+                victory: "Zwycięstwo:",
+                whites: "Białe",
+                blacks: "Czarne",
+                difficulties: {
+                    easy: "łatwy",
+                    normal: "normalny",
+                    hard: "trudny",
+                    expert: "ekspert"
+                }
+            },
+            tr: {
+                gameTitle: "Brainova Kuantum Satranç",
+                quantumBadge: "🚀 KUANTUM AI",
+                controlsTitle: "🎮 Kuantum Kontrolleri",
+                aiMoveText: "Kuantum AI Hamlesi",
+                undoText: "Hamleyi Geri Al",
+                quantumModeText: "Kuantum Modu",
+                newGameText: "Yeni Oyun",
+                statsTitle: "📊 İstatistikler",
+                movesLabel: "Oynanan Hamleler",
+                aiLevelLabel: "AI Seviyesi",
+                timeLabel: "Zaman",
+                scoreLabel: "Skor",
+                aiModeText: "AI'ya Karşı Oyna",
+                humanModeText: "2 Oyuncu",
+                gameStatus: "Yeni oyun - Beyaz başlar",
+                playerWhite: "Beyaz Oyuncu",
+                playerBlack: "Siyah Oyuncu",
+                aiPlayer: "Kuantum AI",
+                historyTitle: "📜 Geçmiş",
+                gameStarted: "Oyun başladı",
+                optionsTitle: "⚙️ AI Seçenekleri",
+                difficultyText: "Zorluk: Uzman",
+                analysisText: "AI Analizi",
+                hintText: "En İyi Hamleler",
+                saveText: "Oyunu Kaydet",
+                aiThinking: "Kuantum AI analiz ediyor...",
+                closeBtn: "Kapat",
+                turnOf: "Sıra:",
+                gameEnded: "Oyun bitti",
+                newGameStarted: "Yeni oyun başladı",
+                quantumActivated: "Kuantum Modu etkinleştirildi! Taşlar ışınlanabilir!",
+                quantumDeactivated: "Kuantum Modu devre dışı",
+                gameSaved: "Oyun kaydedildi!",
+                gameLoaded: "Oyun yüklendi!",
+                loadSavedGame: "Kayıtlı oyunu yüklemek istiyor musunuz?",
+                welcome: "Brainova Kuantum Satranç'a hoş geldiniz! Oyun modunuzu seçin.",
+                aiCalculating: "Kuantum AI en iyi hamleyi hesaplıyor...",
+                undoInDevelopment: "Geri alma işlevi geliştiriliyor",
+                aiAnalyzing: "AI analizi devam ediyor...",
+                bestMovesCalculating: "En iyi hamleler hesaplanıyor...",
+                suggestion: "Öneri:",
+                noMovesAvailable: "Mevcut hamle yok",
+                difficultyChanged: "Zorluk değiştirildi:",
+                whiteAdvantage: "Beyaz'ın önemli avantajı",
+                blackAdvantage: "Siyah'ın önemli avantajı",
+                slightWhiteAdvantage: "Beyaz'ın hafif avantajı",
+                slightBlackAdvantage: "Siyah'ın hafif avantajı",
+                balancedPosition: "Dengeli pozisyon",
+                victory: "Zafer:",
+                whites: "Beyaz",
+                blacks: "Siyah",
+                difficulties: {
+                    easy: "kolay",
+                    normal: "normal",
+                    hard: "zor",
+                    expert: "uzman"
+                }
+            },
+            zh: {
+                gameTitle: "脑诺瓦量子象棋",
+                quantumBadge: "🚀 量子人工智能",
+                controlsTitle: "🎮 量子控制",
+                aiMoveText: "量子AI走棋",
+                undoText: "撤销走棋",
+                quantumModeText: "量子模式",
+                newGameText: "新游戏",
+                statsTitle: "📊 统计数据",
+                movesLabel: "已走步数",
+                aiLevelLabel: "AI等级",
+                timeLabel: "时间",
+                scoreLabel: "得分",
+                aiModeText: "对战AI",
+                humanModeText: "双人对战",
+                gameStatus: "新游戏 - 白方先行",
+                playerWhite: "白方玩家",
+                playerBlack: "黑方玩家",
+                aiPlayer: "量子AI",
+                historyTitle: "📜 历史记录",
+                gameStarted: "游戏开始",
+                optionsTitle: "⚙️ AI选项",
+                difficultyText: "难度：专家",
+                analysisText: "AI分析",
+                hintText: "最佳走法",
+                saveText: "保存游戏",
+                aiThinking: "量子AI分析中...",
+                closeBtn: "关闭",
+                turnOf: "轮到",
+                gameEnded: "游戏结束",
+                newGameStarted: "新游戏开始",
+                quantumActivated: "量子模式已激活！棋子可以瞬移！",
+                quantumDeactivated: "量子模式已关闭",
+                gameSaved: "游戏已保存！",
+                gameLoaded: "游戏已加载！",
+                loadSavedGame: "您要加载保存的游戏吗？",
+                welcome: "欢迎来到脑诺瓦量子象棋！选择您的游戏模式。",
+                aiCalculating: "量子AI正在计算最佳走法...",
+                undoInDevelopment: "撤销功能开发中",
+                aiAnalyzing: "AI分析进行中...",
+                bestMovesCalculating: "计算最佳走法中...",
+                suggestion: "建议：",
+                noMovesAvailable: "无可用走法",
+                difficultyChanged: "难度已更改：",
+                whiteAdvantage: "白方显著优势",
+                blackAdvantage: "黑方显著优势",
+                slightWhiteAdvantage: "白方轻微优势",
+                slightBlackAdvantage: "黑方轻微优势",
+                balancedPosition: "平衡局面",
+                victory: "获胜方",
+                whites: "白方",
+                blacks: "黑方",
+                difficulties: {
+                    easy: "简单",
+                    normal: "普通",
+                    hard: "困难",
+                    expert: "专家"
+                },
+                pauseText: "⏸️ 暂停",
+                resumeText: "▶️ 继续",
+                gamePaused: "游戏已暂停",
+                gameResumed: "游戏已继续"
+            },
+            it: {
+                gameTitle: "Brainova Scacchi Quantici",
+                quantumBadge: "🚀 IA QUANTICA",
+                controlsTitle: "🎮 Controlli Quantici",
+                aiMoveText: "Mossa IA Quantica",
+                undoText: "Annulla Mossa",
+                quantumModeText: "Modalità Quantica",
+                newGameText: "Nuova Partita",
+                statsTitle: "📊 Statistiche",
+                movesLabel: "Mosse Giocate",
+                aiLevelLabel: "Livello IA",
+                timeLabel: "Tempo",
+                scoreLabel: "Punteggio",
+                aiModeText: "Gioca vs IA",
+                humanModeText: "2 Giocatori",
+                gameStatus: "Nuova partita - Bianco inizia",
+                playerWhite: "Giocatore Bianco",
+                playerBlack: "Giocatore Nero",
+                aiPlayer: "IA Quantica",
+                historyTitle: "📜 Cronologia",
+                gameStarted: "Partita iniziata",
+                optionsTitle: "⚙️ Opzioni IA",
+                difficultyText: "Difficoltà: Esperto",
+                analysisText: "Analisi IA",
+                hintText: "Migliori Mosse",
+                saveText: "Salva Partita",
+                aiThinking: "IA Quantica in analisi...",
+                closeBtn: "Chiudi",
+                turnOf: "Turno di",
+                gameEnded: "Partita terminata",
+                newGameStarted: "Nuova partita iniziata",
+                quantumActivated: "Modalità Quantica attivata! I pezzi possono teletrasportarsi!",
+                quantumDeactivated: "Modalità Quantica disattivata",
+                gameSaved: "Partita salvata!",
+                gameLoaded: "Partita caricata!",
+                loadSavedGame: "Vuoi caricare la partita salvata?",
+                welcome: "Benvenuto in Brainova Scacchi Quantici! Scegli la modalità di gioco.",
+                aiCalculating: "IA Quantica calcola la mossa migliore...",
+                undoInDevelopment: "Funzione annulla in sviluppo",
+                aiAnalyzing: "Analisi IA in corso...",
+                bestMovesCalculating: "Calcolo migliori mosse...",
+                suggestion: "Suggerimento:",
+                noMovesAvailable: "Nessuna mossa disponibile",
+                difficultyChanged: "Difficoltà cambiata:",
+                whiteAdvantage: "Vantaggio significativo al Bianco",
+                blackAdvantage: "Vantaggio significativo al Nero",
+                slightWhiteAdvantage: "Leggero vantaggio al Bianco",
+                slightBlackAdvantage: "Leggero vantaggio al Nero",
+                balancedPosition: "Posizione equilibrata",
+                victory: "Vittoria del",
+                whites: "Bianco",
+                blacks: "Nero",
+                difficulties: {
+                    easy: "facile",
+                    normal: "normale",
+                    hard: "difficile",
+                    expert: "esperto"
+                }
+            },
+            pt: {
+                gameTitle: "Brainova Xadrez Quântico",
+                quantumBadge: "🚀 IA QUÂNTICA",
+                controlsTitle: "🎮 Controles Quânticos",
+                aiMoveText: "Jogada IA Quântica",
+                undoText: "Desfazer Jogada",
+                quantumModeText: "Modo Quântico",
+                newGameText: "Nova Partida",
+                statsTitle: "📊 Estatísticas",
+                movesLabel: "Jogadas Feitas",
+                aiLevelLabel: "Nível IA",
+                timeLabel: "Tempo",
+                scoreLabel: "Pontuação",
+                aiModeText: "Jogar vs IA",
+                humanModeText: "2 Jogadores",
+                gameStatus: "Nova partida - Brancas começam",
+                playerWhite: "Jogador Branco",
+                playerBlack: "Jogador Preto",
+                aiPlayer: "IA Quântica",
+                historyTitle: "📜 Histórico",
+                gameStarted: "Partida iniciada",
+                optionsTitle: "⚙️ Opções IA",
+                difficultyText: "Dificuldade: Especialista",
+                analysisText: "Análise IA",
+                hintText: "Melhores Jogadas",
+                saveText: "Salvar Partida",
+                aiThinking: "IA Quântica analisando...",
+                closeBtn: "Fechar",
+                turnOf: "Vez do",
+                gameEnded: "Partida terminada",
+                newGameStarted: "Nova partida iniciada",
+                quantumActivated: "Modo Quântico ativado! As peças podem se teletransportar!",
+                quantumDeactivated: "Modo Quântico desativado",
+                gameSaved: "Partida salva!",
+                gameLoaded: "Partida carregada!",
+                loadSavedGame: "Deseja carregar a partida salva?",
+                welcome: "Bem-vindo ao Brainova Xadrez Quântico! Escolha seu modo de jogo.",
+                aiCalculating: "IA Quântica calculando melhor jogada...",
+                undoInDevelopment: "Função desfazer em desenvolvimento",
+                aiAnalyzing: "Análise IA em progresso...",
+                bestMovesCalculating: "Calculando melhores jogadas...",
+                suggestion: "Sugestão:",
+                noMovesAvailable: "Nenhuma jogada disponível",
+                difficultyChanged: "Dificuldade alterada:",
+                whiteAdvantage: "Vantagem significativa para as Brancas",
+                blackAdvantage: "Vantagem significativa para as Pretas",
+                slightWhiteAdvantage: "Ligeira vantagem para as Brancas",
+                slightBlackAdvantage: "Ligeira vantagem para as Pretas",
+                balancedPosition: "Posição equilibrada",
+                victory: "Vitória das",
+                whites: "Brancas",
+                blacks: "Pretas",
+                difficulties: {
+                    easy: "fácil",
+                    normal: "normal",
+                    hard: "difícil",
+                    expert: "especialista"
+                }
+            },
+            ru: {
+                gameTitle: "Brainova Квантовые Шахматы",
+                quantumBadge: "🚀 КВАНТОВЫЙ ИИ",
+                controlsTitle: "🎮 Квантовое Управление",
+                aiMoveText: "Ход Квантового ИИ",
+                undoText: "Отменить Ход",
+                quantumModeText: "Квантовый Режим",
+                newGameText: "Новая Игра",
+                statsTitle: "📊 Статистика",
+                movesLabel: "Сделано Ходов",
+                aiLevelLabel: "Уровень ИИ",
+                timeLabel: "Время",
+                scoreLabel: "Счёт",
+                aiModeText: "Играть против ИИ",
+                humanModeText: "2 Игрока",
+                gameStatus: "Новая игра - Белые начинают",
+                playerWhite: "Белый Игрок",
+                playerBlack: "Чёрный Игрок",
+                aiPlayer: "Квантовый ИИ",
+                historyTitle: "📜 История",
+                gameStarted: "Игра началась",
+                optionsTitle: "⚙️ Настройки ИИ",
+                difficultyText: "Сложность: Эксперт",
+                analysisText: "Анализ ИИ",
+                hintText: "Лучшие Ходы",
+                saveText: "Сохранить Игру",
+                aiThinking: "Квантовый ИИ анализирует...",
+                closeBtn: "Закрыть",
+                turnOf: "Ход",
+                gameEnded: "Игра окончена",
+                newGameStarted: "Новая игра началась",
+                quantumActivated: "Квантовый режим активирован! Фигуры могут телепортироваться!",
+                quantumDeactivated: "Квантовый режим отключён",
+                gameSaved: "Игра сохранена!",
+                gameLoaded: "Игра загружена!",
+                loadSavedGame: "Хотите загрузить сохранённую игру?",
+                welcome: "Добро пожаловать в Brainova Квантовые Шахматы! Выберите режим игры.",
+                aiCalculating: "Квантовый ИИ вычисляет лучший ход...",
+                undoInDevelopment: "Функция отмены в разработке",
+                aiAnalyzing: "Анализ ИИ в процессе...",
+                bestMovesCalculating: "Вычисление лучших ходов...",
+                suggestion: "Предложение:",
+                noMovesAvailable: "Нет доступных ходов",
+                difficultyChanged: "Сложность изменена:",
+                whiteAdvantage: "Значительное преимущество у Белых",
+                blackAdvantage: "Значительное преимущество у Чёрных",
+                slightWhiteAdvantage: "Небольшое преимущество у Белых",
+                slightBlackAdvantage: "Небольшое преимущество у Чёрных",
+                balancedPosition: "Сбалансированная позиция",
+                victory: "Победа",
+                whites: "Белых",
+                blacks: "Чёрных",
+                difficulties: {
+                    easy: "лёгкий",
+                    normal: "обычный",
+                    hard: "сложный",
+                    expert: "эксперт"
+                }
+            },
+            ja: {
+                gameTitle: "ブレイノバ量子チェス",
+                quantumBadge: "🚀 量子AI",
+                controlsTitle: "🎮 量子コントロール",
+                aiMoveText: "量子AI指し手",
+                undoText: "手を戻す",
+                quantumModeText: "量子モード",
+                newGameText: "新しいゲーム",
+                statsTitle: "📊 統計",
+                movesLabel: "指し手数",
+                aiLevelLabel: "AIレベル",
+                timeLabel: "時間",
+                scoreLabel: "スコア",
+                aiModeText: "AI対戦",
+                humanModeText: "2プレイヤー",
+                gameStatus: "新しいゲーム - 白番開始",
+                playerWhite: "白プレイヤー",
+                playerBlack: "黒プレイヤー",
+                aiPlayer: "量子AI",
+                historyTitle: "📜 履歴",
+                gameStarted: "ゲーム開始",
+                optionsTitle: "⚙️ AIオプション",
+                difficultyText: "難易度：エキスパート",
+                analysisText: "AI分析",
+                hintText: "最善手",
+                saveText: "ゲーム保存",
+                aiThinking: "量子AI分析中...",
+                closeBtn: "閉じる",
+                turnOf: "手番",
+                gameEnded: "ゲーム終了",
+                newGameStarted: "新しいゲームが始まりました",
+                quantumActivated: "量子モード有効！駒がテレポートできます！",
+                quantumDeactivated: "量子モード無効",
+                gameSaved: "ゲーム保存完了！",
+                gameLoaded: "ゲーム読み込み完了！",
+                loadSavedGame: "保存されたゲームを読み込みますか？",
+                welcome: "ブレイノバ量子チェスへようこそ！ゲームモードを選択してください。",
+                aiCalculating: "量子AIが最善手を計算中...",
+                undoInDevelopment: "取り消し機能は開発中",
+                aiAnalyzing: "AI分析進行中...",
+                bestMovesCalculating: "最善手計算中...",
+                suggestion: "提案：",
+                noMovesAvailable: "利用可能な手がありません",
+                difficultyChanged: "難易度変更：",
+                whiteAdvantage: "白の大きな優勢",
+                blackAdvantage: "黒の大きな優勢",
+                slightWhiteAdvantage: "白のわずかな優勢",
+                slightBlackAdvantage: "黒のわずかな優勢",
+                balancedPosition: "均衡した局面",
+                victory: "勝利",
+                whites: "白",
+                blacks: "黒",
+                difficulties: {
+                    easy: "簡単",
+                    normal: "普通",
+                    hard: "難しい",
+                    expert: "エキスパート"
+                }
+            },
+            ko: {
+                gameTitle: "브레이노바 양자 체스",
+                quantumBadge: "🚀 양자 AI",
+                controlsTitle: "🎮 양자 컨트롤",
+                aiMoveText: "양자 AI 수",
+                undoText: "수 되돌리기",
+                quantumModeText: "양자 모드",
+                newGameText: "새 게임",
+                statsTitle: "📊 통계",
+                movesLabel: "플레이한 수",
+                aiLevelLabel: "AI 레벨",
+                timeLabel: "시간",
+                scoreLabel: "점수",
+                aiModeText: "AI 대전",
+                humanModeText: "2인 플레이",
+                gameStatus: "새 게임 - 백이 시작",
+                playerWhite: "백 플레이어",
+                playerBlack: "흑 플레이어",
+                aiPlayer: "양자 AI",
+                historyTitle: "📜 기록",
+                gameStarted: "게임 시작",
+                optionsTitle: "⚙️ AI 옵션",
+                difficultyText: "난이도: 전문가",
+                analysisText: "AI 분석",
+                hintText: "최선의 수",
+                saveText: "게임 저장",
+                aiThinking: "양자 AI 분석 중...",
+                closeBtn: "닫기",
+                turnOf: "차례",
+                gameEnded: "게임 종료",
+                newGameStarted: "새 게임이 시작되었습니다",
+                quantumActivated: "양자 모드 활성화! 기물이 순간이동할 수 있습니다!",
+                quantumDeactivated: "양자 모드 비활성화",
+                gameSaved: "게임 저장 완료!",
+                gameLoaded: "게임 로드 완료!",
+                loadSavedGame: "저장된 게임을 로드하시겠습니까?",
+                welcome: "브레이노바 양자 체스에 오신 것을 환영합니다! 게임 모드를 선택하세요.",
+                aiCalculating: "양자 AI가 최선의 수를 계산 중...",
+                undoInDevelopment: "되돌리기 기능 개발 중",
+                aiAnalyzing: "AI 분석 진행 중...",
+                bestMovesCalculating: "최선의 수 계산 중...",
+                suggestion: "제안:",
+                noMovesAvailable: "사용 가능한 수가 없습니다",
+                difficultyChanged: "난이도 변경:",
+                whiteAdvantage: "백의 상당한 우세",
+                blackAdvantage: "흑의 상당한 우세",
+                slightWhiteAdvantage: "백의 약간의 우세",
+                slightBlackAdvantage: "흑의 약간의 우세",
+                balancedPosition: "균형잡힌 포지션",
+                victory: "승리",
+                whites: "백",
+                blacks: "흑",
+                difficulties: {
+                    easy: "쉬움",
+                    normal: "보통",
+                    hard: "어려움",
+                    expert: "전문가"
+                }
+            },
+            hi: {
+                gameTitle: "ब्रेनोवा क्वांटम शतरंज",
+                quantumBadge: "🚀 क्वांटम AI",
+                controlsTitle: "🎮 क्वांटम नियंत्रण",
+                aiMoveText: "क्वांटम AI चाल",
+                undoText: "चाल वापस करें",
+                quantumModeText: "क्वांटम मोड",
+                newGameText: "नया खेल",
+                statsTitle: "📊 आंकड़े",
+                movesLabel: "खेली गई चालें",
+                aiLevelLabel: "AI स्तर",
+                timeLabel: "समय",
+                scoreLabel: "स्कोर",
+                aiModeText: "AI के विरुद्ध खेलें",
+                humanModeText: "2 खिलाड़ी",
+                gameStatus: "नया खेल - सफेद शुरू करता है",
+                playerWhite: "सफेद खिलाड़ी",
+                playerBlack: "काला खिलाड़ी",
+                aiPlayer: "क्वांटम AI",
+                historyTitle: "📜 इतिहास",
+                gameStarted: "खेल शुरू हुआ",
+                optionsTitle: "⚙️ AI विकल्प",
+                difficultyText: "कठिनाई: विशेषज्ञ",
+                analysisText: "AI विश्लेषण",
+                hintText: "सर्वोत्तम चालें",
+                saveText: "खेल सहेजें",
+                aiThinking: "क्वांटम AI विश्लेषण कर रहा है...",
+                closeBtn: "बंद करें",
+                turnOf: "की बारी",
+                gameEnded: "खेल समाप्त",
+                newGameStarted: "नया खेल शुरू हुआ",
+                quantumActivated: "क्वांटम मोड सक्रिय! मोहरे टेलीपोर्ट कर सकते हैं!",
+                quantumDeactivated: "क्वांटम मोड निष्क्रिय",
+                gameSaved: "खेल सहेजा गया!",
+                gameLoaded: "खेल लोड किया गया!",
+                loadSavedGame: "क्या आप सहेजा गया खेल लोड करना चाहते हैं?",
+                welcome: "ब्रेनोवा क्वांटम शतरंज में आपका स्वागत है! अपना खेल मोड चुनें।",
+                aiCalculating: "क्वांटम AI सर्वोत्तम चाल की गणना कर रहा है...",
+                undoInDevelopment: "वापसी फ़ंक्शन विकास में है",
+                aiAnalyzing: "AI विश्लेषण प्रगति में...",
+                bestMovesCalculating: "सर्वोत्तम चालों की गणना...",
+                suggestion: "सुझाव:",
+                noMovesAvailable: "कोई चाल उपलब्ध नहीं",
+                difficultyChanged: "कठिनाई बदली गई:",
+                whiteAdvantage: "सफेद का महत्वपूर्ण फायदा",
+                blackAdvantage: "काले का महत्वपूर्ण फायदा",
+                slightWhiteAdvantage: "सफेद का थोड़ा फायदा",
+                slightBlackAdvantage: "काले का थोड़ा फायदा",
+                balancedPosition: "संतुलित स्थिति",
+                victory: "जीत",
+                whites: "सफेद",
+                blacks: "काला",
+                difficulties: {
+                    easy: "आसान",
+                    normal: "सामान्य",
+                    hard: "कठिन",
+                    expert: "विशेषज्ञ"
+                }
+            }
+        };
+
+        // État du jeu
+        let gameState = {
+            board: [],
+            currentPlayer: 'white',
+            gameMode: 'ai', // 'ai' ou 'human'
+            selectedSquare: null,
+            possibleMoves: [],
+            moveHistory: [],
+            moveCount: 0,
+            startTime: null,
+            timer: null,
+            aiLevel: 5,
+            score: 0,
+            isGameActive: true,
+            quantumMode: false,
+            aiThinking: false,
+            difficulty: 'expert',
+            capturedPieces: { white: [], black: [] },
+            currentLanguage: 'fr',
+            isPaused: false
+        };
+
+        // Définition des pièces d'échecs
+        const chessPieces = {
+            white: {
+                king: '♔',
+                queen: '♕',
+                rook: '♖',
+                bishop: '♗',
+                knight: '♘',
+                pawn: '♙'
+            },
+            black: {
+                king: '♚',
+                queen: '♛',
+                rook: '♜',
+                bishop: '♝',
+                knight: '♞',
+                pawn: '♟'
+            }
+        };
+
+        // Position initiale des pièces
+        const initialBoard = [
+            ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+            ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            [null, null, null, null, null, null, null, null],
+            ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+            ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+        ];
+
+        // Fonction de changement de langue
+        function changeLanguage() {
+            const selector = document.getElementById('languageSelector');
+            const selectedLang = selector.value;
+            gameState.currentLanguage = selectedLang;
+            
+            const t = translations[selectedLang];
+            
+            // Mettre à jour tous les textes
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('quantumBadge').textContent = t.quantumBadge;
+            document.getElementById('controlsTitle').textContent = t.controlsTitle;
+            document.getElementById('aiMoveText').textContent = t.aiMoveText;
+            document.getElementById('undoText').textContent = t.undoText;
+            document.getElementById('quantumModeText').textContent = t.quantumModeText;
+            document.getElementById('newGameText').textContent = t.newGameText;
+            document.getElementById('statsTitle').textContent = t.statsTitle;
+            document.getElementById('movesLabel').textContent = t.movesLabel;
+            document.getElementById('aiLevelLabel').textContent = t.aiLevelLabel;
+            document.getElementById('timeLabel').textContent = t.timeLabel;
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('aiModeText').textContent = t.aiModeText;
+            document.getElementById('humanModeText').textContent = t.humanModeText;
+            document.getElementById('historyTitle').textContent = t.historyTitle;
+            document.getElementById('gameModeTitle').textContent = t.gameModeTitle;
+            document.getElementById('optionsTitle').textContent = t.optionsTitle;
+            document.getElementById('analysisText').textContent = t.analysisText;
+            document.getElementById('hintText').textContent = t.hintText;
+            document.getElementById('saveText').textContent = t.saveText;
+            document.getElementById('closeBtn').title = t.closeBtn;
+            
+            // Mettre à jour le bouton pause
+            const pauseText = gameState.isPaused ? t.resumeText : t.pauseText;
+            document.getElementById('pauseText').textContent = pauseText;
+            
+            // Mettre à jour le texte de difficulté
+            const diffText = t.difficultyText.replace('Expert', t.difficulties[gameState.difficulty]);
+            document.getElementById('difficultyText').textContent = diffText;
+            
+            // Mettre à jour le message "Partie commencée" dans l'historique
+            const gameStartedElement = document.getElementById('gameStarted');
+            if(gameStartedElement) {
+                gameStartedElement.textContent = t.gameStarted;
+            }
+            
+            updateUI();
+        }
+
+        // Créer les particules quantiques
+        function createQuantumParticles() {
+            const container = document.getElementById('quantumParticles');
+            
+            for(let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'quantum-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 12 + 's';
+                particle.style.animationDuration = (12 + Math.random() * 6) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Créer les lignes d'énergie
+        function createEnergyLines() {
+            const container = document.getElementById('energyLines');
+            
+            for(let i = 0; i < 8; i++) {
+                const line = document.createElement('div');
+                line.className = 'energy-line';
+                line.style.top = Math.random() * 100 + '%';
+                line.style.width = (200 + Math.random() * 400) + 'px';
+                line.style.animationDelay = Math.random() * 8 + 's';
+                line.style.animationDuration = (8 + Math.random() * 4) + 's';
+                container.appendChild(line);
+            }
+        }
+
+        // Créer les cercles d'énergie
+        function createEnergyCircles() {
+            const container = document.getElementById('energyCircles');
+            
+            for(let i = 0; i < 6; i++) {
+                const circle = document.createElement('div');
+                circle.className = 'energy-circle';
+                circle.style.left = Math.random() * 100 + '%';
+                circle.style.top = Math.random() * 100 + '%';
+                circle.style.width = (50 + Math.random() * 100) + 'px';
+                circle.style.height = circle.style.width;
+                circle.style.animationDelay = Math.random() * 6 + 's';
+                circle.style.animationDuration = (6 + Math.random() * 3) + 's';
+                container.appendChild(circle);
+            }
+        }
+
+        // Créer les vagues d'énergie
+        function createEnergyWaves() {
+            const container = document.getElementById('energyWaves');
+            
+            for(let i = 0; i < 3; i++) {
+                const wave = document.createElement('div');
+                wave.className = 'energy-wave';
+                wave.style.animationDelay = i * 5 + 's';
+                wave.style.animationDuration = (15 + Math.random() * 5) + 's';
+                container.appendChild(wave);
+            }
+        }
+
+        // Créer les rayons laser
+        function createLaserBeams() {
+            const container = document.getElementById('laserBeams');
+            
+            for(let i = 0; i < 4; i++) {
+                const beam = document.createElement('div');
+                beam.className = 'laser-beam';
+                beam.style.left = Math.random() * 100 + '%';
+                beam.style.animationDelay = Math.random() * 12 + 's';
+                beam.style.animationDuration = (12 + Math.random() * 6) + 's';
+                container.appendChild(beam);
+            }
+        }
+
+        // Créer les orbes d'énergie
+        function createEnergyOrbs() {
+            const container = document.getElementById('energyOrbs');
+            
+            for(let i = 0; i < 10; i++) {
+                const orb = document.createElement('div');
+                orb.className = 'energy-orb';
+                orb.style.left = Math.random() * 100 + '%';
+                orb.style.animationDelay = Math.random() * 18 + 's';
+                orb.style.animationDuration = (18 + Math.random() * 10) + 's';
+                container.appendChild(orb);
+            }
+        }
+
+        // Initialiser tous les effets futuristes
+        function initFuturisticEffects() {
+            createQuantumParticles();
+            createEnergyLines();
+            createEnergyCircles();
+            createEnergyWaves();
+            createLaserBeams();
+            createEnergyOrbs();
+        }
+
+        // Initialiser le jeu
+        function initGame() {
+            gameState.board = initialBoard.map(row => [...row]);
+            gameState.currentPlayer = 'white';
+            gameState.selectedSquare = null;
+            gameState.possibleMoves = [];
+            gameState.moveHistory = [];
+            gameState.moveCount = 0;
+            gameState.startTime = Date.now();
+            gameState.isGameActive = true;
+            gameState.quantumMode = false;
+            
+            createChessboard();
+            updateUI();
+            startTimer();
+            
+            const t = translations[gameState.currentLanguage];
+            
+            // Vider l'historique et ajouter le message de début
+            const historyElement = document.getElementById('moveHistory');
+            historyElement.innerHTML = '';
+            const gameStartedElement = document.createElement('div');
+            gameStartedElement.className = 'move-item';
+            gameStartedElement.id = 'gameStarted';
+            gameStartedElement.textContent = t.gameStarted;
+            historyElement.appendChild(gameStartedElement);
+        }
+
+        // Créer le plateau d'échecs
+        function createChessboard() {
+            const chessboard = document.getElementById('chessboard');
+            chessboard.innerHTML = '';
+            
+            for(let row = 0; row < 8; row++) {
+                for(let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = `chess-square ${(row + col) % 2 === 0 ? 'light' : 'dark'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+                    square.onclick = () => handleSquareClick(row, col);
+                    
+                    const piece = gameState.board[row][col];
+                    if(piece) {
+                        const pieceElement = document.createElement('div');
+                        pieceElement.className = `chess-piece ${getPieceColor(piece)}`;
+                        pieceElement.textContent = piece;
+                        square.appendChild(pieceElement);
+                    }
+                    
+                    chessboard.appendChild(square);
+                }
+            }
+        }
+
+        // Obtenir la couleur d'une pièce
+        function getPieceColor(piece) {
+            const whitePieces = ['♔', '♕', '♖', '♗', '♘', '♙'];
+            return whitePieces.includes(piece) ? 'white' : 'black';
+        }
+
+        // Gérer le clic sur une case
+        function handleSquareClick(row, col) {
+            if(!gameState.isGameActive || gameState.aiThinking || gameState.isPaused) return;
+            
+            const piece = gameState.board[row][col];
+            const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            
+            // Si aucune pièce n'est sélectionnée
+            if(!gameState.selectedSquare) {
+                if(piece && getPieceColor(piece) === gameState.currentPlayer) {
+                    selectSquare(row, col);
+                }
+                return;
+            }
+            
+            // Si on clique sur la même case
+            if(gameState.selectedSquare.row === row && gameState.selectedSquare.col === col) {
+                deselectSquare();
+                return;
+            }
+            
+            // Si on clique sur une case de mouvement possible
+            if(gameState.possibleMoves.some(move => move.row === row && move.col === col)) {
+                makeMove(gameState.selectedSquare.row, gameState.selectedSquare.col, row, col);
+                return;
+            }
+            
+            // Si on clique sur une autre pièce de la même couleur
+            if(piece && getPieceColor(piece) === gameState.currentPlayer) {
+                deselectSquare();
+                selectSquare(row, col);
+                return;
+            }
+            
+            // Sinon, désélectionner
+            deselectSquare();
+        }
+
+        // Sélectionner une case
+        function selectSquare(row, col) {
+            gameState.selectedSquare = { row, col };
+            gameState.possibleMoves = calculatePossibleMoves(row, col);
+            
+            // Mettre en évidence la case sélectionnée
+            const square = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            square.classList.add('selected');
+            
+            // Mettre en évidence les mouvements possibles
+            gameState.possibleMoves.forEach(move => {
+                const moveSquare = document.querySelector(`[data-row="${move.row}"][data-col="${move.col}"]`);
+                moveSquare.classList.add('possible-move');
+            });
+        }
+
+        // Désélectionner une case
+        function deselectSquare() {
+            if(gameState.selectedSquare) {
+                const square = document.querySelector(`[data-row="${gameState.selectedSquare.row}"][data-col="${gameState.selectedSquare.col}"]`);
+                square.classList.remove('selected');
+            }
+            
+            // Enlever la mise en évidence des mouvements possibles
+            document.querySelectorAll('.possible-move').forEach(square => {
+                square.classList.remove('possible-move');
+            });
+            
+            gameState.selectedSquare = null;
+            gameState.possibleMoves = [];
+        }
+
+        // Calculer les mouvements possibles pour une pièce
+        function calculatePossibleMoves(row, col) {
+            const piece = gameState.board[row][col];
+            if(!piece) return [];
+            
+            const moves = [];
+            const pieceType = getPieceType(piece);
+            const color = getPieceColor(piece);
+            
+            switch(pieceType) {
+                case 'pawn':
+                    moves.push(...calculatePawnMoves(row, col, color));
+                    break;
+                case 'rook':
+                    moves.push(...calculateRookMoves(row, col, color));
+                    break;
+                case 'bishop':
+                    moves.push(...calculateBishopMoves(row, col, color));
+                    break;
+                case 'knight':
+                    moves.push(...calculateKnightMoves(row, col, color));
+                    break;
+                case 'queen':
+                    moves.push(...calculateQueenMoves(row, col, color));
+                    break;
+                case 'king':
+                    moves.push(...calculateKingMoves(row, col, color));
+                    break;
+            }
+            
+            return moves.filter(move => isValidMove(row, col, move.row, move.col));
+        }
+
+        // Obtenir le type d'une pièce
+        function getPieceType(piece) {
+            const pieceMap = {
+                '♔': 'king', '♚': 'king',
+                '♕': 'queen', '♛': 'queen',
+                '♖': 'rook', '♜': 'rook',
+                '♗': 'bishop', '♝': 'bishop',
+                '♘': 'knight', '♞': 'knight',
+                '♙': 'pawn', '♟': 'pawn'
+            };
+            return pieceMap[piece];
+        }
+
+        // Calculer les mouvements du pion
+        function calculatePawnMoves(row, col, color) {
+            const moves = [];
+            const direction = color === 'white' ? -1 : 1;
+            const startRow = color === 'white' ? 6 : 1;
+            
+            // Mouvement vers l'avant
+            if(row + direction >= 0 && row + direction < 8 && !gameState.board[row + direction][col]) {
+                moves.push({ row: row + direction, col });
+                
+                // Double mouvement depuis la position initiale
+                if(row === startRow && !gameState.board[row + 2 * direction][col]) {
+                    moves.push({ row: row + 2 * direction, col });
+                }
+            }
+            
+            // Captures en diagonale
+            for(let dcol of [-1, 1]) {
+                const newRow = row + direction;
+                const newCol = col + dcol;
+                if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    const targetPiece = gameState.board[newRow][newCol];
+                    if(targetPiece && getPieceColor(targetPiece) !== color) {
+                        moves.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+
+        // Calculer les mouvements de la tour
+        function calculateRookMoves(row, col, color) {
+            const moves = [];
+            const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+            
+            for(let [drow, dcol] of directions) {
+                for(let i = 1; i < 8; i++) {
+                    const newRow = row + i * drow;
+                    const newCol = col + i * dcol;
+                    
+                    if(newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+                    
+                    const targetPiece = gameState.board[newRow][newCol];
+                    if(!targetPiece) {
+                        moves.push({ row: newRow, col: newCol });
+                    } else {
+                        if(getPieceColor(targetPiece) !== color) {
+                            moves.push({ row: newRow, col: newCol });
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            return moves;
+        }
+
+        // Calculer les mouvements du fou
+        function calculateBishopMoves(row, col, color) {
+            const moves = [];
+            const directions = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+            
+            for(let [drow, dcol] of directions) {
+                for(let i = 1; i < 8; i++) {
+                    const newRow = row + i * drow;
+                    const newCol = col + i * dcol;
+                    
+                    if(newRow < 0 || newRow >= 8 || newCol < 0 || newCol >= 8) break;
+                    
+                    const targetPiece = gameState.board[newRow][newCol];
+                    if(!targetPiece) {
+                        moves.push({ row: newRow, col: newCol });
+                    } else {
+                        if(getPieceColor(targetPiece) !== color) {
+                            moves.push({ row: newRow, col: newCol });
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            return moves;
+        }
+
+        // Calculer les mouvements du cavalier
+        function calculateKnightMoves(row, col, color) {
+            const moves = [];
+            const knightMoves = [
+                [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+                [1, -2], [1, 2], [2, -1], [2, 1]
+            ];
+            
+            for(let [drow, dcol] of knightMoves) {
+                const newRow = row + drow;
+                const newCol = col + dcol;
+                
+                if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    const targetPiece = gameState.board[newRow][newCol];
+                    if(!targetPiece || getPieceColor(targetPiece) !== color) {
+                        moves.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+
+        // Calculer les mouvements de la reine
+        function calculateQueenMoves(row, col, color) {
+            return [
+                ...calculateRookMoves(row, col, color),
+                ...calculateBishopMoves(row, col, color)
+            ];
+        }
+
+        // Calculer les mouvements du roi
+        function calculateKingMoves(row, col, color) {
+            const moves = [];
+            const directions = [
+                [-1, -1], [-1, 0], [-1, 1],
+                [0, -1],           [0, 1],
+                [1, -1],  [1, 0],  [1, 1]
+            ];
+            
+            for(let [drow, dcol] of directions) {
+                const newRow = row + drow;
+                const newCol = col + dcol;
+                
+                if(newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    const targetPiece = gameState.board[newRow][newCol];
+                    if(!targetPiece || getPieceColor(targetPiece) !== color) {
+                        moves.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+
+        // Vérifier si un mouvement est valide
+        function isValidMove(fromRow, fromCol, toRow, toCol) {
+            // Vérifications de base
+            if(toRow < 0 || toRow >= 8 || toCol < 0 || toCol >= 8) return false;
+            
+            const piece = gameState.board[fromRow][fromCol];
+            const targetPiece = gameState.board[toRow][toCol];
+            
+            if(!piece) return false;
+            if(targetPiece && getPieceColor(piece) === getPieceColor(targetPiece)) return false;
+            
+            return true;
+        }
+
+        // Effectuer un mouvement
+        function makeMove(fromRow, fromCol, toRow, toCol) {
+            const piece = gameState.board[fromRow][fromCol];
+            const capturedPiece = gameState.board[toRow][toCol];
+            
+            // Effectuer le mouvement
+            gameState.board[toRow][toCol] = piece;
+            gameState.board[fromRow][fromCol] = null;
+            
+            // Ajouter à l'historique
+            const moveNotation = `${piece} ${String.fromCharCode(97 + fromCol)}${8 - fromRow} → ${String.fromCharCode(97 + toCol)}${8 - toRow}`;
+            addMoveToHistory(moveNotation);
+            
+            // Gérer les captures
+            if(capturedPiece) {
+                const capturedColor = getPieceColor(capturedPiece);
+                gameState.capturedPieces[capturedColor].push(capturedPiece);
+                gameState.score += getPieceValue(capturedPiece);
+            }
+            
+            gameState.moveCount++;
+            deselectSquare();
+            createChessboard();
+            
+            // Changer de joueur
+            gameState.currentPlayer = gameState.currentPlayer === 'white' ? 'black' : 'white';
+            
+            // Vérifier la fin de partie
+            if(isCheckmate() || isStalemate()) {
+                endGame();
+            } else {
+                updateUI();
+                
+                // Si c'est le tour de l'IA
+                if(gameState.gameMode === 'ai' && gameState.currentPlayer === 'black') {
+                    setTimeout(() => makeAIMove(), 1000);
+                }
+            }
+        }
+
+        // Obtenir la valeur d'une pièce
+        function getPieceValue(piece) {
+            const values = {
+                '♙': 1, '♟': 1,
+                '♘': 3, '♞': 3,
+                '♗': 3, '♝': 3,
+                '♖': 5, '♜': 5,
+                '♕': 9, '♛': 9,
+                '♔': 0, '♚': 0
+            };
+            return values[piece] || 0;
+        }
+
+        // Ajouter un coup à l'historique
+        function addMoveToHistory(move) {
+            gameState.moveHistory.push(move);
+            const historyElement = document.getElementById('moveHistory');
+            const moveElement = document.createElement('div');
+            moveElement.className = 'move-item';
+            moveElement.textContent = `${gameState.moveHistory.length}. ${move}`;
+            historyElement.appendChild(moveElement);
+            historyElement.scrollTop = historyElement.scrollHeight;
+        }
+
+        // Coup de l'IA
+        function makeAIMove() {
+            if(gameState.currentPlayer !== 'black' || !gameState.isGameActive || gameState.isPaused) return;
+            
+            gameState.aiThinking = true;
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.aiCalculating, 0);
+            
+            setTimeout(() => {
+                const bestMove = calculateBestMove();
+                if(bestMove) {
+                    makeMove(bestMove.fromRow, bestMove.fromCol, bestMove.toRow, bestMove.toCol);
+                }
+                gameState.aiThinking = false;
+                hideAIMessage();
+            }, 1500 + Math.random() * 2000);
+        }
+
+        // Calculer le meilleur coup pour l'IA
+        function calculateBestMove() {
+            const allMoves = [];
+            
+            // Générer tous les coups possibles pour les pièces noires
+            for(let row = 0; row < 8; row++) {
+                for(let col = 0; col < 8; col++) {
+                    const piece = gameState.board[row][col];
+                    if(piece && getPieceColor(piece) === 'black') {
+                        const moves = calculatePossibleMoves(row, col);
+                        moves.forEach(move => {
+                            allMoves.push({
+                                fromRow: row,
+                                fromCol: col,
+                                toRow: move.row,
+                                toCol: move.col,
+                                score: evaluateMove(row, col, move.row, move.col)
+                            });
+                        });
+                    }
+                }
+            }
+            
+            if(allMoves.length === 0) return null;
+            
+            // Trier par score et prendre le meilleur
+            allMoves.sort((a, b) => b.score - a.score);
+            
+            // Ajouter un peu d'aléatoire selon la difficulté
+            const randomFactor = gameState.difficulty === 'easy' ? 0.5 : 
+                                 gameState.difficulty === 'normal' ? 0.2 : 0.05;
+            
+            if(Math.random() < randomFactor) {
+                return allMoves[Math.floor(Math.random() * Math.min(3, allMoves.length))];
+            }
+            
+            return allMoves[0];
+        }
+
+        // Évaluer un coup
+        function evaluateMove(fromRow, fromCol, toRow, toCol) {
+            let score = 0;
+            
+            const capturedPiece = gameState.board[toRow][toCol];
+            if(capturedPiece) {
+                score += getPieceValue(capturedPiece) * 10;
+            }
+            
+            // Bonus pour contrôler le centre
+            const centerDistance = Math.abs(toRow - 3.5) + Math.abs(toCol - 3.5);
+            score += (7 - centerDistance) * 2;
+            
+            // Bonus pour avancer les pions
+            const piece = gameState.board[fromRow][fromCol];
+            if(getPieceType(piece) === 'pawn') {
+                score += (fromRow - toRow) * 3;
+            }
+            
+            return score + Math.random() * 5;
+        }
+
+        // Vérifier l'échec et mat
+        function isCheckmate() {
+            // Implémentation simplifiée
+            return false;
+        }
+
+        // Vérifier le pat
+        function isStalemate() {
+            // Implémentation simplifiée
+            return false;
+        }
+
+        // Terminer la partie
+        function endGame() {
+            gameState.isGameActive = false;
+            clearInterval(gameState.timer);
+            
+            const t = translations[gameState.currentLanguage];
+            const winner = gameState.currentPlayer === 'white' ? t.blacks : t.whites;
+            showAIMessage(`${t.gameEnded} ! ${t.victory} ${winner}`, 5000);
+        }
+
+        // Afficher un message IA
+        function showAIMessage(message, duration = 2000) {
+            const aiThinking = document.getElementById('aiThinking');
+            const aiMessage = document.getElementById('aiMessage');
+            
+            aiMessage.textContent = message;
+            aiThinking.classList.add('active');
+            
+            if(duration > 0) {
+                setTimeout(() => {
+                    aiThinking.classList.remove('active');
+                }, duration);
+            }
+        }
+
+        // Masquer le message IA
+        function hideAIMessage() {
+            const aiThinking = document.getElementById('aiThinking');
+            aiThinking.classList.remove('active');
+        }
+
+        // Démarrer le timer
+        function startTimer() {
+            if(gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            gameState.timer = setInterval(() => {
+                if(gameState.isGameActive && !gameState.isPaused) {
+                    updateUI();
+                }
+            }, 1000);
+        }
+
+        // Mettre à jour l'interface utilisateur
+        function updateUI() {
+            document.getElementById('moveCount').textContent = gameState.moveCount;
+            document.getElementById('aiLevel').textContent = gameState.aiLevel;
+            document.getElementById('gameScore').textContent = gameState.score;
+            
+            // Mettre à jour le temps
+            if(gameState.startTime) {
+                const elapsedTime = Date.now() - gameState.startTime;
+                const minutes = Math.floor(elapsedTime / 60000);
+                const seconds = Math.floor((elapsedTime % 60000) / 1000);
+                document.getElementById('gameTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // Mettre à jour le bouton statut du joueur
+            const t = translations[gameState.currentLanguage];
+            const playerName = gameState.currentPlayer === 'white' ? t.playerWhite : 
+                              (gameState.gameMode === 'ai' ? t.aiPlayer : t.playerBlack);
+            const playerIcon = gameState.currentPlayer === 'white' ? '♔' : '♚';
+            
+            document.getElementById('currentPlayer').textContent = playerIcon;
+            document.getElementById('playerName').textContent = playerName;
+            
+            // Changer la couleur du bouton selon le joueur
+            const playerBtn = document.getElementById('playerStatusBtn');
+            playerBtn.classList.remove('yellow-player', 'red-player');
+            if(gameState.currentPlayer === 'white') {
+                playerBtn.classList.add('yellow-player');
+            } else {
+                playerBtn.classList.add('red-player');
+            }
+        }
+
+        // Fonction pour changer de joueur manuellement (mode 2 joueurs uniquement)
+        function switchPlayer() {
+            if(gameState.gameMode === 'human' && gameState.isGameActive && !gameState.aiThinking && !gameState.isPaused) {
+                gameState.currentPlayer = gameState.currentPlayer === 'white' ? 'black' : 'white';
+                deselectSquare();
+                updateUI();
+                
+                const t = translations[gameState.currentLanguage];
+                showAIMessage(`${t.turnOf} ${gameState.currentPlayer === 'white' ? t.playerWhite : t.playerBlack}`, 1500);
+            }
+        }
+
+        // Fonction pour basculer la pause
+        function togglePause() {
+            if(!gameState.isGameActive) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            const t = translations[gameState.currentLanguage];
+            
+            // Mettre à jour le texte du bouton
+            const pauseText = gameState.isPaused ? t.resumeText : t.pauseText;
+            document.getElementById('pauseText').textContent = pauseText;
+            
+            // Afficher le message approprié
+            const message = gameState.isPaused ? t.gamePaused : t.gameResumed;
+            showAIMessage(message, 2000);
+            
+            // Si on reprend le jeu et que c'est le tour de l'IA
+            if(!gameState.isPaused && gameState.gameMode === 'ai' && gameState.currentPlayer === 'black') {
+                setTimeout(() => makeAIMove(), 1000);
+            }
+        }
+
+        // Fonctions des boutons
+        function setGameMode(mode) {
+            gameState.gameMode = mode;
+            
+            const aiBtn = document.getElementById('aiModeBtn');
+            const humanBtn = document.getElementById('humanModeBtn');
+            
+            if(mode === 'ai') {
+                aiBtn.classList.add('active');
+                humanBtn.classList.remove('active');
+            } else {
+                humanBtn.classList.add('active');
+                aiBtn.classList.remove('active');
+            }
+            
+            resetGame();
+        }
+
+        function undoMove() {
+            if(gameState.moveHistory.length <= 1) return;
+            
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.undoInDevelopment, 2000);
+        }
+
+        function activateQuantumMode() {
+            gameState.quantumMode = !gameState.quantumMode;
+            const btn = document.getElementById('quantumBtn');
+            const t = translations[gameState.currentLanguage];
+            
+            if(gameState.quantumMode) {
+                btn.style.background = 'linear-gradient(145deg, #00b894, #00a085)';
+                showAIMessage(t.quantumActivated, 3000);
+                
+                // Ajouter des effets visuels quantiques
+                document.querySelectorAll('.chess-square').forEach(square => {
+                    if(Math.random() < 0.1) {
+                        square.classList.add('quantum-state');
+                        setTimeout(() => {
+                            square.classList.remove('quantum-state');
+                        }, 2000);
+                    }
+                });
+            } else {
+                btn.style.background = 'linear-gradient(145deg, #ff6b6b, #ee5a52)';
+                showAIMessage(t.quantumDeactivated, 2000);
+            }
+        }
+
+        function resetGame() {
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.newGameStarted, 2000);
+            initGame();
+        }
+
+        function changeDifficulty() {
+            const difficulties = ['easy', 'normal', 'hard', 'expert'];
+            const currentIndex = difficulties.indexOf(gameState.difficulty);
+            const nextIndex = (currentIndex + 1) % difficulties.length;
+            gameState.difficulty = difficulties[nextIndex];
+            
+            gameState.aiLevel = nextIndex + 2;
+            
+            const t = translations[gameState.currentLanguage];
+            const diffText = t.difficultyText.replace('Expert', t.difficulties[gameState.difficulty]);
+            document.getElementById('difficultyText').textContent = diffText;
+            
+            showAIMessage(`${t.difficultyChanged} ${t.difficulties[gameState.difficulty]}`, 2000);
+        }
+
+        function toggleAIAnalysis() {
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.aiAnalyzing, 3000);
+            
+            setTimeout(() => {
+                const analysis = analyzePosition();
+                showAIMessage(analysis, 5000);
+            }, 2000);
+        }
+
+        function analyzePosition() {
+            let whiteScore = 0;
+            let blackScore = 0;
+            
+            for(let row = 0; row < 8; row++) {
+                for(let col = 0; col < 8; col++) {
+                    const piece = gameState.board[row][col];
+                    if(piece) {
+                        const value = getPieceValue(piece);
+                        if(getPieceColor(piece) === 'white') {
+                            whiteScore += value;
+                        } else {
+                            blackScore += value;
+                        }
+                    }
+                }
+            }
+            
+            const t = translations[gameState.currentLanguage];
+            const advantage = whiteScore - blackScore;
+            if(advantage > 3) return t.whiteAdvantage;
+            if(advantage < -3) return t.blackAdvantage;
+            if(advantage > 0) return t.slightWhiteAdvantage;
+            if(advantage < 0) return t.slightBlackAdvantage;
+            return t.balancedPosition;
+        }
+
+        function showBestMoves() {
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.bestMovesCalculating, 2000);
+            
+            setTimeout(() => {
+                const moves = calculateBestMove();
+                if(moves) {
+                    const suggestion = `${t.suggestion} ${String.fromCharCode(97 + moves.fromCol)}${8 - moves.fromRow} → ${String.fromCharCode(97 + moves.toCol)}${8 - moves.toRow}`;
+                    showAIMessage(suggestion, 4000);
+                } else {
+                    showAIMessage(t.noMovesAvailable, 2000);
+                }
+            }, 2000);
+        }
+
+        function saveGame() {
+            const saveData = {
+                board: gameState.board,
+                currentPlayer: gameState.currentPlayer,
+                gameMode: gameState.gameMode,
+                moveHistory: gameState.moveHistory,
+                moveCount: gameState.moveCount,
+                score: gameState.score,
+                difficulty: gameState.difficulty,
+                currentLanguage: gameState.currentLanguage
+            };
+            
+            localStorage.setItem('quantumChessSave', JSON.stringify(saveData));
+            const t = translations[gameState.currentLanguage];
+            showAIMessage(t.gameSaved, 2000);
+        }
+
+        function loadGame() {
+            const saveData = localStorage.getItem('quantumChessSave');
+            if(saveData) {
+                const data = JSON.parse(saveData);
+                gameState.board = data.board;
+                gameState.currentPlayer = data.currentPlayer;
+                gameState.gameMode = data.gameMode;
+                gameState.moveHistory = data.moveHistory;
+                gameState.moveCount = data.moveCount;
+                gameState.score = data.score;
+                gameState.difficulty = data.difficulty;
+                if(data.currentLanguage) {
+                    gameState.currentLanguage = data.currentLanguage;
+                    document.getElementById('languageSelector').value = data.currentLanguage;
+                    changeLanguage();
+                }
+                
+                createChessboard();
+                updateUI();
+                const t = translations[gameState.currentLanguage];
+                showAIMessage(t.gameLoaded, 2000);
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initFuturisticEffects();
+            initGame();
+            
+            // Charger une sauvegarde si elle existe
+            if(localStorage.getItem('quantumChessSave')) {
+                setTimeout(() => {
+                    const t = translations[gameState.currentLanguage];
+                    if(confirm(t.loadSavedGame)) {
+                        loadGame();
+                    }
+                }, 1000);
+            }
+            
+            // Message de bienvenue
+            setTimeout(() => {
+                const t = translations[gameState.currentLanguage];
+                showAIMessage(t.welcome, 4000);
+            }, 1000);
+        });
+    </script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux4' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

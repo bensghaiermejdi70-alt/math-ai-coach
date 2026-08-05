@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Pool - Billard Futuriste avec IA</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0033 25%, #330066 50%, #660099 75%, #9900cc 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Effet de grille cyberpunk en arrière-plan */
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Particules cyber */
+        .cyber-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .cyber-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: cyberFloat 12s infinite linear;
+            box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        }
+
+        @keyframes cyberFloat {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            50% { transform: translateY(50vh) translateX(100px) rotate(180deg); opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10px) translateX(-50px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-logo {
+            font-size: 4rem;
+            animation: cyberPulse 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px #00ffff);
+        }
+
+        .title {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ff00);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: cyberGlow 4s ease-in-out infinite;
+            text-shadow: 0 0 40px rgba(0, 255, 255, 0.8);
+            margin-bottom: 10px;
+        }
+
+        @keyframes cyberPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 30px #00ffff); }
+            50% { transform: scale(1.1) rotate(5deg); filter: drop-shadow(0 0 50px #ff00ff); }
+        }
+
+        @keyframes cyberGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #00ffff;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-btn {
+            background: linear-gradient(45deg, #1a0033, #330066);
+            border: 2px solid #00ffff;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-btn:hover {
+            background: linear-gradient(45deg, #330066, #660099);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(26, 0, 51, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            margin-top: 5px;
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(15px);
+            min-width: 200px;
+        }
+
+        .language-dropdown.show {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-radius: 10px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .language-option:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .left-panel, .right-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+        }
+
+        .panel-title {
+            color: #00ffff;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
+        }
+
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .level-btn {
+            background: linear-gradient(45deg, #660099, #9900cc);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .level-btn:hover, .level-btn.active {
+            background: linear-gradient(45deg, #9900cc, #cc00ff);
+            box-shadow: 0 6px 20px rgba(153, 0, 204, 0.6);
+            transform: translateY(-3px);
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+
+        .rules-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .ai-assist-btn {
+            background: linear-gradient(45deg, #ffa500, #ff8c00);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);
+        }
+
+        .cyber-boost-btn {
+            background: linear-gradient(45deg, #9c27b0, #673ab7);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4);
+        }
+
+        .view-3d-btn {
+            background: linear-gradient(45deg, #00bcd4, #0097a7);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+        }
+
+        .view-btn {
+            background: linear-gradient(45deg, #37474f, #546e7a);
+            color: #ffffff;
+            border: 1px solid #00ffff;
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .view-btn:hover, .view-btn.active {
+            background: linear-gradient(45deg, #00bcd4, #0097a7);
+            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.4);
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px solid #00ffff;
+            border-radius: 25px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.2);
+            position: relative;
+            min-height: 700px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 18px;
+            border: 1px solid #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+        }
+
+        .pool-table {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(135deg, #0d4f3c 0%, #1a7a5e 50%, #0d4f3c 100%);
+            border: 8px solid #8B4513;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 0 50px rgba(0, 0, 0, 0.5),
+                0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .table-felt {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            background: radial-gradient(circle at center, #0f5d47 0%, #0a4a3a 100%);
+            border-radius: 15px;
+            border: 2px solid #2d8659;
+        }
+
+        .pocket {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #000000 0%, #333333 100%);
+            border-radius: 50%;
+            border: 3px solid #8B4513;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .pocket.corner-tl { top: -20px; left: -20px; }
+        .pocket.corner-tr { top: -20px; right: -20px; }
+        .pocket.corner-bl { bottom: -20px; left: -20px; }
+        .pocket.corner-br { bottom: -20px; right: -20px; }
+        .pocket.side-l { top: 50%; left: -20px; transform: translateY(-50%); }
+        .pocket.side-r { top: 50%; right: -20px; transform: translateY(-50%); }
+
+        .ball {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset -5px -5px 10px rgba(0, 0, 0, 0.2),
+                inset 5px 5px 10px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+
+        .ball:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 6px 12px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(0, 255, 255, 0.6);
+        }
+
+        .ball.moving {
+            animation: ballRoll 2s ease-out;
+        }
+
+        .ball.cyber-enhanced {
+            box-shadow: 
+                0 0 20px #00ffff,
+                0 0 40px #00ffff,
+                inset -5px -5px 10px rgba(0, 0, 0, 0.2);
+            animation: cyberPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes ballRoll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(720deg); }
+        }
+
+        .ball.moving {
+            animation: ballRoll 0.5s linear infinite;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                0 0 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .cue-ball { background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0); }
+        .ball-1 { background: radial-gradient(circle at 30% 30%, #ffff00, #cccc00); }
+        .ball-2 { background: radial-gradient(circle at 30% 30%, #0066ff, #004499); }
+        .ball-3 { background: radial-gradient(circle at 30% 30%, #ff0000, #cc0000); }
+        .ball-4 { background: radial-gradient(circle at 30% 30%, #9900cc, #660099); }
+        .ball-5 { background: radial-gradient(circle at 30% 30%, #ff6600, #cc4400); }
+        .ball-6 { background: radial-gradient(circle at 30% 30%, #00cc00, #009900); }
+        .ball-7 { background: radial-gradient(circle at 30% 30%, #990000, #660000); }
+        .ball-8 { background: radial-gradient(circle at 30% 30%, #000000, #333333); }
+
+        .cue-stick {
+            position: absolute;
+            width: 300px;
+            height: 8px;
+            background: linear-gradient(90deg, #8B4513 0%, #D2691E 50%, #8B4513 100%);
+            border-radius: 4px;
+            transform-origin: left center;
+            display: none;
+            z-index: 15;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .power-meter {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .power-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+            border-radius: 8px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+
+        .ai-assistant {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid #ff00ff;
+            min-width: 200px;
+            display: none;
+        }
+
+        .ai-status {
+            color: #ff00ff;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .ai-suggestion {
+            color: #00ffff;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a0033, #330066);
+            border: 3px solid #00ffff;
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #00ffff;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 2rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ff4757;
+            transform: scale(1.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #00ffff;
+            font-size: 1rem;
+        }
+
+        .trajectory-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #00ffff, transparent);
+            transform-origin: left center;
+            display: none;
+            z-index: 5;
+            animation: trajectoryPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes trajectoryPulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .shot-btn {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #e94560, #f27121);
+            color: #ffffff;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+            display: none;
+        }
+
+        .shot-btn:hover {
+            transform: translateX(-50%) translateY(-4px);
+            box-shadow: 0 8px 25px rgba(233, 69, 96, 0.6);
+        }
+
+        .shot-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1200px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .left-panel, .right-panel {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                justify-content: center;
+            }
+            
+            .level-selector {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .level-btn {
+                flex: 1;
+                min-width: 120px;
+            }
+            
+            .control-btn {
+                flex: 1;
+                min-width: 180px;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.8rem;
+            }
+            
+            .game-logo {
+                font-size: 3rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .pool-table {
+                height: 400px;
+            }
+            
+            .ball {
+                width: 20px;
+                height: 20px;
+            }
+        }
+        </style>
+    <style>
+    /* override: consistent global close button */
+    .global-close-btn { position: fixed !important; top: 14px !important; right: 14px !important; z-index: 99999 !important; background: linear-gradient(45deg,#ff3b3b,#ff0066) !important; color: #fff !important; border: none !important; width:52px !important; height:52px !important; border-radius:50% !important; font-size:22px !important; cursor:pointer !important; display:flex !important;align-items:center !important;justify-content:center !important; box-shadow:0 8px 22px rgba(255,59,59,0.28) !important; }
+    .global-close-btn:hover{ transform: scale(1.06); }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <!-- Grille cyberpunk -->
+    <div class="cyber-grid"></div>
+    
+    <!-- Particules cyber -->
+    <div class="cyber-particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-section">
+                <div class="game-logo">🎱</div>
+                <div>
+                    <h1 class="title">CYBER POOL</h1>
+                    <p class="subtitle" id="subtitle">Billard futuriste avec IA avancée</p>
+                </div>
+            </div>
+            <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+            <div class="language-selector">
+                <button class="language-btn" id="languageBtn">🌐 Français</button>
+                <div class="language-dropdown" id="languageDropdown">
+                    <div class="language-option" data-lang="fr">🇫🇷 Français</div>
+                    <div class="language-option" data-lang="en">🇬🇧 English</div>
+                    <div class="language-option" data-lang="ar">🇸🇦 العربية</div>
+                    <div class="language-option" data-lang="es">🇪🇸 Español</div>
+                    <div class="language-option" data-lang="de">🇩🇪 Deutsch</div>
+                    <div class="language-option" data-lang="zh">🇨🇳 中文</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-layout">
+            <div class="left-panel">
+                <h3 class="panel-title" id="levelsTitle">Niveaux Cyber</h3>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="1" id="level1">Novice</button>
+                    <button class="level-btn" data-level="2" id="level2">Pro</button>
+                    <button class="level-btn" data-level="3" id="level3">Expert</button>
+                    <button class="level-btn" data-level="4" id="level4">Cyber Master</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="scoreLabel">Score Cyber</div>
+                        <div id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="levelLabel">Niveau</div>
+                        <div id="currentLevel">1</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="shotsLabel">Tirs</div>
+                        <div id="totalShots">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="accuracyLabel">Précision</div>
+                        <div id="accuracy">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="game-info">
+                    <div class="info-item">
+                        <span id="gameLabel">Partie:</span> <span id="currentGame">1</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="ballsLabel">Boules restantes:</span> <span id="ballsRemaining">7</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="playerLabel">Joueur:</span> <span id="currentPlayer">Humain</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="energyLabel">Énergie:</span> <span id="energy">100%</span>
+                    </div>
+                </div>
+                
+                <div class="pool-table" id="poolTable">
+                    <div class="table-felt"></div>
+                    
+                    <!-- Poches -->
+                    <div class="pocket corner-tl"></div>
+                    <div class="pocket corner-tr"></div>
+                    <div class="pocket corner-bl"></div>
+                    <div class="pocket corner-br"></div>
+                    <div class="pocket side-l"></div>
+                    <div class="pocket side-r"></div>
+                    
+                    <!-- Boules -->
+                    <div class="ball cue-ball" id="cueBall" data-ball="cue" style="left: 150px; top: 240px;"></div>
+                    <div class="ball ball-1" id="ball1" data-ball="1" style="left: 400px; top: 240px;">1</div>
+                    <div class="ball ball-2" id="ball2" data-ball="2" style="left: 425px; top: 225px;">2</div>
+                    <div class="ball ball-3" id="ball3" data-ball="3" style="left: 425px; top: 255px;">3</div>
+                    <div class="ball ball-4" id="ball4" data-ball="4" style="left: 450px; top: 210px;">4</div>
+                    <div class="ball ball-5" id="ball5" data-ball="5" style="left: 450px; top: 240px;">5</div>
+                    <div class="ball ball-6" id="ball6" data-ball="6" style="left: 450px; top: 270px;">6</div>
+                    <div class="ball ball-7" id="ball7" data-ball="7" style="left: 475px; top: 195px;">7</div>
+                    <div class="ball ball-8" id="ball8" data-ball="8" style="left: 475px; top: 240px;">8</div>
+                    
+                    <!-- Queue de billard -->
+                    <div class="cue-stick" id="cueStick"></div>
+                    
+                    <!-- Ligne de trajectoire -->
+                    <div class="trajectory-line" id="trajectoryLine"></div>
+                    
+                    <!-- Assistant IA -->
+                    <div class="ai-assistant" id="aiAssistant">
+                        <div class="ai-status" id="aiStatus">Assistant IA</div>
+                        <div class="ai-suggestion" id="aiSuggestion">Analysing shot...</div>
+                    </div>
+                    
+                    <!-- Bouton de tir -->
+                    <button class="shot-btn" id="shotBtn">🎯 Tirer</button>
+                    
+                    <!-- Jauge de puissance -->
+                    <div class="power-meter" id="powerMeter">
+                        <div class="power-fill" id="powerFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <h3 class="panel-title" id="actionsTitle">Actions Cyber</h3>
+                <button class="control-btn rules-btn" id="rulesBtn">📋 Règles</button>
+                <button class="control-btn start-btn" id="startBtn">🚀 Commencer</button>
+                <button class="control-btn start-btn" id="newGameBtn">🔄 Nouvelle Partie</button>
+                <button class="control-btn ai-assist-btn" id="aiAssistBtn">🤖 Assistant IA</button>
+                <button class="control-btn cyber-boost-btn" id="cyberBoostBtn">⚡ Boost Cyber</button>
+                <button class="control-btn view-3d-btn" id="view3DBtn">🎥 Vue 3D</button>
+                
+                <!-- Contrôles 3D -->
+                <div id="viewControls" style="display: block; margin-top: 15px;">
+                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 10px; text-align: center;">Contrôles Vue 3D</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="view-btn active" data-view="top">📐 Vue du Dessus</button>
+                        <button class="view-btn" data-view="side">📏 Vue de Côté</button>
+                        <button class="view-btn" data-view="corner">🔍 Vue d'Angle</button>
+                        <button class="view-btn" data-view="player">👤 Vue Joueur</button>
+                        <button class="view-btn" data-view="cinematic">🎬 Vue Cinéma</button>
+                    </div>
+                    <div id="currentView" style="text-align: center; margin-top: 10px; color: #feca57; font-size: 0.9rem;">Vue actuelle: Dessus</div>
+                </div>
+                
+                <div class="stats-grid" style="margin-top: 25px;">
+                    <div class="stat-item">
+                        <div id="powerLabel">Puissance</div>
+                        <div id="power">50%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="skillLabel">Habileté</div>
+                        <div id="skill">⭐⭐⭐</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="streakLabel">Série</div>
+                        <div id="streak">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="rankLabel">Rang</div>
+                        <div id="rank">Débutant</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal des règles -->
+    <div class="modal" id="rulesModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeRules">&times;</button>
+            <h2 id="rulesTitle">Règles du Cyber Pool</h2>
+            <div id="rulesContent">
+                <p><strong>Objectif:</strong> Utilisez votre interface cyber pour empocher toutes vos boules avant l'IA.</p>
+                <p><strong>Comment jouer:</strong></p>
+                <ul>
+                    <li>Cliquez sur la boule blanche pour viser</li>
+                    <li>Ajustez l'angle et la puissance de votre tir</li>
+                    <li>Utilisez l'assistant IA pour des conseils tactiques</li>
+                    <li>Le boost cyber améliore temporairement vos capacités</li>
+                    <li>Empoche la boule 8 en dernier pour gagner</li>
+                </ul>
+                <p><strong>Niveaux:</strong></p>
+                <ul>
+                    <li><strong>Novice:</strong> IA facile, assistance maximale</li>
+                    <li><strong>Pro:</strong> IA modérée, assistance réduite</li>
+                    <li><strong>Expert:</strong> IA difficile, assistance minimale</li>
+                    <li><strong>Cyber Master:</strong> IA extrême, mode survie</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Traductions
+        const translations = {
+            fr: {
+                subtitle: "Billard futuriste avec IA avancée",
+                levelsTitle: "Niveaux Cyber",
+                actionsTitle: "Actions Cyber",
+                rules: "📋 Règles",
+                start: "🚀 Commencer",
+                newGame: "🔄 Nouvelle Partie",
+
+                aiAssist: "🤖 Assistant IA",
+                cyberBoost: "⚡ Boost Cyber",
+                view3D: "🎥 Vue 3D",
+                viewControls: "Contrôles Vue 3D",
+                viewTop: "📐 Vue du Dessus",
+                viewSide: "📏 Vue de Côté",
+                viewCorner: "🔍 Vue d'Angle", 
+                viewPlayer: "👤 Vue Joueur",
+                viewCinematic: "🎬 Vue Cinéma",
+                scoreLabel: "Score Cyber",
+                levelLabel: "Niveau",
+                shotsLabel: "Tirs",
+                accuracyLabel: "Précision",
+                gameLabel: "Partie:",
+                ballsLabel: "Boules restantes:",
+                playerLabel: "Joueur:",
+                energyLabel: "Énergie:",
+                powerLabel: "Puissance",
+                skillLabel: "Habileté",
+                streakLabel: "Série",
+                rankLabel: "Rang",
+                rulesTitle: "Règles du Cyber Pool",
+                shoot: "🎯 Tirer",
+                aiStatus: "Assistant IA",
+                levels: ["Novice", "Pro", "Expert", "Cyber Master"],
+                players: ["Humain", "IA"],
+                ranks: ["Débutant", "Amateur", "Pro", "Expert", "Maître"],
+                rulesContent: `
+                    <p><strong>Objectif:</strong> Utilisez votre interface cyber pour empocher toutes vos boules avant l'IA.</p>
+                    <p><strong>Comment jouer:</strong></p>
+                    <ul>
+                        <li>Cliquez sur la boule blanche pour viser</li>
+                        <li>Ajustez l'angle et la puissance de votre tir</li>
+                        <li>Utilisez l'assistant IA pour des conseils tactiques</li>
+                        <li>Le boost cyber améliore temporairement vos capacités</li>
+                        <li>Empoche la boule 8 en dernier pour gagner</li>
+                    </ul>
+                    <p><strong>Niveaux:</strong></p>
+                    <ul>
+                        <li><strong>Novice:</strong> IA facile, assistance maximale</li>
+                        <li><strong>Pro:</strong> IA modérée, assistance réduite</li>
+                        <li><strong>Expert:</strong> IA difficile, assistance minimale</li>
+                        <li><strong>Cyber Master:</strong> IA extrême, mode survie</li>
+                    </ul>
+                `
+            },
+            en: {
+                subtitle: "Futuristic pool with advanced AI",
+                levelsTitle: "Cyber Levels",
+                actionsTitle: "Cyber Actions",
+                rules: "📋 Rules",
+                start: "🚀 Start",
+                newGame: "🔄 New Game",
+
+                aiAssist: "🤖 AI Assistant",
+                cyberBoost: "⚡ Cyber Boost",
+                view3D: "🎥 3D View",
+                viewControls: "3D View Controls",
+                viewTop: "📐 Top View",
+                viewSide: "📏 Side View",
+                viewCorner: "🔍 Corner View", 
+                viewPlayer: "👤 Player View",
+                viewCinematic: "🎬 Cinematic View",
+                scoreLabel: "Cyber Score",
+                levelLabel: "Level",
+                shotsLabel: "Shots",
+                accuracyLabel: "Accuracy",
+                gameLabel: "Game:",
+                ballsLabel: "Balls remaining:",
+                playerLabel: "Player:",
+                energyLabel: "Energy:",
+                powerLabel: "Power",
+                skillLabel: "Skill",
+                streakLabel: "Streak",
+                rankLabel: "Rank",
+                rulesTitle: "Cyber Pool Rules",
+                shoot: "🎯 Shoot",
+                aiStatus: "AI Assistant",
+                levels: ["Novice", "Pro", "Expert", "Cyber Master"],
+                players: ["Human", "AI"],
+                ranks: ["Beginner", "Amateur", "Pro", "Expert", "Master"],
+                rulesContent: `
+                    <p><strong>Objective:</strong> Use your cyber interface to pocket all your balls before the AI.</p>
+                    <p><strong>How to play:</strong></p>
+                    <ul>
+                        <li>Click on the cue ball to aim</li>
+                        <li>Adjust angle and power of your shot</li>
+                        <li>Use AI assistant for tactical advice</li>
+                        <li>Cyber boost temporarily improves your abilities</li>
+                        <li>Pocket the 8-ball last to win</li>
+                    </ul>
+                    <p><strong>Levels:</strong></p>
+                    <ul>
+                        <li><strong>Novice:</strong> Easy AI, maximum assistance</li>
+                        <li><strong>Pro:</strong> Moderate AI, reduced assistance</li>
+                        <li><strong>Expert:</strong> Hard AI, minimal assistance</li>
+                        <li><strong>Cyber Master:</strong> Extreme AI, survival mode</li>
+                    </ul>
+                `
+            },
+            ar: {
+                subtitle: "بلياردو مستقبلي بذكاء اصطناعي متقدم",
+                levelsTitle: "المستويات السيبرانية",
+                actionsTitle: "الإجراءات السيبرانية",
+                rules: "📋 القواعد",
+                start: "🚀 ابدأ",
+                newGame: "🔄 لعبة جديدة",
+                aiAssist: "🤖 مساعد الذكاء الاصطناعي",
+                cyberBoost: "⚡ تعزيز سيبراني",
+                scoreLabel: "النقاط السيبرانية",
+                levelLabel: "المستوى",
+                shotsLabel: "الضربات",
+                accuracyLabel: "الدقة",
+                gameLabel: "اللعبة:",
+                ballsLabel: "الكرات المتبقية:",
+                playerLabel: "اللاعب:",
+                energyLabel: "الطاقة:",
+                powerLabel: "القوة",
+                skillLabel: "المهارة",
+                streakLabel: "السلسلة",
+                rankLabel: "الرتبة",
+                rulesTitle: "قواعد البلياردو السيبراني",
+                shoot: "🎯 اضرب",
+                aiStatus: "مساعد الذكاء الاصطناعي",
+                levels: ["مبتدئ", "محترف", "خبير", "سيد سيبراني"],
+                players: ["إنسان", "ذكاء اصطناعي"],
+                ranks: ["مبتدئ", "هاوي", "محترف", "خبير", "أستاذ"],
+                rulesContent: `
+                    <p><strong>الهدف:</strong> استخدم واجهتك السيبرانية لإدخال جميع كراتك قبل الذكاء الاصطناعي.</p>
+                    <p><strong>كيفية اللعب:</strong></p>
+                    <ul>
+                        <li>انقر على الكرة البيضاء للتصويب</li>
+                        <li>اضبط الزاوية وقوة ضربتك</li>
+                        <li>استخدم مساعد الذكاء الاصطناعي للنصائح التكتيكية</li>
+                        <li>التعزيز السيبراني يحسن قدراتك مؤقتاً</li>
+                        <li>أدخل الكرة رقم 8 أخيراً للفوز</li>
+                    </ul>
+                    <p><strong>المستويات:</strong></p>
+                    <ul>
+                        <li><strong>مبتدئ:</strong> ذكاء اصطناعي سهل، مساعدة قصوى</li>
+                        <li><strong>محترف:</strong> ذكاء اصطناعي متوسط، مساعدة مقللة</li>
+                        <li><strong>خبير:</strong> ذكاء اصطناعي صعب، مساعدة قليلة</li>
+                        <li><strong>سيد سيبراني:</strong> ذكاء اصطناعي متطرف، وضع البقاء</li>
+                    </ul>
+                `
+            },
+            es: {
+                subtitle: "Billar futurista con IA avanzada",
+                levelsTitle: "Niveles Cyber",
+                actionsTitle: "Acciones Cyber",
+                rules: "📋 Reglas",
+                start: "🚀 Comenzar",
+                newGame: "🔄 Nuevo Juego",
+                aiAssist: "🤖 Asistente IA",
+                cyberBoost: "⚡ Impulso Cyber",
+                scoreLabel: "Puntuación Cyber",
+                levelLabel: "Nivel",
+                shotsLabel: "Tiros",
+                accuracyLabel: "Precisión",
+                gameLabel: "Juego:",
+                ballsLabel: "Bolas restantes:",
+                playerLabel: "Jugador:",
+                energyLabel: "Energía:",
+                powerLabel: "Potencia",
+                skillLabel: "Habilidad",
+                streakLabel: "Racha",
+                rankLabel: "Rango",
+                rulesTitle: "Reglas del Cyber Pool",
+                shoot: "🎯 Disparar",
+                aiStatus: "Asistente IA",
+                levels: ["Novato", "Pro", "Experto", "Cyber Master"],
+                players: ["Humano", "IA"],
+                ranks: ["Principiante", "Amateur", "Pro", "Experto", "Maestro"],
+                rulesContent: `
+                    <p><strong>Objetivo:</strong> Usa tu interfaz cyber para embocar todas tus bolas antes que la IA.</p>
+                    <p><strong>Cómo jugar:</strong></p>
+                    <ul>
+                        <li>Haz clic en la bola blanca para apuntar</li>
+                        <li>Ajusta el ángulo y la potencia de tu tiro</li>
+                        <li>Usa el asistente IA para consejos tácticos</li>
+                        <li>El impulso cyber mejora temporalmente tus habilidades</li>
+                        <li>Emboca la bola 8 al final para ganar</li>
+                    </ul>
+                    <p><strong>Niveles:</strong></p>
+                    <ul>
+                        <li><strong>Novato:</strong> IA fácil, asistencia máxima</li>
+                        <li><strong>Pro:</strong> IA moderada, asistencia reducida</li>
+                        <li><strong>Experto:</strong> IA difícil, asistencia mínima</li>
+                        <li><strong>Cyber Master:</strong> IA extrema, modo supervivencia</li>
+                    </ul>
+                `
+            },
+            de: {
+                subtitle: "Futuristisches Billard mit fortgeschrittener KI",
+                levelsTitle: "Cyber-Stufen",
+                actionsTitle: "Cyber-Aktionen",
+                rules: "📋 Regeln",
+                start: "🚀 Starten",
+                newGame: "🔄 Neues Spiel",
+                aiAssist: "🤖 KI-Assistent",
+                cyberBoost: "⚡ Cyber-Boost",
+                scoreLabel: "Cyber-Punkte",
+                levelLabel: "Stufe",
+                shotsLabel: "Schüsse",
+                accuracyLabel: "Genauigkeit",
+                gameLabel: "Spiel:",
+                ballsLabel: "Verbleibende Kugeln:",
+                playerLabel: "Spieler:",
+                energyLabel: "Energie:",
+                powerLabel: "Kraft",
+                skillLabel: "Geschick",
+                streakLabel: "Serie",
+                rankLabel: "Rang",
+                rulesTitle: "Cyber Pool Regeln",
+                shoot: "🎯 Schießen",
+                aiStatus: "KI-Assistent",
+                levels: ["Anfänger", "Profi", "Experte", "Cyber Master"],
+                players: ["Mensch", "KI"],
+                ranks: ["Beginner", "Amateur", "Profi", "Experte", "Meister"],
+                rulesContent: `
+                    <p><strong>Ziel:</strong> Nutze deine Cyber-Schnittstelle, um alle deine Kugeln vor der KI zu versenken.</p>
+                    <p><strong>Spielweise:</strong></p>
+                    <ul>
+                        <li>Klicke auf die weiße Kugel zum Zielen</li>
+                        <li>Stelle Winkel und Kraft deines Schusses ein</li>
+                        <li>Nutze den KI-Assistenten für taktische Ratschläge</li>
+                        <li>Der Cyber-Boost verbessert deine Fähigkeiten vorübergehend</li>
+                        <li>Versenke die 8er-Kugel zuletzt, um zu gewinnen</li>
+                    </ul>
+                    <p><strong>Stufen:</strong></p>
+                    <ul>
+                        <li><strong>Anfänger:</strong> Einfache KI, maximale Hilfe</li>
+                        <li><strong>Profi:</strong> Mittlere KI, reduzierte Hilfe</li>
+                        <li><strong>Experte:</strong> Schwere KI, minimale Hilfe</li>
+                        <li><strong>Cyber Master:</strong> Extreme KI, Überlebensmodus</li>
+                    </ul>
+                `
+            },
+            zh: {
+                subtitle: "未来主义台球与先进AI",
+                levelsTitle: "网络等级",
+                actionsTitle: "网络操作",
+                rules: "📋 规则",
+                start: "🚀 开始",
+                newGame: "🔄 新游戏",
+                aiAssist: "🤖 AI助手",
+                cyberBoost: "⚡ 网络增强",
+                scoreLabel: "网络分数",
+                levelLabel: "等级",
+                shotsLabel: "击球",
+                accuracyLabel: "准确度",
+                gameLabel: "游戏:",
+                ballsLabel: "剩余球数:",
+                playerLabel: "玩家:",
+                energyLabel: "能量:",
+                powerLabel: "力量",
+                skillLabel: "技能",
+                streakLabel: "连击",
+                rankLabel: "等级",
+                rulesTitle: "网络台球规则",
+                shoot: "🎯 击球",
+                aiStatus: "AI助手",
+                levels: ["新手", "专业", "专家", "网络大师"],
+                players: ["人类", "AI"],
+                ranks: ["初学者", "业余", "专业", "专家", "大师"],
+                rulesContent: `
+                    <p><strong>目标:</strong> 使用你的网络界面在AI之前将所有球打入袋中。</p>
+                    <p><strong>游戏方法:</strong></p>
+                    <ul>
+                        <li>点击白球进行瞄准</li>
+                        <li>调整击球的角度和力量</li>
+                        <li>使用AI助手获取战术建议</li>
+                        <li>网络增强暂时提高你的能力</li>
+                        <li>最后打入8号球获胜</li>
+                    </ul>
+                    <p><strong>等级:</strong></p>
+                    <ul>
+                        <li><strong>新手:</strong> 简单AI，最大辅助</li>
+                        <li><strong>专业:</strong> 中等AI，减少辅助</li>
+                        <li><strong>专家:</strong> 困难AI，最小辅助</li>
+                        <li><strong>网络大师:</strong> 极端AI，生存模式</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Variables du jeu
+        let currentLanguage = 'fr';
+        let currentLevel = 1;
+        let currentGame = 1;
+        let score = 0;
+        let totalShots = 0;
+        let successfulShots = 0;
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let gameStarted = false;
+        let energy = 100;
+        let power = 50;
+        let ballsRemaining = 7;
+        let isAiming = false;
+        let aiAssistActive = false;
+        let cyberBoostActive = false;
+        let gameMode = 'practice'; // 'practice' seulement
+
+        // Configuration des niveaux
+        const levelConfig = {
+            1: { aiDifficulty: 'easy', assistance: 'high', name: 'Novice' },
+            2: { aiDifficulty: 'medium', assistance: 'medium', name: 'Pro' },
+            3: { aiDifficulty: 'hard', assistance: 'low', name: 'Expert' },
+            4: { aiDifficulty: 'extreme', assistance: 'none', name: 'Cyber Master' }
+        };
+
+        // État des boules
+        let ballsState = {
+            cue: { x: 150, y: 240, pocketed: false },
+            1: { x: 400, y: 240, pocketed: false },
+            2: { x: 425, y: 225, pocketed: false },
+            3: { x: 425, y: 255, pocketed: false },
+            4: { x: 450, y: 210, pocketed: false },
+            5: { x: 450, y: 240, pocketed: false },
+            6: { x: 450, y: 270, pocketed: false },
+            7: { x: 475, y: 195, pocketed: false },
+            8: { x: 475, y: 240, pocketed: false }
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGame();
+            setupEventListeners();
+            createCyberParticles();
+        });
+
+        function createCyberParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 80; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'cyber-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 12 + 's';
+                particle.style.animationDuration = (12 + Math.random() * 6) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function setupEventListeners() {
+            // Sélecteur de langue
+            document.getElementById('languageBtn').addEventListener('click', function() {
+                const dropdown = document.getElementById('languageDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            // Options de langue
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    changeLanguage(lang);
+                    document.getElementById('languageDropdown').classList.remove('show');
+                });
+            });
+
+            // Boutons de niveau
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLevel = parseInt(this.dataset.level);
+                    document.getElementById('currentLevel').textContent = currentLevel;
+                    if (!gameStarted) {
+                        initializeGame();
+                    }
+                });
+            });
+
+            // Boutons de contrôle
+            document.getElementById('rulesBtn').addEventListener('click', showRules);
+            document.getElementById('startBtn').addEventListener('click', startNewGame);
+            document.getElementById('newGameBtn').addEventListener('click', startNewGame);
+
+            document.getElementById('closeRules').addEventListener('click', hideRules);
+            document.getElementById('aiAssistBtn').addEventListener('click', activateAIAssist);
+            document.getElementById('cyberBoostBtn').addEventListener('click', activateCyberBoost);
+            document.getElementById('shotBtn').addEventListener('click', executeShot);
+
+            // Interaction avec la boule blanche
+            document.getElementById('cueBall').addEventListener('click', startAiming);
+
+            // Fermer dropdown en cliquant ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.language-selector')) {
+                    document.getElementById('languageDropdown').classList.remove('show');
+                }
+            });
+
+            // Mouvement de la souris pour viser
+            document.getElementById('poolTable').addEventListener('mousemove', updateAiming);
+            
+            // Clic pour tirer directement sur la table
+            document.getElementById('poolTable').addEventListener('click', function(e) {
+                if (isAiming && e.target.id === 'poolTable') {
+                    executeShot();
+                }
+            });
+            
+            // Touche Entrée pour tirer
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && isAiming) {
+                    e.preventDefault();
+                    executeShot();
+                }
+            });
+
+            // Boutons de vue 3D - directement fonctionnels
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    changeView(this.dataset.view);
+                });
+            });
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            // Mettre à jour les textes
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('levelsTitle').textContent = t.levelsTitle;
+            document.getElementById('actionsTitle').textContent = t.actionsTitle;
+            document.getElementById('rulesBtn').innerHTML = t.rules;
+            document.getElementById('startBtn').innerHTML = t.start;
+            document.getElementById('newGameBtn').innerHTML = t.newGame;
+            document.getElementById('aiAssistBtn').innerHTML = t.aiAssist;
+            document.getElementById('cyberBoostBtn').innerHTML = t.cyberBoost;
+            document.getElementById('view3DBtn').innerHTML = t.view3D;
+            document.getElementById('shotBtn').innerHTML = t.shoot;
+            
+            // Mettre à jour les contrôles 3D si ils existent
+            const viewControlsTitle = document.querySelector('#viewControls > div');
+            if (viewControlsTitle) viewControlsTitle.textContent = t.viewControls;
+            
+            const viewButtons = document.querySelectorAll('.view-btn');
+            if (viewButtons.length > 0) {
+                viewButtons[0].innerHTML = t.viewTop;
+                viewButtons[1].innerHTML = t.viewSide;
+                viewButtons[2].innerHTML = t.viewCorner;
+                viewButtons[3].innerHTML = t.viewPlayer;
+                viewButtons[4].innerHTML = t.viewCinematic;
+            }
+            
+            // Labels
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('levelLabel').textContent = t.levelLabel;
+            document.getElementById('shotsLabel').textContent = t.shotsLabel;
+            document.getElementById('accuracyLabel').textContent = t.accuracyLabel;
+            document.getElementById('gameLabel').textContent = t.gameLabel;
+            document.getElementById('ballsLabel').textContent = t.ballsLabel;
+            document.getElementById('playerLabel').textContent = t.playerLabel;
+            document.getElementById('energyLabel').textContent = t.energyLabel;
+            document.getElementById('powerLabel').textContent = t.powerLabel;
+            document.getElementById('skillLabel').textContent = t.skillLabel;
+            document.getElementById('streakLabel').textContent = t.streakLabel;
+            document.getElementById('rankLabel').textContent = t.rankLabel;
+            document.getElementById('aiStatus').textContent = t.aiStatus;
+            
+            // Boutons de niveau
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`level${i + 1}`).textContent = t.levels[i];
+            }
+            
+            // Bouton de langue
+            const flags = { fr: '🇫🇷', en: '🇬🇧', ar: '🇸🇦', es: '🇪🇸', de: '🇩🇪', zh: '🇨🇳' };
+            const names = { fr: 'Français', en: 'English', ar: 'العربية', es: 'Español', de: 'Deutsch', zh: '中文' };
+            document.getElementById('languageBtn').innerHTML = `🌐 ${names[lang]}`;
+            
+            // Mettre à jour le joueur actuel
+            updateCurrentPlayerDisplay();
+        }
+
+        function initializeGame() {
+            if (!gameStarted) {
+                score = 0;
+                totalShots = 0;
+                successfulShots = 0;
+                currentGame = 1;
+                currentStreak = 0;
+                maxStreak = 0;
+                energy = 100;
+                power = 50;
+            }
+            
+            ballsRemaining = 7;
+            isAiming = false;
+            aiAssistActive = false;
+            cyberBoostActive = false;
+            
+            resetBallPositions();
+            updateDisplay();
+            hideGameElements();
+            
+            if (!gameStarted) {
+                showNotification("🎱 Interface cyber initialisée! Prêt pour le billard futuriste!", 'info');
+            }
+        }
+
+        function resetBallPositions() {
+            // Réinitialiser les positions des boules
+            ballsState = {
+                cue: { x: 150, y: 240, pocketed: false },
+                1: { x: 400, y: 240, pocketed: false },
+                2: { x: 425, y: 225, pocketed: false },
+                3: { x: 425, y: 255, pocketed: false },
+                4: { x: 450, y: 210, pocketed: false },
+                5: { x: 450, y: 240, pocketed: false },
+                6: { x: 450, y: 270, pocketed: false },
+                7: { x: 475, y: 195, pocketed: false },
+                8: { x: 475, y: 240, pocketed: false }
+            };
+            
+            // Repositionner visuellement les boules
+            Object.keys(ballsState).forEach(ballId => {
+                const ball = document.getElementById(ballId === 'cue' ? 'cueBall' : `ball${ballId}`);
+                if (ball) {
+                    ball.style.left = ballsState[ballId].x + 'px';
+                    ball.style.top = ballsState[ballId].y + 'px';
+                    ball.style.display = 'block';
+                    ball.classList.remove('cyber-enhanced');
+                }
+            });
+        }
+
+        function startAiming() {
+            if (!gameStarted || isAiming) return;
+            
+            isAiming = true;
+            showGameElements();
+            
+            showNotification(`🎯 Mode visée activé! Déplacez la souris pour viser, puis cliquez sur la table ou appuyez sur Entrée pour tirer.`, 'info');
+        }
+
+        function updateAiming(event) {
+            if (!isAiming) return;
+            
+            const table = document.getElementById('poolTable');
+            const cueBall = document.getElementById('cueBall');
+            const cueStick = document.getElementById('cueStick');
+            const trajectoryLine = document.getElementById('trajectoryLine');
+            
+            const tableRect = table.getBoundingClientRect();
+            const mouseX = event.clientX - tableRect.left;
+            const mouseY = event.clientY - tableRect.top;
+            
+            const cueBallX = ballsState.cue.x + 12.5; // Centre de la boule
+            const cueBallY = ballsState.cue.y + 12.5;
+            
+            // Calculer l'angle avec sensibilité 3D
+            const sensitivity = getAimingSensitivity();
+            const rawAngle = Math.atan2(mouseY - cueBallY, mouseX - cueBallX);
+            const angle = rawAngle * sensitivity + rawAngle * (1 - sensitivity) * 0.5; // Lissage pour les vues difficiles
+            
+            const distance = Math.min(200, Math.sqrt(Math.pow(mouseX - cueBallX, 2) + Math.pow(mouseY - cueBallY, 2))) * sensitivity;
+            
+            // Positionner la queue
+            cueStick.style.left = (cueBallX - distance * Math.cos(angle)) + 'px';
+            cueStick.style.top = (cueBallY - 4) + 'px';
+            cueStick.style.transform = `rotate(${angle}rad)`;
+            
+            // Ligne de trajectoire avec opacité variable selon la difficulté
+            const trajectoryOpacity = 0.3 + (sensitivity * 0.4); // Plus visible en vue facile
+            trajectoryLine.style.left = cueBallX + 'px';
+            trajectoryLine.style.top = (cueBallY - 1) + 'px';
+            trajectoryLine.style.width = Math.min(300, distance * 2) + 'px';
+            trajectoryLine.style.transform = `rotate(${angle}rad)`;
+            trajectoryLine.style.opacity = trajectoryOpacity;
+            
+            // Ajuster la puissance basée sur la distance et la vue 3D
+            power = Math.min(100, (distance / 200) * 100 * (1 + (1 - sensitivity) * 0.3)); // Compensation pour vues difficiles
+            updatePowerMeter();
+        }
+
+        function updatePowerMeter() {
+            const powerFill = document.getElementById('powerFill');
+            powerFill.style.width = power + '%';
+        }
+
+        function showGameElements() {
+            document.getElementById('cueStick').style.display = 'block';
+            document.getElementById('trajectoryLine').style.display = 'block';
+            document.getElementById('powerMeter').style.display = 'block';
+            document.getElementById('shotBtn').style.display = 'block';
+        }
+
+        function hideGameElements() {
+            document.getElementById('cueStick').style.display = 'none';
+            document.getElementById('trajectoryLine').style.display = 'none';
+            document.getElementById('powerMeter').style.display = 'none';
+            document.getElementById('shotBtn').style.display = 'none';
+            document.getElementById('aiAssistant').style.display = 'none';
+        }
+
+        function executeShot() {
+            if (!isAiming || power < 10) {
+                showNotification("⚠️ Puissance insuffisante! Visez plus loin.", 'warning');
+                return;
+            }
+            
+            isAiming = false;
+            
+            // Incrémenter les tirs
+            totalShots++;
+            
+            // Calculer la direction et la vitesse du tir
+            const table = document.getElementById('poolTable');
+            const cueBall = document.getElementById('cueBall');
+            const cueStick = document.getElementById('cueStick');
+            
+            // Récupérer l'angle de la queue
+            const transform = cueStick.style.transform;
+            const angle = parseFloat(transform.match(/rotate\(([-\d.]+)rad\)/)[1]);
+            
+            // Calculer la vitesse initiale basée sur la puissance
+            const velocity = {
+                x: Math.cos(angle) * (power / 10) * (cyberBoostActive ? 1.5 : 1),
+                y: Math.sin(angle) * (power / 10) * (cyberBoostActive ? 1.5 : 1)
+            };
+            
+            if (cyberBoostActive) {
+                cueBall.classList.add('cyber-enhanced');
+            }
+            
+            hideGameElements();
+            showNotification(`💥 Tir exécuté avec ${Math.round(power)}% de puissance!`, 'shot');
+            
+            // Démarrer la simulation physique
+            startPhysicsSimulation(velocity);
+        }
+
+        function startPhysicsSimulation(initialVelocity) {
+            const tableRect = document.getElementById('poolTable').getBoundingClientRect();
+            const tableWidth = 600; // Largeur interne de la table
+            const tableHeight = 460; // Hauteur interne de la table
+            const ballRadius = 12.5;
+            const friction = 0.98; // Coefficient de friction
+            const minVelocity = 0.1; // Vitesse minimale avant arrêt
+            
+            // État physique des boules
+            let ballsPhysics = {};
+            
+            // Initialiser la physique pour toutes les boules
+            Object.keys(ballsState).forEach(ballId => {
+                if (!ballsState[ballId].pocketed) {
+                    ballsPhysics[ballId] = {
+                        x: ballsState[ballId].x + ballRadius,
+                        y: ballsState[ballId].y + ballRadius,
+                        vx: ballId === 'cue' ? initialVelocity.x : 0,
+                        vy: ballId === 'cue' ? initialVelocity.y : 0,
+                        moving: ballId === 'cue'
+                    };
+                }
+            });
+            
+            let animationId;
+            let pocketedBalls = [];
+            
+            function updatePhysics() {
+                let anyBallMoving = false;
+                
+                // Mettre à jour chaque boule
+                Object.keys(ballsPhysics).forEach(ballId => {
+                    const ball = ballsPhysics[ballId];
+                    
+                    if (Math.abs(ball.vx) > minVelocity || Math.abs(ball.vy) > minVelocity) {
+                        anyBallMoving = true;
+                        ball.moving = true;
+                        
+                        // Mettre à jour la position
+                        ball.x += ball.vx;
+                        ball.y += ball.vy;
+                        
+                        // Appliquer la friction
+                        ball.vx *= friction;
+                        ball.vy *= friction;
+                        
+                        // Collision avec les bords
+                        if (ball.x - ballRadius <= 20 || ball.x + ballRadius >= tableWidth - 20) {
+                            ball.vx = -ball.vx * 0.8; // Rebond avec perte d'énergie
+                            ball.x = Math.max(20 + ballRadius, Math.min(tableWidth - 20 - ballRadius, ball.x));
+                            createBounceEffect(ball.x, ball.y);
+                        }
+                        
+                        if (ball.y - ballRadius <= 20 || ball.y + ballRadius >= tableHeight - 20) {
+                            ball.vy = -ball.vy * 0.8;
+                            ball.y = Math.max(20 + ballRadius, Math.min(tableHeight - 20 - ballRadius, ball.y));
+                            createBounceEffect(ball.x, ball.y);
+                        }
+                        
+                        // Vérifier les poches
+                        checkPocketCollision(ballId, ball, pocketedBalls);
+                        
+                        // Mettre à jour la position visuelle
+                        const ballElement = document.getElementById(ballId === 'cue' ? 'cueBall' : `ball${ballId}`);
+                        if (ballElement && !ballsState[ballId].pocketed) {
+                            ballElement.style.left = (ball.x - ballRadius) + 'px';
+                            ballElement.style.top = (ball.y - ballRadius) + 'px';
+                            ballElement.classList.add('moving');
+                        }
+                    } else {
+                        ball.moving = false;
+                        ball.vx = 0;
+                        ball.vy = 0;
+                        
+                        const ballElement = document.getElementById(ballId === 'cue' ? 'cueBall' : `ball${ballId}`);
+                        if (ballElement) {
+                            ballElement.classList.remove('moving');
+                        }
+                    }
+                });
+                
+                // Vérifier les collisions entre boules
+                checkBallCollisions(ballsPhysics);
+                
+                if (anyBallMoving) {
+                    animationId = requestAnimationFrame(updatePhysics);
+                } else {
+                    // Toutes les boules se sont arrêtées
+                    finishShot(pocketedBalls);
+                }
+            }
+            
+            // Démarrer l'animation
+            updatePhysics();
+        }
+        
+        function checkBallCollisions(ballsPhysics) {
+            const ballRadius = 12.5;
+            const ballIds = Object.keys(ballsPhysics);
+            
+            for (let i = 0; i < ballIds.length; i++) {
+                for (let j = i + 1; j < ballIds.length; j++) {
+                    const ball1 = ballsPhysics[ballIds[i]];
+                    const ball2 = ballsPhysics[ballIds[j]];
+                    
+                    const dx = ball2.x - ball1.x;
+                    const dy = ball2.y - ball1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < ballRadius * 2) {
+                        // Collision détectée!
+                        createCollisionEffect(ball1.x, ball1.y);
+                        
+                        // Normaliser le vecteur de collision
+                        const nx = dx / distance;
+                        const ny = dy / distance;
+                        
+                        // Séparer les boules pour éviter qu'elles se chevauchent
+                        const overlap = ballRadius * 2 - distance;
+                        ball1.x -= nx * overlap * 0.5;
+                        ball1.y -= ny * overlap * 0.5;
+                        ball2.x += nx * overlap * 0.5;
+                        ball2.y += ny * overlap * 0.5;
+                        
+                        // Calculer les nouvelles vitesses (collision élastique simplifiée)
+                        const relativeVelocityX = ball1.vx - ball2.vx;
+                        const relativeVelocityY = ball1.vy - ball2.vy;
+                        const speed = relativeVelocityX * nx + relativeVelocityY * ny;
+                        
+                        if (speed > 0) {
+                            const impulse = 2 * speed / 2; // Masse égale pour toutes les boules
+                            ball1.vx -= impulse * nx;
+                            ball1.vy -= impulse * ny;
+                            ball2.vx += impulse * nx;
+                            ball2.vy += impulse * ny;
+                            
+                            // Ajouter un peu de friction lors de la collision
+                            ball1.vx *= 0.9;
+                            ball1.vy *= 0.9;
+                            ball2.vx *= 0.9;
+                            ball2.vy *= 0.9;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function checkPocketCollision(ballId, ball, pocketedBalls) {
+            const pocketRadius = 20;
+            const pockets = [
+                { x: 20, y: 20 },     // coin haut-gauche
+                { x: 580, y: 20 },    // coin haut-droite
+                { x: 20, y: 440 },    // coin bas-gauche
+                { x: 580, y: 440 },   // coin bas-droite
+                { x: 20, y: 230 },    // milieu gauche
+                { x: 580, y: 230 }    // milieu droite
+            ];
+            
+            for (let pocket of pockets) {
+                const dx = ball.x - pocket.x;
+                const dy = ball.y - pocket.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < pocketRadius) {
+                    // Boule empochée!
+                    if (!pocketedBalls.includes(ballId)) {
+                        pocketedBalls.push(ballId);
+                        pocketBall(ballId);
+                        
+                        // Arrêter le mouvement de cette boule
+                        ball.vx = 0;
+                        ball.vy = 0;
+                        ball.moving = false;
+                        
+                        // Effet visuel d'empochage
+                        createPocketEffect(document.getElementById(ballId === 'cue' ? 'cueBall' : `ball${ballId}`));
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function finishShot(pocketedBalls) {
+            // Mettre à jour les positions finales dans ballsState
+            Object.keys(ballsState).forEach(ballId => {
+                if (!ballsState[ballId].pocketed) {
+                    const ballElement = document.getElementById(ballId === 'cue' ? 'cueBall' : `ball${ballId}`);
+                    if (ballElement) {
+                        ballsState[ballId].x = parseInt(ballElement.style.left);
+                        ballsState[ballId].y = parseInt(ballElement.style.top);
+                    }
+                }
+            });
+            
+            // Nettoyer les effets visuels
+            document.getElementById('cueBall').classList.remove('moving', 'cyber-enhanced');
+            
+            // Évaluer le résultat du tir
+            if (pocketedBalls.length > 0) {
+                currentStreak++;
+                maxStreak = Math.max(maxStreak, currentStreak);
+                
+                const points = pocketedBalls.length * 100 * currentLevel * (1 + currentStreak * 0.1);
+                
+                successfulShots++;
+                score += Math.floor(points);
+                
+                if (pocketedBalls.length === 1) {
+                    showNotification(`🎉 Boule ${pocketedBalls[0]} empochée! +${Math.floor(points)} points`, 'success');
+                } else {
+                    showNotification(`🔥 ${pocketedBalls.length} boules empochées! +${Math.floor(points)} points`, 'success');
+                }
+            } else {
+                currentStreak = 0;
+                showNotification(`💨 Aucune boule empochée! Essayez encore.`, 'miss');
+            }
+            
+            // Consommer de l'énergie
+            energy = Math.max(0, energy - 5);
+            
+            // Réinitialiser les boosts
+            cyberBoostActive = false;
+            aiAssistActive = false;
+            
+            setTimeout(() => {
+                updateDisplay();
+                
+                if (ballsRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function pocketBall(ballNumber) {
+            ballsState[ballNumber].pocketed = true;
+            const ball = document.getElementById(`ball${ballNumber}`);
+            
+            // Animation d'empochage
+            ball.style.transform = 'scale(0)';
+            ball.style.opacity = '0';
+            
+            setTimeout(() => {
+                ball.style.display = 'none';
+            }, 500);
+            
+            ballsRemaining--;
+            
+            // Effet visuel
+            createPocketEffect(ball);
+        }
+
+
+
+        function activateAIAssist() {
+            if (aiAssistActive || energy < 25) {
+                showNotification("⚠️ Énergie insuffisante pour l'assistant IA!", 'warning');
+                return;
+            }
+            
+            aiAssistActive = true;
+            energy -= 25;
+            
+            // Afficher l'assistant IA
+            const aiAssistant = document.getElementById('aiAssistant');
+            const aiSuggestion = document.getElementById('aiSuggestion');
+            
+            aiAssistant.style.display = 'block';
+            aiSuggestion.textContent = 'Analyse en cours...';
+            
+            setTimeout(() => {
+                const suggestions = [
+                    "Visez la boule 3 avec un angle de 45°",
+                    "Utilisez une puissance moyenne pour la boule 5",
+                    "Tentez un tir indirect via la bande",
+                    "La boule 2 est dans une position favorable",
+                    "Concentrez-vous sur la boule 7"
+                ];
+                
+                const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+                aiSuggestion.textContent = randomSuggestion;
+                
+                showNotification("🤖 Assistant IA activé! +20% de précision", 'ai');
+            }, 2000);
+            
+            updateDisplay();
+        }
+
+        function activateCyberBoost() {
+            if (cyberBoostActive || energy < 40) {
+                showNotification("⚠️ Énergie insuffisante pour le boost cyber!", 'warning');
+                return;
+            }
+            
+            cyberBoostActive = true;
+            energy -= 40;
+            
+            // Effet visuel sur toutes les boules
+            document.querySelectorAll('.ball').forEach(ball => {
+                ball.style.boxShadow = '0 0 25px #00ffff, 0 0 50px #00ffff';
+            });
+            
+            showNotification("⚡ Boost cyber activé! +30% de précision et puissance!", 'boost');
+            updateDisplay();
+        }
+
+        function startNewGame() {
+            gameStarted = true;
+            gameMode = 'practice';
+            currentGame = 1;
+            score = 0;
+            totalShots = 0;
+            successfulShots = 0;
+            currentStreak = 0;
+            maxStreak = 0;
+            energy = 100;
+            power = 50;
+            
+            initializeGame();
+            showNotification("🎱 Nouvelle partie d'entraînement commencée! Bonne chance!", 'start');
+        }
+
+        function endGame() {
+            gameStarted = false;
+            
+            const accuracy = totalShots > 0 ? Math.round((successfulShots / totalShots) * 100) : 0;
+            const winner = ballsRemaining === 0 ? 'human' : 'ai';
+            
+            showGameOverModal({
+                score: score,
+                level: currentLevel,
+                accuracy: accuracy,
+                streak: maxStreak,
+                shots: totalShots,
+                winner: winner
+            });
+        }
+
+        function updateDisplay() {
+            // Score avec animation
+            const scoreElement = document.getElementById('score');
+            const oldScore = parseInt(scoreElement.textContent.replace(/[^\d]/g, '')) || 0;
+            
+            if (score > oldScore) {
+                scoreElement.style.transform = 'scale(1.2)';
+                scoreElement.style.color = '#00ff88';
+                setTimeout(() => {
+                    scoreElement.style.transform = 'scale(1)';
+                    scoreElement.style.color = 'inherit';
+                }, 300);
+            }
+            
+            scoreElement.textContent = score.toLocaleString();
+            
+            document.getElementById('currentLevel').textContent = currentLevel;
+            document.getElementById('currentGame').textContent = currentGame;
+            document.getElementById('ballsRemaining').textContent = ballsRemaining;
+            document.getElementById('streak').textContent = currentStreak;
+            
+            // Tirs et précision
+            document.getElementById('totalShots').textContent = totalShots;
+            const accuracy = totalShots > 0 ? Math.round((successfulShots / totalShots) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            // Énergie
+            const energyElement = document.getElementById('energy');
+            energyElement.textContent = energy + '%';
+            if (energy >= 80) {
+                energyElement.style.color = '#00ff88';
+            } else if (energy >= 40) {
+                energyElement.style.color = '#feca57';
+            } else {
+                energyElement.style.color = '#ff6b6b';
+            }
+            
+            // Puissance
+            document.getElementById('power').textContent = Math.round(power) + '%';
+            
+            // Habileté basée sur la précision
+            const skillLevel = Math.min(5, Math.floor(accuracy / 20) + 1);
+            document.getElementById('skill').textContent = '⭐'.repeat(skillLevel);
+            
+            // Rang basé sur le score
+            const t = translations[currentLanguage];
+            let rank = t.ranks[0]; // Débutant
+            if (score >= 10000) rank = t.ranks[4]; // Maître
+            else if (score >= 5000) rank = t.ranks[3]; // Expert
+            else if (score >= 2000) rank = t.ranks[2]; // Pro
+            else if (score >= 500) rank = t.ranks[1]; // Amateur
+            
+            document.getElementById('rank').textContent = rank;
+            
+            // Affichage simple du joueur
+            document.getElementById('currentPlayer').textContent = 'Entraînement';
+            document.getElementById('currentPlayer').style.color = '#00ff88';
+        }
+
+        function showRules() {
+            const modal = document.getElementById('rulesModal');
+            const t = translations[currentLanguage];
+            
+            document.getElementById('rulesTitle').textContent = t.rulesTitle;
+            document.getElementById('rulesContent').innerHTML = t.rulesContent;
+            
+            modal.style.display = 'block';
+        }
+
+        function hideRules() {
+            document.getElementById('rulesModal').style.display = 'none';
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            
+            let bgColor = 'linear-gradient(45deg, #1a0033, #330066)';
+            if (type === 'success') bgColor = 'linear-gradient(45deg, #00ff88, #00cc6a)';
+            else if (type === 'warning') bgColor = 'linear-gradient(45deg, #ffa500, #ff8c00)';
+            else if (type === 'miss') bgColor = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+            else if (type === 'ai') bgColor = 'linear-gradient(45deg, #9c27b0, #673ab7)';
+            else if (type === 'boost') bgColor = 'linear-gradient(45deg, #00ffff, #0099cc)';
+            else if (type === 'shot') bgColor = 'linear-gradient(45deg, #e94560, #f27121)';
+            else if (type === 'partial') bgColor = 'linear-gradient(45deg, #feca57, #ff9ff3)';
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 15px;
+                border: 2px solid #00ffff;
+                box-shadow: 0 6px 25px rgba(0, 255, 255, 0.4);
+                z-index: 1000;
+                max-width: 350px;
+                font-size: 1rem;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        function showGameOverModal(stats) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            const t = translations[currentLanguage];
+            const winnerText = stats.winner === 'human' ? '🏆 Victoire!' : '🤖 L\'IA gagne!';
+            const winnerColor = stats.winner === 'human' ? '#00ff88' : '#ff6b6b';
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2 style="color: ${winnerColor}; text-align: center; margin-bottom: 10px;">🎱 Partie Terminée</h2>
+                    <p style="text-align: center; margin-bottom: 30px; color: #feca57; font-size: 1.5rem;">${winnerText}</p>
+                    
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-item">
+                            <div>Score Final</div>
+                            <div style="font-size: 1.8rem; color: #00ff88;">${stats.score.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Précision</div>
+                            <div style="color: ${stats.accuracy >= 70 ? '#00ff88' : stats.accuracy >= 50 ? '#feca57' : '#ff6b6b'}">${stats.accuracy}%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Meilleure Série</div>
+                            <div style="color: #ffd700;">${stats.streak}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Tirs Total</div>
+                            <div>${stats.shots}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Niveau Atteint</div>
+                            <div>${stats.level}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Rang Final</div>
+                            <div style="color: #00ffff;">${document.getElementById('rank').textContent}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="startNewGame(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #00ff88, #00cc6a); color: white; border: none; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 1.1rem;">
+                            🚀 Nouvelle Partie
+                        </button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #660099, #9900cc); color: white; border: none; padding: 15px 30px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 1.1rem;">
+                            🏠 Menu Principal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Effets visuels
+        function createPocketEffect(element) {
+            const effect = document.createElement('div');
+            effect.innerHTML = '✨💫✨';
+            effect.style.cssText = `
+                position: absolute;
+                left: ${element.offsetLeft}px;
+                top: ${element.offsetTop}px;
+                font-size: 2rem;
+                pointer-events: none;
+                z-index: 201;
+                animation: pocketEffect 1.5s ease-out forwards;
+            `;
+            
+            element.parentElement.appendChild(effect);
+            setTimeout(() => effect.remove(), 1500);
+        }
+
+        function createCollisionEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.innerHTML = '💥';
+            effect.style.cssText = `
+                position: absolute;
+                left: ${x - 15}px;
+                top: ${y - 15}px;
+                font-size: 1.5rem;
+                pointer-events: none;
+                z-index: 200;
+                animation: collisionEffect 0.8s ease-out forwards;
+                color: #ffff00;
+                text-shadow: 0 0 10px #ffff00;
+            `;
+            
+            document.getElementById('poolTable').appendChild(effect);
+            setTimeout(() => effect.remove(), 800);
+        }
+
+        function createBounceEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.innerHTML = '⚡';
+            effect.style.cssText = `
+                position: absolute;
+                left: ${x - 10}px;
+                top: ${y - 10}px;
+                font-size: 1.2rem;
+                pointer-events: none;
+                z-index: 200;
+                animation: bounceEffect 0.6s ease-out forwards;
+                color: #00ffff;
+                text-shadow: 0 0 8px #00ffff;
+            `;
+            
+            document.getElementById('poolTable').appendChild(effect);
+            setTimeout(() => effect.remove(), 600);
+        }
+
+        // Styles d'animation supplémentaires
+        const additionalStyles = `
+            @keyframes slideIn {
+                0% { transform: translateX(100%); opacity: 0; }
+                100% { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                0% { transform: translateX(0); opacity: 1; }
+                100% { transform: translateX(100%); opacity: 0; }
+            }
+            
+            @keyframes pocketEffect {
+                0% { transform: scale(1) rotate(0deg); opacity: 1; }
+                50% { transform: scale(1.5) rotate(180deg); opacity: 0.8; }
+                100% { transform: scale(2) rotate(360deg); opacity: 0; }
+            }
+            
+            @keyframes collisionEffect {
+                0% { transform: scale(0.5); opacity: 1; }
+                50% { transform: scale(1.2); opacity: 0.8; }
+                100% { transform: scale(0.8); opacity: 0; }
+            }
+            
+            @keyframes bounceEffect {
+                0% { transform: scale(0.8) translateY(0); opacity: 1; }
+                50% { transform: scale(1.1) translateY(-5px); opacity: 0.9; }
+                100% { transform: scale(0.6) translateY(0); opacity: 0; }
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = additionalStyles;
+        document.head.appendChild(styleSheet);
+
+        // Variables pour le système 3D
+        let current3DView = 'top';
+        let cinematic3DActive = false;
+        let cinematicRotation = 0;
+
+        // Fonctions pour le système 3D
+        function toggle3DControls() {
+            const controls = document.getElementById('viewControls');
+            const isVisible = controls.style.display !== 'none';
+            controls.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                showNotification("🎥 Contrôles 3D activés ! Choisissez votre angle de vue.", 'info');
+            }
+        }
+
+        function changeView(viewType) {
+            // Arrêter la vue cinématique si active
+            if (cinematic3DActive) {
+                cinematic3DActive = false;
+            }
+            
+            current3DView = viewType;
+            
+            // Mettre à jour les boutons actifs
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-view="${viewType}"]`).classList.add('active');
+            
+            // Appliquer la transformation 3D
+            apply3DTransform(viewType);
+            
+            // Mettre à jour l'affichage de la vue actuelle
+            const viewNames = {
+                top: 'Vue du Dessus',
+                side: 'Vue de Côté', 
+                corner: 'Vue d\'Angle',
+                player: 'Vue Joueur',
+                cinematic: 'Vue Cinéma'
+            };
+            
+            document.getElementById('currentView').textContent = `Vue actuelle: ${viewNames[viewType]}`;
+            
+            // Notification avec difficulté
+            const difficulties = {
+                top: { name: 'Vue du Dessus', difficulty: 'Facile', color: '#00ff88' },
+                side: { name: 'Vue de Côté', difficulty: 'Moyen', color: '#feca57' },
+                corner: { name: 'Vue d\'Angle', difficulty: 'Difficile', color: '#ff6b6b' },
+                player: { name: 'Vue Joueur', difficulty: 'Expert', color: '#9c27b0' },
+                cinematic: { name: 'Vue Cinéma', difficulty: 'Spectacle', color: '#00ffff' }
+            };
+            
+            const viewInfo = difficulties[viewType];
+            showNotification(`🎥 ${viewInfo.name} activée ! Difficulté: ${viewInfo.difficulty}`, 'info');
+            
+            // Démarrer la vue cinématique si sélectionnée
+            if (viewType === 'cinematic') {
+                startCinematicView();
+            }
+        }
+
+        function apply3DTransform(viewType) {
+            const table = document.getElementById('poolTable');
+            const tableRect = table.getBoundingClientRect();
+            
+            // Réinitialiser les transformations
+            table.style.transformOrigin = 'center center';
+            
+            switch (viewType) {
+                case 'top':
+                    table.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+                    table.style.boxShadow = 'inset 0 0 50px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.8)';
+                    break;
+                    
+                case 'side':
+                    table.style.transform = 'perspective(1200px) rotateX(60deg) rotateY(0deg) scale(0.9)';
+                    table.style.boxShadow = 'inset 0 0 50px rgba(0, 0, 0, 0.7), 0 20px 50px rgba(0, 0, 0, 0.9)';
+                    break;
+                    
+                case 'corner':
+                    table.style.transform = 'perspective(1400px) rotateX(45deg) rotateY(25deg) scale(0.85)';
+                    table.style.boxShadow = 'inset 0 0 60px rgba(0, 0, 0, 0.6), 0 25px 60px rgba(0, 0, 0, 0.8)';
+                    break;
+                    
+                case 'player':
+                    table.style.transform = 'perspective(1600px) rotateX(75deg) rotateY(0deg) scale(0.8)';
+                    table.style.boxShadow = 'inset 0 0 70px rgba(0, 0, 0, 0.8), 0 30px 70px rgba(0, 0, 0, 0.9)';
+                    break;
+                    
+                case 'cinematic':
+                    // La transformation sera gérée par l'animation
+                    break;
+            }
+            
+            // Ajuster les ombres des boules selon la vue
+            adjustBallShadows(viewType);
+        }
+
+        function adjustBallShadows(viewType) {
+            const balls = document.querySelectorAll('.ball');
+            let shadowIntensity = '0 4px 8px rgba(0, 0, 0, 0.3)';
+            
+            switch (viewType) {
+                case 'side':
+                    shadowIntensity = '0 8px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3)';
+                    break;
+                case 'corner':
+                    shadowIntensity = '0 6px 12px rgba(0, 0, 0, 0.4), 2px 2px 6px rgba(0, 0, 0, 0.3)';
+                    break;
+                case 'player':
+                    shadowIntensity = '0 10px 20px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4)';
+                    break;
+                case 'cinematic':
+                    shadowIntensity = '0 8px 16px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.3)';
+                    break;
+            }
+            
+            balls.forEach(ball => {
+                if (!ball.classList.contains('cyber-enhanced')) {
+                    ball.style.boxShadow = shadowIntensity + ', inset -5px -5px 10px rgba(0, 0, 0, 0.2), inset 5px 5px 10px rgba(255, 255, 255, 0.3)';
+                }
+            });
+        }
+
+        function startCinematicView() {
+            cinematic3DActive = true;
+            cinematicRotation = 0;
+            
+            function animateCinematic() {
+                if (!cinematic3DActive) return;
+                
+                cinematicRotation += 0.5;
+                const table = document.getElementById('poolTable');
+                
+                const rotateX = 45 + Math.sin(cinematicRotation * 0.02) * 20;
+                const rotateY = cinematicRotation * 0.3;
+                const scale = 0.85 + Math.sin(cinematicRotation * 0.03) * 0.1;
+                
+                table.style.transform = `perspective(1500px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`;
+                table.style.boxShadow = `inset 0 0 ${60 + Math.sin(cinematicRotation * 0.04) * 20}px rgba(0, 0, 0, 0.6), 0 ${25 + Math.sin(cinematicRotation * 0.05) * 10}px 60px rgba(0, 0, 0, 0.8)`;
+                
+                // Effet de lumière dynamique sur les boules
+                const balls = document.querySelectorAll('.ball');
+                balls.forEach((ball, index) => {
+                    const lightIntensity = 0.3 + Math.sin(cinematicRotation * 0.02 + index) * 0.2;
+                    ball.style.boxShadow = `0 8px 16px rgba(0, 0, 0, 0.5), 0 0 ${20 * lightIntensity}px rgba(0, 255, 255, ${lightIntensity}), inset -5px -5px 10px rgba(0, 0, 0, 0.2), inset 5px 5px 10px rgba(255, 255, 255, 0.3)`;
+                });
+                
+                requestAnimationFrame(animateCinematic);
+            }
+            
+            animateCinematic();
+        }
+
+        // Ajuster la sensibilité de visée selon la vue 3D
+        function getAimingSensitivity() {
+            const sensitivities = {
+                top: 1.0,      // Normal
+                side: 0.8,     // Plus difficile
+                corner: 0.7,   // Difficile
+                player: 0.6,   // Très difficile
+                cinematic: 0.5 // Extrême
+            };
+            
+            return sensitivities[current3DView] || 1.0;
+        }
+
+        // Régénération d'énergie automatique
+        setInterval(() => {
+            if (gameStarted && energy < 100) {
+                energy = Math.min(100, energy + 1);
+                updateDisplay();
+            }
+        }, 3000);
+    </script>
+<script>
+/* Canonical child-side overlay closer for platform pages */
+function closePlatform(){
+    try{ console.debug('jeux27: closePlatform called'); }catch(e){}
+    if(window.parent && window.parent !== window){
+        window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux27' }, '*');
+        return;
+    }
+    if(window.opener && !window.opener.closed){
+        try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux27' }, '*'); }catch(e){}
+        try{ window.close(); }catch(e){}
+        return;
+    }
+    window.location.href = '/detente';
+}
+window.closePlatform = closePlatform;
+
+(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9875f504f05de167',t:'MTc1OTI1ODc2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux27' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

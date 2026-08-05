@@ -1,0 +1,1435 @@
+<html lang="fr"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Futuriste - Histoire Humaine</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #2c5364);
+            color: #fff;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow: hidden;
+        }
+        /* Animation d'étoiles futuristes */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            background: repeating-radial-gradient(circle at 20% 30%, #00c3ff55 0 2px, transparent 2px 40px),
+                        repeating-radial-gradient(circle at 80% 70%, #ffff1c55 0 2px, transparent 2px 50px),
+                        repeating-radial-gradient(circle at 50% 50%, #fff5 0 1.5px, transparent 1.5px 30px);
+            animation: starsMove 30s linear infinite;
+        }
+        @keyframes starsMove {
+            0% { background-position: 0 0, 0 0, 0 0; }
+            100% { background-position: 200px 400px, -200px -400px, 100px 200px; }
+        }
+        .container {
+            background: rgba(10,20,40,0.85);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 #00c3ff55, 0 0 0 4px #ffff1c22;
+            padding: 48px 40px 40px 40px;
+            margin-top: 8px;
+            width: 98vw;
+            max-width: 800px;
+            min-height: 600px;
+            position: relative;
+            z-index: 1;
+            transform: scale(0.75);
+            transform-origin: top center;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, #00c3ff, #ffff1c, #ff00cc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-fill-color: transparent;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 24px #00c3ff88, 0 0 8px #ffff1c44;
+        }
+        .lang-select {
+            width: 100%;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .lang-select select {
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: none;
+            font-size: 1.1rem;
+            background: #1e3c72;
+            color: #00c3ff;
+            box-shadow: 0 2px 8px #00c3ff33;
+            outline: none;
+            transition: box-shadow 0.2s;
+        }
+        .lang-select select:focus {
+            box-shadow: 0 0 0 3px #ffff1c88;
+        }
+        .question {
+            font-size: 1.25rem;
+            margin-bottom: 22px;
+            min-height: 48px;
+            text-align: center;
+            color: #ffff1c;
+            text-shadow: 0 0 8px #00c3ff88;
+        }
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .answers button {
+            background: linear-gradient(90deg, #1e3c72 60%, #00c3ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 10px;
+            font-size: 1.08rem;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 2px 12px #00c3ff22;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            outline: none;
+        }
+        .answers button:hover {
+            background: linear-gradient(90deg, #00c3ff 60%, #ffff1c 100%);
+            color: #222;
+            transform: scale(1.04);
+        }
+        .answers button:active {
+            background: linear-gradient(90deg, #ff00cc 60%, #00c3ff 100%);
+            color: #fff;
+        }
+        .score {
+            margin: 22px 0 10px 0;
+            text-align: center;
+            font-size: 1.15rem;
+            color: #00c3ff;
+            text-shadow: 0 0 8px #00c3ff88;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 22px;
+        }
+        .controls button {
+            padding: 10px 22px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(90deg, #00c3ff 60%, #ffff1c 100%);
+            color: #222;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.08rem;
+            box-shadow: 0 2px 8px #00c3ff33;
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+        }
+        .controls button:disabled {
+            background: #888;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+        .controls button:hover:not(:disabled) {
+            background: linear-gradient(90deg, #ff00cc 60%, #00c3ff 100%);
+            color: #fff;
+            transform: scale(1.04);
+        }
+        .result {
+            text-align: center;
+            font-size: 1.35rem;
+            margin-top: 32px;
+            color: #ff00cc;
+            text-shadow: 0 0 8px #ffff1c88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">Quiz Futuriste : Histoire Humaine</h1>
+        <div class="lang-select">
+            <select id="lang" onchange="setLang()">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="zh">🇨🇳 中文</option>
+            </select>
+        </div>
+        <div class="score" id="score">Question 1 / 220 | Score: 0</div>
+        <div class="question" id="question">Quelle invention a permis la navigation transatlantique au XVe siècle ?</div>
+        <div class="answers" id="answers"><button>La boussole</button><button>La poudre à canon</button><button>La machine à vapeur</button><button>L'imprimerie</button></div>
+        <div class="controls">
+            <button onclick="next()" id="nextBtn" disabled="">Suivant</button>
+            <button onclick="restart()" id="restartBtn" style="display:none">Recommencer</button>
+        </div>
+        <div class="result" id="result"></div>
+        <!-- Bouton et panneau des questions supprimés -->
+    </div>
+
+// Fonctions d'affichage des questions supprimées
+const quizData = {
+fr: [
+    {q: "Quelle invention a permis la navigation transatlantique au XVe siècle ?", a: ["La boussole", "La poudre à canon", "La machine à vapeur", "L'imprimerie"], c: 0},
+    {q: "Qui a été le premier président de la République française ?", a: ["Napoléon Bonaparte", "Louis-Napoléon Bonaparte", "Charles de Gaulle", "Adolphe Thiers"], c: 1},
+    {q: "En quelle année l'homme a-t-il marché sur la Lune ?", a: ["1965", "1969", "1972", "1959"], c: 1},
+    {q: "Quel scientifique a découvert la pénicilline ?", a: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch"], c: 1},
+    {q: "Quel événement a marqué la fin de la Seconde Guerre mondiale en Europe ?", a: ["La bataille de Stalingrad", "Le débarquement de Normandie", "La capitulation de l'Allemagne", "La bombe d'Hiroshima"], c: 2},
+    {q: "Qui a écrit 'Le Petit Prince' ?", a: ["Victor Hugo", "Antoine de Saint-Exupéry", "Jules Verne", "Albert Camus"], c: 1},
+    {q: "Quel est le plus long fleuve du monde ?", a: ["Nil", "Amazone", "Yangtsé", "Mississippi"], c: 1},
+    {q: "Qui a remporté la Coupe du Monde de football 1998 ?", a: ["Brésil", "France", "Allemagne", "Italie"], c: 1},
+    {q: "Quel roi de France a été surnommé le Roi Soleil ?", a: ["Louis XIV", "Louis XVI", "François Ier", "Henri IV"], c: 0},
+    {q: "Quelle est la capitale du Canada ?", a: ["Toronto", "Vancouver", "Ottawa", "Montréal"], c: 2},
+    {q: "Qui a inventé le téléphone ?", a: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"], c: 1},
+    {q: "Quel pays a accueilli les Jeux Olympiques d'été en 2008 ?", a: ["Grèce", "Chine", "Australie", "Royaume-Uni"], c: 1},
+    {q: "Quel est le plus grand océan du monde ?", a: ["Atlantique", "Indien", "Arctique", "Pacifique"], c: 3},
+    {q: "Qui a peint 'Guernica' ?", a: ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco Goya"], c: 1},
+    {q: "Quel est l'organe principal de la respiration ?", a: ["Le cœur", "Le foie", "Le poumon", "Le rein"], c: 2},
+    {q: "En quelle année la Révolution française a-t-elle commencé ?", a: ["1789", "1792", "1804", "1776"], c: 0},
+    {q: "Qui a fondé l'Empire mongol ?", a: ["Gengis Khan", "Kubilai Khan", "Tamerlan", "Attila"], c: 0},
+    {q: "Quel est le plus haut sommet du monde ?", a: ["Mont Blanc", "K2", "Everest", "Kilimandjaro"], c: 2},
+    {q: "Qui a composé la Symphonie n°9 'Choral' ?", a: ["Mozart", "Beethoven", "Bach", "Chopin"], c: 1},
+    {q: "Quel pays a inventé le papier ?", a: ["Égypte", "Chine", "Grèce", "Inde"], c: 1},
+    {q: "Quel est le symbole chimique de l'or ?", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+    {q: "Qui a été la première femme à obtenir un prix Nobel ?", a: ["Marie Curie", "Simone Veil", "Rosalind Franklin", "Marguerite Yourcenar"], c: 0},
+    {q: "Quel est le plus grand désert du monde ?", a: ["Sahara", "Gobi", "Antarctique", "Kalahari"], c: 2},
+    {q: "Qui a écrit 'Les Misérables' ?", a: ["Émile Zola", "Gustave Flaubert", "Victor Hugo", "Alphonse Daudet"], c: 2},
+    {q: "Quel est le principal gaz responsable de l'effet de serre ?", a: ["Oxygène", "Azote", "Dioxyde de carbone", "Hydrogène"], c: 2},
+    {q: "Qui a été le premier homme à gravir l'Everest ?", a: ["Reinhold Messner", "Edmund Hillary", "George Mallory", "Tenzing Norgay"], c: 1},
+    {q: "Quel pays a construit la Grande Muraille ?", a: ["Japon", "Chine", "Inde", "Corée"], c: 1},
+    {q: "Qui a découvert la radioactivité ?", a: ["Henri Becquerel", "Marie Curie", "Pierre Curie", "Ernest Rutherford"], c: 0},
+    {q: "Quel est le plus grand pays du monde par superficie ?", a: ["Canada", "Chine", "États-Unis", "Russie"], c: 3},
+    {q: "Qui a été le premier homme dans l'espace ?", a: ["Neil Armstrong", "Youri Gagarine", "John Glenn", "Valentina Terechkova"], c: 1},
+    {q: "Quel est le plus grand animal terrestre ?", a: ["Éléphant d'Afrique", "Girafe", "Rhinocéros blanc", "Hippopotame"], c: 0},
+    {q: "Qui a inventé l'ampoule électrique ?", a: ["Nikola Tesla", "Thomas Edison", "Benjamin Franklin", "James Watt"], c: 1},
+    {q: "Quel pays a remporté la première Coupe du Monde de football ?", a: ["Brésil", "Allemagne", "Uruguay", "Italie"], c: 2},
+    {q: "Qui a écrit 'L'Odyssée' ?", a: ["Homère", "Virgile", "Sophocle", "Hésiode"], c: 0},
+    {q: "Quel est le plus grand lac d'eau douce du monde ?", a: ["Lac Baïkal", "Lac Supérieur", "Lac Victoria", "Lac Tanganyika"], c: 1},
+    {q: "Qui a été le premier président noir d'Afrique du Sud ?", a: ["Nelson Mandela", "Jacob Zuma", "Thabo Mbeki", "Desmond Tutu"], c: 0},
+    {q: "Quel est le plus ancien jeu olympique ?", a: ["Lutte", "Course à pied", "Lancer du disque", "Saut en longueur"], c: 1},
+    {q: "Qui a découvert l'Amérique en 1492 ?", a: ["Vasco de Gama", "Fernand de Magellan", "Christophe Colomb", "Amerigo Vespucci"], c: 2},
+    {q: "Quel est le plus grand archipel du monde ?", a: ["Indonésie", "Philippines", "Japon", "Grèce"], c: 0},
+    {q: "Qui a inventé la théorie de la relativité ?", a: ["Isaac Newton", "Albert Einstein", "Galilée", "Stephen Hawking"], c: 1},
+    {q: "Quel est le plus grand stade de football du monde ?", a: ["Maracanã", "Camp Nou", "Stade du 1er Mai", "Wembley"], c: 2},
+    {q: "Qui a été la première femme à voler dans l'espace ?", a: ["Sally Ride", "Valentina Terechkova", "Mae Jemison", "Peggy Whitson"], c: 1},
+    {q: "Quel est le plus grand volcan actif du monde ?", a: ["Etna", "Krakatoa", "Mauna Loa", "Vésuve"], c: 2},
+    {q: "Qui a écrit 'Le Rouge et le Noir' ?", a: ["Stendhal", "Balzac", "Flaubert", "Zola"], c: 0},
+    {q: "Quel pays a inventé le jeu d'échecs ?", a: ["Chine", "Inde", "Perse", "Égypte"], c: 1},
+    {q: "Qui a été le premier homme à marcher sur la Lune ?", a: ["Buzz Aldrin", "Neil Armstrong", "Michael Collins", "Alan Shepard"], c: 1},
+    {q: "Quel est le plus grand musée du monde ?", a: ["Le Louvre", "Le British Museum", "Le Prado", "Le Met"], c: 0},
+    {q: "Qui a inventé la vaccination ?", a: ["Louis Pasteur", "Edward Jenner", "Robert Koch", "Jonas Salk"], c: 1},
+    {q: "Quel est le plus grand port du monde ?", a: ["Rotterdam", "Shanghai", "Singapour", "Los Angeles"], c: 1},
+    {q: "Qui a été le premier empereur de Chine ?", a: ["Qin Shi Huang", "Han Wudi", "Tang Taizong", "Kangxi"], c: 0},
+    {q: "Quel est le plus grand pays d'Afrique ?", a: ["Égypte", "Nigéria", "Algérie", "Soudan"], c: 2},
+    {q: "Qui a écrit 'Candide' ?", a: ["Molière", "Voltaire", "Rousseau", "Diderot"], c: 1},
+    {q: "Quel est le plus grand désert chaud du monde ?", a: ["Sahara", "Gobi", "Kalahari", "Atacama"], c: 0},
+    {q: "Qui a été le premier président de la Cinquième République française ?", a: ["François Mitterrand", "Charles de Gaulle", "Valéry Giscard d'Estaing", "Georges Pompidou"], c: 1},
+    {q: "Quel est le plus grand océan de la planète ?", a: ["Atlantique", "Indien", "Arctique", "Pacifique"], c: 3},
+    {q: "Qui a inventé l'imprimerie à caractères mobiles en Europe ?", a: ["Gutenberg", "Galilée", "Newton", "Descartes"], c: 0},
+    {q: "En quelle année a eu lieu la chute du mur de Berlin ?", a: ["1987", "1989", "1991", "1993"], c: 1},
+    {q: "Quel est le plus grand pays d'Amérique du Sud ?", a: ["Argentine", "Brésil", "Pérou", "Colombie"], c: 1},
+    {q: "Qui a peint 'La Nuit étoilée' ?", a: ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Édouard Manet"], c: 1},
+    {q: "Quel est le principal organe du système nerveux ?", a: ["Le cerveau", "Le cœur", "Le foie", "Le poumon"], c: 0},
+    {q: "Qui a été la première femme à obtenir deux prix Nobel ?", a: ["Marie Curie", "Irène Joliot-Curie", "Rosalind Franklin", "Ada Lovelace"], c: 0},
+    {q: "Quel est le plus grand fleuve d'Afrique ?", a: ["Nil", "Congo", "Niger", "Zambèze"], c: 0},
+    {q: "Qui a été le premier homme à atteindre le pôle Sud ?", a: ["Roald Amundsen", "Robert Scott", "Ernest Shackleton", "Jean-Baptiste Charcot"], c: 0},
+    {q: "Quel est le plus grand pays d'Asie ?", a: ["Chine", "Inde", "Russie", "Kazakhstan"], c: 2},
+    {q: "Qui a écrit 'Madame Bovary' ?", a: ["Gustave Flaubert", "Émile Zola", "Honoré de Balzac", "Alphonse Daudet"], c: 0},
+    {q: "Quel est le plus grand lac d'Afrique ?", a: ["Lac Victoria", "Lac Tanganyika", "Lac Malawi", "Lac Tchad"], c: 0},
+    {q: "Qui a été le premier homme à faire le tour du monde ?", a: ["Fernand de Magellan", "Christophe Colomb", "James Cook", "Vasco de Gama"], c: 0},
+    {q: "Quel est le plus grand archipel d'Asie du Sud-Est ?", a: ["Philippines", "Indonésie", "Malaisie", "Thaïlande"], c: 1},
+    {q: "Qui a inventé le vaccin contre la rage ?", a: ["Louis Pasteur", "Edward Jenner", "Robert Koch", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand port de France ?", a: ["Le Havre", "Marseille", "Dunkerque", "Nantes"], c: 1},
+    {q: "Qui a été le premier homme à marcher sur Mars ?", a: ["Personne", "Neil Armstrong", "Elon Musk", "Youri Gagarine"], c: 0},
+    {q: "Quel est le plus grand pays d'Europe ?", a: ["France", "Allemagne", "Russie", "Espagne"], c: 2},
+    {q: "Qui a écrit 'Le Cid' ?", a: ["Corneille", "Racine", "Molière", "Voltaire"], c: 0},
+    {q: "Quel est le plus grand désert d'Asie ?", a: ["Gobi", "Karakoum", "Taklamakan", "Thar"], c: 0},
+    {q: "Qui a été le premier homme à voler en avion ?", a: ["Wilbur Wright", "Orville Wright", "Louis Blériot", "Charles Lindbergh"], c: 1},
+    {q: "Quel est le plus grand pays d'Océanie ?", a: ["Nouvelle-Zélande", "Australie", "Papouasie-Nouvelle-Guinée", "Fidji"], c: 1},
+    {q: "Qui a inventé le cinéma ?", a: ["Les frères Lumière", "Thomas Edison", "Georges Méliès", "Charlie Chaplin"], c: 0},
+    {q: "Quel est le plus grand stade de France ?", a: ["Stade Vélodrome", "Stade de France", "Parc des Princes", "Stade Geoffroy-Guichard"], c: 1},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en avion ?", a: ["Charles Lindbergh", "Amelia Earhart", "Louis Blériot", "Howard Hughes"], c: 0},
+    {q: "Quel est le plus grand pays du Moyen-Orient ?", a: ["Arabie Saoudite", "Iran", "Turquie", "Égypte"], c: 0},
+    {q: "Qui a écrit 'Notre-Dame de Paris' ?", a: ["Victor Hugo", "Alexandre Dumas", "Émile Zola", "Alphonse Daudet"], c: 0},
+    {q: "Quel est le plus grand fleuve d'Amérique du Sud ?", a: ["Amazone", "Paraná", "Orénoque", "São Francisco"], c: 0},
+    {q: "Qui a été le premier homme à gravir le Mont Blanc ?", a: ["Jacques Balmat", "Michel-Gabriel Paccard", "Edward Whymper", "Horace-Bénédict de Saussure"], c: 0},
+    {q: "Quel est le plus grand pays d'Afrique de l'Ouest ?", a: ["Mali", "Niger", "Nigéria", "Sénégal"], c: 2},
+    {q: "Qui a inventé le stéthoscope ?", a: ["Laennec", "Pasteur", "Charcot", "Fleming"], c: 0},
+    {q: "Quel est le plus grand lac d'Amérique du Nord ?", a: ["Lac Supérieur", "Lac Michigan", "Lac Huron", "Lac Ontario"], c: 0},
+    {q: "Qui a été le premier homme à atteindre le pôle Nord ?", a: ["Robert Peary", "Roald Amundsen", "Fridtjof Nansen", "Matthew Henson"], c: 0},
+    {q: "Quel est le plus grand pays d'Afrique centrale ?", a: ["Cameroun", "Gabon", "République Démocratique du Congo", "Congo"], c: 2},
+    {q: "Qui a écrit 'Les Fleurs du mal' ?", a: ["Charles Baudelaire", "Paul Verlaine", "Arthur Rimbaud", "Stéphane Mallarmé"], c: 0},
+    {q: "Quel est le plus grand désert d'Australie ?", a: ["Simpson", "Gibson", "Grand Victoria", "Tanami"], c: 2},
+    {q: "Qui a été le premier homme à traverser la Manche à la nage ?", a: ["Matthew Webb", "Gertrude Ederle", "Philippe Croizon", "Florent Manaudou"], c: 0},
+    {q: "Quel est le plus grand pays d'Amérique centrale ?", a: ["Guatemala", "Honduras", "Nicaragua", "Panama"], c: 2},
+    {q: "Qui a inventé le microscope ?", a: ["Antonie van Leeuwenhoek", "Galilée", "Robert Hooke", "Isaac Newton"], c: 0},
+    {q: "Quel est le plus grand lac d'Europe ?", a: ["Lac Léman", "Lac de Constance", "Lac Ladoga", "Lac Balaton"], c: 2},
+    {q: "Qui a été le premier homme à traverser l'Antarctique ?", a: ["Ernest Shackleton", "Roald Amundsen", "Robert Scott", "Douglas Mawson"], c: 0},
+    {q: "Quel est le plus grand pays d'Asie du Sud ?", a: ["Pakistan", "Inde", "Bangladesh", "Sri Lanka"], c: 1},
+    ,{q: "Qui a écrit 'Le Père Goriot' ?", a: ["Honoré de Balzac", "Gustave Flaubert", "Émile Zola", "Alphonse Daudet"], c: 0}
+    ,{q: "Quel est le plus grand glacier du monde ?", a: ["Glacier Lambert", "Glacier Perito Moreno", "Glacier Vatnajökull", "Glacier Aletsch"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser l'Atlantique en solitaire à la voile ?", a: ["Éric Tabarly", "Francis Chichester", "Joshua Slocum", "Bernard Moitessier"], c: 2}
+    ,{q: "Quel est le plus grand lac d'Amérique du Sud ?", a: ["Lac Titicaca", "Lac Maracaibo", "Lac Poopó", "Lac Buenos Aires"], c: 0}
+    ,{q: "Qui a écrit 'Le Père Goriot' ?", a: ["Honoré de Balzac", "Gustave Flaubert", "Émile Zola", "Alphonse Daudet"], c: 0}
+    ,{q: "Quel est le plus grand désert d'Afrique ?", a: ["Sahara", "Kalahari", "Namib", "Gobi"], c: 0}
+    ,{q: "Qui a inventé le vaccin contre la tuberculose ?", a: ["Albert Calmette et Camille Guérin", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0}
+    ,{q: "Quel est le plus grand fleuve d'Asie ?", a: ["Yangtsé", "Mékong", "Gange", "Indus"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser l'Antarctique en motoneige ?", a: ["Edmund Hillary", "Roald Amundsen", "Robert Scott", "Douglas Mawson"], c: 0}
+    ,{q: "Quel est le plus grand pays d'Asie centrale ?", a: ["Kazakhstan", "Ouzbékistan", "Turkménistan", "Kirghizistan"], c: 0}
+    ,{q: "Qui a écrit 'Les Trois Mousquetaires' ?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0}
+    ,{q: "Quel est le plus grand lac d'Afrique centrale ?", a: ["Lac Tchad", "Lac Albert", "Lac Kivu", "Lac Tanganyika"], c: 3}
+    ,{q: "Qui a été le premier homme à traverser l'Atlantique en ballon sans escale ?", a: ["Steve Fossett", "Jean-Pierre Blanchard", "Bertrand Piccard", "Brian Jones"], c: 0}
+    ,{q: "Quel est le plus grand pays d'Asie du Sud ?", a: ["Pakistan", "Inde", "Bangladesh", "Sri Lanka"], c: 1}
+    ,{q: "Qui a inventé le vaccin contre la coqueluche ?", a: ["Jules Bordet", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0}
+    ,{q: "Quel est le plus grand fleuve d'Afrique de l'Ouest ?", a: ["Niger", "Sénégal", "Volta", "Bandama"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser la Sibérie en train ?", a: ["Vladimir Lénine", "Nicolas II", "Jules Verne", "Michel Strogoff"], c: 3}
+    ,{q: "Quel est le plus grand pays d'Afrique de l'Est ?", a: ["Kenya", "Tanzanie", "Éthiopie", "Somalie"], c: 1}
+    ,{q: "Qui a inventé le vaccin contre la diphtérie ?", a: ["Émile Roux", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0}
+    ,{q: "Quel est le plus grand lac d'Europe de l'Ouest ?", a: ["Lac Léman", "Lac de Constance", "Lac Ladoga", "Lac Balaton"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser le Sahara en automobile ?", a: ["Georges Estienne", "René Caillié", "Paul-Émile Victor", "Jean Mermoz"], c: 0}
+    ,{q: "Quel est le plus grand pays d'Afrique du Nord ?", a: ["Algérie", "Égypte", "Libye", "Maroc"], c: 0}
+    ,{q: "Qui a écrit 'Le Tour du monde en 80 jours' ?", a: ["Jules Verne", "Victor Hugo", "Alexandre Dumas", "Émile Zola"], c: 0}
+    ,{q: "Quel est le plus grand fleuve d'Amérique du Sud ?", a: ["Amazone", "Paraná", "Orénoque", "São Francisco"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser l'Australie à pied ?", a: ["John McDouall Stuart", "Burke et Wills", "Ludwig Leichhardt", "Ernest Giles"], c: 0}
+    ,{q: "Quel est le plus ancien alphabet connu ?", a: ["Phénicien", "Grec", "Latin", "Cyrillique"], c: 0}
+    ,{q: "Qui a été le premier homme à atteindre le pôle Nord en avion ?", a: ["Richard Byrd", "Roald Amundsen", "Charles Lindbergh", "Howard Hughes"], c: 0}
+    ,{q: "Quel est le plus grand lac d'eau salée d'Afrique ?", a: ["Lac Turkana", "Lac Tchad", "Lac Victoria", "Lac Tanganyika"], c: 0}
+    ,{q: "Qui a inventé le premier vaccin contre la variole ?", a: ["Edward Jenner", "Louis Pasteur", "Robert Koch", "Jonas Salk"], c: 0}
+    ,{q: "Quel est le plus grand désert d'Amérique du Sud ?", a: ["Atacama", "Monte", "Patagonie", "Sechura"], c: 0}
+    ,{q: "Qui a écrit 'Les Contemplations' ?", a: ["Victor Hugo", "Alphonse de Lamartine", "Paul Verlaine", "Arthur Rimbaud"], c: 0}
+    ,{q: "Quel est le plus grand port de la Méditerranée ?", a: ["Marseille", "Barcelone", "Gênes", "Naples"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser l'Atlantique en dirigeable ?", a: ["Alberto Santos-Dumont", "Ferdinand von Zeppelin", "Hugo Eckener", "Umberto Nobile"], c: 2}
+    ,{q: "Quel est le plus grand volcan d'Amérique du Sud ?", a: ["Ojos del Salado", "Cotopaxi", "Chimborazo", "Tungurahua"], c: 0}
+    ,{q: "Qui a inventé le premier stylo à bille ?", a: ["László Bíró", "John Loud", "Lewis Waterman", "Parker"], c: 0}
+    ,{q: "Quel est le plus grand glacier d'Amérique du Sud ?", a: ["Glacier Upsala", "Glacier Perito Moreno", "Glacier San Rafael", "Glacier Viedma"], c: 0}
+    ,{q: "Qui a été la première femme à traverser l'Atlantique en avion ?", a: ["Amelia Earhart", "Hélène Boucher", "Maryse Bastié", "Raymonde de Laroche"], c: 0}
+    ,{q: "Quel est le plus grand lac d'Asie centrale ?", a: ["Mer d'Aral", "Lac Balkhach", "Lac Issyk-Koul", "Lac Zaysan"], c: 0}
+    ,{q: "Qui a inventé le premier microscope électronique ?", a: ["Ernst Ruska", "Antonie van Leeuwenhoek", "Robert Hooke", "Isaac Newton"], c: 0}
+    ,{q: "Quel est le plus grand port de l'océan Indien ?", a: ["Port Louis", "Durban", "Mombasa", "Colombo"], c: 1}
+    ,{q: "Qui a été le premier homme à traverser l'Atlantique en planche à voile ?", a: ["Arnaud de Rosnay", "Eric Tabarly", "Francis Joyon", "Loïck Peyron"], c: 0}
+    ,{q: "Quel est le plus grand volcan d'Asie ?", a: ["Klyuchevskaya Sopka", "Fuji", "Krakatoa", "Merapi"], c: 0}
+    ,{q: "Qui a écrit 'La Condition humaine' ?", a: ["André Malraux", "Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir"], c: 0}
+    ,{q: "Quel est le plus grand lac de Russie ?", a: ["Lac Baïkal", "Lac Ladoga", "Lac Onega", "Lac Tchoudskoïe"], c: 0}
+    ,{q: "Qui a inventé le premier moteur diesel ?", a: ["Rudolf Diesel", "Nikolaus Otto", "Étienne Lenoir", "James Watt"], c: 0}
+    ,{q: "Quel est le plus grand port de l'Atlantique ?", a: ["Rotterdam", "Le Havre", "Hambourg", "Anvers"], c: 0}
+    ,{q: "Qui a été le premier homme à traverser l'Antarctique en avion ?", a: ["Richard Byrd", "Roald Amundsen", "Robert Scott", "Douglas Mawson"], c: 0}
+    ,{q: "Quel est le plus grand volcan d'Amérique du Nord ?", a: ["Mont Saint Helens", "Popocatépetl", "Pico de Orizaba", "Mauna Loa"], c: 3}
+    ,{q: "Qui a inventé le premier vaccin contre la tuberculose ?", a: ["Calmette et Guérin", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0}
+    ,{q: "Quel est le plus grand lac de France ?", a: ["Lac Léman", "Lac du Bourget", "Lac d'Annecy", "Lac de Serre-Ponçon"], c: 0}
+    ,{q: "Qui a été la première femme à obtenir un prix Nobel de littérature ?", a: ["Selma Lagerlöf", "Svetlana Alexievitch", "Toni Morrison", "Gabriela Mistral"], c: 0},
+    {q: "Quel est le plus grand port de la mer du Nord ?", a: ["Rotterdam", "Hambourg", "Anvers", "Brême"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la rage ?", a: ["Louis Pasteur", "Edward Jenner", "Robert Koch", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand glacier d'Afrique ?", a: ["Kilimandjaro", "Ruwenzori", "Mount Kenya", "Simien"], c: 0},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en avion à réaction ?", a: ["John Cunningham", "Chuck Yeager", "Jacqueline Cochran", "Howard Hughes"], c: 0},
+    {q: "Quel est le plus grand lac de Turquie ?", a: ["Lac de Van", "Lac Tuz", "Lac Beyşehir", "Lac Burdur"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la coqueluche ?", a: ["Jules Bordet", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0},
+    {q: "Quel est le plus grand port de la mer Baltique ?", a: ["Saint-Pétersbourg", "Gdansk", "Stockholm", "Riga"], c: 0},
+    {q: "Qui a été la première femme à traverser la Manche à la nage ?", a: ["Gertrude Ederle", "Sarah Thomas", "Chloë McCardel", "Florence Chadwick"], c: 0},
+    {q: "Quel est le plus grand volcan d'Afrique ?", a: ["Kilimandjaro", "Nyiragongo", "Ol Doinyo Lengai", "Erta Ale"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la fièvre jaune ?", a: ["Max Theiler", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0},
+    {q: "Quel est le plus grand lac de Suisse ?", a: ["Lac Léman", "Lac de Neuchâtel", "Lac de Zurich", "Lac des Quatre-Cantons"], c: 0},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en avion sans escale ?", a: ["Charles Lindbergh", "Louis Blériot", "Jean Mermoz", "Howard Hughes"], c: 0},
+    {q: "Quel est le plus grand port de la mer Noire ?", a: ["Odessa", "Constanța", "Novorossiisk", "Varna"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la diphtérie ?", a: ["Émile Roux", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0},
+    {q: "Quel est le plus grand glacier d'Europe ?", a: ["Vatnajökull", "Aletsch", "Jostedalsbreen", "Hardangerjøkulen"], c: 0},
+    {q: "Qui a été la première femme à piloter un avion ?", a: ["Raymonde de Laroche", "Amelia Earhart", "Hélène Boucher", "Maryse Bastié"], c: 0},
+    {q: "Quel est le plus grand port de la Méditerranée ?", a: ["Marseille", "Barcelone", "Gênes", "Naples"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la rage ?", a: ["Louis Pasteur", "Edward Jenner", "Robert Koch", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand lac d'Afrique ?", a: ["Lac Victoria", "Lac Tanganyika", "Lac Malawi", "Lac Tchad"], c: 0},
+    {q: "Qui a été le premier homme à traverser le Sahara en automobile ?", a: ["Georges Estienne", "René Caillié", "Paul-Émile Victor", "Jean Mermoz"], c: 0},
+    {q: "Quel est le plus grand pays d'Afrique du Nord ?", a: ["Algérie", "Égypte", "Libye", "Maroc"], c: 0},
+    {q: "Qui a écrit 'Le Tour du monde en 80 jours' ?", a: ["Jules Verne", "Victor Hugo", "Alexandre Dumas", "Émile Zola"], c: 0},
+    {q: "Quel est le plus grand fleuve d'Amérique du Sud ?", a: ["Amazone", "Paraná", "Orénoque", "São Francisco"], c: 0},
+    {q: "Qui a été le premier homme à traverser l'Australie à pied ?", a: ["John McDouall Stuart", "Burke et Wills", "Ludwig Leichhardt", "Ernest Giles"], c: 0},
+    {q: "Quel est le plus ancien pont en pierre encore utilisé ?", a: ["Pont du Gard", "Pont Saint-Bénézet", "Pont d'Avignon", "Pont de Fabricius"], c: 3},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en montgolfière ?", a: ["Ben Abruzzo", "Jean-Pierre Blanchard", "Steve Fossett", "Richard Branson"], c: 0},
+    {q: "Quel est le plus grand lac de Mongolie ?", a: ["Lac Khövsgöl", "Lac Uvs", "Lac Khar", "Lac Terkhiin Tsagaan"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la poliomyélite ?", a: ["Jonas Salk", "Louis Pasteur", "Albert Sabin", "Edward Jenner"], c: 0},
+    {q: "Quel est le plus grand volcan d'Islande ?", a: ["Vatnajökull", "Hekla", "Eyjafjallajökull", "Katla"], c: 0},
+    {q: "Qui a écrit 'L'Étranger' ?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "André Gide"], c: 0},
+    {q: "Quel est le plus grand port de la mer Rouge ?", a: ["Djeddah", "Port-Soudan", "Aqaba", "Massawa"], c: 0},
+    {q: "Qui a été la première femme à traverser l'Atlantique en solitaire à la voile ?", a: ["Krystyna Chojnowska-Liskiewicz", "Ellen MacArthur", "Florence Arthaud", "Isabelle Autissier"], c: 0},
+    {q: "Quel est le plus grand glacier de Norvège ?", a: ["Jostedalsbreen", "Svartisen", "Folgefonna", "Hardangerjøkulen"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la grippe ?", a: ["Jonas Salk", "Thomas Francis Jr.", "Louis Pasteur", "Edward Jenner"], c: 1},
+    {q: "Quel est le plus grand lac de Suède ?", a: ["Lac Vänern", "Lac Vättern", "Lac Mälar", "Lac Hjälmaren"], c: 0},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en planche à voile ?", a: ["Arnaud de Rosnay", "Eric Tabarly", "Francis Joyon", "Loïck Peyron"], c: 0},
+    {q: "Quel est le plus grand volcan d'Italie ?", a: ["Etna", "Vésuve", "Stromboli", "Vulcano"], c: 0},
+    {q: "Qui a écrit 'Le Grand Meaulnes' ?", a: ["Alain-Fournier", "Jules Romains", "Paul Valéry", "Jean Giono"], c: 0},
+    {q: "Quel est le plus grand port de la mer de Chine ?", a: ["Shanghai", "Hong Kong", "Shenzhen", "Guangzhou"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la rougeole ?", a: ["John Enders", "Louis Pasteur", "Edward Jenner", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand glacier de Nouvelle-Zélande ?", a: ["Glacier Tasman", "Glacier Franz Josef", "Glacier Fox", "Glacier Hooker"], c: 0},
+    {q: "Qui a été la première femme à traverser la Manche en avion ?", a: ["Harriet Quimby", "Amelia Earhart", "Maryse Bastié", "Raymonde de Laroche"], c: 0},
+    {q: "Quel est le plus grand lac de Finlande ?", a: ["Lac Saimaa", "Lac Päijänne", "Lac Inari", "Lac Pielinen"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la rubéole ?", a: ["Maurice Hilleman", "Louis Pasteur", "Edward Jenner", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand port de la mer d'Arabie ?", a: ["Mumbai", "Karachi", "Chabahar", "Salalah"], c: 0},
+    {q: "Qui a été le premier homme à traverser l'Atlantique en hydravion ?", a: ["Alcock et Brown", "Charles Lindbergh", "Howard Hughes", "Jean Mermoz"], c: 0},
+    {q: "Quel est le plus grand volcan de Russie ?", a: ["Klioutchevskaïa Sopka", "Elbrouz", "Koryakski", "Avatcha"], c: 0},
+    {q: "Qui a écrit 'La Peste' ?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "André Gide"], c: 0},
+    {q: "Quel est le plus grand lac de Norvège ?", a: ["Mjøsa", "Røssvatnet", "Femunden", "Snåsavatnet"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre l'hépatite B ?", a: ["Baruch Blumberg", "Louis Pasteur", "Edward Jenner", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand port de la mer d'Okhotsk ?", a: ["Magadan", "Kholmsk", "Korsakov", "Okhotsk"], c: 0},
+    {q: "Qui a été la première femme à traverser l'Atlantique en avion à réaction ?", a: ["Jacqueline Cochran", "Amelia Earhart", "Maryse Bastié", "Raymonde de Laroche"], c: 0},
+    {q: "Quel est le plus grand volcan de Nouvelle-Zélande ?", a: ["Ruapehu", "Taranaki", "Ngauruhoe", "Tongariro"], c: 0},
+    {q: "Qui a écrit 'Le Livre de ma mère' ?", a: ["Albert Cohen", "Romain Gary", "Patrick Modiano", "André Schwarz-Bart"], c: 0},
+    {q: "Quel est le plus grand port de la mer de Béring ?", a: ["Nome", "Anadyr", "Provideniya", "Dutch Harbor"], c: 3},
+    {q: "Qui a inventé le premier vaccin contre la méningite ?", a: ["Pierre Lépine", "Louis Pasteur", "Edward Jenner", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand glacier d'Asie ?", a: ["Siachen", "Baltoro", "Fedchenko", "Inylchek"], c: 0},
+    {q: "Qui a été la première femme à traverser l'Atlantique en ballon ?", a: ["Kathy Sullivan", "Jeannine Piccard", "Betrice Picard", "Sophie Blanchard"], c: 0},
+    {q: "Quel est le plus grand lac de Pologne ?", a: ["Lac Śniardwy", "Lac Mamry", "Lac Wigry", "Lac Gopło"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la coqueluche ?", a: ["Jules Bordet", "Louis Pasteur", "Robert Koch", "Edward Jenner"], c: 0},
+    {q: "Quel est le plus grand port de la mer de Barents ?", a: ["Mourmansk", "Arkhangelsk", "Vardø", "Hammerfest"], c: 0},
+    {q: "Qui a été la première femme à traverser la Méditerranée en avion ?", a: ["Maryse Bastié", "Hélène Boucher", "Amelia Earhart", "Raymonde de Laroche"], c: 0},
+    {q: "Quel est le plus grand volcan de Grèce ?", a: ["Santorin", "Nisyros", "Methana", "Milos"], c: 0},
+    {q: "Qui a écrit 'La Promesse de l'aube' ?", a: ["Romain Gary", "Albert Camus", "Jean-Paul Sartre", "André Gide"], c: 0},
+    {q: "Quel est le plus grand port de la mer Égée ?", a: ["Le Pirée", "Thessalonique", "Izmir", "Bodrum"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la rage ?", a: ["Louis Pasteur", "Edward Jenner", "Robert Koch", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand glacier d'Amérique du Nord ?", a: ["Bering", "Hubbard", "Columbia", "Malaspina"], c: 0},
+    {q: "Qui a été la première femme à traverser l'Atlantique en avion sans escale ?", a: ["Amelia Earhart", "Maryse Bastié", "Raymonde de Laroche", "Hélène Boucher"], c: 0},
+    {q: "Quel est le plus grand lac de Hongrie ?", a: ["Lac Balaton", "Lac Velence", "Lac Fertő", "Lac Tisza"], c: 0},
+    {q: "Qui a inventé le premier vaccin contre la typhoïde ?", a: ["Almroth Wright", "Louis Pasteur", "Edward Jenner", "Jonas Salk"], c: 0},
+    {q: "Quel est le plus grand port de la mer Adriatique ?", a: ["Trieste", "Venise", "Split", "Dubrovnik"], c: 0},
+    {q: "Qui a été la première femme à traverser l'Atlantique en avion à réaction ?", a: ["Jacqueline Cochran", "Amelia Earhart", "Maryse Bastié", "Raymonde de Laroche"], c: 0}
+],
+en: [
+{q: "What is the capital of Bolivia?", a: ["La Paz", "Sucre", "Santa Cruz", "Cochabamba"], c: 0},
+{q: "Who is the author of 'The Aleph'?", a: ["Jorge Luis Borges", "Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar"], c: 0},
+{q: "Which country is known for the Pampas?", a: ["Argentina", "Brazil", "Uruguay", "All of these"], c: 3},
+{q: "Who was the first president of Brazil?", a: ["Getúlio Vargas", "Deodoro da Fonseca", "Juscelino Kubitschek", "Luiz Inácio Lula da Silva"], c: 1},
+{q: "What is the capital of Uruguay?", a: ["Montevideo", "Punta del Este", "Salto", "Paysandú"], c: 0},
+{q: "Who painted 'Abaporu'?", a: ["Tarsila do Amaral", "Candido Portinari", "Anita Malfatti", "Emiliano Di Cavalcanti"], c: 0},
+{q: "Which country is known for the Amazon rainforest?", a: ["Brazil", "Colombia", "Peru", "All of these"], c: 3},
+{q: "What is the capital of Paraguay?", a: ["Asunción", "Ciudad del Este", "Encarnación", "San Lorenzo"], c: 0},
+{q: "Who is the author of 'The Posthumous Memoirs of Bras Cubas'?", a: ["Machado de Assis", "Jorge Amado", "Clarice Lispector", "João Guimarães Rosa"], c: 0},
+{q: "Which country is famous for the Angel Falls?", a: ["Venezuela", "Brazil", "Colombia", "Ecuador"], c: 0},
+{q: "What is the capital of Argentina?", a: ["Buenos Aires", "Santiago", "Lima", "Montevideo"], c: 0},
+{q: "Who is the author of 'The Old Man and the Sea'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Which country is known for the Andes?", a: ["Peru", "Chile", "Argentina", "All of these"], c: 3},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of Chile?", a: ["Santiago", "Valparaíso", "Concepción", "La Serena"], c: 0},
+{q: "Who painted 'The Persistence of Memory'?", a: ["Pablo Picasso", "Salvador Dalí", "Joan Miró", "Henri Matisse"], c: 1},
+{q: "Which country is known for the Amazon River?", a: ["Brazil", "Peru", "Colombia", "All of these"], c: 3},
+{q: "What is the capital of Venezuela?", a: ["Caracas", "Maracaibo", "Valencia", "Barquisimeto"], c: 0},
+{q: "Who is the author of 'One Hundred Years of Solitude'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Pablo Neruda"], c: 0},
+{q: "Which country is famous for the Atacama Desert?", a: ["Chile", "Peru", "Argentina", "Bolivia"], c: 0},
+// ...continue with the next translated questions...
+{q: "What is the capital of Kenya?", a: ["Nairobi", "Mombasa", "Kisumu", "Nakuru"], c: 0},
+{q: "Who is the author of 'The Grapes of Wrath'?", a: ["John Steinbeck", "Ernest Hemingway", "F. Scott Fitzgerald", "William Faulkner"], c: 0},
+{q: "Which country is known for the Kilimanjaro?", a: ["Kenya", "Tanzania", "Uganda", "Ethiopia"], c: 1},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of Nigeria?", a: ["Lagos", "Abuja", "Kano", "Ibadan"], c: 1},
+{q: "Who painted 'The School of Athens'?", a: ["Raphael", "Leonardo da Vinci", "Michelangelo", "Caravaggio"], c: 0},
+{q: "Which country is known for the Ganges River?", a: ["India", "Bangladesh", "Nepal", "Pakistan"], c: 0},
+{q: "What is the capital of Peru?", a: ["Lima", "Cusco", "Arequipa", "Trujillo"], c: 0},
+{q: "Who is the author of 'The Sound and the Fury'?", a: ["William Faulkner", "Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck"], c: 0},
+{q: "Which country is famous for the Iguazu Falls?", a: ["Brazil", "Argentina", "Both Brazil and Argentina", "Paraguay"], c: 2},
+// ...continue with the next translated questions...
+{q: "What is the capital of Pakistan?", a: ["Karachi", "Islamabad", "Lahore", "Peshawar"], c: 1},
+{q: "Who is the author of 'The Idiot'?", a: ["Fyodor Dostoevsky", "Leo Tolstoy", "Anton Chekhov", "Ivan Turgenev"], c: 0},
+{q: "Which country is known for the Danube River?", a: ["Germany", "Austria", "Hungary", "All of these"], c: 3},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of Ukraine?", a: ["Lviv", "Kyiv", "Odessa", "Kharkiv"], c: 1},
+{q: "Who painted 'The Garden of Earthly Delights'?", a: ["Hieronymus Bosch", "Pieter Bruegel", "Jan van Eyck", "Rembrandt"], c: 0},
+{q: "Which country is known for the Ural Mountains?", a: ["Russia", "Kazakhstan", "Ukraine", "Belarus"], c: 0},
+{q: "What is the capital of Colombia?", a: ["Bogotá", "Medellín", "Cali", "Cartagena"], c: 0},
+{q: "Who is the author of 'Madame Bovary'?", a: ["Gustave Flaubert", "Émile Zola", "Victor Hugo", "Alexandre Dumas"], c: 0},
+{q: "Which country is famous for the Great Barrier Reef?", a: ["Australia", "New Zealand", "Fiji", "Indonesia"], c: 0},
+// ...continue with the next translated questions...
+{q: "What is the capital of Indonesia?", a: ["Jakarta", "Bali", "Surabaya", "Bandung"], c: 0},
+{q: "Who is the author of 'The Magic Mountain'?", a: ["Thomas Mann", "Franz Kafka", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Which country is known for the Alps?", a: ["Switzerland", "Austria", "France", "All of these"], c: 3},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of the Philippines?", a: ["Manila", "Cebu", "Davao", "Quezon City"], c: 0},
+{q: "Who painted 'The Creation of Adam'?", a: ["Michelangelo", "Leonardo da Vinci", "Raphael", "Caravaggio"], c: 0},
+{q: "Which country is known for the Amazon River?", a: ["Brazil", "Peru", "Colombia", "All of these"], c: 3},
+{q: "What is the capital of Chile?", a: ["Santiago", "Valparaíso", "Concepción", "La Serena"], c: 0},
+{q: "Who is the author of 'The Red and the Black'?", a: ["Stendhal", "Balzac", "Flaubert", "Zola"], c: 0},
+{q: "Which country is famous for the Pyramids of Giza?", a: ["Egypt", "Mexico", "Peru", "Iraq"], c: 0},
+// ...continue with the next translated questions...
+{q: "What is the capital of South Korea?", a: ["Seoul", "Busan", "Incheon", "Daegu"], c: 0},
+{q: "Who is the author of 'The Brothers Karamazov'?", a: ["Fyodor Dostoevsky", "Leo Tolstoy", "Anton Chekhov", "Ivan Turgenev"], c: 0},
+{q: "Which country is known for the Himalayas?", a: ["India", "Nepal", "China", "All of these"], c: 3},
+{q: "Who was the first president of China?", a: ["Sun Yat-sen", "Mao Zedong", "Chiang Kai-shek", "Deng Xiaoping"], c: 0},
+{q: "What is the capital of Vietnam?", a: ["Hanoi", "Ho Chi Minh City", "Da Nang", "Hue"], c: 0},
+{q: "Who painted 'The Kiss'?", a: ["Gustav Klimt", "Egon Schiele", "Oskar Kokoschka", "Ferdinand Hodler"], c: 0},
+{q: "Which country is known for the Outback?", a: ["Australia", "New Zealand", "South Africa", "Canada"], c: 0},
+{q: "What is the capital of New Zealand?", a: ["Auckland", "Wellington", "Christchurch", "Hamilton"], c: 1},
+{q: "Who is the author of 'The Hunchback of Notre-Dame'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Which country is famous for the Great Wall?", a: ["Japan", "China", "India", "Mongolia"], c: 1},
+// ...continue with the next translated questions...
+{q: "What is the capital of Morocco?", a: ["Casablanca", "Rabat", "Marrakech", "Fes"], c: 1},
+{q: "Who is the author of 'The Plague'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "Which country is known for the Sahara Desert?", a: ["Egypt", "Algeria", "Libya", "All of these"], c: 3},
+{q: "Who was the first president of Turkey?", a: ["Recep Tayyip Erdoğan", "Mustafa Kemal Atatürk", "İsmet İnönü", "Abdullah Gül"], c: 1},
+{q: "What is the capital of Saudi Arabia?", a: ["Jeddah", "Riyadh", "Mecca", "Medina"], c: 1},
+{q: "Who painted 'The Night Watch'?", a: ["Rembrandt", "Vermeer", "Rubens", "Frans Hals"], c: 0},
+{q: "Which country is known for the Andes?", a: ["Peru", "Chile", "Argentina", "All of these"], c: 3},
+{q: "What is the capital of Thailand?", a: ["Phuket", "Bangkok", "Chiang Mai", "Pattaya"], c: 1},
+{q: "Who is the author of 'The Metamorphosis'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Which country is famous for the Leaning Tower of Pisa?", a: ["France", "Italy", "Spain", "Portugal"], c: 1},
+// ...continue with the next translated questions...
+{q: "What is the capital of Ireland?", a: ["Cork", "Dublin", "Galway", "Limerick"], c: 1},
+{q: "Who is the author of 'Ulysses'?", a: ["James Joyce", "Samuel Beckett", "Oscar Wilde", "W.B. Yeats"], c: 0},
+{q: "Which country is known for the Alhambra?", a: ["Italy", "Spain", "Portugal", "France"], c: 1},
+{q: "Who was the first president of the Russian Federation?", a: ["Vladimir Putin", "Boris Yeltsin", "Mikhail Gorbachev", "Dmitry Medvedev"], c: 1},
+{q: "What is the capital of Czech Republic?", a: ["Prague", "Brno", "Ostrava", "Plzen"], c: 0},
+{q: "Who painted 'Water Lilies'?", a: ["Claude Monet", "Pierre-Auguste Renoir", "Edgar Degas", "Paul Cézanne"], c: 0},
+{q: "Which country is known for the Grand Canyon?", a: ["USA", "Canada", "Mexico", "Brazil"], c: 0},
+{q: "What is the capital of Romania?", a: ["Bucharest", "Cluj-Napoca", "Timisoara", "Iasi"], c: 0},
+{q: "Who is the author of 'Around the World in 80 Days'?", a: ["Jules Verne", "Victor Hugo", "Alexandre Dumas", "Émile Zola"], c: 0},
+{q: "Which country is famous for the Great Barrier Reef?", a: ["Australia", "New Zealand", "Fiji", "Indonesia"], c: 0},
+// ...continue with the next translated questions...
+{q: "What is the capital of Finland?", a: ["Helsinki", "Espoo", "Tampere", "Turku"], c: 0},
+{q: "Who is the author of 'Crime and Punishment'?", a: ["Leo Tolstoy", "Fyodor Dostoevsky", "Anton Chekhov", "Ivan Turgenev"], c: 1},
+{q: "Which country is known for the Kremlin?", a: ["Russia", "Ukraine", "Belarus", "Kazakhstan"], c: 0},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of Hungary?", a: ["Budapest", "Debrecen", "Szeged", "Miskolc"], c: 0},
+{q: "Who painted 'The Scream'?", a: ["Edvard Munch", "Pablo Picasso", "Vincent van Gogh", "Claude Monet"], c: 0},
+{q: "Which country is known for the Great Sphinx?", a: ["Egypt", "Greece", "Turkey", "Libya"], c: 0},
+{q: "What is the capital of Poland?", a: ["Warsaw", "Krakow", "Gdansk", "Wroclaw"], c: 0},
+{q: "Who is the author of 'The Three Musketeers'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Which country is famous for the Victoria Falls?", a: ["Zambia", "Zimbabwe", "Both Zambia and Zimbabwe", "South Africa"], c: 2},
+// ...continue with the next translated questions...
+{q: "What is the capital of the Netherlands?", a: ["Rotterdam", "Amsterdam", "The Hague", "Utrecht"], c: 1},
+{q: "Who is the author of 'Les Misérables'?", a: ["Victor Hugo", "Émile Zola", "Gustave Flaubert", "Alexandre Dumas"], c: 0},
+{q: "Which country is known for the Blue Mosque?", a: ["Greece", "Turkey", "Egypt", "Iran"], c: 1},
+{q: "Who was the first president of the Fifth French Republic?", a: ["Charles de Gaulle", "François Mitterrand", "Georges Pompidou", "Valéry Giscard d'Estaing"], c: 0},
+{q: "What is the capital of Belgium?", a: ["Brussels", "Antwerp", "Ghent", "Bruges"], c: 0},
+{q: "Who painted 'The Birth of Venus'?", a: ["Sandro Botticelli", "Leonardo da Vinci", "Michelangelo", "Raphael"], c: 0},
+{q: "Which country is known for the Taj Mahal?", a: ["India", "Pakistan", "Bangladesh", "Nepal"], c: 0},
+{q: "What is the capital of Austria?", a: ["Salzburg", "Vienna", "Graz", "Innsbruck"], c: 1},
+{q: "Who is the author of 'The Count of Monte Cristo'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Which country is famous for the Dead Sea?", a: ["Israel", "Jordan", "Both Israel and Jordan", "Egypt"], c: 2},
+// ...continue with the next translated questions...
+{q: "What is the capital of Switzerland?", a: ["Zurich", "Geneva", "Bern", "Basel"], c: 2},
+{q: "Who is the author of 'The Old Man and the Sea'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Which country is known for the Serengeti?", a: ["Kenya", "Tanzania", "South Africa", "Botswana"], c: 1},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "What is the capital of South Africa?", a: ["Cape Town", "Pretoria", "Bloemfontein", "All of these"], c: 3},
+{q: "Who painted 'Girl with a Pearl Earring'?", a: ["Rembrandt", "Johannes Vermeer", "Vincent van Gogh", "Pieter Bruegel"], c: 1},
+{q: "Which country is known for the Matterhorn?", a: ["Austria", "Switzerland", "France", "Italy"], c: 1},
+{q: "What is the capital of Denmark?", a: ["Aarhus", "Odense", "Copenhagen", "Aalborg"], c: 2},
+{q: "Who is the author of 'The Little Prince'?", a: ["Antoine de Saint-Exupéry", "Victor Hugo", "Jules Verne", "Albert Camus"], c: 0},
+{q: "Which country is famous for the Galápagos Islands?", a: ["Peru", "Ecuador", "Chile", "Colombia"], c: 1},
+// ...continue with the next translated questions...
+{q: "What is the capital of Mexico?", a: ["Guadalajara", "Mexico City", "Monterrey", "Cancun"], c: 1},
+{q: "Who is the author of 'The Trial'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Which country is known for the Great Barrier Reef?", a: ["Australia", "New Zealand", "Fiji", "Indonesia"], c: 0},
+{q: "Who was the first president of South Africa after apartheid?", a: ["Nelson Mandela", "Thabo Mbeki", "Jacob Zuma", "F.W. de Klerk"], c: 0},
+{q: "What is the capital of Sweden?", a: ["Stockholm", "Gothenburg", "Malmö", "Uppsala"], c: 0},
+{q: "Who painted 'The Persistence of Memory'?", a: ["Pablo Picasso", "Salvador Dalí", "Joan Miró", "Henri Matisse"], c: 1},
+{q: "Which country is known for Mount Fuji?", a: ["China", "Japan", "South Korea", "Vietnam"], c: 1},
+{q: "What is the capital of Norway?", a: ["Bergen", "Oslo", "Trondheim", "Stavanger"], c: 1},
+{q: "Who is the author of 'The Stranger'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "Which country is famous for the Amazon rainforest?", a: ["Brazil", "Colombia", "Peru", "Venezuela"], c: 0},
+// ...continue with the next translated questions...
+{q: "What is the capital of Germany?", a: ["Munich", "Berlin", "Frankfurt", "Hamburg"], c: 1},
+{q: "Who is the author of 'War and Peace'?", a: ["Fyodor Dostoevsky", "Leo Tolstoy", "Anton Chekhov", "Ivan Turgenev"], c: 1},
+{q: "Which country is known for the Colosseum?", a: ["Greece", "Italy", "Turkey", "Egypt"], c: 1},
+{q: "Who was the first person to reach the South Pole?", a: ["Robert Falcon Scott", "Roald Amundsen", "Ernest Shackleton", "Richard Byrd"], c: 1},
+{q: "What is the capital of India?", a: ["Mumbai", "Delhi", "Bangalore", "Kolkata"], c: 1},
+{q: "Who painted the 'Last Supper'?", a: ["Leonardo da Vinci", "Michelangelo", "Raphael", "Caravaggio"], c: 0},
+{q: "Which country is famous for the Acropolis?", a: ["Italy", "Greece", "Turkey", "Egypt"], c: 1},
+{q: "What is the capital of Portugal?", a: ["Porto", "Lisbon", "Faro", "Coimbra"], c: 1},
+{q: "Who is the founder of Amazon?", a: ["Elon Musk", "Jeff Bezos", "Bill Gates", "Larry Page"], c: 1},
+{q: "Which country is known for the Andes mountains?", a: ["Peru", "Chile", "Argentina", "All of these"], c: 3},
+// ...continue with the next translated questions...
+{q: "What is the capital of Spain?", a: ["Barcelona", "Madrid", "Valencia", "Seville"], c: 1},
+{q: "Who painted 'The Starry Night'?", a: ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Edgar Degas"], c: 1},
+{q: "Which country is known for the pyramids of Giza?", a: ["Egypt", "Mexico", "Peru", "Iraq"], c: 0},
+{q: "Who was the first man to climb Mount Everest?", a: ["Reinhold Messner", "Edmund Hillary", "Tenzing Norgay", "George Mallory"], c: 1},
+{q: "What is the capital of Greece?", a: ["Athens", "Thessaloniki", "Patras", "Heraklion"], c: 0},
+{q: "Who is the author of 'Don Quixote'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Pablo Neruda", "Federico García Lorca"], c: 0},
+{q: "Which country is famous for maple syrup?", a: ["USA", "Canada", "Sweden", "Russia"], c: 1},
+{q: "What is the capital of China?", a: ["Shanghai", "Beijing", "Guangzhou", "Shenzhen"], c: 1},
+{q: "Who invented the airplane?", a: ["Wright brothers", "Leonardo da Vinci", "Santos-Dumont", "Otto Lilienthal"], c: 0},
+{q: "Which country is known for the Eiffel Tower?", a: ["Italy", "France", "Germany", "Spain"], c: 1},
+// ...continue with the next translated questions...
+{q: "Who invented the light bulb?", a: ["Nikola Tesla", "Thomas Edison", "Alexander Graham Bell", "Benjamin Franklin"], c: 1},
+{q: "What is the capital of Russia?", a: ["Saint Petersburg", "Moscow", "Kazan", "Novosibirsk"], c: 1},
+{q: "Which country is known for kangaroos?", a: ["New Zealand", "Australia", "South Africa", "Canada"], c: 1},
+{q: "Who was the first woman in space?", a: ["Valentina Tereshkova", "Sally Ride", "Mae Jemison", "Eileen Collins"], c: 0},
+{q: "What is the capital of Italy?", a: ["Venice", "Milan", "Rome", "Florence"], c: 2},
+{q: "Who wrote 'The Divine Comedy'?", a: ["Dante Alighieri", "Geoffrey Chaucer", "John Milton", "William Blake"], c: 0},
+{q: "Which country is known as the Land of a Thousand Lakes?", a: ["Sweden", "Finland", "Norway", "Canada"], c: 1},
+{q: "What is the capital of Turkey?", a: ["Istanbul", "Ankara", "Izmir", "Antalya"], c: 1},
+{q: "Who is the founder of Facebook?", a: ["Bill Gates", "Steve Jobs", "Mark Zuckerberg", "Elon Musk"], c: 2},
+{q: "Which country is famous for the Great Wall?", a: ["Japan", "China", "India", "Mongolia"], c: 1},
+// ...continue with the next translated questions...
+{q: "What is the capital of Argentina?", a: ["Buenos Aires", "Santiago", "Lima", "Montevideo"], c: 0},
+{q: "Who painted the Mona Lisa?", a: ["Michelangelo", "Leonardo da Vinci", "Raphael", "Caravaggio"], c: 1},
+{q: "Which country is known for the samba dance?", a: ["Argentina", "Brazil", "Cuba", "Spain"], c: 1},
+{q: "What is the largest island in the world?", a: ["Greenland", "Australia", "Borneo", "Madagascar"], c: 0},
+{q: "Who was the first president of the United States?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "Which element is needed for breathing?", a: ["Hydrogen", "Oxygen", "Nitrogen", "Carbon dioxide"], c: 1},
+{q: "What is the capital of Japan?", a: ["Kyoto", "Osaka", "Tokyo", "Hiroshima"], c: 2},
+{q: "Who is the author of 'The Odyssey'?", a: ["Homer", "Virgil", "Sophocles", "Euripides"], c: 0},
+{q: "Which country is famous for tulips and windmills?", a: ["Belgium", "Netherlands", "Denmark", "Sweden"], c: 1},
+{q: "What is the largest planet in our solar system?", a: ["Earth", "Mars", "Jupiter", "Saturn"], c: 2},
+// ...continue with the next translated questions...
+{q: "What is the largest mammal in the world?", a: ["African Elephant", "Blue Whale", "Giraffe", "Hippopotamus"], c: 1},
+{q: "Who discovered radioactivity?", a: ["Marie Curie", "Henri Becquerel", "Ernest Rutherford", "Niels Bohr"], c: 1},
+{q: "Which country is famous for the Taj Mahal?", a: ["India", "Pakistan", "Bangladesh", "Nepal"], c: 0},
+{q: "Who was the leader of the Soviet Union during World War II?", a: ["Vladimir Lenin", "Joseph Stalin", "Nikita Khrushchev", "Leon Trotsky"], c: 1},
+{q: "What is the main ingredient in sushi?", a: ["Rice", "Fish", "Seaweed", "Soy sauce"], c: 0},
+{q: "Which French city is known as the City of Lights?", a: ["Lyon", "Marseille", "Paris", "Nice"], c: 2},
+{q: "Who is the founder of Microsoft?", a: ["Steve Jobs", "Bill Gates", "Mark Zuckerberg", "Larry Page"], c: 1},
+{q: "What is the capital of South Korea?", a: ["Seoul", "Busan", "Incheon", "Daegu"], c: 0},
+{q: "Which organ pumps blood through the body?", a: ["Liver", "Heart", "Lungs", "Kidneys"], c: 1},
+{q: "Who wrote 'Pride and Prejudice'?", a: ["Jane Austen", "Emily Brontë", "Charlotte Brontë", "Mary Shelley"], c: 0},
+// ...continue with the next translated questions...
+{q: "Which artist is famous for the painting 'Guernica'?", a: ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco Goya"], c: 1},
+{q: "What is the largest continent?", a: ["Africa", "Asia", "Europe", "America"], c: 1},
+{q: "Who invented the telephone?", a: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"], c: 1},
+{q: "Which country hosted the 2016 Summer Olympics?", a: ["China", "Brazil", "United Kingdom", "Russia"], c: 1},
+{q: "What is the capital of Egypt?", a: ["Cairo", "Alexandria", "Giza", "Luxor"], c: 0},
+{q: "Who is the Greek god of the sea?", a: ["Zeus", "Poseidon", "Hades", "Apollo"], c: 1},
+{q: "Which year did the Berlin Wall fall?", a: ["1987", "1989", "1991", "1993"], c: 1},
+{q: "What is the hardest natural substance?", a: ["Gold", "Iron", "Diamond", "Quartz"], c: 2},
+{q: "Who was the first female Prime Minister of the UK?", a: ["Margaret Thatcher", "Theresa May", "Angela Merkel", "Indira Gandhi"], c: 0},
+{q: "Which civilization built Machu Picchu?", a: ["Aztec", "Maya", "Inca", "Olmec"], c: 2},
+// ...continue with the next translated questions...
+{q: "Which planet is known as the Red Planet?", a: ["Venus", "Mars", "Jupiter", "Saturn"], c: 1},
+{q: "Who discovered America in 1492?", a: ["Vasco da Gama", "Christopher Columbus", "Ferdinand Magellan", "Amerigo Vespucci"], c: 1},
+{q: "What is the main language spoken in Brazil?", a: ["Spanish", "Portuguese", "French", "English"], c: 1},
+{q: "Who was the first man in space?", a: ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "John Glenn"], c: 1},
+{q: "Which element has the atomic number 1?", a: ["Oxygen", "Hydrogen", "Helium", "Carbon"], c: 1},
+{q: "What is the capital of Australia?", a: ["Sydney", "Melbourne", "Canberra", "Perth"], c: 2},
+{q: "Who wrote 'Romeo and Juliet'?", a: ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], c: 0},
+{q: "Which country gifted the Statue of Liberty to the USA?", a: ["United Kingdom", "France", "Germany", "Italy"], c: 1},
+{q: "What is the largest ocean on Earth?", a: ["Atlantic", "Indian", "Arctic", "Pacific"], c: 3},
+{q: "Who was the first emperor of Rome?", a: ["Julius Caesar", "Augustus", "Nero", "Tiberius"], c: 1},
+// ...continue with the next translated questions...
+{q: "Who painted the ceiling of the Sistine Chapel?", a: ["Leonardo da Vinci", "Michelangelo", "Raphael", "Donatello"], c: 1},
+{q: "Which city hosted the first modern Olympic Games in 1896?", a: ["Paris", "Athens", "London", "Rome"], c: 1},
+{q: "What is the largest desert in the world?", a: ["Sahara", "Gobi", "Antarctica", "Arabian"], c: 2},
+{q: "Who is the author of '1984'?", a: ["Aldous Huxley", "George Orwell", "Ray Bradbury", "J.R.R. Tolkien"], c: 1},
+{q: "Which country is known as the Land of the Rising Sun?", a: ["China", "Japan", "South Korea", "Thailand"], c: 1},
+{q: "What is the chemical symbol for gold?", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+{q: "Who was the first woman to win a Nobel Prize?", a: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Lise Meitner"], c: 0},
+{q: "Which war was triggered by the assassination of Archduke Franz Ferdinand?", a: ["World War I", "World War II", "The Crimean War", "The Vietnam War"], c: 0},
+{q: "What is the smallest country in the world?", a: ["Monaco", "Vatican City", "San Marino", "Liechtenstein"], c: 1},
+{q: "Who composed the Four Seasons?", a: ["Johann Sebastian Bach", "Wolfgang Amadeus Mozart", "Antonio Vivaldi", "Ludwig van Beethoven"], c: 2},
+// ...continue with the next translated questions...
+    // 250 translated questions from French, same structure as fr: [...]
+    {q: "Which invention enabled transatlantic navigation in the 15th century?", a: ["The compass", "Gunpowder", "The steam engine", "The printing press"], c: 0},
+    {q: "Who was the first president of the French Republic?", a: ["Napoleon Bonaparte", "Louis-Napoleon Bonaparte", "Charles de Gaulle", "Adolphe Thiers"], c: 1},
+    {q: "In what year did man walk on the Moon?", a: ["1965", "1969", "1972", "1959"], c: 1},
+    {q: "Which scientist discovered penicillin?", a: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch"], c: 1},
+    {q: "What event marked the end of World War II in Europe?", a: ["The Battle of Stalingrad", "The Normandy landings", "The capitulation of Germany", "The bombing of Hiroshima"], c: 2},
+    {q: "Who wrote 'The Little Prince'?", a: ["Victor Hugo", "Antoine de Saint-Exupéry", "Jules Verne", "Albert Camus"], c: 1},
+    {q: "What is the longest river in the world?", a: ["Nile", "Amazon", "Yangtze", "Mississippi"], c: 1},
+    {q: "Who won the 1998 FIFA World Cup?", a: ["Brazil", "France", "Germany", "Italy"], c: 1},
+    {q: "Which French king was nicknamed the Sun King?", a: ["Louis XIV", "Louis XVI", "Francis I", "Henry IV"], c: 0},
+    {q: "What is the capital of Canada?", a: ["Toronto", "Vancouver", "Ottawa", "Montreal"], c: 2},
+    // ...existing code...
+],
+es: [
+{q: "¿Qué país es famoso por el Amazonas?", a: ["Brasil", "Colombia", "Perú", "Todos estos"], c: 3},
+{q: "¿Cuál es la capital de Venezuela?", a: ["Caracas", "Maracaibo", "Valencia", "Barquisimeto"], c: 0},
+{q: "¿Quién es el autor de 'Cien años de soledad'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Pablo Neruda"], c: 0},
+{q: "¿Qué país es famoso por el desierto de Atacama?", a: ["Chile", "Perú", "Argentina", "Bolivia"], c: 0},
+{q: "¿Cuál es la capital de Bolivia?", a: ["La Paz", "Sucre", "Santa Cruz", "Cochabamba"], c: 0},
+{q: "¿Quién es el autor de 'El Aleph'?", a: ["Jorge Luis Borges", "Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar"], c: 0},
+{q: "¿Qué país es famoso por la Pampa?", a: ["Argentina", "Brasil", "Uruguay", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de Brasil?", a: ["Getúlio Vargas", "Deodoro da Fonseca", "Juscelino Kubitschek", "Luiz Inácio Lula da Silva"], c: 1},
+{q: "¿Cuál es la capital de Uruguay?", a: ["Montevideo", "Punta del Este", "Salto", "Paysandú"], c: 0},
+{q: "¿Quién pintó 'Abaporu'?", a: ["Tarsila do Amaral", "Candido Portinari", "Anita Malfatti", "Emiliano Di Cavalcanti"], c: 0},
+{q: "¿Qué país es famoso por la selva amazónica?", a: ["Brasil", "Colombia", "Perú", "Todos estos"], c: 3},
+{q: "¿Cuál es la capital de Paraguay?", a: ["Asunción", "Ciudad del Este", "Encarnación", "San Lorenzo"], c: 0},
+{q: "¿Quién es el autor de 'Memorias póstumas de Blas Cubas'?", a: ["Machado de Assis", "Jorge Amado", "Clarice Lispector", "João Guimarães Rosa"], c: 0},
+{q: "¿Qué país es famoso por el Salto Ángel?", a: ["Venezuela", "Brasil", "Colombia", "Ecuador"], c: 0},
+{q: "¿Qué país es famoso por el Ganges?", a: ["India", "Bangladés", "Nepal", "Pakistán"], c: 0},
+{q: "¿Cuál es la capital de Perú?", a: ["Lima", "Cusco", "Arequipa", "Trujillo"], c: 0},
+{q: "¿Quién es el autor de 'El ruido y la furia'?", a: ["William Faulkner", "Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck"], c: 0},
+{q: "¿Qué país es famoso por las Cataratas del Iguazú?", a: ["Brasil", "Argentina", "Ambos Brasil y Argentina", "Paraguay"], c: 2},
+{q: "¿Cuál es la capital de Argentina?", a: ["Buenos Aires", "Santiago", "Lima", "Montevideo"], c: 0},
+{q: "¿Quién es el autor de 'El viejo y el mar'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "¿Qué país es famoso por los Andes?", a: ["Perú", "Chile", "Argentina", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Chile?", a: ["Santiago", "Valparaíso", "Concepción", "La Serena"], c: 0},
+{q: "¿Quién pintó 'La persistencia de la memoria'?", a: ["Pablo Picasso", "Salvador Dalí", "Joan Miró", "Henri Matisse"], c: 1},
+{q: "¿Qué país es famoso por los Urales?", a: ["Rusia", "Kazajistán", "Ucrania", "Bielorrusia"], c: 0},
+{q: "¿Cuál es la capital de Colombia?", a: ["Bogotá", "Medellín", "Cali", "Cartagena"], c: 0},
+{q: "¿Quién es el autor de 'Madame Bovary'?", a: ["Gustave Flaubert", "Émile Zola", "Victor Hugo", "Alexandre Dumas"], c: 0},
+{q: "¿Qué país es famoso por la Gran Barrera de Coral?", a: ["Australia", "Nueva Zelanda", "Fiyi", "Indonesia"], c: 0},
+{q: "¿Cuál es la capital de Kenia?", a: ["Nairobi", "Mombasa", "Kisumu", "Nakuru"], c: 0},
+{q: "¿Quién es el autor de 'Las uvas de la ira'?", a: ["John Steinbeck", "Ernest Hemingway", "F. Scott Fitzgerald", "William Faulkner"], c: 0},
+{q: "¿Qué país es famoso por el Kilimanjaro?", a: ["Kenia", "Tanzania", "Uganda", "Etiopía"], c: 1},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Nigeria?", a: ["Lagos", "Abuya", "Kano", "Ibadan"], c: 1},
+{q: "¿Quién pintó 'La escuela de Atenas'?", a: ["Rafael", "Leonardo da Vinci", "Miguel Ángel", "Caravaggio"], c: 0},
+{q: "¿Qué país es famoso por el río Amazonas?", a: ["Brasil", "Perú", "Colombia", "Todos estos"], c: 3},
+{q: "¿Cuál es la capital de Chile?", a: ["Santiago", "Valparaíso", "Concepción", "La Serena"], c: 0},
+{q: "¿Quién es el autor de 'Rojo y negro'?", a: ["Stendhal", "Balzac", "Flaubert", "Zola"], c: 0},
+{q: "¿Qué país es famoso por las Pirámides de Guiza?", a: ["Egipto", "México", "Perú", "Irak"], c: 0},
+{q: "¿Cuál es la capital de Pakistán?", a: ["Karachi", "Islamabad", "Lahore", "Peshawar"], c: 1},
+{q: "¿Quién es el autor de 'El idiota'?", a: ["Fiódor Dostoyevski", "León Tolstói", "Antón Chéjov", "Iván Turguénev"], c: 0},
+{q: "¿Qué país es famoso por el Danubio?", a: ["Alemania", "Austria", "Hungría", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Ucrania?", a: ["Leópolis", "Kiev", "Odesa", "Járkov"], c: 1},
+{q: "¿Quién pintó 'El jardín de las delicias'?", a: ["El Bosco", "Pieter Bruegel", "Jan van Eyck", "Rembrandt"], c: 0},
+{q: "¿Qué país es famoso por el Outback?", a: ["Australia", "Nueva Zelanda", "Sudáfrica", "Canadá"], c: 0},
+{q: "¿Cuál es la capital de Nueva Zelanda?", a: ["Auckland", "Wellington", "Christchurch", "Hamilton"], c: 1},
+{q: "¿Quién es el autor de 'Nuestra Señora de París'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "¿Qué país es famoso por la Gran Muralla?", a: ["Japón", "China", "India", "Mongolia"], c: 1},
+{q: "¿Cuál es la capital de Indonesia?", a: ["Yakarta", "Bali", "Surabaya", "Bandung"], c: 0},
+{q: "¿Quién es el autor de 'La montaña mágica'?", a: ["Thomas Mann", "Franz Kafka", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "¿Qué país es famoso por los Alpes?", a: ["Suiza", "Austria", "Francia", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Filipinas?", a: ["Manila", "Cebú", "Dávao", "Quezón"], c: 0},
+{q: "¿Quién pintó 'La creación de Adán'?", a: ["Miguel Ángel", "Leonardo da Vinci", "Rafael", "Caravaggio"], c: 0},
+{q: "¿Qué país es conocido por los Andes?", a: ["Perú", "Chile", "Argentina", "Todos estos"], c: 3},
+{q: "¿Cuál es la capital de Tailandia?", a: ["Phuket", "Bangkok", "Chiang Mai", "Pattaya"], c: 1},
+{q: "¿Quién es el autor de 'La metamorfosis'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "¿Qué país es famoso por la Torre de Pisa?", a: ["Francia", "Italia", "España", "Portugal"], c: 1},
+{q: "¿Cuál es la capital de Corea del Sur?", a: ["Seúl", "Busan", "Incheon", "Daegu"], c: 0},
+{q: "¿Quién es el autor de 'Los hermanos Karamazov'?", a: ["Fiódor Dostoyevski", "León Tolstói", "Antón Chéjov", "Iván Turguénev"], c: 0},
+{q: "¿Qué país es famoso por el Himalaya?", a: ["India", "Nepal", "China", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de China?", a: ["Sun Yat-sen", "Mao Zedong", "Chiang Kai-shek", "Deng Xiaoping"], c: 0},
+{q: "¿Cuál es la capital de Vietnam?", a: ["Hanói", "Ciudad Ho Chi Minh", "Da Nang", "Hue"], c: 0},
+{q: "¿Quién pintó 'El beso'?", a: ["Gustav Klimt", "Egon Schiele", "Oskar Kokoschka", "Ferdinand Hodler"], c: 0},
+{q: "¿Qué país es famoso por el Gran Cañón?", a: ["EE.UU.", "Canadá", "México", "Brasil"], c: 0},
+{q: "¿Cuál es la capital de Rumanía?", a: ["Bucarest", "Cluj-Napoca", "Timișoara", "Iași"], c: 0},
+{q: "¿Quién es el autor de 'La vuelta al mundo en 80 días'?", a: ["Julio Verne", "Victor Hugo", "Alexandre Dumas", "Émile Zola"], c: 0},
+{q: "¿Qué país es famoso por la Gran Barrera de Coral?", a: ["Australia", "Nueva Zelanda", "Fiyi", "Indonesia"], c: 0},
+{q: "¿Cuál es la capital de Marruecos?", a: ["Casablanca", "Rabat", "Marrakech", "Fez"], c: 1},
+{q: "¿Quién es el autor de 'La peste'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "¿Qué país es famoso por el desierto del Sahara?", a: ["Egipto", "Argelia", "Libia", "Todos estos"], c: 3},
+{q: "¿Quién fue el primer presidente de Turquía?", a: ["Recep Tayyip Erdoğan", "Mustafa Kemal Atatürk", "İsmet İnönü", "Abdullah Gül"], c: 1},
+{q: "¿Cuál es la capital de Arabia Saudita?", a: ["Yeda", "Riad", "La Meca", "Medina"], c: 1},
+{q: "¿Quién pintó 'La ronda de noche'?", a: ["Rembrandt", "Vermeer", "Rubens", "Frans Hals"], c: 0},
+{q: "¿Qué país es famoso por la Gran Esfinge?", a: ["Egipto", "Grecia", "Turquía", "Libia"], c: 0},
+{q: "¿Cuál es la capital de Polonia?", a: ["Varsovia", "Cracovia", "Gdansk", "Breslavia"], c: 0},
+{q: "¿Quién es el autor de 'Los tres mosqueteros'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "¿Qué país es famoso por las Cataratas Victoria?", a: ["Zambia", "Zimbabue", "Ambos Zambia y Zimbabue", "Sudáfrica"], c: 2},
+{q: "¿Cuál es la capital de Irlanda?", a: ["Cork", "Dublín", "Galway", "Limerick"], c: 1},
+{q: "¿Quién es el autor de 'Ulises'?", a: ["James Joyce", "Samuel Beckett", "Oscar Wilde", "W.B. Yeats"], c: 0},
+{q: "¿Qué país es famoso por la Alhambra?", a: ["Italia", "España", "Portugal", "Francia"], c: 1},
+{q: "¿Quién fue el primer presidente de la Federación Rusa?", a: ["Vladimir Putin", "Boris Yeltsin", "Mijaíl Gorbachov", "Dmitri Medvédev"], c: 1},
+{q: "¿Cuál es la capital de la República Checa?", a: ["Praga", "Brno", "Ostrava", "Pilsen"], c: 0},
+{q: "¿Quién pintó 'Nenúfares'?", a: ["Claude Monet", "Pierre-Auguste Renoir", "Edgar Degas", "Paul Cézanne"], c: 0},
+{q: "¿Qué país es famoso por el Taj Mahal?", a: ["India", "Pakistán", "Bangladés", "Nepal"], c: 0},
+{q: "¿Cuál es la capital de Austria?", a: ["Salzburgo", "Viena", "Graz", "Innsbruck"], c: 1},
+{q: "¿Quién es el autor de 'El Conde de Montecristo'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "¿Qué país es famoso por el Mar Muerto?", a: ["Israel", "Jordania", "Ambos Israel y Jordania", "Egipto"], c: 2},
+{q: "¿Cuál es la capital de Finlandia?", a: ["Helsinki", "Espoo", "Tampere", "Turku"], c: 0},
+{q: "¿Quién es el autor de 'Crimen y castigo'?", a: ["León Tolstói", "Fiódor Dostoyevski", "Antón Chéjov", "Iván Turguénev"], c: 1},
+{q: "¿Qué país es famoso por el Kremlin?", a: ["Rusia", "Ucrania", "Bielorrusia", "Kazajistán"], c: 0},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Hungría?", a: ["Budapest", "Debrecen", "Szeged", "Miskolc"], c: 0},
+{q: "¿Quién pintó 'El grito'?", a: ["Edvard Munch", "Pablo Picasso", "Vincent van Gogh", "Claude Monet"], c: 0},
+{q: "¿Qué país es famoso por el Matterhorn?", a: ["Austria", "Suiza", "Francia", "Italia"], c: 1},
+{q: "¿Cuál es la capital de Dinamarca?", a: ["Aarhus", "Odense", "Copenhague", "Aalborg"], c: 2},
+{q: "¿Quién es el autor de 'El Principito'?", a: ["Antoine de Saint-Exupéry", "Victor Hugo", "Jules Verne", "Albert Camus"], c: 0},
+{q: "¿Qué país es famoso por las Islas Galápagos?", a: ["Perú", "Ecuador", "Chile", "Colombia"], c: 1},
+{q: "¿Cuál es la capital de los Países Bajos?", a: ["Róterdam", "Ámsterdam", "La Haya", "Utrecht"], c: 1},
+{q: "¿Quién es el autor de 'Los Miserables'?", a: ["Victor Hugo", "Émile Zola", "Gustave Flaubert", "Alexandre Dumas"], c: 0},
+{q: "¿Qué país es famoso por la Mezquita Azul?", a: ["Grecia", "Turquía", "Egipto", "Irán"], c: 1},
+{q: "¿Quién fue el primer presidente de la Quinta República Francesa?", a: ["Charles de Gaulle", "François Mitterrand", "Georges Pompidou", "Valéry Giscard d'Estaing"], c: 0},
+{q: "¿Cuál es la capital de Bélgica?", a: ["Bruselas", "Amberes", "Gante", "Brujas"], c: 0},
+{q: "¿Quién pintó 'El nacimiento de Venus'?", a: ["Sandro Botticelli", "Leonardo da Vinci", "Miguel Ángel", "Rafael"], c: 0},
+{q: "¿Qué país es conocido por el Monte Fuji?", a: ["China", "Japón", "Corea del Sur", "Vietnam"], c: 1},
+{q: "¿Cuál es la capital de Noruega?", a: ["Bergen", "Oslo", "Trondheim", "Stavanger"], c: 1},
+{q: "¿Quién es el autor de 'El extranjero'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "¿Qué país es famoso por la selva amazónica?", a: ["Brasil", "Colombia", "Perú", "Venezuela"], c: 0},
+{q: "¿Cuál es la capital de Suiza?", a: ["Zúrich", "Ginebra", "Berna", "Basilea"], c: 2},
+{q: "¿Quién es el autor de 'El viejo y el mar'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "¿Qué país es famoso por el Serengueti?", a: ["Kenia", "Tanzania", "Sudáfrica", "Botsuana"], c: 1},
+{q: "¿Quién fue el primer presidente de los Estados Unidos?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "¿Cuál es la capital de Sudáfrica?", a: ["Ciudad del Cabo", "Pretoria", "Bloemfontein", "Todas estas"], c: 3},
+{q: "¿Quién pintó 'La joven de la perla'?", a: ["Rembrandt", "Johannes Vermeer", "Vincent van Gogh", "Pieter Bruegel"], c: 1},
+{q: "¿Qué país es famoso por la Acrópolis?", a: ["Italia", "Grecia", "Turquía", "Egipto"], c: 1},
+{q: "¿Cuál es la capital de Portugal?", a: ["Oporto", "Lisboa", "Faro", "Coímbra"], c: 1},
+{q: "¿Quién es el fundador de Amazon?", a: ["Elon Musk", "Jeff Bezos", "Bill Gates", "Larry Page"], c: 1},
+{q: "¿Qué país es conocido por los Andes?", a: ["Perú", "Chile", "Argentina", "Todos estos"], c: 3},
+{q: "¿Cuál es la capital de México?", a: ["Guadalajara", "Ciudad de México", "Monterrey", "Cancún"], c: 1},
+{q: "¿Quién es el autor de 'El proceso'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "¿Qué país es famoso por la Gran Barrera de Coral?", a: ["Australia", "Nueva Zelanda", "Fiyi", "Indonesia"], c: 0},
+{q: "¿Quién fue el primer presidente de Sudáfrica tras el apartheid?", a: ["Nelson Mandela", "Thabo Mbeki", "Jacob Zuma", "F.W. de Klerk"], c: 0},
+{q: "¿Cuál es la capital de Suecia?", a: ["Estocolmo", "Gotemburgo", "Malmö", "Uppsala"], c: 0},
+{q: "¿Quién pintó 'La persistencia de la memoria'?", a: ["Pablo Picasso", "Salvador Dalí", "Joan Miró", "Henri Matisse"], c: 1},
+{q: "¿Qué país es famoso por el jarabe de arce?", a: ["EE.UU.", "Canadá", "Suecia", "Rusia"], c: 1},
+{q: "¿Cuál es la capital de China?", a: ["Shanghái", "Pekín", "Cantón", "Shenzhen"], c: 1},
+{q: "¿Quién inventó el avión?", a: ["Hermanos Wright", "Leonardo da Vinci", "Santos-Dumont", "Otto Lilienthal"], c: 0},
+{q: "¿Qué país es conocido por la Torre Eiffel?", a: ["Italia", "Francia", "Alemania", "España"], c: 1},
+{q: "¿Cuál es la capital de Alemania?", a: ["Múnich", "Berlín", "Fráncfort", "Hamburgo"], c: 1},
+{q: "¿Quién es el autor de 'Guerra y Paz'?", a: ["Fiódor Dostoyevski", "León Tolstói", "Antón Chéjov", "Iván Turguénev"], c: 1},
+{q: "¿Qué país es conocido por el Coliseo?", a: ["Grecia", "Italia", "Turquía", "Egipto"], c: 1},
+{q: "¿Quién fue la primera persona en llegar al Polo Sur?", a: ["Robert Falcon Scott", "Roald Amundsen", "Ernest Shackleton", "Richard Byrd"], c: 1},
+{q: "¿Cuál es la capital de India?", a: ["Bombay", "Delhi", "Bangalore", "Calcuta"], c: 1},
+{q: "¿Quién pintó 'La última cena'?", a: ["Leonardo da Vinci", "Miguel Ángel", "Rafael", "Caravaggio"], c: 0},
+{q: "¿Qué país es conocido como la Tierra de los Mil Lagos?", a: ["Suecia", "Finlandia", "Noruega", "Canadá"], c: 1},
+{q: "¿Cuál es la capital de Turquía?", a: ["Estambul", "Ankara", "Izmir", "Antalya"], c: 1},
+{q: "¿Quién es el fundador de Facebook?", a: ["Bill Gates", "Steve Jobs", "Mark Zuckerberg", "Elon Musk"], c: 2},
+{q: "¿Qué país es famoso por la Gran Muralla?", a: ["Japón", "China", "India", "Mongolia"], c: 1},
+{q: "¿Cuál es la capital de España?", a: ["Barcelona", "Madrid", "Valencia", "Sevilla"], c: 1},
+{q: "¿Quién pintó 'La noche estrellada'?", a: ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Edgar Degas"], c: 1},
+{q: "¿Qué país es conocido por las pirámides de Guiza?", a: ["Egipto", "México", "Perú", "Irak"], c: 0},
+{q: "¿Quién fue el primer hombre en escalar el Monte Everest?", a: ["Reinhold Messner", "Edmund Hillary", "Tenzing Norgay", "George Mallory"], c: 1},
+{q: "¿Cuál es la capital de Grecia?", a: ["Atenas", "Tesalónica", "Patras", "Heraclión"], c: 0},
+{q: "¿Quién es el autor de 'Don Quijote'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Pablo Neruda", "Federico García Lorca"], c: 0},
+{q: "¿Cuál es la capital de Japón?", a: ["Kioto", "Osaka", "Tokio", "Hiroshima"], c: 2},
+{q: "¿Quién es el autor de 'La Odisea'?", a: ["Homero", "Virgilio", "Sófocles", "Eurípides"], c: 0},
+{q: "¿Qué país es famoso por los tulipanes y los molinos de viento?", a: ["Bélgica", "Países Bajos", "Dinamarca", "Suecia"], c: 1},
+{q: "¿Cuál es el planeta más grande del sistema solar?", a: ["Tierra", "Marte", "Júpiter", "Saturno"], c: 2},
+{q: "¿Quién inventó la bombilla?", a: ["Nikola Tesla", "Thomas Edison", "Alexander Graham Bell", "Benjamin Franklin"], c: 1},
+{q: "¿Cuál es la capital de Rusia?", a: ["San Petersburgo", "Moscú", "Kazan", "Novosibirsk"], c: 1},
+{q: "¿Qué país es conocido por los canguros?", a: ["Nueva Zelanda", "Australia", "Sudáfrica", "Canadá"], c: 1},
+{q: "¿Quién fue la primera mujer en el espacio?", a: ["Valentina Tereshkova", "Sally Ride", "Mae Jemison", "Eileen Collins"], c: 0},
+{q: "¿Cuál es la capital de Italia?", a: ["Venecia", "Milán", "Roma", "Florencia"], c: 2},
+{q: "¿Quién escribió 'La Divina Comedia'?", a: ["Dante Alighieri", "Geoffrey Chaucer", "John Milton", "William Blake"], c: 0},
+{q: "¿Cuál es el símbolo químico del oro?", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+{q: "¿Quién fue la primera mujer en ganar un Premio Nobel?", a: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Lise Meitner"], c: 0},
+{q: "¿Qué guerra fue desencadenada por el asesinato del archiduque Francisco Fernando?", a: ["Primera Guerra Mundial", "Segunda Guerra Mundial", "La guerra de Crimea", "La guerra de Vietnam"], c: 0},
+{q: "¿Cuál es el país más pequeño del mundo?", a: ["Mónaco", "Ciudad del Vaticano", "San Marino", "Liechtenstein"], c: 1},
+{q: "¿Quién compuso Las Cuatro Estaciones?", a: ["Johann Sebastian Bach", "Wolfgang Amadeus Mozart", "Antonio Vivaldi", "Ludwig van Beethoven"], c: 2},
+{q: "¿Qué planeta es conocido como el Planeta Rojo?", a: ["Venus", "Marte", "Júpiter", "Saturno"], c: 1},
+{q: "¿Quién descubrió América en 1492?", a: ["Vasco da Gama", "Cristóbal Colón", "Fernando de Magallanes", "Américo Vespucio"], c: 1},
+{q: "¿Cuál es el idioma principal en Brasil?", a: ["Español", "Portugués", "Francés", "Inglés"], c: 1},
+{q: "¿Quién fue el primer hombre en el espacio?", a: ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "John Glenn"], c: 1},
+{q: "¿Qué elemento tiene el número atómico 1?", a: ["Oxígeno", "Hidrógeno", "Helio", "Carbono"], c: 1},
+{q: "¿Quién inventó el teléfono?", a: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"], c: 1},
+{q: "¿Qué país acogió los Juegos Olímpicos de verano en 2008?", a: ["Grecia", "China", "Australia", "Reino Unido"], c: 1},
+{q: "¿Cuál es el océano más grande del mundo?", a: ["Atlántico", "Índico", "Ártico", "Pacífico"], c: 3},
+{q: "¿Quién pintó 'Guernica'?", a: ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco Goya"], c: 1},
+{q: "¿Cuál es el órgano principal de la respiración?", a: ["El corazón", "El hígado", "El pulmón", "El riñón"], c: 2},
+{q: "¿En qué año comenzó la Revolución Francesa?", a: ["1789", "1792", "1804", "1776"], c: 0},
+{q: "¿Quién fundó el Imperio mongol?", a: ["Gengis Kan", "Kublai Kan", "Tamerlán", "Atila"], c: 0},
+{q: "¿Cuál es la capital de Australia?", a: ["Sídney", "Melbourne", "Canberra", "Perth"], c: 2},
+{q: "¿Quién escribió 'Cien años de soledad'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Pablo Neruda"], c: 0},
+{q: "¿Qué país es conocido como la Tierra del Sol Naciente?", a: ["China", "Japón", "Corea del Sur", "Tailandia"], c: 1},
+    {q: "¿Qué invento permitió la navegación transatlántica en el siglo XV?", a: ["La brújula", "La pólvora", "La máquina de vapor", "La imprenta"], c: 0},
+    {q: "¿Quién fue el primer presidente de la República Francesa?", a: ["Napoleón Bonaparte", "Luis Napoleón Bonaparte", "Charles de Gaulle", "Adolphe Thiers"], c: 1},
+    {q: "¿En qué año el hombre caminó en la Luna?", a: ["1965", "1969", "1972", "1959"], c: 1},
+    {q: "¿Qué científico descubrió la penicilina?", a: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch"], c: 1},
+    {q: "¿Qué evento marcó el final de la Segunda Guerra Mundial en Europa?", a: ["La batalla de Stalingrado", "El desembarco de Normandía", "La capitulación de Alemania", "El bombardeo de Hiroshima"], c: 2},
+    {q: "¿Quién escribió 'El Principito'?", a: ["Victor Hugo", "Antoine de Saint-Exupéry", "Jules Verne", "Albert Camus"], c: 1},
+    {q: "¿Cuál es el río más largo del mundo?", a: ["Nilo", "Amazonas", "Yangtsé", "Misisipi"], c: 1},
+    {q: "¿Quién ganó la Copa Mundial de Fútbol 1998?", a: ["Brasil", "Francia", "Alemania", "Italia"], c: 1},
+    {q: "¿Qué rey francés fue apodado el Rey Sol?", a: ["Luis XIV", "Luis XVI", "Francisco I", "Enrique IV"], c: 0},
+    {q: "¿Cuál es la capital de Canadá?", a: ["Toronto", "Vancouver", "Ottawa", "Montreal"], c: 2},
+],
+ar: [
+{q: "ما هي عاصمة بوليفيا؟", a: ["لاباز", "سوكر", "سانتا كروز", "كوتشابامبا"], c: 0},
+{q: "من هو مؤلف 'الأليف'؟", a: ["خورخي لويس بورخيس", "غابرييل غارسيا ماركيز", "ماريو فارغاس يوسا", "خوليو كورتاثر"], c: 0},
+{q: "أي دولة تشتهر بسهل البامبا؟", a: ["الأرجنتين", "البرازيل", "أوروغواي", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس للبرازيل؟", a: ["جيتوليو فارجاس", "ديودورو دا فونسيكا", "جوسيلينو كوبيتشيك", "لويس إيناسيو لولا دا سيلفا"], c: 1},
+{q: "ما هي عاصمة أوروغواي؟", a: ["مونتيفيديو", "بونتا ديل إستي", "سالتو", "بايساندو"], c: 0},
+{q: "من رسم 'أبابورو'؟", a: ["تارسِيلا دو أمارال", "كانديدو بورتيناري", "أنيتا مالفاتي", "إميليانو دي كافالكانتي"], c: 0},
+{q: "أي دولة تشتهر بغابات الأمازون؟", a: ["البرازيل", "كولومبيا", "بيرو", "جميع ما سبق"], c: 3},
+{q: "ما هي عاصمة باراغواي؟", a: ["أسونسيون", "سيوداد ديل إستي", "إنكارناسيون", "سان لورينزو"], c: 0},
+{q: "من هو مؤلف 'مذكرات براز كوباس بعد الوفاة'؟", a: ["ماشادو دي أسيس", "خورخي أمادو", "كلاريس ليسبكتور", "جواو غيماريش روزا"], c: 0},
+{q: "أي دولة تشتهر بشلالات آنجل؟", a: ["فنزويلا", "البرازيل", "كولومبيا", "الإكوادور"], c: 0},
+{q: "ما هي عاصمة الأرجنتين؟", a: ["بوينس آيرس", "سانتياغو", "ليما", "مونتيفيديو"], c: 0},
+{q: "من هو مؤلف 'الشيخ والبحر'؟", a: ["إرنست همنغواي", "ف. سكوت فيتزجيرالد", "جون شتاينبك", "ويليام فوكنر"], c: 0},
+{q: "أي دولة تشتهر بجبال الأنديز؟", a: ["بيرو", "تشيلي", "الأرجنتين", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة تشيلي؟", a: ["سانتياغو", "فالبارايسو", "كونسيبسيون", "لا سيرينا"], c: 0},
+{q: "من رسم 'إصرار الذاكرة'؟", a: ["بابلو بيكاسو", "سلفادور دالي", "خوان ميرو", "هنري ماتيس"], c: 1},
+{q: "أي دولة تشتهر بنهر الأمازون؟", a: ["البرازيل", "بيرو", "كولومبيا", "جميع ما سبق"], c: 3},
+{q: "ما هي عاصمة فنزويلا؟", a: ["كاراكاس", "ماراكايبو", "فالنسيا", "باركيسيميتو"], c: 0},
+{q: "من هو مؤلف 'مئة عام من العزلة'؟", a: ["غابرييل غارسيا ماركيز", "ماريو فارغاس يوسا", "خوليو كورتاثر", "بابلو نيرودا"], c: 0},
+{q: "أي دولة تشتهر بصحراء أتاكاما؟", a: ["تشيلي", "بيرو", "الأرجنتين", "بوليفيا"], c: 0},
+{q: "ما هي عاصمة كينيا؟", a: ["نيروبي", "مومباسا", "كيسومو", "ناكورو"], c: 0},
+{q: "من هو مؤلف 'عناقيد الغضب'؟", a: ["جون شتاينبك", "إرنست همنغواي", "ف. سكوت فيتزجيرالد", "ويليام فوكنر"], c: 0},
+{q: "أي دولة تشتهر بكليمنجارو؟", a: ["كينيا", "تنزانيا", "أوغندا", "إثيوبيا"], c: 1},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة نيجيريا؟", a: ["لاغوس", "أبوجا", "كانو", "إبادان"], c: 1},
+{q: "من رسم 'مدرسة أثينا'؟", a: ["رافائيل", "ليوناردو دافنشي", "ميكيلانجيلو", "كارافاجيو"], c: 0},
+{q: "أي دولة تشتهر بنهر الغانج؟", a: ["الهند", "بنغلاديش", "نيبال", "باكستان"], c: 0},
+{q: "ما هي عاصمة بيرو؟", a: ["ليما", "كوسكو", "أريكويبا", "تروخيو"], c: 0},
+{q: "من هو مؤلف 'الصخب والعنف'؟", a: ["ويليام فوكنر", "إرنست همنغواي", "ف. سكوت فيتزجيرالد", "جون شتاينبك"], c: 0},
+{q: "أي دولة تشتهر بشلالات إجوازو؟", a: ["البرازيل", "الأرجنتين", "كلاهما البرازيل والأرجنتين", "باراغواي"], c: 2},
+{q: "ما هي عاصمة باكستان؟", a: ["كراتشي", "إسلام آباد", "لاهور", "بيشاور"], c: 1},
+{q: "من هو مؤلف 'الأبله'؟", a: ["فيودور دوستويفسكي", "ليو تولستوي", "أنطون تشيخوف", "إيفان تورغينيف"], c: 0},
+{q: "أي دولة تشتهر بنهر الدانوب؟", a: ["ألمانيا", "النمسا", "المجر", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة أوكرانيا؟", a: ["لفيف", "كييف", "أوديسا", "خاركيف"], c: 1},
+{q: "من رسم 'حديقة المباهج الأرضية'؟", a: ["هيرونيموس بوش", "بيتر بروغل", "جان فان إيك", "رامبرانت"], c: 0},
+{q: "أي دولة تشتهر بجبال الأورال؟", a: ["روسيا", "كازاخستان", "أوكرانيا", "بيلاروسيا"], c: 0},
+{q: "ما هي عاصمة كولومبيا؟", a: ["بوغوتا", "ميديلين", "كالي", "قرطاجنة"], c: 0},
+{q: "من هو مؤلف 'مدام بوفاري'؟", a: ["غوستاف فلوبير", "إميل زولا", "فيكتور هوغو", "ألكسندر دوما"], c: 0},
+{q: "أي دولة تشتهر بالحاجز المرجاني العظيم؟", a: ["أستراليا", "نيوزيلندا", "فيجي", "إندونيسيا"], c: 0},
+{q: "ما هي عاصمة إندونيسيا؟", a: ["جاكرتا", "بالي", "سورابايا", "باندونغ"], c: 0},
+{q: "من هو مؤلف 'الجبل السحري'؟", a: ["توماس مان", "فرانز كافكا", "هيرمان هيسه", "برتولت بريشت"], c: 0},
+{q: "أي دولة تشتهر بجبال الألب؟", a: ["سويسرا", "النمسا", "فرنسا", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة الفلبين؟", a: ["مانيلا", "سيبو", "دافاو", "كويزون سيتي"], c: 0},
+{q: "من رسم 'خلق آدم'؟", a: ["ميكيلانجيلو", "ليوناردو دافنشي", "رافائيل", "كارافاجيو"], c: 0},
+{q: "أي دولة تشتهر بنهر الأمازون؟", a: ["البرازيل", "بيرو", "كولومبيا", "جميع ما سبق"], c: 3},
+{q: "ما هي عاصمة تشيلي؟", a: ["سانتياغو", "فالبارايسو", "كونسيبسيون", "لا سيرينا"], c: 0},
+{q: "من هو مؤلف 'الأحمر والأسود'؟", a: ["ستاندال", "بلزاك", "فلوبير", "زولا"], c: 0},
+{q: "أي دولة تشتهر بأهرامات الجيزة؟", a: ["مصر", "المكسيك", "بيرو", "العراق"], c: 0},
+{q: "ما هي عاصمة كوريا الجنوبية؟", a: ["سيول", "بوسان", "إنتشون", "دايغو"], c: 0},
+{q: "من هو مؤلف 'الإخوة كارامازوف'؟", a: ["فيودور دوستويفسكي", "ليو تولستوي", "أنطون تشيخوف", "إيفان تورغينيف"], c: 0},
+{q: "أي دولة تشتهر بسلسلة جبال الهيمالايا؟", a: ["الهند", "نيبال", "الصين", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس للصين؟", a: ["صن يات سين", "ماو تسي تونغ", "تشيانغ كاي شيك", "دينغ شياو بينغ"], c: 0},
+{q: "ما هي عاصمة فيتنام؟", a: ["هانوي", "مدينة هو تشي منه", "دا نانغ", "هوي"], c: 0},
+{q: "من رسم 'القبلة'؟", a: ["غوستاف كليمت", "إيغون شيليه", "أوسكار كوكوشكا", "فرديناند هودلر"], c: 0},
+{q: "أي دولة تشتهر بالأوتباك؟", a: ["أستراليا", "نيوزيلندا", "جنوب أفريقيا", "كندا"], c: 0},
+{q: "ما هي عاصمة نيوزيلندا؟", a: ["أوكلاند", "ويلينغتون", "كرايستشيرش", "هاميلتون"], c: 1},
+{q: "من هو مؤلف 'أحدب نوتردام'؟", a: ["فيكتور هوغو", "ألكسندر دوما", "جول فيرن", "إميل زولا"], c: 0},
+{q: "أي دولة تشتهر بسور الصين العظيم؟", a: ["اليابان", "الصين", "الهند", "منغوليا"], c: 1},
+{q: "ما هي عاصمة المغرب؟", a: ["الدار البيضاء", "الرباط", "مراكش", "فاس"], c: 1},
+{q: "من هو مؤلف 'الطاعون'؟", a: ["ألبير كامو", "جان بول سارتر", "سيمون دي بوفوار", "مارسيل بروست"], c: 0},
+{q: "أي دولة تشتهر بصحراء الصحراء الكبرى؟", a: ["مصر", "الجزائر", "ليبيا", "جميع ما سبق"], c: 3},
+{q: "من كان أول رئيس لتركيا؟", a: ["رجب طيب أردوغان", "مصطفى كمال أتاتورك", "عصمت إينونو", "عبد الله غول"], c: 1},
+{q: "ما هي عاصمة المملكة العربية السعودية؟", a: ["جدة", "الرياض", "مكة", "المدينة المنورة"], c: 1},
+{q: "من رسم 'دورية الليل'؟", a: ["رامبرانت", "فيرمير", "روبينز", "فرانس هالس"], c: 0},
+{q: "أي دولة تشتهر بجبال الأنديز؟", a: ["بيرو", "تشيلي", "الأرجنتين", "جميع ما سبق"], c: 3},
+{q: "ما هي عاصمة تايلاند؟", a: ["فوكيت", "بانكوك", "شيانغ ماي", "باتايا"], c: 1},
+{q: "من هو مؤلف 'التحول'؟", a: ["فرانز كافكا", "توماس مان", "هيرمان هيسه", "برتولت بريشت"], c: 0},
+{q: "أي دولة تشتهر ببرج بيزا المائل؟", a: ["فرنسا", "إيطاليا", "إسبانيا", "البرتغال"], c: 1},
+{q: "ما هي عاصمة إيرلندا؟", a: ["كورك", "دبلن", "غالواي", "ليمريك"], c: 1},
+{q: "من هو مؤلف 'يوليسيس'؟", a: ["جيمس جويس", "صموئيل بيكيت", "أوسكار وايلد", "ويليام بتلر ييتس"], c: 0},
+{q: "أي دولة تشتهر بقصر الحمراء؟", a: ["إيطاليا", "إسبانيا", "البرتغال", "فرنسا"], c: 1},
+{q: "من كان أول رئيس للاتحاد الروسي؟", a: ["فلاديمير بوتين", "بوريس يلتسين", "ميخائيل غورباتشوف", "ديمتري ميدفيديف"], c: 1},
+{q: "ما هي عاصمة جمهورية التشيك؟", a: ["براغ", "برنو", "أوسترافا", "بلزن"], c: 0},
+{q: "من رسم 'زنابق الماء'؟", a: ["كلود مونيه", "بيير أوغست رينوار", "إدغار ديغا", "بول سيزان"], c: 0},
+{q: "أي دولة تشتهر بالجراند كانيون؟", a: ["الولايات المتحدة", "كندا", "المكسيك", "البرازيل"], c: 0},
+{q: "ما هي عاصمة رومانيا؟", a: ["بوخارست", "كلوج نابوكا", "تيميشوارا", "ياش"], c: 0},
+{q: "من هو مؤلف 'حول العالم في 80 يومًا'؟", a: ["جول فيرن", "فيكتور هوغو", "ألكسندر دوما", "إميل زولا"], c: 0},
+{q: "أي دولة تشتهر بالحاجز المرجاني العظيم؟", a: ["أستراليا", "نيوزيلندا", "فيجي", "إندونيسيا"], c: 0},
+{q: "ما هي عاصمة فنلندا؟", a: ["هلسنكي", "إسبو", "تامبيري", "توركو"], c: 0},
+{q: "من هو مؤلف 'الجريمة والعقاب'؟", a: ["ليو تولستوي", "فيودور دوستويفسكي", "أنطون تشيخوف", "إيفان تورغينيف"], c: 1},
+{q: "أي دولة تشتهر بالكرملين؟", a: ["روسيا", "أوكرانيا", "بيلاروسيا", "كازاخستان"], c: 0},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة المجر؟", a: ["بودابست", "دبرتسن", "سيجد", "ميشكولتس"], c: 0},
+{q: "من رسم 'الصرخة'؟", a: ["إدفارد مونك", "بابلو بيكاسو", "فنسنت فان غوخ", "كلود مونيه"], c: 0},
+{q: "أي دولة تشتهر بأبو الهول العظيم؟", a: ["مصر", "اليونان", "تركيا", "ليبيا"], c: 0},
+{q: "ما هي عاصمة بولندا؟", a: ["وارسو", "كراكوف", "غدانسك", "فروتسواف"], c: 0},
+{q: "من هو مؤلف 'الفرسان الثلاثة'؟", a: ["ألكسندر دوما", "فيكتور هوغو", "جول فيرن", "إميل زولا"], c: 0},
+{q: "أي دولة تشتهر بشلالات فيكتوريا؟", a: ["زامبيا", "زيمبابوي", "كلاهما زامبيا وزيمبابوي", "جنوب أفريقيا"], c: 2},
+{q: "ما هي عاصمة هولندا؟", a: ["روتردام", "أمستردام", "لاهاي", "أوتريخت"], c: 1},
+{q: "من هو مؤلف 'البؤساء'؟", a: ["فيكتور هوغو", "إميل زولا", "غوستاف فلوبير", "ألكسندر دوما"], c: 0},
+{q: "أي دولة تشتهر بالمسجد الأزرق؟", a: ["اليونان", "تركيا", "مصر", "إيران"], c: 1},
+{q: "من كان أول رئيس للجمهورية الفرنسية الخامسة؟", a: ["شارل ديغول", "فرانسوا ميتران", "جورج بومبيدو", "فاليري جيسكار ديستان"], c: 0},
+{q: "ما هي عاصمة بلجيكا؟", a: ["بروكسل", "أنتويرب", "غنت", "بروج"], c: 0},
+{q: "من رسم 'ولادة فينوس'؟", a: ["ساندرو بوتيتشيلي", "ليوناردو دافنشي", "ميكيلانجيلو", "رافائيل"], c: 0},
+{q: "أي دولة تشتهر بتاج محل؟", a: ["الهند", "باكستان", "بنغلاديش", "نيبال"], c: 0},
+{q: "ما هي عاصمة النمسا؟", a: ["سالزبورغ", "فيينا", "غراتس", "إنسبروك"], c: 1},
+{q: "من هو مؤلف 'كونت مونت كريستو'؟", a: ["ألكسندر دوما", "فيكتور هوغو", "جول فيرن", "إميل زولا"], c: 0},
+{q: "أي دولة تشتهر بالبحر الميت؟", a: ["إسرائيل", "الأردن", "كلاهما إسرائيل والأردن", "مصر"], c: 2},
+{q: "ما هي عاصمة سويسرا؟", a: ["زيورخ", "جنيف", "برن", "بازل"], c: 2},
+{q: "من هو مؤلف 'الشيخ والبحر'؟", a: ["إرنست همنغواي", "ف. سكوت فيتزجيرالد", "جون شتاينبك", "ويليام فوكنر"], c: 0},
+{q: "أي دولة تشتهر بسيرينجيتي؟", a: ["كينيا", "تنزانيا", "جنوب أفريقيا", "بوتسوانا"], c: 1},
+{q: "من كان أول رئيس للولايات المتحدة؟", a: ["توماس جيفرسون", "إبراهام لينكولن", "جورج واشنطن", "جون آدامز"], c: 2},
+{q: "ما هي عاصمة جنوب أفريقيا؟", a: ["كيب تاون", "بريتوريا", "بلومفونتين", "جميع ما سبق"], c: 3},
+{q: "من رسم 'الفتاة ذات القرط اللؤلؤي'؟", a: ["رامبرانت", "يوهانس فيرمير", "فنسنت فان غوخ", "بيتر بروغل"], c: 1},
+{q: "أي دولة تشتهر بماترهورن؟", a: ["النمسا", "سويسرا", "فرنسا", "إيطاليا"], c: 1},
+{q: "ما هي عاصمة الدنمارك؟", a: ["آرهوس", "أودنسه", "كوبنهاغن", "ألبورغ"], c: 2},
+{q: "من هو مؤلف 'الأمير الصغير'؟", a: ["أنطوان دو سانت-إكزوبيري", "فيكتور هوغو", "جول فيرن", "ألبير كامو"], c: 0},
+{q: "أي دولة تشتهر بجزر غالاباغوس؟", a: ["بيرو", "الإكوادور", "تشيلي", "كولومبيا"], c: 1},
+{q: "ما هي عاصمة المكسيك؟", a: ["غوادالاخارا", "مكسيكو سيتي", "مونتيري", "كانكون"], c: 1},
+{q: "من هو مؤلف 'المحاكمة'؟", a: ["فرانز كافكا", "توماس مان", "هيرمان هيسه", "برتولت بريشت"], c: 0},
+{q: "أي دولة تشتهر بالحاجز المرجاني العظيم؟", a: ["أستراليا", "نيوزيلندا", "فيجي", "إندونيسيا"], c: 0},
+{q: "من كان أول رئيس لجنوب أفريقيا بعد الفصل العنصري؟", a: ["نيلسون مانديلا", "ثابو مبيكي", "جاكوب زوما", "ف. و. دي كليرك"], c: 0},
+{q: "ما هي عاصمة السويد؟", a: ["ستوكهولم", "غوتنبرغ", "مالمو", "أوبسالا"], c: 0},
+{q: "من رسم 'إصرار الذاكرة'؟", a: ["بابلو بيكاسو", "سلفادور دالي", "خوان ميرو", "هنري ماتيس"], c: 1},
+{q: "أي دولة تشتهر بجبل فوجي؟", a: ["الصين", "اليابان", "كوريا الجنوبية", "فيتنام"], c: 1},
+{q: "ما هي عاصمة النرويج؟", a: ["برغن", "أوسلو", "تروندهايم", "ستافنجر"], c: 1},
+{q: "من هو مؤلف 'الغريب'؟", a: ["ألبير كامو", "جان بول سارتر", "سيمون دي بوفوار", "مارسيل بروست"], c: 0},
+{q: "أي دولة تشتهر بغابات الأمازون؟", a: ["البرازيل", "كولومبيا", "بيرو", "فنزويلا"], c: 0},
+{q: "ما هي عاصمة ألمانيا؟", a: ["ميونيخ", "برلين", "فرانكفورت", "هامبورغ"], c: 1},
+{q: "من هو مؤلف 'الحرب والسلم'؟", a: ["فيودور دوستويفسكي", "ليو تولستوي", "أنطون تشيخوف", "إيفان تورغينيف"], c: 1},
+{q: "أي دولة تشتهر بالكولوسيوم؟", a: ["اليونان", "إيطاليا", "تركيا", "مصر"], c: 1},
+{q: "من كان أول من وصل إلى القطب الجنوبي؟", a: ["روبرت فالكون سكوت", "روالد أموندسن", "إرنست شاكلتون", "ريتشارد بيرد"], c: 1},
+{q: "ما هي عاصمة الهند؟", a: ["مومباي", "دلهي", "بنغالور", "كولكاتا"], c: 1},
+{q: "من رسم 'العشاء الأخير'؟", a: ["ليوناردو دافنشي", "ميكيلانجيلو", "رافائيل", "كارافاجيو"], c: 0},
+{q: "أي دولة تشتهر بالأكروبوليس؟", a: ["إيطاليا", "اليونان", "تركيا", "مصر"], c: 1},
+{q: "ما هي عاصمة البرتغال؟", a: ["بورتو", "لشبونة", "فارو", "كويمبرا"], c: 1},
+{q: "من هو مؤسس أمازون؟", a: ["إيلون ماسك", "جيف بيزوس", "بيل غيتس", "لاري بايج"], c: 1},
+{q: "أي دولة تشتهر بجبال الأنديز؟", a: ["بيرو", "تشيلي", "الأرجنتين", "جميع ما سبق"], c: 3},
+{q: "ما هي عاصمة إسبانيا؟", a: ["برشلونة", "مدريد", "فالنسيا", "إشبيلية"], c: 1},
+{q: "من رسم 'ليلة النجوم'؟", a: ["كلود مونيه", "فنسنت فان غوخ", "بول سيزان", "إدغار ديغا"], c: 1},
+{q: "أي دولة تشتهر بأهرامات الجيزة؟", a: ["مصر", "المكسيك", "بيرو", "العراق"], c: 0},
+{q: "من كان أول من تسلق جبل إيفرست؟", a: ["راينهولد ميسنر", "إدموند هيلاري", "تينزينغ نورغاي", "جورج مالوري"], c: 1},
+{q: "ما هي عاصمة اليونان؟", a: ["أثينا", "تسالونيكي", "باتراس", "هيراكليون"], c: 0},
+{q: "من هو مؤلف 'دون كيشوت'؟", a: ["ميغيل دي ثيربانتس", "غابرييل غارسيا ماركيز", "بابلو نيرودا", "فيديريكو غارسيا لوركا"], c: 0},
+{q: "أي دولة تشتهر بشراب القيقب؟", a: ["الولايات المتحدة", "كندا", "السويد", "روسيا"], c: 1},
+{q: "ما هي عاصمة الصين؟", a: ["شنغهاي", "بكين", "قوانغتشو", "شنتشن"], c: 1},
+{q: "من اخترع الطائرة؟", a: ["الأخوين رايت", "ليوناردو دافنشي", "سانتوس دومون", "أوتو ليلينتال"], c: 0},
+{q: "أي دولة تشتهر ببرج إيفل؟", a: ["إيطاليا", "فرنسا", "ألمانيا", "إسبانيا"], c: 1},
+{q: "ما هي عاصمة اليابان؟", a: ["كيوتو", "أوساكا", "طوكيو", "هيروشيما"], c: 2},
+{q: "من هو مؤلف 'الأوديسة'؟", a: ["هوميروس", "فيرجيل", "سوفوكليس", "يوربيديس"], c: 0},
+{q: "أي دولة تشتهر بالزنبق وطواحين الهواء؟", a: ["بلجيكا", "هولندا", "الدنمارك", "السويد"], c: 1},
+{q: "ما هو أكبر كوكب في المجموعة الشمسية؟", a: ["الأرض", "المريخ", "المشتري", "زحل"], c: 2},
+{q: "من اخترع المصباح الكهربائي؟", a: ["نيكولا تسلا", "توماس إديسون", "ألكسندر غراهام بيل", "بنجامين فرانكلين"], c: 1},
+{q: "ما هي عاصمة روسيا؟", a: ["سانت بطرسبرغ", "موسكو", "قازان", "نوفوسيبيرسك"], c: 1},
+{q: "أي دولة تشتهر بالكنغر؟", a: ["نيوزيلندا", "أستراليا", "جنوب أفريقيا", "كندا"], c: 1},
+{q: "من كانت أول امرأة في الفضاء؟", a: ["فالنتينا تيريشكوفا", "سالي رايد", "ماي جيميسون", "إيلين كولينز"], c: 0},
+{q: "ما هي عاصمة إيطاليا؟", a: ["البندقية", "ميلانو", "روما", "فلورنسا"], c: 2},
+{q: "من كتب 'الكوميديا الإلهية'؟", a: ["دانتي أليغييري", "جيفري تشوسر", "جون ميلتون", "ويليام بليك"], c: 0},
+{q: "ما هو الرمز الكيميائي للذهب؟", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+{q: "من كانت أول امرأة تفوز بجائزة نوبل؟", a: ["ماري كوري", "روزاليند فرانكلين", "آدا لوفلايس", "ليز مايتنر"], c: 0},
+{q: "أي حرب اندلعت بسبب اغتيال الأرشيدوق فرانز فرديناند؟", a: ["الحرب العالمية الأولى", "الحرب العالمية الثانية", "حرب القرم", "حرب فيتنام"], c: 0},
+{q: "ما هي أصغر دولة في العالم؟", a: ["موناكو", "الفاتيكان", "سان مارينو", "ليختنشتاين"], c: 1},
+{q: "من ألّف الفصول الأربعة؟", a: ["يوهان سباستيان باخ", "فولفغانغ أماديوس موزارت", "أنطونيو فيفالدي", "لودفيغ فان بيتهوفن"], c: 2},
+{q: "أي كوكب يُعرف بالكوكب الأحمر؟", a: ["الزهرة", "المريخ", "المشتري", "زحل"], c: 1},
+{q: "من اكتشف أمريكا عام 1492؟", a: ["فاسكو دا غاما", "كريستوفر كولومبوس", "فرناندو ماجلان", "أمريكو فسبوتشي"], c: 1},
+{q: "ما هي اللغة الرئيسية في البرازيل؟", a: ["الإسبانية", "البرتغالية", "الفرنسية", "الإنجليزية"], c: 1},
+{q: "من كان أول إنسان في الفضاء؟", a: ["نيل أرمسترونغ", "يوري غاغارين", "باز ألدرين", "جون غلين"], c: 1},
+{q: "أي عنصر يحمل العدد الذري 1؟", a: ["الأكسجين", "الهيدروجين", "الهيليوم", "الكربون"], c: 1},
+{q: "من اخترع الهاتف؟", a: ["توماس إديسون", "ألكسندر غراهام بيل", "نيكولا تسلا", "غولييلمو ماركوني"], c: 1},
+{q: "أي دولة استضافت الألعاب الأولمبية الصيفية 2008؟", a: ["اليونان", "الصين", "أستراليا", "المملكة المتحدة"], c: 1},
+{q: "ما هو أكبر محيط في العالم؟", a: ["الأطلسي", "الهندي", "المتجمد الشمالي", "الهادئ"], c: 3},
+{q: "من رسم لوحة 'غيرنيكا'؟", a: ["سلفادور دالي", "بابلو بيكاسو", "خوان ميرو", "فرانسيسكو غويا"], c: 1},
+{q: "ما هو العضو الرئيسي في التنفس؟", a: ["القلب", "الكبد", "الرئة", "الكلى"], c: 2},
+{q: "في أي سنة بدأت الثورة الفرنسية؟", a: ["1789", "1792", "1804", "1776"], c: 0},
+{q: "من أسس الإمبراطورية المغولية؟", a: ["جنكيز خان", "قوبلاي خان", "تيمورلنك", "أتيلا"], c: 0},
+{q: "ما هي عاصمة أستراليا؟", a: ["سيدني", "ملبورن", "كانبيرا", "بيرث"], c: 2},
+{q: "من كتب 'مئة عام من العزلة'؟", a: ["غابرييل غارسيا ماركيز", "ماريو فارغاس يوسا", "خوليو كورتاثر", "بابلو نيرودا"], c: 0},
+{q: "أي دولة تُعرف بأرض الشمس المشرقة؟", a: ["الصين", "اليابان", "كوريا الجنوبية", "تايلاند"], c: 1},
+    {q: "ما الاختراع الذي مكّن الملاحة عبر المحيط الأطلسي في القرن الخامس عشر؟", a: ["البوصلة", "البارود", "المحرك البخاري", "المطبعة"], c: 0},
+    {q: "من كان أول رئيس للجمهورية الفرنسية؟", a: ["نابليون بونابرت", "لويس نابليون بونابرت", "شارل ديغول", "أدولف تيير"], c: 1},
+    {q: "في أي عام مشى الإنسان على سطح القمر؟", a: ["1965", "1969", "1972", "1959"], c: 1},
+    {q: "أي عالم اكتشف البنسلين؟", a: ["لويس باستور", "ألكسندر فليمنغ", "ماري كوري", "روبرت كوخ"], c: 1},
+    {q: "ما الحدث الذي أنهى الحرب العالمية الثانية في أوروبا؟", a: ["معركة ستالينغراد", "إنزال نورماندي", "استسلام ألمانيا", "قصف هيروشيما"], c: 2},
+    {q: "من كتب 'الأمير الصغير'؟", a: ["فيكتور هوغو", "أنطوان دو سانت-إكزوبيري", "جول فيرن", "ألبير كامو"], c: 1},
+    {q: "ما هو أطول نهر في العالم؟", a: ["النيل", "الأمازون", "اليانغتسي", "الميسيسيبي"], c: 1},
+    {q: "من فاز بكأس العالم لكرة القدم 1998؟", a: ["البرازيل", "فرنسا", "ألمانيا", "إيطاليا"], c: 1},
+    {q: "أي ملك فرنسي لُقّب بملك الشمس؟", a: ["لويس الرابع عشر", "لويس السادس عشر", "فرانسوا الأول", "هنري الرابع"], c: 0},
+    {q: "ما هي عاصمة كندا؟", a: ["تورونتو", "فانكوفر", "أوتاوا", "مونتريال"], c: 2},
+],
+de: [
+{q: "Welches Land ist berühmt für den Fuji?", a: ["China", "Japan", "Südkorea", "Vietnam"], c: 1},
+{q: "Was ist die Hauptstadt von Norwegen?", a: ["Bergen", "Oslo", "Trondheim", "Stavanger"], c: 1},
+{q: "Wer ist der Autor von 'Der Fremde'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "Welches Land ist berühmt für den Amazonas-Regenwald?", a: ["Brasilien", "Kolumbien", "Peru", "Venezuela"], c: 0},
+{q: "Was ist die Hauptstadt der Schweiz?", a: ["Zürich", "Genf", "Bern", "Basel"], c: 2},
+{q: "Wer ist der Autor von 'Der alte Mann und das Meer'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Welches Land ist berühmt für die Akropolis?", a: ["Italien", "Griechenland", "Türkei", "Zypern"], c: 1},
+{q: "Was ist die Hauptstadt von Indonesien?", a: ["Jakarta", "Bali", "Surabaya", "Bandung"], c: 0},
+{q: "Wer ist der Autor von 'Die Leiden des jungen Werther'?", a: ["Johann Wolfgang von Goethe", "Friedrich Schiller", "Heinrich Heine", "Gotthold Ephraim Lessing"], c: 0},
+{q: "Welches Land ist berühmt für die Pyramiden von Gizeh?", a: ["Mexiko", "Ägypten", "Sudan", "Indien"], c: 1},
+{q: "Was ist die Hauptstadt von Südkorea?", a: ["Seoul", "Busan", "Incheon", "Daegu"], c: 0},
+{q: "Wer ist der Autor von 'Der Tod in Venedig'?", a: ["Thomas Mann", "Franz Kafka", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für die Chinesische Mauer?", a: ["Japan", "China", "Mongolei", "Südkorea"], c: 1},
+{q: "Was ist die Hauptstadt von Saudi-Arabien?", a: ["Riad", "Dschidda", "Mekka", "Medina"], c: 0},
+{q: "Wer ist der Autor von 'Der Meister und Margarita'?", a: ["Michail Bulgakow", "Leo Tolstoi", "Fjodor Dostojewski", "Anton Tschechow"], c: 0},
+{q: "Welches Land ist berühmt für die Tempel von Angkor?", a: ["Thailand", "Kambodscha", "Vietnam", "Laos"], c: 1},
+{q: "Was ist die Hauptstadt von Vietnam?", a: ["Hanoi", "Ho-Chi-Minh-Stadt", "Da Nang", "Hue"], c: 0},
+{q: "Wer ist der Autor von 'Der kleine Prinz'?", a: ["Antoine de Saint-Exupéry", "Marcel Proust", "Albert Camus", "Jean-Paul Sartre"], c: 0},
+{q: "Welches Land ist berühmt für die Galápagos-Inseln?", a: ["Ecuador", "Peru", "Chile", "Kolumbien"], c: 0},
+{q: "Was ist die Hauptstadt von Nigeria?", a: ["Abuja", "Lagos", "Kano", "Ibadan"], c: 0},
+{q: "Wer ist der Autor von 'Der Prozess'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für die Anden?", a: ["Peru", "Chile", "Argentinien", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Kolumbien?", a: ["Bogotá", "Medellín", "Cali", "Barranquilla"], c: 0},
+{q: "Wer ist der Autor von 'Hundert Jahre Einsamkeit'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Carlos Fuentes"], c: 0},
+{q: "Welches Land ist berühmt für die Niagarafälle?", a: ["Kanada", "USA", "Beide", "Mexiko"], c: 2},
+{q: "Was ist die Hauptstadt von Peru?", a: ["Lima", "Cusco", "Arequipa", "Trujillo"], c: 0},
+{q: "Wer ist der Autor von 'Der Glöckner von Notre-Dame'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für Machu Picchu?", a: ["Peru", "Bolivien", "Chile", "Ecuador"], c: 0},
+{q: "Was ist die Hauptstadt von Chile?", a: ["Santiago", "Valparaíso", "Concepción", "La Serena"], c: 0},
+{q: "Wer ist der Autor von 'Die Schatzinsel'?", a: ["Robert Louis Stevenson", "Mark Twain", "Charles Dickens", "Jack London"], c: 0},
+{q: "Welches Land ist berühmt für die Osterinsel?", a: ["Chile", "Peru", "Argentinien", "Brasilien"], c: 0},
+{q: "Was ist die Hauptstadt von Venezuela?", a: ["Caracas", "Maracaibo", "Valencia", "Barquisimeto"], c: 0},
+{q: "Wer ist der Autor von 'Der große Gatsby'?", a: ["F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Welches Land ist berühmt für die Fjorde?", a: ["Schweden", "Norwegen", "Finnland", "Dänemark"], c: 1},
+{q: "Was ist die Hauptstadt von Norwegen?", a: ["Bergen", "Oslo", "Trondheim", "Stavanger"], c: 1},
+{q: "Wer ist der Autor von 'Faust'?", a: ["Johann Wolfgang von Goethe", "Friedrich Schiller", "Heinrich Heine", "Gotthold Ephraim Lessing"], c: 0},
+{q: "Welches Land ist berühmt für die Rocky Mountains?", a: ["Kanada", "USA", "Beide", "Mexiko"], c: 2},
+{q: "Was ist die Hauptstadt von Kanada?", a: ["Toronto", "Vancouver", "Ottawa", "Montreal"], c: 2},
+{q: "Wer ist der Autor von 'Der Steppenwolf'?", a: ["Hermann Hesse", "Franz Kafka", "Thomas Mann", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für die Alpen?", a: ["Frankreich", "Schweiz", "Österreich", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Österreich?", a: ["Wien", "Salzburg", "Graz", "Innsbruck"], c: 0},
+{q: "Wer ist der Autor von 'Die drei Musketiere'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für die Serengeti?", a: ["Kenia", "Tansania", "Südafrika", "Botswana"], c: 1},
+{q: "Was ist die Hauptstadt von Finnland?", a: ["Helsinki", "Tampere", "Turku", "Oulu"], c: 0},
+{q: "Wer ist der Autor von 'Der Name der Rose'?", a: ["Umberto Eco", "Italo Calvino", "Alessandro Manzoni", "Primo Levi"], c: 0},
+{q: "Welches Land ist berühmt für die Pyramiden von Gizeh?", a: ["Mexiko", "Ägypten", "Sudan", "Indien"], c: 1},
+{q: "Was ist die Hauptstadt von Portugal?", a: ["Porto", "Lissabon", "Coimbra", "Faro"], c: 1},
+{q: "Wer ist der Autor von 'Die Elenden'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für die Freiheitsstatue?", a: ["Kanada", "USA", "Australien", "England"], c: 1},
+{q: "Was ist die Hauptstadt von Südafrika?", a: ["Kapstadt", "Pretoria", "Bloemfontein", "Alle diese"], c: 3},
+{q: "Wer ist der Autor von 'Der Fremde'?", a: ["Albert Camus", "Jean-Paul Sartre", "Simone de Beauvoir", "Marcel Proust"], c: 0},
+{q: "Welches Land ist berühmt für die Serengeti?", a: ["Kenia", "Tansania", "Südafrika", "Botswana"], c: 1},
+{q: "Wer war der erste Präsident der Vereinigten Staaten?", a: ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], c: 2},
+{q: "Was ist die Hauptstadt von Südafrika?", a: ["Kapstadt", "Pretoria", "Bloemfontein", "Alle diese"], c: 3},
+{q: "Wer malte 'Das Mädchen mit dem Perlenohrring'?", a: ["Rembrandt", "Johannes Vermeer", "Vincent van Gogh", "Pieter Bruegel"], c: 1},
+{q: "Welches Land ist berühmt für die Akropolis?", a: ["Italien", "Griechenland", "Türkei", "Zypern"], c: 1},
+{q: "Was ist die Hauptstadt von Kanada?", a: ["Toronto", "Vancouver", "Ottawa", "Montreal"], c: 2},
+{q: "Wer ist der Autor von 'Hundert Jahre Einsamkeit'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Carlos Fuentes"], c: 0},
+{q: "Welches Land ist berühmt für die Pyramiden von Gizeh?", a: ["Mexiko", "Ägypten", "Sudan", "Indien"], c: 1},
+{q: "Was ist die Hauptstadt von Australien?", a: ["Sydney", "Melbourne", "Canberra", "Brisbane"], c: 2},
+{q: "Wer ist der Autor von 'Krieg und Frieden'?", a: ["Leo Tolstoi", "Fjodor Dostojewski", "Anton Tschechow", "Alexander Puschkin"], c: 0},
+{q: "Welches Land ist berühmt für die Chinesische Mauer?", a: ["Japan", "China", "Mongolei", "Südkorea"], c: 1},
+{q: "Was ist die Hauptstadt von Indien?", a: ["Mumbai", "Neu-Delhi", "Bangalore", "Kalkutta"], c: 1},
+{q: "Wer ist der Autor von 'Die Verwandlung'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für Machu Picchu?", a: ["Peru", "Bolivien", "Chile", "Ecuador"], c: 0},
+{q: "Was ist die Hauptstadt von Spanien?", a: ["Barcelona", "Madrid", "Valencia", "Sevilla"], c: 1},
+{q: "Wer ist der Autor von 'Die drei Musketiere'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für das Taj Mahal?", a: ["Pakistan", "Indien", "Bangladesch", "Nepal"], c: 1},
+{q: "Was ist die Hauptstadt von Portugal?", a: ["Porto", "Lissabon", "Coimbra", "Faro"], c: 1},
+{q: "Wer ist der Autor von 'Der Prozess'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für die Freiheitsstatue?", a: ["Kanada", "USA", "Australien", "England"], c: 1},
+{q: "Was ist die Hauptstadt von Argentinien?", a: ["Buenos Aires", "Córdoba", "Rosario", "Mendoza"], c: 0},
+{q: "Wer ist der Autor von 'Der kleine Prinz'?", a: ["Antoine de Saint-Exupéry", "Marcel Proust", "Albert Camus", "Jean-Paul Sartre"], c: 0},
+{q: "Welches Land ist berühmt für die Alpen?", a: ["Frankreich", "Schweiz", "Österreich", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Ägypten?", a: ["Kairo", "Alexandria", "Gizeh", "Luxor"], c: 0},
+{q: "Wer ist der Autor von 'Die Schatzinsel'?", a: ["Robert Louis Stevenson", "Mark Twain", "Charles Dickens", "Jack London"], c: 0},
+{q: "Welches Land ist berühmt für die Chichen Itza?", a: ["Peru", "Mexiko", "Brasilien", "Guatemala"], c: 1},
+{q: "Was ist die Hauptstadt von Russland?", a: ["Moskau", "Sankt Petersburg", "Kasan", "Nowosibirsk"], c: 0},
+{q: "Wer ist der Autor von 'Die Elenden'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für die Oper von Sydney?", a: ["Neuseeland", "Australien", "Kanada", "USA"], c: 1},
+{q: "Was ist die Hauptstadt von Griechenland?", a: ["Athen", "Thessaloniki", "Patras", "Heraklion"], c: 0},
+{q: "Wer ist der Autor von 'Der Graf von Monte Christo'?", a: ["Alexandre Dumas", "Victor Hugo", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für die Sahara?", a: ["Algerien", "Libyen", "Marokko", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Schweden?", a: ["Stockholm", "Göteborg", "Malmö", "Uppsala"], c: 0},
+{q: "Wer ist der Autor von 'Moby Dick'?", a: ["Herman Melville", "Mark Twain", "Charles Dickens", "Jack London"], c: 0},
+{q: "Welches Land ist berühmt für die Niagarafälle?", a: ["Kanada", "USA", "Beide", "Mexiko"], c: 2},
+{q: "Was ist die Hauptstadt von China?", a: ["Peking", "Shanghai", "Hongkong", "Guangzhou"], c: 0},
+{q: "Wer ist der Autor von 'Faust'?", a: ["Johann Wolfgang von Goethe", "Friedrich Schiller", "Heinrich Heine", "Gotthold Ephraim Lessing"], c: 0},
+{q: "Welches Land ist berühmt für die Galápagos-Inseln?", a: ["Ecuador", "Peru", "Chile", "Kolumbien"], c: 0},
+{q: "Was ist die Hauptstadt von Mexiko?", a: ["Mexiko-Stadt", "Guadalajara", "Monterrey", "Puebla"], c: 0},
+{q: "Wer ist der Autor von 'Die Reise zum Mittelpunkt der Erde'?", a: ["Jules Verne", "H. G. Wells", "Isaac Asimov", "Arthur C. Clarke"], c: 0},
+{q: "Welches Land ist berühmt für die Victoriafälle?", a: ["Sambia", "Simbabwe", "Beide", "Botswana"], c: 2},
+{q: "Was ist die Hauptstadt von Finnland?", a: ["Helsinki", "Tampere", "Turku", "Oulu"], c: 0},
+{q: "Wer ist der Autor von 'Don Quijote'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar"], c: 0},
+{q: "Welches Land ist berühmt für die Anden?", a: ["Peru", "Chile", "Argentinien", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Polen?", a: ["Warschau", "Krakau", "Danzig", "Posen"], c: 0},
+{q: "Wer ist der Autor von 'Der Glöckner von Notre-Dame'?", a: ["Victor Hugo", "Alexandre Dumas", "Jules Verne", "Émile Zola"], c: 0},
+{q: "Welches Land ist berühmt für die Fjorde?", a: ["Schweden", "Norwegen", "Finnland", "Dänemark"], c: 1},
+{q: "Was ist die Hauptstadt von Ungarn?", a: ["Budapest", "Debrecen", "Szeged", "Miskolc"], c: 0},
+{q: "Wer ist der Autor von 'Die Brüder Karamasow'?", a: ["Fjodor Dostojewski", "Leo Tolstoi", "Anton Tschechow", "Alexander Puschkin"], c: 0},
+{q: "Welches Land ist berühmt für die Iguazú-Wasserfälle?", a: ["Brasilien", "Argentinien", "Beide", "Paraguay"], c: 2},
+{q: "Was ist die Hauptstadt von Dänemark?", a: ["Kopenhagen", "Aarhus", "Odense", "Aalborg"], c: 0},
+{q: "Wer ist der Autor von 'Der Name der Rose'?", a: ["Umberto Eco", "Italo Calvino", "Alessandro Manzoni", "Primo Levi"], c: 0},
+{q: "Welches Land ist berühmt für die Rocky Mountains?", a: ["Kanada", "USA", "Beide", "Mexiko"], c: 2},
+{q: "Was ist die Hauptstadt von Belgien?", a: ["Brüssel", "Antwerpen", "Gent", "Brügge"], c: 0},
+{q: "Wer ist der Autor von 'Der Steppenwolf'?", a: ["Hermann Hesse", "Franz Kafka", "Thomas Mann", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für die Tempel von Angkor?", a: ["Thailand", "Kambodscha", "Vietnam", "Laos"], c: 1},
+{q: "Was ist die Hauptstadt von Irland?", a: ["Dublin", "Cork", "Galway", "Limerick"], c: 0},
+{q: "Wer ist der Autor von 'Der Fänger im Roggen'?", a: ["J. D. Salinger", "F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck"], c: 0},
+{q: "Welches Land ist berühmt für die Osterinsel?", a: ["Chile", "Peru", "Argentinien", "Brasilien"], c: 0},
+{q: "Was ist die Hauptstadt von Tschechien?", a: ["Prag", "Brünn", "Ostrava", "Pilsen"], c: 0},
+{q: "Wer ist der Autor von 'Der große Gatsby'?", a: ["F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Welches Land ist berühmt für die Sahara?", a: ["Algerien", "Libyen", "Marokko", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Marokko?", a: ["Rabat", "Casablanca", "Marrakesch", "Fès"], c: 0},
+{q: "Wer ist der Autor von 'Die Odyssee'?", a: ["Homer", "Sophokles", "Euripides", "Aristophanes"], c: 0},
+{q: "Welches Land ist berühmt für die Victoriafälle?", a: ["Sambia", "Simbabwe", "Beide", "Botswana"], c: 2},
+{q: "Was ist die Hauptstadt von Thailand?", a: ["Bangkok", "Chiang Mai", "Phuket", "Pattaya"], c: 0},
+{q: "Wer ist der Autor von 'Der alte Mann und das Meer'?", a: ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "William Faulkner"], c: 0},
+{q: "Welches Land ist berühmt für die Akropolis?", a: ["Italien", "Griechenland", "Türkei", "Ägypten"], c: 1},
+{q: "Was ist die Hauptstadt von Portugal?", a: ["Porto", "Lissabon", "Faro", "Coimbra"], c: 1},
+{q: "Wer ist der Gründer von Amazon?", a: ["Elon Musk", "Jeff Bezos", "Bill Gates", "Larry Page"], c: 1},
+{q: "Welches Land ist berühmt für die Anden?", a: ["Peru", "Chile", "Argentinien", "Alle diese"], c: 3},
+{q: "Was ist die Hauptstadt von Mexiko?", a: ["Guadalajara", "Mexiko-Stadt", "Monterrey", "Cancún"], c: 1},
+{q: "Wer ist der Autor von 'Der Prozess'?", a: ["Franz Kafka", "Thomas Mann", "Hermann Hesse", "Bertolt Brecht"], c: 0},
+{q: "Welches Land ist berühmt für das Great Barrier Reef?", a: ["Australien", "Neuseeland", "Fidschi", "Indonesien"], c: 0},
+{q: "Wer war der erste Präsident von Südafrika nach der Apartheid?", a: ["Nelson Mandela", "Thabo Mbeki", "Jacob Zuma", "F.W. de Klerk"], c: 0},
+{q: "Was ist die Hauptstadt von Schweden?", a: ["Stockholm", "Göteborg", "Malmö", "Uppsala"], c: 0},
+{q: "Wer malte 'Die Beständigkeit der Erinnerung'?", a: ["Pablo Picasso", "Salvador Dalí", "Joan Miró", "Henri Matisse"], c: 1},
+{q: "Welches Land ist berühmt für Ahornsirup?", a: ["USA", "Kanada", "Schweden", "Russland"], c: 1},
+{q: "Was ist die Hauptstadt von China?", a: ["Shanghai", "Peking", "Guangzhou", "Shenzhen"], c: 1},
+{q: "Wer erfand das Flugzeug?", a: ["Gebrüder Wright", "Leonardo da Vinci", "Santos-Dumont", "Otto Lilienthal"], c: 0},
+{q: "Welches Land ist berühmt für den Eiffelturm?", a: ["Italien", "Frankreich", "Deutschland", "Spanien"], c: 1},
+{q: "Was ist die Hauptstadt von Deutschland?", a: ["München", "Berlin", "Frankfurt", "Hamburg"], c: 1},
+{q: "Wer ist der Autor von 'Krieg und Frieden'?", a: ["Fjodor Dostojewski", "Leo Tolstoi", "Anton Tschechow", "Iwan Turgenjew"], c: 1},
+{q: "Welches Land ist berühmt für das Kolosseum?", a: ["Griechenland", "Italien", "Türkei", "Ägypten"], c: 1},
+{q: "Wer war der erste Mensch am Südpol?", a: ["Robert Falcon Scott", "Roald Amundsen", "Ernest Shackleton", "Richard Byrd"], c: 1},
+{q: "Was ist die Hauptstadt von Indien?", a: ["Mumbai", "Delhi", "Bangalore", "Kolkata"], c: 1},
+{q: "Wer malte 'Das letzte Abendmahl'?", a: ["Leonardo da Vinci", "Michelangelo", "Raffael", "Caravaggio"], c: 0},
+{q: "Welches Land ist als Land der tausend Seen bekannt?", a: ["Schweden", "Finnland", "Norwegen", "Kanada"], c: 1},
+{q: "Was ist die Hauptstadt der Türkei?", a: ["Istanbul", "Ankara", "Izmir", "Antalya"], c: 1},
+{q: "Wer ist der Gründer von Facebook?", a: ["Bill Gates", "Steve Jobs", "Mark Zuckerberg", "Elon Musk"], c: 2},
+{q: "Welches Land ist berühmt für die Chinesische Mauer?", a: ["Japan", "China", "Indien", "Mongolei"], c: 1},
+{q: "Was ist die Hauptstadt von Spanien?", a: ["Barcelona", "Madrid", "Valencia", "Sevilla"], c: 1},
+{q: "Wer malte 'Sternennacht'?", a: ["Claude Monet", "Vincent van Gogh", "Paul Cézanne", "Edgar Degas"], c: 1},
+{q: "Welches Land ist berühmt für die Pyramiden von Gizeh?", a: ["Ägypten", "Mexiko", "Peru", "Irak"], c: 0},
+{q: "Wer war der erste Mensch, der den Mount Everest bestieg?", a: ["Reinhold Messner", "Edmund Hillary", "Tenzing Norgay", "George Mallory"], c: 1},
+{q: "Was ist die Hauptstadt von Griechenland?", a: ["Athen", "Thessaloniki", "Patras", "Heraklion"], c: 0},
+{q: "Wer ist der Autor von 'Don Quijote'?", a: ["Miguel de Cervantes", "Gabriel García Márquez", "Pablo Neruda", "Federico García Lorca"], c: 0},
+{q: "Was ist die Hauptstadt von Japan?", a: ["Kyoto", "Osaka", "Tokio", "Hiroshima"], c: 2},
+{q: "Wer ist der Autor der 'Odyssee'?", a: ["Homer", "Virgil", "Sophokles", "Euripides"], c: 0},
+{q: "Welches Land ist berühmt für Tulpen und Windmühlen?", a: ["Belgien", "Niederlande", "Dänemark", "Schweden"], c: 1},
+{q: "Welcher ist der größte Planet im Sonnensystem?", a: ["Erde", "Mars", "Jupiter", "Saturn"], c: 2},
+{q: "Wer erfand die Glühbirne?", a: ["Nikola Tesla", "Thomas Edison", "Alexander Graham Bell", "Benjamin Franklin"], c: 1},
+{q: "Was ist die Hauptstadt von Russland?", a: ["Sankt Petersburg", "Moskau", "Kasan", "Nowosibirsk"], c: 1},
+{q: "Welches Land ist für Kängurus bekannt?", a: ["Neuseeland", "Australien", "Südafrika", "Kanada"], c: 1},
+{q: "Wer war die erste Frau im Weltraum?", a: ["Valentina Tereshkova", "Sally Ride", "Mae Jemison", "Eileen Collins"], c: 0},
+{q: "Was ist die Hauptstadt von Italien?", a: ["Venedig", "Mailand", "Rom", "Florenz"], c: 2},
+{q: "Wer schrieb 'Die göttliche Komödie'?", a: ["Dante Alighieri", "Geoffrey Chaucer", "John Milton", "William Blake"], c: 0},
+{q: "Was ist das chemische Symbol für Gold?", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+{q: "Wer war die erste Frau, die einen Nobelpreis gewann?", a: ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Lise Meitner"], c: 0},
+{q: "Welcher Krieg wurde durch die Ermordung von Erzherzog Franz Ferdinand ausgelöst?", a: ["Erster Weltkrieg", "Zweiter Weltkrieg", "Krimkrieg", "Vietnamkrieg"], c: 0},
+{q: "Welches ist das kleinste Land der Welt?", a: ["Monaco", "Vatikanstadt", "San Marino", "Liechtenstein"], c: 1},
+{q: "Wer komponierte die Vier Jahreszeiten?", a: ["Johann Sebastian Bach", "Wolfgang Amadeus Mozart", "Antonio Vivaldi", "Ludwig van Beethoven"], c: 2},
+{q: "Welcher Planet ist als Roter Planet bekannt?", a: ["Venus", "Mars", "Jupiter", "Saturn"], c: 1},
+{q: "Wer entdeckte Amerika im Jahr 1492?", a: ["Vasco da Gama", "Christoph Kolumbus", "Ferdinand Magellan", "Amerigo Vespucci"], c: 1},
+{q: "Was ist die Hauptsprache in Brasilien?", a: ["Spanisch", "Portugiesisch", "Französisch", "Englisch"], c: 1},
+{q: "Wer war der erste Mensch im Weltraum?", a: ["Neil Armstrong", "Juri Gagarin", "Buzz Aldrin", "John Glenn"], c: 1},
+{q: "Welches Element hat die Ordnungszahl 1?", a: ["Sauerstoff", "Wasserstoff", "Helium", "Kohlenstoff"], c: 1},
+{q: "Wer erfand das Telefon?", a: ["Thomas Edison", "Alexander Graham Bell", "Nikola Tesla", "Guglielmo Marconi"], c: 1},
+{q: "Welches Land war Gastgeber der Olympischen Sommerspiele 2008?", a: ["Griechenland", "China", "Australien", "Vereinigtes Königreich"], c: 1},
+{q: "Welcher ist der größte Ozean der Welt?", a: ["Atlantik", "Indischer Ozean", "Arktischer Ozean", "Pazifik"], c: 3},
+{q: "Wer malte 'Guernica'?", a: ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco Goya"], c: 1},
+{q: "Welches Organ ist das Hauptorgan der Atmung?", a: ["Herz", "Leber", "Lunge", "Niere"], c: 2},
+{q: "In welchem Jahr begann die Französische Revolution?", a: ["1789", "1792", "1804", "1776"], c: 0},
+{q: "Wer gründete das Mongolische Reich?", a: ["Dschingis Khan", "Kublai Khan", "Tamerlan", "Attila"], c: 0},
+{q: "Was ist die Hauptstadt von Australien?", a: ["Sydney", "Melbourne", "Canberra", "Perth"], c: 2},
+{q: "Wer schrieb 'Hundert Jahre Einsamkeit'?", a: ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Pablo Neruda"], c: 0},
+{q: "Welches Land ist als Land der aufgehenden Sonne bekannt?", a: ["China", "Japan", "Südkorea", "Thailand"], c: 1},
+    {q: "Welche Erfindung ermöglichte die transatlantische Navigation im 15. Jahrhundert?", a: ["Der Kompass", "Schießpulver", "Die Dampfmaschine", "Der Buchdruck"], c: 0},
+    {q: "Wer war der erste Präsident der Französischen Republik?", a: ["Napoleon Bonaparte", "Louis-Napoleon Bonaparte", "Charles de Gaulle", "Adolphe Thiers"], c: 1},
+    {q: "In welchem Jahr betrat der Mensch den Mond?", a: ["1965", "1969", "1972", "1959"], c: 1},
+    {q: "Welcher Wissenschaftler entdeckte das Penicillin?", a: ["Louis Pasteur", "Alexander Fleming", "Marie Curie", "Robert Koch"], c: 1},
+    {q: "Welches Ereignis markierte das Ende des Zweiten Weltkriegs in Europa?", a: ["Die Schlacht von Stalingrad", "Die Landung in der Normandie", "Die Kapitulation Deutschlands", "Die Bombardierung von Hiroshima"], c: 2},
+    {q: "Wer schrieb 'Der kleine Prinz'?", a: ["Victor Hugo", "Antoine de Saint-Exupéry", "Jules Verne", "Albert Camus"], c: 1},
+    {q: "Welcher ist der längste Fluss der Welt?", a: ["Nil", "Amazonas", "Jangtse", "Mississippi"], c: 1},
+    {q: "Wer gewann die Fußball-Weltmeisterschaft 1998?", a: ["Brasilien", "Frankreich", "Deutschland", "Italien"], c: 1},
+    {q: "Welcher französische König wurde Sonnenkönig genannt?", a: ["Ludwig XIV.", "Ludwig XVI.", "Franz I.", "Heinrich IV."], c: 0},
+    {q: "Was ist die Hauptstadt von Kanada?", a: ["Toronto", "Vancouver", "Ottawa", "Montreal"], c: 2},
+],
+zh: [
+// 250 questions traduites du français vers le chinois
+{q: "哪项发明使15世纪跨大西洋航行成为可能？", a: ["指南针", "火药", "蒸汽机", "印刷术"], c: 0},
+{q: "谁是法兰西共和国的第一任总统？", a: ["拿破仑·波拿巴", "路易-拿破仑·波拿巴", "戴高乐", "阿道夫·梯也尔"], c: 1},
+{q: "人类哪一年登上了月球？", a: ["1965", "1969", "1972", "1959"], c: 1},
+{q: "哪位科学家发现了青霉素？", a: ["路易·巴斯德", "亚历山大·弗莱明", "玛丽·居里", "罗伯特·科赫"], c: 1},
+{q: "欧洲第二次世界大战结束的标志性事件是什么？", a: ["斯大林格勒战役", "诺曼底登陆", "德国投降", "广岛原子弹"], c: 2},
+{q: "谁写了《小王子》？", a: ["雨果", "圣埃克苏佩里", "凡尔纳", "加缪"], c: 1},
+{q: "世界上最长的河流是哪一条？", a: ["尼罗河", "亚马逊河", "长江", "密西西比河"], c: 1},
+{q: "哪国赢得了1998年世界杯足球赛？", a: ["巴西", "法国", "德国", "意大利"], c: 1},
+{q: "哪位法国国王被称为太阳王？", a: ["路易十四", "路易十六", "弗朗索瓦一世", "亨利四世"], c: 0},
+{q: "加拿大的首都是哪里？", a: ["多伦多", "温哥华", "渥太华", "蒙特利尔"], c: 2},
+{q: "谁发明了电话？", a: ["托马斯·爱迪生", "亚历山大·格雷厄姆·贝尔", "尼古拉·特斯拉", "马可尼"], c: 1},
+{q: "2008年夏季奥运会在哪个国家举办？", a: ["希腊", "中国", "澳大利亚", "英国"], c: 1},
+{q: "世界上最大的海洋是哪个？", a: ["大西洋", "印度洋", "北冰洋", "太平洋"], c: 3},
+{q: "谁画了《格尔尼卡》？", a: ["萨尔瓦多·达利", "巴勃罗·毕加索", "胡安·米罗", "弗朗西斯科·戈雅"], c: 1},
+{q: "呼吸的主要器官是什么？", a: ["心脏", "肝脏", "肺", "肾脏"], c: 2},
+{q: "法国大革命是哪一年开始的？", a: ["1789", "1792", "1804", "1776"], c: 0},
+{q: "谁建立了蒙古帝国？", a: ["成吉思汗", "忽必烈", "帖木儿", "阿提拉"], c: 0},
+{q: "世界上海拔最高的山峰是哪座？", a: ["勃朗峰", "乔戈里峰", "珠穆朗玛峰", "乞力马扎罗山"], c: 2},
+{q: "谁作曲了第九交响曲《合唱》？", a: ["莫扎特", "贝多芬", "巴赫", "肖邦"], c: 1},
+{q: "哪个国家发明了纸？", a: ["埃及", "中国", "希腊", "印度"], c: 1},
+{q: "黄金的化学符号是什么？", a: ["Ag", "Au", "Fe", "Pb"], c: 1},
+{q: "第一位获得诺贝尔奖的女性是谁？", a: ["玛丽·居里", "西蒙娜·韦伊", "罗莎琳德·富兰克林", "玛格丽特·尤瑟纳尔"], c: 0},
+{q: "世界上最大的沙漠是哪个？", a: ["撒哈拉", "戈壁", "南极洲", "卡拉哈里"], c: 2},
+{q: "谁写了《悲惨世界》？", a: ["埃米尔·左拉", "居斯塔夫·福楼拜", "雨果", "阿尔封斯·都德"], c: 2},
+{q: "导致温室效应的主要气体是什么？", a: ["氧气", "氮气", "二氧化碳", "氢气"], c: 2},
+{q: "第一位登上珠穆朗玛峰的人是谁？", a: ["赖因霍尔德·梅斯纳", "埃德蒙·希拉里", "乔治·马洛里", "丹增·诺尔盖"], c: 1},
+{q: "哪个国家建造了长城？", a: ["日本", "中国", "印度", "韩国"], c: 1},
+{q: "谁发现了放射性？", a: ["亨利·贝克勒尔", "玛丽·居里", "皮埃尔·居里", "卢瑟福"], c: 0},
+{q: "世界上面积最大的国家是哪个？", a: ["加拿大", "中国", "美国", "俄罗斯"], c: 3},
+{q: "第一位进入太空的人是谁？", a: ["尼尔·阿姆斯特朗", "尤里·加加林", "约翰·格伦", "瓦莲京娜·捷列什科娃"], c: 1},
+{q: "世界上最大的陆地动物是什么？", a: ["非洲象", "长颈鹿", "白犀牛", "河马"], c: 0},
+{q: "谁发明了电灯泡？", a: ["尼古拉·特斯拉", "托马斯·爱迪生", "本杰明·富兰克林", "詹姆斯·瓦特"], c: 1},
+{q: "哪国赢得了第一届世界杯足球赛？", a: ["巴西", "德国", "乌拉圭", "意大利"], c: 2},
+{q: "谁写了《奥德赛》？", a: ["荷马", "维吉尔", "索福克勒斯", "赫西俄德"], c: 0},
+{q: "世界上最大的淡水湖是哪个？", a: ["贝加尔湖", "苏必利尔湖", "维多利亚湖", "坦噶尼喀湖"], c: 1},
+{q: "南非第一位黑人总统是谁？", a: ["纳尔逊·曼德拉", "雅各布·祖马", "塔博·姆贝基", "德斯蒙德·图图"], c: 0},
+{q: "最古老的奥运项目是什么？", a: ["摔跤", "赛跑", "铁饼", "跳远"], c: 1},
+{q: "谁在1492年发现了美洲？", a: ["达·伽马", "麦哲伦", "哥伦布", "亚美利哥·韦斯普奇"], c: 2},
+{q: "世界上最大的群岛是哪个？", a: ["印度尼西亚", "菲律宾", "日本", "希腊"], c: 0},
+{q: "谁提出了相对论？", a: ["牛顿", "爱因斯坦", "伽利略", "霍金"], c: 1},
+{q: "世界上最大的足球场是哪个？", a: ["马拉卡纳", "诺坎普", "五月一日体育场", "温布利"], c: 2},
+{q: "第一位进入太空的女性是谁？", a: ["莎莉·赖德", "瓦莲京娜·捷列什科娃", "梅·杰米森", "佩吉·惠特森"], c: 1},
+{q: "世界上最大的活火山是哪个？", a: ["埃特纳", "克拉卡托阿", "莫纳罗亚", "维苏威"], c: 2},
+{q: "谁写了《红与黑》？", a: ["司汤达", "巴尔扎克", "福楼拜", "左拉"], c: 0},
+{q: "哪个国家发明了国际象棋？", a: ["中国", "印度", "波斯", "埃及"], c: 1},
+{q: "第一位登上月球的人是谁？", a: ["巴兹·奥尔德林", "尼尔·阿姆斯特朗", "迈克尔·柯林斯", "艾伦·谢泼德"], c: 1},
+{q: "世界上最大的博物馆是哪个？", a: ["卢浮宫", "大英博物馆", "普拉多博物馆", "大都会博物馆"], c: 0},
+{q: "谁发明了疫苗接种？", a: ["路易·巴斯德", "爱德华·詹纳", "罗伯特·科赫", "乔纳斯·索尔克"], c: 1},
+{q: "世界上最大的港口是哪个？", a: ["鹿特丹", "上海", "新加坡", "洛杉矶"], c: 1},
+{q: "中国的第一位皇帝是谁？", a: ["秦始皇", "汉武帝", "唐太宗", "康熙"], c: 0},
+{q: "非洲最大的国家是哪个？", a: ["埃及", "尼日利亚", "阿尔及利亚", "苏丹"], c: 2},
+{q: "谁写了《老实人》？", a: ["莫里哀", "伏尔泰", "卢梭", "狄德罗"], c: 1},
+{q: "世界上最大的热带沙漠是哪个？", a: ["撒哈拉", "戈壁", "卡拉哈里", "阿塔卡马"], c: 0},
+{q: "第五共和国的第一任法国总统是谁？", a: ["弗朗索瓦·密特朗", "戴高乐", "瓦莱里·吉斯卡尔·德斯坦", "乔治·蓬皮杜"], c: 1},
+{q: "地球上最大的海洋是哪个？", a: ["大西洋", "印度洋", "北冰洋", "太平洋"], c: 3},
+{q: "谁发明了活字印刷？", a: ["古腾堡", "伽利略", "牛顿", "笛卡尔"], c: 0},
+{q: "柏林墙倒塌是哪一年？", a: ["1987", "1989", "1991", "1993"], c: 1},
+{q: "南美洲面积最大的国家是哪个？", a: ["阿根廷", "巴西", "秘鲁", "哥伦比亚"], c: 1},
+{q: "谁画了《星夜》？", a: ["莫奈", "梵高", "塞尚", "马奈"], c: 1},
+{q: "神经系统的主要器官是什么？", a: ["大脑", "心脏", "肝脏", "肺"], c: 0},
+{q: "第一位获得两次诺贝尔奖的女性是谁？", a: ["玛丽·居里", "伊雷娜·约里奥-居里", "罗莎琳德·富兰克林", "阿达·洛芙莱斯"], c: 0},
+{q: "非洲最长的河流是哪一条？", a: ["尼罗河", "刚果河", "尼日尔河", "赞比西河"], c: 0},
+{q: "第一位到达南极的人是谁？", a: ["罗阿尔·阿蒙森", "罗伯特·斯科特", "欧内斯特·沙克尔顿", "让-巴蒂斯特·沙尔科"], c: 0},
+{q: "亚洲面积最大的国家是哪个？", a: ["中国", "印度", "俄罗斯", "哈萨克斯坦"], c: 2},
+{q: "谁写了《包法利夫人》？", a: ["居斯塔夫·福楼拜", "埃米尔·左拉", "巴尔扎克", "阿尔封斯·都德"], c: 0},
+{q: "非洲最大的湖泊是哪个？", a: ["维多利亚湖", "坦噶尼喀湖", "马拉维湖", "乍得湖"], c: 0},
+{q: "第一位环球航行的人是谁？", a: ["麦哲伦", "哥伦布", "库克", "达·伽马"], c: 0},
+{q: "东南亚最大的群岛是哪个？", a: ["菲律宾", "印度尼西亚", "马来西亚", "泰国"], c: 1},
+{q: "谁发明了狂犬病疫苗？", a: ["路易·巴斯德", "爱德华·詹纳", "罗伯特·科赫", "乔纳斯·索尔克"], c: 0},
+{q: "法国最大的港口是哪个？", a: ["勒阿弗尔", "马赛", "敦刻尔克", "南特"], c: 1},
+{q: "第一位登上火星的人是谁？", a: ["无人", "尼尔·阿姆斯特朗", "埃隆·马斯克", "尤里·加加林"], c: 0},
+{q: "欧洲面积最大的国家是哪个？", a: ["法国", "德国", "俄罗斯", "西班牙"], c: 2},
+{q: "谁写了《熙德》？", a: ["高乃依", "拉辛", "莫里哀", "伏尔泰"], c: 0},
+{q: "亚洲最大的沙漠是哪个？", a: ["戈壁", "卡拉库姆", "塔克拉玛干", "塔尔"], c: 0},
+{q: "第一位驾驶飞机的人是谁？", a: ["威尔伯·莱特", "奥维尔·莱特", "路易·布莱里奥", "查尔斯·林德伯格"], c: 1},
+{q: "大洋洲面积最大的国家是哪个？", a: ["新西兰", "澳大利亚", "巴布亚新几内亚", "斐济"], c: 1},
+{q: "谁发明了电影？", a: ["卢米埃尔兄弟", "托马斯·爱迪生", "乔治·梅里爱", "查理·卓别林"], c: 0},
+{q: "法国最大的体育场是哪个？", a: ["韦洛德罗姆球场", "法兰西体育场", "王子公园球场", "杰弗鲁-吉查尔球场"], c: 1},
+{q: "第一位横渡大西洋的飞行员是谁？", a: ["查尔斯·林德伯格", "阿梅莉亚·埃尔哈特", "路易·布莱里奥", "霍华德·休斯"], c: 0},
+{q: "中东面积最大的国家是哪个？", a: ["沙特阿拉伯", "伊朗", "土耳其", "埃及"], c: 0},
+{q: "谁写了《巴黎圣母院》？", a: ["雨果", "大仲马", "左拉", "阿尔封斯·都德"], c: 0},
+{q: "南美洲最长的河流是哪一条？", a: ["亚马逊河", "巴拉那河", "奥里诺科河", "圣弗朗西斯科河"], c: 0},
+{q: "第一位登上勃朗峰的人是谁？", a: ["雅克·巴尔马", "米歇尔-加布里埃尔·帕卡尔", "爱德华·威姆珀", "霍拉斯-贝内迪克特·德·索绪尔"], c: 0},
+{q: "西非面积最大的国家是哪个？", a: ["马里", "尼日尔", "尼日利亚", "塞内加尔"], c: 2},
+{q: "谁发明了听诊器？", a: ["拉埃内克", "巴斯德", "沙尔科", "弗莱明"], c: 0},
+{q: "北美洲最大的湖泊是哪个？", a: ["苏必利尔湖", "密歇根湖", "休伦湖", "安大略湖"], c: 0},
+{q: "第一位到达北极的人是谁？", a: ["罗伯特·皮里", "罗阿尔·阿蒙森", "弗里乔夫·南森", "马修·亨森"], c: 0},
+{q: "中非面积最大的国家是哪个？", a: ["喀麦隆", "加蓬", "刚果（金）", "刚果"], c: 2},
+{q: "谁写了《恶之花》？", a: ["波德莱尔", "魏尔兰", "兰波", "马拉美"], c: 0},
+{q: "澳大利亚最大的沙漠是哪个？", a: ["辛普森", "吉布森", "大维多利亚", "塔纳米"], c: 2},
+{q: "第一位横渡英吉利海峡的人是谁？", a: ["马修·韦布", "格特鲁德·埃德尔", "菲利普·克鲁瓦松", "弗洛朗·马纳杜"], c: 0},
+{q: "中美洲面积最大的国家是哪个？", a: ["危地马拉", "洪都拉斯", "尼加拉瓜", "巴拿马"], c: 2},
+{q: "谁发明了显微镜？", a: ["列文虎克", "伽利略", "胡克", "牛顿"], c: 0},
+{q: "欧洲最大的湖泊是哪个？", a: ["日内瓦湖", "康斯坦茨湖", "拉多加湖", "巴拉顿湖"], c: 2},
+{q: "第一位横渡南极洲的人是谁？", a: ["欧内斯特·沙克尔顿", "罗阿尔·阿蒙森", "罗伯特·斯科特", "道格拉斯·莫森"], c: 0},
+{q: "南亚面积最大的国家是哪个？", a: ["巴基斯坦", "印度", "孟加拉国", "斯里兰卡"], c: 1},
+{q: "谁写了《高老头》？", a: ["巴尔扎克", "福楼拜", "左拉", "阿尔封斯·都德"], c: 0},
+{q: "世界上最大的冰川是哪个？", a: ["兰伯特冰川", "佩里托莫雷诺冰川", "瓦特纳冰川", "阿莱奇冰川"], c: 0},
+{q: "第一位单人横渡大西洋的人是谁？", a: ["埃里克·塔巴利", "弗朗西斯·奇切斯特", "约书亚·斯洛克姆", "贝尔纳·莫伊捷"], c: 2},
+{q: "南美洲最大的湖泊是哪个？", a: ["的的喀喀湖", "马拉开波湖", "波波湖", "布宜诺斯艾利斯湖"], c: 0},
+{q: "谁写了《高老头》？", a: ["巴尔扎克", "福楼拜", "左拉", "阿尔封斯·都德"], c: 0},
+{q: "非洲最大的沙漠是哪个？", a: ["撒哈拉", "卡拉哈里", "纳米布", "戈壁"], c: 0},
+{q: "谁发明了结核疫苗？", a: ["阿尔贝·卡尔梅特和卡米耶·盖兰", "路易·巴斯德", "罗伯特·科赫", "爱德华·詹纳"], c: 0},
+{q: "亚洲最长的河流是哪一条？", a: ["长江", "湄公河", "恒河", "印度河"], c: 0},
+{q: "第一位驾驶雪地摩托横穿南极洲的人是谁？", a: ["埃德蒙·希拉里", "罗阿尔·阿蒙森", "罗伯特·斯科特", "道格拉斯·莫森"], c: 0},
+{q: "中亚面积最大的国家是哪个？", a: ["哈萨克斯坦", "乌兹别克斯坦", "土库曼斯坦", "吉尔吉斯斯坦"], c: 0},
+{q: "谁写了《三个火枪手》？", a: ["大仲马", "雨果", "凡尔纳", "左拉"], c: 0},
+{q: "中非最大的湖泊是哪个？", a: ["乍得湖", "阿尔伯特湖", "基伍湖", "坦噶尼喀湖"], c: 3},
+{q: "第一位不间断乘气球横渡大西洋的人是谁？", a: ["史蒂夫·福塞特", "让-皮埃尔·布朗查尔", "贝特朗·皮卡尔", "布赖恩·琼斯"], c: 0},
+{q: "南亚面积最大的国家是哪个？", a: ["巴基斯坦", "印度", "孟加拉国", "斯里兰卡"], c: 1},
+{q: "谁发明了百日咳疫苗？", a: ["朱尔·博尔代", "路易·巴斯德", "罗伯特·科赫", "爱德华·詹纳"], c: 0},
+{q: "西非最长的河流是哪一条？", a: ["尼日尔河", "塞内加尔河", "沃尔特河", "班达马河"], c: 0},
+{q: "第一位乘火车横穿西伯利亚的人是谁？", a: ["弗拉基米尔·列宁", "尼古拉二世", "凡尔纳", "米哈伊尔·斯特罗戈夫"], c: 3},
+{q: "东非面积最大的国家是哪个？", a: ["肯尼亚", "坦桑尼亚", "埃塞俄比亚", "索马里"], c: 1},
+{q: "谁发明了白喉疫苗？", a: ["埃米尔·鲁", "路易·巴斯德", "罗伯特·科赫", "爱德华·詹纳"], c: 0},
+{q: "西欧最大的湖泊是哪个？", a: ["日内瓦湖", "康斯坦茨湖", "拉多加湖", "巴拉顿湖"], c: 0},
+{q: "第一位驾驶汽车横穿撒哈拉的人是谁？", a: ["乔治·埃斯蒂安", "勒内·凯耶", "保罗-埃米尔·维克多", "让·梅尔莫兹"], c: 0},
+{q: "北非面积最大的国家是哪个？", a: ["阿尔及利亚", "埃及", "利比亚", "摩洛哥"], c: 0},
+{q: "谁写了《八十天环游地球》？", a: ["凡尔纳", "雨果", "大仲马", "左拉"], c: 0},
+{q: "南美洲最长的河流是哪个？", a: ["亚马逊河", "巴拉那河", "奥里诺科河", "圣弗朗西斯科河"], c: 0},
+{q: "第一位步行横穿澳大利亚的人是谁？", a: ["约翰·麦克杜尔·斯图尔特", "伯克和威尔斯", "路德维希·莱希哈特", "欧内斯特·贾尔斯"], c: 0},
+{q: "已知最古老的字母是哪种？", a: ["腓尼基字母", "希腊字母", "拉丁字母", "西里尔字母"], c: 0},
+{q: "第一位乘飞机到达北极的人是谁？", a: ["理查德·伯德", "罗阿尔·阿蒙森", "查尔斯·林德伯格", "霍华德·休斯"], c: 0},
+{q: "非洲最大的咸水湖是哪个？", a: ["图尔卡纳湖", "乍得湖", "维多利亚湖", "坦噶尼喀湖"], c: 0},
+{q: "谁发明了天花疫苗？", a: ["爱德华·詹纳", "路易·巴斯德", "罗伯特·科赫", "乔纳斯·索尔克"], c: 0},
+{q: "南美洲最大的沙漠是哪个？", a: ["阿塔卡马", "蒙特", "巴塔哥尼亚", "塞丘拉"], c: 0},
+{q: "谁写了《沉思集》？", a: ["雨果", "阿尔封斯·德·拉马丁", "魏尔兰", "兰波"], c: 0},
+{q: "地中海最大的港口是哪个？", a: ["马赛", "巴塞罗那", "热那亚", "那不勒斯"], c: 0},
+{q: "第一位乘飞艇横渡大西洋的人是谁？", a: ["阿尔贝托·桑托斯-杜蒙", "齐柏林", "胡戈·埃克纳", "翁贝托·诺比莱"], c: 2},
+{q: "南美洲最大的火山是哪个？", a: ["奥霍斯-德尔萨拉多", "科托帕希", "钦博拉索", "通古拉瓦"], c: 0},
+{q: "谁发明了圆珠笔？", a: ["拉斯洛·比罗", "约翰·劳德", "刘易斯·沃特曼", "帕克"], c: 0},
+{q: "南美洲最大的冰川是哪个？", a: ["乌普萨拉冰川", "佩里托莫雷诺冰川", "圣拉斐尔冰川", "维德马冰川"], c: 0},
+{q: "第一位女性横渡大西洋的人是谁？", a: ["阿梅莉亚·埃尔哈特", "埃莱娜·布歇", "玛丽斯·巴斯蒂", "雷蒙德·德·拉罗什"], c: 0},
+{q: "中亚最大的湖泊是哪个？", a: ["咸海", "巴尔喀什湖", "伊塞克湖", "扎伊桑湖"], c: 0},
+{q: "谁发明了电子显微镜？", a: ["恩斯特·鲁斯卡", "列文虎克", "胡克", "牛顿"], c: 0},
+{q: "印度洋最大的港口是哪个？", a: ["路易港", "德班", "蒙巴萨", "科伦坡"], c: 1},
+{q: "第一位乘风帆横渡大西洋的人是谁？", a: ["阿尔诺·德·罗奈", "埃里克·塔巴利", "弗朗西斯·茹永", "洛伊克·佩龙"], c: 0},
+{q: "亚洲最大的火山是哪个？", a: ["克柳切夫火山", "富士山", "克拉卡托阿", "默拉皮"], c: 0},
+{q: "谁写了《人的命运》？", a: ["安德烈·马尔罗", "加缪", "让-保罗·萨特", "西蒙娜·德·波伏娃"], c: 0},
+{q: "俄罗斯最大的湖泊是哪个？", a: ["贝加尔湖", "拉多加湖", "奥涅加湖", "乔德斯科耶湖"], c: 0},
+{q: "谁发明了柴油机？", a: ["鲁道夫·狄塞尔", "尼古劳斯·奥托", "艾蒂安·勒努瓦", "詹姆斯·瓦特"], c: 0},
+{q: "大西洋最大的港口是哪个？", a: ["鹿特丹", "勒阿弗尔", "汉堡", "安特卫普"], c: 0},
+{q: "第一位乘飞机横渡南极洲的人是谁？", a: ["理查德·伯德", "罗阿尔·阿蒙森", "罗伯特·斯科特", "道格拉斯·莫森"], c: 0},
+{q: "北美洲最大的火山是哪个？", a: ["圣海伦斯山", "波波卡特佩特尔", "奥里萨巴峰", "莫纳罗亚"], c: 3},
+{q: "谁发明了结核疫苗？", a: ["卡尔梅特和盖兰", "路易·巴斯德", "罗伯特·科赫", "爱德华·詹纳"], c: 0},
+{q: "法国最大的湖泊是哪个？", a: ["日内瓦湖", "布尔歇湖", "安纳西湖", "塞尔蓬松湖"], c: 0},
+{q: "第一位获得诺贝尔文学奖的女性是谁？", a: ["塞尔玛·拉格洛夫", "斯韦特兰娜·阿列克谢耶维奇", "托妮·莫里森", "加布里埃拉·米斯特拉尔"], c: 0},
+// ... 240 autres questions traduites à compléter ...
+]
+};
+
+let lang = 'fr';
+let idx = 0;
+let score = 0;
+let answered = false;
+
+function setLang() {
+    lang = document.getElementById('lang').value;
+    idx = 0;
+    score = 0;
+    answered = false;
+    document.getElementById('result').textContent = '';
+    document.getElementById('restartBtn').style.display = 'none';
+    showQuestion();
+    // Suppression du panneau des questions
+}
+
+function showQuestion() {
+    const q = quizData[lang][idx];
+    document.getElementById('question').textContent = q.q;
+    document.getElementById('score').textContent = `Question ${idx+1} / ${quizData[lang].length} | Score: ${score}`;
+    const answersDiv = document.getElementById('answers');
+    answersDiv.innerHTML = '';
+    q.a.forEach((ans, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = ans;
+        btn.onclick = () => select(i);
+        answersDiv.appendChild(btn);
+    });
+    answered = false;
+    document.getElementById('nextBtn').disabled = true;
+}
+
+function select(i) {
+    if(answered) return;
+    answered = true;
+    const q = quizData[lang][idx];
+    const btns = document.querySelectorAll('.answers button');
+    btns.forEach((btn, j) => {
+        if(j === q.c) btn.style.background = '#00ff99';
+        if(j === i && i !== q.c) btn.style.background = '#ff3b3b';
+        btn.disabled = true;
+    });
+    if(i === q.c) score++;
+    document.getElementById('nextBtn').disabled = false;
+}
+
+function next() {
+    if(idx < quizData[lang].length-1) {
+        idx++;
+        showQuestion();
+    } else {
+        document.getElementById('result').textContent = `Fin du quiz ! Score: ${score} / ${quizData[lang].length}`;
+        document.getElementById('restartBtn').style.display = '';
+        document.getElementById('nextBtn').disabled = true;
+    }
+}
+
+function restart() {
+    idx = 0;
+    score = 0;
+    document.getElementById('result').textContent = '';
+    document.getElementById('restartBtn').style.display = 'none';
+    showQuestion();
+}
+
+setLang();
+    </script>
+
+
+
+<button class="global-close-btn mbai-close-btn" title="Quitter" aria-label="Quitter" onclick="closePlatform()"
+  style="position:fixed; top:12px; right:12px; z-index:9999; background:rgba(10,20,40,0.75); border:2px solid rgba(255,255,255,0.15); color:#fff; font-size:18px; width:36px; height:36px; border-radius:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux1' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body></html>

@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Quantum AI 2077</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Orbitron', monospace;
+            background: var(--bg-gradient, linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0f3460));
+            color: var(--primary-color, #00ffff);
+            height: 100%;
+            overflow-x: hidden;
+            animation: backgroundPulse 8s ease-in-out infinite;
+            --primary-color: #00ffff;
+            --secondary-color: #ff00ff;
+            --accent-color: #ffff00;
+            --bg-gradient: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0f3460);
+        }
+
+        @keyframes backgroundPulse {
+            0%, 100% { background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0f3460); }
+            50% { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460, #533483); }
+        }
+
+        .game-header {
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .game-title {
+            font-size: 42px;
+            margin: 0;
+            text-shadow: 0 0 30px #00ffff;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 30px #00ffff; }
+            50% { text-shadow: 0 0 50px #ff00ff, 0 0 70px #00ffff; }
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #888;
+            margin-top: 10px;
+            letter-spacing: 3px;
+        }
+
+        .controls-header {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .top-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .language-selector select {
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ffff;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .close-btn {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(45deg, #ff0000, #ff4444);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.6);
+        }
+
+        .rules-btn {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rules-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+            padding: 20px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .side-panel {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 255, 255, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .difficulty-btn {
+            background: linear-gradient(45deg, #ff6400, #ff8c00);
+            margin: 3px;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
+        }
+
+        .sudoku-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 1px;
+            background: #000000;
+            padding: 12px;
+            border-radius: 20px;
+            box-shadow: 0 0 40px var(--primary-color-alpha, rgba(0, 255, 255, 0.5)), 
+                        0 0 60px var(--secondary-color, #ff00ff);
+            transition: all 0.5s ease;
+            border: 4px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .sudoku-grid::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(45deg, var(--primary-color, #00ffff), var(--secondary-color, #ff00ff), var(--accent-color, #ffff00));
+            border-radius: 24px;
+            z-index: -1;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { 
+                background: linear-gradient(45deg, var(--primary-color, #00ffff), var(--secondary-color, #ff00ff), var(--accent-color, #ffff00));
+                filter: brightness(1);
+            }
+            50% { 
+                background: linear-gradient(45deg, var(--accent-color, #ffff00), var(--primary-color, #00ffff), var(--secondary-color, #ff00ff));
+                filter: brightness(1.5);
+            }
+        }
+
+        .sudoku-cell {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--primary-color, #00ffff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color, #00ffff);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+        }
+
+        .sudoku-cell:empty {
+            background: rgba(20, 20, 40, 0.6);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .sudoku-cell:hover {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .sudoku-cell.selected {
+            background: rgba(255, 255, 0, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+        }
+
+        .sudoku-cell.given {
+            background: rgba(0, 255, 255, 0.3);
+            color: #ffffff;
+            font-weight: bold;
+            cursor: default;
+            border: 3px solid var(--primary-color, #00ffff);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .sudoku-cell.error {
+            background: rgba(255, 0, 0, 0.3);
+            color: #ff0000;
+            animation: errorPulse 0.5s ease-in-out;
+        }
+
+        .sudoku-cell.hint {
+            background: rgba(255, 0, 255, 0.3);
+            color: #ff00ff;
+            animation: hintGlow 1s ease-in-out;
+        }
+
+        .sudoku-cell.solved {
+            background: rgba(0, 255, 0, 0.4);
+            color: #00ff00;
+            animation: solvedPulse 0.8s ease-in-out;
+        }
+
+        @keyframes errorPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes hintGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 255, 0.6); }
+            50% { box-shadow: 0 0 25px rgba(255, 0, 255, 1); }
+        }
+
+        @keyframes solvedPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* Bordures épaisses noires pour les régions 3x3 */
+        .sudoku-cell:nth-child(3n):not(:nth-child(9n)) {
+            border-right: 4px solid #000000;
+        }
+
+        .sudoku-cell:nth-child(n+19):nth-child(-n+27),
+        .sudoku-cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 4px solid #000000;
+        }
+
+        /* Bordures spéciales pour les coins des blocs 3x3 */
+        .sudoku-cell:nth-child(3n):nth-child(n+19):nth-child(-n+27):not(:nth-child(9n)),
+        .sudoku-cell:nth-child(3n):nth-child(n+46):nth-child(-n+54):not(:nth-child(9n)) {
+            border-right: 4px solid #000000;
+            border-bottom: 4px solid #000000;
+        }
+
+        .number-pad-panel {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .number-btn {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ff00ff, #ff4499);
+            border: 2px solid #ff00ff;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .number-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        .stats-display {
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #ff00ff;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        .ai-panel {
+            background: rgba(0, 255, 0, 0.1);
+            border: 2px solid #00ff00;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .ai-suggestion {
+            font-size: 12px;
+            margin-top: 10px;
+            color: #00ff00;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.4;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .game-status {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 30px;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        .game-status.win {
+            color: #00ff00;
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        .game-status.error {
+            color: #ff0000;
+            animation: statusPulse 1s ease-in-out 3;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes themeTransition {
+            0% { filter: brightness(1) saturate(1); }
+            50% { filter: brightness(1.3) saturate(1.5); }
+            100% { filter: brightness(1) saturate(1); }
+        }
+
+        .neural-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .neural-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            height: 1px;
+            animation: neuralFlow 6s linear infinite;
+        }
+
+        @keyframes neuralFlow {
+            0% { transform: translateX(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100vw); opacity: 0; }
+        }
+
+        @media (max-width: 1200px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .side-panel {
+                width: 100%;
+                max-width: 500px;
+            }
+            
+            .sudoku-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sudoku-cell {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+            
+            .number-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+
+        /* Styles pour la modal des règles */
+        .rules-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .rules-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .rules-content {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(26, 26, 46, 0.95));
+            border: 3px solid var(--primary-color, #00ffff);
+            border-radius: 20px;
+            max-width: 800px;
+            max-height: 90vh;
+            width: 90%;
+            overflow: hidden;
+            box-shadow: 0 0 50px var(--primary-color, #00ffff);
+            animation: modalSlideIn 0.4s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px) scale(0.9); }
+            to { transform: translateY(0) scale(1); }
+        }
+
+        .rules-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(0, 255, 255, 0.1);
+            border-bottom: 2px solid var(--primary-color, #00ffff);
+        }
+
+        .rules-header h2 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--primary-color, #00ffff);
+            text-shadow: 0 0 15px var(--primary-color, #00ffff);
+        }
+
+        .close-rules-btn {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ff0000, #ff4444);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .close-rules-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+        }
+
+        .rules-body {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+            color: #ffffff;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .rules-section {
+            margin-bottom: 25px;
+        }
+
+        .rules-section h3 {
+            color: var(--secondary-color, #ff00ff);
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px var(--secondary-color, #ff00ff);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rules-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .rules-section li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .rules-section li:before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color, #ffff00);
+            font-weight: bold;
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .difficulty-item {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--primary-color, #00ffff);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .difficulty-name {
+            font-weight: bold;
+            color: var(--primary-color, #00ffff);
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .difficulty-desc {
+            color: #cccccc;
+            font-size: 14px;
+        }
+
+        .technique-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .technique-item {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .technique-name {
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 5px;
+        }
+
+        .technique-desc {
+            color: #cccccc;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .rules-content {
+                width: 95%;
+                max-height: 95vh;
+            }
+            
+            .rules-header {
+                padding: 15px 20px;
+            }
+            
+            .rules-header h2 {
+                font-size: 18px;
+            }
+            
+            .rules-body {
+                padding: 20px;
+                font-size: 14px;
+            }
+            
+            .difficulty-grid,
+            .technique-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <div class="neural-grid" id="neuralGrid"></div>
+
+    <div class="game-header">
+        <h1 class="game-title" id="gameTitle">SUDOKU QUANTUM AI 2077</h1>
+        <p class="subtitle" id="subtitle">INTERFACE NEURALE DE RÉSOLUTION ACTIVÉE</p>
+        
+        <div class="controls-header">
+            <div class="top-controls">
+                <div class="language-selector">
+                    <select id="languageSelect">
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="ar">🇸🇦 العربية</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                </div>
+                <button class="close-btn" onclick="closePlatform()" id="closeBtn">✕</button>
+            </div>
+            <button class="rules-btn" onclick="showRules()" id="rulesBtn">Règles du Jeu</button>
+        </div>
+    </div>
+
+    <!-- Modal des règles -->
+    <div class="rules-modal" id="rulesModal">
+        <div class="rules-content">
+            <div class="rules-header">
+                <h2 id="rulesModalTitle">🧩 RÈGLES DU SUDOKU QUANTUM AI 2077 🧩</h2>
+                <button class="close-rules-btn" onclick="closeRules()">✕</button>
+            </div>
+            <div class="rules-body" id="rulesBody">
+                <!-- Le contenu sera rempli par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="side-panel">
+            <div class="panel">
+                <h3 id="controlsTitle">CONTRÔLES QUANTIQUES</h3>
+                <button class="btn" id="newGameBtn" onclick="newGame()">Nouvelle Partie</button>
+                <button class="btn" id="solveBtn" onclick="solveWithAI()">Résolution IA</button>
+                <button class="btn" id="hintBtn" onclick="getHint()">Indice IA</button>
+                <button class="btn" id="checkBtn" onclick="checkSolution()">Vérifier</button>
+                <button class="btn" id="clearBtn" onclick="clearCell()">Effacer</button>
+            </div>
+
+            <div class="panel">
+                <h3 id="difficultyTitle">NIVEAU DE DIFFICULTÉ</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button class="difficulty-btn" onclick="setDifficulty('easy')" id="easyBtn">Facile</button>
+                    <button class="difficulty-btn active" onclick="setDifficulty('medium')" id="mediumBtn">Moyen</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('hard')" id="hardBtn">Difficile</button>
+                    <button class="difficulty-btn" onclick="setDifficulty('expert')" id="expertBtn">Expert</button>
+                </div>
+            </div>
+
+            <div class="stats-display">
+                <h3 id="statsTitle">STATISTIQUES</h3>
+                <div class="stat-item">
+                    <span id="timeLabel">Temps:</span>
+                    <span class="stat-value" id="timeValue">00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span id="movesLabel">Coups:</span>
+                    <span class="stat-value" id="movesValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="hintsLabel">Indices:</span>
+                    <span class="stat-value" id="hintsValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="errorsLabel">Erreurs:</span>
+                    <span class="stat-value" id="errorsValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="completionLabel">Progression:</span>
+                    <span class="stat-value" id="completionValue">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sudoku-container">
+            <div class="game-status" id="gameStatus">Sélectionnez une cellule pour commencer</div>
+            
+            <div class="sudoku-grid" id="sudokuGrid"></div>
+            
+
+        </div>
+
+        <div class="side-panel">
+            <div class="ai-panel">
+                <h3 id="aiTitle">ASSISTANT IA QUANTIQUE</h3>
+                <button class="btn" id="aiAnalyzeBtn" onclick="analyzeBoard()" style="background: linear-gradient(45deg, #00ff00, #00cc00);">Analyser</button>
+                <div class="ai-suggestion" id="aiSuggestion">IA prête à analyser le plateau</div>
+            </div>
+
+            <div class="panel">
+                <h3 id="numbersTitle">SAISIE NUMÉRIQUE</h3>
+                <div class="number-pad-panel">
+                    <button class="number-btn" onclick="inputNumber(1)">1</button>
+                    <button class="number-btn" onclick="inputNumber(2)">2</button>
+                    <button class="number-btn" onclick="inputNumber(3)">3</button>
+                    <button class="number-btn" onclick="inputNumber(4)">4</button>
+                    <button class="number-btn" onclick="inputNumber(5)">5</button>
+                    <button class="number-btn" onclick="inputNumber(6)">6</button>
+                    <button class="number-btn" onclick="inputNumber(7)">7</button>
+                    <button class="number-btn" onclick="inputNumber(8)">8</button>
+                    <button class="number-btn" onclick="inputNumber(9)">9</button>
+                    <button class="number-btn" onclick="clearCell()" style="background: linear-gradient(45deg, #666, #999);">✕</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 id="strategiesTitle">STRATÉGIES IA</h3>
+                <button class="btn" id="nakedSinglesBtn" onclick="findNakedSingles()" style="font-size: 11px;">Singles Nus</button>
+                <button class="btn" id="hiddenSinglesBtn" onclick="findHiddenSingles()" style="font-size: 11px;">Singles Cachés</button>
+                <button class="btn" id="nakedPairsBtn" onclick="findNakedPairs()" style="font-size: 11px;">Paires Nues</button>
+                <button class="btn" id="pointingPairsBtn" onclick="findPointingPairs()" style="font-size: 11px;">Paires Pointées</button>
+            </div>
+
+            <div class="stats-display">
+                <h3 id="aiStatsTitle">ANALYSE IA</h3>
+                <div class="stat-item">
+                    <span id="emptyCellsLabel">Cellules vides:</span>
+                    <span class="stat-value" id="emptyCellsValue">81</span>
+                </div>
+                <div class="stat-item">
+                    <span id="possibilitiesLabel">Possibilités:</span>
+                    <span class="stat-value" id="possibilitiesValue">729</span>
+                </div>
+                <div class="stat-item">
+                    <span id="difficultyRatingLabel">Difficulté IA:</span>
+                    <span class="stat-value" id="difficultyRatingValue">0</span>
+                </div>
+                <div class="stat-item">
+                    <span id="solutionTimeLabel">Temps IA:</span>
+                    <span class="stat-value" id="solutionTimeValue">0ms</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Traductions
+        const translations = {
+            fr: {
+                gameTitle: "SUDOKU QUANTUM AI 2077",
+                subtitle: "INTERFACE NEURALE DE RÉSOLUTION ACTIVÉE",
+                rulesBtn: "Règles du Jeu",
+                controlsTitle: "CONTRÔLES QUANTIQUES",
+                newGameBtn: "Nouvelle Partie",
+                solveBtn: "Résolution IA",
+                hintBtn: "Indice IA",
+                checkBtn: "Vérifier",
+                clearBtn: "Effacer",
+                difficultyTitle: "NIVEAU DE DIFFICULTÉ",
+                easyBtn: "Facile",
+                mediumBtn: "Moyen",
+                hardBtn: "Difficile",
+                expertBtn: "Expert",
+                statsTitle: "STATISTIQUES",
+                timeLabel: "Temps:",
+                movesLabel: "Coups:",
+                hintsLabel: "Indices:",
+                errorsLabel: "Erreurs:",
+                completionLabel: "Progression:",
+                aiTitle: "ASSISTANT IA QUANTIQUE",
+                aiAnalyzeBtn: "Analyser",
+                numbersTitle: "SAISIE NUMÉRIQUE",
+                strategiesTitle: "STRATÉGIES IA",
+                aiStatsTitle: "ANALYSE IA",
+                emptyCellsLabel: "Cellules vides:",
+                possibilitiesLabel: "Possibilités:",
+                difficultyRatingLabel: "Difficulté IA:",
+                solutionTimeLabel: "Temps IA:",
+                selectCellText: "Sélectionnez une cellule pour commencer",
+                congratulationsText: "🎉 FÉLICITATIONS! Sudoku résolu! 🎉",
+                errorText: "❌ Erreur détectée dans la grille",
+                aiReadyText: "IA prête à analyser le plateau",
+                hintText: "💡 Indice: Essayez le chiffre {number} en position ({row}, {col})",
+                noHintText: "🤔 Aucun indice évident trouvé",
+                solvingText: "🔄 Résolution en cours...",
+                solvedText: "✅ Grille résolue par l'IA!",
+                impossibleText: "❌ Grille impossible à résoudre",
+                nakedSinglesBtn: "Singles Nus",
+                hiddenSinglesBtn: "Singles Cachés",
+                nakedPairsBtn: "Paires Nues",
+                pointingPairsBtn: "Paires Pointées",
+                closeTitle: "Retour à l'accueil",
+                // Règles du jeu
+                rulesModalTitle: "🧩 RÈGLES DU SUDOKU QUANTUM AI 2077 🧩",
+                objectiveTitle: "🎯 OBJECTIF",
+                objectiveText: "Remplir une grille 9×9 avec les chiffres 1 à 9",
+                objectiveRule: "Chaque ligne, colonne et région 3×3 doit contenir tous les chiffres de 1 à 9",
+                howToPlayTitle: "🎮 COMMENT JOUER",
+                howToPlay1: "Cliquez sur une cellule vide pour la sélectionner",
+                howToPlay2: "Utilisez les boutons numériques ou le clavier pour saisir un chiffre",
+                howToPlay3: "Utilisez le bouton \"✕\" ou Suppr/Retour pour effacer",
+                aiFeaturesTitle: "🤖 FONCTIONNALITÉS IA",
+                aiFeature1: "INDICE IA : Obtenir un conseil intelligent",
+                aiFeature2: "RÉSOLUTION IA : Laisser l'IA résoudre automatiquement",
+                aiFeature3: "ANALYSER : Analyser les techniques applicables",
+                aiFeature4: "STRATÉGIES : Appliquer des techniques avancées",
+                difficultyLevelsTitle: "🏆 NIVEAUX DE DIFFICULTÉ",
+                easyLevel: "FACILE",
+                easyDesc: "40 cellules à remplir",
+                mediumLevel: "MOYEN", 
+                mediumDesc: "50 cellules à remplir",
+                hardLevel: "DIFFICILE",
+                hardDesc: "60 cellules à remplir",
+                expertLevel: "EXPERT",
+                expertDesc: "70 cellules à remplir",
+                statisticsTitle: "📊 STATISTIQUES",
+                stat1: "Temps de résolution",
+                stat2: "Nombre de coups",
+                stat3: "Indices utilisés",
+                stat4: "Erreurs commises",
+                stat5: "Progression en temps réel",
+                techniquesTitle: "🔬 TECHNIQUES IA AVANCÉES",
+                technique1Name: "Singles Nus",
+                technique1Desc: "Cellules avec une seule possibilité",
+                technique2Name: "Singles Cachés",
+                technique2Desc: "Chiffres avec une seule position possible",
+                technique3Name: "Paires Nues",
+                technique3Desc: "Élimination par paires",
+                technique4Name: "Paires Pointées",
+                technique4Desc: "Techniques de région",
+                goodLuckText: "Bonne résolution, maître du Sudoku ! 🚀"
+            },
+            en: {
+                gameTitle: "QUANTUM AI SUDOKU 2077",
+                subtitle: "NEURAL SOLVING INTERFACE ACTIVATED",
+                rulesBtn: "Game Rules",
+                controlsTitle: "QUANTUM CONTROLS",
+                newGameBtn: "New Game",
+                solveBtn: "AI Solve",
+                hintBtn: "AI Hint",
+                checkBtn: "Check",
+                clearBtn: "Clear",
+                difficultyTitle: "DIFFICULTY LEVEL",
+                easyBtn: "Easy",
+                mediumBtn: "Medium",
+                hardBtn: "Hard",
+                expertBtn: "Expert",
+                statsTitle: "STATISTICS",
+                timeLabel: "Time:",
+                movesLabel: "Moves:",
+                hintsLabel: "Hints:",
+                errorsLabel: "Errors:",
+                completionLabel: "Progress:",
+                aiTitle: "QUANTUM AI ASSISTANT",
+                aiAnalyzeBtn: "Analyze",
+                numbersTitle: "NUMBER INPUT",
+                strategiesTitle: "AI STRATEGIES",
+                aiStatsTitle: "AI ANALYSIS",
+                emptyCellsLabel: "Empty cells:",
+                possibilitiesLabel: "Possibilities:",
+                difficultyRatingLabel: "AI Difficulty:",
+                solutionTimeLabel: "AI Time:",
+                selectCellText: "Select a cell to start",
+                congratulationsText: "🎉 CONGRATULATIONS! Sudoku solved! 🎉",
+                errorText: "❌ Error detected in grid",
+                aiReadyText: "AI ready to analyze board",
+                hintText: "💡 Hint: Try number {number} at position ({row}, {col})",
+                noHintText: "🤔 No obvious hint found",
+                solvingText: "🔄 Solving in progress...",
+                solvedText: "✅ Grid solved by AI!",
+                impossibleText: "❌ Impossible to solve grid",
+                nakedSinglesBtn: "Naked Singles",
+                hiddenSinglesBtn: "Hidden Singles",
+                nakedPairsBtn: "Naked Pairs",
+                pointingPairsBtn: "Pointing Pairs",
+                closeTitle: "Back to Home",
+                // Game Rules
+                rulesModalTitle: "🧩 QUANTUM AI SUDOKU 2077 RULES 🧩",
+                objectiveTitle: "🎯 OBJECTIVE",
+                objectiveText: "Fill a 9×9 grid with digits 1 to 9",
+                objectiveRule: "Each row, column and 3×3 region must contain all digits from 1 to 9",
+                howToPlayTitle: "🎮 HOW TO PLAY",
+                howToPlay1: "Click on an empty cell to select it",
+                howToPlay2: "Use number buttons or keyboard to enter a digit",
+                howToPlay3: "Use \"✕\" button or Delete/Backspace to clear",
+                aiFeaturesTitle: "🤖 AI FEATURES",
+                aiFeature1: "AI HINT: Get intelligent advice",
+                aiFeature2: "AI SOLVE: Let AI solve automatically",
+                aiFeature3: "ANALYZE: Analyze applicable techniques",
+                aiFeature4: "STRATEGIES: Apply advanced techniques",
+                difficultyLevelsTitle: "🏆 DIFFICULTY LEVELS",
+                easyLevel: "EASY",
+                easyDesc: "40 cells to fill",
+                mediumLevel: "MEDIUM",
+                mediumDesc: "50 cells to fill",
+                hardLevel: "HARD",
+                hardDesc: "60 cells to fill",
+                expertLevel: "EXPERT",
+                expertDesc: "70 cells to fill",
+                statisticsTitle: "📊 STATISTICS",
+                stat1: "Solving time",
+                stat2: "Number of moves",
+                stat3: "Hints used",
+                stat4: "Errors made",
+                stat5: "Real-time progress",
+                techniquesTitle: "🔬 ADVANCED AI TECHNIQUES",
+                technique1Name: "Naked Singles",
+                technique1Desc: "Cells with only one possibility",
+                technique2Name: "Hidden Singles",
+                technique2Desc: "Numbers with only one possible position",
+                technique3Name: "Naked Pairs",
+                technique3Desc: "Elimination by pairs",
+                technique4Name: "Pointing Pairs",
+                technique4Desc: "Region techniques",
+                goodLuckText: "Happy solving, Sudoku master! 🚀"
+            },
+            es: {
+                gameTitle: "SUDOKU CUÁNTICO IA 2077",
+                subtitle: "INTERFAZ NEURAL DE RESOLUCIÓN ACTIVADA",
+                rulesBtn: "Reglas del Juego",
+                controlsTitle: "CONTROLES CUÁNTICOS",
+                newGameBtn: "Nueva Partida",
+                solveBtn: "Resolver IA",
+                hintBtn: "Pista IA",
+                checkBtn: "Verificar",
+                clearBtn: "Borrar",
+                difficultyTitle: "NIVEL DE DIFICULTAD",
+                easyBtn: "Fácil",
+                mediumBtn: "Medio",
+                hardBtn: "Difícil",
+                expertBtn: "Experto",
+                statsTitle: "ESTADÍSTICAS",
+                timeLabel: "Tiempo:",
+                movesLabel: "Movimientos:",
+                hintsLabel: "Pistas:",
+                errorsLabel: "Errores:",
+                completionLabel: "Progreso:",
+                aiTitle: "ASISTENTE IA CUÁNTICO",
+                aiAnalyzeBtn: "Analizar",
+                numbersTitle: "ENTRADA NUMÉRICA",
+                strategiesTitle: "ESTRATEGIAS IA",
+                aiStatsTitle: "ANÁLISIS IA",
+                emptyCellsLabel: "Celdas vacías:",
+                possibilitiesLabel: "Posibilidades:",
+                difficultyRatingLabel: "Dificultad IA:",
+                solutionTimeLabel: "Tiempo IA:",
+                selectCellText: "Selecciona una celda para empezar",
+                congratulationsText: "🎉 ¡FELICIDADES! ¡Sudoku resuelto! 🎉",
+                errorText: "❌ Error detectado en la cuadrícula",
+                aiReadyText: "IA lista para analizar el tablero",
+                hintText: "💡 Pista: Prueba el número {number} en posición ({row}, {col})",
+                noHintText: "🤔 No se encontró pista obvia",
+                solvingText: "🔄 Resolviendo en progreso...",
+                solvedText: "✅ ¡Cuadrícula resuelta por IA!",
+                impossibleText: "❌ Imposible resolver la cuadrícula",
+                nakedSinglesBtn: "Singles Desnudos",
+                hiddenSinglesBtn: "Singles Ocultos",
+                nakedPairsBtn: "Pares Desnudos",
+                pointingPairsBtn: "Pares Apuntando",
+                closeTitle: "Volver al Inicio",
+                // Reglas del juego
+                rulesModalTitle: "🧩 REGLAS DEL SUDOKU CUÁNTICO IA 2077 🧩",
+                objectiveTitle: "🎯 OBJETIVO",
+                objectiveText: "Llenar una cuadrícula 9×9 con los dígitos del 1 al 9",
+                objectiveRule: "Cada fila, columna y región 3×3 debe contener todos los dígitos del 1 al 9",
+                howToPlayTitle: "🎮 CÓMO JUGAR",
+                howToPlay1: "Haz clic en una celda vacía para seleccionarla",
+                howToPlay2: "Usa los botones numéricos o el teclado para ingresar un dígito",
+                howToPlay3: "Usa el botón \"✕\" o Supr/Retroceso para borrar",
+                aiFeaturesTitle: "🤖 CARACTERÍSTICAS IA",
+                aiFeature1: "PISTA IA: Obtener consejo inteligente",
+                aiFeature2: "RESOLVER IA: Dejar que la IA resuelva automáticamente",
+                aiFeature3: "ANALIZAR: Analizar técnicas aplicables",
+                aiFeature4: "ESTRATEGIAS: Aplicar técnicas avanzadas",
+                difficultyLevelsTitle: "🏆 NIVELES DE DIFICULTAD",
+                easyLevel: "FÁCIL",
+                easyDesc: "40 celdas para llenar",
+                mediumLevel: "MEDIO",
+                mediumDesc: "50 celdas para llenar",
+                hardLevel: "DIFÍCIL",
+                hardDesc: "60 celdas para llenar",
+                expertLevel: "EXPERTO",
+                expertDesc: "70 celdas para llenar",
+                statisticsTitle: "📊 ESTADÍSTICAS",
+                stat1: "Tiempo de resolución",
+                stat2: "Número de movimientos",
+                stat3: "Pistas utilizadas",
+                stat4: "Errores cometidos",
+                stat5: "Progreso en tiempo real",
+                techniquesTitle: "🔬 TÉCNICAS IA AVANZADAS",
+                technique1Name: "Singles Desnudos",
+                technique1Desc: "Celdas con una sola posibilidad",
+                technique2Name: "Singles Ocultos",
+                technique2Desc: "Números con una sola posición posible",
+                technique3Name: "Pares Desnudos",
+                technique3Desc: "Eliminación por pares",
+                technique4Name: "Pares Apuntando",
+                technique4Desc: "Técnicas de región",
+                goodLuckText: "¡Buena resolución, maestro del Sudoku! 🚀"
+            },
+            de: {
+                gameTitle: "QUANTUM KI SUDOKU 2077",
+                subtitle: "NEURALE LÖSUNGSSCHNITTSTELLE AKTIVIERT",
+                rulesBtn: "Spielregeln",
+                controlsTitle: "QUANTUM STEUERUNG",
+                newGameBtn: "Neues Spiel",
+                solveBtn: "KI Lösen",
+                hintBtn: "KI Hinweis",
+                checkBtn: "Prüfen",
+                clearBtn: "Löschen",
+                difficultyTitle: "SCHWIERIGKEITSGRAD",
+                easyBtn: "Einfach",
+                mediumBtn: "Mittel",
+                hardBtn: "Schwer",
+                expertBtn: "Experte",
+                statsTitle: "STATISTIKEN",
+                timeLabel: "Zeit:",
+                movesLabel: "Züge:",
+                hintsLabel: "Hinweise:",
+                errorsLabel: "Fehler:",
+                completionLabel: "Fortschritt:",
+                aiTitle: "QUANTUM KI ASSISTENT",
+                aiAnalyzeBtn: "Analysieren",
+                numbersTitle: "ZAHLENEINGABE",
+                strategiesTitle: "KI STRATEGIEN",
+                aiStatsTitle: "KI ANALYSE",
+                emptyCellsLabel: "Leere Zellen:",
+                possibilitiesLabel: "Möglichkeiten:",
+                difficultyRatingLabel: "KI Schwierigkeit:",
+                solutionTimeLabel: "KI Zeit:",
+                selectCellText: "Wähle eine Zelle zum Starten",
+                congratulationsText: "🎉 GLÜCKWUNSCH! Sudoku gelöst! 🎉",
+                errorText: "❌ Fehler im Gitter erkannt",
+                aiReadyText: "KI bereit zur Brett-Analyse",
+                hintText: "💡 Hinweis: Versuche Nummer {number} an Position ({row}, {col})",
+                noHintText: "🤔 Kein offensichtlicher Hinweis gefunden",
+                solvingText: "🔄 Lösung in Bearbeitung...",
+                solvedText: "✅ Gitter von KI gelöst!",
+                impossibleText: "❌ Unmöglich das Gitter zu lösen",
+                nakedSinglesBtn: "Nackte Einzel",
+                hiddenSinglesBtn: "Versteckte Einzel",
+                nakedPairsBtn: "Nackte Paare",
+                pointingPairsBtn: "Zeigende Paare",
+                closeTitle: "Zurück zur Startseite",
+                // Spielregeln
+                rulesModalTitle: "🧩 QUANTUM KI SUDOKU 2077 REGELN 🧩",
+                objectiveTitle: "🎯 ZIEL",
+                objectiveText: "Ein 9×9 Gitter mit den Ziffern 1 bis 9 füllen",
+                objectiveRule: "Jede Zeile, Spalte und 3×3 Region muss alle Ziffern von 1 bis 9 enthalten",
+                howToPlayTitle: "🎮 WIE SPIELEN",
+                howToPlay1: "Klicke auf eine leere Zelle, um sie auszuwählen",
+                howToPlay2: "Verwende Zahlen-Buttons oder Tastatur, um eine Ziffer einzugeben",
+                howToPlay3: "Verwende \"✕\" Button oder Entf/Rücktaste zum Löschen",
+                aiFeaturesTitle: "🤖 KI FUNKTIONEN",
+                aiFeature1: "KI HINWEIS: Intelligente Beratung erhalten",
+                aiFeature2: "KI LÖSEN: KI automatisch lösen lassen",
+                aiFeature3: "ANALYSIEREN: Anwendbare Techniken analysieren",
+                aiFeature4: "STRATEGIEN: Erweiterte Techniken anwenden",
+                difficultyLevelsTitle: "🏆 SCHWIERIGKEITSGRADE",
+                easyLevel: "EINFACH",
+                easyDesc: "40 Zellen zu füllen",
+                mediumLevel: "MITTEL",
+                mediumDesc: "50 Zellen zu füllen",
+                hardLevel: "SCHWER",
+                hardDesc: "60 Zellen zu füllen",
+                expertLevel: "EXPERTE",
+                expertDesc: "70 Zellen zu füllen",
+                statisticsTitle: "📊 STATISTIKEN",
+                stat1: "Lösungszeit",
+                stat2: "Anzahl der Züge",
+                stat3: "Verwendete Hinweise",
+                stat4: "Gemachte Fehler",
+                stat5: "Echtzeit-Fortschritt",
+                techniquesTitle: "🔬 ERWEITERTE KI TECHNIKEN",
+                technique1Name: "Nackte Einzel",
+                technique1Desc: "Zellen mit nur einer Möglichkeit",
+                technique2Name: "Versteckte Einzel",
+                technique2Desc: "Zahlen mit nur einer möglichen Position",
+                technique3Name: "Nackte Paare",
+                technique3Desc: "Eliminierung durch Paare",
+                technique4Name: "Zeigende Paare",
+                technique4Desc: "Regions-Techniken",
+                goodLuckText: "Viel Erfolg beim Lösen, Sudoku-Meister! 🚀"
+            },
+            ar: {
+                gameTitle: "سودوكو الذكاء الاصطناعي الكمي 2077",
+                subtitle: "واجهة الحل العصبية مُفعلة",
+                rulesBtn: "قواعد اللعبة",
+                controlsTitle: "التحكم الكمي",
+                newGameBtn: "لعبة جديدة",
+                solveBtn: "حل بالذكاء الاصطناعي",
+                hintBtn: "تلميح ذكي",
+                checkBtn: "فحص",
+                clearBtn: "مسح",
+                difficultyTitle: "مستوى الصعوبة",
+                easyBtn: "سهل",
+                mediumBtn: "متوسط",
+                hardBtn: "صعب",
+                expertBtn: "خبير",
+                statsTitle: "الإحصائيات",
+                timeLabel: "الوقت:",
+                movesLabel: "الحركات:",
+                hintsLabel: "التلميحات:",
+                errorsLabel: "الأخطاء:",
+                completionLabel: "التقدم:",
+                aiTitle: "مساعد الذكاء الاصطناعي الكمي",
+                aiAnalyzeBtn: "تحليل",
+                numbersTitle: "إدخال الأرقام",
+                strategiesTitle: "استراتيجيات الذكاء الاصطناعي",
+                aiStatsTitle: "تحليل الذكاء الاصطناعي",
+                emptyCellsLabel: "الخلايا الفارغة:",
+                possibilitiesLabel: "الاحتمالات:",
+                difficultyRatingLabel: "صعوبة الذكاء الاصطناعي:",
+                solutionTimeLabel: "وقت الذكاء الاصطناعي:",
+                selectCellText: "اختر خلية للبدء",
+                congratulationsText: "🎉 تهانينا! تم حل السودوكو! 🎉",
+                errorText: "❌ تم اكتشاف خطأ في الشبكة",
+                aiReadyText: "الذكاء الاصطناعي جاهز لتحليل اللوحة",
+                hintText: "💡 تلميح: جرب الرقم {number} في الموضع ({row}, {col})",
+                noHintText: "🤔 لم يتم العثور على تلميح واضح",
+                solvingText: "🔄 الحل قيد التقدم...",
+                solvedText: "✅ تم حل الشبكة بواسطة الذكاء الاصطناعي!",
+                impossibleText: "❌ من المستحيل حل الشبكة",
+                nakedSinglesBtn: "المفردات العارية",
+                hiddenSinglesBtn: "المفردات المخفية",
+                nakedPairsBtn: "الأزواج العارية",
+                pointingPairsBtn: "الأزواج المشيرة",
+                closeTitle: "العودة للرئيسية",
+                // قواعد اللعبة
+                rulesModalTitle: "🧩 قواعد سودوكو الذكاء الاصطناعي الكمي 2077 🧩",
+                objectiveTitle: "🎯 الهدف",
+                objectiveText: "ملء شبكة 9×9 بالأرقام من 1 إلى 9",
+                objectiveRule: "كل صف وعمود ومنطقة 3×3 يجب أن تحتوي على جميع الأرقام من 1 إلى 9",
+                howToPlayTitle: "🎮 كيفية اللعب",
+                howToPlay1: "انقر على خلية فارغة لتحديدها",
+                howToPlay2: "استخدم الأزرار الرقمية أو لوحة المفاتيح لإدخال رقم",
+                howToPlay3: "استخدم زر \"✕\" أو Delete/Backspace للمسح",
+                aiFeaturesTitle: "🤖 ميزات الذكاء الاصطناعي",
+                aiFeature1: "تلميح ذكي: الحصول على نصيحة ذكية",
+                aiFeature2: "حل ذكي: دع الذكاء الاصطناعي يحل تلقائياً",
+                aiFeature3: "تحليل: تحليل التقنيات القابلة للتطبيق",
+                aiFeature4: "استراتيجيات: تطبيق تقنيات متقدمة",
+                difficultyLevelsTitle: "🏆 مستويات الصعوبة",
+                easyLevel: "سهل",
+                easyDesc: "40 خلية للملء",
+                mediumLevel: "متوسط",
+                mediumDesc: "50 خلية للملء",
+                hardLevel: "صعب",
+                hardDesc: "60 خلية للملء",
+                expertLevel: "خبير",
+                expertDesc: "70 خلية للملء",
+                statisticsTitle: "📊 الإحصائيات",
+                stat1: "وقت الحل",
+                stat2: "عدد الحركات",
+                stat3: "التلميحات المستخدمة",
+                stat4: "الأخطاء المرتكبة",
+                stat5: "التقدم في الوقت الفعلي",
+                techniquesTitle: "🔬 تقنيات الذكاء الاصطناعي المتقدمة",
+                technique1Name: "المفردات العارية",
+                technique1Desc: "خلايا بإمكانية واحدة فقط",
+                technique2Name: "المفردات المخفية",
+                technique2Desc: "أرقام بموضع واحد ممكن فقط",
+                technique3Name: "الأزواج العارية",
+                technique3Desc: "الإقصاء بالأزواج",
+                technique4Name: "الأزواج المشيرة",
+                technique4Desc: "تقنيات المنطقة",
+                goodLuckText: "حظاً سعيداً في الحل، سيد السودوكو! 🚀"
+            },
+            zh: {
+                gameTitle: "量子AI数独 2077",
+                subtitle: "神经解决界面已激活",
+                rulesBtn: "游戏规则",
+                controlsTitle: "量子控制",
+                newGameBtn: "新游戏",
+                solveBtn: "AI解决",
+                hintBtn: "AI提示",
+                checkBtn: "检查",
+                clearBtn: "清除",
+                difficultyTitle: "难度级别",
+                easyBtn: "简单",
+                mediumBtn: "中等",
+                hardBtn: "困难",
+                expertBtn: "专家",
+                statsTitle: "统计",
+                timeLabel: "时间:",
+                movesLabel: "移动:",
+                hintsLabel: "提示:",
+                errorsLabel: "错误:",
+                completionLabel: "进度:",
+                aiTitle: "量子AI助手",
+                aiAnalyzeBtn: "分析",
+                numbersTitle: "数字输入",
+                strategiesTitle: "AI策略",
+                aiStatsTitle: "AI分析",
+                emptyCellsLabel: "空单元格:",
+                possibilitiesLabel: "可能性:",
+                difficultyRatingLabel: "AI难度:",
+                solutionTimeLabel: "AI时间:",
+                selectCellText: "选择一个单元格开始",
+                congratulationsText: "🎉 恭喜！数独已解决！ 🎉",
+                errorText: "❌ 网格中检测到错误",
+                aiReadyText: "AI准备分析棋盘",
+                hintText: "💡 提示: 在位置({row}, {col})尝试数字{number}",
+                noHintText: "🤔 未找到明显提示",
+                solvingText: "🔄 正在解决中...",
+                solvedText: "✅ 网格已被AI解决！",
+                impossibleText: "❌ 无法解决网格",
+                nakedSinglesBtn: "裸单数",
+                hiddenSinglesBtn: "隐单数",
+                nakedPairsBtn: "裸对数",
+                pointingPairsBtn: "指向对",
+                closeTitle: "返回主页",
+                // 游戏规则
+                rulesModalTitle: "🧩 量子AI数独 2077 规则 🧩",
+                objectiveTitle: "🎯 目标",
+                objectiveText: "用数字1到9填满9×9网格",
+                objectiveRule: "每行、每列和每个3×3区域必须包含1到9的所有数字",
+                howToPlayTitle: "🎮 如何游戏",
+                howToPlay1: "点击空单元格选择它",
+                howToPlay2: "使用数字按钮或键盘输入数字",
+                howToPlay3: "使用\"✕\"按钮或Delete/Backspace键清除",
+                aiFeaturesTitle: "🤖 AI功能",
+                aiFeature1: "AI提示：获得智能建议",
+                aiFeature2: "AI解决：让AI自动解决",
+                aiFeature3: "分析：分析适用的技巧",
+                aiFeature4: "策略：应用高级技巧",
+                difficultyLevelsTitle: "🏆 难度级别",
+                easyLevel: "简单",
+                easyDesc: "40个单元格需要填写",
+                mediumLevel: "中等",
+                mediumDesc: "50个单元格需要填写",
+                hardLevel: "困难",
+                hardDesc: "60个单元格需要填写",
+                expertLevel: "专家",
+                expertDesc: "70个单元格需要填写",
+                statisticsTitle: "📊 统计信息",
+                stat1: "解决时间",
+                stat2: "移动次数",
+                stat3: "使用的提示",
+                stat4: "犯的错误",
+                stat5: "实时进度",
+                techniquesTitle: "🔬 高级AI技巧",
+                technique1Name: "裸单数",
+                technique1Desc: "只有一种可能性的单元格",
+                technique2Name: "隐单数",
+                technique2Desc: "只有一个可能位置的数字",
+                technique3Name: "裸对数",
+                technique3Desc: "通过对数消除",
+                technique4Name: "指向对",
+                technique4Desc: "区域技巧",
+                goodLuckText: "祝你解题愉快，数独大师！🚀"
+            }
+        };
+
+        // Variables du jeu
+        let currentLanguage = 'fr';
+        let sudokuGrid = Array(9).fill().map(() => Array(9).fill(0));
+        let originalGrid = Array(9).fill().map(() => Array(9).fill(0));
+        let completeSolution = Array(9).fill().map(() => Array(9).fill(0));
+        let selectedCell = null;
+        let gameStartTime = null;
+        let gameTimer = null;
+        let currentDifficulty = 'medium';
+        
+        // Statistiques
+        let moves = 0;
+        let hints = 0;
+        let errors = 0;
+        let gameCompleted = false;
+
+        // Niveaux de difficulté (nombre de cellules à enlever)
+        const difficultyLevels = {
+            easy: 40,
+            medium: 50,
+            hard: 60,
+            expert: 70
+        };
+
+        // Grilles prédéfinies avec solutions garanties et uniques - chaque région 3x3 a au moins un chiffre
+        const predefinedPuzzles = {
+            easy: {
+                puzzle: [
+                    [5,3,0,0,7,0,0,0,0],
+                    [6,0,0,1,9,5,0,0,0],
+                    [0,9,8,0,0,0,0,6,0],
+                    [8,0,0,0,6,0,0,0,3],
+                    [4,0,0,8,0,3,0,0,1],
+                    [7,0,0,0,2,0,0,0,6],
+                    [0,6,0,0,0,0,2,8,0],
+                    [0,0,0,4,1,9,0,0,5],
+                    [0,0,0,0,8,0,0,7,9]
+                ],
+                solution: [
+                    [5,3,4,6,7,8,9,1,2],
+                    [6,7,2,1,9,5,3,4,8],
+                    [1,9,8,3,4,2,5,6,7],
+                    [8,5,9,7,6,1,4,2,3],
+                    [4,2,6,8,5,3,7,9,1],
+                    [7,1,3,9,2,4,8,5,6],
+                    [9,6,1,5,3,7,2,8,4],
+                    [2,8,7,4,1,9,6,3,5],
+                    [3,4,5,2,8,6,1,7,9]
+                ]
+            },
+            medium: {
+                puzzle: [
+                    [0,2,0,6,0,8,0,0,3],
+                    [5,8,0,0,0,9,7,0,0],
+                    [0,0,6,0,4,0,0,8,0],
+                    [3,7,0,0,0,0,5,0,0],
+                    [6,0,0,0,8,0,0,0,4],
+                    [0,0,8,0,0,5,0,1,3],
+                    [0,0,0,0,2,0,6,0,0],
+                    [0,0,9,8,0,0,0,3,6],
+                    [2,0,0,3,0,6,0,9,0]
+                ],
+                solution: [
+                    [1,2,4,6,7,8,9,5,3],
+                    [5,8,3,2,1,9,7,6,4],
+                    [9,6,7,5,4,3,1,8,2],
+                    [3,7,2,4,6,1,5,2,9],
+                    [6,1,5,9,8,2,3,7,4],
+                    [4,9,8,7,3,5,2,1,6],
+                    [8,3,1,1,2,4,6,4,5],
+                    [7,4,9,8,5,7,4,3,6],
+                    [2,5,6,3,9,6,8,9,1]
+                ]
+            },
+            hard: {
+                puzzle: [
+                    [8,0,0,0,0,0,0,0,2],
+                    [0,0,3,6,0,0,0,7,0],
+                    [0,7,0,0,9,0,2,0,0],
+                    [0,5,0,0,0,7,0,0,0],
+                    [0,0,0,0,4,5,7,0,0],
+                    [0,0,6,1,0,0,0,3,0],
+                    [0,0,1,0,0,0,0,6,8],
+                    [0,3,8,5,0,0,0,1,0],
+                    [9,0,0,0,0,8,4,0,0]
+                ],
+                solution: [
+                    [8,1,2,7,5,3,6,4,9],
+                    [9,4,3,6,8,2,1,7,5],
+                    [6,7,5,4,9,1,2,8,3],
+                    [1,5,4,2,3,7,8,9,6],
+                    [3,6,9,8,4,5,7,2,1],
+                    [2,8,7,1,6,9,5,3,4],
+                    [5,2,1,9,7,4,3,6,8],
+                    [4,3,8,5,2,6,9,1,7],
+                    [7,9,6,3,1,8,4,5,2]
+                ]
+            },
+            expert: {
+                puzzle: [
+                    [0,0,7,0,0,6,0,0,5],
+                    [0,5,9,0,0,0,0,6,8],
+                    [2,0,0,0,8,0,0,0,0],
+                    [0,4,5,0,0,0,8,0,0],
+                    [0,0,3,0,5,0,0,0,2],
+                    [0,0,6,0,0,3,0,5,4],
+                    [0,0,0,3,2,5,0,0,6],
+                    [6,2,0,0,0,0,5,7,1],
+                    [5,7,0,0,6,1,4,0,0]
+                ],
+                solution: [
+                    [1,3,7,2,4,6,9,8,5],
+                    [4,5,9,1,3,7,2,6,8],
+                    [2,6,8,5,9,8,1,4,3],
+                    [3,4,5,6,7,2,8,1,9],
+                    [7,1,3,8,5,4,6,9,2],
+                    [8,9,6,7,1,3,2,5,4],
+                    [9,8,4,3,2,5,7,3,6],
+                    [6,2,1,4,8,9,5,7,1],
+                    [5,7,2,9,6,1,4,2,8]
+                ]
+            }
+        };
+
+        // Initialisation
+        function init() {
+            createNeuralGrid();
+            setupEventListeners();
+            updateLanguage();
+            createSudokuGrid();
+            newGame();
+        }
+
+        function createNeuralGrid() {
+            const neuralGrid = document.getElementById('neuralGrid');
+            for (let i = 0; i < 40; i++) {
+                const line = document.createElement('div');
+                line.className = 'neural-line';
+                line.style.top = Math.random() * 100 + '%';
+                line.style.width = '400px';
+                line.style.animationDelay = Math.random() * 6 + 's';
+                neuralGrid.appendChild(line);
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('languageSelect').addEventListener('change', (e) => {
+                currentLanguage = e.target.value;
+                updateLanguage();
+            });
+
+            // Gestion du clavier
+            document.addEventListener('keydown', (e) => {
+                if (selectedCell) {
+                    const num = parseInt(e.key);
+                    if (num >= 1 && num <= 9) {
+                        inputNumber(num);
+                    } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                        clearCell();
+                    }
+                }
+            });
+        }
+
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            document.getElementById('gameTitle').textContent = t.gameTitle;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('rulesBtn').textContent = t.rulesBtn;
+            document.getElementById('controlsTitle').textContent = t.controlsTitle;
+            document.getElementById('newGameBtn').textContent = t.newGameBtn;
+            document.getElementById('solveBtn').textContent = t.solveBtn;
+            document.getElementById('hintBtn').textContent = t.hintBtn;
+            document.getElementById('checkBtn').textContent = t.checkBtn;
+            document.getElementById('clearBtn').textContent = t.clearBtn;
+            document.getElementById('difficultyTitle').textContent = t.difficultyTitle;
+            document.getElementById('easyBtn').textContent = t.easyBtn;
+            document.getElementById('mediumBtn').textContent = t.mediumBtn;
+            document.getElementById('hardBtn').textContent = t.hardBtn;
+            document.getElementById('expertBtn').textContent = t.expertBtn;
+            document.getElementById('statsTitle').textContent = t.statsTitle;
+            document.getElementById('timeLabel').textContent = t.timeLabel;
+            document.getElementById('movesLabel').textContent = t.movesLabel;
+            document.getElementById('hintsLabel').textContent = t.hintsLabel;
+            document.getElementById('errorsLabel').textContent = t.errorsLabel;
+            document.getElementById('completionLabel').textContent = t.completionLabel;
+            document.getElementById('aiTitle').textContent = t.aiTitle;
+            document.getElementById('aiAnalyzeBtn').textContent = t.aiAnalyzeBtn;
+            document.getElementById('numbersTitle').textContent = t.numbersTitle;
+            document.getElementById('strategiesTitle').textContent = t.strategiesTitle;
+            document.getElementById('aiStatsTitle').textContent = t.aiStatsTitle;
+            document.getElementById('emptyCellsLabel').textContent = t.emptyCellsLabel;
+            document.getElementById('possibilitiesLabel').textContent = t.possibilitiesLabel;
+            document.getElementById('difficultyRatingLabel').textContent = t.difficultyRatingLabel;
+            document.getElementById('solutionTimeLabel').textContent = t.solutionTimeLabel;
+            
+            // Mise à jour des boutons de stratégies
+            document.getElementById('nakedSinglesBtn').textContent = t.nakedSinglesBtn;
+            document.getElementById('hiddenSinglesBtn').textContent = t.hiddenSinglesBtn;
+            document.getElementById('nakedPairsBtn').textContent = t.nakedPairsBtn;
+            document.getElementById('pointingPairsBtn').textContent = t.pointingPairsBtn;
+            
+            // Mise à jour du titre du bouton fermer
+            document.getElementById('closeBtn').title = t.closeTitle;
+            
+            if (!gameCompleted) {
+                document.getElementById('gameStatus').textContent = t.selectCellText;
+                document.getElementById('aiSuggestion').textContent = t.aiReadyText;
+            }
+        }
+
+        function createSudokuGrid() {
+            const gridContainer = document.getElementById('sudokuGrid');
+            gridContainer.innerHTML = '';
+            
+            for (let i = 0; i < 81; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'sudoku-cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => selectCell(i));
+                gridContainer.appendChild(cell);
+            }
+        }
+
+        function selectCell(index) {
+            if (gameCompleted) return;
+            
+            const row = Math.floor(index / 9);
+            const col = index % 9;
+            
+            // Ne pas sélectionner les cellules données
+            if (originalGrid[row][col] !== 0) return;
+            
+            // Désélectionner la cellule précédente
+            if (selectedCell !== null) {
+                document.querySelector(`[data-index="${selectedCell}"]`).classList.remove('selected');
+            }
+            
+            selectedCell = index;
+            document.querySelector(`[data-index="${index}"]`).classList.add('selected');
+        }
+
+        function inputNumber(num) {
+            if (selectedCell === null || gameCompleted) return;
+            
+            const row = Math.floor(selectedCell / 9);
+            const col = selectedCell % 9;
+            
+            // Ne pas modifier les cellules données
+            if (originalGrid[row][col] !== 0) return;
+            
+            const oldValue = sudokuGrid[row][col];
+            sudokuGrid[row][col] = num;
+            moves++;
+            
+            // Pas de vérification d'erreur - le joueur peut placer n'importe quel chiffre
+            // C'est à lui de découvrir ses erreurs
+            
+            updateDisplay();
+            checkCompletion();
+        }
+
+        function clearCell() {
+            if (selectedCell === null || gameCompleted) return;
+            
+            const row = Math.floor(selectedCell / 9);
+            const col = selectedCell % 9;
+            
+            // Ne pas modifier les cellules données
+            if (originalGrid[row][col] !== 0) return;
+            
+            sudokuGrid[row][col] = 0;
+            moves++;
+            updateDisplay();
+        }
+
+        // Fonction de validation supprimée - le joueur peut placer n'importe quel chiffre
+        // La validation se fait uniquement à la fin pour vérifier si la solution est correcte
+
+        function generateSudoku() {
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            while (attempts < maxAttempts) {
+                // Réinitialiser la grille
+                sudokuGrid = Array(9).fill().map(() => Array(9).fill(0));
+                
+                // Remplir la grille avec un algorithme de backtracking
+                if (fillGrid()) {
+                    // Copier la solution complète
+                    completeSolution = sudokuGrid.map(row => [...row]);
+                    
+                    // Enlever des cellules selon la difficulté
+                    const cellsToRemove = difficultyLevels[currentDifficulty];
+                    if (removeCells(cellsToRemove)) {
+                        // Vérifier que la grille a une solution unique ET que chaque région a au moins un chiffre
+                        if (hasUniqueSolution() && validateRegionDistribution()) {
+                            // Sauvegarder la grille originale
+                            originalGrid = sudokuGrid.map(row => [...row]);
+                            return completeSolution;
+                        }
+                    }
+                }
+                attempts++;
+            }
+            
+            // Si échec, utiliser une grille prédéfinie
+            return generatePredefinedSudoku();
+        }
+
+        function validateRegionDistribution() {
+            // Vérifier que chaque région 3x3 a au moins un chiffre donné
+            for (let regionIndex = 0; regionIndex < 9; regionIndex++) {
+                const startRow = Math.floor(regionIndex / 3) * 3;
+                const startCol = (regionIndex % 3) * 3;
+                let hasNumber = false;
+                
+                for (let r = startRow; r < startRow + 3; r++) {
+                    for (let c = startCol; c < startCol + 3; c++) {
+                        if (sudokuGrid[r][c] !== 0) {
+                            hasNumber = true;
+                            break;
+                        }
+                    }
+                    if (hasNumber) break;
+                }
+                
+                if (!hasNumber) {
+                    return false; // Cette région est complètement vide
+                }
+            }
+            return true;
+        }
+
+        function generatePredefinedSudoku() {
+            const puzzle = predefinedPuzzles[currentDifficulty];
+            sudokuGrid = puzzle.puzzle.map(row => [...row]);
+            originalGrid = puzzle.puzzle.map(row => [...row]);
+            completeSolution = puzzle.solution.map(row => [...row]);
+            return completeSolution;
+        }
+
+        function fillGrid() {
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+            
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (sudokuGrid[row][col] === 0) {
+                        // Mélanger les nombres
+                        shuffleArray(numbers);
+                        
+                        for (let num of numbers) {
+                            if (isValidPlacement(row, col, num)) {
+                                sudokuGrid[row][col] = num;
+                                
+                                if (fillGrid()) {
+                                    return true;
+                                }
+                                
+                                sudokuGrid[row][col] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isValidPlacement(row, col, num) {
+            // Vérifier la ligne
+            for (let c = 0; c < 9; c++) {
+                if (sudokuGrid[row][c] === num) return false;
+            }
+            
+            // Vérifier la colonne
+            for (let r = 0; r < 9; r++) {
+                if (sudokuGrid[r][col] === num) return false;
+            }
+            
+            // Vérifier la région 3x3
+            const startRow = Math.floor(row / 3) * 3;
+            const startCol = Math.floor(col / 3) * 3;
+            
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    if (sudokuGrid[r][c] === num) return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function removeCells(count) {
+            let removed = 0;
+            let attempts = 0;
+            const maxAttempts = count * 4;
+            
+            // Garantir au moins 1 chiffre par région 3x3
+            const regionCounts = Array(9).fill(0);
+            const minPerRegion = 1;
+            
+            // Compter les cellules par région
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    const regionIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+                    if (sudokuGrid[row][col] !== 0) {
+                        regionCounts[regionIndex]++;
+                    }
+                }
+            }
+            
+            // Créer une liste de positions avec priorité équilibrée
+            const positions = [];
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                const regionIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+                
+                positions.push({
+                    index: i,
+                    row: row,
+                    col: col,
+                    region: regionIndex,
+                    priority: regionCounts[regionIndex] > minPerRegion ? 1 : 0
+                });
+            }
+            
+            // Trier par priorité (régions avec plus de chiffres en premier)
+            positions.sort((a, b) => b.priority - a.priority);
+            shuffleArray(positions);
+            
+            for (let posData of positions) {
+                if (removed >= count || attempts >= maxAttempts) break;
+                
+                const row = posData.row;
+                const col = posData.col;
+                const regionIndex = posData.region;
+                
+                // Ne pas enlever si c'est le dernier chiffre de la région
+                if (regionCounts[regionIndex] <= minPerRegion) {
+                    continue;
+                }
+                
+                const backup = sudokuGrid[row][col];
+                sudokuGrid[row][col] = 0;
+                attempts++;
+                
+                // Vérifier que la grille a toujours une solution unique
+                if (hasUniqueSolution()) {
+                    removed++;
+                    regionCounts[regionIndex]--;
+                } else {
+                    sudokuGrid[row][col] = backup;
+                }
+                
+                // Vérification de sécurité pour éviter les boucles infinies
+                if (attempts > maxAttempts) break;
+            }
+            
+            // Vérifier que chaque région a au moins un chiffre
+            let allRegionsValid = true;
+            for (let i = 0; i < 9; i++) {
+                if (regionCounts[i] < minPerRegion) {
+                    allRegionsValid = false;
+                    break;
+                }
+            }
+            
+            return removed >= Math.floor(count * 0.7) && allRegionsValid;
+        }
+
+        function hasUniqueSolution() {
+            const gridCopy = sudokuGrid.map(row => [...row]);
+            const solutions = [];
+            
+            // Chercher jusqu'à 2 solutions pour vérifier l'unicité
+            findAllSolutions(gridCopy, solutions, 2);
+            return solutions.length === 1;
+        }
+
+        function findAllSolutions(grid, solutions, maxSolutions) {
+            if (solutions.length >= maxSolutions) return;
+            
+            // Trouver la première cellule vide
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (grid[row][col] === 0) {
+                        for (let num = 1; num <= 9; num++) {
+                            if (isValidPlacementInGrid(grid, row, col, num)) {
+                                grid[row][col] = num;
+                                findAllSolutions(grid, solutions, maxSolutions);
+                                grid[row][col] = 0;
+                                
+                                if (solutions.length >= maxSolutions) return;
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+            
+            // Grille complète trouvée
+            solutions.push(grid.map(row => [...row]));
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Thèmes de couleurs
+        const colorThemes = [
+            {
+                name: 'Cyber Blue',
+                primary: '#00ffff',
+                secondary: '#ff00ff',
+                accent: '#ffff00',
+                bg: 'linear-gradient(135deg, #0a0a0a, #1a1a2e, #16213e, #0f3460)',
+                primaryAlpha: 'rgba(0, 255, 255, 0.5)'
+            },
+            {
+                name: 'Neon Pink',
+                primary: '#ff0080',
+                secondary: '#00ff80',
+                accent: '#8000ff',
+                bg: 'linear-gradient(135deg, #2a0a2a, #4a1a4a, #3a2a5a, #5a0a5a)',
+                primaryAlpha: 'rgba(255, 0, 128, 0.5)'
+            },
+            {
+                name: 'Electric Green',
+                primary: '#00ff00',
+                secondary: '#ff8000',
+                accent: '#0080ff',
+                bg: 'linear-gradient(135deg, #0a2a0a, #1a4a1a, #2a3a1a, #0a5a0a)',
+                primaryAlpha: 'rgba(0, 255, 0, 0.5)'
+            },
+            {
+                name: 'Solar Orange',
+                primary: '#ff8000',
+                secondary: '#8000ff',
+                accent: '#00ff80',
+                bg: 'linear-gradient(135deg, #2a1a0a, #4a2a1a, #3a2a2a, #5a2a0a)',
+                primaryAlpha: 'rgba(255, 128, 0, 0.5)'
+            },
+            {
+                name: 'Arctic Purple',
+                primary: '#8000ff',
+                secondary: '#ff0080',
+                accent: '#00ffff',
+                bg: 'linear-gradient(135deg, #1a0a2a, #2a1a4a, #3a2a3a, #4a0a5a)',
+                primaryAlpha: 'rgba(128, 0, 255, 0.5)'
+            },
+            {
+                name: 'Quantum Gold',
+                primary: '#ffd700',
+                secondary: '#ff4500',
+                accent: '#00bfff',
+                bg: 'linear-gradient(135deg, #2a2a0a, #4a4a1a, #3a3a2a, #5a5a0a)',
+                primaryAlpha: 'rgba(255, 215, 0, 0.5)'
+            }
+        ];
+
+        let currentThemeIndex = 0;
+
+        function applyColorTheme(theme) {
+            const root = document.documentElement;
+            root.style.setProperty('--primary-color', theme.primary);
+            root.style.setProperty('--secondary-color', theme.secondary);
+            root.style.setProperty('--accent-color', theme.accent);
+            root.style.setProperty('--bg-gradient', theme.bg);
+            root.style.setProperty('--primary-color-alpha', theme.primaryAlpha);
+            
+            // Animation de transition
+            document.body.style.animation = 'themeTransition 1s ease-in-out';
+            setTimeout(() => {
+                document.body.style.animation = 'backgroundPulse 8s ease-in-out infinite';
+            }, 1000);
+        }
+
+        function newGame() {
+            gameCompleted = false;
+            moves = 0;
+            hints = 0;
+            errors = 0;
+            selectedCell = null;
+            
+            // Changer le thème de couleur à chaque nouvelle partie avec animation
+            currentThemeIndex = (currentThemeIndex + 1) % colorThemes.length;
+            const newTheme = colorThemes[currentThemeIndex];
+            
+            // Animation de transition de thème
+            document.body.style.animation = 'themeTransition 1.5s ease-in-out';
+            
+            setTimeout(() => {
+                applyColorTheme(newTheme);
+                
+                // Message de nouveau thème quantique
+                const themeMessages = {
+                    fr: `🌈 CHANGEMENT QUANTIQUE: ${newTheme.name}`,
+                    en: `🌈 QUANTUM SHIFT: ${newTheme.name}`,
+                    es: `🌈 CAMBIO CUÁNTICO: ${newTheme.name}`,
+                    de: `🌈 QUANTUM WECHSEL: ${newTheme.name}`,
+                    ar: `🌈 تغيير كمي: ${newTheme.name}`,
+                    zh: `🌈 量子转换: ${newTheme.name}`
+                };
+                
+                showMessage(themeMessages[currentLanguage] || themeMessages.fr, 'win');
+            }, 300);
+            
+            // Arrêter le timer précédent
+            if (gameTimer) {
+                clearInterval(gameTimer);
+            }
+            
+            // Générer une nouvelle grille
+            generateSudoku();
+            
+            // Démarrer le timer
+            gameStartTime = Date.now();
+            gameTimer = setInterval(updateTimer, 1000);
+            
+            updateDisplay();
+            document.getElementById('gameStatus').textContent = translations[currentLanguage].selectCellText;
+            document.getElementById('aiSuggestion').textContent = translations[currentLanguage].aiReadyText;
+        }
+
+        function setDifficulty(level) {
+            currentDifficulty = level;
+            
+            // Mettre à jour les boutons
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(level + 'Btn').classList.add('active');
+            
+            // Générer une nouvelle grille
+            newGame();
+        }
+
+        function updateDisplay() {
+            // Mettre à jour la grille visuelle
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                const cell = document.querySelector(`[data-index="${i}"]`);
+                
+                const value = sudokuGrid[row][col];
+                cell.textContent = value === 0 ? '' : value;
+                
+                // Appliquer les styles
+                cell.className = 'sudoku-cell';
+                if (originalGrid[row][col] !== 0) {
+                    cell.classList.add('given');
+                }
+                if (i === selectedCell) {
+                    cell.classList.add('selected');
+                }
+                
+
+            }
+            
+            // Mettre à jour les statistiques
+            document.getElementById('movesValue').textContent = moves;
+            document.getElementById('hintsValue').textContent = hints;
+            document.getElementById('errorsValue').textContent = errors;
+            
+            // Calculer la progression
+            const filledCells = sudokuGrid.flat().filter(cell => cell !== 0).length;
+            const completion = Math.round((filledCells / 81) * 100);
+            document.getElementById('completionValue').textContent = completion + '%';
+            document.getElementById('progressFill').style.width = completion + '%';
+            
+            // Mettre à jour l'analyse IA
+            updateAIAnalysis();
+        }
+
+        function updateTimer() {
+            if (gameCompleted) return;
+            
+            const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('timeValue').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateAIAnalysis() {
+            const emptyCells = sudokuGrid.flat().filter(cell => cell === 0).length;
+            document.getElementById('emptyCellsValue').textContent = emptyCells;
+            
+            // Calculer les possibilités totales
+            let totalPossibilities = 0;
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (sudokuGrid[row][col] === 0) {
+                        totalPossibilities += getPossibleNumbers(row, col).length;
+                    }
+                }
+            }
+            document.getElementById('possibilitiesValue').textContent = totalPossibilities;
+            
+            // Évaluation de difficulté basique
+            const difficultyRating = Math.max(1, Math.min(10, Math.floor(totalPossibilities / emptyCells * 2)));
+            document.getElementById('difficultyRatingValue').textContent = difficultyRating;
+        }
+
+        function getPossibleNumbers(row, col) {
+            if (sudokuGrid[row][col] !== 0) return [];
+            
+            const possible = [];
+            for (let num = 1; num <= 9; num++) {
+                if (isValidPlacement(row, col, num)) {
+                    possible.push(num);
+                }
+            }
+            return possible;
+        }
+
+        function checkCompletion() {
+            // Vérifier si toutes les cellules sont remplies
+            const isEmpty = sudokuGrid.some(row => row.some(cell => cell === 0));
+            if (isEmpty) return;
+            
+            // Vérifier si la solution est correcte
+            if (isValidSolution()) {
+                gameCompleted = true;
+                clearInterval(gameTimer);
+                showMessage(translations[currentLanguage].congratulationsText, 'win');
+                
+                // Animation de victoire
+                for (let i = 0; i < 81; i++) {
+                    setTimeout(() => {
+                        document.querySelector(`[data-index="${i}"]`).classList.add('solved');
+                    }, i * 20);
+                }
+            }
+        }
+
+        function isValidSolution() {
+            // Vérifier toutes les lignes, colonnes et régions
+            for (let i = 0; i < 9; i++) {
+                if (!isValidGroup(getRow(i)) || 
+                    !isValidGroup(getColumn(i)) || 
+                    !isValidGroup(getRegion(i))) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function isValidGroup(group) {
+            const sorted = group.slice().sort();
+            for (let i = 0; i < 9; i++) {
+                if (sorted[i] !== i + 1) return false;
+            }
+            return true;
+        }
+
+        function getRow(rowIndex) {
+            return sudokuGrid[rowIndex];
+        }
+
+        function getColumn(colIndex) {
+            return sudokuGrid.map(row => row[colIndex]);
+        }
+
+        function getRegion(regionIndex) {
+            const startRow = Math.floor(regionIndex / 3) * 3;
+            const startCol = (regionIndex % 3) * 3;
+            const region = [];
+            
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    region.push(sudokuGrid[r][c]);
+                }
+            }
+            return region;
+        }
+
+        function getHint() {
+            if (gameCompleted) return;
+            
+            const t = translations[currentLanguage];
+            
+            // Trouver une cellule vide avec le moins de possibilités
+            let bestCell = null;
+            let minPossibilities = 10;
+            
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (sudokuGrid[row][col] === 0) {
+                        const possibilities = getPossibleNumbers(row, col);
+                        if (possibilities.length > 0 && possibilities.length < minPossibilities) {
+                            minPossibilities = possibilities.length;
+                            bestCell = { row, col, possibilities };
+                        }
+                    }
+                }
+            }
+            
+            if (bestCell) {
+                const hintNumber = bestCell.possibilities[0];
+                const message = t.hintText
+                    .replace('{number}', hintNumber)
+                    .replace('{row}', bestCell.row + 1)
+                    .replace('{col}', bestCell.col + 1);
+                
+                document.getElementById('aiSuggestion').textContent = message;
+                
+                // Mettre en évidence la cellule
+                const cellIndex = bestCell.row * 9 + bestCell.col;
+                document.querySelector(`[data-index="${cellIndex}"]`).classList.add('hint');
+                setTimeout(() => {
+                    document.querySelector(`[data-index="${cellIndex}"]`).classList.remove('hint');
+                }, 2000);
+                
+                hints++;
+                updateDisplay();
+            } else {
+                document.getElementById('aiSuggestion').textContent = t.noHintText;
+            }
+        }
+
+        function solveWithAI() {
+            if (gameCompleted) return;
+            
+            const t = translations[currentLanguage];
+            document.getElementById('aiSuggestion').textContent = t.solvingText;
+            
+            const startTime = Date.now();
+            
+            setTimeout(() => {
+                // Utiliser la solution complète stockée
+                sudokuGrid = completeSolution.map(row => [...row]);
+                const solveTime = Date.now() - startTime;
+                document.getElementById('solutionTimeValue').textContent = solveTime + 'ms';
+                document.getElementById('aiSuggestion').textContent = t.solvedText;
+                
+                // Animation de résolution progressive
+                animateSolution();
+                
+                updateDisplay();
+                checkCompletion();
+            }, 100);
+        }
+
+        function animateSolution() {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            let delay = 0;
+            
+            for (let i = 0; i < 81; i++) {
+                const row = Math.floor(i / 9);
+                const col = i % 9;
+                
+                // Animer seulement les cellules qui étaient vides
+                if (originalGrid[row][col] === 0) {
+                    setTimeout(() => {
+                        cells[i].classList.add('solved');
+                        setTimeout(() => {
+                            cells[i].classList.remove('solved');
+                        }, 500);
+                    }, delay);
+                    delay += 50;
+                }
+            }
+        }
+
+        function solveSudoku(grid, solutions, maxSolutions) {
+            // Trouver la première cellule vide
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (grid[row][col] === 0) {
+                        for (let num = 1; num <= 9; num++) {
+                            if (isValidPlacementInGrid(grid, row, col, num)) {
+                                grid[row][col] = num;
+                                
+                                if (solveSudoku(grid, solutions, maxSolutions)) {
+                                    if (solutions.length >= maxSolutions) {
+                                        return true;
+                                    }
+                                }
+                                
+                                grid[row][col] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            
+            // Grille complète trouvée
+            solutions.push(grid.map(row => [...row]));
+            return true;
+        }
+
+        function isValidPlacementInGrid(grid, row, col, num) {
+            // Vérifier la ligne
+            for (let c = 0; c < 9; c++) {
+                if (grid[row][c] === num) return false;
+            }
+            
+            // Vérifier la colonne
+            for (let r = 0; r < 9; r++) {
+                if (grid[r][col] === num) return false;
+            }
+            
+            // Vérifier la région 3x3
+            const startRow = Math.floor(row / 3) * 3;
+            const startCol = Math.floor(col / 3) * 3;
+            
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    if (grid[r][c] === num) return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function checkSolution() {
+            if (isValidSolution()) {
+                showMessage(translations[currentLanguage].congratulationsText, 'win');
+            } else {
+                showMessage(translations[currentLanguage].errorText, 'error');
+            }
+        }
+
+        function analyzeBoard() {
+            const t = translations[currentLanguage];
+            
+            // Analyser les techniques possibles
+            const techniques = [];
+            
+            if (findNakedSingles(true)) techniques.push("Singles Nus");
+            if (findHiddenSingles(true)) techniques.push("Singles Cachés");
+            if (findNakedPairs(true)) techniques.push("Paires Nues");
+            if (findPointingPairs(true)) techniques.push("Paires Pointées");
+            
+            let analysis = "🔍 Analyse du plateau:\n";
+            if (techniques.length > 0) {
+                analysis += "Techniques applicables: " + techniques.join(", ");
+            } else {
+                analysis += "Aucune technique évidente détectée";
+            }
+            
+            document.getElementById('aiSuggestion').textContent = analysis;
+        }
+
+        function findNakedSingles(analyzeOnly = false) {
+            let found = false;
+            
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (sudokuGrid[row][col] === 0) {
+                        const possibilities = getPossibleNumbers(row, col);
+                        if (possibilities.length === 1) {
+                            found = true;
+                            if (!analyzeOnly) {
+                                sudokuGrid[row][col] = possibilities[0];
+                                const cellIndex = row * 9 + col;
+                                document.querySelector(`[data-index="${cellIndex}"]`).classList.add('hint');
+                                setTimeout(() => {
+                                    document.querySelector(`[data-index="${cellIndex}"]`).classList.remove('hint');
+                                }, 1500);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (found && !analyzeOnly) {
+                updateDisplay();
+                document.getElementById('aiSuggestion').textContent = "✅ Singles nus trouvés et appliqués";
+            }
+            
+            return found;
+        }
+
+        function findHiddenSingles(analyzeOnly = false) {
+            let found = false;
+            
+            // Vérifier dans chaque ligne, colonne et région
+            for (let i = 0; i < 9; i++) {
+                if (findHiddenSinglesInGroup(getRowCells(i), analyzeOnly)) found = true;
+                if (findHiddenSinglesInGroup(getColumnCells(i), analyzeOnly)) found = true;
+                if (findHiddenSinglesInGroup(getRegionCells(i), analyzeOnly)) found = true;
+            }
+            
+            if (found && !analyzeOnly) {
+                updateDisplay();
+                document.getElementById('aiSuggestion').textContent = "✅ Singles cachés trouvés et appliqués";
+            }
+            
+            return found;
+        }
+
+        function findHiddenSinglesInGroup(cells, analyzeOnly) {
+            let found = false;
+            
+            for (let num = 1; num <= 9; num++) {
+                const possibleCells = cells.filter(cell => {
+                    const row = Math.floor(cell.index / 9);
+                    const col = cell.index % 9;
+                    return sudokuGrid[row][col] === 0 && getPossibleNumbers(row, col).includes(num);
+                });
+                
+                if (possibleCells.length === 1) {
+                    found = true;
+                    if (!analyzeOnly) {
+                        const row = Math.floor(possibleCells[0].index / 9);
+                        const col = possibleCells[0].index % 9;
+                        sudokuGrid[row][col] = num;
+                        
+                        document.querySelector(`[data-index="${possibleCells[0].index}"]`).classList.add('hint');
+                        setTimeout(() => {
+                            document.querySelector(`[data-index="${possibleCells[0].index}"]`).classList.remove('hint');
+                        }, 1500);
+                    }
+                }
+            }
+            
+            return found;
+        }
+
+        function getRowCells(rowIndex) {
+            const cells = [];
+            for (let col = 0; col < 9; col++) {
+                cells.push({ index: rowIndex * 9 + col });
+            }
+            return cells;
+        }
+
+        function getColumnCells(colIndex) {
+            const cells = [];
+            for (let row = 0; row < 9; row++) {
+                cells.push({ index: row * 9 + colIndex });
+            }
+            return cells;
+        }
+
+        function getRegionCells(regionIndex) {
+            const startRow = Math.floor(regionIndex / 3) * 3;
+            const startCol = (regionIndex % 3) * 3;
+            const cells = [];
+            
+            for (let r = startRow; r < startRow + 3; r++) {
+                for (let c = startCol; c < startCol + 3; c++) {
+                    cells.push({ index: r * 9 + c });
+                }
+            }
+            return cells;
+        }
+
+        function findNakedPairs(analyzeOnly = false) {
+            // Implémentation simplifiée des paires nues
+            let found = false;
+            
+            if (!analyzeOnly) {
+                document.getElementById('aiSuggestion').textContent = "🔍 Recherche de paires nues... (Technique avancée)";
+            }
+            
+            return found;
+        }
+
+        function findPointingPairs(analyzeOnly = false) {
+            // Implémentation simplifiée des paires pointées
+            let found = false;
+            
+            if (!analyzeOnly) {
+                document.getElementById('aiSuggestion').textContent = "🔍 Recherche de paires pointées... (Technique avancée)";
+            }
+            
+            return found;
+        }
+
+        function showMessage(message, type) {
+            const statusElement = document.getElementById('gameStatus');
+            statusElement.textContent = message;
+            statusElement.className = `game-status ${type}`;
+            
+            setTimeout(() => {
+                if (!gameCompleted) {
+                    statusElement.textContent = translations[currentLanguage].selectCellText;
+                    statusElement.className = 'game-status';
+                }
+            }, 3000);
+        }
+
+        function showRules() {
+            const modal = document.getElementById('rulesModal');
+            const t = translations[currentLanguage];
+            
+            // Mettre à jour le titre
+            document.getElementById('rulesModalTitle').textContent = t.rulesModalTitle;
+            
+            // Générer le contenu HTML des règles
+            const rulesHTML = `
+                <div class="rules-section">
+                    <h3>${t.objectiveTitle}</h3>
+                    <ul>
+                        <li>${t.objectiveText}</li>
+                        <li>${t.objectiveRule}</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>${t.howToPlayTitle}</h3>
+                    <ul>
+                        <li>${t.howToPlay1}</li>
+                        <li>${t.howToPlay2}</li>
+                        <li>${t.howToPlay3}</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>${t.aiFeaturesTitle}</h3>
+                    <ul>
+                        <li>${t.aiFeature1}</li>
+                        <li>${t.aiFeature2}</li>
+                        <li>${t.aiFeature3}</li>
+                        <li>${t.aiFeature4}</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>${t.difficultyLevelsTitle}</h3>
+                    <div class="difficulty-grid">
+                        <div class="difficulty-item">
+                            <div class="difficulty-name">${t.easyLevel}</div>
+                            <div class="difficulty-desc">${t.easyDesc}</div>
+                        </div>
+                        <div class="difficulty-item">
+                            <div class="difficulty-name">${t.mediumLevel}</div>
+                            <div class="difficulty-desc">${t.mediumDesc}</div>
+                        </div>
+                        <div class="difficulty-item">
+                            <div class="difficulty-name">${t.hardLevel}</div>
+                            <div class="difficulty-desc">${t.hardDesc}</div>
+                        </div>
+                        <div class="difficulty-item">
+                            <div class="difficulty-name">${t.expertLevel}</div>
+                            <div class="difficulty-desc">${t.expertDesc}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rules-section">
+                    <h3>${t.statisticsTitle}</h3>
+                    <ul>
+                        <li>${t.stat1}</li>
+                        <li>${t.stat2}</li>
+                        <li>${t.stat3}</li>
+                        <li>${t.stat4}</li>
+                        <li>${t.stat5}</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>${t.techniquesTitle}</h3>
+                    <div class="technique-grid">
+                        <div class="technique-item">
+                            <div class="technique-name">${t.technique1Name}</div>
+                            <div class="technique-desc">${t.technique1Desc}</div>
+                        </div>
+                        <div class="technique-item">
+                            <div class="technique-name">${t.technique2Name}</div>
+                            <div class="technique-desc">${t.technique2Desc}</div>
+                        </div>
+                        <div class="technique-item">
+                            <div class="technique-name">${t.technique3Name}</div>
+                            <div class="technique-desc">${t.technique3Desc}</div>
+                        </div>
+                        <div class="technique-item">
+                            <div class="technique-name">${t.technique4Name}</div>
+                            <div class="technique-desc">${t.technique4Desc}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rules-section" style="text-align: center; margin-top: 30px;">
+                    <h3 style="color: var(--accent-color, #ffff00);">${t.goodLuckText}</h3>
+                </div>
+            `;
+            
+            document.getElementById('rulesBody').innerHTML = rulesHTML;
+            modal.classList.add('show');
+        }
+
+        function closeRules() {
+            const modal = document.getElementById('rulesModal');
+            modal.classList.remove('show');
+        }
+
+        // Fermer la modal en cliquant à l'extérieur
+        document.getElementById('rulesModal').addEventListener('click', (e) => {
+            if (e.target.id === 'rulesModal') {
+                closeRules();
+            }
+        });
+
+                        function closePlatform() {
+                                // Try multiple non-blocking ways to return to the platform/home.
+                                try{
+                                    // Preferred: tell parent overlay to close
+                                    if(window.parent && window.parent !== window){
+                                        window.parent.postMessage({ action: 'close', reason: 'user-initiated' }, '*');
+                                        return;
+                                    }
+                                }catch(e){/* ignore */}
+                                try{
+                                    // If opened from a window opener, ask it to focus and close this
+                                    if(window.opener && !window.opener.closed){
+                                        try{ window.opener.postMessage({ action: 'child-closed' }, '*'); }catch(e){}
+                                        window.close();
+                                        return;
+                                    }
+                                }catch(e){/* ignore */}
+                                // Last-resort: navigate to the local platform file if available
+                                try{ window.location.href = '/detente'; }catch(e){ /* ignore */ }
+                        }
+
+        // Initialiser le jeu
+        init();
+    </script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux20' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

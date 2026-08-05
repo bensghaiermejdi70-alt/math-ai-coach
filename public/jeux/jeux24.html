@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Dice - Jeu Futuriste avec IA</title>
+    <style>
+        body {
+box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #e94560 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Effet de particules neurales en arrière-plan */
+        .neural-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .neural-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ffff;
+            border-radius: 50%;
+            animation: neuralFloat 8s infinite linear;
+            box-shadow: 0 0 8px #00ffff;
+        }
+
+        @keyframes neuralFloat {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            50% { transform: translateY(50vh) translateX(50px) rotate(180deg); opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10px) translateX(-30px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .game-logo {
+            font-size: 4rem;
+            animation: neuralPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px #00ffff);
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00ffff, #ff0080, #ffff00, #00ff88);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: neuralGlow 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        @keyframes neuralPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(10deg); }
+        }
+
+        @keyframes neuralGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #00ffff;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .language-btn {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            border: 2px solid #00ffff;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        .language-btn:hover {
+            background: linear-gradient(45deg, #2a5298, #1e3c72);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(30, 60, 114, 0.95);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            margin-top: 5px;
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .language-dropdown.show {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            border-radius: 10px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        .language-option:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .game-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 220px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .left-panel, .right-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            color: #00ffff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: 2px solid #ffffff;
+            color: #ffffff;
+            padding: 10px 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .level-btn:hover, .level-btn.active {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .rules-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .ai-predict-btn {
+            background: linear-gradient(45deg, #ffa500, #ff8c00);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+        }
+
+        .neural-boost-btn {
+            background: linear-gradient(45deg, #9c27b0, #673ab7);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid #00ffff;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.3);
+        }
+
+        .dice-arena {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #00ffff;
+            border-radius: 15px;
+            background: radial-gradient(circle at center, rgba(0, 255, 255, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .dice {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ffffff, #e0e0e0);
+            border: 3px solid #333;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .dice:hover {
+            transform: scale(1.1) rotateY(15deg);
+            box-shadow: 0 12px 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .dice.rolling {
+            animation: diceRoll 2s ease-in-out;
+        }
+
+        .dice.neural-enhanced {
+            background: linear-gradient(45deg, #00ffff, #0099cc);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(0, 255, 255, 0.5);
+            animation: neuralPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes diceRoll {
+            0% { transform: rotateX(0deg) rotateY(0deg); }
+            25% { transform: rotateX(90deg) rotateY(90deg); }
+            50% { transform: rotateX(180deg) rotateY(180deg); }
+            75% { transform: rotateX(270deg) rotateY(270deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        .prediction-zone {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #00ffff;
+        }
+
+        .prediction-slot {
+            width: 35px;
+            height: 35px;
+            border: 2px solid #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .prediction-slot:hover {
+            background: rgba(0, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .prediction-slot.selected {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
+        .neural-interface {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #ff0080;
+            min-width: 200px;
+        }
+
+        .neural-status {
+            color: #ff0080;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .neural-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .neural-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0080, #00ffff);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #00ffff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #ff4757;
+            transform: scale(1.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #00ffff;
+            font-size: 0.9rem;
+        }
+
+        .ai-prediction {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: rgba(255, 165, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #ffa500;
+            max-width: 150px;
+        }
+
+        .ai-prediction h4 {
+            color: #ffa500;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+
+        .roll-btn {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #e94560, #f27121);
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        }
+
+        .roll-btn:hover {
+            transform: translateX(-50%) translateY(-3px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.5);
+        }
+
+        .roll-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1024px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .left-panel, .right-panel {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+            
+            .level-selector {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .level-btn {
+                flex: 1;
+                min-width: 100px;
+            }
+            
+            .control-btn {
+                flex: 1;
+                min-width: 150px;
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .game-logo {
+                font-size: 3rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .dice-arena {
+                height: 300px;
+            }
+            
+            .dice {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+        }
+        </style>
+    <style>
+    /* override: consistent global close button */
+    .global-close-btn { position: fixed !important; top: 14px !important; right: 14px !important; z-index: 99999 !important; background: linear-gradient(45deg,#ff3b3b,#ff0066) !important; color: #fff !important; border: none !important; width:52px !important; height:52px !important; border-radius:50% !important; font-size:22px !important; cursor:pointer !important; display:flex !important;align-items:center !important;justify-content:center !important; box-shadow:0 8px 22px rgba(255,59,59,0.28) !important; }
+    .global-close-btn:hover{ transform: scale(1.06); }
+    </style>
+</head>
+<body>
+<button id='backToMenuBtn' class='header-btn' style='position:absolute; top:10px; left:10px; z-index:1000;'>?? Menu</button>
+    <!-- Particules neurales -->
+    <div class="neural-particles" id="particles"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-section">
+                <div class="game-logo">🎲</div>
+                <div>
+                    <h1 class="title">NEURAL DICE</h1>
+                    <p class="subtitle" id="subtitle">Prédisez l'avenir avec l'IA neurale</p>
+                </div>
+            </div>
+            <button class="global-close-btn" title="Fermer" aria-label="Fermer" onclick="closePlatform()">✕</button>
+            <div class="language-selector">
+                <button class="language-btn" id="languageBtn">🌐 Français</button>
+                <div class="language-dropdown" id="languageDropdown">
+                    <div class="language-option" data-lang="fr">🇫🇷 Français</div>
+                    <div class="language-option" data-lang="en">🇬🇧 English</div>
+                    <div class="language-option" data-lang="ar">🇸🇦 العربية</div>
+                    <div class="language-option" data-lang="es">🇪🇸 Español</div>
+                    <div class="language-option" data-lang="de">🇩🇪 Deutsch</div>
+                    <div class="language-option" data-lang="zh">🇨🇳 中文</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-layout">
+            <div class="left-panel">
+                <h3 class="panel-title" id="levelsTitle">Niveaux Neuraux</h3>
+                <div class="level-selector">
+                    <button class="level-btn active" data-level="1" id="level1">Apprenti</button>
+                    <button class="level-btn" data-level="2" id="level2">Adepte</button>
+                    <button class="level-btn" data-level="3" id="level3">Maître</button>
+                    <button class="level-btn" data-level="4" id="level4">Transcendant</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div id="scoreLabel">Score Neural</div>
+                        <div id="score">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="levelLabel">Niveau</div>
+                        <div id="currentLevel">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="game-info">
+                    <div class="info-item">
+                        <span id="roundLabel">Manche:</span> <span id="currentRound">1/10</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="predictionsLabel">Prédictions:</span> <span id="correctPredictions">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="streakLabel">Série:</span> <span id="currentStreak">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span id="accuracyLabel">Précision:</span> <span id="accuracy">0%</span>
+                    </div>
+                </div>
+                
+                <div class="dice-arena" id="diceArena">
+                    <div class="dice" id="dice1">?</div>
+                    <div class="dice" id="dice2">?</div>
+                    
+                    <div class="neural-interface">
+                        <div class="neural-status" id="neuralStatus">Interface Neurale</div>
+                        <div class="neural-bar">
+                            <div class="neural-fill" id="neuralFill"></div>
+                        </div>
+                        <div id="neuralPower">Puissance: 0%</div>
+                    </div>
+                    
+                    <div class="ai-prediction" id="aiPrediction" style="display: none;">
+                        <h4 id="aiPredictionTitle">Prédiction IA</h4>
+                        <div id="aiPredictionText">Analysing...</div>
+                    </div>
+                    
+                    <button class="roll-btn" id="rollBtn">🎲 Lancer les Dés</button>
+                    
+                    <div class="prediction-zone">
+                        <div class="prediction-slot" data-dice="1" data-value="1">1</div>
+                        <div class="prediction-slot" data-dice="1" data-value="2">2</div>
+                        <div class="prediction-slot" data-dice="1" data-value="3">3</div>
+                        <div class="prediction-slot" data-dice="1" data-value="4">4</div>
+                        <div class="prediction-slot" data-dice="1" data-value="5">5</div>
+                        <div class="prediction-slot" data-dice="1" data-value="6">6</div>
+                        <div style="width: 20px;"></div>
+                        <div class="prediction-slot" data-dice="2" data-value="1">1</div>
+                        <div class="prediction-slot" data-dice="2" data-value="2">2</div>
+                        <div class="prediction-slot" data-dice="2" data-value="3">3</div>
+                        <div class="prediction-slot" data-dice="2" data-value="4">4</div>
+                        <div class="prediction-slot" data-dice="2" data-value="5">5</div>
+                        <div class="prediction-slot" data-dice="2" data-value="6">6</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <h3 class="panel-title" id="actionsTitle">Actions Neurales</h3>
+                <button class="control-btn rules-btn" id="rulesBtn">📋 Règles</button>
+                <button class="control-btn start-btn" id="startBtn">🚀 Commencer</button>
+                <button class="control-btn start-btn" id="newGameBtn">🔄 Nouvelle Partie</button>
+                <button class="control-btn ai-predict-btn" id="aiPredictBtn">🤖 Prédiction IA</button>
+                <button class="control-btn neural-boost-btn" id="neuralBoostBtn">⚡ Boost Neural</button>
+                
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-item">
+                        <div id="energyLabel">Énergie</div>
+                        <div id="energy">100%</div>
+                    </div>
+                    <div class="stat-item">
+                        <div id="intuitionLabel">Intuition</div>
+                        <div id="intuition">⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal des règles -->
+    <div class="modal" id="rulesModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeRules">&times;</button>
+            <h2 id="rulesTitle">Règles du Jeu</h2>
+            <div id="rulesContent">
+                <p><strong>Objectif:</strong> Utilisez votre interface neurale pour prédire les résultats des dés avant qu'ils ne soient lancés.</p>
+                <p><strong>Comment jouer:</strong></p>
+                <ul>
+                    <li>Sélectionnez vos prédictions pour chaque dé (1-6)</li>
+                    <li>Lancez les dés et voyez si vos prédictions sont correctes</li>
+                    <li>Utilisez l'IA pour obtenir des conseils de prédiction</li>
+                    <li>Le boost neural améliore vos chances temporairement</li>
+                    <li>Plus vous prédisez correctement, plus votre score augmente</li>
+                </ul>
+                <p><strong>Niveaux:</strong></p>
+                <ul>
+                    <li><strong>Apprenti:</strong> 2 dés, 10 manches, prédictions simples</li>
+                    <li><strong>Adepte:</strong> 2 dés, 15 manches, bonus de série</li>
+                    <li><strong>Maître:</strong> 3 dés, 20 manches, défis spéciaux</li>
+                    <li><strong>Transcendant:</strong> 3 dés, 25 manches, chaos quantique</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Traductions
+        const translations = {
+            fr: {
+                subtitle: "Prédisez l'avenir avec l'IA neurale",
+                levelsTitle: "Niveaux Neuraux",
+                actionsTitle: "Actions Neurales",
+                rules: "📋 Règles",
+                start: "🚀 Commencer",
+                newGame: "🔄 Nouvelle Partie",
+                aiPredict: "🤖 Prédiction IA",
+                neuralBoost: "⚡ Boost Neural",
+                scoreLabel: "Score Neural",
+                levelLabel: "Niveau",
+                roundLabel: "Manche:",
+                predictionsLabel: "Prédictions:",
+                streakLabel: "Série:",
+                accuracyLabel: "Précision:",
+                energyLabel: "Énergie",
+                intuitionLabel: "Intuition",
+                rulesTitle: "Règles du Jeu",
+                rollDice: "🎲 Lancer les Dés",
+                neuralStatus: "Interface Neurale",
+                aiPredictionTitle: "Prédiction IA",
+                levels: ["Apprenti", "Adepte", "Maître", "Transcendant"],
+                rulesContent: `
+                    <p><strong>Objectif:</strong> Utilisez votre interface neurale pour prédire les résultats des dés avant qu'ils ne soient lancés.</p>
+                    <p><strong>Comment jouer:</strong></p>
+                    <ul>
+                        <li>Sélectionnez vos prédictions pour chaque dé (1-6)</li>
+                        <li>Lancez les dés et voyez si vos prédictions sont correctes</li>
+                        <li>Utilisez l'IA pour obtenir des conseils de prédiction</li>
+                        <li>Le boost neural améliore vos chances temporairement</li>
+                        <li>Plus vous prédisez correctement, plus votre score augmente</li>
+                    </ul>
+                    <p><strong>Niveaux:</strong></p>
+                    <ul>
+                        <li><strong>Apprenti:</strong> 2 dés, 100 manches, prédictions simples</li>
+                        <li><strong>Adepte:</strong> 2 dés, 100 manches, bonus de série</li>
+                        <li><strong>Maître:</strong> 3 dés, 100 manches, défis spéciaux</li>
+                        <li><strong>Transcendant:</strong> 3 dés, 100 manches, chaos quantique</li>
+                    </ul>
+                `
+            },
+            en: {
+                subtitle: "Predict the future with neural AI",
+                levelsTitle: "Neural Levels",
+                actionsTitle: "Neural Actions",
+                rules: "📋 Rules",
+                start: "🚀 Start",
+                newGame: "🔄 New Game",
+                aiPredict: "🤖 AI Prediction",
+                neuralBoost: "⚡ Neural Boost",
+                scoreLabel: "Neural Score",
+                levelLabel: "Level",
+                roundLabel: "Round:",
+                predictionsLabel: "Predictions:",
+                streakLabel: "Streak:",
+                accuracyLabel: "Accuracy:",
+                energyLabel: "Energy",
+                intuitionLabel: "Intuition",
+                rulesTitle: "Game Rules",
+                rollDice: "🎲 Roll Dice",
+                neuralStatus: "Neural Interface",
+                aiPredictionTitle: "AI Prediction",
+                levels: ["Apprentice", "Adept", "Master", "Transcendent"],
+                rulesContent: `
+                    <p><strong>Objective:</strong> Use your neural interface to predict dice results before they are rolled.</p>
+                    <p><strong>How to play:</strong></p>
+                    <ul>
+                        <li>Select your predictions for each die (1-6)</li>
+                        <li>Roll the dice and see if your predictions are correct</li>
+                        <li>Use AI to get prediction advice</li>
+                        <li>Neural boost temporarily improves your chances</li>
+                        <li>The more you predict correctly, the higher your score</li>
+                    </ul>
+                    <p><strong>Levels:</strong></p>
+                    <ul>
+                        <li><strong>Apprentice:</strong> 2 dice, 100 rounds, simple predictions</li>
+                        <li><strong>Adept:</strong> 2 dice, 100 rounds, streak bonuses</li>
+                        <li><strong>Master:</strong> 3 dice, 100 rounds, special challenges</li>
+                        <li><strong>Transcendent:</strong> 3 dice, 100 rounds, quantum chaos</li>
+                    </ul>
+                `
+            },
+            ar: {
+                subtitle: "تنبأ بالمستقبل بالذكاء الاصطناعي العصبي",
+                levelsTitle: "المستويات العصبية",
+                actionsTitle: "الإجراءات العصبية",
+                rules: "📋 القواعد",
+                start: "🚀 ابدأ",
+                newGame: "🔄 لعبة جديدة",
+                aiPredict: "🤖 تنبؤ الذكاء الاصطناعي",
+                neuralBoost: "⚡ تعزيز عصبي",
+                scoreLabel: "النقاط العصبية",
+                levelLabel: "المستوى",
+                roundLabel: "الجولة:",
+                predictionsLabel: "التنبؤات:",
+                streakLabel: "السلسلة:",
+                accuracyLabel: "الدقة:",
+                energyLabel: "الطاقة",
+                intuitionLabel: "الحدس",
+                rulesTitle: "قواعد اللعبة",
+                rollDice: "🎲 رمي النرد",
+                neuralStatus: "الواجهة العصبية",
+                aiPredictionTitle: "تنبؤ الذكاء الاصطناعي",
+                levels: ["متدرب", "ماهر", "أستاذ", "متسامي"],
+                rulesContent: `
+                    <p><strong>الهدف:</strong> استخدم واجهتك العصبية للتنبؤ بنتائج النرد قبل رميها.</p>
+                    <p><strong>كيفية اللعب:</strong></p>
+                    <ul>
+                        <li>اختر تنبؤاتك لكل نرد (1-6)</li>
+                        <li>ارم النرد وانظر إذا كانت تنبؤاتك صحيحة</li>
+                        <li>استخدم الذكاء الاصطناعي للحصول على نصائح التنبؤ</li>
+                        <li>التعزيز العصبي يحسن فرصك مؤقتاً</li>
+                        <li>كلما تنبأت بشكل صحيح أكثر، كلما زادت نقاطك</li>
+                    </ul>
+                    <p><strong>المستويات:</strong></p>
+                    <ul>
+                        <li><strong>متدرب:</strong> نردان، 10 جولات، تنبؤات بسيطة</li>
+                        <li><strong>ماهر:</strong> نردان، 15 جولة، مكافآت السلسلة</li>
+                        <li><strong>أستاذ:</strong> 3 أنراد، 20 جولة، تحديات خاصة</li>
+                        <li><strong>متسامي:</strong> 3 أنراد، 25 جولة، فوضى كمية</li>
+                    </ul>
+                `
+            },
+            es: {
+                subtitle: "Predice el futuro con IA neural",
+                levelsTitle: "Niveles Neurales",
+                actionsTitle: "Acciones Neurales",
+                rules: "📋 Reglas",
+                start: "🚀 Comenzar",
+                newGame: "🔄 Nuevo Juego",
+                aiPredict: "🤖 Predicción IA",
+                neuralBoost: "⚡ Impulso Neural",
+                scoreLabel: "Puntuación Neural",
+                levelLabel: "Nivel",
+                roundLabel: "Ronda:",
+                predictionsLabel: "Predicciones:",
+                streakLabel: "Racha:",
+                accuracyLabel: "Precisión:",
+                energyLabel: "Energía",
+                intuitionLabel: "Intuición",
+                rulesTitle: "Reglas del Juego",
+                rollDice: "🎲 Lanzar Dados",
+                neuralStatus: "Interfaz Neural",
+                aiPredictionTitle: "Predicción IA",
+                levels: ["Aprendiz", "Adepto", "Maestro", "Trascendente"],
+                rulesContent: `
+                    <p><strong>Objetivo:</strong> Usa tu interfaz neural para predecir los resultados de los dados antes de lanzarlos.</p>
+                    <p><strong>Cómo jugar:</strong></p>
+                    <ul>
+                        <li>Selecciona tus predicciones para cada dado (1-6)</li>
+                        <li>Lanza los dados y ve si tus predicciones son correctas</li>
+                        <li>Usa la IA para obtener consejos de predicción</li>
+                        <li>El impulso neural mejora tus posibilidades temporalmente</li>
+                        <li>Cuanto más predices correctamente, mayor es tu puntuación</li>
+                    </ul>
+                    <p><strong>Niveles:</strong></p>
+                    <ul>
+                        <li><strong>Aprendiz:</strong> 2 dados, 10 rondas, predicciones simples</li>
+                        <li><strong>Adepto:</strong> 2 dados, 15 rondas, bonos de racha</li>
+                        <li><strong>Maestro:</strong> 3 dados, 20 rondas, desafíos especiales</li>
+                        <li><strong>Trascendente:</strong> 3 dados, 25 rondas, caos cuántico</li>
+                    </ul>
+                `
+            },
+            de: {
+                subtitle: "Vorhersage der Zukunft mit neuraler KI",
+                levelsTitle: "Neurale Stufen",
+                actionsTitle: "Neurale Aktionen",
+                rules: "📋 Regeln",
+                start: "🚀 Starten",
+                newGame: "🔄 Neues Spiel",
+                aiPredict: "🤖 KI-Vorhersage",
+                neuralBoost: "⚡ Neuraler Boost",
+                scoreLabel: "Neurale Punkte",
+                levelLabel: "Stufe",
+                roundLabel: "Runde:",
+                predictionsLabel: "Vorhersagen:",
+                streakLabel: "Serie:",
+                accuracyLabel: "Genauigkeit:",
+                energyLabel: "Energie",
+                intuitionLabel: "Intuition",
+                rulesTitle: "Spielregeln",
+                rollDice: "🎲 Würfel werfen",
+                neuralStatus: "Neurale Schnittstelle",
+                aiPredictionTitle: "KI-Vorhersage",
+                levels: ["Lehrling", "Adept", "Meister", "Transzendent"],
+                rulesContent: `
+                    <p><strong>Ziel:</strong> Nutze deine neurale Schnittstelle, um Würfelergebnisse vorherzusagen, bevor sie geworfen werden.</p>
+                    <p><strong>Spielweise:</strong></p>
+                    <ul>
+                        <li>Wähle deine Vorhersagen für jeden Würfel (1-6)</li>
+                        <li>Wirf die Würfel und sieh, ob deine Vorhersagen richtig sind</li>
+                        <li>Nutze die KI für Vorhersage-Tipps</li>
+                        <li>Der neurale Boost verbessert deine Chancen vorübergehend</li>
+                        <li>Je mehr du richtig vorhersagst, desto höher deine Punktzahl</li>
+                    </ul>
+                    <p><strong>Stufen:</strong></p>
+                    <ul>
+                        <li><strong>Lehrling:</strong> 2 Würfel, 10 Runden, einfache Vorhersagen</li>
+                        <li><strong>Adept:</strong> 2 Würfel, 15 Runden, Serien-Boni</li>
+                        <li><strong>Meister:</strong> 3 Würfel, 20 Runden, spezielle Herausforderungen</li>
+                        <li><strong>Transzendent:</strong> 3 Würfel, 25 Runden, Quantenchaos</li>
+                    </ul>
+                `
+            },
+            zh: {
+                subtitle: "用神经AI预测未来",
+                levelsTitle: "神经等级",
+                actionsTitle: "神经操作",
+                rules: "📋 规则",
+                start: "🚀 开始",
+                newGame: "🔄 新游戏",
+                aiPredict: "🤖 AI预测",
+                neuralBoost: "⚡ 神经增强",
+                scoreLabel: "神经分数",
+                levelLabel: "等级",
+                roundLabel: "回合:",
+                predictionsLabel: "预测:",
+                streakLabel: "连击:",
+                accuracyLabel: "准确度:",
+                energyLabel: "能量",
+                intuitionLabel: "直觉",
+                rulesTitle: "游戏规则",
+                rollDice: "🎲 掷骰子",
+                neuralStatus: "神经接口",
+                aiPredictionTitle: "AI预测",
+                levels: ["学徒", "专家", "大师", "超越者"],
+                rulesContent: `
+                    <p><strong>目标:</strong> 使用你的神经接口在骰子投掷前预测结果。</p>
+                    <p><strong>游戏方法:</strong></p>
+                    <ul>
+                        <li>为每个骰子选择你的预测(1-6)</li>
+                        <li>投掷骰子，看看你的预测是否正确</li>
+                        <li>使用AI获取预测建议</li>
+                        <li>神经增强暂时提高你的机会</li>
+                        <li>预测越准确，分数越高</li>
+                    </ul>
+                    <p><strong>等级:</strong></p>
+                    <ul>
+                        <li><strong>学徒:</strong> 2个骰子，10轮，简单预测</li>
+                        <li><strong>专家:</strong> 2个骰子，15轮，连击奖励</li>
+                        <li><strong>大师:</strong> 3个骰子，20轮，特殊挑战</li>
+                        <li><strong>超越者:</strong> 3个骰子，25轮，量子混沌</li>
+                    </ul>
+                `
+            }
+        };
+
+        // Variables du jeu
+        let currentLanguage = 'fr';
+        let currentLevel = 1;
+        let currentRound = 1;
+        let totalRounds = 10;
+        let score = 0;
+        let correctPredictions = 0;
+        let currentStreak = 0;
+        let maxStreak = 0;
+        let gameStarted = false;
+        let neuralPower = 0;
+        let energy = 100;
+        let predictions = { dice1: null, dice2: null, dice3: null };
+        let diceResults = {};
+        let isRolling = false;
+        let aiPredictionActive = false;
+        let neuralBoostActive = false;
+
+        // Configuration des niveaux
+        const levelConfig = {
+            1: { diceCount: 2, rounds: 100, difficulty: 'easy' },
+            2: { diceCount: 2, rounds: 100, difficulty: 'medium' },
+            3: { diceCount: 3, rounds: 100, difficulty: 'hard' },
+            4: { diceCount: 3, rounds: 100, difficulty: 'extreme' }
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGame();
+            setupEventListeners();
+            createNeuralParticles();
+        });
+
+        function createNeuralParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 60; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'neural-particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (8 + Math.random() * 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function setupEventListeners() {
+            // Sélecteur de langue
+            document.getElementById('languageBtn').addEventListener('click', function() {
+                const dropdown = document.getElementById('languageDropdown');
+                dropdown.classList.toggle('show');
+            });
+
+            // Options de langue
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.dataset.lang;
+                    changeLanguage(lang);
+                    document.getElementById('languageDropdown').classList.remove('show');
+                });
+            });
+
+            // Boutons de niveau
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentLevel = parseInt(this.dataset.level);
+                    document.getElementById('currentLevel').textContent = currentLevel;
+                    if (!gameStarted) {
+                        initializeGame();
+                    }
+                });
+            });
+
+            // Boutons de contrôle
+            document.getElementById('rulesBtn').addEventListener('click', showRules);
+            document.getElementById('startBtn').addEventListener('click', startNewGame);
+            document.getElementById('newGameBtn').addEventListener('click', startNewGame);
+            document.getElementById('closeRules').addEventListener('click', hideRules);
+            document.getElementById('aiPredictBtn').addEventListener('click', activateAIPrediction);
+            document.getElementById('neuralBoostBtn').addEventListener('click', activateNeuralBoost);
+            document.getElementById('rollBtn').addEventListener('click', rollDice);
+
+            // Slots de prédiction
+            document.querySelectorAll('.prediction-slot').forEach(slot => {
+                slot.addEventListener('click', function() {
+                    const dice = this.dataset.dice;
+                    const value = parseInt(this.dataset.value);
+                    selectPrediction(dice, value, this);
+                });
+            });
+
+            // Fermer dropdown en cliquant ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.language-selector')) {
+                    document.getElementById('languageDropdown').classList.remove('show');
+                }
+            });
+        }
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            // Mettre à jour les textes
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('levelsTitle').textContent = t.levelsTitle;
+            document.getElementById('actionsTitle').textContent = t.actionsTitle;
+            document.getElementById('rulesBtn').innerHTML = t.rules;
+            document.getElementById('startBtn').innerHTML = t.start;
+            document.getElementById('newGameBtn').innerHTML = t.newGame;
+            document.getElementById('aiPredictBtn').innerHTML = t.aiPredict;
+            document.getElementById('neuralBoostBtn').innerHTML = t.neuralBoost;
+            document.getElementById('rollBtn').innerHTML = t.rollDice;
+            
+            // Labels
+            document.getElementById('scoreLabel').textContent = t.scoreLabel;
+            document.getElementById('levelLabel').textContent = t.levelLabel;
+            document.getElementById('roundLabel').textContent = t.roundLabel;
+            document.getElementById('predictionsLabel').textContent = t.predictionsLabel;
+            document.getElementById('streakLabel').textContent = t.streakLabel;
+            document.getElementById('accuracyLabel').textContent = t.accuracyLabel;
+            document.getElementById('energyLabel').textContent = t.energyLabel;
+            document.getElementById('intuitionLabel').textContent = t.intuitionLabel;
+            document.getElementById('neuralStatus').textContent = t.neuralStatus;
+            document.getElementById('aiPredictionTitle').textContent = t.aiPredictionTitle;
+            
+            // Boutons de niveau
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`level${i + 1}`).textContent = t.levels[i];
+            }
+            
+            // Bouton de langue
+            const flags = { fr: '🇫🇷', en: '🇬🇧', ar: '🇸🇦', es: '🇪🇸', de: '🇩🇪', zh: '🇨🇳' };
+            const names = { fr: 'Français', en: 'English', ar: 'العربية', es: 'Español', de: 'Deutsch', zh: '中文' };
+            document.getElementById('languageBtn').innerHTML = `🌐 ${names[lang]}`;
+        }
+
+        function initializeGame() {
+            const config = levelConfig[currentLevel];
+            totalRounds = config.rounds;
+            
+            if (!gameStarted) {
+                score = 0;
+                currentRound = 1;
+                correctPredictions = 0;
+                currentStreak = 0;
+                maxStreak = 0;
+                neuralPower = 0;
+                energy = 100;
+            }
+            
+            predictions = { dice1: null, dice2: null, dice3: null };
+            diceResults = {};
+            isRolling = false;
+            aiPredictionActive = false;
+            neuralBoostActive = false;
+            
+            setupDiceForLevel();
+            updateDisplay();
+            resetPredictionSlots();
+            
+            if (!gameStarted) {
+                showNotification("🧠 Connectez-vous à l'interface neurale pour commencer!", 'info');
+            }
+        }
+
+        function setupDiceForLevel() {
+            const config = levelConfig[currentLevel];
+            const diceArena = document.getElementById('diceArena');
+            
+            // Supprimer les dés existants
+            const existingDice = diceArena.querySelectorAll('.dice');
+            existingDice.forEach(dice => dice.remove());
+            
+            // Créer les nouveaux dés
+            for (let i = 1; i <= config.diceCount; i++) {
+                const dice = document.createElement('div');
+                dice.className = 'dice';
+                dice.id = `dice${i}`;
+                dice.textContent = '?';
+                diceArena.appendChild(dice);
+            }
+            
+            // Ajuster les slots de prédiction
+            const predictionZone = document.querySelector('.prediction-zone');
+            const slots = predictionZone.querySelectorAll('.prediction-slot');
+            
+            slots.forEach(slot => {
+                const diceNum = parseInt(slot.dataset.dice);
+                if (diceNum <= config.diceCount) {
+                    slot.style.display = 'flex';
+                } else {
+                    slot.style.display = 'none';
+                }
+            });
+        }
+
+        function selectPrediction(diceNum, value, slotElement) {
+            if (isRolling || !gameStarted) return;
+            
+            // Désélectionner les autres slots pour ce dé
+            document.querySelectorAll(`[data-dice="${diceNum}"]`).forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            // Sélectionner le slot cliqué
+            slotElement.classList.add('selected');
+            predictions[`dice${diceNum}`] = value;
+            
+            // Effet visuel
+            createSelectionEffect(slotElement);
+            
+            // Vérifier si toutes les prédictions sont faites
+            checkPredictionsComplete();
+        }
+
+        function checkPredictionsComplete() {
+            const config = levelConfig[currentLevel];
+            let allPredicted = true;
+            
+            for (let i = 1; i <= config.diceCount; i++) {
+                if (predictions[`dice${i}`] === null) {
+                    allPredicted = false;
+                    break;
+                }
+            }
+            
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = !allPredicted;
+            
+            if (allPredicted) {
+                rollBtn.style.background = 'linear-gradient(45deg, #00ff88, #00cc6a)';
+                rollBtn.style.boxShadow = '0 4px 15px rgba(0, 255, 136, 0.5)';
+            } else {
+                rollBtn.style.background = 'linear-gradient(45deg, #e94560, #f27121)';
+                rollBtn.style.boxShadow = '0 4px 15px rgba(233, 69, 96, 0.3)';
+            }
+        }
+
+        function rollDice() {
+            if (isRolling || !gameStarted) return;
+            
+            const config = levelConfig[currentLevel];
+            let allPredicted = true;
+            
+            for (let i = 1; i <= config.diceCount; i++) {
+                if (predictions[`dice${i}`] === null) {
+                    allPredicted = false;
+                    break;
+                }
+            }
+            
+            if (!allPredicted) {
+                showNotification("⚠️ Faites vos prédictions pour tous les dés!", 'warning');
+                return;
+            }
+            
+            isRolling = true;
+            document.getElementById('rollBtn').disabled = true;
+            
+            // Animation de lancement
+            for (let i = 1; i <= config.diceCount; i++) {
+                const dice = document.getElementById(`dice${i}`);
+                dice.classList.add('rolling');
+                
+                if (neuralBoostActive) {
+                    dice.classList.add('neural-enhanced');
+                }
+            }
+            
+            // Simuler le lancement avec délai
+            setTimeout(() => {
+                performDiceRoll();
+            }, 2000);
+        }
+
+        function performDiceRoll() {
+            const config = levelConfig[currentLevel];
+            let correctCount = 0;
+            
+            // Générer les résultats
+            for (let i = 1; i <= config.diceCount; i++) {
+                let result;
+                
+                // Appliquer les bonus
+                if (neuralBoostActive && Math.random() < 0.3) {
+                    // 30% de chance d'avoir le bon résultat avec le boost neural
+                    result = predictions[`dice${i}`];
+                } else if (aiPredictionActive && Math.random() < 0.2) {
+                    // 20% de chance d'avoir le bon résultat avec l'IA
+                    result = predictions[`dice${i}`];
+                } else {
+                    result = Math.floor(Math.random() * 6) + 1;
+                }
+                
+                diceResults[`dice${i}`] = result;
+                
+                // Afficher le résultat
+                const dice = document.getElementById(`dice${i}`);
+                dice.textContent = result;
+                dice.classList.remove('rolling');
+                
+                // Vérifier la prédiction
+                if (predictions[`dice${i}`] === result) {
+                    correctCount++;
+                    dice.style.background = 'linear-gradient(45deg, #00ff88, #00cc6a)';
+                    createSuccessEffect(dice);
+                } else {
+                    dice.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+                    createFailureEffect(dice);
+                }
+            }
+            
+            // Calculer les résultats
+            processRoundResults(correctCount, config.diceCount);
+            
+            // Réinitialiser les états
+            isRolling = false;
+            neuralBoostActive = false;
+            aiPredictionActive = false;
+            
+            setTimeout(() => {
+                nextRound();
+            }, 3000);
+        }
+
+        function processRoundResults(correctCount, totalDice) {
+            const accuracy = Math.round((correctCount / totalDice) * 100);
+            
+            if (correctCount === totalDice) {
+                // Prédiction parfaite
+                currentStreak++;
+                maxStreak = Math.max(maxStreak, currentStreak);
+                
+                let points = 100 * currentLevel;
+                if (currentStreak >= 3) {
+                    points *= (1 + currentStreak * 0.2); // Bonus de série
+                }
+                
+                score += Math.floor(points);
+                correctPredictions++;
+                
+                showNotification(`🎉 Prédiction parfaite! +${Math.floor(points)} points`, 'success');
+                
+                // Augmenter la puissance neurale
+                neuralPower = Math.min(100, neuralPower + 15);
+                
+            } else if (correctCount > 0) {
+                // Prédiction partielle
+                currentStreak = 0;
+                let points = correctCount * 25 * currentLevel;
+                score += points;
+                correctPredictions += correctCount;
+                
+                showNotification(`✨ ${correctCount}/${totalDice} correct! +${points} points`, 'partial');
+                neuralPower = Math.min(100, neuralPower + 5);
+                
+            } else {
+                // Aucune prédiction correcte
+                currentStreak = 0;
+                showNotification("💥 Aucune prédiction correcte!", 'failure');
+                neuralPower = Math.max(0, neuralPower - 10);
+            }
+            
+            // Consommer de l'énergie
+            energy = Math.max(0, energy - 5);
+            
+            updateDisplay();
+        }
+
+        function nextRound() {
+            currentRound++;
+            
+            if (currentRound > totalRounds) {
+                endGame();
+                return;
+            }
+            
+            // Réinitialiser pour la prochaine manche
+            predictions = { dice1: null, dice2: null, dice3: null };
+            resetPredictionSlots();
+            resetDiceAppearance();
+            
+            document.getElementById('rollBtn').disabled = false;
+            document.getElementById('rollBtn').style.background = 'linear-gradient(45deg, #e94560, #f27121)';
+            
+            // Régénérer de l'énergie
+            energy = Math.min(100, energy + 10);
+            
+            updateDisplay();
+            showNotification(`🔄 Manche ${currentRound}/${totalRounds}`, 'info');
+        }
+
+        function resetPredictionSlots() {
+            document.querySelectorAll('.prediction-slot').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+        }
+
+        function resetDiceAppearance() {
+            const config = levelConfig[currentLevel];
+            for (let i = 1; i <= config.diceCount; i++) {
+                const dice = document.getElementById(`dice${i}`);
+                dice.textContent = '?';
+                dice.style.background = 'linear-gradient(45deg, #ffffff, #e0e0e0)';
+                dice.classList.remove('neural-enhanced');
+            }
+        }
+
+        function activateAIPrediction() {
+            if (aiPredictionActive || energy < 20) {
+                showNotification("⚠️ Énergie insuffisante pour l'IA!", 'warning');
+                return;
+            }
+            
+            aiPredictionActive = true;
+            energy -= 20;
+            
+            // Afficher la prédiction IA
+            const aiPrediction = document.getElementById('aiPrediction');
+            const aiText = document.getElementById('aiPredictionText');
+            
+            aiPrediction.style.display = 'block';
+            aiText.textContent = 'Analyse en cours...';
+            
+            setTimeout(() => {
+                const config = levelConfig[currentLevel];
+                let prediction = '';
+                
+                for (let i = 1; i <= config.diceCount; i++) {
+                    const suggestedValue = Math.floor(Math.random() * 6) + 1;
+                    prediction += `Dé ${i}: ${suggestedValue} `;
+                }
+                
+                aiText.textContent = prediction;
+                showNotification("🤖 Prédiction IA activée! +20% de précision", 'ai');
+            }, 2000);
+            
+            updateDisplay();
+        }
+
+        function activateNeuralBoost() {
+            if (neuralBoostActive || neuralPower < 50) {
+                showNotification("⚠️ Puissance neurale insuffisante!", 'warning');
+                return;
+            }
+            
+            neuralBoostActive = true;
+            neuralPower -= 50;
+            
+            // Effet visuel
+            document.querySelectorAll('.dice').forEach(dice => {
+                dice.style.boxShadow = '0 0 20px #00ffff';
+            });
+            
+            showNotification("⚡ Boost neural activé! +30% de précision", 'boost');
+            updateDisplay();
+        }
+
+        function startNewGame() {
+            gameStarted = true;
+            currentRound = 1;
+            score = 0;
+            correctPredictions = 0;
+            currentStreak = 0;
+            maxStreak = 0;
+            neuralPower = 25;
+            energy = 100;
+            
+            initializeGame();
+            showNotification("🧠 Interface neurale connectée! Commencez vos prédictions!", 'start');
+        }
+
+        function endGame() {
+            gameStarted = false;
+            
+            const totalPredictions = totalRounds * levelConfig[currentLevel].diceCount;
+            const finalAccuracy = Math.round((correctPredictions / totalPredictions) * 100);
+            
+            showGameOverModal({
+                score: score,
+                level: currentLevel,
+                accuracy: finalAccuracy,
+                streak: maxStreak,
+                predictions: correctPredictions,
+                total: totalPredictions
+            });
+        }
+
+        function updateDisplay() {
+            // Score avec animation
+            const scoreElement = document.getElementById('score');
+            const oldScore = parseInt(scoreElement.textContent) || 0;
+            if (score > oldScore) {
+                scoreElement.style.transform = 'scale(1.2)';
+                scoreElement.style.color = '#00ff88';
+                setTimeout(() => {
+                    scoreElement.style.transform = 'scale(1)';
+                    scoreElement.style.color = 'inherit';
+                }, 300);
+            }
+            scoreElement.textContent = score.toLocaleString();
+            
+            document.getElementById('currentLevel').textContent = currentLevel;
+            document.getElementById('currentRound').textContent = `${currentRound}/${totalRounds}`;
+            document.getElementById('correctPredictions').textContent = correctPredictions;
+            document.getElementById('currentStreak').textContent = currentStreak;
+            
+            // Précision
+            const totalAttempts = (currentRound - 1) * levelConfig[currentLevel].diceCount;
+            const accuracy = totalAttempts > 0 ? Math.round((correctPredictions / totalAttempts) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            // Énergie
+            const energyElement = document.getElementById('energy');
+            energyElement.textContent = energy + '%';
+            if (energy >= 80) {
+                energyElement.style.color = '#00ff88';
+            } else if (energy >= 40) {
+                energyElement.style.color = '#feca57';
+            } else {
+                energyElement.style.color = '#ff6b6b';
+            }
+            
+            // Intuition basée sur la série
+            const intuitionLevel = Math.min(5, Math.floor(currentStreak / 2) + 1);
+            document.getElementById('intuition').textContent = '⭐'.repeat(intuitionLevel);
+            
+            // Puissance neurale
+            const neuralFill = document.getElementById('neuralFill');
+            neuralFill.style.width = neuralPower + '%';
+            document.getElementById('neuralPower').textContent = `Puissance: ${neuralPower}%`;
+        }
+
+        function showRules() {
+            const modal = document.getElementById('rulesModal');
+            const t = translations[currentLanguage];
+            
+            document.getElementById('rulesTitle').textContent = t.rulesTitle;
+            document.getElementById('rulesContent').innerHTML = t.rulesContent;
+            
+            modal.style.display = 'block';
+        }
+
+        function hideRules() {
+            document.getElementById('rulesModal').style.display = 'none';
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            
+            let bgColor = 'linear-gradient(45deg, #1e3c72, #2a5298)';
+            if (type === 'success') bgColor = 'linear-gradient(45deg, #00ff88, #00cc6a)';
+            else if (type === 'warning') bgColor = 'linear-gradient(45deg, #ffa500, #ff8c00)';
+            else if (type === 'failure') bgColor = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+            else if (type === 'ai') bgColor = 'linear-gradient(45deg, #9c27b0, #673ab7)';
+            else if (type === 'boost') bgColor = 'linear-gradient(45deg, #00ffff, #0099cc)';
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                border: 2px solid #00ffff;
+                box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3);
+                z-index: 1000;
+                max-width: 300px;
+                font-size: 0.9rem;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.innerHTML = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showGameOverModal(stats) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            const t = translations[currentLanguage];
+            
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <button class="close-btn" onclick="this.parentElement.parentElement.remove()">&times;</button>
+                    <h2 style="color: #00ffff; text-align: center; margin-bottom: 10px;">🧠 Session Neurale Terminée</h2>
+                    <p style="text-align: center; margin-bottom: 30px; color: #feca57;">Niveau ${stats.level} - ${stats.predictions}/${stats.total} prédictions correctes</p>
+                    
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-item">
+                            <div>Score Final</div>
+                            <div style="font-size: 1.8rem; color: #00ff88;">${stats.score.toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Précision</div>
+                            <div style="color: ${stats.accuracy >= 70 ? '#00ff88' : stats.accuracy >= 50 ? '#feca57' : '#ff6b6b'}">${stats.accuracy}%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Meilleure Série</div>
+                            <div style="color: #ffd700;">${stats.streak}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div>Niveau Atteint</div>
+                            <div>${stats.level}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="startNewGame(); this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #00ff88, #00cc6a); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🚀 Nouvelle Session
+                        </button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove();" 
+                                style="background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-weight: bold;">
+                            🏠 Menu Principal
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Effets visuels
+        function createSelectionEffect(element) {
+            const effect = document.createElement('div');
+            effect.style.cssText = `
+                position: absolute;
+                left: ${element.offsetLeft}px;
+                top: ${element.offsetTop}px;
+                width: ${element.offsetWidth}px;
+                height: ${element.offsetHeight}px;
+                border: 3px solid #00ffff;
+                border-radius: 10px;
+                pointer-events: none;
+                z-index: 200;
+                animation: selectionPulse 0.5s ease-out forwards;
+            `;
+            
+            element.parentElement.appendChild(effect);
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function createSuccessEffect(element) {
+            const success = document.createElement('div');
+            success.innerHTML = '✨';
+            success.style.cssText = `
+                position: absolute;
+                left: ${element.offsetLeft + element.offsetWidth/2}px;
+                top: ${element.offsetTop}px;
+                font-size: 2rem;
+                pointer-events: none;
+                z-index: 201;
+                animation: successFloat 1s ease-out forwards;
+            `;
+            
+            element.parentElement.appendChild(success);
+            setTimeout(() => success.remove(), 1000);
+        }
+
+        function createFailureEffect(element) {
+            const failure = document.createElement('div');
+            failure.innerHTML = '💥';
+            failure.style.cssText = `
+                position: absolute;
+                left: ${element.offsetLeft + element.offsetWidth/2}px;
+                top: ${element.offsetTop}px;
+                font-size: 2rem;
+                pointer-events: none;
+                z-index: 201;
+                animation: failureShake 0.5s ease-out forwards;
+            `;
+            
+            element.parentElement.appendChild(failure);
+            setTimeout(() => failure.remove(), 500);
+        }
+
+        // Styles d'animation supplémentaires
+        const additionalStyles = `
+            @keyframes slideIn {
+                0% { transform: translateX(100%); opacity: 0; }
+                100% { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                0% { transform: translateX(0); opacity: 1; }
+                100% { transform: translateX(100%); opacity: 0; }
+            }
+            
+            @keyframes selectionPulse {
+                0% { transform: scale(0.8); opacity: 1; }
+                100% { transform: scale(1.2); opacity: 0; }
+            }
+            
+            @keyframes successFloat {
+                0% { transform: translateY(0) scale(1); opacity: 1; }
+                100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+            }
+            
+            @keyframes failureShake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = additionalStyles;
+        document.head.appendChild(styleSheet);
+    </script>
+<script>
+/* Canonical child-side overlay closer for platform pages */
+function closePlatform(){
+    try{ console.debug('jeux24: closePlatform called'); }catch(e){}
+    // If inside an iframe, prefer postMessage to parent
+    if(window.parent && window.parent !== window){
+        window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux24' }, '*');
+        return;
+    }
+    // If opened as a popup, notify opener then try to close
+    if(window.opener && !window.opener.closed){
+        try{ window.opener.postMessage({ action: 'child-closed', source: 'jeux24' }, '*'); }catch(e){}
+        try{ window.close(); }catch(e){}
+        return;
+    }
+    // Final fallback
+    window.location.href = '/detente';
+}
+window.closePlatform = closePlatform;
+
+(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9874d00c32b7e23b',t:'MTc1OTI0Njc2My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux24' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
+
+
+

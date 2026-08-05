@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="fr">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Matrix - Jeu Futuriste</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Orbitron', 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #00ffff;
+      overflow-x: hidden;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .title {
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff;
+      margin: 0 0 10px 0;
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 20px #00ffff, 0 0 40px #00ffff; }
+      50% { text-shadow: 0 0 30px #00ffff, 0 0 60px #00ffff, 0 0 80px #00ffff; }
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #a0a0ff;
+      margin: 0;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .language-selector {
+      position: relative;
+    }
+
+    .language-btn {
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid #00ffff;
+      color: #00ffff;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .language-btn:hover {
+      background: rgba(0, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+    }
+
+    .language-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 5px;
+      background: rgba(15, 12, 41, 0.95);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      padding: 10px;
+      display: none;
+      min-width: 150px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      z-index: 10;
+    }
+
+    .language-dropdown.active {
+      display: block;
+    }
+
+    .language-option {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s;
+      color: #00ffff;
+    }
+
+    .language-option:hover {
+      background: rgba(0, 255, 255, 0.2);
+    }
+
+    .level-selector {
+      display: flex;
+      gap: 10px;
+    }
+
+    .level-btn {
+      background: rgba(255, 0, 255, 0.1);
+      border: 2px solid #ff00ff;
+      color: #ff00ff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    .level-btn:hover {
+      background: rgba(255, 0, 255, 0.2);
+      box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+    }
+
+    .level-btn.active {
+      background: rgba(255, 0, 255, 0.3);
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px;
+      border-radius: 20px;
+      border: 2px solid rgba(0, 255, 255, 0.3);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #a0a0ff;
+      margin-bottom: 5px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ffff;
+    }
+
+    .game-area {
+      background: rgba(0, 0, 0, 0.4);
+      border: 3px solid #00ffff;
+      border-radius: 20px;
+      padding: 30px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+    }
+
+    .welcome-screen {
+      text-align: center;
+    }
+
+    .welcome-text {
+      font-size: 20px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00ffff, #0080ff);
+      border: none;
+      color: #000;
+      padding: 15px 40px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: bold;
+      font-family: inherit;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      margin: 10px;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #ff00ff, #ff0080);
+      border: none;
+      color: #fff;
+      padding: 15px 40px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: bold;
+      font-family: inherit;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+      margin: 10px;
+    }
+
+    .btn-secondary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+    }
+
+    .grid {
+      display: grid;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .grid.easy {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid.medium {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .grid.hard {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .cell {
+      aspect-ratio: 1;
+      background: rgba(0, 0, 0, 0.5);
+      border: 2px solid #00ffff;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    .cell.highlight {
+      background: linear-gradient(135deg, #00ffff, #ffffff) !important;
+      border-color: #ffffff !important;
+      animation: pulse 0.8s ease-in-out;
+      box-shadow: 0 0 40px rgba(0, 255, 255, 1), 0 0 60px rgba(255, 255, 255, 0.8) !important;
+      transform: scale(1.15) !important;
+    }
+
+    .cell.correct {
+      background: linear-gradient(135deg, #00ff00, #00ff80);
+      border-color: #00ff00;
+      animation: success 0.5s;
+    }
+
+    .cell.wrong {
+      background: linear-gradient(135deg, #ff0000, #ff0080);
+      border-color: #ff0000;
+      animation: shake 0.5s;
+    }
+
+    @keyframes pulse {
+      0% { 
+        transform: scale(1); 
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      }
+      50% { 
+        transform: scale(1.2); 
+        box-shadow: 0 0 50px rgba(0, 255, 255, 1), 0 0 80px rgba(255, 255, 255, 0.9);
+      }
+      100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+      }
+    }
+
+    @keyframes success {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15) rotate(5deg); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .message {
+      font-size: 24px;
+      margin: 20px 0;
+      text-align: center;
+      min-height: 30px;
+      font-weight: bold;
+    }
+
+    .message.success {
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+    }
+
+    .message.error {
+      color: #ff0000;
+      text-shadow: 0 0 10px #ff0000;
+    }
+
+    @media (max-width: 600px) {
+      .title {
+        font-size: 32px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .level-selector {
+        justify-content: center;
+      }
+
+      .grid.hard {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="stars" id="stars"></div>
+  <div class="container">
+   <div class="content">
+    <div class="header">
+     <h1 class="title" id="gameTitle">Memory Matrix</h1>
+     <p class="subtitle" id="subtitle">Jeu de Mémoire Futuriste</p>
+    </div>
+    <div class="controls">
+     <div class="language-selector"><button class="language-btn" id="languageBtn"> <span id="currentLang">🇫🇷 Français</span> <span>▼</span> </button>
+      <div class="language-dropdown" id="languageDropdown">
+       <div class="language-option" data-lang="fr">
+        🇫🇷 Français
+       </div>
+       <div class="language-option" data-lang="en">
+        🇬🇧 English
+       </div>
+       <div class="language-option" data-lang="ar">
+        🇸🇦 العربية
+       </div>
+       <div class="language-option" data-lang="es">
+        🇪🇸 Español
+       </div>
+       <div class="language-option" data-lang="de">
+        🇩🇪 Deutsch
+       </div>
+       <div class="language-option" data-lang="zh">
+        🇨🇳 中文
+       </div>
+      </div>
+     </div>
+     <div class="level-selector"><button class="level-btn active" data-level="easy" id="easyBtn">Facile</button> <button class="level-btn" data-level="medium" id="mediumBtn">Moyen</button> <button class="level-btn" data-level="hard" id="hardBtn">Difficile</button>
+     </div>
+    </div>
+    <div class="stats">
+     <div class="stat">
+      <div class="stat-label" id="levelLabel">
+       Niveau
+      </div>
+      <div class="stat-value" id="levelValue">
+       Facile
+      </div>
+     </div>
+     <div class="stat">
+      <div class="stat-label" id="scoreLabel">
+       Score
+      </div>
+      <div class="stat-value" id="scoreValue">
+       0
+      </div>
+     </div>
+     <div class="stat">
+      <div class="stat-label" id="roundLabel">
+       Manche
+      </div>
+      <div class="stat-value" id="roundValue">
+       0
+      </div>
+     </div>
+    </div>
+    <div class="game-area" id="gameArea">
+     <div class="welcome-screen" id="welcomeScreen">
+      <p class="welcome-text" id="welcomeText">Mémorisez la séquence lumineuse et reproduisez-la !<br>
+        Chaque niveau augmente la difficulté.<br>
+        Testez votre mémoire et amusez-vous !</p><button class="btn-primary" id="startBtn">🚀 Démarrer</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      game_title: "Memory Matrix",
+      welcome_message: "Mémorisez la séquence lumineuse et reproduisez-la ! Chaque niveau augmente la difficulté. Testez votre mémoire et amusez-vous !",
+      start_button: "🚀 Démarrer",
+      new_game_button: "🔄 Nouveau Jeu"
+    };
+
+    const translations = {
+      fr: {
+        title: "Memory Matrix",
+        subtitle: "Jeu de Mémoire Futuriste",
+        welcome: "Mémorisez la séquence lumineuse et reproduisez-la !\nChaque niveau augmente la difficulté.\nTestez votre mémoire et amusez-vous !",
+        start: "🚀 Démarrer",
+        newGame: "🔄 Nouveau Jeu",
+        easy: "Facile",
+        medium: "Moyen",
+        hard: "Difficile",
+        level: "Niveau",
+        score: "Score",
+        round: "Manche",
+        watch: "Observez la séquence...",
+        yourTurn: "À votre tour !",
+        correct: "Excellent ! 🎉",
+        wrong: "Oups ! Réessayez 😊",
+        gameOver: "Partie terminée ! Score final :"
+      },
+      en: {
+        title: "Memory Matrix",
+        subtitle: "Futuristic Memory Game",
+        welcome: "Memorize the light sequence and reproduce it!\nEach level increases the difficulty.\nTest your memory and have fun!",
+        start: "🚀 Start",
+        newGame: "🔄 New Game",
+        easy: "Easy",
+        medium: "Medium",
+        hard: "Hard",
+        level: "Level",
+        score: "Score",
+        round: "Round",
+        watch: "Watch the sequence...",
+        yourTurn: "Your turn!",
+        correct: "Excellent! 🎉",
+        wrong: "Oops! Try again 😊",
+        gameOver: "Game Over! Final score:"
+      },
+      ar: {
+        title: "مصفوفة الذاكرة",
+        subtitle: "لعبة ذاكرة مستقبلية",
+        welcome: "احفظ تسلسل الأضواء وأعد إنتاجه!\nكل مستوى يزيد الصعوبة.\nاختبر ذاكرتك واستمتع!",
+        start: "🚀 ابدأ",
+        newGame: "🔄 لعبة جديدة",
+        easy: "سهل",
+        medium: "متوسط",
+        hard: "صعب",
+        level: "المستوى",
+        score: "النقاط",
+        round: "الجولة",
+        watch: "شاهد التسلسل...",
+        yourTurn: "دورك!",
+        correct: "ممتاز! 🎉",
+        wrong: "عفواً! حاول مرة أخرى 😊",
+        gameOver: "انتهت اللعبة! النقاط النهائية:"
+      },
+      es: {
+        title: "Matriz de Memoria",
+        subtitle: "Juego de Memoria Futurista",
+        welcome: "¡Memoriza la secuencia de luces y reprodúcela!\nCada nivel aumenta la dificultad.\n¡Pon a prueba tu memoria y diviértete!",
+        start: "🚀 Comenzar",
+        newGame: "🔄 Nuevo Juego",
+        easy: "Fácil",
+        medium: "Medio",
+        hard: "Difícil",
+        level: "Nivel",
+        score: "Puntuación",
+        round: "Ronda",
+        watch: "Observa la secuencia...",
+        yourTurn: "¡Tu turno!",
+        correct: "¡Excelente! 🎉",
+        wrong: "¡Ups! Inténtalo de nuevo 😊",
+        gameOver: "¡Juego terminado! Puntuación final:"
+      },
+      de: {
+        title: "Gedächtnis-Matrix",
+        subtitle: "Futuristisches Gedächtnisspiel",
+        welcome: "Merken Sie sich die Lichtsequenz und reproduzieren Sie sie!\nJedes Level erhöht die Schwierigkeit.\nTesten Sie Ihr Gedächtnis und haben Sie Spaß!",
+        start: "🚀 Starten",
+        newGame: "🔄 Neues Spiel",
+        easy: "Einfach",
+        medium: "Mittel",
+        hard: "Schwer",
+        level: "Level",
+        score: "Punktzahl",
+        round: "Runde",
+        watch: "Beobachten Sie die Sequenz...",
+        yourTurn: "Sie sind dran!",
+        correct: "Ausgezeichnet! 🎉",
+        wrong: "Hoppla! Versuchen Sie es erneut 😊",
+        gameOver: "Spiel vorbei! Endpunktzahl:"
+      },
+      zh: {
+        title: "记忆矩阵",
+        subtitle: "未来记忆游戏",
+        welcome: "记住光序列并重现它！\n每个级别都会增加难度。\n测试你的记忆力，玩得开心！",
+        start: "🚀 开始",
+        newGame: "🔄 新游戏",
+        easy: "简单",
+        medium: "中等",
+        hard: "困难",
+        level: "级别",
+        score: "分数",
+        round: "回合",
+        watch: "观察序列...",
+        yourTurn: "轮到你了！",
+        correct: "太棒了！🎉",
+        wrong: "哎呀！再试一次 😊",
+        gameOver: "游戏结束！最终得分："
+      }
+    };
+
+    let currentLang = 'fr';
+    let currentLevel = 'easy';
+    let score = 0;
+    let round = 0;
+    let sequence = [];
+    let playerSequence = [];
+    let isPlaying = false;
+    let isPlayerTurn = false;
+
+    const gridSizes = {
+      easy: 3,
+      medium: 4,
+      hard: 5
+    };
+
+    const sequenceLengths = {
+      easy: 3,
+      medium: 4,
+      hard: 5
+    };
+
+    function createStars() {
+      const starsContainer = document.getElementById('stars');
+      for (let i = 0; i < 100; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.width = Math.random() * 3 + 'px';
+        star.style.height = star.style.width;
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 3 + 's';
+        starsContainer.appendChild(star);
+      }
+    }
+
+    function updateLanguage() {
+      const t = translations[currentLang];
+      document.getElementById('gameTitle').textContent = t.title;
+      document.getElementById('subtitle').textContent = t.subtitle;
+      document.getElementById('easyBtn').textContent = t.easy;
+      document.getElementById('mediumBtn').textContent = t.medium;
+      document.getElementById('hardBtn').textContent = t.hard;
+      document.getElementById('levelLabel').textContent = t.level;
+      document.getElementById('scoreLabel').textContent = t.score;
+      document.getElementById('roundLabel').textContent = t.round;
+      document.getElementById('levelValue').textContent = t[currentLevel];
+      
+      if (!isPlaying) {
+        document.getElementById('welcomeText').textContent = t.welcome;
+        document.getElementById('startBtn').textContent = t.start;
+      }
+      
+      // Mettre à jour le bouton "Nouveau Jeu" s'il existe
+      const newGameBtnEl = document.getElementById('newGameBtn');
+      if (newGameBtnEl) {
+        newGameBtnEl.textContent = t.newGame;
+      }
+      
+      // Mettre à jour le message en cours s'il y en a un
+      const messageEl = document.getElementById('message');
+      if (messageEl && messageEl.textContent) {
+        if (messageEl.textContent.includes('Observez') || messageEl.textContent.includes('Watch') || messageEl.textContent.includes('شاهد') || messageEl.textContent.includes('Observa') || messageEl.textContent.includes('Beobachten') || messageEl.textContent.includes('观察')) {
+          messageEl.textContent = t.watch;
+        } else if (messageEl.textContent.includes('votre tour') || messageEl.textContent.includes('Your turn') || messageEl.textContent.includes('دورك') || messageEl.textContent.includes('Tu turno') || messageEl.textContent.includes('Sie sind dran') || messageEl.textContent.includes('轮到你了')) {
+          messageEl.textContent = t.yourTurn;
+        }
+      }
+    }
+
+    function createGrid() {
+      const gameArea = document.getElementById('gameArea');
+      gameArea.innerHTML = '';
+      
+      const grid = document.createElement('div');
+      grid.className = `grid ${currentLevel}`;
+      grid.id = 'grid';
+      
+      const size = gridSizes[currentLevel];
+      const totalCells = size * size;
+      
+      // Différents thèmes d'icônes pour varier le jeu
+      const iconThemes = [
+        ['⭐', '🔥', '💎', '⚡', '🌟', '💫', '✨', '🎯', '🚀', '🎪', '🎨', '🎭', '🎲', '🎮', '🎸', '🎺', '🎻', '🎹', '🎤', '🎧', '🎬', '🎊', '🎉', '🎈', '🎀'],
+        ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇'],
+        ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥒', '🌶️', '🌽', '🥕', '🫒', '🧄'],
+        ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🏍️', '🛵', '🚲', '🛴', '🛹', '🚁', '✈️', '🚀', '🛸', '⛵', '🚤'],
+        ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🎽'],
+        ['🎭', '🎨', '🎪', '🎫', '🎟️', '🎠', '🎡', '🎢', '🎳', '🎯', '🎲', '🎰', '🃏', '🀄', '🎴', '🎮', '🕹️', '🎸', '🥁', '🎹', '🎺', '🎷', '🪕', '🎻', '🪘']
+      ];
+      
+      // Sélectionner un thème aléatoire à chaque nouveau jeu
+      const selectedTheme = iconThemes[Math.floor(Math.random() * iconThemes.length)];
+      
+      // Mélanger les icônes du thème sélectionné
+      const shuffledIcons = [...selectedTheme].sort(() => Math.random() - 0.5);
+      
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.textContent = shuffledIcons[i % shuffledIcons.length];
+        cell.addEventListener('click', handleCellClick);
+        grid.appendChild(cell);
+      }
+      
+      const message = document.createElement('div');
+      message.className = 'message';
+      message.id = 'message';
+      
+      const newGameBtn = document.createElement('button');
+      newGameBtn.className = 'btn-secondary';
+      newGameBtn.id = 'newGameBtn';
+      newGameBtn.textContent = translations[currentLang].newGame;
+      newGameBtn.addEventListener('click', startNewGame);
+      
+      gameArea.appendChild(message);
+      gameArea.appendChild(grid);
+      gameArea.appendChild(newGameBtn);
+    }
+
+    function generateSequence() {
+      const size = gridSizes[currentLevel];
+      const totalCells = size * size;
+      const length = sequenceLengths[currentLevel] + Math.floor(round / 3);
+      
+      sequence = [];
+      for (let i = 0; i < length; i++) {
+        sequence.push(Math.floor(Math.random() * totalCells));
+      }
+    }
+
+    async function playSequence() {
+      isPlayerTurn = false;
+      const t = translations[currentLang];
+      const messageEl = document.getElementById('message');
+      messageEl.textContent = t.watch;
+      messageEl.className = 'message';
+      
+      const cells = document.querySelectorAll('.cell');
+      cells.forEach(cell => {
+        cell.style.pointerEvents = 'none';
+        cell.classList.remove('highlight', 'correct', 'wrong');
+      });
+      
+      // Attendre un peu avant de commencer
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      for (let i = 0; i < sequence.length; i++) {
+        const cell = cells[sequence[i]];
+        
+        // Allumer la cellule
+        cell.classList.add('highlight');
+        
+        // Garder allumée pendant 800ms
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Éteindre la cellule
+        cell.classList.remove('highlight');
+        
+        // Pause entre les cellules (sauf pour la dernière)
+        if (i < sequence.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
+      }
+      
+      // Attendre avant de permettre au joueur de jouer
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      messageEl.textContent = t.yourTurn;
+      messageEl.className = 'message';
+      cells.forEach(cell => cell.style.pointerEvents = 'auto');
+      isPlayerTurn = true;
+    }
+
+    function handleCellClick(e) {
+      if (!isPlayerTurn) return;
+      
+      const index = parseInt(e.target.dataset.index);
+      playerSequence.push(index);
+      
+      // Effet visuel pour le clic du joueur
+      e.target.classList.add('highlight');
+      setTimeout(() => e.target.classList.remove('highlight'), 400);
+      
+      // Vérifier après un petit délai pour voir l'effet
+      setTimeout(() => checkSequence(), 200);
+    }
+
+    function checkSequence() {
+      const currentIndex = playerSequence.length - 1;
+      const t = translations[currentLang];
+      
+      if (playerSequence[currentIndex] !== sequence[currentIndex]) {
+        const cells = document.querySelectorAll('.cell');
+        cells[playerSequence[currentIndex]].classList.add('wrong');
+        setTimeout(() => cells[playerSequence[currentIndex]].classList.remove('wrong'), 500);
+        
+        document.getElementById('message').textContent = t.wrong;
+        document.getElementById('message').className = 'message error';
+        
+        setTimeout(() => {
+          playerSequence = [];
+          playSequence();
+        }, 1500);
+        return;
+      }
+      
+      if (playerSequence.length === sequence.length) {
+        const cells = document.querySelectorAll('.cell');
+        playerSequence.forEach(index => {
+          cells[index].classList.add('correct');
+        });
+        
+        score += sequence.length * 10;
+        round++;
+        document.getElementById('scoreValue').textContent = score;
+        document.getElementById('roundValue').textContent = round;
+        document.getElementById('message').textContent = t.correct;
+        document.getElementById('message').className = 'message success';
+        
+        setTimeout(() => {
+          cells.forEach(cell => cell.classList.remove('correct'));
+          playerSequence = [];
+          generateSequence();
+          playSequence();
+        }, 1500);
+      }
+    }
+
+    function startGame() {
+      isPlaying = true;
+      score = 0;
+      round = 1;
+      sequence = [];
+      playerSequence = [];
+      
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('roundValue').textContent = round;
+      
+      createGrid();
+      generateSequence();
+      playSequence();
+    }
+
+    function startNewGame() {
+      startGame();
+    }
+
+    document.getElementById('languageBtn').addEventListener('click', () => {
+      document.getElementById('languageDropdown').classList.toggle('active');
+    });
+
+    document.querySelectorAll('.language-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        currentLang = e.target.dataset.lang;
+        document.getElementById('currentLang').textContent = e.target.textContent;
+        document.getElementById('languageDropdown').classList.remove('active');
+        updateLanguage();
+      });
+    });
+
+    document.querySelectorAll('.level-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentLevel = e.target.dataset.level;
+        document.getElementById('levelValue').textContent = translations[currentLang][currentLevel];
+        
+        // Si une partie est en cours, redémarrer avec le nouveau niveau
+        if (isPlaying) {
+          startGame();
+        }
+      });
+    });
+
+    document.getElementById('startBtn').addEventListener('click', startGame);
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.language-selector')) {
+        document.getElementById('languageDropdown').classList.remove('active');
+      }
+    });
+
+    async function onConfigChange(config) {
+      const title = config.game_title || defaultConfig.game_title;
+      const welcome = config.welcome_message || defaultConfig.welcome_message;
+      const startBtn = config.start_button || defaultConfig.start_button;
+      const newGameBtn = config.new_game_button || defaultConfig.new_game_button;
+
+      document.getElementById('gameTitle').textContent = title;
+      
+      const welcomeTextEl = document.getElementById('welcomeText');
+      if (welcomeTextEl) {
+        welcomeTextEl.textContent = welcome;
+      }
+      
+      const startBtnEl = document.getElementById('startBtn');
+      if (startBtnEl) {
+        startBtnEl.textContent = startBtn;
+      }
+      
+      const newGameBtnEl = document.getElementById('newGameBtn');
+      if (newGameBtnEl) {
+        newGameBtnEl.textContent = newGameBtn;
+      }
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ["game_title", config.game_title || defaultConfig.game_title],
+          ["welcome_message", config.welcome_message || defaultConfig.welcome_message],
+          ["start_button", config.start_button || defaultConfig.start_button],
+          ["new_game_button", config.new_game_button || defaultConfig.new_game_button]
+        ])
+      });
+    }
+
+    createStars();
+    updateLanguage();
+  </script>
+ 
+<button class="global-close-btn mbai-close-btn" title="Quitter" aria-label="Quitter" onclick="closePlatform()"
+  style="position:fixed; top:12px; right:12px; z-index:9999; background:rgba(10,20,40,0.75); border:2px solid rgba(255,255,255,0.15); color:#fff; font-size:18px; width:36px; height:36px; border-radius:18px; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+
+<!-- MathBacAI: gestionnaire de fermeture unique -->
+<script>
+(function(){
+    function closePlatform(){
+        try{
+            if(window.parent && window.parent !== window){
+                window.parent.postMessage({ action: 'close', reason: 'user-initiated', source: 'jeux29' }, '*');
+                return;
+            }
+        }catch(e){}
+        try{ window.location.href = '/detente'; }catch(e){}
+    }
+    window.closePlatform = closePlatform;
+})();
+</script>
+</body>
+</html>
