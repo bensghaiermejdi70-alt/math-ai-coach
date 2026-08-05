@@ -181,7 +181,7 @@ export default function LandingPageAr() {
                   href="/detente"
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold px-6 py-2.5 text-sm shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300"
                 >
-                  العب
+                  استراحة ذكية
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                 </Link>
               </div>
