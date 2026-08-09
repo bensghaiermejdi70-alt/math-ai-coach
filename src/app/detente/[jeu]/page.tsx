@@ -12,6 +12,7 @@ export function generateMetadata({ params }: { params: { jeu: string } }) {
   return {
     title: `${game.title} — Détente | MathBacAI`,
     description: `Joue gratuitement à ${game.title} sur MathBacAI, entre deux séances de révision.`,
+    robots: { index: false, follow: true },
   };
 }
 
