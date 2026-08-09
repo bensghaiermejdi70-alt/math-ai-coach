@@ -10,11 +10,25 @@ const DESKTOP_BREAKPOINT = 1024;
 
 // Taille "virtuelle" à laquelle les jeux ont été conçus (canvas fixe).
 // En dessous du breakpoint, on affiche le jeu à cette taille native
-// puis on le réduit visuellement (CSS transform) pour qu'il tienne à
-// l'écran — le fichier du jeu lui-même n'est jamais modifié ni
-// redimensionné, on change juste le "zoom" de la fenêtre qui le montre.
+// puis on le réduit/adapte visuellement (CSS transform) pour qu'il
+// remplisse l'écran — le fichier du jeu lui-même n'est jamais modifié.
 const DEFAULT_DESIGN_WIDTH = 1280;
 const DEFAULT_DESIGN_HEIGHT = 800;
+
+// Compromis étirement / recadrage pour remplir l'écran sans bande
+// noire : 0 = étirement complet (aucune coupe, formes déformées),
+// 1 = recadrage complet (formes intactes, bords coupés). 0.5 = on
+// partage la différence moitié-moitié entre les deux défauts.
+const FILL_BLEND = 0.5;
+
+function computeFillScale(vw: number, vh: number, dw: number, dh: number) {
+  const sx = vw / dw;
+  const sy = vh / dh;
+  if (sx >= sy) {
+    return { scaleX: sx, scaleY: sy + FILL_BLEND * (sx - sy) };
+  }
+  return { scaleX: sx + FILL_BLEND * (sy - sx), scaleY: sy };
+}
 
 export default function GameFrame({
   slug,
@@ -29,7 +43,7 @@ export default function GameFrame({
 }) {
   const router = useRouter();
   const [isDesktop, setIsDesktop] = useState(true);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState({ scaleX: 1, scaleY: 1 });
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
@@ -46,11 +60,14 @@ export default function GameFrame({
       const desktop = window.innerWidth >= DESKTOP_BREAKPOINT;
       setIsDesktop(desktop);
       if (!desktop) {
-        const s = Math.min(
-          window.innerWidth / designWidth,
-          window.innerHeight / designHeight
+        setScale(
+          computeFillScale(
+            window.innerWidth,
+            window.innerHeight,
+            designWidth,
+            designHeight
+          )
         );
-        setScale(s);
       }
     }
     recompute();
@@ -74,17 +91,16 @@ export default function GameFrame({
     );
   }
 
-  // Mobile / écran étroit : le jeu garde sa taille native, on le
-  // réduit à l'échelle pour qu'il tienne entièrement à l'écran (et
-  // qu'il en profite vraiment en paysage), sans toucher au fichier
-  // du jeu.
+  // Mobile / écran étroit : le jeu garde sa taille native, on
+  // l'étire/recadre légèrement (moitié-moitié) pour remplir tout
+  // l'écran sans bande noire, sans toucher au fichier du jeu.
   return (
     <div className="flex h-full w-full items-center justify-center overflow-hidden bg-black">
       <div
         style={{
           width: designWidth,
           height: designHeight,
-          transform: `scale(${scale})`,
+          transform: `scale(${scale.scaleX}, ${scale.scaleY})`,
           transformOrigin: "center center",
           flexShrink: 0,
         }}
