@@ -15,14 +15,11 @@ const DESKTOP_BREAKPOINT = 1024;
 const DEFAULT_DESIGN_WIDTH = 1280;
 const DEFAULT_DESIGN_HEIGHT = 800;
 
-// Compromis étirement / recadrage. Avec le défilement tactile
-// maintenant actif, le recadrage n'a plus d'inconvénient (on atteint
-// toujours la zone coupée en glissant le doigt) alors que
-// l'étirement déforme en permanence — donc réglé à 1 (recadrage
-// complet, zéro déformation) par défaut. Repasser à une valeur plus
-// basse (ex. 0.3) si un jeu précis a des boutons vraiment trop loin
-// pour qu'on ait envie de scroller.
-const FILL_BLEND = 1;
+// Compromis étirement / recadrage pour remplir l'écran sans bande
+// noire : 0 = étirement complet (aucune coupe, formes déformées),
+// 1 = recadrage complet (formes intactes, bords coupés). 0.5 = on
+// partage la différence moitié-moitié entre les deux défauts.
+const FILL_BLEND = 0.5;
 
 function computeFillScale(vw: number, vh: number, dw: number, dh: number) {
   const sx = vw / dw;
@@ -94,37 +91,26 @@ export default function GameFrame({
     );
   }
 
-  // Mobile / écran étroit : le jeu garde sa taille native, recadré
-  // pour remplir l'écran sans déformation (FILL_BLEND=1), et la zone
-  // reste défilable (glisser du doigt) pour atteindre toute portion
-  // recadrée hors champ — rien n'est donc jamais définitivement
-  // inaccessible. Le fichier du jeu n'est pas touché.
+  // Mobile / écran étroit : le jeu garde sa taille native, on
+  // l'étire/recadre légèrement (moitié-moitié) pour remplir tout
+  // l'écran sans bande noire, sans toucher au fichier du jeu.
   return (
-    <div
-      className="h-full w-full overflow-auto bg-black"
-      style={{ WebkitOverflowScrolling: "touch" }}
-    >
+    <div className="flex h-full w-full items-center justify-center overflow-hidden bg-black">
       <div
         style={{
-          width: designWidth * scale.scaleX,
-          height: designHeight * scale.scaleY,
+          width: designWidth,
+          height: designHeight,
+          transform: `scale(${scale.scaleX}, ${scale.scaleY})`,
+          transformOrigin: "center center",
+          flexShrink: 0,
         }}
       >
-        <div
-          style={{
-            width: designWidth,
-            height: designHeight,
-            transform: `scale(${scale.scaleX}, ${scale.scaleY})`,
-            transformOrigin: "top left",
-          }}
-        >
-          <iframe
-            src={`/jeux/${slug}.html`}
-            title={title}
-            className="block h-full w-full border-0"
-            allow="fullscreen"
-          />
-        </div>
+        <iframe
+          src={`/jeux/${slug}.html`}
+          title={title}
+          className="block h-full w-full border-0"
+          allow="fullscreen"
+        />
       </div>
     </div>
   );
