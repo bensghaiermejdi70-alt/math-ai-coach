@@ -125,6 +125,11 @@ export default function LandingPage() {
           <div className="parallax-orb absolute top-24 left-8 w-72 h-72 rounded-full bg-blue-500/15 blur-3xl" />
           <div className="parallax-orb delay-1 absolute top-14 right-10 w-80 h-80 rounded-full bg-violet-500/15 blur-3xl" />
           <div className="parallax-orb delay-2 absolute bottom-12 left-1/3 w-64 h-64 rounded-full bg-cyan-400/10 blur-3xl" />
+          <span aria-hidden className="hero-math absolute top-[10%] right-[8%] text-white/10 italic text-3xl md:text-4xl select-none">E=mc²</span>
+          <span aria-hidden className="hero-math delay-1 absolute top-[40%] right-[24%] text-white/10 italic text-2xl md:text-3xl select-none">sin x</span>
+          <span aria-hidden className="hero-math delay-2 absolute bottom-[16%] right-[6%] text-white/10 italic text-2xl md:text-3xl select-none">a²+b²=c²</span>
+          <span aria-hidden className="hero-math absolute top-[8%] left-[6%] text-white/10 italic text-2xl md:text-3xl select-none">∫f(x)dx</span>
+          <span aria-hidden className="hero-math delay-1 absolute bottom-[10%] left-[10%] text-white/10 italic text-xl md:text-2xl select-none">π ≈ 3.14</span>
         </div>
         <div className="absolute top-10 right-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -139,18 +144,35 @@ export default function LandingPage() {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-950/50 via-transparent to-transparent" />
               </div>
-              <div className="hero-badge absolute -bottom-3 -right-1 md:right-4 bg-white rounded-3xl backdrop-blur-md px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+              <div className="hero-badge absolute -bottom-3 -right-1 md:right-4 bg-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/20 flex items-center gap-3 border border-slate-100">
+                <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m-6 4h4m-4 4h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Taux de réussite</p>
-                  <p className="text-lg font-extrabold text-slate-900">94%</p>
+                  <p className="text-[11px] font-extrabold text-black" style={{ color: '#000000' }}>Solveur d'exercices</p>
+                  <p className="text-[10px] text-black font-semibold" style={{ color: '#000000' }}>Étapes détaillées</p>
                 </div>
               </div>
-              <div className="hero-badge absolute -top-3 left-4 md:left-8 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-xl px-3 py-2 shadow-lg shadow-amber-500/30 flex items-center gap-2">
-                <svg className="w-4 h-4 text-slate-900" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                <span className="text-slate-900 text-xs font-extrabold">Top Rated</span>
+              <div className="hero-badge delay-1 absolute top-1/2 -translate-y-1/2 -left-4 md:-left-10 bg-white rounded-2xl px-4 py-3 shadow-2xl shadow-black/20 border border-slate-100 max-w-[170px] hidden sm:block">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                    <svg className="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>
+                  </div>
+                  <p className="text-[11px] font-extrabold text-black" style={{ color: '#000000' }}>Simulation IA</p>
+                </div>
+                <ul className="space-y-0.5">
+                  <li className="text-[10px] text-black font-semibold flex items-center gap-1"><span className="text-emerald-500">✓</span> Examen généré</li>
+                  <li className="text-[10px] text-black font-semibold flex items-center gap-1"><span className="text-emerald-500">✓</span> Correction IA</li>
+                </ul>
+              </div>
+              <div className="hero-badge delay-2 absolute top-8 md:top-12 left-4 md:left-8 bg-white rounded-2xl px-4 py-3 shadow-lg shadow-black/10 flex items-center gap-3 border border-slate-100">
+                <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                </div>
+                <div>
+                  <p className="text-[11px] font-extrabold text-black" style={{ color: '#000000' }}>Professeur IA</p>
+                  <p className="text-[10px] text-black font-semibold" style={{ color: '#000000' }}>Explication détaillée</p>
+                </div>
               </div>
             </div>
 
@@ -413,6 +435,28 @@ export default function LandingPage() {
           animation: driftBadge 6s ease-in-out infinite;
         }
 
+        .hero-badge.delay-1 {
+          animation-delay: 1s;
+        }
+
+        .hero-badge.delay-2 {
+          animation-delay: 2s;
+        }
+
+        .hero-math {
+          font-family: Georgia, serif;
+          animation: floatOrb 14s ease-in-out infinite;
+          will-change: transform;
+        }
+
+        .hero-math.delay-1 {
+          animation-delay: 3s;
+        }
+
+        .hero-math.delay-2 {
+          animation-delay: 6s;
+        }
+
         .hero-title,
         .hero-copy,
         .hero-actions {
@@ -435,6 +479,7 @@ export default function LandingPage() {
           .parallax-orb,
           .hero-card,
           .hero-badge,
+          .hero-math,
           .hero-title,
           .hero-copy,
           .hero-actions {
