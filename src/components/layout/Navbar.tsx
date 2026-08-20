@@ -407,7 +407,7 @@ function AbonnementDropdown({ pathname }: { pathname: string }) {
                 <div style={{ width:34, height:34, borderRadius:9, background:'linear-gradient(135deg,rgba(59,130,246,0.2),rgba(99,102,241,0.15))', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>🇫🇷</div>
                 <div>
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--text)', marginBottom:2 }}>Abonnement France</div>
-                  <div style={{ fontSize:11, color:'var(--muted)' }}>19€ · 29€ · 199€/an</div>
+                  <div style={{ fontSize:11, color:'var(--muted)' }}>29€ · 45€ · 299€/an</div>
                   <div style={{ fontSize:10, color:'#60a5fa', fontWeight:600, marginTop:1 }}>Paiement sécurisé Stripe · Carte bancaire</div>
                 </div>
               </div>
