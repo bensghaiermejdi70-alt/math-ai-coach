@@ -12,6 +12,12 @@ const bw = (year: number, session: 'principale' | 'controle', folder: string, fi
 const rb = (section: string, matiere: string, annee: number, sess: string) =>
   `${RB}?section=${encodeURIComponent(section)}&matiere=${encodeURIComponent(matiere)}&annee=${annee}&session=${encodeURIComponent(sess)}`
 
+// Helper pour construire un lien echoexam.edunet.tn (miroir officiel — sujets 2026,
+// pas encore archivés sur bacweb.tn au moment de cet ajout, cf. commentaire plus bas)
+const EO = 'http://www.echoexam.edunet.tn/bac'
+const eo = (year: number, session: 'principale' | 'controle', folder: string, file: string) =>
+  `${EO}/${year}/${session}/${folder}/${file}`
+
 // ── Types ────────────────────────────────────────────────────
 export type Session = {
   sujet?: string
@@ -29,6 +35,7 @@ export type AnneeData = { year: number; exercices: ExData[]; note?: string }
 //  Corrigé  : non disponible sur bacweb (section Maths directe)
 // ════════════════════════════════════════════════════════════════
 const mathsLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','math','math.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','math','math.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      bw(2025,'principale','math','math.pdf'),
@@ -125,6 +132,7 @@ const mathsLinks: Record<number, AnneeLinks> = {
 //  Corrigés confirmés sur bacweb.tn (2016, 2018, 2022 vérifiés)
 // ════════════════════════════════════════════════════════════════
 const scExpLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','sciences_ex','math.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','sciences_ex','math.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      bw(2025,'principale','sciences_ex','math.pdf'),
@@ -226,6 +234,7 @@ const scExpLinks: Record<number, AnneeLinks> = {
 //              informatique/math_c.pdf (correction — 2019, 2021 confirmés)
 // ════════════════════════════════════════════════════════════════
 const mathsInfoLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','informatique','math.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','informatique','math.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P', sujet: 'https://drive.google.com/file/d/1Ewz9mKnu8NLbVy1iYRP-QAOKIaBZlyhO/preview', correction: 'https://drive.google.com/file/d/1IBjYbhboqWucTM1YlpY_yTRifWpoGdm2/preview' },
     controle:   { label:'Session de Contrôle', session:'C', sujet: 'https://drive.google.com/file/d/1Y8uH_NiEurb1ALUX5ZGuIlyeriWVFFf2/preview', correction: 'https://drive.google.com/file/d/1tVODKqGPcFCi1ufp1IfUpd-Z_olnO3or/preview' },
@@ -273,6 +282,7 @@ const mathsInfoLinks: Record<number, AnneeLinks> = {
 }
 
 const scTechLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','technique','math.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','technique','math.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      'https://drive.google.com/file/d/1JvWd8PQRsVKjjzS0V-AWsmEfvCAjb0-H/preview',
@@ -369,6 +379,7 @@ const scTechLinks: Record<number, AnneeLinks> = {
 //  Corrigés : Google Drive (mathsplustn.com)
 // ════════════════════════════════════════════════════════════════
 const ecoGestionLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','economie_gestion','math.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','economie_gestion','math.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      'https://drive.google.com/file/d/16ZHD8M0B1rk63R71aDyxWJW9XnCRevYl/preview',
@@ -473,6 +484,13 @@ export type InfoLinks = {
   controle:   { algo_sujet?: string; algo_corr?: string; bd_sujet?: string; bd_corr?: string }
 }
 export const infoLinks: Record<number, InfoLinks> = {
+  // 2026 : bacweb.tn n'a pas encore archivé la session ; sujets récupérés sur le
+  // miroir officiel echoexam.edunet.tn. Le fichier BD a été renommé "sti.pdf"
+  // (Systèmes et Technologies de l'Information — BD + Web fusionnés, cf. règle métier)
+  2026: {
+    principale: { algo_sujet: eo(2026,'principale','informatique','algorithme.pdf'), bd_sujet: eo(2026,'principale','informatique','sti.pdf') },
+    controle:   { algo_sujet: eo(2026,'controle','informatique','algorithme.pdf'),   bd_sujet: eo(2026,'controle','informatique','sti.pdf') },
+  },
   2025: {
     principale: { algo_sujet: bw(2025,'principale','informatique','algorithme.pdf'), bd_sujet: bw(2025,'principale','informatique','bd.pdf') },
     controle:   { algo_sujet: bw(2025,'controle','informatique','algorithme.pdf'),   bd_sujet: bw(2025,'controle','informatique','bd.pdf') },
@@ -525,6 +543,7 @@ export const infoLinks: Record<number, InfoLinks> = {
 //  Corrigé : sciences_ex/svt_c.pdf (quand disponible)
 // ════════════════════════════════════════════════════════════════
 const svtScExpLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','sciences_ex','svt.pdf'), correction:undefined }},
   2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','sciences_ex','svt.pdf'), correction:undefined }},
   2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','sciences_ex','svt.pdf'), correction:undefined }},
   2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','sciences_ex','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','sciences_ex','svt.pdf'), correction:undefined }},
@@ -544,6 +563,7 @@ const svtScExpLinks: Record<number, AnneeLinks> = {
 //  Corrigé : math/svt_c.pdf (quand disponible)
 // ════════════════════════════════════════════════════════════════
 const svtMathsLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','math','svt.pdf'), correction:undefined }},
   2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','math','svt.pdf'), correction:undefined }},
   2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','math','svt.pdf'), correction:undefined }},
   2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','math','svt.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','math','svt.pdf'), correction:undefined }},
@@ -561,7 +581,10 @@ const svtMathsLinks: Record<number, AnneeLinks> = {
 //  DONNÉES EXERCICES — thèmes par année (résumé pédagogique)
 // ════════════════════════════════════════════════════════════════
 const BAC_MATHS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Exercice 1',theme:'Analyse — étude de fonction, dérivée, limites',pts:5},
     {titre:'Exercice 2',theme:'Nombres complexes — module, argument, transformations',pts:6},
     {titre:'Exercice 3',theme:'Probabilités — variable aléatoire, espérance',pts:3},
@@ -630,7 +653,10 @@ const BAC_MATHS_DATA: AnneeData[] = [
 ]
 
 const BAC_SC_EXP_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Exercice 1',theme:'Analyse — étude de fonction, limites, dérivée',pts:5},
     {titre:'Exercice 2',theme:'Nombres complexes — forme algébrique, géométrie',pts:5},
     {titre:'Exercice 3',theme:'Probabilités — loi binomiale, espérance',pts:4},
@@ -709,7 +735,10 @@ const BAC_SC_EXP_DATA: AnneeData[] = [
 ]
 
 const BAC_SC_TECH_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Exercice 1',theme:'Analyse — dérivée, variations, représentation graphique',pts:5},
     {titre:'Exercice 2',theme:'Suites numériques — arithmétique, géométrique',pts:5},
     {titre:'Exercice 3',theme:'Probabilités — dénombrement, loi de probabilité',pts:4},
@@ -788,6 +817,9 @@ const BAC_SC_TECH_DATA: AnneeData[] = [
 ]
 
 const BAC_INFO_MATH_DATA: AnneeData[] = [
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
   { year:2025, exercices:[
     {titre:'Exercice 1',theme:'Analyse — étude de fonction, dérivée, limites',pts:5},
     {titre:'Exercice 2',theme:'Suites réelles — récurrence, monotonie, convergence',pts:5},
@@ -857,7 +889,10 @@ const BAC_INFO_MATH_DATA: AnneeData[] = [
 ]
 
 const BAC_INFO_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'⚙️ Algorithmique',theme:'Algorithmes récursifs — factorielle, Fibonacci, résolution Python/Pascal',pts:7},
     {titre:'🗄️ Bases de données',theme:'SQL avancé — sous-requêtes, GROUP BY HAVING, fonctions agrégat',pts:6},
     {titre:'🌐 TIC & Réseaux',theme:'Architecture réseau TCP/IP, HTML5/CSS3, sécurité informatique',pts:7},
@@ -915,7 +950,10 @@ const BAC_INFO_DATA: AnneeData[] = [
 ]
 
 const BAC_ECO_GESTION_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Exercice 1',theme:'Analyse — étude de fonction, ln, dérivée',pts:5},
     {titre:'Exercice 2',theme:'Probabilités — loi discrète, espérance mathématique',pts:4},
     {titre:'Exercice 3',theme:'Matrices & Systèmes — résolution, applications',pts:5},
@@ -999,7 +1037,10 @@ const BAC_ECO_GESTION_DATA: AnneeData[] = [
 //  Coefficient 5 · Durée 3h
 // ════════════════════════════════════════════════════════════════
 const BAC_SVT_SC_EXP_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Partie I — Génétique (6 pts)',theme:'Brassage interchromosomique et intrachromosomique — crossing-over · génotypes · phénotypes · lois de Mendel appliquées',pts:6},
     {titre:'Partie II — Milieu intérieur & Neuro (7 pts)',theme:'Régulation de la glycémie (insuline/glucagon) — Potentiel d\'action et transmission synaptique — Immunité spécifique et vaccination',pts:7},
     {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — régulation hormonale (FSH, LH, œstrogènes, progestérone) — ovulation et corps jaune',pts:4},
@@ -1073,7 +1114,10 @@ const BAC_SVT_SC_EXP_DATA: AnneeData[] = [
 //  Coefficient 2 · Durée 2h
 // ════════════════════════════════════════════════════════════════
 const BAC_SVT_MATHS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Partie I — Génétique (5 pts)',theme:'Brassage génétique — lois de Mendel — hérédité liée au sexe — diagnostic prénatal',pts:5},
     {titre:'Partie II — Milieu intérieur & Neuro (6 pts)',theme:'Régulation de la glycémie — insuline et glucagon — potentiel d\'action — transmission synaptique',pts:6},
     {titre:'Partie III — Reproduction humaine (4 pts)',theme:'Cycle sexuel féminin — régulation hormonale — contraception mécanisme',pts:4},
@@ -1160,6 +1204,7 @@ const BAC_SVT_MATHS_DATA: AnneeData[] = [
 //  Pas de correction (même pattern que autres sections)
 // ════════════════════════════════════════════════════════════════
 const anglaisLettresLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','lettre','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:undefined, correction:undefined }},
   // ── Dossier bacweb.tn : "lettre" (sans s) — vérifié
   // ── Sujet uniquement — pas de correction (même pattern que autres sections)
   // ── URL : bacweb.tn/bac/{year}/{session}/lettre/anglais.pdf
@@ -1179,6 +1224,7 @@ const anglaisLettresLinks: Record<number, AnneeLinks> = {
 // Liens commun : Sc. Maths / Sc. Exp / Sc. Tech / Informatique / Éco-Gestion
 // Dossier bacweb : math/ — fichier : anglais.pdf (programme unique commun)
 const anglaisSciencesLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:undefined, correction:undefined }},
   2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2025,'controle','math','anglais.pdf'), correction:undefined }},
   2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2024,'controle','math','anglais.pdf'), correction:undefined }},
   2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','math','anglais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:bw(2023,'controle','math','anglais.pdf'), correction:undefined }},
@@ -1212,7 +1258,10 @@ const anglaisEcoLinks: Record<number, AnneeLinks> = {
 //  Structure : Reading (8 pts) + Writing (8 pts) + Language (4 pts)
 // ════════════════════════════════════════════════════════════════
 const BAC_ANGLAIS_LETTRES_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Reading (8 pts)',theme:'Texte argumentatif — analyse et compréhension · Justification · Inférences · Vocabulaire en contexte',pts:8},
     {titre:'Writing (8 pts)',theme:'Essay argumentatif — Art & société · Expression personnelle · Structure introduction/développement/conclusion',pts:8},
     {titre:'Language (4 pts)',theme:'Grammar : Reported speech · Passive voice · Relative clauses · Vocabulary in context',pts:4},
@@ -1270,7 +1319,10 @@ const BAC_ANGLAIS_LETTRES_DATA: AnneeData[] = [
 ]
 
 const BAC_ANGLAIS_SCIENCES_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Reading (8 pts)',theme:'Texte scientifique — AI & Technology · Analyse logique · Questions de compréhension',pts:8},
     {titre:'Writing (8 pts)',theme:'Essay — Impact de l\'intelligence artificielle sur la société · Argumentation technique',pts:8},
     {titre:'Language (4 pts)',theme:'Relative clauses · Passive · Future forms · Vocabulary : science & technology',pts:4},
@@ -1328,7 +1380,10 @@ const BAC_ANGLAIS_SCIENCES_DATA: AnneeData[] = [
 ]
 
 const BAC_ANGLAIS_ECO_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Reading (8 pts)',theme:'Texte — Global trade & economic inequality · Compréhension · Analyse économique',pts:8},
     {titre:'Writing (8 pts)',theme:'Essay — La mondialisation profite-t-elle à tous ? · Argumentation économique',pts:8},
     {titre:'Language (4 pts)',theme:'Passive · Reported speech · Vocabulary : economics & trade',pts:4},
@@ -1399,6 +1454,7 @@ export const SECTIONS_ANGLAIS = [
 //  DONNÉES PHYSIQUE-CHIMIE — liens et thèmes
 // ════════════════════════════════════════════════════════════════
 const scExpPhysLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','sciences_ex','physique.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','sciences_ex','physique.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      bw(2025,'principale','sciences_ex','physique.pdf'),
@@ -1496,6 +1552,7 @@ const scExpPhysLinks: Record<number, AnneeLinks> = {
 //  Corrections : bacweb.tn physique_c.pdf + Google Drive pour manquants
 // ════════════════════════════════════════════════════════════════
 const scTechPhysLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','technique','physique.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','technique','physique.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet:      bw(2025,'principale','technique','physique.pdf'),
@@ -1590,7 +1647,10 @@ const scTechPhysLinks: Record<number, AnneeLinks> = {
 //  DATA — SCIENCES EXPÉRIMENTALES · Thèmes Physique-Chimie
 // ════════════════════════════════════════════════════════════════
 const BAC_SC_EXP_PHYS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Chimie — Exercice 1',theme:'Cinétique chimique — vitesse de réaction, facteurs cinétiques, loi de vitesse, temps de demi-vie',pts:5},
     {titre:'Chimie — Exercice 2',theme:'Équilibres et acido-basicité — pH, Ka, titrage, courbe de neutralisation',pts:4},
     {titre:'Physique — Exercice 1',theme:'Mécanique — 2ème loi de Newton, systèmes en translation, forces et accélération',pts:5},
@@ -1662,7 +1722,10 @@ const BAC_SC_EXP_PHYS_DATA: AnneeData[] = [
 //  DATA — SCIENCES TECHNIQUES · Thèmes Physique-Chimie
 // ════════════════════════════════════════════════════════════════
 const BAC_SC_TECH_PHYS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Chimie (7 pts)',theme:'Transformations chimiques en solution — réactions acide-base, pH, dosage, applications industrielles',pts:7},
     {titre:'Physique (15 pts)',theme:'Mécanique et électricité — 2ème loi de Newton, circuits RC/RL, oscillations, ondes sonores',pts:15},
   ]},
@@ -1714,6 +1777,7 @@ const BAC_SC_TECH_PHYS_DATA: AnneeData[] = [
 //  Coeff 3 · Durée 3h · bacweb.tn/bac/{year}/{session}/math/physique.pdf
 // ════════════════════════════════════════════════════════════════
 const mathPhysLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','math','physique.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','math','physique.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet: bw(2025,'principale','math','physique.pdf'), correction: undefined },
@@ -1797,7 +1861,10 @@ const mathPhysLinks: Record<number, AnneeLinks> = {
 }
 
 const BAC_MATH_PHYS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Chimie (8 pts)',theme:"Cinétique chimique — vitesse, loi de vitesse, ordre de réaction, facteurs cinétiques, applications",pts:8},
     {titre:'Physique (12 pts)',theme:"Mécanique : 2ème loi de Newton, satellites, forces — Électricité : circuits RC/RL, oscillations libres",pts:12},
   ]},
@@ -1848,6 +1915,7 @@ const BAC_MATH_PHYS_DATA: AnneeData[] = [
 //  Coeff 3 · Durée 3h · bacweb.tn/bac/{year}/{session}/informatique/physique.pdf
 // ════════════════════════════════════════════════════════════════
 const infoPhysLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','informatique','physique.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','informatique','physique.pdf'), correction:undefined }},
   2025: {
     principale: { label:'Session Principale', session:'P',
       sujet: bw(2025,'principale','informatique','physique.pdf'), correction: undefined },
@@ -1929,7 +1997,10 @@ const infoPhysLinks: Record<number, AnneeLinks> = {
 }
 
 const BAC_INFO_PHYS_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Chimie (8 pts)',theme:"Transformations acide-base — pH, Ka, pKa, dosage, solutions tampons biologiques",pts:8},
     {titre:'Physique (12 pts)',theme:"Mécanique — 2ème loi de Newton, translation — Oscillations électriques : circuits LC, RLC",pts:12},
   ]},
@@ -1986,6 +2057,7 @@ export type SKey = 'maths' | 'sc-exp' | 'sc-tech' | 'info' | 'eco' | 'sc-exp-phy
 // Scientifiques: sciences_ex/ (sauf 2021+2018+2016P = math/)
 // undefined    = 404 confirme sur bacweb.tn
 const francaisLettresLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','lettre','francais.pdf'), correction:undefined }},
   2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:undefined, correction:undefined }},
   2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2024,'controle','lettre','francais.pdf'), correction:undefined }},
   2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','lettre','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2023,'controle','lettre','francais.pdf'), correction:undefined }},
@@ -2000,6 +2072,7 @@ const francaisLettresLinks: Record<number, AnneeLinks> = {
 }
 
 const francaisScientifiqueLinks: Record<number, AnneeLinks> = {
+  2026: { principale:{ label:'Session Principale', session:'P', sujet:eo(2026,'principale','math','francais.pdf'), correction:undefined }, controle:{ label:'Session de Contrôle', session:'C', sujet:eo(2026,'controle','math','francais.pdf'), correction:undefined }},
   2025: { principale:{ label:'Session Principale', session:'P', sujet:bw(2025,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:undefined, correction:undefined }},
   2024: { principale:{ label:'Session Principale', session:'P', sujet:bw(2024,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2024,'controle','sciences_ex','francais.pdf'), correction:undefined }},
   2023: { principale:{ label:'Session Principale', session:'P', sujet:bw(2023,'principale','sciences_ex','francais.pdf'), correction:undefined }, controle:{ label:'Session de Controle', session:'C', sujet:bw(2023,'controle','sciences_ex','francais.pdf'), correction:undefined }},
@@ -2014,7 +2087,10 @@ const francaisScientifiqueLinks: Record<number, AnneeLinks> = {
 }
 
 const BAC_FRANCAIS_LETTRES_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Comprehension',theme:"Texte argumentatif — solidarite et partage interculturel",pts:7},
     {titre:'Langue',theme:"Connecteurs logiques, modalisation, champ lexical",pts:5},
     {titre:'Production',theme:"Essai — engagement de l'ecrivain dans la societe",pts:8},
@@ -2072,7 +2148,10 @@ const BAC_FRANCAIS_LETTRES_DATA: AnneeData[] = [
 ]
 
 const BAC_FRANCAIS_SCIENT_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Comprehension',theme:"Texte argumentatif — science et progres, Albert Jacquard",pts:7},
     {titre:'Langue',theme:"Connecteurs logiques, modalisation, reformulation",pts:5},
     {titre:'Production',theme:"Sujet de reflexion — l'homme face a la technologie",pts:8},
@@ -2153,7 +2232,10 @@ export const SECTIONS_PHYS = [
 //  SECTIONS INFORMATIQUE
 // ════════════════════════════════════════════════════════════════
 const BAC_INFO_ALGO_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[{titre:'⚙️ Algorithmique',theme:'Algorithmes récursifs — factorielle, Fibonacci, Python/Pascal',pts:7},{titre:'🗄️ Bases de données',theme:'SQL avancé — sous-requêtes, GROUP BY HAVING',pts:6},{titre:'🌐 TIC',theme:'Réseaux TCP/IP, HTML5/CSS3, sécurité',pts:7}]},
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[{titre:'⚙️ Algorithmique',theme:'Algorithmes récursifs — factorielle, Fibonacci, Python/Pascal',pts:7},{titre:'🗄️ Bases de données',theme:'SQL avancé — sous-requêtes, GROUP BY HAVING',pts:6},{titre:'🌐 TIC',theme:'Réseaux TCP/IP, HTML5/CSS3, sécurité',pts:7}]},
   { year:2024, note:'🔥', exercices:[{titre:'⚙️ Algorithmique',theme:'Tri rapide (Quick Sort), récursivité, complexité',pts:7},{titre:'🗄️ Bases de données',theme:'SQL — jointures multiples, GROUP BY, sous-requêtes',pts:6},{titre:'🌐 TIC',theme:'HTML5/CSS3, JavaScript DOM',pts:7}]},
   { year:2023, exercices:[{titre:'⚙️ Algorithmique',theme:'Tri fusion (Merge Sort), arbres binaires ABR',pts:7},{titre:'🗄️ Bases de données',theme:'Modélisation E/A, normalisation 3FN, SQL DDL/DML',pts:6},{titre:'🌐 TIC',theme:'PHP serveur, sessions, cookies',pts:7}]},
   { year:2022, exercices:[{titre:'⚙️ Algorithmique',theme:'Listes chaînées — insertion, suppression nœud',pts:7},{titre:'🗄️ Bases de données',theme:'SQL SELECT imbriqué, sous-requêtes corrélées',pts:6},{titre:'🌐 TIC',theme:'CSS3 flexbox, JavaScript DOM',pts:7}]},
@@ -2220,6 +2302,7 @@ const buildLinks = (file: string, avail: Record<number,{pr:Cell;co:Cell}>): Reco
 // ── ÉCONOMIE : corrigés réels = bacweb 2016-2019 (P+C), 2021 (P+C), 2022 P uniquement ──
 //    Sujets : 2023P via ecoles.com.tn · 2025P via echoexam · 2023C introuvable → redirection reviserbac
 const economieLinks: Record<number, AnneeLinks> = buildLinks('economie', {
+  2026:{ pr:cell('eo','' ),       co:cell('eo','' ) },
   2025:{ pr:cell('eo','' ),       co:cell('bw','' ) },
   2024:{ pr:cell('bw','' ),       co:cell('bw','' ) },
   2023:{ pr:cell(ECO_2023_P,''),  co:cell('/sujets/economie-2023-controle.pdf','' ) },
@@ -2235,6 +2318,7 @@ const economieLinks: Record<number, AnneeLinks> = buildLinks('economie', {
 
 // ── GESTION : tous les sujets sur bacweb (2015-2025) ; corrigés réels = bacweb 2015-2019, 2021, 2022 (P+C) ──
 const gestionLinks: Record<number, AnneeLinks> = buildLinks('gestion', {
+  2026:{ pr:cell('eo','' ),  co:cell('eo','' ) },
   2025:{ pr:cell('bw','' ),  co:cell('bw','' ) },
   2024:{ pr:cell('bw','' ),  co:cell('bw','' ) },
   2023:{ pr:cell('bw','' ),  co:cell('bw','' ) },
@@ -2250,7 +2334,10 @@ const gestionLinks: Record<number, AnneeLinks> = buildLinks('gestion', {
 
 // ── Données ÉCONOMIE : structure type de l'épreuve (programme CNP) ──
 const BAC_ECONOMIE_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Partie 1',theme:'Mobilisation des connaissances — définitions et mécanismes économiques',pts:6},
     {titre:'Partie 2',theme:'Étude de document — lecture de données, calcul d\'indicateurs (taux, indices)',pts:6},
     {titre:'Partie 3',theme:'Sujet de réflexion — La mondialisation et ses enjeux',pts:8},
@@ -2309,7 +2396,10 @@ const BAC_ECONOMIE_DATA: AnneeData[] = [
 
 // ── Données GESTION : structure type de l'épreuve (dossiers) ──
 const BAC_GESTION_DATA: AnneeData[] = [
-  { year:2025, note:'🆕', exercices:[
+  { year:2026, note:'🆕', exercices:[
+    {titre:'Sujet officiel 2026', theme:'Sujet complet de la session 2026 — voir le PDF officiel ci-dessus (thèmes détaillés par exercice à venir)', pts:20},
+  ]},
+  { year:2025, exercices:[
     {titre:'Dossier 1',theme:'Comptabilité & analyse financière — bilan, FDR, BFR, trésorerie nette',pts:7},
     {titre:'Dossier 2',theme:'Calcul des coûts — coût de revient, seuil de rentabilité',pts:7},
     {titre:'Dossier 3',theme:'Gestion financière — financement, budgets, ratios',pts:6},

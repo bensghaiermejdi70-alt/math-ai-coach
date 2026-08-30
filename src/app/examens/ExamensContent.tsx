@@ -156,16 +156,6 @@ function SessionsBlock({ year, secKey, color, links, infoL, onOpen }: {
                 <BtnLink label="📄 Sujet Anglais" url={sess?.sujet} color={color} onOpen={(u)=>onOpen(u,`Sujet Anglais — ${secLabel} Bac ${year} — ${s.label}`)} />
                 <BtnLink label="✅ Correction" url={sess?.correction} color="#06d6a0" onOpen={(u)=>onOpen(u,`Correction Anglais — ${secLabel} Bac ${year} — ${s.label}`)} />
               </div>
-              {!sess?.sujet && (
-                <div style={{padding:'10px 14px',background:'rgba(245,158,11,0.06)',borderRadius:9,border:'1px solid rgba(245,158,11,0.18)'}}>
-                  <p style={{margin:'0 0 6px',fontSize:12,color:'#fbbf24',fontWeight:600}}>📂 Liens alternatifs</p>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <a href="https://www.bac-done.com/sections/lettres/corrections/anglais" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(245,158,11,0.1)',color:'#fbbf24',textDecoration:'none',fontWeight:600}}>bac-done.com →</a>
-                    <a href="https://www.reviserbac.tn/sujets?matiere=anglais" target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(236,72,153,0.1)',color:'#ec4899',textDecoration:'none',fontWeight:600}}>reviserbac.tn →</a>
-                    <a href={`http://www.bacweb.tn/bac/${year}/principale/lettres/anglais.pdf`} target="_blank" rel="noreferrer" style={{fontSize:11,padding:'4px 10px',borderRadius:7,background:'rgba(79,110,247,0.1)',color:'#818cf8',textDecoration:'none',fontWeight:600}}>bacweb.tn →</a>
-                  </div>
-                </div>
-              )}
             </div>
           )
         } else {
@@ -333,7 +323,7 @@ export default function ExamensTunisiePage({ data }: { data: ExamDataMod }) {
               </div>
             </div>
             <div style={{fontSize:12,color:'var(--muted)',textAlign:'right'}}>
-              <div>📅 2015 → 2025 · 11 années</div>
+              <div>📅 2015 → 2026 · 12 années</div>
               <div style={{marginTop:4}}>📌 Session principale + 🔄 Session contrôle</div>
             </div>
           </div>
