@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
+import ShareButton from '@/components/ShareButton'
 
 // ═══════════════════════════════════════════════════════════════
 //  MathBacAI — LANDING PAGE V10 (FR) — reconstruite depuis l'historique
@@ -103,6 +104,11 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-3">
+            <ShareButton
+              text="Prépare ton Bac avec l'IA — MathBacAI 🇹🇳🇫🇷"
+              label="Partager"
+              className="px-4 py-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-blue-600 text-xs font-bold transition-all duration-300"
+            />
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
               <span className="px-3 py-1 rounded-full bg-white text-slate-900 text-xs font-bold shadow-sm">FR</span>
               <Link href="/ar" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
@@ -366,6 +372,11 @@ export default function LandingPage() {
             <a href="https://www.facebook.com/bac2027mathbacai" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 hover:scale-110 flex items-center justify-center text-white transition-all duration-300">
               <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
             </a>
+            <ShareButton
+              text="Prépare ton Bac avec l'IA — MathBacAI 🇹🇳🇫🇷"
+              label="Partager"
+              className="h-14 px-6 rounded-full bg-white/10 hover:bg-white/20 hover:scale-105 flex items-center justify-center text-white font-bold transition-all duration-300"
+            />
           </div>
         </div>
       </section>

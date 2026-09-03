@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Metadata } from 'next'
+import ShareButton from '@/components/ShareButton'
 
 // ═══════════════════════════════════════════════════════════════
 //  MathBacAI — LANDING PAGE V10 (AR)
@@ -88,6 +89,13 @@ export default function LandingPageAr() {
             </Link>
           </nav>
           <div className="flex items-center gap-3">
+            <ShareButton
+              text="جهّز البكالوريا بالذكاء الاصطناعي — MathBacAI 🇹🇳🇫🇷"
+              ariaLabel="مشاركة MathBacAI"
+              copiedLabel="تم نسخ الرابط !"
+              label="مشاركة"
+              className="px-4 py-1.5 rounded-full hover:bg-slate-100 text-slate-500 hover:text-blue-600 text-xs font-bold transition-all duration-300"
+            />
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
               <Link href="/?lang=fr" className="px-3 py-1 rounded-full text-slate-500 text-xs font-bold hover:text-blue-600 transition-colors">
                 Français
