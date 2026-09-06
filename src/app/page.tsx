@@ -94,11 +94,15 @@ export default function LandingPage() {
             MathBacAI
           </Link>
           <nav className="hidden lg:flex items-center gap-10 text-sm font-semibold text-slate-500">
-            <span>Fonctionnalités</span>
-            <span>Bac Blanc</span>
-            <span>Simulation</span>
-            <span>Solveur</span>
-            <span>Chat Prof</span>
+            <Link href="/fiches-revision" className="hover:text-blue-600 transition-colors">
+              📚 Fiche révision
+            </Link>
+            <Link
+              href="/decouvrir"
+              className="rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 text-slate-900 text-xs font-bold px-4 py-2 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105 transition-all duration-300"
+            >
+              Commencer avec l'intelligence artificielle
+            </Link>
             <Link href="/detente" className="hover:text-blue-600 transition-colors">
               Détente 🎮
             </Link>

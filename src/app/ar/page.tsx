@@ -79,11 +79,15 @@ export default function LandingPageAr() {
             MathBacAI
           </Link>
           <nav className="hidden lg:flex items-center gap-10 text-sm font-semibold text-slate-500">
-            <span>الميزات</span>
-            <span>باك blanc</span>
-            <span>المحاكاة</span>
-            <span>محلل التمارين الذكي (Le solveur)</span>
-            <span>دردشة الأستاذ</span>
+            <Link href="/fiches-revision" className="hover:text-blue-600 transition-colors">
+              📚 أوراق المراجعة
+            </Link>
+            <Link
+              href="/decouvrir"
+              className="rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 text-slate-900 text-xs font-bold px-4 py-2 hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105 transition-all duration-300"
+            >
+              ابدأ مع الذكاء الاصطناعي
+            </Link>
             <Link href="/detente" className="hover:text-blue-600 transition-colors">
               استراحة 🎮
             </Link>

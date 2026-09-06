@@ -16,6 +16,7 @@ const PUBLIC_ROUTES = [
   '/bac',
   '/bac-france',
   '/solve', // Solveur accessible sans login
+  '/fiches-revision',
 ]
 
 const LANG_COOKIE = 'lang_pref'
@@ -27,6 +28,7 @@ const PROTECTED_ROUTES = [
   '/app',
   '/dashboard',
   '/settings',
+  '/canvas',
 ]
 
 export async function middleware(request: NextRequest) {
