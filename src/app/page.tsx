@@ -127,6 +127,23 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
+        <div className="flex lg:hidden items-center gap-2 px-6 pb-3 overflow-x-auto">
+          <Link
+            href="/fiches-revision"
+            className="whitespace-nowrap rounded-full bg-slate-100 text-slate-600 text-xs font-bold px-4 py-2 hover:bg-slate-200 transition-colors"
+          >
+            📚 Fiche révision
+          </Link>
+          <Link
+            href="/decouvrir"
+            className="whitespace-nowrap rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 text-slate-900 text-xs font-bold px-4 py-2 hover:shadow-lg hover:shadow-emerald-500/30 transition-all duration-300"
+          >
+            Commencer avec l'IA
+          </Link>
+          <Link href="/detente" className="whitespace-nowrap rounded-full bg-slate-100 text-slate-600 text-xs font-bold px-4 py-2 hover:bg-slate-200 transition-colors">
+            Détente 🎮
+          </Link>
+        </div>
       </header>
 
       {/* ═══════════════════════════ HERO */}
