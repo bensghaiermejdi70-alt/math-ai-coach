@@ -203,18 +203,18 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   <div class="header">
     <div class="header-left">
       <div class="brand">🤖 MathBacAI · Chat Prof IA</div>
-      <div class="htitle">Conversation mathématiques</div>
-      <div style="font-size:11px;color:#4f6ef7;font-weight:600;margin-top:4px">http://app.mathsbac.com</div>
+      <div class="htitle">Conversation </div>
+      <div style="font-size:11px;color:#4f6ef7;font-weight:600;margin-top:4px">http://mathbacai.com</div>
     </div>
     <div class="header-right">
       <strong>Date :</strong> ${date}<br>
       <strong>Messages :</strong> ${messages.length}<br>
-      <strong>Site :</strong> app.mathsbac.com
+      <strong>Site :</strong> mathbacai.com
     </div>
   </div>
   ${msgHtml}
   <div class="footer">
-    <span><strong>MathBacAI</strong> — Chat Prof IA · http://app.mathsbac.com</span>
+    <span><strong>MathBacAI</strong> — Chat Prof IA · http://mathbacai.com</span>
     <span>MathBacAI ${new Date().getFullYear()}</span>
   </div>
 </div>
@@ -1513,7 +1513,7 @@ export default function ChatPage() {
     })
 
     try {
-      const res = await fetch('/api/anthropic', {
+      const res = await fetch('/api/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
