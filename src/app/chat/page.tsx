@@ -24,22 +24,57 @@ function useKaTeX() {
 
 // ── Rendu LaTeX inline + block avec KaTeX ────────────────────────
 function renderKaTeX(text: string): string {
-  let result = text
+  // Filet de sécurité : un paragraphe entier sans "$" mais rempli de vraie syntaxe LaTeX est
+  // enveloppé dans $$ ... $$ avant le traitement normal (repris de la logique déjà utilisée
+  // pour l'export PDF dans solve/page.tsx).
+  const LATEX_CMD = /\\[a-zA-Z]+/
+  const FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+  const FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+  const stripLatexSyntax = (s: string): string => {
+    let t = s
+    for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+    t = t.replace(/[{}\\^_$]/g, ' ')
+    t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ')
+    t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+    return t.replace(/\s+/g, ' ').trim()
+  }
+  const looksLikeBareLatexParagraph = (p: string): boolean => {
+    const t = p.trim()
+    if (!t || t.includes('$')) return false
+    if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false
+    if (!LATEX_CMD.test(t)) return false
+    const remainder = stripLatexSyntax(t)
+    if (remainder.length > 30) return false
+    return !FRENCH_ACCENT.test(remainder) && !FRENCH_STOP.test(remainder)
+  }
 
-  // ✅ $$...$$ → BLOCK (avec data-latex pour copie)
+  let result = text
+    .split(/\n{2,}/)
+    .map((p) => (looksLikeBareLatexParagraph(p) ? '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$' : p))
+    .join('\n\n')
+
+  const blocks: string[] = []
+
+  // $$...$$ → BLOCK (mis de côté avant l'étape inline, pour ne jamais fuir dans son propre attribut)
   result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
+    let html: string
     try {
       const katex = (window as any).katex
-      if (!katex) return `<span style="font-style:italic;color:var(--muted)">[formule mathématique]</span>`
-      const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: true })
-      const safeMath = math.trim().replace(/"/g, '&quot;').replace(/\n/g, ' ')
-      return `<div style="text-align:center;margin:10px 0;overflow-x:auto" data-latex="$$${safeMath}$$">${rendered}</div>`
+      if (!katex) {
+        html = `<span style="font-style:italic;color:var(--muted)">[formule mathématique]</span>`
+      } else {
+        const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: true })
+        const safeMath = math.trim().replace(/"/g, '&quot;').replace(/\n/g, ' ')
+        html = `<div style="text-align:center;margin:10px 0;overflow-x:auto" data-latex="$$${safeMath}$$">${rendered}</div>`
+      }
     } catch {
-      return `<code>${math}</code>`
+      html = `<code>${math}</code>`
     }
+    blocks.push(html)
+    return `@@KTXBLOCK${blocks.length - 1}@@`
   })
 
-  // ✅ $...$ → INLINE (avec data-latex pour copie)
+  // $...$ → INLINE
   result = result.replace(/\$([^$]+?)\$/g, (_: string, math: string) => {
     try {
       const katex = (window as any).katex
@@ -52,7 +87,7 @@ function renderKaTeX(text: string): string {
     }
   })
 
-  return result
+  return result.replace(/@@KTXBLOCK(\d+)@@/g, (_: string, i: string) => blocks[Number(i)])
 }
 
 // ════════════════════════════════════════════════════════════════════

@@ -40,7 +40,7 @@ async function askClaude(prompt: string, system: string, maxTokens = 6000, matie
   const _timer = setTimeout(() => _ctrl.abort(), 125000)
   let r: Response
   try {
-    r = await fetch('/api/anthropic', {
+    r = await fetch('/api/llm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -896,6 +896,38 @@ function rllLooksLikeMath(m: string): boolean {
   if (RLL_FR_STOPWORDS.test(withoutText)) return false
   return true
 }
+// Filet de sécurité : un paragraphe entier sans "$" mais rempli de vraie syntaxe LaTeX est
+// enveloppé dans $$ ... $$ AVANT le découpage ligne par ligne (une formule répartie sur
+// plusieurs lignes doit être vue d'un bloc, pas ligne par ligne).
+const BLX_LATEX_CMD = /\\[a-zA-Z]+/
+const BLX_FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+const BLX_FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+function blxStripLatexSyntax(s: string): string {
+  let t = s
+  for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+  t = t.replace(/[{}\\^_$]/g, ' ')
+  t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ')
+  t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+  return t.replace(/\s+/g, ' ').trim()
+}
+function blxLooksLikeBareLatexParagraph(p: string): boolean {
+  const t = p.trim()
+  if (!t || t.includes('$') || t.includes('\u0001')) return false
+  if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false
+  if (!BLX_LATEX_CMD.test(t)) return false
+  const remainder = blxStripLatexSyntax(t)
+  if (remainder.length > 30) return false
+  return !BLX_FRENCH_ACCENT.test(remainder) && !BLX_FRENCH_STOP.test(remainder)
+}
+function preprocessBareLatex(text: string): string {
+  const saved: string[] = []
+  const hidden = text.replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
+  const fixed = hidden
+    .split(/\n{2,}/)
+    .map((p) => (blxLooksLikeBareLatexParagraph(p) ? '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$' : p))
+    .join('\n\n')
+  return fixed.replace(/\u0001(\d+)\u0001/g, (_, i) => saved[Number(i)])
+}
 function renderLatexLine(line: string): string {
   // Remplace $$...$$ (block) puis $...$ (inline) par du HTML KaTeX
   let result = line
@@ -990,7 +1022,7 @@ function RichText({ text }: { text: string }) {
         }
         return seg.content ? (
           <div key={idx}>
-            {seg.content.split('\n').map((ln, j) => {
+            {preprocessBareLatex(seg.content).split('\n').map((ln, j) => {
               if (!ln.trim()) return <div key={j} style={{ height: 7 }} />
               if (ln.startsWith('## ')) return (
                 <h3 key={j} style={{ fontSize: 15, fontWeight: 700, color: '#818cf8', marginTop: 22, marginBottom: 8, borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: 5 }}>
