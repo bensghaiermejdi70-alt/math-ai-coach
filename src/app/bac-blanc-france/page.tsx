@@ -288,7 +288,7 @@ let onStreamProgress: ((full: string) => void) | null = null
 
 async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
   const myProgress = onStreamProgress // capture le listener propre à CET appel (évite qu'une analyse de fond coupe le streaming d'une correction)
-  const r = await fetch('/api/anthropic', {
+  const r = await fetch('/api/llm', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
