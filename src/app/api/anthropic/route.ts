@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
         }).map((sub: any) => sub.plan_type)
 
         const matiere = (body.matiere as MatiereType) || 'mathematiques'
-        const relevantPlans = activePlanTypes
+        const relevantPlans = activePlanTypes.filter((pt: string) => extractMatiere(pt) === matiere)
         const limits = getQuotaLimits(relevantPlans, false)
         const limitKey = `${quotaType}_per_week` as keyof typeof limits
         const limit = limits[limitKey] as number
@@ -150,6 +150,7 @@ export async function POST(req: NextRequest) {
             .select('*')
             .eq('user_id', user.id)
             .eq('week_start', weekStart)
+            .eq('matiere', matiere)
 
           const colMap: Record<string, string> = {
             chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used',

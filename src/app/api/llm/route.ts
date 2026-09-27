@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { createServerSupabaseClient, createAdminClient } from '@/lib/supabase/server'
-import { ADMIN_EMAIL, getQuotaLimits, MatiereType } from '@/lib/types/monetisation'
+import { ADMIN_EMAIL, extractMatiere, getQuotaLimits, MatiereType } from '@/lib/types/monetisation'
 import { fetchAnthropicWithRetry } from '@/lib/anthropic/fetchWithRetry'
 import {
   abSettings, Arm, CONTROL_MODELS_ALLOWED, estimateCostUsd, extraInstructionsFor, getVariantSpec, MAX_TOKENS_CAP,
@@ -330,7 +330,11 @@ export async function POST(req: NextRequest) {
         })
         .map((sub: any) => sub.plan_type)
 
-      const limits = getQuotaLimits(activePlanTypes, false)
+      // Quota PAR MATIÈRE (pas un total mélangeant toutes les matières abonnées) : on ne garde
+      // que les abonnements correspondant à la matière de CETTE requête, des deux côtés de la
+      // comparaison (limite ET usage), pour que chaque matière ait son propre compteur indépendant.
+      const relevantPlans = activePlanTypes.filter((pt: string) => extractMatiere(pt) === matiere)
+      const limits = getQuotaLimits(relevantPlans, false)
       const limit = limits[`${quotaType}_per_week` as keyof typeof limits] as number
 
       if (limit !== -1) {
@@ -339,6 +343,7 @@ export async function POST(req: NextRequest) {
           .select('*')
           .eq('user_id', user.id)
           .eq('week_start', getWeekStart())
+          .eq('matiere', matiere)
 
         const colMap: Record<string, string> = { chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used' }
         const used = (Array.isArray(quotas) ? quotas : []).reduce(
