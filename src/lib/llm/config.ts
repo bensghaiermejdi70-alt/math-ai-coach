@@ -144,8 +144,24 @@ export const CHAT_LENGTH_REMINDER =
   "puis question finale à l'élève. Une réponse courte est une réponse incorrecte. " +
   "Quand plusieurs grandeurs ou courbes sont liées (tension et courant, position et vitesse, une fonction et sa tangente…), trace-les TOUTES ensemble dans le même bloc graph, avec une entrée par courbe dans \\\"functions\\\", plutôt que d'en omettre une."
 
+// ── Constaté sur le solveur (23/09) : Luna respecte $...$/$$...$$ sur des formules isolées, mais
+// laisse parfois un bloc \begin{aligned}...\end{aligned} entier SANS le envelopper dans $$ $$ —
+// il s'affiche alors en LaTeX brut à l'écran. Claude ne fait jamais cette erreur dans nos tests.
+// Rappel ciblé, indépendant du rappel de longueur (le chat cumule les deux ; jamais sur les
+// simulations, dont le JSON exclut volontairement les "$" dans certains champs).
+export const LATEX_DELIMITER_REMINDER =
+  "\n\n## RAPPEL LATEX (PRIORITAIRE)\nAucun symbole ou formule mathématique ne doit jamais apparaître hors des délimiteurs $ ... $ (en ligne) ou $$ ... $$ (centré) — y compris un bloc \\begin{aligned}...\\end{aligned}, \\begin{cases}...\\end{cases} ou tout autre environnement multi-lignes, qui doit être entièrement enveloppé dans UN SEUL $$ ... $$. Une formule sans $ affichée telle quelle (avec des \\frac, \\sqrt, \\left, etc. visibles) est une erreur grave."
+
+// ── Constaté sur le solveur (25/09) : sur un exercice à sous-questions numérotées (1.a, 1.b, 2.a...),
+// Luna a répondu directement à 1.b) sans jamais traiter 1.a), alors que 1.b) réutilisait son résultat.
+// Claude ne saute aucune sous-question dans nos tests.
+export const SOLVER_COMPLETENESS_REMINDER =
+  "\n\n## RAPPEL COMPLÉTUDE (PRIORITAIRE)\nAvant de répondre, relis l'énoncé en entier et dresse mentalement la liste de TOUTES les sous-questions à traiter (1.a, 1.b, 2.a, 2.b, 3, 4...), quelle que soit leur mise en page — même si une lettre de sous-question est seule sur sa ligne, précédée d'un tiret, ou séparée du numéro par un saut de ligne. Une sous-question fait partie de l'exercice dès qu'elle porte une lettre ou un numéro, peu importe sa présentation. Réponds ensuite à CHACUNE d'elles, dans l'ordre, sans en sauter aucune — même si son résultat sert dans une question suivante, même si elle te semble immédiate. Ne commence jamais ta réponse par une sous-question du milieu ou de la fin (b), c), 4)...) en laissant une question antérieure sans réponse."
+
 export function extraInstructionsFor(t: QuotaType, spec: ModelSpec, disabled = false): string {
-  if (disabled || spec.provider !== 'openai' || t !== 'chat') return ''
+  if (disabled || spec.provider !== 'openai') return ''
+  if (t !== 'chat' && t !== 'solver') return ''
   if (process.env.LLM_LENGTH_REMINDER === '0') return ''
-  return CHAT_LENGTH_REMINDER
+  if (t === 'solver') return LATEX_DELIMITER_REMINDER + SOLVER_COMPLETENESS_REMINDER
+  return CHAT_LENGTH_REMINDER + LATEX_DELIMITER_REMINDER
 }

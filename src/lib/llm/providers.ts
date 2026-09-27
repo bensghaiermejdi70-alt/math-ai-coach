@@ -403,6 +403,68 @@ function createGraphFenceBuffer(emit: (text: string) => void) {
   return { push, flush }
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+// Correction des formules LaTeX émises SANS $ ... $ / $$ ... $$ (constaté sur Luna : un bloc de
+// calcul entier — ex. deux limites séparées par \qquad\text{et}\qquad, ou un \begin{aligned} — part
+// parfois sans aucun délimiteur alors que le reste de la réponse les utilise correctement). Jamais
+// observé sur Claude dans nos tests, donc jamais appliqué à ses réponses.
+// Heuristique : un paragraphe entier (délimité par une ligne vide) qui contient au moins une commande
+// LaTeX (\frac, \lim, \sqrt, \text...) et ZÉRO "$" est presque sûrement une formule oubliée hors
+// délimiteurs — jamais un mélange avec du texte déjà bien délimité, qu'on ne touche jamais (pour ne
+// jamais imbriquer un $$ dans un autre). On l'enveloppe dans $$ ... $$ en recollant ses lignes en une
+// seule : ces sauts de ligne ne sont qu'une mise en forme, jamais une syntaxe LaTeX valide hors d'un
+// environnement comme \begin{aligned}, qu'on laisse par ailleurs intact à l'intérieur du $$ ... $$.
+// ═════════════════════════════════════════════════════════════════════════════
+const LATEX_CMD = /\\[a-zA-Z]+/
+
+// Un paragraphe peut mélanger une vraie phrase française ET une formule bare sur la même "ligne
+// logique" (une seule ligne simple, pas de ligne vide entre les deux) — ex. observé le 25/09 :
+// "Déterminer le plus petit entier naturel pair m tel que\n\\begin{cases}...\\end{cases}". Envelopper
+// TOUT le paragraphe dans $$ $$ y ferait alors rendre la phrase française comme des symboles
+// mathématiques (lettres italiques collées) — une dégradation visuelle, pas une correction.
+// On ne considère donc un paragraphe comme "LaTeX pur" que si, une fois toute sa syntaxe LaTeX
+// retirée (commandes + arguments, symboles, chiffres, opérateurs), il ne reste presque plus rien —
+// mesuré sur nos cas réels : ~3 à 15 caractères pour du LaTeX pur, 60+ dès qu'une phrase s'y mêle.
+function stripLatexSyntax(s: string): string {
+  let t = s
+  for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+  t = t.replace(/[{}\\^_$]/g, ' ')
+  t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ') // symboles unicode mathématiques usuels
+  t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+  return t.replace(/\s+/g, ' ').trim()
+}
+// Garde-fous supplémentaires, appliqués sur le RÉSIDU (après avoir retiré toute la syntaxe LaTeX,
+// y compris le contenu de \text{...} qui peut légitimement contenir un mot français comme "et" ou
+// "mesurée") : un accent français, ou un petit mot de liaison sans ambiguïté, qui SURVIT au nettoyage
+// signale une vraie phrase mêlée à la formule (ex. "Avec C₀=... :" collé à un bloc sans ligne vide) —
+// jamais enveloppée, même si sa longueur reste sous le seuil.
+const FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+const FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on)\b/i
+function looksLikeBareLatexParagraph(p: string): boolean {
+  const t = p.trim()
+  if (!t || t.includes('$') || t.includes('\u0001')) return false // déjà délimité, ou contient une fence protégée : jamais touché
+  if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false // titres, listes, tableaux, citations : jamais des formules isolées
+  if (!LATEX_CMD.test(t)) return false
+  const remainder = stripLatexSyntax(t)
+  if (remainder.length > 30) return false
+  return !FRENCH_ACCENT.test(remainder) && !FRENCH_STOP.test(remainder)
+}
+function wrapBareLatexParagraph(p: string): string {
+  return '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$'
+}
+
+// Texte entier : les fences ``` (dont nos blocs ```graph, déjà corrigés séparément) sont protégées
+// avant tout découpage, pour ne jamais les interpréter comme des paragraphes de prose.
+function wrapBareLatexInText(text: string): string {
+  const saved: string[] = []
+  const hidden = text.replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
+  const fixed = hidden
+    .split(/\n{2,}/)
+    .map((p) => (looksLikeBareLatexParagraph(p) ? wrapBareLatexParagraph(p) : p))
+    .join('\n\n')
+  return fixed.replace(/\u0001(\d+)\u0001/g, (_, i) => saved[Number(i)])
+}
+
 // ── OpenAI : mode non-streaming ──────────────────────────────────────────────
 export async function openaiOnce(body: any, spec: ModelSpec, apiKey: string, timeoutMs: number, extraInstructions = ''): Promise<RunResult> {
   const t0 = Date.now()
@@ -422,7 +484,7 @@ export async function openaiOnce(body: any, spec: ModelSpec, apiKey: string, tim
     if (data.status === 'failed') {
       return { ok: false, status: 502, error: data?.error?.message || 'Réponse OpenAI en échec', text: '', usage, stopReason: null, latencyMs }
     }
-    const text = normalizeGraphBlocksInText(openaiText(data))
+    const text = wrapBareLatexInText(normalizeGraphBlocksInText(openaiText(data)))
     const truncated = data.status === 'incomplete'
     if (!text.trim()) {
       return {
@@ -662,5 +724,40 @@ export async function openaiCollect(body: any, spec: ModelSpec, apiKey: string, 
   if (error || !text.trim()) {
     return { ok: false, status: 502, error: error || 'Réponse vide', text, usage: meta.usage, stopReason: meta.stopReason, latencyMs }
   }
-  return { ok: true, status: 200, text, usage: meta.usage, stopReason: meta.stopReason, latencyMs }
+  return { ok: true, status: 200, text: wrapBareLatexInText(text), usage: meta.usage, stopReason: meta.stopReason, latencyMs }
+}
+
+// ── OpenAI en direct, texte COMPLET (via openaiCollect, corrigé graph + LaTeX), puis rejoué au client
+// sous forme d'un flux SSE Anthropic. Utilisée pour le bras variante réellement servi (chat/solveur) :
+// la correction du LaTeX brut se décide au niveau du PARAGRAPHE (délimité par une ligne vide), ce qui
+// ne peut se faire de façon fiable sur des deltas arrivant caractère par caractère comme le fait déjà
+// createGraphFenceBuffer pour les ```graph (fence explicite et bornée). Contrepartie assumée : le texte
+// de Luna apparaît d'un bloc une fois généré, au lieu de s'afficher progressivement comme avec Claude —
+// le délai total pour l'élève est inchangé (même durée de génération), seul l'effet de frappe disparaît.
+export async function openaiStreamBuffered(
+  body: any,
+  spec: ModelSpec,
+  apiKey: string,
+  opts: { ttftMs: number; totalMs: number },
+  extraInstructions = ''
+): Promise<OpenAIStreamStart> {
+  const t0 = Date.now()
+  const r = await openaiCollect(body, spec, apiKey, opts.totalMs, extraInstructions)
+  if (!r.ok) return { ok: false, status: r.status, error: r.error || 'Erreur API OpenAI' }
+  const chunks: Uint8Array[] = [
+    sse('message_start', {
+      type: 'message_start',
+      message: { id: `msg_oa_${t0.toString(36)}`, type: 'message', role: 'assistant', model: spec.model, content: [], usage: { input_tokens: 0, output_tokens: 0 } },
+    }),
+    sse('content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }),
+    sse('content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: r.text } }),
+    sse('content_block_stop', { type: 'content_block_stop', index: 0 }),
+    sse('message_delta', { type: 'message_delta', delta: { stop_reason: r.stopReason || 'end_turn', stop_sequence: null }, usage: { output_tokens: r.usage.output } }),
+    sse('message_stop', { type: 'message_stop' }),
+  ]
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) { for (const c of chunks) controller.enqueue(c); controller.close() },
+  })
+  const done: Promise<StreamMeta> = Promise.resolve({ usage: r.usage, outChars: r.text.length, ttfbMs: r.latencyMs, stopReason: r.stopReason, error: undefined })
+  return { ok: true, stream, done }
 }

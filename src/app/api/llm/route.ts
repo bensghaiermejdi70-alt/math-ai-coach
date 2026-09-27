@@ -20,7 +20,7 @@ import {
   ModelSpec, parseSpec, pickArm, QuotaType, Usage, EMPTY_USAGE,
 } from '@/lib/llm/config'
 import {
-  anthropicCollect, anthropicOnce, canUseOpenAI, openaiCollect, openaiOnce, openaiStream, RunResult, StreamMeta,
+  anthropicCollect, anthropicOnce, canUseOpenAI, openaiCollect, openaiOnce, openaiStreamBuffered, RunResult, StreamMeta,
   tapAnthropicSSE, toAnthropicMessage,
 } from '@/lib/llm/providers'
 
@@ -213,7 +213,7 @@ async function tryOpenAI(ctx: Ctx, spec: ModelSpec): Promise<{ response?: Respon
 
   if (ctx.stream) {
     const t0 = Date.now()
-    const r = await openaiStream(ctx.anthropicBody, spec, apiKey, { ttftMs: ctx.cfg.ttftMs, totalMs: 240000 }, extraInstructionsFor(ctx.log.quotaType, spec))
+    const r = await openaiStreamBuffered(ctx.anthropicBody, spec, apiKey, { ttftMs: ctx.cfg.ttftMs, totalMs: 240000 }, extraInstructionsFor(ctx.log.quotaType, spec))
     if (!r.ok) {
       logCall(ctx.log, spec, { ok: false, status: r.status, error: r.error, latencyMs: Date.now() - t0 }, 1)
       return { error: r.error }
