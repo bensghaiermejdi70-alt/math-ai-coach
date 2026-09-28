@@ -47,7 +47,7 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { MatiereType } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: string = 'mathematiques'
@@ -5039,7 +5039,7 @@ function CorrectionDirectePanel({ onStart }: {
 function PhaseGenerating({ archives, customText, onDone, matiere }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void; matiere?:string
 }) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
+  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, matiereActive, getSubjectQuotaLimit} = useAuth()
   // Sync globalMatiere depuis la prop matiere (UI) — priorité sur matiereActive (abonnement)
   const _matiereMapPG: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
@@ -5054,10 +5054,8 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const started = useRef(false)
 
   // Quota depuis Supabase
-  const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // Quota cumulé tous abonnements
-  const simUsed  = totalQuota.simulations_used || 0
-  const simLimit = quotaLimits.simulations_per_week
+  const simUsed  = (quotas as any)?.[globalMatiere]?.simulations_used || 0
+  const simLimit = getSubjectQuotaLimit('simulations', globalMatiere as MatiereType)
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
   const limitReached = !isUnlimited && simUsed >= simLimit
@@ -7067,7 +7065,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   onDone: (exams: GeneratedExam[]) => void
   matiere?: string
 }) {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
+  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, matiereActive, getSubjectQuotaLimit } = useAuth()
   const _matiereMapPGC: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
   }
@@ -7078,10 +7076,8 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   const [error, setError] = useState('')
   const started = useRef(false)
 
-  const totalQuota = sumQuotasAcrossMatiere(quotas)
-  // Quota cumulé tous abonnements
-  const simUsed  = totalQuota.simulations_used || 0
-  const simLimit = quotaLimits.simulations_per_week
+  const simUsed  = (quotas as any)?.[globalMatiere]?.simulations_used || 0
+  const simLimit = getSubjectQuotaLimit('simulations', globalMatiere as MatiereType)
   const isUnlimited  = isAdmin || simLimit === -1
   const limitReached = !isUnlimited && simUsed >= simLimit
 

@@ -13,7 +13,6 @@ import {
   extractMatiere,
   hasMatiereAccess,
   PlanQuotas,
-  sumQuotasAcrossMatiere,
 } from '@/lib/types/monetisation'
 import {
   isMultiSessionUser,
@@ -76,7 +75,7 @@ interface AuthContextType {
   daysRemaining: number | null
   matiereActive: MatiereType
   quotaVersion: number
-  getUsed: (type: QuotaType) => number
+  getUsed: (type: QuotaType, matiere?: MatiereType) => number
   checkMatiereAccess: (matiere: MatiereType) => boolean
   getSubjectQuotaLimit: (type: QuotaType, matiere?: MatiereType) => number
   activePlanTypes: string[]
@@ -90,7 +89,7 @@ interface AuthContextType {
 
   refreshSubscription: () => Promise<void>
   checkQuota: (type: QuotaType, matiere?: MatiereType) => boolean
-  getQuotaUsage: (type: QuotaType) => { used: number; limit: number }
+  getQuotaUsage: (type: QuotaType, matiere?: MatiereType) => { used: number; limit: number }
   incrementQuota: (type: QuotaType, matiere?: MatiereType) => Promise<void>
 }
 
@@ -159,43 +158,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   function checkQuota(type: QuotaType, matiere: MatiereType = matiereActive): boolean {
     if (isAdmin) return true
     if (!quotas) return hasActiveSubscription ? true : false
-    const limitKey: Record<QuotaType, string> = {
-      simulations: 'simulations_per_week', chat: 'chat_per_week', solver: 'solver_per_week',
-      remediation: 'remediation_per_week', analyses: 'analyses_per_week',
-    }
-    const limit = (quotaLimits as any)[limitKey[type]] as number
-    const totalQuotas = sumQuotasAcrossMatiere(quotas)
+    const limit = getSubjectQuotaLimit(type, matiere)
     const usedKey: Record<QuotaType, string> = {
       simulations: 'simulations_used', chat: 'chat_used', solver: 'solver_used',
       remediation: 'remediation_used', analyses: 'analyses_used',
     }
-    const used = (totalQuotas as any)[usedKey[type]] as number ?? 0
+    const used = ((quotas as any)?.[matiere]?.[usedKey[type]] as number) ?? 0
     if (limit === -1) return true
     return used < limit
   }
 
-  function getUsed(type: QuotaType): number {
-    const usedKey: Record<QuotaType, keyof UserQuotas> = {
-      simulations: 'simulations_used', chat: 'chat_used', solver: 'solver_used',
-      remediation: 'remediation_used', analyses: 'analyses_used',
-    }
-    const total = sumQuotasAcrossMatiere(quotas)
-    return (total[usedKey[type]] as number) ?? 0
-  }
-
-  function getQuotaUsage(type: QuotaType): { used: number; limit: number } {
-    const limitKey: Record<QuotaType, string> = {
-      simulations: 'simulations_per_week', chat: 'chat_per_week', solver: 'solver_per_week',
-      remediation: 'remediation_per_week', analyses: 'analyses_per_week',
-    }
-    const limit = (quotaLimits as any)[limitKey[type]] as number ?? 0
-    const totalQuotas = sumQuotasAcrossMatiere(quotas)
+  function getUsed(type: QuotaType, matiere: MatiereType = matiereActive): number {
     const usedKey: Record<QuotaType, string> = {
       simulations: 'simulations_used', chat: 'chat_used', solver: 'solver_used',
       remediation: 'remediation_used', analyses: 'analyses_used',
     }
-    const used = (totalQuotas as any)[usedKey[type]] as number ?? 0
-    return { used, limit }
+    return ((quotas as any)?.[matiere]?.[usedKey[type]] as number) ?? 0
+  }
+
+  function getQuotaUsage(type: QuotaType, matiere: MatiereType = matiereActive): { used: number; limit: number } {
+    return { used: getUsed(type, matiere), limit: getSubjectQuotaLimit(type, matiere) ?? 0 }
   }
 
   const daysRemaining = hasActiveSubscription && subscriptionEnd
