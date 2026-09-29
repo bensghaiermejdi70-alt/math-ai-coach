@@ -77,6 +77,16 @@ function getQuotaType(body: any): QuotaType {
   return 'chat'
 }
 
+// Types de FACTURATION du quota. Le routage (modèle, pourcentage, rappels) reste sur les 3 familles
+// chat / solver / simulations ; 'analyses', 'remediation' et 'correction' appartiennent à la famille
+// "simulations" pour le routage mais ont leur propre règle de comptage :
+//   simulations -> génération d'un examen (1 unité)          analyses    -> analyse du travail de l'élève
+//   remediation -> exercices de remédiation                  correction  -> correction des exercices, estimation de
+//                                                              la note : NON comptée (fait partie de l'examen déjà
+//                                                              comptabilisé), mais réservée aux abonnés de la matière
+type BillingType = QuotaType | 'analyses' | 'remediation' | 'correction'
+const EXTRA_BILLING_TYPES = ['analyses', 'remediation', 'correction']
+
 function getWeekStart(): string {
   const now = new Date()
   const day = now.getDay()
@@ -104,7 +114,8 @@ function withSystemCache(b: any): any {
 // ── Journalisation (fire-and-forget : ne bloque et ne casse JAMAIS la réponse) ──
 interface LogCtx {
   userId: string
-  quotaType: QuotaType
+  quotaType: QuotaType // famille de ROUTAGE (chat | solver | simulations) : modèle, pourcentage, rappels
+  billing: string // type de FACTURATION du quota (inclut analyses | remediation | correction)
   matiere: string
   arm: Arm
   fallback: boolean
@@ -125,7 +136,7 @@ function logCall(
         user_id: c.userId, compare_id: c.compareId, arm: c.arm, attempt, fallback: c.fallback, note: c.note,
         provider: spec.provider, model: spec.model,
         effort: spec.effort ? spec.effort + (spec.verbosity ? `+verb:${spec.verbosity}` : '') : null,
-        quota_type: c.quotaType, matiere: c.matiere, stream: c.stream,
+        quota_type: c.billing, matiere: c.matiere, stream: c.stream,
         ok: r.ok, status: r.status ?? null, error: r.error ? r.error.slice(0, 500) : null,
         latency_ms: r.latencyMs ?? null, ttfb_ms: r.ttfbMs ?? null,
         input_tokens: usage.input, output_tokens: usage.output, cached_tokens: usage.cached,
@@ -308,7 +319,9 @@ export async function POST(req: NextRequest) {
     }
     const maxTokens = Math.min(Number(body?.max_tokens) || 4000, MAX_TOKENS_CAP)
 
-    const quotaType = getQuotaType(body)
+    const isExtraBilling = EXTRA_BILLING_TYPES.includes(body?.type)
+    const quotaType: QuotaType = isExtraBilling ? 'simulations' : getQuotaType(body) // routage
+    const billing: BillingType = isExtraBilling ? (body.type as BillingType) : quotaType // facturation
     const matiere = ((body?.matiere as MatiereType) || 'mathematiques') as string
 
     // ── Quota hebdo (logique identique à /api/anthropic) ──
@@ -335,34 +348,49 @@ export async function POST(req: NextRequest) {
       // comparaison (limite ET usage), pour que chaque matière ait son propre compteur indépendant.
       const relevantPlans = activePlanTypes.filter((pt: string) => extractMatiere(pt) === matiere)
       const limits = getQuotaLimits(relevantPlans, false)
-      const limit = limits[`${quotaType}_per_week` as keyof typeof limits] as number
 
-      if (limit !== -1) {
-        const { data: quotas } = await supabase
-          .from('user_quotas')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('week_start', getWeekStart())
-          .eq('matiere', matiere)
-
-        const colMap: Record<string, string> = { chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used' }
-        const used = (Array.isArray(quotas) ? quotas : []).reduce(
-          (sum, row) => sum + (((row as any)?.[colMap[quotaType]] as number) || 0), 0
-        )
-        if (used >= limit) {
+      if (billing === 'correction') {
+        // Non comptée, mais réservée aux abonnés de CETTE matière (évite qu'un compte sans abonnement
+        // utilise gratuitement la route). Reste limitée par l'anti-rafale et visible dans llm_ab_logs.
+        if (limits.simulations_per_week === 0) {
           return NextResponse.json(
-            { error: `Quota ${quotaType} dépassé (${used}/${limit} cette semaine). Renouvellement lundi.`, quota_exceeded: true, quota_type: quotaType, used, limit },
+            { error: 'Aucun abonnement actif pour cette matière.', quota_exceeded: true, quota_type: 'simulations', used: 0, limit: 0 },
             { status: 429 }
           )
+        }
+      } else {
+        const limit = limits[`${billing}_per_week` as keyof typeof limits] as number
+
+        if (limit !== -1) {
+          const { data: quotas } = await supabase
+            .from('user_quotas')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('week_start', getWeekStart())
+            .eq('matiere', matiere)
+
+          const colMap: Record<string, string> = {
+            chat: 'chat_used', solver: 'solver_used', simulations: 'simulations_used',
+            remediation: 'remediation_used', analyses: 'analyses_used',
+          }
+          const used = (Array.isArray(quotas) ? quotas : []).reduce(
+            (sum, row) => sum + (((row as any)?.[colMap[billing]] as number) || 0), 0
+          )
+          if (used >= limit) {
+            return NextResponse.json(
+              { error: `Quota ${billing} dépassé (${used}/${limit} cette semaine). Renouvellement lundi.`, quota_exceeded: true, quota_type: billing, used, limit },
+              { status: 429 }
+            )
+          }
         }
       }
     }
 
     // Comptage serveur après succès (identique : RPC increment_quota, admin non compté)
     const countUsage = async () => {
-      if (isAdmin) return
+      if (isAdmin || billing === 'correction') return // les corrections ne consomment aucun quota
       try {
-        await supabase.rpc('increment_quota', { p_user_id: user.id, p_matiere: matiere, p_type: quotaType })
+        await supabase.rpc('increment_quota', { p_user_id: user.id, p_matiere: matiere, p_type: billing })
       } catch (e) {
         console.error('increment_quota (serveur) échec:', e)
       }
@@ -382,7 +410,7 @@ export async function POST(req: NextRequest) {
       variantSpec = override
     }
     const ctx: Ctx = {
-      log: { userId: user.id, quotaType, matiere, arm: 'control', fallback: false, note: null, compareId: null, stream: !!anthropicBody.stream },
+      log: { userId: user.id, quotaType, billing, matiere, arm: 'control', fallback: false, note: null, compareId: null, stream: !!anthropicBody.stream },
       anthropicBody, stream: !!anthropicBody.stream, isAdmin, countUsage, cfg,
     }
 

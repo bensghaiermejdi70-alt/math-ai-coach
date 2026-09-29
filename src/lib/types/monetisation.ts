@@ -22,7 +22,7 @@ export type PlanType = 'mensuel' | 'annuel' | 'sprint_bac'
 // ── Helpers pour extraire plan et matière ──────────────────────────
 export function extractPlan(planType: string | null | undefined): 'mensuel' | 'annuel' | 'sprint_bac' {
   if (!planType) return 'mensuel'
-  if (planType.startsWith('sprint_bac')) return 'sprint_bac'
+  if (planType.startsWith('sprint')) return 'sprint_bac'
   if (planType.startsWith('annuel'))     return 'annuel'
   return 'mensuel'
 }
