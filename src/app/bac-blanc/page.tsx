@@ -299,15 +299,15 @@ GÉOMÉTRIE DANS L'ESPACE (3D : tétraèdre, plans, droites/sphères de l'espace
 // askClaude le remet à null tout seul à la fin → aucune fuite entre concours / correction / analyse.
 let onStreamProgress: ((full: string) => void) | null = null
 
-async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 5000, matiere?: string, billingType: string = 'simulations'): Promise<string> {
   const myProgress = onStreamProgress // capture le listener propre à CET appel (évite qu'une analyse de fond coupe le streaming d'une correction)
-  const r = await fetch('/api/llm', {
+  const r = await fetch('/api/anthropic', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6', max_tokens: maxTokens, system,
       stream: true, // SSE : les tokens arrivent en continu → on reste sous le timeout serveur 115s (comme le chat). Sans ça, les générations lourdes (maths/physique/svt avec graphiques) dépassaient le délai → spinner infini.
       messages: [{ role:'user', content:prompt }],
-      type: 'simulations',
+      type: billingType,
       matiere: matiere || globalMatiere || 'mathematiques'
     }),
   })
@@ -1434,7 +1434,7 @@ GREC : θ  λ  α  β  γ  δ  Δ  σ  π  ω  Ω  ε  μ`
       ? `EXAMEN : ${examTitle}\nEXERCICE A CORRIGER : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nREPONSE DE L'ELEVE :\n${studentWork}\n\nRedige la correction COMPLETE de cet exercice. Structure :\n\n## ${exercise.title} — Correction detaillee (${exercise.points} pts)\n\n[Pour CHAQUE sous-question :]\n### Question X —\n**Concept utilise :** [Theoreme / formule / methode]\n**Resolution etape par etape :**\n- Etape 1 : [Action] → [Resultat]\n> **Resultat :** [Reponse finale]\n**Bareme question X :** [X] pts\n**Analyse reponse eleve :**\n✅ Correct : [ce qui est bien]\n❌ Incorrect : [ce qui est faux]\n💡 Conseil : [comment corriger]\n---\n> **Bilan ${exercise.title} :** [X]/${exercise.points} pts`
       : `EXAMEN : ${examTitle}\nEXERCICE : ${exercise.title} — ${exercise.points} points sur ${totalPoints}\n\nENONCE COMPLET :\n${exercise.statement}\n\nRedige la correction COMPLETE de l'exercice. Traite TOUTES les sous-questions, dans l'ordre, sans en sauter aucune. Sois COMPLET mais DIRECT (va a l'essentiel, pas de remplissage) et termine IMPERATIVEMENT l'exercice entier. Structure :\n\n## ${exercise.title} — Correction complete (${exercise.points} pts)\n\n[Pour CHAQUE sous-question, dans l'ordre :]\n### Question X\n**Methode :** [Theoreme / formule + pourquoi, en 1 phrase]\n**Resolution :**\n- [Etape → calcul = resultat]\n> **Resultat :** [Reponse finale]\n**Bareme :** [X] pts\n\n[UNE SEULE FOIS, a la toute fin, apres avoir traite TOUTES les questions :]\n---\n> **📌 A retenir & pieges :** [2-3 formules/methodes cles + 1-2 erreurs classiques a eviter]`)
 
-  return askClaude(prompt, system, 8000)
+  return askClaude(prompt, system, 8000, undefined, 'correction')
 }
 
 async function correctSingleExercise(exam: BacExam, exerciseIndex: number, studentWork: string): Promise<string> {
@@ -1457,7 +1457,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
     ? `Estime la note de cet élève sur ${exam.totalPoints} points. SUJET: ${exList} RÉPONSE: ${studentWork.slice(0,1200)} JSON: {"score":[entier 0-${exam.totalPoints}],"maxScore":${exam.totalPoints},"comment":"[phrase encourageante 1-2 phrases]","breakdown":[{"title":"[ex]","pts":[accordés],"max":[max],"reason":"[raison]"}]}`
     : `{"score":0,"maxScore":${exam.totalPoints},"comment":"Aucune réponse soumise. La correction complète va tout vous apprendre !","breakdown":${JSON.stringify(exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:'Non répondu'})))}}`
 
-  const raw = await askClaude(prompt, system, 800)
+  const raw = await askClaude(prompt, system, 800, undefined, 'correction')
   try {
     return JSON.parse(raw.replace(/```json|```/g,'').trim())
   } catch {
@@ -1535,7 +1535,7 @@ JSON requis :
     {"id":"rem${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtrise Bac]","statement":"Exercice avancé. 4 parties. Min 100 mots.","hint":"[Conseil Bac]","officialCorrection":"[Correction Bac. Min 80 mots.]"}
   ]
 }`
-  const raw = await askClaude(prompt, system, 6000)
+  const raw = await askClaude(prompt, system, 6000, undefined, 'analyses')
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exercise.points,
     weakAreas:[{theme:exercise.theme,severity:'moderate',description:'Analyse indisponible',priority:1}],
@@ -1557,7 +1557,7 @@ async function analyzeStudentWork(exam: BacExam, studentWork: string, correction
     ? `Analyse this student's English Bac Blanc work and generate a complete remediation report.\n\nEXAM:\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts): ${e.statement.substring(0,200)}`).join('\n')}\n\nSTUDENT WORK:\n${studentWork || '(No answer provided — analyse as an unprepared student)'}\n\nCORRECTION:\n${correction.substring(0,1200)}\n\nGenerate this JSON (ALL text fields in ENGLISH):\n{\n  "estimatedScore": [between 0 and ${exam.totalPoints}, realistic estimate],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Precise skill area]","severity": "critical|moderate|good","description": "[Precise explanation in English]","priority": [1=very urgent, 2=important, 3=secondary]}\n  ],\n\n  "globalAdvice": ["[Practical actionable advice 1 in English]", "[Advice 2]", "[Advice 3]"],\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Priority skill to work on]","difficulty": "introductory|standard|advanced","objective": "[What the student will acquire — in English]","statement": "Complete original English practice exercise. 3-4 sub-questions. Minimum 80 words. WRITTEN IN ENGLISH.","hint": "Methodological hint to get started without giving the answer — in English","officialCorrection": "Complete detailed correction step by step — ENTIRELY IN ENGLISH"},\n    {"id": "rem-2","theme": "[2nd weak area]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3rd weak area]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."}\n  ]\n}`
     : `Analyse ce travail d'élève et génère un rapport de remédiation complet.\n\nSUJET :\n${exam.exercises.map(e=>`${e.title} (${e.theme}, ${e.points}pts) : ${e.statement.substring(0,200)}`).join('\n')}\n\nTRAVAIL ÉLÈVE :\n${studentWork || '(Aucune réponse fournie — analyser comme un élève non préparé)'}\n\nCORRECTION :\n${correction.substring(0,1200)}\n\nGénère ce JSON :\n{\n  "estimatedScore": [entre 0 et ${exam.totalPoints}, estimation réaliste],\n  "maxScore": ${exam.totalPoints},\n  "weakAreas": [\n    {"theme": "[Thème précis]","severity": "critical|moderate|good","description": "[Explication précise]","priority": [1=très urgent, 2=important, 3=secondaire]}\n  ],\n\n  "globalAdvice": ["[Conseil ACTIONNABLE concret]","[Méthode mnémotechnique]","[Priorité révision]"],
   "studyPlan": {"week1":["[Action j1-2]","[Action j3-4]","[Action j5-7]"],"week2":["[Approfondissement]"],"dailyGoal":"[Objectif quotidien]"},\n  "remediationExercises": [\n    {"id": "rem-1","theme": "[Thème à travailler en priorité]","difficulty": "introductory|standard|advanced","objective": "[Ce que l\'élève va acquérir]","statement": "Mini-exercice complet et original avec données précises. 3 à 4 sous-questions. Minimum 80 mots.","hint": "Indication méthodologique pour commencer sans donner la réponse","officialCorrection": "Correction complète et développée, étape par étape"},\n    {"id": "rem-2","theme": "[2ème thème faible]","difficulty": "standard","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id": "rem-3","theme": "[3ème thème faible]","difficulty": "introductory","objective": "...","statement": "...","hint": "...","officialCorrection": "..."},\n    {"id":"rem-4","theme":"[Thème critique]","difficulty":"advanced","objective":"[Niveau Bac]","statement":"Exercice avancé Bac. 4 sous-parties. Min 120 mots.","hint":"[Stratégie]","officialCorrection":"[Correction Bac. Min 100 mots.]"}\n  ]\n}`
-  const raw = await askClaude(prompt, system, 8000)
+  const raw = await askClaude(prompt, system, 8000, undefined, 'analyses')
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
     weakAreas:[{theme:'Général',severity:'moderate',description:'Analyse non disponible',priority:1}],
@@ -1589,7 +1589,7 @@ Be precise, encouraging, and identify exactly what is missing.`
     ? `REMEDIATION EXERCISE — ${exercise.theme}\nObjective: ${exercise.objective}\n\nStatement:\n${exercise.statement}\n\nStudent's answer:\n${studentAnswer || '(No answer provided)'}\n\nModel correction:\n${exercise.officialCorrection}\n\nProvide (ALL IN ENGLISH):\n## Assessment of the answer\n[What is correct, incomplete, or wrong]\n\n## Commented correction\n[Step-by-step correction with explanations]\n\n## Key points to remember\n[Grammar rule, vocabulary or writing strategy — max 3 essential points]\n\n## Next step\n[One concrete action to keep improving on this skill]`
     : `EXERCICE DE REMÉDIATION — ${exercise.theme}\nObjectif : ${exercise.objective}\n\nÉnoncé :\n${exercise.statement}\n\nRéponse de l\'élève :\n${studentAnswer || '(Aucune réponse fournie)'}\n\nCorrection officielle :\n${exercise.officialCorrection}\n\n## ✅ Évaluation de ta réponse\n[Ce qui est juste ✅, incomplet ⚠️, faux ❌ — score estimé]\n\n## 📝 Correction commentée étape par étape\n[Pour chaque sous-question : méthode → calcul $LaTeX$ → > **Résultat :** $valeur$]\n\n## 🔑 Ce qu'il faut absolument retenir\n[Max 3 règles/formules + erreur classique à éviter]\n\n## 🎯 Exercice flash pour consolider\n[1-2 questions sur le même concept — avec la réponse]\n\n## 📈 Prochain pas\n[Action concrète pour maîtriser ce thème avant le Bac]`
 
-  return askClaude(prompt, system, 2000)
+  return askClaude(prompt, system, 2000, undefined, 'remediation')
 }
 
 
@@ -3633,7 +3633,7 @@ function PageAnalyseExercice({
     try {
       const sys = `Tu es un tuteur mathématiques bienveillant. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
       const prompt = `Exercice : ${rem.statement}\n\nRéponse de l'élève : ${remAnswers[rem.id] || '(Aucune réponse)'}\n\nCorrection officielle : ${rem.officialCorrection}\n\nFournis une correction commentée et encourageante :`
-      const text = await askClaude(prompt, sys, 2500)
+      const text = await askClaude(prompt, sys, 2500, undefined, 'remediation')
       setRemFeedback(p => ({ ...p, [rem.id]: text }))
     } catch {}
     setRemLoading(p => ({ ...p, [rem.id]: false }))

@@ -47,7 +47,7 @@ import { useSearchParams } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
-import { MatiereType } from '@/lib/types/monetisation'
+import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
 
 // Track current subject for askClaude calls
 let globalMatiere: string = 'mathematiques'
@@ -271,7 +271,7 @@ async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
   let lastErr: any = null
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const r = await fetch('/api/llm', {
+      const r = await fetch('/api/anthropic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -354,14 +354,14 @@ function humanizeStream(s: string): string {
     .trim()
 }
 
-async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string, onDelta?: (full: string) => void): Promise<string> {
+async function askClaude(prompt: string, system: string, maxTokens = 4000, matiere?: string, onDelta?: (full: string) => void, billingType: string = 'simulations'): Promise<string> {
   // Appel via route Next.js (évite CORS), retry auto ; streaming si onDelta fourni
   const body = {
     model: 'claude-sonnet-4-6',
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: prompt }],
-    type: 'simulations',
+    type: billingType,
     matiere: matiere || globalMatiere || 'mathematiques'
   }
   if (onDelta) return streamAnthropic(body, onDelta)
@@ -376,7 +376,8 @@ async function askClaudeWithImages(
   images: { data: string; mediaType: string }[],
   system: string,
   maxTokens = 8000,
-  onDelta?: (full: string) => void
+  onDelta?: (full: string) => void,
+  billingType: string = 'simulations'
 ): Promise<string> {
 
   // Chunk les images par 2 max pour éviter les payloads trop lourds
@@ -400,7 +401,7 @@ async function askClaudeWithImages(
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content }],
-      type: 'simulations',
+      type: billingType,
     }
     if (cb) return streamAnthropic(body, cb)
     const d = await postAnthropicWithRetry(body)
@@ -1335,7 +1336,7 @@ Write the COMPLETE and EXHAUSTIVE correction of this LLCER English subject ONLY.
 
 > **Key points to remember for ${exercise.title}:** [Synthesis method + translation rules]`
 
-    return askClaude(anglaisPrompt, system, 8000)
+    return askClaude(anglaisPrompt, system, 8000, undefined, undefined, 'correction')
   }
 
   // Détecter si l'élève a soumis des images (photos de copie)
@@ -1364,7 +1365,7 @@ Pour CHAQUE question numérotée (1., 2., 3.…) :
 - Structures de données → trace d'exécution étape par étape.
 - Réseaux → calculs d'adresses (réseau, diffusion, masque /n, nb de machines), table de routage complétée, coûts OSPF/RIP.]
 ${withWork ? "### Évaluation de la copie\n[Réussites, erreurs, conseils ciblés par question]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [répartition des points par question + pièges classiques]`
-    return askClaude(nsiPrompt, system, 8000)
+    return askClaude(nsiPrompt, system, 8000, undefined, undefined, 'correction')
   }
 
   // ── SVT : corrigé dédié (pas de sous-questions numérotées) ──
@@ -1386,7 +1387,7 @@ Si raisonnement sur documents : exploitation document par document (observation 
 ### Connaissances mobilisées
 [Notions clés du programme à maîtriser pour ce sujet]
 ${withWork ? "### Évaluation de la copie\n[Réussites, manques, conseils ciblés]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [critères de notation + pièges classiques]`
-    return askClaude(svtPrompt, system, 8000)
+    return askClaude(svtPrompt, system, 8000, undefined, undefined, 'correction')
   }
 
   // ── PHILOSOPHIE : corrigé dédié (dissertation / explication de texte) ──
@@ -1409,7 +1410,7 @@ Rédige le CORRIGÉ COMPLET de ce sujet de PHILOSOPHIE UNIQUEMENT${withWork ? ",
 ### Références mobilisables
 [Auteurs et thèses pertinents pour ce sujet]
 ${withWork ? "### Évaluation de la copie\n[Forces, faiblesses, conseils de méthode ciblés]\n" : ''}> **Barème et attendus (${exercise.points} pts) :** [critères de notation + pièges classiques]`
-    return askClaude(philoPrompt, system, 8000)
+    return askClaude(philoPrompt, system, 8000, undefined, undefined, 'correction')
   }
 
   const prompt = withWork
@@ -1479,7 +1480,7 @@ Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT au
   const FIN = '[[FIN_CORRECTION]]'
   const promptFull = prompt + "\n\nIMPÉRATIF ABSOLU : corrige TOUTES les sous-questions dans l'ordre, jusqu'à la TOUTE DERNIÈRE (ex. 3b, 3c…), sans en omettre aucune. Quand la correction est ENTIÈREMENT terminée, écris sur une dernière ligne EXACTEMENT : " + FIN
 
-  let full = await askClaude(promptFull, system, 8000, undefined, onDelta)
+  let full = await askClaude(promptFull, system, 8000, undefined, onDelta, 'correction')
 
   let tries = 0
   while (tries < 2 && !full.includes('FIN_CORRECTION')) {
@@ -1490,7 +1491,7 @@ Redige la correction COMPLETE de cet exercice UNIQUEMENT. RÉPONDS UNIQUEMENT au
       + "\n\n---\nÉNONCÉ COMPLET (référence) :\n" + exercise.statement
       + "\n\nCONTINUE la correction EXACTEMENT là où elle s'est arrêtée ci-dessus, sans RIEN répéter, et traite TOUTES les sous-questions restantes jusqu'à la dernière. Même format (### Question X, **Méthode :**, **Résolution :**, > **Résultat :**, **Barème :**). Quand tout est terminé, écris sur une dernière ligne EXACTEMENT : " + FIN
     const cont = await askClaude(contPrompt, system, 8000, undefined,
-      onDelta ? (pp: string) => onDelta(base + '\n' + pp) : undefined)
+      onDelta ? (pp: string) => onDelta(base + '\n' + pp) : undefined, 'correction')
     full = base + '\n' + cont
   }
 
@@ -1531,7 +1532,7 @@ ${cleanWork}
 
 Rédige la correction complète avec analyse de la copie.`
       : `Voici le sujet de l'examen en image. Rédige la correction complète et exhaustive de tous les exercices visibles, étape par étape.`
-    return askClaudeWithImages(prompt, allImages, system, 12000, onDelta)
+    return askClaudeWithImages(prompt, allImages, system, 12000, onDelta, 'correction')
   }
 
   const cleanEx = { ...ex, statement: cleanStmt }
@@ -1577,7 +1578,7 @@ JSON requis :
     {"id":"remSim${exIdx}-3","theme":"${exercise.theme}","difficulty":"advanced","objective":"[Maîtriser en conditions Bac]","statement":"Exercice avancé type Bac France. 4 sous-parties. Minimum 100 mots.","hint":"[Conseil méthodologique niveau Bac]","officialCorrection":"[Correction officielle niveau Bac. Minimum 80 mots.]"}
   ]
 }`
-  const raw = await askClaude(prompt, system, 6000, undefined, () => {})
+  const raw = await askClaude(prompt, system, 6000, undefined, () => {}, 'analyses')
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exercise.points,
     weakAreas:[{theme:exercise.theme,severity:'moderate',description:'Analyse indisponible',priority:1}],
@@ -1662,7 +1663,7 @@ Génère ce JSON :
   ]
 }`
 
-  const raw = await askClaude(prompt, system, 7000, undefined, () => {})
+  const raw = await askClaude(prompt, system, 7000, undefined, () => {}, 'analyses')
   return parseJSON<AnalysisResult>(raw, {
     estimatedScore:0, maxScore:exam.totalPoints,
     weakAreas:[{theme:'Général',severity:'moderate',description:'Analyse non disponible',priority:1}],
@@ -1727,7 +1728,7 @@ Rédige une correction personnalisée avec cette structure OBLIGATOIRE :
 
 ## 📈 Prochain pas
 [Action concrète et spécifique pour maîtriser ce thème avant le Bac]`,
-    system, 2500
+    system, 2500, undefined, undefined, 'remediation'
   )
 }
 
@@ -1759,7 +1760,7 @@ Reponds UNIQUEMENT en JSON valide, sans markdown, sans explication hors JSON.`
     ? `Estime la note de cet eleve sur ${exam.totalPoints} points. SUJET: ${exList} REPONSE: ${studentWork.slice(0,1200)} JSON: {"score":[entier 0-${exam.totalPoints}],"maxScore":${exam.totalPoints},"comment":"[phrase encourageante 1-2 phrases]","breakdown":[{"title":"[ex]","pts":[accordes],"max":[max],"reason":"[raison]"}]}`
     : `{"score":0,"maxScore":${exam.totalPoints},"comment":"Aucune reponse soumise. La correction complete va tout vous apprendre !","breakdown":${JSON.stringify(exam.exercises.map(e=>({title:e.title,pts:0,max:e.points,reason:'Non repondu'})))}}`
 
-  const raw = await askClaude(prompt, system, 800)
+  const raw = await askClaude(prompt, system, 800, undefined, undefined, 'correction')
   try {
     return JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,'').trim())
   } catch {
@@ -5039,7 +5040,7 @@ function CorrectionDirectePanel({ onStart }: {
 function PhaseGenerating({ archives, customText, onDone, matiere }: {
   archives:Archive[]; customText:string; onDone:(exams:GeneratedExam[])=>void; matiere?:string
 }) {
-  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, matiereActive, getSubjectQuotaLimit} = useAuth()
+  const { isAdmin, isSprint, checkQuota, incrementQuota, quotas, quotaLimits, matiereActive} = useAuth()
   // Sync globalMatiere depuis la prop matiere (UI) — priorité sur matiereActive (abonnement)
   const _matiereMapPG: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
@@ -5054,8 +5055,10 @@ function PhaseGenerating({ archives, customText, onDone, matiere }: {
   const started = useRef(false)
 
   // Quota depuis Supabase
-  const simUsed  = (quotas as any)?.[globalMatiere]?.simulations_used || 0
-  const simLimit = getSubjectQuotaLimit('simulations', globalMatiere as MatiereType)
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  // Quota cumulé tous abonnements
+  const simUsed  = totalQuota.simulations_used || 0
+  const simLimit = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const simRemaining = isUnlimited ? 999 : Math.max(0, simLimit - simUsed)
   const limitReached = !isUnlimited && simUsed >= simLimit
@@ -5956,7 +5959,7 @@ function PageAnalyseExercice({
     try {
       const sys = `Tu es un tuteur mathématiques bienveillant. Corrige la réponse de l'élève sur cet exercice de remédiation. Sois précis et encourageant.`
       const prompt = `Exercice : ${rem.statement}\n\nRéponse de l'élève : ${remAnswers[rem.id] || '(Aucune réponse)'}\n\nCorrection officielle : ${rem.officialCorrection}\n\nFournis une correction commentée et encourageante :`
-      const text = await askClaude(prompt, sys, 2500)
+      const text = await askClaude(prompt, sys, 2500, undefined, undefined, 'remediation')
       setRemFeedback(p => ({ ...p, [rem.id]: text }))
     } catch {}
     setRemLoading(p => ({ ...p, [rem.id]: false }))
@@ -7065,7 +7068,7 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   onDone: (exams: GeneratedExam[]) => void
   matiere?: string
 }) {
-  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, matiereActive, getSubjectQuotaLimit } = useAuth()
+  const { isAdmin, checkQuota, incrementQuota: incrementQuotaSub, quotas, quotaLimits, matiereActive } = useAuth()
   const _matiereMapPGC: Record<string,string> = {
     maths:'mathematiques', physique:'physique', informatique:'informatique', anglais:'anglais'
   }
@@ -7076,8 +7079,10 @@ function PhaseGeneratingChapitres({ chapitres, sectionLabel, onDone, matiere }: 
   const [error, setError] = useState('')
   const started = useRef(false)
 
-  const simUsed  = (quotas as any)?.[globalMatiere]?.simulations_used || 0
-  const simLimit = getSubjectQuotaLimit('simulations', globalMatiere as MatiereType)
+  const totalQuota = sumQuotasAcrossMatiere(quotas)
+  // Quota cumulé tous abonnements
+  const simUsed  = totalQuota.simulations_used || 0
+  const simLimit = quotaLimits.simulations_per_week
   const isUnlimited  = isAdmin || simLimit === -1
   const limitReached = !isUnlimited && simUsed >= simLimit
 
