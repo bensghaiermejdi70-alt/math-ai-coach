@@ -271,7 +271,7 @@ async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
   let lastErr: any = null
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const r = await fetch('/api/anthropic', {
+      const r = await fetch('/api/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -294,7 +294,7 @@ async function postAnthropicWithRetry(body: any, maxRetries = 2): Promise<any> {
 async function streamAnthropic(body: any, onDelta: (full: string) => void): Promise<string> {
   let r: Response
   try {
-    r = await fetch('/api/anthropic', {
+    r = await fetch('/api/llm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...body, stream: true }),
