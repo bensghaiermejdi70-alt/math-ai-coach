@@ -158,10 +158,19 @@ export const LATEX_DELIMITER_REMINDER =
 export const SOLVER_COMPLETENESS_REMINDER =
   "\n\n## RAPPEL COMPLÉTUDE (PRIORITAIRE)\nAvant de répondre, relis l'énoncé en entier et dresse mentalement la liste de TOUTES les sous-questions à traiter (1.a, 1.b, 2.a, 2.b, 3, 4...), quelle que soit leur mise en page — même si une lettre de sous-question est seule sur sa ligne, précédée d'un tiret, ou séparée du numéro par un saut de ligne. Une sous-question fait partie de l'exercice dès qu'elle porte une lettre ou un numéro, peu importe sa présentation. Réponds ensuite à CHACUNE d'elles, dans l'ordre, sans en sauter aucune — même si son résultat sert dans une question suivante, même si elle te semble immédiate. Ne commence jamais ta réponse par une sous-question du milieu ou de la fin (b), c), 4)...) en laissant une question antérieure sans réponse."
 
+// ── Simulations/Bac Blancs/corrections/analyses/remédiation (01/10) : ces pages n'utilisent PAS
+// KaTeX — leur affichage (écran ET PDF) convertit le texte directement en Unicode et ne sait pas
+// toujours bien gérer une commande LaTeX imbriquée (ex. \sqrt{\frac{a}{b}}), qui ressort alors cassée
+// à l'écran. Contrairement au chat/solveur, on ne demande donc PAS des $ ici : on demande l'inverse,
+// aucune syntaxe LaTeX du tout, uniquement de l'Unicode déjà prêt à afficher.
+export const UNICODE_ONLY_REMINDER =
+  "\n\n## RAPPEL NOTATION (PRIORITAIRE)\nCette page n'affiche PAS de LaTeX : n'utilise JAMAIS $, $$, \\( \\), \\[ \\], \\frac, \\sqrt, \\begin{...}, ^ ou _ en syntaxe LaTeX. Écris directement en Unicode déjà lisible à l'écran : fractions sous la forme (a)/(b), racines sous la forme √(x), exposants avec les caractères ² ³ ou le format x^2, indices avec une lettre collée (x1, xn) ou le caractère ₙ. Une commande LaTeX visible telle quelle (avec un backslash) est une erreur grave sur cette page."
+
 export function extraInstructionsFor(t: QuotaType, spec: ModelSpec, disabled = false): string {
   if (disabled || spec.provider !== 'openai') return ''
-  if (t !== 'chat' && t !== 'solver') return ''
   if (process.env.LLM_LENGTH_REMINDER === '0') return ''
   if (t === 'solver') return LATEX_DELIMITER_REMINDER + SOLVER_COMPLETENESS_REMINDER
-  return CHAT_LENGTH_REMINDER + LATEX_DELIMITER_REMINDER
+  if (t === 'chat') return CHAT_LENGTH_REMINDER + LATEX_DELIMITER_REMINDER
+  if (t === 'simulations') return UNICODE_ONLY_REMINDER
+  return ''
 }

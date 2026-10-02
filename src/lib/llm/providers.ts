@@ -453,11 +453,21 @@ function wrapBareLatexParagraph(p: string): string {
   return '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$'
 }
 
+// Luna utilise parfois les délimiteurs LaTeX \( ... \) / \[ ... \] au lieu de $ ... $ / $$ ... $$,
+// que ni le rendu KaTeX du chat/solveur ni le PDF ne reconnaissent (ils ne cherchent que $). Comme
+// \( \) et \[ \] SONT déjà des délimiteurs mathématiques explicites (jamais une parenthèse de prose
+// — celle-ci n'a pas de backslash), les convertir en $ / $$ est toujours sûr, sans heuristique.
+function convertEscapedLatexDelimiters(text: string): string {
+  return text
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner}$`)
+}
+
 // Texte entier : les fences ``` (dont nos blocs ```graph, déjà corrigés séparément) sont protégées
 // avant tout découpage, pour ne jamais les interpréter comme des paragraphes de prose.
 function wrapBareLatexInText(text: string): string {
   const saved: string[] = []
-  const hidden = text.replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
+  const hidden = convertEscapedLatexDelimiters(text).replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
   const fixed = hidden
     .split(/\n{2,}/)
     .map((p) => (looksLikeBareLatexParagraph(p) ? wrapBareLatexParagraph(p) : p))

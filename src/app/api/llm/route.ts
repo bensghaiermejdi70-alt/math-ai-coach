@@ -418,9 +418,13 @@ export async function POST(req: NextRequest) {
     if (isAdmin && llm_compare) return await handleCompare(ctx, model, variantSpec, llm_reminder === false)
 
     // ── Choix du bras ──
+    // L'admin utilise désormais Luna par défaut, comme un élève (plus besoin de forcer depuis la
+    // console) ; il peut encore demander explicitement Claude via llm_arm:'control', ou comparer
+    // les deux via llm_compare (traité plus haut, jamais compté dans les statistiques A/B).
     let arm: Arm = 'control'
     if (isAdmin && (llm_arm === 'control' || llm_arm === 'variant')) arm = llm_arm
-    else if (!isAdmin && variantSpec) arm = pickArm(user.id, quotaType, matiere) // admin hors stats sauf bras forcé
+    else if (isAdmin && variantSpec) arm = 'variant'
+    else if (!isAdmin && variantSpec) arm = pickArm(user.id, quotaType, matiere)
 
     if (arm === 'variant') {
       const reason = variantBlockReason(variantSpec, anthropicBody)
