@@ -916,7 +916,7 @@ function blxLooksLikeBareLatexParagraph(p: string): boolean {
   if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false
   if (!BLX_LATEX_CMD.test(t)) return false
   const remainder = blxStripLatexSyntax(t)
-  if (remainder.length > 30) return false
+  if (remainder.length > 80) return false
   return !BLX_FRENCH_ACCENT.test(remainder) && !BLX_FRENCH_STOP.test(remainder)
 }
 function preprocessBareLatex(text: string): string {
@@ -1979,7 +1979,7 @@ function SolvePageInner() {
   const quotaRemaining  = isAdmin || solverLimit === -1
     ? 999
     : Math.max(0, _effectiveLimit - solverUsed)
-  const isUnlimited     = isAdmin || isSprint || solverLimit === -1
+  const isUnlimited     = isAdmin || solverLimit === -1
 
   const insertSymbol = useCallback((sym: string) => {
     const ta = textareaRef.current

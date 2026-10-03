@@ -446,7 +446,10 @@ function looksLikeBareLatexParagraph(p: string): boolean {
   if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false // titres, listes, tableaux, citations : jamais des formules isolées
   if (!LATEX_CMD.test(t)) return false
   const remainder = stripLatexSyntax(t)
-  if (remainder.length > 30) return false
+  // Seuil volontairement large : une longue suite de calculs (ex. une dérivée en 5 étapes) laisse
+  // naturellement plus de lettres résiduelles (x, e, f répétés) qu'une formule courte, sans pour
+  // autant être de la prose — c'est l'accent/mot-outil ci-dessous qui fait le vrai tri.
+  if (remainder.length > 80) return false
   return !FRENCH_ACCENT.test(remainder) && !FRENCH_STOP.test(remainder)
 }
 function wrapBareLatexParagraph(p: string): string {
