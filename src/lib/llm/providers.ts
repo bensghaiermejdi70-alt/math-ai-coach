@@ -364,41 +364,54 @@ function normalizeGraphBlocksInText(text: string): string {
   return text.replace(/```graph[ \t]*\r?\n?[\s\S]*?```/g, (block) => normalizeGraphFence(block))
 }
 
-// Version "flux" : les deltas de texte hors bloc ```graph partent vers emit() immédiatement ; dès
-// qu'une fence ```graph s'ouvre, ses deltas sont retenus (jamais renvoyés partiellement) jusqu'à sa
-// fermeture, puis le bloc corrigé est émis d'un bloc. Insensible au découpage des deltas, y compris
-// si un marqueur ``` est coupé en deux entre deux appels à push().
+// Version "flux" : les deltas de texte hors d'une "fence" (``` ```graph, \( \), \[ \]) partent vers
+// emit() immédiatement ; dès qu'un marqueur d'ouverture apparaît, tout est retenu (jamais renvoyé
+// partiellement) jusqu'à son marqueur de fermeture, puis le bloc corrigé est émis d'un bloc —
+// insensible au découpage des deltas, y compris si un marqueur est coupé en deux entre deux appels
+// à push(). \( \) / \[ \] sont converties en $ $ / $$ $$ (même raison que normalizeGraphFence pour
+// les ```graph : ni le rendu écran ni le PDF ne reconnaissent ces délimiteurs LaTeX).
+interface FenceType { open: string; close: string; transform: (full: string) => string }
+const FENCE_TYPES: FenceType[] = [
+  { open: '```graph', close: '```', transform: normalizeGraphFence },
+  { open: '\\[', close: '\\]', transform: (f) => `$$${f.slice(2, -2)}$$` },
+  { open: '\\(', close: '\\)', transform: (f) => `$${f.slice(2, -2)}$` },
+]
+const MAX_OPEN_LEN = Math.max(...FENCE_TYPES.map((f) => f.open.length))
+
 function createGraphFenceBuffer(emit: (text: string) => void) {
-  const OPEN = '```graph'
-  const CLOSE = '```'
   let buf = ''
-  let inFence = false
+  let active: FenceType | null = null
   function push(delta: string) {
     buf += delta
     for (;;) {
-      if (!inFence) {
-        const i = buf.indexOf(OPEN)
-        if (i === -1) {
-          const keep = OPEN.length - 1 // garde une queue assez longue pour un marqueur coupé entre deux deltas
+      if (!active) {
+        let bestIdx = -1
+        let bestType: FenceType | null = null
+        for (const ft of FENCE_TYPES) {
+          const i = buf.indexOf(ft.open)
+          if (i !== -1 && (bestIdx === -1 || i < bestIdx)) { bestIdx = i; bestType = ft }
+        }
+        if (bestIdx === -1) {
+          const keep = MAX_OPEN_LEN - 1 // garde une queue assez longue pour un marqueur coupé entre deux deltas
           if (buf.length > keep) { emit(buf.slice(0, buf.length - keep)); buf = buf.slice(buf.length - keep) }
           return
         }
-        emit(buf.slice(0, i))
-        buf = buf.slice(i)
-        inFence = true
+        emit(buf.slice(0, bestIdx))
+        buf = buf.slice(bestIdx)
+        active = bestType
         continue
       } else {
-        const j = buf.indexOf(CLOSE, OPEN.length)
-        if (j === -1) return // fence pas encore fermée : on attend, rien n'est émis
-        const full = buf.slice(0, j + CLOSE.length)
-        emit(normalizeGraphFence(full))
-        buf = buf.slice(j + CLOSE.length)
-        inFence = false
+        const j = buf.indexOf(active.close, active.open.length)
+        if (j === -1) return // pas encore fermé : on attend, rien n'est émis
+        const full = buf.slice(0, j + active.close.length)
+        emit(active.transform(full))
+        buf = buf.slice(j + active.close.length)
+        active = null
         continue
       }
     }
   }
-  // Fin de flux avec une fence jamais refermée (cas anormal) : on renvoie le texte brut plutôt que de le perdre.
+  // Fin de flux avec un marqueur jamais refermé (cas anormal) : on renvoie le texte brut plutôt que de le perdre.
   function flush() { if (buf) { emit(buf); buf = '' } }
   return { push, flush }
 }
