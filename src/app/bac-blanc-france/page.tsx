@@ -1,4 +1,4 @@
-'use client'  
+'use client'
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
 // ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
@@ -4632,6 +4632,15 @@ function BacBlancFranceInner() {
   useEffect(() => { saveVisit() }, [])
 
   const handleInscription = useCallback(async (c: Candidat) => {
+    // Le Bac Blanc n'est ouvert aux élèves qu'en mai et juin (période des examens blancs réels) ;
+    // l'admin garde un accès illimité toute l'année pour les tests.
+    if (!isAdmin) {
+      const moisActuel = new Date().getMonth() + 1 // 1=janvier ... 12=décembre
+      if (moisActuel !== 5 && moisActuel !== 6) {
+        alert('📅 Le Bac Blanc ouvre en mai et juin, au plus près des épreuves officielles.\n\nEn attendant, entraîne-toi avec le Solveur ou génère des Simulations d\'examen, disponibles toute l\'année.')
+        return
+      }
+    }
     // Filet de sécurité anti-abus (admin = illimité)
     if (!isAdmin && simLimit !== -1 && simUsed >= simLimit * 2) {
       alert(`⚠️ Limite atteinte — ${simUsed} examens cette semaine.\n\n→ mathsbac.com/abonnement`)
