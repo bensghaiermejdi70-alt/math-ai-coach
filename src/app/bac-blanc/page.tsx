@@ -1,4 +1,4 @@
-'use client'
+'use client' 
 
 function MatiereLockOverlay({ matiere, label, color, icon }: {
   matiere: string; label: string; color: string; icon: string

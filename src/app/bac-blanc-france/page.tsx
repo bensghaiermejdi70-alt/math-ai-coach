@@ -1,4 +1,4 @@
-'use client'
+'use client'  
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 
 // ── Compteur hebdomadaire Bac Blanc (limite lue depuis quotaLimits.bac_blanc_per_week, défaut 5) ──
