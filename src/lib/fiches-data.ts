@@ -3,7 +3,7 @@
 // mettre disponible: true et remplir chapitres[]. Aucune page à modifier.
 
 export interface FicheDocument {
-  type: 'cours' | 'quiz' | 'flashcards' | 'complet'
+  type: 'cours' | 'quiz' | 'flashcards' | 'complet' | 'presentation'
   label: string
   file: string // nom du fichier dans /public/fiches/tunisie/<matiere>/
 }
@@ -162,7 +162,10 @@ const svtData: { n: number; titre: string; file: string }[] = [
   { n: 15, titre: 'Les dysfonctionnements du système immunitaire',       file: 'fiche-revision-svt-chap15.pdf' },
 ]
 const svtChapitres: FicheChapitre[] = svtData.map(d => ({
-  numero: d.n, titre: d.titre, documents: [{ type: 'complet', label: 'Fiche complète', file: d.file }],
+  numero: d.n, titre: d.titre, documents: [
+    { type: 'complet', label: 'Fiche complète', file: d.file },
+    { type: 'presentation', label: 'Présentation', file: `presentation_chap${d.n}_svt.pdf` },
+  ],
 }))
 
 // ══════════════════════════════════════════════════════════════

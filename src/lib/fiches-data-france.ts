@@ -29,6 +29,14 @@ const mathematiquesChapitres: FicheChapitreFrance[] = [
   { numero: 8,  titre: 'Intégration',                           file: 'chapitre8_integration.pdf' },
   { numero: 9,  titre: 'Équations différentielles',             file: 'chapitre9_equations_differentielles.pdf' },
   { numero: 10, titre: "Vecteurs & Repères dans l'espace",      file: 'chapitre10_vecteurs_espace.pdf' },
+  { numero: 11, titre: 'Droites & Plans — Équations',           file: 'chapitre11_droites_plans.pdf' },
+  { numero: 12, titre: "Produit scalaire dans l'espace",        file: 'chapitre12_produit_scalaire.pdf' },
+  { numero: 13, titre: 'Variables aléatoires',                  file: 'chapitre13_variables_aleatoires.pdf' },
+  { numero: 14, titre: 'Lois à densité (continues)',            file: 'chapitre14_lois_continues.pdf' },
+  { numero: 15, titre: 'Loi normale (Gauss)',                   file: 'chapitre15_loi_normale.pdf' },
+  { numero: 16, titre: 'Loi binomiale B(n,p)',                  file: 'chapitre16_loi_binomiale.pdf' },
+  { numero: 17, titre: 'Échantillonnage & Estimation',          file: 'chapitre17_echantillonnage.pdf' },
+  { numero: 18, titre: 'Python avancé & Algorithmique',         file: 'chapitre18_python_avance.pdf' },
 ]
 
 export const FICHES_FRANCE: FicheMatiereFrance[] = [
