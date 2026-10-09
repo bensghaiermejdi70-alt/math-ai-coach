@@ -97,10 +97,20 @@ export async function anthropicOnce(body: any, apiKey: string, retries = 2, time
         text: '', usage: EMPTY_USAGE, stopReason: null, latencyMs,
       }
     }
-    const text = (data.content || []).map((b: any) => (b.type === 'text' ? b.text : '')).join('')
+    const text = wrapBareLatexInText(
+      (data.content || [])
+        .map((b: any) => (b.type === 'text' ? b.text : ''))
+        .join('')
+    )
+
     return {
-      ok: true, status: 200, text, usage: anthropicUsage(data.usage),
-      stopReason: data.stop_reason ?? null, latencyMs, raw: data,
+      ok: true,
+      status: 200,
+      text,
+      usage: anthropicUsage(data.usage),
+      stopReason: data.stop_reason ?? null,
+      latencyMs,
+      raw: data,
     }
   } catch (e) {
     return { ok: false, status: 0, error: errMsg(e), text: '', usage: EMPTY_USAGE, stopReason: null, latencyMs: Date.now() - t0 }
@@ -428,67 +438,350 @@ function createGraphFenceBuffer(emit: (text: string) => void) {
 // seule : ces sauts de ligne ne sont qu'une mise en forme, jamais une syntaxe LaTeX valide hors d'un
 // environnement comme \begin{aligned}, qu'on laisse par ailleurs intact à l'intérieur du $$ ... $$.
 // ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════════
+// Normalisation des formules LaTeX générées sans délimiteurs.
+// Objectif : empêcher qu'une formule comme
+//
+// |u_n-6|=\left|-4\left(\frac{1}{2}\right)^n\right|
+// \=4\left(\frac{1}{2}\right)^n
+//
+// arrive brute dans le Solveur.
+//
+// IMPORTANT : on ne modifie jamais les blocs de code ```...```.
+// ═════════════════════════════════════════════════════════════════════════════
+
 const LATEX_CMD = /\\[a-zA-Z]+/
 
-// Un paragraphe peut mélanger une vraie phrase française ET une formule bare sur la même "ligne
-// logique" (une seule ligne simple, pas de ligne vide entre les deux) — ex. observé le 25/09 :
-// "Déterminer le plus petit entier naturel pair m tel que\n\\begin{cases}...\\end{cases}". Envelopper
-// TOUT le paragraphe dans $$ $$ y ferait alors rendre la phrase française comme des symboles
-// mathématiques (lettres italiques collées) — une dégradation visuelle, pas une correction.
-// On ne considère donc un paragraphe comme "LaTeX pur" que si, une fois toute sa syntaxe LaTeX
-// retirée (commandes + arguments, symboles, chiffres, opérateurs), il ne reste presque plus rien —
-// mesuré sur nos cas réels : ~3 à 15 caractères pour du LaTeX pur, 60+ dès qu'une phrase s'y mêle.
+const FRENCH_ACCENT =
+  /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+
+const FRENCH_STOP =
+  /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+
 function stripLatexSyntax(s: string): string {
   let t = s
-  for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+
+  // Supprime les commandes LaTeX et leurs arguments simples.
+  for (let i = 0; i < 5; i++) {
+    t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+  }
+
+  // Supprime la syntaxe LaTeX.
   t = t.replace(/[{}\\^_$]/g, ' ')
-  t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ') // symboles unicode mathématiques usuels
-  t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+
+  // Supprime les symboles mathématiques Unicode.
+  t = t.replace(
+    /[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g,
+    ' '
+  )
+
+  // Supprime chiffres et opérateurs.
+  // IMPORTANT : le caractère | est volontairement accepté comme partie
+  // d'une expression de valeur absolue.
+  t = t.replace(/[0-9+\-*/=(),.;:!?<>\[\]|]/g, ' ')
+
   return t.replace(/\s+/g, ' ').trim()
 }
-// Garde-fous supplémentaires, appliqués sur le RÉSIDU (après avoir retiré toute la syntaxe LaTeX,
-// y compris le contenu de \text{...} qui peut légitimement contenir un mot français comme "et" ou
-// "mesurée") : un accent français, ou un petit mot de liaison sans ambiguïté, qui SURVIT au nettoyage
-// signale une vraie phrase mêlée à la formule (ex. "Avec C₀=... :" collé à un bloc sans ligne vide) —
-// jamais enveloppée, même si sa longueur reste sous le seuil.
-const FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
-const FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on)\b/i
+
 function looksLikeBareLatexParagraph(p: string): boolean {
   const t = p.trim()
-  if (!t || t.includes('$') || t.includes('\u0001')) return false // déjà délimité, ou contient une fence protégée : jamais touché
-  if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false // titres, listes, tableaux, citations : jamais des formules isolées
+
+  if (!t) return false
+
+  // Déjà correctement délimité.
+  if (t.includes('$')) return false
+
+  // Blocs markdown qui ne doivent jamais être transformés.
+  // IMPORTANT :
+  // on NE bloque PAS les lignes commençant par |,
+  // car |u_n-6| est une vraie expression mathématique.
+  if (/^[#>*\-]/.test(t)) return false
+
+  // Une vraie liste numérotée ne doit pas être transformée
+  // en formule entière.
+  if (/^\d+[.)]\s+/.test(t)) return false
+
+  // Il faut au moins une commande LaTeX.
   if (!LATEX_CMD.test(t)) return false
+
+  if (/^\\boxed\s*\{/.test(t)) return true
+  if (/^\\(?:lim|sum|int|frac|sqrt|sin|cos|tan|ln|exp)\b/.test(t)) return true
+
   const remainder = stripLatexSyntax(t)
-  // Seuil volontairement large : une longue suite de calculs (ex. une dérivée en 5 étapes) laisse
-  // naturellement plus de lettres résiduelles (x, e, f répétés) qu'une formule courte, sans pour
-  // autant être de la prose — c'est l'accent/mot-outil ci-dessous qui fait le vrai tri.
-  if (remainder.length > 80) return false
-  return !FRENCH_ACCENT.test(remainder) && !FRENCH_STOP.test(remainder)
-}
-function wrapBareLatexParagraph(p: string): string {
-  return '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$'
+
+  // Une formule pure doit rester relativement courte
+  // après suppression de sa syntaxe.
+  if (remainder.length > 100) return false
+
+  // Si du français identifiable reste présent,
+  // ce n'est probablement pas une formule pure.
+  if (FRENCH_ACCENT.test(remainder)) return false
+  if (FRENCH_STOP.test(remainder)) return false
+
+  return true
 }
 
-// Luna utilise parfois les délimiteurs LaTeX \( ... \) / \[ ... \] au lieu de $ ... $ / $$ ... $$,
-// que ni le rendu KaTeX du chat/solveur ni le PDF ne reconnaissent (ils ne cherchent que $). Comme
-// \( \) et \[ \] SONT déjà des délimiteurs mathématiques explicites (jamais une parenthèse de prose
-// — celle-ci n'a pas de backslash), les convertir en $ / $$ est toujours sûr, sans heuristique.
+function wrapBareLatexParagraph(p: string): string {
+  const clean = p
+    .replace(/\\=/g, '=')
+    .replace(/\s*\n\s*/g, ' ')
+    .trim()
+
+  return '$$' + clean + '$$'
+}
+
+function wrapParagraph(p: string): string {
+  // Cas simple :
+  //
+  // |u_n-6|=\left|-4...\right|
+  // \=4...
+  //
+  // devient directement une formule centrée.
+  if (looksLikeBareLatexParagraph(p)) {
+    return wrapBareLatexParagraph(p)
+  }
+
+  const lines = p.split('\n')
+
+  // Cas :
+  //
+  // Pour tout n∈N,
+  //
+  // |u_n-6|=...
+  //
+  // On conserve l'introduction comme texte normal
+  // et on transforme uniquement la formule.
+  for (let n = 1; n <= Math.min(3, lines.length - 1); n++) {
+    const introLines = lines.slice(0, n)
+    const rest = lines.slice(n).join('\n')
+
+    if (
+      introLines.every(
+        (line) =>
+          line.trim().length <= 80 &&
+          !line.includes('$')
+      ) &&
+      looksLikeBareLatexParagraph(rest)
+    ) {
+      return (
+        introLines.join('\n') +
+        '\n' +
+        wrapBareLatexParagraph(rest)
+      )
+    }
+  }
+
+  // Même si le paragraphe contient du texte,
+  // on corrige au minimum les \= isolés.
+  return p.replace(/\\=/g, '=')
+}
+
+// Convertit les délimiteurs LaTeX standards en délimiteurs
+// compris par le moteur d'affichage de MathbacAI.
 function convertEscapedLatexDelimiters(text: string): string {
   return text
-    .replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner}$$`)
-    .replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner}$`)
+    .replace(
+      /\\\[([\s\S]*?)\\\]/g,
+      (_, inner) => `$$${inner}$$`
+    )
+    .replace(
+      /\\\(([\s\S]*?)\\\)/g,
+      (_, inner) => `$${inner}$`
+    )
 }
 
-// Texte entier : les fences ``` (dont nos blocs ```graph, déjà corrigés séparément) sont protégées
-// avant tout découpage, pour ne jamais les interpréter comme des paragraphes de prose.
 function wrapBareLatexInText(text: string): string {
+  if (!text) return text
+
   const saved: string[] = []
-  const hidden = convertEscapedLatexDelimiters(text).replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
-  const fixed = hidden
+
+  let source = text
+    .replace(/&#x20;/g, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/\u00a0/g, ' ')
+
+  // Convertir les délimiteurs LaTeX classiques en délimiteurs
+  // compris par notre renderer.
+  source = source
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner}$`)
+
+  // Convertir les environnements aligned/align en bloc mathématique.
+  source = source.replace(
+    /\\begin\{(?:aligned|align\*?|gathered)\}([\s\S]*?)\\end\{(?:aligned|align\*?|gathered)\}/g,
+    (_, inner) => {
+      const clean = String(inner)
+        .replace(/\\\\/g, '\n')
+        .replace(/&/g, '')
+        .trim()
+
+      return `\n$$\n${clean}\n$$\n`
+    }
+  )
+
+  // Les blocs ```math ... ``` produits par certains modèles
+  // deviennent directement des formules.
+  source = source.replace(
+    /```math\s*([\s\S]*?)```/gi,
+    (_, inner) => `\n$$\n${String(inner).trim()}\n$$\n`
+  )
+
+  // Les blocs ```latex ... ``` également.
+  source = source.replace(
+    /```latex\s*([\s\S]*?)```/gi,
+    (_, inner) => `\n$$\n${String(inner).trim()}\n$$\n`
+  )
+
+  // Protéger les vrais blocs de code restants.
+  const hidden = source.replace(
+    /```[\s\S]*?```/g,
+    (m) => {
+      saved.push(m)
+      return `\u0001${saved.length - 1}\u0001`
+    }
+  )
+
+  let fixed = hidden
+
+  // Nettoyer les formules inline produites avec des backticks.
+  // Le texte autour reste du texte normal.
+  fixed = fixed.replace(
+    /`([^`\n]+)`/g,
+    (full, inner) => {
+      const value = String(inner).trim()
+
+      // Une formule inline contient généralement une égalité,
+      // un indice, une fraction ou une commande LaTeX.
+      if (
+        /\\[a-zA-Z]+/.test(value) ||
+        /[=^_]|[∈∉≤≥√π∞]/.test(value)
+      ) {
+        return `$${value}$`
+      }
+
+      return value
+    }
+  )
+
+  // Éviter les mots collés aux délimiteurs mathématiques.
+  fixed = fixed
+    .replace(/([^\s$])\$(?=[A-Za-zÀ-ÖØ-öø-ÿ])/g, '$1 $')
+    .replace(/([A-Za-zÀ-ÖØ-öø-ÿ])\$/g, '$1 $')
+    .replace(/\$\s+/g, '$')
+    .replace(/\s+\$/g, '$')
+
+  // Corriger uniquement les lignes qui sont entièrement mathématiques.
+  // Ne jamais transformer une phrase française contenant une formule
+  // en bloc mathématique.
+  fixed = fixed
+    .split('\n')
+    .map((line) => {
+      const t = line.trim()
+
+      if (!t) return line
+
+      // Les titres Markdown restent inchangés.
+      if (/^#{1,6}\s/.test(t)) return line
+
+      // Les lignes déjà protégées restent inchangées.
+      if (t.startsWith('$') || t.endsWith('$')) return line
+
+      // Ne traiter que les lignes qui commencent directement
+      // par une expression mathématique.
+      const isMathLine =
+        /^(?:[|\\a-zA-Z_]|[0-9(])/.test(t) &&
+        (
+          /\\(?:frac|sqrt|boxed|vec|arg|lim|sum|int|sin|cos|tan|ln|exp|pi|in|mathbb|times)\b/.test(t) ||
+          /(?:^|[\s])(?:[a-zA-Z]|\\[a-zA-Z]+)_[a-zA-Z0-9]+[\s]*=/.test(t) ||
+          /^\\(?:overrightarrow|arg)\b/.test(t)
+        )
+
+      if (!isMathLine) return line
+
+      const clean = t
+        .replace(/\\left/g, '')
+        .replace(/\\right/g, '')
+        .replace(/\\qquad/g, ' ')
+        .replace(/\\quad/g, ' ')
+        .replace(/\\text\s*\{([^{}]*)\}/g, '$1')
+        .replace(/\\=/g, '=')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      return `$$${clean}$$`
+    })
+    .join('\n')
+
+  // Nettoyage des commandes LaTeX de présentation qui ne doivent
+  // pas rester visibles.
+  fixed = fixed
+    .replace(/\\left/g, '')
+    .replace(/\\right/g, '')
+    .replace(/\\qquad/g, ' ')
+    .replace(/\\quad/g, ' ')
+    .replace(/\\,/g, ' ')
+    .replace(/\\;/g, ' ')
+    .replace(/\\!/g, '')
+    .replace(/\\text\s*\{([^{}]*)\}/g, '$1')
+
+  // Transformer les expressions entre backticks qui sont clairement
+  // mathématiques en formules LaTeX.
+  fixed = fixed.replace(
+    /`([^`\n]+)`/g,
+    (full, inner) => {
+      const value = String(inner).trim()
+
+      const looksMath =
+        /\\[a-zA-Z]+/.test(value) ||
+        /[=^_]|[∈∉≤≥√π∞]/.test(value) ||
+        /^[A-Za-z]\s*[+\-*/=]/.test(value)
+
+      return looksMath ? `$${value}$` : full
+    }
+  )
+
+  // Convertir les paragraphes restants contenant principalement
+  // du LaTeX brut.
+  fixed = fixed
     .split(/\n{2,}/)
-    .map((p) => (looksLikeBareLatexParagraph(p) ? wrapBareLatexParagraph(p) : p))
+    .map((p) => {
+      const trimmed = p.trim()
+
+      if (!trimmed) return p
+
+      if (trimmed.includes('$')) {
+        return p
+      }
+
+      // Ligne ou paragraphe purement mathématique.
+      if (
+        /\\(?:frac|sqrt|boxed|vec|lim|sum|int|sin|cos|tan|ln|exp|pi|in|mathbb|times)\b/.test(trimmed)
+      ) {
+        const cleaned = trimmed
+          .replace(/\\left/g, '')
+          .replace(/\\right/g, '')
+          .replace(/\\qquad/g, ' ')
+          .replace(/\\quad/g, ' ')
+          .replace(/\\text\s*\{([^{}]*)\}/g, '$1')
+          .replace(/\\=/g, '=')
+          .replace(/\s+/g, ' ')
+          .trim()
+
+        return `$$${cleaned}$$`
+      }
+
+      return wrapParagraph(p)
+    })
     .join('\n\n')
-  return fixed.replace(/\u0001(\d+)\u0001/g, (_, i) => saved[Number(i)])
+
+  // Corriger les égalités échappées restantes.
+  fixed = fixed.replace(/\\=/g, '=')
+
+  // Restaurer les blocs de code protégés.
+  return fixed.replace(
+    /\u0001(\d+)\u0001/g,
+    (_, i) => saved[Number(i)]
+  )
 }
 
 // ── OpenAI : mode non-streaming ──────────────────────────────────────────────

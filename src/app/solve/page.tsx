@@ -900,33 +900,127 @@ function rllLooksLikeMath(m: string): boolean {
 // enveloppé dans $$ ... $$ AVANT le découpage ligne par ligne (une formule répartie sur
 // plusieurs lignes doit être vue d'un bloc, pas ligne par ligne).
 const BLX_LATEX_CMD = /\\[a-zA-Z]+/
-const BLX_FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
-const BLX_FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+
+const BLX_FRENCH_ACCENT =
+  /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+
+const BLX_FRENCH_STOP =
+  /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+
 function blxStripLatexSyntax(s: string): string {
   let t = s
-  for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+
+  // Commandes LaTeX
+  for (let i = 0; i < 4; i++) {
+    t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+  }
+
+  // Commandes / caractères mathématiques
   t = t.replace(/[{}\\^_$]/g, ' ')
   t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ')
   t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+
   return t.replace(/\s+/g, ' ').trim()
 }
+
 function blxLooksLikeBareLatexParagraph(p: string): boolean {
   const t = p.trim()
-  if (!t || t.includes('$') || t.includes('\u0001')) return false
-  if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false
+
+  if (!t) return false
+
+  // Déjà correctement délimité
+  if (t.includes('$')) return false
+
+  // Ne pas toucher aux titres, listes ou citations markdown.
+  // IMPORTANT : on ne bloque PLUS les lignes qui commencent par "|",
+  // car |u_n-6| est une expression mathématique valide.
+  if (/^[#>*\-]|^\d+[.)]/.test(t)) return false
+
+  // Il faut réellement une commande LaTeX
   if (!BLX_LATEX_CMD.test(t)) return false
+
   const remainder = blxStripLatexSyntax(t)
-  if (remainder.length > 80) return false
-  return !BLX_FRENCH_ACCENT.test(remainder) && !BLX_FRENCH_STOP.test(remainder)
+
+  // Une vraie formule doit rester courte après suppression de la syntaxe.
+  if (remainder.length > 100) return false
+
+  // Si le reste ressemble clairement à du français, ce n'est pas une formule.
+  return !BLX_FRENCH_ACCENT.test(remainder) &&
+         !BLX_FRENCH_STOP.test(remainder)
 }
+
+function blxWrapOne(p: string): string {
+  return '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$'
+}
+
+function blxWrapParagraph(p: string): string {
+  if (blxLooksLikeBareLatexParagraph(p)) {
+    return blxWrapOne(p)
+  }
+
+  const lines = p.split('\n')
+
+  // Cas :
+  // "Pour tout n..."
+  // "FORMULE LATEX BRUTE"
+  //
+  // On garde l'introduction en texte normal et on transforme
+  // uniquement la ligne / partie mathématique.
+  for (let n = 1; n <= Math.min(3, lines.length - 1); n++) {
+    const introLines = lines.slice(0, n)
+    const rest = lines.slice(n).join('\n')
+
+    if (
+      introLines.every(
+        (l) => l.trim().length <= 80 && !l.includes('$')
+      ) &&
+      blxLooksLikeBareLatexParagraph(rest)
+    ) {
+      return introLines.join('\n') + '\n' + blxWrapOne(rest)
+    }
+  }
+
+  return p
+}
+
 function preprocessBareLatex(text: string): string {
+  if (!text) return text
+
   const saved: string[] = []
-  const hidden = text.replace(/```[\s\S]*?```/g, (m) => { saved.push(m); return `\u0001${saved.length - 1}\u0001` })
+
+  // Nettoyage de quelques artefacts qui apparaissent parfois
+  // dans les réponses du modèle.
+  let source = text
+    .replace(/&#x20;/g, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/\u00a0/g, ' ')
+
+  // Convertir les délimiteurs LaTeX standards en délimiteurs
+  // compris par notre moteur d'affichage.
+  source = source
+    .replace(/\\\[/g, '$$')
+    .replace(/\\\]/g, '$$')
+    .replace(/\\\(/g, '$')
+    .replace(/\\\)/g, '$')
+
+  // Protéger les blocs de code pour ne jamais les modifier.
+  const hidden = source.replace(
+    /```[\s\S]*?```/g,
+    (m) => {
+      saved.push(m)
+      return `\u0001${saved.length - 1}\u0001`
+    }
+  )
+
   const fixed = hidden
     .split(/\n{2,}/)
-    .map((p) => (blxLooksLikeBareLatexParagraph(p) ? '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$' : p))
+    .map((p) => blxWrapParagraph(p))
     .join('\n\n')
-  return fixed.replace(/\u0001(\d+)\u0001/g, (_, i) => saved[Number(i)])
+
+  return fixed.replace(
+    /\u0001(\d+)\u0001/g,
+    (_, i) => saved[Number(i)]
+  )
 }
 function renderLatexLine(line: string): string {
   // Remplace $$...$$ (block) puis $...$ (inline) par du HTML KaTeX
@@ -1503,6 +1597,9 @@ async function openSolutionPdf(exercise: string, solution: string, mode: string,
       return imgs
     } catch { return [] }
   }
+  // Attendre que Plotly/SVG ait terminé son rendu avant la capture PDF.
+  await new Promise(resolve => setTimeout(resolve, 1000))
+
   const graphImgs = await captureGraphs()
 
   // Remplace chaque bloc [GRAPH:{...}] (multi-lignes) par un placeholder indexé
@@ -2795,59 +2892,102 @@ Structure OBLIGATOIRE :
       // l'énoncé complet servant de contexte. Aucun doublon, fin garantie.
       const systemFull = system
 
-      function splitByMarkers(text: string, re: RegExp, seq: (m: RegExpMatchArray) => number): string[] {
+      function splitByMarkers(text: string, re: RegExp): string[] {
         const lines = text.split('\n')
         const blocks: string[] = []
         let current: string[] | null = null
-        let expected: number | null = null
+
         for (const line of lines) {
           const m = line.match(re)
-          const val = m ? seq(m) : null
-          if (val !== null && (expected === null || val === expected)) {
-            if (current) blocks.push(current.join('\n'))
-            current = [line]; expected = val + 1
+
+          if (m) {
+            if (current) {
+              blocks.push(current.join('\n'))
+            }
+            current = [line]
           } else if (current) {
             current.push(line)
           }
         }
-        if (current) blocks.push(current.join('\n'))
+
+        if (current) {
+          blocks.push(current.join('\n'))
+        }
+
         return blocks
       }
 
-      // Découpage à DEUX niveaux : par question numérotée (1,2,3…), puis chaque
-      // question est elle-même redécoupée par ses sous-questions (a,b,c…).
-      // → liste plate { label, text } : CHAQUE sous-question = un appel dédié.
-      const subRe = /^\s*([a-z])\s*[.)]\s+\S/i
+      // Découpage robuste :
+      // 1) questions principales : 1), 2), 3)...
+      // 2) sous-questions : a), b), c)...
+      // Aucune exigence que les numéros ou lettres soient parfaitement consécutifs.
+      const subRe = /^\s*(?:\(?([a-z])\)?)[.)]\s+\S/i
       const numRe = /^\s*(\d+)\s*[.)]\s+\S/
+
       function buildItems(text: string): { label: string; text: string }[] {
         const items: { label: string; text: string }[] = []
-        const numBlocks = splitByMarkers(text, numRe, m => parseInt(m[1], 10))
+
+        const numBlocks = splitByMarkers(text, numRe)
+
+        // Exercice avec plusieurs questions numérotées
         if (numBlocks.length >= 2) {
           for (const nb of numBlocks) {
-            const numLabel = nb.match(numRe)?.[1] || '?'
-            const subBlocks = splitByMarkers(nb, subRe, m => m[1].toLowerCase().charCodeAt(0) - 97)
+            const numMatch = nb.match(numRe)
+            const numLabel = numMatch?.[1] || '?'
+
+            const subBlocks = splitByMarkers(nb, subRe)
+
             if (subBlocks.length >= 2) {
-              const intro = nb.split('\n').slice(0, Math.max(1, nb.split('\n').findIndex(l => subRe.test(l)))).join('\n').trim()
+              // Texte situé avant la première sous-question
+              const lines = nb.split('\n')
+              const firstSubIndex = lines.findIndex(line => subRe.test(line))
+              const intro =
+                firstSubIndex > 0
+                  ? lines.slice(0, firstSubIndex).join('\n').trim()
+                  : ''
+
               for (const sb of subBlocks) {
-                const sl = sb.match(subRe)?.[1]?.toLowerCase() || ''
-                const body = intro ? `${intro}\n${sb}` : sb
-                items.push({ label: `Question ${numLabel}.${sl})`, text: body })
+                const subMatch = sb.match(subRe)
+                const subLabel = subMatch?.[1]?.toLowerCase() || ''
+
+                const body = intro
+                  ? `${intro}\n${sb}`
+                  : sb
+
+                items.push({
+                  label: `Question ${numLabel}.${subLabel})`,
+                  text: body.trim(),
+                })
               }
             } else {
-              items.push({ label: `Question ${numLabel}`, text: nb })
+              // Question sans sous-questions
+              items.push({
+                label: `Question ${numLabel}`,
+                text: nb.trim(),
+              })
             }
           }
+
           return items
         }
-        // Pas de numéros → découpage par lettres au niveau racine
-        const letterBlocks = splitByMarkers(text, subRe, m => m[1].toLowerCase().charCodeAt(0) - 97)
+
+        // Exercice sans numéros : a), b), c)...
+        const letterBlocks = splitByMarkers(text, subRe)
+
         if (letterBlocks.length >= 2) {
           for (const lb of letterBlocks) {
-            const sl = lb.match(subRe)?.[1]?.toLowerCase() || ''
-            items.push({ label: `Question ${sl})`, text: lb })
+            const subMatch = lb.match(subRe)
+            const subLabel = subMatch?.[1]?.toLowerCase() || ''
+
+            items.push({
+              label: `Question ${subLabel})`,
+              text: lb.trim(),
+            })
           }
+
           return items
         }
+
         return []
       }
 
@@ -2881,9 +3021,72 @@ RÉSOUS MAINTENANT, de façon complète et détaillée, UNIQUEMENT la question c
 QUESTION À RÉSOUDRE (${items[i].label}) :
 ${items[i].text}
 
-FORMAT : commence par un titre « ### ${items[i].label} », puis : **Méthode**, **Calculs** étape par étape, et « > **Résultat :** ».
+FORMAT OBLIGATOIRE :
+Commence par un titre « ### ${items[i].label} », puis utilise exactement les sections :
+**Méthode**
+**Calculs**
+**Résultat :**
 
-RÈGLE GRAPHIQUE (importante) : n'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé. Sinon, décris la figure en mots. JSON COMPACT (≤ 10 formes), VALIDE, sur UNE seule ligne.
+RÈGLES ABSOLUES DE NOTATION MATHÉMATIQUE :
+1. Toute formule mathématique DOIT être placée entre des délimiteurs LaTeX :
+   - formule courte : $...$
+   - formule importante ou centrée : $$...$$
+
+2. N'AFFICHE JAMAIS de LaTeX brut sans délimiteurs.
+   INTERDIT :
+   v_n=u_n-6
+   \\frac{1}{2}
+   \\lim_{n\\to+\\infty}u_n
+   \\text{première boule rouge}
+
+3. N'utilise JAMAIS de backticks autour d'une formule mathématique.
+   INTERDIT :
+   \`v_n=u_n-6\`
+   \`n\\in\\mathbb{N}\`
+
+4. N'utilise PAS les environnements LaTeX suivants :
+   \\begin{aligned}
+   \\end{aligned}
+   \\begin{align}
+   \\end{align}
+   \\begin{cases}
+   \\end{cases}
+
+5. Pour plusieurs égalités successives, écris chaque égalité comme une formule indépendante entre $$...$$.
+   Exemple :
+   $$v_{n+1}=u_{n+1}-6$$
+   $$=\\frac{1}{2}u_n+3-6$$
+   $$=\\frac{1}{2}u_n-3$$
+   $$=\\frac{1}{2}(u_n-6)$$
+   $$=\\frac{1}{2}v_n$$
+
+6. N'utilise JAMAIS \\= .
+   Pour une nouvelle égalité, utilise simplement =.
+
+7. N'utilise pas \\qquad, \\text{} ou d'autres commandes LaTeX complexes si elles ne sont pas nécessaires.
+   Pour du texte à l'intérieur d'une explication, écris simplement du texte normal hors formule.
+
+8. Les symboles mathématiques comme \\in, \\mathbb{N}, \\frac, \\sqrt, \\lim, \\to, \\times doivent rester à l'intérieur de $...$ ou $$...$$.
+
+9. Ne mélange jamais une formule LaTeX et sa version texte/Unicode sur la même ligne.
+   Exemple INTERDIT :
+   La suite \`v_n=u_n-6\` ...
+   Exemple CORRECT :
+   La suite $v_n=u_n-6$ ...
+
+10. Avant d'envoyer ta réponse, vérifie silencieusement chaque formule :
+   - commence-t-elle par $ ou $$ ?
+   - se termine-t-elle par $ ou $$ ?
+   - contient-elle du LaTeX brut visible ?
+   - contient-elle \\= ?
+   - contient-elle \\begin ou \\end ?
+   Si oui, corrige-la avant de répondre.
+
+RÈGLE DE COMPLÉTUDE :
+Réponds uniquement à ${items[i].label}. Ne saute aucune étape nécessaire à sa démonstration et n'anticipe pas la résolution des questions suivantes.
+
+RÈGLE GRAPHIQUE :
+N'inclus un bloc [GRAPH:{...}] QUE si tu peux placer les points avec des coordonnées qui respectent EXACTEMENT les propriétés de l'énoncé. Sinon, décris la figure en mots. JSON COMPACT (≤ 10 formes), VALIDE, sur UNE seule ligne.
 
 Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remplissage ni répétition inutile.`
           console.log('[Solve]', items[i].label, '—', i + 1, '/', items.length, '— envoi…')
@@ -2960,12 +3163,78 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
 
       // Questions similaires en arrière-plan (ne compte pas dans le quota)
       askClaude(
-        `Exercice : "${input.slice(0, 200)}"\nGénère 3 exercices similaires de difficulté légèrement croissante pour Bac Tunisie.\nRéponds UNIQUEMENT en JSON : ["question1","question2","question3"]`,
-        'Tu génères des exercices. Réponds UNIQUEMENT en JSON valide.', 500
+        `Exercice de référence :
+"${input.slice(0, 500)}"
+
+Génère exactement 3 exercices similaires pour un élève du Bac Tunisie, avec une difficulté légèrement croissante.
+
+RÈGLES ABSOLUES DE FORMAT :
+
+1. Chaque élément doit être un énoncé d'exercice complet et directement utilisable par l'élève.
+2. Structure clairement chaque exercice avec des retours à la ligne.
+3. Utilise :
+   EXERCICE 1
+   EXERCICE 2
+   EXERCICE 3
+   puis les questions numérotées : 1., 2., 3.
+   et les sous-questions : a), b), c).
+4. INTERDIT dans les exercices :
+   - aucun symbole "$"
+   - aucun "$$"
+   - aucun "\\("
+   - aucun "\\)"
+   - aucun "\\["
+   - aucun "\\]"
+   - aucun "\\begin"
+   - aucun "\\end"
+   - aucun LaTeX
+   - aucun HTML
+   - aucune balise <strong>, <span>, etc.
+   - aucun Markdown
+   - aucun caractère "\\n" écrit littéralement
+5. Pour les mathématiques, écris les expressions directement avec une notation lisible :
+   uₙ, uₙ₊₁, x², √x, ∈, ≤, ≥, →, +∞, etc.
+6. Ne donne aucune solution et aucun résultat.
+7. Chaque exercice doit être suffisamment complet pour pouvoir être envoyé directement au Solveur.
+8. Les trois exercices doivent rester sur le même thème mathématique que l'exercice de référence.
+
+Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes :
+["EXERCICE 1 ...", "EXERCICE 2 ...", "EXERCICE 3 ..."]`,
+        'Tu génères des énoncés mathématiques propres pour des élèves du Bac Tunisie. Réponds UNIQUEMENT avec un JSON valide contenant exactement 3 chaînes. Aucun LaTeX, aucun Markdown, aucun HTML et aucun caractère \\n littéral.',
+        500
       ).then(raw => {
         try {
           const arr = JSON.parse(raw.replace(/```json|```/g, '').trim())
-          if (Array.isArray(arr)) setSimilarQ(arr.slice(0, 3))
+          if (Array.isArray(arr)) {
+            const cleaned = arr
+              .slice(0, 3)
+              .map((q: any, index: number) => {
+                let text = String(q ?? '')
+
+                text = text
+                  .replace(/\\n/g, '\n')
+                  .replace(/\r\n/g, '\n')
+                  .replace(/```(?:text|markdown)?/gi, '')
+                  .replace(/```/g, '')
+                  .replace(/<[^>]*>/g, '')
+                  .replace(/\$/g, '')
+                  .replace(/\s*—\s*/g, ' — ')
+                  .replace(/[ \t]+/g, ' ')
+                  .replace(/\n[ \t]+/g, '\n')
+                  .replace(/[ \t]+\n/g, '\n')
+                  .replace(/\n{3,}/g, '\n\n')
+                  .trim()
+
+                if (!/^EXERCICE\s+\d+/i.test(text)) {
+                  text = `EXERCICE ${index + 1}\n\n${text}`
+                }
+
+                return text.trim()
+              })
+              .filter((q: string) => q.length > 20)
+
+            setSimilarQ(cleaned)
+          }
         } catch { /* silencieux */ }
       }).catch(() => { /* silencieux */ })
     } catch (e: any) {
@@ -3514,7 +3783,9 @@ Sois COMPLET mais DIRECT : montre les étapes clés et les résultats, sans remp
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @media(max-width:700px) {
-          div[style*="grid-template-columns: 1fr 260px"] { grid-template-columns: 1fr !important; }
+          div[style*="grid-template-columns: 1fr 260px"] {
+            grid-template-columns: 1fr !important;
+          }
         }
       `}</style>
     </>

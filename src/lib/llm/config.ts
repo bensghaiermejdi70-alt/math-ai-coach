@@ -152,11 +152,38 @@ export const CHAT_LENGTH_REMINDER =
 export const LATEX_DELIMITER_REMINDER =
   "\n\n## RAPPEL LATEX (PRIORITAIRE)\nAucun symbole ou formule mathématique ne doit jamais apparaître hors des délimiteurs $ ... $ (en ligne) ou $$ ... $$ (centré) — y compris un bloc \\begin{aligned}...\\end{aligned}, \\begin{cases}...\\end{cases} ou tout autre environnement multi-lignes, qui doit être entièrement enveloppé dans UN SEUL $$ ... $$. Une formule sans $ affichée telle quelle (avec des \\frac, \\sqrt, \\left, etc. visibles) est une erreur grave."
 
-// ── Constaté sur le solveur (25/09) : sur un exercice à sous-questions numérotées (1.a, 1.b, 2.a...),
-// Luna a répondu directement à 1.b) sans jamais traiter 1.a), alors que 1.b) réutilisait son résultat.
-// Claude ne saute aucune sous-question dans nos tests.
+// ── Constaté sur le solveur : certaines réponses peuvent sauter une sous-question
+// ou répéter une formule sous plusieurs formes. Ce rappel impose une sortie propre,
+// complète et dans l'ordre exact de l'énoncé.
 export const SOLVER_COMPLETENESS_REMINDER =
-  "\n\n## RAPPEL COMPLÉTUDE (PRIORITAIRE)\nAvant de répondre, relis l'énoncé en entier et dresse mentalement la liste de TOUTES les sous-questions à traiter (1.a, 1.b, 2.a, 2.b, 3, 4...), quelle que soit leur mise en page — même si une lettre de sous-question est seule sur sa ligne, précédée d'un tiret, ou séparée du numéro par un saut de ligne. Une sous-question fait partie de l'exercice dès qu'elle porte une lettre ou un numéro, peu importe sa présentation. Réponds ensuite à CHACUNE d'elles, dans l'ordre, sans en sauter aucune — même si son résultat sert dans une question suivante, même si elle te semble immédiate. Ne commence jamais ta réponse par une sous-question du milieu ou de la fin (b), c), 4)...) en laissant une question antérieure sans réponse."
+  "\n\n## RÈGLES ABSOLUES DU SOLVEUR (PRIORITAIRES)\n" +
+  "Avant de répondre, relis l'énoncé en entier et identifie mentalement TOUTES les questions et sous-questions, dans leur ordre exact : 1), 2), 2.a), 2.b), 3), etc. " +
+  "Tu dois répondre à CHACUNE d'elles, sans jamais en sauter une, même si une sous-question semble évidente ou si son résultat est utilisé dans une question suivante. " +
+  "Commence toujours par la première question et avance dans l'ordre jusqu'à la dernière.\n\n" +
+
+  "## ORDRE OBLIGATOIRE\n" +
+  "Ne commence JAMAIS directement par b), 2.b), 3) ou une autre question située plus loin dans l'énoncé. " +
+  "Une question précédente doit toujours être traitée avant la suivante.\n\n" +
+
+  "## NOTATION MATHÉMATIQUE\n" +
+  "N'affiche JAMAIS deux fois la même formule sous deux formes différentes. " +
+  "Ne donne jamais une formule brute puis immédiatement la même formule en LaTeX. " +
+  "Pour chaque expression mathématique, utilise UNE SEULE représentation LaTeX correctement délimitée par $...$ pour une formule en ligne ou $$...$$ pour une formule centrée. " +
+  "Ne mélange pas une expression mathématique Unicode et sa version LaTeX dans la même ligne.\n\n" +
+
+  "## AUCUNE RÉPÉTITION\n" +
+  "Ne répète pas l'énoncé complet inutilement. " +
+  "Ne répète pas une question déjà traitée. " +
+  "Ne répète pas une formule déjà affichée uniquement pour la reformuler.\n\n" +
+
+  "## CONTRÔLE AVANT ENVOI\n" +
+  "Avant d'envoyer ta réponse, vérifie silencieusement : " +
+  "(1) toutes les questions sont présentes, " +
+  "(2) toutes les sous-questions sont présentes, " +
+  "(3) elles sont dans le bon ordre, " +
+  "(4) aucune formule n'est dupliquée, " +
+  "(5) aucune formule LaTeX n'apparaît sans $...$ ou $$...$$, " +
+  "et (6) aucune partie de la réponse ne commence au milieu de l'exercice.";
 
 // ── Simulations/Bac Blancs/corrections/analyses/remédiation (01/10) : ces pages n'utilisent PAS
 // KaTeX — leur affichage (écran ET PDF) convertit le texte directement en Unicode et ne sait pas
