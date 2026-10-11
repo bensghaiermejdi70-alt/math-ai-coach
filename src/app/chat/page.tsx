@@ -158,19 +158,16 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
         ln.trim() === '```' || ln.trim() === '```graph') return ''
     if (!ln.trim()) return '<div style="height:6px"></div>'
     const ep = (s: string): string => {
-      // 1. Blocs $$...$$ → span centré avec texte lisible
       let r = s.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
         const readable = latexToReadable(math.trim())
         return `<div style="text-align:center;margin:6px 0;padding:4px 0;font-family:'Cambria Math','Times New Roman',serif;font-size:14px;color:#1a1a2e">${esc(readable)}</div>`
       })
-      // 2. $...$ inline → span avec texte lisible
       r = r.replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => {
         const readable = latexToReadable(math.trim())
         return `<span style="font-family:'Cambria Math','Times New Roman',serif;color:#1e1b4b">${esc(readable)}</span>`
       })
-      // 3. Markdown bold/italic
-      r = r.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
-      // 4. Échapper le reste (déjà partiellement échappé via esc dans latexToReadable)
+      r = r.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
       return r
     }
     if (ln.startsWith('## '))  return `<h3 style="font-size:14px;font-weight:700;color:#4f6ef7;margin:14px 0 5px;border-bottom:1px solid #e0e7ff;padding-bottom:4px">${ep(ln.slice(3))}</h3>`
@@ -194,7 +191,28 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
         }
         return '<div style="background:#f0f4ff;border-left:3px solid #4f6ef7;padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;font-style:italic;color:#4f6ef7;font-size:12px">📊 Graphique — ouvrir dans MathBacAI pour visualiser</div>'
       })
-    const bodyLines = cleanContent.split('\n').map(convertLine).join('')
+    const pdfMathBlocks: { math: string; display: boolean }[] = []
+    const protectedContent = cleanContent.replace(
+      /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g,
+      (_match, displayMath, inlineMath) => {
+        const display = displayMath !== undefined
+        const math = (displayMath ?? inlineMath).trim()
+        const index = pdfMathBlocks.push({ math, display }) - 1
+        return `@@PDFMATH${index}@@`
+      }
+    )
+
+    const bodyLines = protectedContent
+      .split('\n')
+      .map(convertLine)
+      .join('')
+      .replace(/@@PDFMATH(\d+)@@/g, (_match, index) => {
+        const item = pdfMathBlocks[Number(index)]
+        if (!item) return ''
+        const latex = esc(item.math).replace(/"/g, '&quot;')
+        const cls = item.display ? 'pdf-math-block' : 'pdf-math-inline'
+        return `<span class="${cls}" data-pdf-latex="${latex}"></span>`
+      })
     return `
     <div style="margin-bottom:20px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -226,6 +244,8 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   .header-right{background:#1a1a2e;color:#fff;padding:16px 20px;text-align:right;font-size:12px;line-height:1.7}
   .footer{margin-top:32px;padding-top:12px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-size:10px;color:#666}
   .katex-display{margin:8px 0!important;overflow-x:auto}
+  .pdf-math-block{display:block;text-align:center;margin:8px 0;overflow-x:auto}
+  .pdf-math-inline{display:inline}
   @media print{.print-bar{display:none!important}.page{padding:10px 20px}}
 </style>
 </head>
@@ -256,10 +276,15 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
 <script>
   const katexCDN='https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'
   const s=document.createElement('script');s.src=katexCDN;s.onload=()=>{
-    document.querySelectorAll('p,h3,h4,li,div').forEach(el=>{
-      try{if(el.children.length===0)el.innerHTML=el.innerHTML
-        .replace(/\\$\\$([\\s\\S]+?)\\$\\$/g,(_,m)=>katex.renderToString(m.trim(),{throwOnError:false,displayMode:true}))
-        .replace(/\\$([^$\\n]+?)\\$/g,(_,m)=>katex.renderToString(m.trim(),{throwOnError:false,displayMode:false}))}catch(e){}
+    document.querySelectorAll('[data-pdf-latex]').forEach(el=>{
+      try{
+        const math=el.getAttribute('data-pdf-latex')||''
+        const display=el.classList.contains('pdf-math-block')
+        el.innerHTML=katex.renderToString(math,{
+          throwOnError:false,
+          displayMode:display
+        })
+      }catch(e){}
     })
     setTimeout(()=>window.print(),600)
   };document.head.appendChild(s)
@@ -293,40 +318,187 @@ function openChatPdf(messages: { role: string; content: string }[]): void {
   w.document.write(html); w.document.close()
 }
 
+function improveCopiedMath(src: string): string {
+  let s = src;
+
+  // Convertir les matrices en lignes lisibles dans le texte copié.
+  s = s.replace(
+    /\\begin\{([pv]?matrix)\}([\s\S]*?)\\end\{\1\}/g,
+    (_: string, _type: string, body: string) =>
+      '\n' +
+      body
+        .split(/\\\\/)
+        .map((r: string) =>
+          '[ ' +
+          r
+            .replace(/\\(?:left|right)\b/g, '')
+            .split('&')
+            .map((x: string) => x.trim())
+            .join('  |  ') +
+          ' ]'
+        )
+        .join('\n') +
+      '\n'
+  );
+
+  // Supprimer les délimiteurs mathématiques LaTeX.
+  s = s.replace(/\$\$?/g, '');
+
+  // Espaces et symboles mathématiques.
+  s = s
+    .replace(/\\(?:qquad|quad|enspace)\b/g, ' ')
+    .replace(/\\times\b/g, ' × ')
+    .replace(/\\cdot\b/g, ' × ')
+    .replace(/\\(?:neq|ne)\b/g, ' ≠ ')
+    .replace(/\\(?:leq|le)\b/g, ' ≤ ')
+    .replace(/\\(?:geq|ge)\b/g, ' ≥ ')
+    .replace(/\\in\b/g, ' ∈ ')
+    .replace(/\\notin\b/g, ' ∉ ')
+    .replace(/\\mathbb\{N\}/g, 'ℕ')
+    .replace(/\\mathbb\{R\}/g, 'ℝ')
+    .replace(/\\longrightarrow\b|\\rightarrow\b/g, ' → ')
+    .replace(/\\text\{([^{}]*)\}/g, '$1')
+    .replace(/\\mathrm\{([^{}]*)\}/g, '$1')
+    .replace(/\\,/g, ' ')
+    .replace(/\\;/g, ' ');
+
+  // Fractions simples.
+  s = s.replace(
+    /\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
+    '($1)/($2)'
+  );
+
+  // Indices et exposants.
+  s = s
+    .replace(/_\{([^{}]*)\}/g, '_$1')
+    .replace(/\^\{([^{}]*)\}/g, '^$1')
+    .replace(/\\left\b|\\right\b/g, '');
+
+  // Retirer les commandes LaTeX encore présentes.
+  s = s
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *([=+−×÷≠≤≥→]) */g, ' $1 ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n');
+
+  return s.trim();
+}
+
 function latexToReadable(src: string): string {
-  return src
-    .replace(/\\begin\{[pv]matrix\}([\s\S]*?)\\end\{[pv]matrix\}/g,
-      (_: string, m: string) => '\n' + m.trim().split('\\\\')
-        .map((r: string) => '[ ' + r.split('&').map((x: string) => x.trim()).join('  ') + ' ]')
-        .join('\n') + '\n')
-    .replace(/\\[df]rac\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
-    .replace(/\\binom\{([^}]*)\}\{([^}]*)\}/g, 'C($1,$2)')
-    .replace(/\\times/g,'×').replace(/\\cdot/g,'·').replace(/\\div/g,'÷')
-    .replace(/\\pm/g,'±').replace(/\\leq/g,'≤').replace(/\\geq/g,'≥')
-    .replace(/\\neq/g,'≠').replace(/\\approx/g,'≈').replace(/\\infty/g,'∞')
-    .replace(/\\in\b/g,'∈').replace(/\\cup/g,'∪').replace(/\\cap/g,'∩')
-    .replace(/\\emptyset/g,'∅').replace(/\\forall/g,'∀').replace(/\\exists/g,'∃')
-    .replace(/\\Rightarrow/g,'⇒').replace(/\\Leftrightarrow/g,'⟺')
-    .replace(/\\rightarrow|\\to\b/g,'→').replace(/\\leftarrow/g,'←')
-    .replace(/\\overrightarrow\{([^}]*)\}/g,'$1⃗')
-    .replace(/\\vec\{([^}]*)\}/g,'$1⃗')
-    .replace(/\\sqrt\{([^}]+)\}/g,'√($1)').replace(/\\sqrt/g,'√')
-    .replace(/\\ln\b/g,'ln').replace(/\\log\b/g,'log')
-    .replace(/\\sin\b/g,'sin').replace(/\\cos\b/g,'cos').replace(/\\tan\b/g,'tan')
-    .replace(/\\sum/g,'∑').replace(/\\prod/g,'∏').replace(/\\int/g,'∫')
-    .replace(/\\alpha/g,'α').replace(/\\beta/g,'β').replace(/\\gamma/g,'γ')
-    .replace(/\\delta/g,'δ').replace(/\\Delta/g,'Δ').replace(/\\pi\b/g,'π')
-    .replace(/\\sigma/g,'σ').replace(/\\omega/g,'ω').replace(/\\theta/g,'θ')
-    .replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')')
-    .replace(/\\left\s*\[/g,'[').replace(/\\right\s*\]/g,']')
-    .replace(/\\left\s*\|/g,'|').replace(/\\right\s*\|/g,'|')
-    .replace(/\\left/g,'').replace(/\\right/g,'')
-    // Sommes avec bornes : \sum_{k=1}^{n} → ∑(k=1 to n)
-    .replace(/∑_\{([^}]*)\}\^\{([^}]*)\}/g,'∑(k=$1 to $2)')
-    .replace(/∫_\{([^}]*)\}\^\{([^}]*)\}/g,'∫($1 to $2)')
-    .replace(/\^\{([^}]+)\}/g,'^($1)').replace(/\_\{([^}]+)\}/g,'_($1)')
-    .replace(/\^([0-9a-z])/g,'^$1').replace(/_([0-9a-z])/g,'_$1')
-    .replace(/\\\\|\{|\}/g,' ').replace(/\\[a-zA-Z]+/g,'').replace(/\s+/g,' ').trim()
+  let s = src;
+
+  // Matrices : conserver une ligne par rangée.
+  s = s.replace(
+    /\\begin\{([pv]?matrix)\}([\s\S]*?)\\end\{\1\}/g,
+    (_: string, _type: string, body: string) =>
+      '\n' +
+      body
+        .split(/\\\\/)
+        .map((r: string) =>
+          '[ ' +
+          r
+            .replace(/\\(?:left|right)\b/g, '')
+            .split('&')
+            .map((x: string) => x.trim())
+            .join('  |  ') +
+          ' ]'
+        )
+        .join('\n') +
+      '\n'
+  );
+
+  // Fractions et coefficients binomiaux.
+  s = s.replace(
+    /\\(?:d?frac)\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
+    '($1)/($2)'
+  );
+  s = s.replace(
+    /\\binom\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
+    'C($1,$2)'
+  );
+
+  // Symboles mathématiques.
+  s = s
+    .replace(/\\times\b/g, ' × ')
+    .replace(/\\cdot\b/g, ' · ')
+    .replace(/\\div\b/g, ' ÷ ')
+    .replace(/\\pm\b/g, ' ± ')
+    .replace(/\\neq\b|\\ne\b/g, ' ≠ ')
+    .replace(/\\leq\b|\\le\b/g, ' ≤ ')
+    .replace(/\\geq\b|\\ge\b/g, ' ≥ ')
+    .replace(/\\approx\b/g, ' ≈ ')
+    .replace(/\\infty\b/g, '∞')
+    .replace(/\\in\b/g, ' ∈ ')
+    .replace(/\\notin\b/g, ' ∉ ')
+    .replace(/\\cup\b/g, ' ∪ ')
+    .replace(/\\cap\b/g, ' ∩ ')
+    .replace(/\\emptyset\b/g, '∅')
+    .replace(/\\forall\b/g, '∀')
+    .replace(/\\exists\b/g, '∃')
+    .replace(/\\Rightarrow\b/g, ' ⇒ ')
+    .replace(/\\Leftarrow\b/g, ' ⇐ ')
+    .replace(/\\Leftrightarrow\b/g, ' ⇔ ')
+    .replace(/\\rightarrow\b|\\to\b/g, ' → ')
+    .replace(/\\leftarrow\b/g, ' ← ')
+    .replace(/\\overrightarrow\{([^{}]*)\}/g, '$1⃗')
+    .replace(/\\vec\{([^{}]*)\}/g, '$1⃗')
+    .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
+    .replace(/\\sqrt\b/g, '√')
+    .replace(/\\ln\b/g, 'ln')
+    .replace(/\\log\b/g, 'log')
+    .replace(/\\sin\b/g, 'sin')
+    .replace(/\\cos\b/g, 'cos')
+    .replace(/\\tan\b/g, 'tan')
+    .replace(/\\sum\b/g, '∑')
+    .replace(/\\prod\b/g, '∏')
+    .replace(/\\int\b/g, '∫')
+    .replace(/\\alpha\b/g, 'α')
+    .replace(/\\beta\b/g, 'β')
+    .replace(/\\gamma\b/g, 'γ')
+    .replace(/\\delta\b/g, 'δ')
+    .replace(/\\Delta\b/g, 'Δ')
+    .replace(/\\pi\b/g, 'π')
+    .replace(/\\sigma\b/g, 'σ')
+    .replace(/\\omega\b/g, 'ω')
+    .replace(/\\theta\b/g, 'θ');
+
+  // Parenthèses, crochets et valeurs absolues.
+  s = s
+    .replace(/\\left\b|\\right\b/g, '')
+    .replace(/\\langle\b/g, '⟨')
+    .replace(/\\rangle\b/g, '⟩')
+    .replace(/\\\{/g, '{')
+    .replace(/\\\}/g, '}')
+    .replace(/\\\(/g, '(')
+    .replace(/\\\)/g, ')')
+    .replace(/\\\[/g, '[')
+    .replace(/\\\]/g, ']')
+    .replace(/\\\|/g, '|');
+
+  // Exposants et indices : u_{n+1} → u_(n+1), x^2 → x^2.
+  s = s
+    .replace(/_\s*\{([^{}]*)\}/g, '_($1)')
+    .replace(/\^\s*\{([^{}]*)\}/g, '^($1)')
+    .replace(/_([0-9a-zA-Z])/g, '_$1');
+
+  // Commandes de mise en forme et espaces LaTeX.
+  s = s
+    .replace(/\\(?:text|mathrm|mathbf|mathit|operatorname)\s*\{([^{}]*)\}/g, '$1')
+    .replace(/\\(?:,|;|:|!|quad|qquad|enspace)(?![a-zA-Z])/g, ' ')
+    .replace(/\$\$?/g, '')
+    .replace(/\\\\/g, '\n')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\s*([=+−×÷≠≤≥→])\s*/g, ' $1 ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n');
+
+  return s.trim();
 }
 
 
@@ -1237,7 +1409,30 @@ function inlineFmt(t: string) {
 }
 
 function renderText(text: string) {
-  const lines = text.split('\n')
+  const mathBlocks: string[] = []
+
+  const normalizedText = text.replace(
+    /\$\s*(\\begin\{(?:p|b|B|v|V)?matrix\}[\s\S]*?\\end\{(?:p|b|B|v|V)?matrix\})\s*\$/g,
+    (_match, math) => '$$' + math.replace(/\s*\n\s*/g, ' ') + '$$'
+  )
+
+  // Repérer les environnements mathématiques qui n'ont pas encore $$...$$
+  let preparedText = normalizedText.replace(
+    /\\begin\{(pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix|cases|array)\}[\s\S]*?\\end\{\1\}/g,
+    (env: string, _name: string, offset: number, whole: string) => {
+      const before = whole.slice(0, offset)
+      const insideMath = (before.match(/\$\$/g) || []).length % 2 === 1
+      return insideMath ? env : `$$${env}$$`
+    }
+  )
+
+  // Traiter les formules complètes AVANT de découper le texte en lignes
+  preparedText = preparedText.replace(/\$\$([\s\S]+?)\$\$/g, (formula: string) => {
+    mathBlocks.push(renderKaTeX(formula))
+    return `\n@@CHATMATH${mathBlocks.length - 1}@@\n`
+  })
+
+  const lines = preparedText.split('\n')
   const els: React.ReactNode[] = []
   let k = 0
   const MARKERS = ['**📌', '**💡', '**⚠️', '**✅', '**✏️', '**📊']
@@ -1245,6 +1440,24 @@ function renderText(text: string) {
   const MARKER_BGS: Record<string, string> = { '⚠️': 'rgba(245,158,11,0.08)', '💡': 'rgba(6,214,160,0.08)', '✅': 'rgba(6,214,160,0.1)', '📊': 'rgba(167,139,250,0.08)', '📌': 'rgba(79,110,247,0.08)', '✏️': 'rgba(79,110,247,0.08)' }
 
   for (const line of lines) {
+    const mathMarker = line.trim().match(/^@@CHATMATH(\d+)@@$/)
+
+    if (mathMarker) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            textAlign: 'center',
+            margin: '10px 0',
+            overflowX: 'auto'
+          }}
+          dangerouslySetInnerHTML={{
+            __html: mathBlocks[Number(mathMarker[1])]
+          }}
+        />
+      )
+      continue
+    }
     if (MARKERS.some(m => line.startsWith(m))) {
       const match = line.match(/\*\*([^*]+)\*\*(.*)/)
       if (match) {
@@ -1371,14 +1584,23 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
         </div>
         <div style={{ display: 'flex', gap: 5, flexDirection: isUser ? 'row-reverse' : 'row', opacity: hovered && !editing ? 1 : 0, transition: 'opacity 0.15s', pointerEvents: hovered && !editing ? 'auto' : 'none' }}>
           <button onClick={() => {
-              // Copie avec conversion LaTeX → lisible
-              const lines = msg.content.split('\n').map((ln: string) =>
-                ln.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => latexToReadable(m))
-                  .replace(/\$([^$\n]+?)\$/g, (_: string, m: string) => latexToReadable(m))
-                  .replace(/^## /,'').replace(/^### /,'').replace(/\*\*(.+?)\*\*/g,'$1')
-                  .replace(/^> /,'→ ').replace(/^- /,'• ')
-              )
-              copyToClipboard(lines.join('\n').trim()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
+              // Copie : traiter les formules complètes avant les lignes.
+              const copiedText = improveCopiedMath(msg.content);
+
+              const lines = copiedText.split('\n').map((ln: string) =>
+                ln.replace(/^### /, '')
+                  .replace(/^## /, '')
+                  .replace(/\*\*(.+?)\*\*/g, '$1')
+                  .replace(/^> /, '→ ')
+                  .replace(/^- /, '• ')
+              );
+
+              copyToClipboard(lines.join('\n').trim())
+                .then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                })
+                .catch(() => {});
             }} style={btn(copied ? '#06d6a0' : undefined)}>
             {copied ? '✓ Copié !' : '📋 Copier'}
           </button>
