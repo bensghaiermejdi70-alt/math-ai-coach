@@ -1408,39 +1408,175 @@ function inlineFmt(t: string) {
   return result
 }
 
+function normalizeMarkdownTableLine(line: string): string {
+  return line.trim().replace(/\\\|/g, '|');
+}
+
+function isMarkdownTableRow(line: string): boolean {
+  const trimmed = normalizeMarkdownTableLine(line);
+  return trimmed.startsWith('|') && trimmed.endsWith('|');
+}
+
+function isMarkdownTableSeparator(line: string): boolean {
+  const trimmed = normalizeMarkdownTableLine(line);
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed);
+}
+
+function parseMarkdownTableRow(line: string): string[] {
+  return normalizeMarkdownTableLine(line)
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map(cell => cell.trim());
+}
+
 function renderText(text: string) {
-  const mathBlocks: string[] = []
+  const mathBlocks: string[] = [];
 
   const normalizedText = text.replace(
     /\$\s*(\\begin\{(?:p|b|B|v|V)?matrix\}[\s\S]*?\\end\{(?:p|b|B|v|V)?matrix\})\s*\$/g,
     (_match, math) => '$$' + math.replace(/\s*\n\s*/g, ' ') + '$$'
-  )
+  );
 
-  // Repérer les environnements mathématiques qui n'ont pas encore $$...$$
+  // Repérer les environnements mathématiques qui n'ont pas encore $$...$$.
   let preparedText = normalizedText.replace(
     /\\begin\{(pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix|cases|array)\}[\s\S]*?\\end\{\1\}/g,
     (env: string, _name: string, offset: number, whole: string) => {
-      const before = whole.slice(0, offset)
-      const insideMath = (before.match(/\$\$/g) || []).length % 2 === 1
-      return insideMath ? env : `$$${env}$$`
+      const before = whole.slice(0, offset);
+      const insideMath = (before.match(/\$\$/g) || []).length % 2 === 1;
+      return insideMath ? env : `$$${env}$$`;
     }
-  )
+  );
 
-  // Traiter les formules complètes AVANT de découper le texte en lignes
+  // Traiter les formules complètes avant de découper le texte en lignes.
   preparedText = preparedText.replace(/\$\$([\s\S]+?)\$\$/g, (formula: string) => {
-    mathBlocks.push(renderKaTeX(formula))
-    return `\n@@CHATMATH${mathBlocks.length - 1}@@\n`
-  })
+    mathBlocks.push(renderKaTeX(formula));
+    return `\n@@CHATMATH${mathBlocks.length - 1}@@\n`;
+  });
 
-  const lines = preparedText.split('\n')
-  const els: React.ReactNode[] = []
-  let k = 0
-  const MARKERS = ['**📌', '**💡', '**⚠️', '**✅', '**✏️', '**📊']
-  const MARKER_COLORS: Record<string, string> = { '⚠️': '#f59e0b', '💡': '#06d6a0', '✅': '#06d6a0', '📊': '#a78bfa', '📌': '#4f6ef7', '✏️': '#4f6ef7' }
-  const MARKER_BGS: Record<string, string> = { '⚠️': 'rgba(245,158,11,0.08)', '💡': 'rgba(6,214,160,0.08)', '✅': 'rgba(6,214,160,0.1)', '📊': 'rgba(167,139,250,0.08)', '📌': 'rgba(79,110,247,0.08)', '✏️': 'rgba(79,110,247,0.08)' }
+  const lines = preparedText.split('\n');
+  const els: React.ReactNode[] = [];
+  let k = 0;
 
-  for (const line of lines) {
-    const mathMarker = line.trim().match(/^@@CHATMATH(\d+)@@$/)
+  const MARKERS = ['**📌', '**💡', '**⚠️', '**✅', '**✏️', '**📊'];
+
+  const MARKER_COLORS: Record<string, string> = {
+    '⚠️': '#f59e0b',
+    '💡': '#06d6a0',
+    '✅': '#06d6a0',
+    '📊': '#a78bfa',
+    '📌': '#4f6ef7',
+    '✏️': '#4f6ef7'
+  };
+
+  const MARKER_BGS: Record<string, string> = {
+    '⚠️': 'rgba(245,158,11,0.08)',
+    '💡': 'rgba(6,214,160,0.08)',
+    '✅': 'rgba(6,214,160,0.1)',
+    '📊': 'rgba(167,139,250,0.08)',
+    '📌': 'rgba(79,110,247,0.08)',
+    '✏️': 'rgba(79,110,247,0.08)'
+  };
+
+  // Boucle indexée pour pouvoir traiter un tableau entier
+  // et sauter ses lignes après l'avoir affiché.
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 1. Détecter un tableau Markdown complet.
+    if (
+      isMarkdownTableRow(line) &&
+      i + 1 < lines.length &&
+      isMarkdownTableSeparator(lines[i + 1])
+    ) {
+      const headers = parseMarkdownTableRow(line);
+      const rows: string[][] = [];
+
+      let j = i + 2;
+
+      while (j < lines.length && isMarkdownTableRow(lines[j])) {
+        if (!isMarkdownTableSeparator(lines[j])) {
+          rows.push(parseMarkdownTableRow(lines[j]));
+        }
+        j++;
+      }
+
+      els.push(
+        <div
+          key={k++}
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            overflowX: 'auto',
+            margin: '12px 0',
+            border: '1px solid var(--border, #444)',
+            borderRadius: 8
+          }}
+        >
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: 13,
+              lineHeight: 1.5
+            }}
+          >
+            <thead>
+              <tr>
+                {headers.map((header, colIndex) => (
+                  <th
+                    key={colIndex}
+                    style={{
+                      padding: '9px 10px',
+                      textAlign: 'left',
+                      background: 'var(--accent)',
+                      color: '#fff',
+                      border: '1px solid var(--border, #444)',
+                      verticalAlign: 'top'
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: inlineFmt(header)
+                    }}
+                  />
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {headers.map((_, colIndex) => (
+                    <td
+                      key={colIndex}
+                      style={{
+                        padding: '8px 10px',
+                        border: '1px solid var(--border, #444)',
+                        verticalAlign: 'top',
+                        background:
+                          rowIndex % 2 === 0
+                            ? 'var(--card, transparent)'
+                            : 'transparent',
+                        overflowWrap: 'anywhere'
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: inlineFmt(row[colIndex] || '')
+                      }}
+                    />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
+      // Sauter toutes les lignes du tableau déjà affiché.
+      i = j - 1;
+      continue;
+    }
+
+    // 2. Conserver le rendu des formules mathématiques.
+    const mathMarker = line.trim().match(/^@@CHATMATH(\d+)@@$/);
 
     if (mathMarker) {
       els.push(
@@ -1455,41 +1591,189 @@ function renderText(text: string) {
             __html: mathBlocks[Number(mathMarker[1])]
           }}
         />
-      )
-      continue
+      );
+      continue;
     }
+
+    // 3. Conserver les encadrés informatifs.
     if (MARKERS.some(m => line.startsWith(m))) {
-      const match = line.match(/\*\*([^*]+)\*\*(.*)/)
+      const match = line.match(/\*\*([^*]+)\*\*(.*)/);
+
       if (match) {
-        const tag = match[1], rest = match[2]
-        const key = Object.keys(MARKER_COLORS).find(k => tag.includes(k)) || '📌'
-        const color = MARKER_COLORS[key], bg = MARKER_BGS[key]
-        els.push(<div key={k++} style={{ background: bg, border: `1px solid ${color}25`, borderLeft: `3px solid ${color}`, borderRadius: 8, padding: '10px 14px', margin: '8px 0' }}>
-          <span style={{ color, fontWeight: 700, fontSize: 13 }}>{tag}</span>
-          {rest && <span style={{ fontSize: 14, color: 'var(--text2)', marginLeft: 4 }} dangerouslySetInnerHTML={{ __html: inlineFmt(rest) }} />}
-        </div>)
-        continue
+        const tag = match[1];
+        const rest = match[2];
+        const markerKey =
+          Object.keys(MARKER_COLORS).find(key => tag.includes(key)) || '📌';
+        const color = MARKER_COLORS[markerKey];
+        const bg = MARKER_BGS[markerKey];
+
+        els.push(
+          <div
+            key={k++}
+            style={{
+              background: bg,
+              border: `1px solid ${color}25`,
+              borderLeft: `3px solid ${color}`,
+              borderRadius: 8,
+              padding: '10px 14px',
+              margin: '8px 0'
+            }}
+          >
+            <span
+              style={{
+                color,
+                fontWeight: 700,
+                fontSize: 13
+              }}
+            >
+              {tag}
+            </span>
+            {rest && (
+              <span
+                style={{
+                  fontSize: 14,
+                  color: 'var(--text2)',
+                  marginLeft: 4
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: inlineFmt(rest)
+                }}
+              />
+            )}
+          </div>
+        );
+        continue;
       }
     }
-    if (line.startsWith('### ')) { els.push(<div key={k++} style={{ fontWeight: 700, fontSize: 14, color: 'var(--accent)', marginTop: 14, marginBottom: 4 }} dangerouslySetInnerHTML={{ __html: inlineFmt(line.slice(4)) }} />); continue }
-    if (line.startsWith('## ')) { els.push(<div key={k++} style={{ fontWeight: 700, fontSize: 16, marginTop: 16, marginBottom: 6 }} dangerouslySetInnerHTML={{ __html: inlineFmt(line.slice(3)) }} />); continue }
+
+    // 4. Conserver les titres.
+    if (line.startsWith('### ')) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            fontWeight: 700,
+            fontSize: 14,
+            color: 'var(--accent)',
+            marginTop: 14,
+            marginBottom: 4
+          }}
+          dangerouslySetInnerHTML={{
+            __html: inlineFmt(line.slice(4))
+          }}
+        />
+      );
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            fontWeight: 700,
+            fontSize: 16,
+            marginTop: 16,
+            marginBottom: 6
+          }}
+          dangerouslySetInnerHTML={{
+            __html: inlineFmt(line.slice(3))
+          }}
+        />
+      );
+      continue;
+    }
+
+    // 5. Conserver les listes à puces.
     if (/^[-*] /.test(line)) {
-      els.push(<div key={k++} style={{ display: 'flex', gap: 8, fontSize: 14, lineHeight: 1.6, marginBottom: 2 }}>
-        <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }}>▸</span>
-        <span dangerouslySetInnerHTML={{ __html: inlineFmt(line.slice(2)) }} />
-      </div>); continue
+      els.push(
+        <div
+          key={k++}
+          style={{
+            display: 'flex',
+            gap: 8,
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 2
+          }}
+        >
+          <span
+            style={{
+              color: 'var(--accent)',
+              flexShrink: 0,
+              marginTop: 1
+            }}
+          >
+            ▸
+          </span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: inlineFmt(line.slice(2))
+            }}
+          />
+        </div>
+      );
+      continue;
     }
+
+    // 6. Conserver les listes numérotées.
     if (/^\d+\. /.test(line)) {
-      const num = line.match(/^(\d+)\. /)?.[1] || '1'
-      els.push(<div key={k++} style={{ display: 'flex', gap: 10, fontSize: 14, lineHeight: 1.6, marginBottom: 4 }}>
-        <span style={{ color: 'var(--accent)', fontWeight: 700, fontFamily: 'monospace', minWidth: 22, flexShrink: 0 }}>{num}.</span>
-        <span dangerouslySetInnerHTML={{ __html: inlineFmt(line.slice(num.length + 2)) }} />
-      </div>); continue
+      const num = line.match(/^(\d+)\. /)?.[1] || '1';
+
+      els.push(
+        <div
+          key={k++}
+          style={{
+            display: 'flex',
+            gap: 10,
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 4
+          }}
+        >
+          <span
+            style={{
+              color: 'var(--accent)',
+              fontWeight: 700,
+              fontFamily: 'monospace',
+              minWidth: 22,
+              flexShrink: 0
+            }}
+          >
+            {num}.
+          </span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: inlineFmt(line.slice(num.length + 2))
+            }}
+          />
+        </div>
+      );
+      continue;
     }
-    if (line.trim() === '') { els.push(<div key={k++} style={{ height: 6 }} />); continue }
-    els.push(<p key={k++} style={{ fontSize: 14, lineHeight: 1.72, marginBottom: 3 }} dangerouslySetInnerHTML={{ __html: inlineFmt(line) }} />)
+
+    // 7. Conserver les espaces et paragraphes ordinaires.
+    if (line.trim() === '') {
+      els.push(<div key={k++} style={{ height: 6 }} />);
+      continue;
+    }
+
+    els.push(
+      <p
+        key={k++}
+        style={{
+          fontSize: 14,
+          lineHeight: 1.72,
+          marginBottom: 3
+        }}
+        dangerouslySetInnerHTML={{
+          __html: inlineFmt(line)
+        }}
+      />
+    );
   }
-  return <div>{els}</div>
+
+  return <div>{els}</div>;
 }
 
 // ── AsciiGraph inline ────────────────────────────────────────────
