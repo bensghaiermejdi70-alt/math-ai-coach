@@ -149,6 +149,28 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
+  function normalizePdfTableLine(line: string): string {
+    return line.trim().replace(/\\\|/g, '|')
+  }
+
+  function isPdfTableRow(line: string): boolean {
+    const s = normalizePdfTableLine(line)
+    return s.startsWith('|') && s.endsWith('|')
+  }
+
+  function isPdfTableSeparator(line: string): boolean {
+    const s = normalizePdfTableLine(line)
+    return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(s)
+  }
+
+  function parsePdfTableRow(line: string): string[] {
+    return normalizePdfTableLine(line)
+      .replace(/^\|/, '')
+      .replace(/\|$/, '')
+      .split('|')
+      .map(cell => cell.trim())
+  }
+
   function convertLine(ln: string): string {
     // Ignorer les blocs graphiques JSON bruts
     if (ln.trim().startsWith('{') || ln.trim().startsWith('"type"') || 
@@ -202,17 +224,71 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
       }
     )
 
-    const bodyLines = protectedContent
-      .split('\n')
-      .map(convertLine)
-      .join('')
-      .replace(/@@PDFMATH(\d+)@@/g, (_match, index) => {
+    const lines = protectedContent.split('\n')
+    let bodyLines = ''
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+
+      // Détecter un tableau Markdown, comme le bilan affiché dans le chat.
+      if (
+        isPdfTableRow(line) &&
+        i + 1 < lines.length &&
+        isPdfTableSeparator(lines[i + 1])
+      ) {
+        const headers = parsePdfTableRow(line)
+        const rows: string[][] = []
+        let j = i + 2
+
+        while (j < lines.length && isPdfTableRow(lines[j])) {
+          if (!isPdfTableSeparator(lines[j])) {
+            rows.push(parsePdfTableRow(lines[j]))
+          }
+          j++
+        }
+
+        bodyLines += `
+          <div class="pdf-table-wrap">
+            <table class="pdf-table">
+              <thead>
+                <tr>
+                  ${headers.map(cell =>
+                    `<th>${convertLine(cell).replace(/^<p[^>]*>|<\/p>$/g, '')}</th>`
+                  ).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(row => `
+                  <tr>
+                    ${headers.map((_, colIndex) =>
+                      `<td>${convertLine(row[colIndex] || '').replace(/^<p[^>]*>|<\/p>$/g, '')}</td>`
+                    ).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `
+
+        i = j - 1
+        continue
+      }
+
+      bodyLines += convertLine(line)
+    }
+
+    bodyLines = bodyLines.replace(
+      /@@PDFMATH(\d+)@@/g,
+      (_match, index) => {
         const item = pdfMathBlocks[Number(index)]
         if (!item) return ''
+
         const latex = esc(item.math).replace(/"/g, '&quot;')
         const cls = item.display ? 'pdf-math-block' : 'pdf-math-inline'
+
         return `<span class="${cls}" data-pdf-latex="${latex}"></span>`
-      })
+      }
+    )
     return `
     <div style="margin-bottom:20px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -244,6 +320,53 @@ function buildChatHtml(messages: { role: string; content: string }[], graphImage
   .header-right{background:#1a1a2e;color:#fff;padding:16px 20px;text-align:right;font-size:12px;line-height:1.7}
   .footer{margin-top:32px;padding-top:12px;border-top:2px solid #1a1a2e;display:flex;justify-content:space-between;font-size:10px;color:#666}
   .katex-display{margin:8px 0!important;overflow-x:auto}
+  .pdf-table-wrap{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    margin:12px 0;
+    break-inside:avoid;
+    page-break-inside:avoid;
+  }
+  .pdf-table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:auto;
+    font-size:11px;
+    line-height:1.45;
+  }
+  .pdf-table th{
+    background:#4f6ef7;
+    color:#fff;
+    font-weight:700;
+    text-align:left;
+    padding:7px;
+    border:1px solid #c7d2fe;
+    overflow-wrap:anywhere;
+  }
+  .pdf-table td{
+    padding:6px 7px;
+    border:1px solid #cbd5e1;
+    vertical-align:top;
+    overflow-wrap:anywhere;
+    color:#1a1a2e;
+  }
+  .pdf-table tbody tr:nth-child(odd){
+    background:#f3f6ff;
+  }
+  @media print{
+    .pdf-table-wrap{
+      overflow:visible;
+    }
+    .pdf-table{
+      width:100%;
+      font-size:10px;
+    }
+    .pdf-table tr{
+      break-inside:avoid;
+      page-break-inside:avoid;
+    }
+  }
   .pdf-math-block{display:block;text-align:center;margin:8px 0;overflow-x:auto}
   .pdf-math-inline{display:inline}
   @media print{.print-bar{display:none!important}.page{padding:10px 20px}}
