@@ -63,7 +63,10 @@ function renderKaTeX(text: string): string {
       if (!katex) {
         html = `<span style="font-style:italic;color:var(--muted)">[formule mathématique]</span>`
       } else {
-        const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: true })
+        const rendered = katex.renderToString(
+          math.trim().replace(/^\$+|\$+$/g, '').trim(),
+          { throwOnError: false, displayMode: true }
+        )
         const safeMath = math.trim().replace(/"/g, '&quot;').replace(/\n/g, ' ')
         html = `<div style="text-align:center;margin:10px 0;overflow-x:auto" data-latex="$$${safeMath}$$">${rendered}</div>`
       }
@@ -1557,13 +1560,13 @@ function renderText(text: string) {
   const mathBlocks: string[] = [];
 
   const normalizedText = text.replace(
-    /\$\s*(\\begin\{(?:p|b|B|v|V)?matrix\}[\s\S]*?\\end\{(?:p|b|B|v|V)?matrix\})\s*\$/g,
-    (_match, math) => '$$' + math.replace(/\s*\n\s*/g, ' ') + '$$'
-  );
+    /\$([^$]*\\begin\{(?:p|b|B|v|V)?matrix\}[\s\S]*?\\end\{(?:p|b|B|v|V)?matrix\}[^$]*)\$/g,
+    (_match, math) => '$$' + math.trim() + '$$'
+  )
 
   // Repérer les environnements mathématiques qui n'ont pas encore $$...$$.
   let preparedText = normalizedText.replace(
-    /\\begin\{(pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix|cases|array)\}[\s\S]*?\\end\{\1\}/g,
+    /\\begin\{(pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\}[\s\S]*?\\end\{\1\}(?:\s*=\s*\\begin\{(?:pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\}[\s\S]*?\\end\{(?:pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\})?/g,
     (env: string, _name: string, offset: number, whole: string) => {
       const before = whole.slice(0, offset);
       const insideMath = (before.match(/\$\$/g) || []).length % 2 === 1;
