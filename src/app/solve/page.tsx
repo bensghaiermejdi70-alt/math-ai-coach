@@ -2581,11 +2581,11 @@ function SolvePageInner() {
       .replace(/\^\{([^}]+)\}/g,'^($1)').replace(/\_\{([^}]+)\}/g,'_($1)')
       .replace(/\^([0-9n])/g,'^$1').replace(/\_([0-9n])/g,'_$1')
       .replace(/\\sqrt\{([^}]+)\}/g,'√($1)').replace(/\\sqrt/g,'√')
-      .replace(/\\ln\b/g,'ln').replace(/\\log\b/g,'log')
-      .replace(/\\sin\b/g,'sin').replace(/\\cos\b/g,'cos').replace(/\\tan\b/g,'tan')
-      .replace(/\\exp\b/g,'exp').replace(/\\lim\b/g,'lim')
+      .replace(/\\ln(?![a-zA-Z])/g,'ln').replace(/\\log(?![a-zA-Z])/g,'log')
+      .replace(/\\sin(?![a-zA-Z])/g,'sin').replace(/\\cos(?![a-zA-Z])/g,'cos').replace(/\\tan(?![a-zA-Z])/g,'tan')
+      .replace(/\\exp(?![a-zA-Z])/g,'exp').replace(/\\lim(?![a-zA-Z])/g,'lim')
       .replace(/\\sum/g,'∑').replace(/\\prod/g,'∏').replace(/\\int/g,'∫')
-      .replace(/\\max\b/g,'max').replace(/\\min\b/g,'min')
+      .replace(/\\max(?![a-zA-Z])/g,'max').replace(/\\min(?![a-zA-Z])/g,'min')
       .replace(/\\alpha/g,'α').replace(/\\beta/g,'β').replace(/\\gamma/g,'γ')
       .replace(/\\delta/g,'δ').replace(/\\Delta/g,'Δ').replace(/\\epsilon/g,'ε')
       .replace(/\\lambda/g,'λ').replace(/\\mu/g,'μ').replace(/\\pi\b/g,'π')
@@ -4131,15 +4131,12 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                             .join('')
                         } catch { return solution }
                       })()
-                      const lines = collapsedSol.split('\n').map((ln: string) => {
-                        const converted = ln
-                          .replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => latexToReadable(m.trim()))
-                          .replace(/\$([^$\n]+?)\$/g, (_: string, m: string) => latexToReadable(m.trim()))
-                          .replace(/\\[a-zA-Z{(]/g, (m: string) => {
-                            const converted2 = latexToReadable(ln
-                              .replace(/\$\$[\s\S]+?\$\$/g,'').replace(/\$[^$\n]+?\$/g,''))
-                            return converted2.includes(m) ? latexToReadable(m) : m
-                          })
+                      const readableSol = collapsedSol
+                        .replace(/\$\$([\s\S]+?)\$\$/g, (_: string, m: string) => latexToReadable(m.trim()))
+                        .replace(/\$([^$\n]+?)\$/g, (_: string, m: string) => latexToReadable(m.trim()))
+                        .replace(/\${1,2}/g, '')
+                      const lines = readableSol.split('\n').map((ln: string) => {
+                        const converted = /\\[a-zA-Z]+/.test(ln) ? latexToReadable(ln) : ln
                         return converted
                           .replace(/^## /, '').replace(/^### /, '').replace(/^#### /, '')
                           .replace(/\*\*(.+?)\*\*/g, '$1')
