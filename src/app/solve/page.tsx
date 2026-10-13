@@ -1662,7 +1662,7 @@ function cleanLatex(s: string): string {
 }
 
 function mathHtml(input: string): string {
-  const SYM: Record<string, string> = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',varepsilon:'ε',zeta:'ζ',eta:'η',theta:'θ',vartheta:'ϑ',iota:'ι',kappa:'κ',lambda:'λ',mu:'µ',nu:'ν',xi:'ξ',pi:'π',varpi:'ϖ',rho:'ρ',varrho:'ϱ',sigma:'σ',varsigma:'ς',tau:'τ',upsilon:'υ',phi:'φ',varphi:'φ',chi:'χ',psi:'ψ',omega:'ω',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Xi:'Ξ',Pi:'Π',Sigma:'Σ',Upsilon:'Υ',Phi:'Φ',Psi:'Ψ',Omega:'Ω',infty:'∞',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',ast:'∗',star:'⋆',bullet:'•',leq:'≤',geq:'≥',le:'≤',ge:'≥',neq:'≠',ne:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',degree:'°',to:'→',rightarrow:'→',longrightarrow:'⟶',Rightarrow:'⇒',Leftrightarrow:'⇔',leftrightarrow:'↔',leftarrow:'←',longleftarrow:'⟵',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',notin:'∉',ni:'∋',subset:'⊂',supset:'⊃',subseteq:'⊆',supseteq:'⊇',cup:'∪',cap:'∩',emptyset:'∅',varnothing:'∅',setminus:'∖',forall:'∀',exists:'∃',nexists:'∄',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',oint:'∮',ldots:'…',cdots:'⋯',vdots:'⋮',dots:'…',prime:'′',checkmark:'✓',check:'✓',wedge:'∧',vee:'∨',land:'∧',lor:'∨',neg:'¬',lnot:'¬',oplus:'⊕',otimes:'⊗',ell:'ℓ',Re:'ℜ',Im:'ℑ',aleph:'ℵ',hbar:'ℏ',mid:'∣',nmid:'∤',cong2:'≅' }
+  const SYM: Record<string, string> = { alpha:'α',beta:'β',gamma:'γ',delta:'δ',epsilon:'ε',varepsilon:'ε',zeta:'ζ',eta:'η',theta:'θ',vartheta:'ϑ',iota:'ι',kappa:'κ',lambda:'λ',mu:'µ',nu:'ν',xi:'ξ',pi:'π',varpi:'ϖ',rho:'ρ',varrho:'ϱ',sigma:'σ',varsigma:'ς',tau:'τ',upsilon:'υ',phi:'φ',varphi:'φ',chi:'χ',psi:'ψ',omega:'ω',Gamma:'Γ',Delta:'Δ',Theta:'Θ',Lambda:'Λ',Xi:'Ξ',Pi:'Π',Sigma:'Σ',Upsilon:'Υ',Phi:'Φ',Psi:'Ψ',Omega:'Ω',infty:'∞',nearrow:'↗',searrow:'↘',uparrow:'↑',downarrow:'↓',nwarrow:'↖',swarrow:'↙',times:'×',cdot:'·',div:'÷',pm:'±',mp:'∓',ast:'∗',star:'⋆',bullet:'•',leq:'≤',geq:'≥',le:'≤',ge:'≥',neq:'≠',ne:'≠',approx:'≈',equiv:'≡',sim:'∼',simeq:'≃',cong:'≅',propto:'∝',parallel:'∥',perp:'⊥',angle:'∠',circ:'∘',degree:'°',to:'→',rightarrow:'→',longrightarrow:'⟶',Rightarrow:'⇒',Leftrightarrow:'⇔',leftrightarrow:'↔',leftarrow:'←',longleftarrow:'⟵',mapsto:'↦',implies:'⟹',iff:'⟺',in:'∈',notin:'∉',ni:'∋',subset:'⊂',supset:'⊃',subseteq:'⊆',supseteq:'⊇',cup:'∪',cap:'∩',emptyset:'∅',varnothing:'∅',setminus:'∖',forall:'∀',exists:'∃',nexists:'∄',nabla:'∇',partial:'∂',sum:'∑',prod:'∏',int:'∫',oint:'∮',ldots:'…',cdots:'⋯',vdots:'⋮',dots:'…',prime:'′',checkmark:'✓',check:'✓',wedge:'∧',vee:'∨',land:'∧',lor:'∨',neg:'¬',lnot:'¬',oplus:'⊕',otimes:'⊗',ell:'ℓ',Re:'ℜ',Im:'ℑ',aleph:'ℵ',hbar:'ℏ',mid:'∣',nmid:'∤',cong2:'≅' }
   const esc = (c: string): string => c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '$' ? '' : c  // filet ultime : un "$" ne doit JAMAIS survivre au rendu mathHtml
   const brace = (s: string, i: number): [string, number] => { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '{') d++; else if (s[j] === '}') { d--; if (d === 0) return [s.slice(i + 1, j), j + 1] } } return [s.slice(i + 1), s.length] }
   const grp = (s: string, i: number): [string, number] => { while (i < s.length && s[i] === ' ') i++; if (s[i] === '{') return brace(s, i); return [s[i] || '', i + 1] }
@@ -1682,8 +1682,16 @@ function mathHtml(input: string): string {
               const body = ei >= 0 ? s.slice(bi, ei) : s.slice(bi); const after = ei >= 0 ? ei + endTok.length : s.length
               let bc = body
               if (env === 'array') { const cm = /^\s*\{[^}]*\}/.exec(bc); if (cm) bc = bc.slice(cm[0].length) }
-              const rows = bc.split(/\\\\(?:\s*\[[^\]]*\])?/).map((r: string) => r.trim()).filter((r: string) => r !== '')
-              const trs = rows.map((r: string) => '<tr>' + r.split('&').map((c: string) => '<td>' + render(c.trim()) + '</td>').join('') + '</tr>').join('')
+              const trs = bc
+                .split(/\\\\(?:\s*\[[^\]]*\])?/)
+                .map((r: string) => {
+                  const hasHline = /\\hline/.test(r)
+                  const cells = r.replace(/\\(?:hline|cline)\b/g, '').trim()
+                  if (!cells) return ''
+                  return '<tr' + (hasHline ? ' class="mhline"' : '') + '>' +
+                    cells.split('&').map((c: string) => '<td>' + render(c.trim()) + '</td>').join('') + '</tr>'
+                })
+                .join('')
               const cls = (env === 'vmatrix' || env === 'Vmatrix') ? 'mm-det' : (env === 'cases') ? 'mm-cases' : 'mm-par'
               out += '<span class="mmatrix ' + cls + '"><table>' + trs + '</table></span>'; i = after; continue
             }
@@ -1699,7 +1707,7 @@ function mathHtml(input: string): string {
           if (name === 'binom' || name === 'choose') { const [a2, i2] = grp(s, ni); const [b2, i3] = grp(s, i2); out += '(<span class="mfrac mbinom"><span class="mnum">' + render(a2) + '</span><span class="mden">' + render(b2) + '</span></span>)'; i = i3; continue }
           if (name === 'mathbb') { const [b, i2] = grp(s, ni); const BB: Record<string, string> = { R:'ℝ', N:'ℕ', Z:'ℤ', Q:'ℚ', C:'ℂ', K:'𝕂' }; out += (BB[b.trim()] ?? render(b)); i = i2; continue }
           if (name === 'text' || name === 'mathrm' || name === 'mathbf' || name === 'operatorname') { const [b, i2] = grp(s, ni); out += render(b); i = i2; continue }
-          if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr') { i = ni; continue }
+          if (name === 'left' || name === 'right' || name === 'displaystyle' || name === 'bigl' || name === 'bigr' || name === 'hline' || name === 'cline') { i = ni; continue }
           if (name === 'quad') { out += '&nbsp;&nbsp;&nbsp;&nbsp;'; i = ni; continue }
           if (name === 'qquad') { out += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'; i = ni; continue }
           if (name === 'pmod' || name === 'mod' || name === 'pod') { const [b, i2] = grp(s, ni); out += '&nbsp;(mod&nbsp;' + render(b) + ')'; i = i2; continue }
@@ -1809,6 +1817,7 @@ function buildSolutionHtml(exercise: string, solution: string, mode: string, pre
   .mmatrix.mm-cases{ border-right:none; }
   .mmatrix > table{ border-collapse:collapse; }
   .mmatrix td{ padding:2px 8px; text-align:center; }
+  .mmatrix tr.mhline td { border-top: 1.2px solid currentColor; }
   .math-display{ text-align:center; margin:12px 0; font-size:1.06em; overflow-x:auto; }
 </style>
 <style>
@@ -2542,6 +2551,59 @@ function SolvePageInner() {
     reader.readAsDataURL(file)
   }
   const removeAttachment = (i: number) => setAttachments(prev => prev.filter((_, idx) => idx !== i))
+
+  function latexToReadable(src: string): string {
+    return src
+      .replace(/\\begin\{[pv]matrix\}([\s\S]*?)\\end\{[pv]matrix\}/g,
+        (_: string, m: string) => '\n' + m.trim().split('\\\\')
+          .map((r: string) => '[ ' + r.split('&').map((x: string) => x.trim()).join('  ') + ' ]')
+          .join('\n') + '\n')
+      .replace(/\\[df]rac\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
+      .replace(/\\[df]rac\{\{([^}]*)\}\}\{([^{}]*)\}/g, '($1/$2)')
+      .replace(/\\binom\{([^}]*)\}\{([^}]*)\}/g, 'C($1,$2)')
+      .replace(/\\overrightarrow\{([^{}]*)\}/g, '$1→')
+      .replace(/\\overleftarrow\{([^{}]*)\}/g, '$1←')
+      .replace(/\\vec\{([^{}]*)\}/g, '$1→')
+      .replace(/\\widehat\{([^{}]*)\}/g, '$1̂')
+      .replace(/\\hat\{([^{}]*)\}/g, '$1̂')
+      .replace(/\\overline\{([^{}]*)\}/g, '$1̄')
+      .replace(/\\bar\{([^{}]*)\}/g, '$1̄')
+      .replace(/\\underline\{([^{}]*)\}/g, '$1')
+      .replace(/\\(mathbb|mathbf|mathrm|mathcal|boldsymbol)\{([^{}]*)\}/g, '$2')
+      .replace(/\\times/g,'×').replace(/\\cdot/g,'·').replace(/\\div/g,'÷')
+      .replace(/\\pm/g,'±').replace(/\\leq/g,'≤').replace(/\\geq/g,'≥')
+      .replace(/\\neq/g,'≠').replace(/\\approx/g,'≈').replace(/\\infty/g,'∞')
+      .replace(/\\in\b/g,'∈').replace(/\\cup/g,'∪').replace(/\\cap/g,'∩')
+      .replace(/\\emptyset/g,'∅').replace(/\\forall/g,'∀').replace(/\\exists/g,'∃')
+      .replace(/\\Rightarrow/g,'⇒').replace(/\\Leftrightarrow/g,'⟺')
+      .replace(/\\rightarrow|\\to\b/g,'→').replace(/\\leftarrow/g,'←')
+      .replace(/\\subset/g,'⊂').replace(/\\supset/g,'⊃')
+      .replace(/\^\{([^}]+)\}/g,'^($1)').replace(/\_\{([^}]+)\}/g,'_($1)')
+      .replace(/\^([0-9n])/g,'^$1').replace(/\_([0-9n])/g,'_$1')
+      .replace(/\\sqrt\{([^}]+)\}/g,'√($1)').replace(/\\sqrt/g,'√')
+      .replace(/\\ln\b/g,'ln').replace(/\\log\b/g,'log')
+      .replace(/\\sin\b/g,'sin').replace(/\\cos\b/g,'cos').replace(/\\tan\b/g,'tan')
+      .replace(/\\exp\b/g,'exp').replace(/\\lim\b/g,'lim')
+      .replace(/\\sum/g,'∑').replace(/\\prod/g,'∏').replace(/\\int/g,'∫')
+      .replace(/\\max\b/g,'max').replace(/\\min\b/g,'min')
+      .replace(/\\alpha/g,'α').replace(/\\beta/g,'β').replace(/\\gamma/g,'γ')
+      .replace(/\\delta/g,'δ').replace(/\\Delta/g,'Δ').replace(/\\epsilon/g,'ε')
+      .replace(/\\lambda/g,'λ').replace(/\\mu/g,'μ').replace(/\\pi\b/g,'π')
+      .replace(/\\sigma/g,'σ').replace(/\\omega/g,'ω').replace(/\\Omega/g,'Ω')
+      .replace(/\\theta/g,'θ').replace(/\\phi/g,'φ').replace(/\\rho/g,'ρ')
+      .replace(/\\chi/g,'χ').replace(/\\xi/g,'ξ').replace(/\\eta/g,'η')
+      .replace(/\\[,;!]/g,' ').replace(/\\quad/g,' ').replace(/\\qquad/g,'  ')
+      .replace(/\\textbf?\{([^}]+)\}/g,'$1')
+      .replace(/\\text\{([^}]+)\}/g,'$1')
+      .replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')')
+      .replace(/\\left\s*\[/g,'[').replace(/\\right\s*\]/g,']')
+      .replace(/\\left\s*\|/g,'|').replace(/\\right\s*\|/g,'|')
+      .replace(/\\left\s*\./g,'').replace(/\\right\s*\./g,'')
+      .replace(/\\left/g,'').replace(/\\right/g,'')
+      .replace(/\\\\/g,'\n')
+      .replace(/\{/g,'').replace(/\}/g,'')
+      .replace(/\\[a-zA-Z]+\*/g,'').replace(/\\[a-zA-Z]+/g,'')
+  }
 
   const handleSolve = async () => {
     if (!input.trim()) return
@@ -3658,13 +3720,15 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                   .replace(/```(?:text|markdown)?/gi, '')
                   .replace(/```/g, '')
                   .replace(/<[^>]*>/g, '')
-                  .replace(/\$/g, '')
+                  .replace(/\$/g, ' ')
                   .replace(/\s*—\s*/g, ' — ')
                   .replace(/[ \t]+/g, ' ')
                   .replace(/\n[ \t]+/g, '\n')
                   .replace(/[ \t]+\n/g, '\n')
                   .replace(/\n{3,}/g, '\n\n')
                   .trim()
+
+                text = latexToReadable(text)
 
                 if (!/^EXERCICE\s+\d+/i.test(text)) {
                   text = `EXERCICE ${index + 1}\n\n${text}`
@@ -4060,58 +4124,6 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                   </button>
                   <button
                     onClick={() => {
-                      function latexToReadable(src: string): string {
-                        return src
-                          .replace(/\\begin\{[pv]matrix\}([\s\S]*?)\\end\{[pv]matrix\}/g,
-                            (_: string, m: string) => '\n' + m.trim().split('\\\\')
-                              .map((r: string) => '[ ' + r.split('&').map((x: string) => x.trim()).join('  ') + ' ]')
-                              .join('\n') + '\n')
-                          .replace(/\\[df]rac\{([^{}]*)\}\{([^{}]*)\}/g, '($1/$2)')
-                          .replace(/\\[df]rac\{\{([^}]*)\}\}\{([^{}]*)\}/g, '($1/$2)')
-                          .replace(/\\binom\{([^}]*)\}\{([^}]*)\}/g, 'C($1,$2)')
-                          .replace(/\\overrightarrow\{([^{}]*)\}/g, '$1→')
-                          .replace(/\\overleftarrow\{([^{}]*)\}/g, '$1←')
-                          .replace(/\\vec\{([^{}]*)\}/g, '$1→')
-                          .replace(/\\widehat\{([^{}]*)\}/g, '$1̂')
-                          .replace(/\\hat\{([^{}]*)\}/g, '$1̂')
-                          .replace(/\\overline\{([^{}]*)\}/g, '$1̄')
-                          .replace(/\\bar\{([^{}]*)\}/g, '$1̄')
-                          .replace(/\\underline\{([^{}]*)\}/g, '$1')
-                          .replace(/\\(mathbb|mathbf|mathrm|mathcal|boldsymbol)\{([^{}]*)\}/g, '$2')
-                          .replace(/\\times/g,'×').replace(/\\cdot/g,'·').replace(/\\div/g,'÷')
-                          .replace(/\\pm/g,'±').replace(/\\leq/g,'≤').replace(/\\geq/g,'≥')
-                          .replace(/\\neq/g,'≠').replace(/\\approx/g,'≈').replace(/\\infty/g,'∞')
-                          .replace(/\\in\b/g,'∈').replace(/\\cup/g,'∪').replace(/\\cap/g,'∩')
-                          .replace(/\\emptyset/g,'∅').replace(/\\forall/g,'∀').replace(/\\exists/g,'∃')
-                          .replace(/\\Rightarrow/g,'⇒').replace(/\\Leftrightarrow/g,'⟺')
-                          .replace(/\\rightarrow|\\to\b/g,'→').replace(/\\leftarrow/g,'←')
-                          .replace(/\\subset/g,'⊂').replace(/\\supset/g,'⊃')
-                          .replace(/\^\{([^}]+)\}/g,'^($1)').replace(/\_\{([^}]+)\}/g,'_($1)')
-                          .replace(/\^([0-9n])/g,'^$1').replace(/\_([0-9n])/g,'_$1')
-                          .replace(/\\sqrt\{([^}]+)\}/g,'√($1)').replace(/\\sqrt/g,'√')
-                          .replace(/\\ln\b/g,'ln').replace(/\\log\b/g,'log')
-                          .replace(/\\sin\b/g,'sin').replace(/\\cos\b/g,'cos').replace(/\\tan\b/g,'tan')
-                          .replace(/\\exp\b/g,'exp').replace(/\\lim\b/g,'lim')
-                          .replace(/\\sum/g,'∑').replace(/\\prod/g,'∏').replace(/\\int/g,'∫')
-                          .replace(/\\max\b/g,'max').replace(/\\min\b/g,'min')
-                          .replace(/\\alpha/g,'α').replace(/\\beta/g,'β').replace(/\\gamma/g,'γ')
-                          .replace(/\\delta/g,'δ').replace(/\\Delta/g,'Δ').replace(/\\epsilon/g,'ε')
-                          .replace(/\\lambda/g,'λ').replace(/\\mu/g,'μ').replace(/\\pi\b/g,'π')
-                          .replace(/\\sigma/g,'σ').replace(/\\omega/g,'ω').replace(/\\Omega/g,'Ω')
-                          .replace(/\\theta/g,'θ').replace(/\\phi/g,'φ').replace(/\\rho/g,'ρ')
-                          .replace(/\\chi/g,'χ').replace(/\\xi/g,'ξ').replace(/\\eta/g,'η')
-                          .replace(/\\[,;!]/g,' ').replace(/\\quad/g,' ').replace(/\\qquad/g,'  ')
-                          .replace(/\\textbf?\{([^}]+)\}/g,'$1')
-                          .replace(/\\text\{([^}]+)\}/g,'$1')
-                          .replace(/\\left\s*\(/g,'(').replace(/\\right\s*\)/g,')')
-                          .replace(/\\left\s*\[/g,'[').replace(/\\right\s*\]/g,']')
-                          .replace(/\\left\s*\|/g,'|').replace(/\\right\s*\|/g,'|')
-                          .replace(/\\left\s*\./g,'').replace(/\\right\s*\./g,'')
-                          .replace(/\\left/g,'').replace(/\\right/g,'')
-                          .replace(/\\\\/g,'\n')
-                          .replace(/\{/g,'').replace(/\}/g,'')
-                          .replace(/\\[a-zA-Z]+\*/g,'').replace(/\\[a-zA-Z]+/g,'')
-                      }
                       const collapsedSol = (() => {
                         try {
                           return parseGraphSegments(solution)

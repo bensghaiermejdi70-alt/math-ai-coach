@@ -673,8 +673,6 @@ function wrapBareLatexInText(text: string): string {
   fixed = fixed
     .replace(/([^\s$])\$(?=[A-Za-zÀ-ÖØ-öø-ÿ])/g, '$1 $')
     .replace(/([A-Za-zÀ-ÖØ-öø-ÿ])\$/g, '$1 $')
-    .replace(/\$\s+/g, '$')
-    .replace(/\s+\$/g, '$')
 
   // Corriger uniquement les lignes qui sont entièrement mathématiques.
   // Ne jamais transformer une phrase française contenant une formule
