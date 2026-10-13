@@ -1085,75 +1085,513 @@ function LatexLine({ line, style }: { line: string; style?: React.CSSProperties 
   return <span dangerouslySetInnerHTML={{ __html: html }} style={style} />
 }
 
+function renderKaTeX(text: string): string {
+  // Filet de sécurité : un paragraphe entier sans "$" mais rempli de vraie syntaxe LaTeX est
+  // enveloppé dans $$ ... $$ avant le traitement normal (repris de la logique déjà utilisée
+  // pour l'export PDF dans solve/page.tsx).
+  const LATEX_CMD = /\\[a-zA-Z]+/
+  const FRENCH_ACCENT = /[éèêëàâäùûüôöîïçœÉÈÊËÀÂÄÙÛÜÔÖÎÏÇŒ]/
+  const FRENCH_STOP = /\b(avec|dans|pour|donc|alors|comme|soit|tel|telle|puisque|lorsque|ainsi|nous|vous|cette|notre|on|sont|être|car|dont|seulement|toutefois)\b/i
+  const stripLatexSyntax = (s: string): string => {
+    let t = s
+    for (let i = 0; i < 4; i++) t = t.replace(/\\[a-zA-Z]+(\{[^{}]*\})*/g, ' ')
+    t = t.replace(/[{}\\^_$]/g, ' ')
+    t = t.replace(/[×÷⋅−–—≡≤≥≠≈∈∉∀∃∞√°→↔⇒⇔·]/g, ' ')
+    t = t.replace(/[0-9+\-*/=(),.;:!?<>[\]|]/g, ' ')
+    return t.replace(/\s+/g, ' ').trim()
+  }
+  const looksLikeBareLatexParagraph = (p: string): boolean => {
+    const t = p.trim()
+    if (!t || t.includes('$')) return false
+    if (/^[|#>*\-]|^\d+[.)]/.test(t)) return false
+    if (!LATEX_CMD.test(t)) return false
+    const remainder = stripLatexSyntax(t)
+    if (remainder.length > 30) return false
+    return !FRENCH_ACCENT.test(remainder) && !FRENCH_STOP.test(remainder)
+  }
+
+  let result = text
+    .split(/\n{2,}/)
+    .map((p) => (looksLikeBareLatexParagraph(p) ? '$$' + p.replace(/\s*\n\s*/g, ' ').trim() + '$$' : p))
+    .join('\n\n')
+
+  const blocks: string[] = []
+
+  // $$...$$ → BLOCK (mis de côté avant l'étape inline, pour ne jamais fuir dans son propre attribut)
+  result = result.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => {
+    // Si le contenu ressemble à de la prose, le passage inline traitera les formules internes.
+    const cleaned = math.replace(/\\(?:text|mathrm|operatorname)\s*\{[^}]*\}/g, '')
+    if (FRENCH_STOP.test(cleaned) || FRENCH_ACCENT.test(cleaned)) {
+      return math
+    }
+    let html: string
+    try {
+      const katex = (window as any).katex
+      if (!katex) {
+        html = `<span style="font-style:italic;color:var(--muted)">[formule mathématique]</span>`
+      } else {
+        const rendered = katex.renderToString(
+          math.trim().replace(/^\$+|\$+$/g, '').trim(),
+          { throwOnError: false, displayMode: true }
+        )
+        const safeMath = math.trim().replace(/"/g, '&quot;').replace(/\n/g, ' ')
+        html = `<div style="text-align:center;margin:10px 0;overflow-x:auto" data-latex="$$${safeMath}$$">${rendered}</div>`
+      }
+    } catch {
+      html = `<code>${math}</code>`
+    }
+    blocks.push(html)
+    return `@@KTXBLOCK${blocks.length - 1}@@`
+  })
+
+  // $...$ → INLINE
+  result = result.replace(/\$([^$]+?)\$/g, (_: string, math: string) => {
+    try {
+      const katex = (window as any).katex
+      if (!katex) return `<span style="font-style:italic">${math}</span>`
+      const rendered = katex.renderToString(math.trim(), { throwOnError: false, displayMode: false })
+      const safeMath = math.trim().replace(/"/g, '&quot;')
+      return `<span data-latex="$${safeMath}$" style="display:inline">${rendered}</span>`
+    } catch {
+      return `<code>${math}</code>`
+    }
+  })
+
+  return result.replace(/@@KTXBLOCK(\d+)@@/g, (_: string, i: string) => blocks[Number(i)])
+}
+
+
+function inlineFmt(t: string) {
+  // 1. KaTeX d'abord (avant tout autre remplacement pour ne pas casser les formules)
+  let result = renderKaTeX(t)
+  // 2. Markdown inline
+  result = result
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, `<code style="font-family:monospace;background:rgba(79,110,247,0.14);color:#a78bfa;padding:1px 6px;border-radius:4px;font-size:12px">$1</code>`)
+  return result
+}
+
+function normalizeMarkdownTableLine(line: string): string {
+  return line.trim().replace(/\\\|/g, '|');
+}
+
+function isMarkdownTableRow(line: string): boolean {
+  const trimmed = normalizeMarkdownTableLine(line);
+  return trimmed.startsWith('|') && trimmed.endsWith('|');
+}
+
+function isMarkdownTableSeparator(line: string): boolean {
+  const trimmed = normalizeMarkdownTableLine(line);
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed);
+}
+
+function parseMarkdownTableRow(line: string): string[] {
+  return normalizeMarkdownTableLine(line)
+    .replace(/^\|/, '')
+    .replace(/\|$/, '')
+    .split('|')
+    .map(cell => cell.trim());
+}
+
+
+
+function renderText(text: string) {
+  const mathBlocks: string[] = [];
+
+  const normalizedInput = text
+    // Certaines réponses arrivent avec le Markdown échappé.
+    .replace(/\\\*\\\*/g, '**')
+    .replace(/\\\*/g, '*')
+    .replace(/\\\$/g, '$')
+    // Les blocs ```math``` doivent être rendus comme des formules, pas comme du code.
+    .replace(/```math\s*\n([\s\S]*?)```/g, (_match, math) => `\n$$${math.trim()}$$\n`)
+
+  const normalizedText = normalizedInput.replace(
+    /\$([^$]*\\begin\{(?:p|b|B|v|V)?matrix\}[\s\S]*?\\end\{(?:p|b|B|v|V)?matrix\}[^$]*)\$/g,
+    (_match, math) => '$$' + math.trim() + '$$'
+  )
+
+  // Repérer les environnements mathématiques qui n'ont pas encore $$...$$.
+  let preparedText = normalizedText.replace(
+    /\\begin\{(pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\}[\s\S]*?\\end\{\1\}(?:\s*=\s*\\begin\{(?:pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\}[\s\S]*?\\end\{(?:pmatrix|bmatrix|Bmatrix|vmatrix|Vmatrix|matrix)\})?/g,
+    (env: string, _name: string, offset: number, whole: string) => {
+      const before = whole.slice(0, offset);
+      const insideMath = (before.match(/\$\$/g) || []).length % 2 === 1;
+      return insideMath ? env : `$$${env}$$`;
+    }
+  );
+
+  // Traiter les formules complètes avant de découper le texte en lignes.
+  preparedText = preparedText.replace(/\$\$([\s\S]+?)\$\$/g, (formula: string) => {
+    mathBlocks.push(renderKaTeX(formula));
+    return `\n@@CHATMATH${mathBlocks.length - 1}@@\n`;
+  });
+
+  const lines = preparedText.split('\n');
+  const els: React.ReactNode[] = [];
+  let k = 0;
+
+  const MARKERS = ['**📌', '**💡', '**⚠️', '**✅', '**✏️', '**📊'];
+
+  const MARKER_COLORS: Record<string, string> = {
+    '⚠️': '#f59e0b',
+    '💡': '#06d6a0',
+    '✅': '#06d6a0',
+    '📊': '#a78bfa',
+    '📌': '#4f6ef7',
+    '✏️': '#4f6ef7'
+  };
+
+  const MARKER_BGS: Record<string, string> = {
+    '⚠️': 'rgba(245,158,11,0.08)',
+    '💡': 'rgba(6,214,160,0.08)',
+    '✅': 'rgba(6,214,160,0.1)',
+    '📊': 'rgba(167,139,250,0.08)',
+    '📌': 'rgba(79,110,247,0.08)',
+    '✏️': 'rgba(79,110,247,0.08)'
+  };
+
+  // Boucle indexée pour pouvoir traiter un tableau entier
+  // et sauter ses lignes après l'avoir affiché.
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 1. Détecter un tableau Markdown complet.
+    if (
+      isMarkdownTableRow(line) &&
+      i + 1 < lines.length &&
+      isMarkdownTableSeparator(lines[i + 1])
+    ) {
+      const headers = parseMarkdownTableRow(line);
+      const rows: string[][] = [];
+
+      let j = i + 2;
+
+      while (j < lines.length && isMarkdownTableRow(lines[j])) {
+        if (!isMarkdownTableSeparator(lines[j])) {
+          rows.push(parseMarkdownTableRow(lines[j]));
+        }
+        j++;
+      }
+
+      els.push(
+        <div
+          key={k++}
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            overflowX: 'auto',
+            margin: '12px 0',
+            border: '1px solid var(--border, #444)',
+            borderRadius: 8
+          }}
+        >
+          <table
+            style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: 13,
+              lineHeight: 1.5
+            }}
+          >
+            <thead>
+              <tr>
+                {headers.map((header, colIndex) => (
+                  <th
+                    key={colIndex}
+                    style={{
+                      padding: '9px 10px',
+                      textAlign: 'left',
+                      background: 'var(--accent)',
+                      color: '#fff',
+                      border: '1px solid var(--border, #444)',
+                      verticalAlign: 'top'
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: inlineFmt(header)
+                    }}
+                  />
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {headers.map((_, colIndex) => (
+                    <td
+                      key={colIndex}
+                      style={{
+                        padding: '8px 10px',
+                        border: '1px solid var(--border, #444)',
+                        verticalAlign: 'top',
+                        background:
+                          rowIndex % 2 === 0
+                            ? 'var(--card, transparent)'
+                            : 'transparent',
+                        overflowWrap: 'anywhere'
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: inlineFmt(row[colIndex] || '')
+                      }}
+                    />
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
+      // Sauter toutes les lignes du tableau déjà affiché.
+      i = j - 1;
+      continue;
+    }
+
+    // 2. Conserver le rendu des formules mathématiques.
+    const mathMarker = line.trim().match(/^@@CHATMATH(\d+)@@$/);
+
+    if (mathMarker) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            textAlign: 'center',
+            margin: '10px 0',
+            overflowX: 'auto'
+          }}
+          dangerouslySetInnerHTML={{
+            __html: mathBlocks[Number(mathMarker[1])]
+          }}
+        />
+      );
+      continue;
+    }
+
+    // 3. Conserver les encadrés informatifs.
+    if (MARKERS.some(m => line.startsWith(m))) {
+      const match = line.match(/\*\*([^*]+)\*\*(.*)/);
+
+      if (match) {
+        const tag = match[1];
+        const rest = match[2];
+        const markerKey =
+          Object.keys(MARKER_COLORS).find(key => tag.includes(key)) || '📌';
+        const color = MARKER_COLORS[markerKey];
+        const bg = MARKER_BGS[markerKey];
+
+        els.push(
+          <div
+            key={k++}
+            style={{
+              background: bg,
+              border: `1px solid ${color}25`,
+              borderLeft: `3px solid ${color}`,
+              borderRadius: 8,
+              padding: '10px 14px',
+              margin: '8px 0'
+            }}
+          >
+            <span
+              style={{
+                color,
+                fontWeight: 700,
+                fontSize: 13
+              }}
+            >
+              {tag}
+            </span>
+            {rest && (
+              <span
+                style={{
+                  fontSize: 14,
+                  color: 'var(--text2)',
+                  marginLeft: 4
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: inlineFmt(rest)
+                }}
+              />
+            )}
+          </div>
+        );
+        continue;
+      }
+    }
+
+    // 4. Conserver les titres.
+    if (line.startsWith('### ')) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            fontWeight: 700,
+            fontSize: 14,
+            color: 'var(--accent)',
+            marginTop: 14,
+            marginBottom: 4
+          }}
+          dangerouslySetInnerHTML={{
+            __html: inlineFmt(line.slice(4))
+          }}
+        />
+      );
+      continue;
+    }
+
+    if (line.startsWith('## ')) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            fontWeight: 700,
+            fontSize: 16,
+            marginTop: 16,
+            marginBottom: 6
+          }}
+          dangerouslySetInnerHTML={{
+            __html: inlineFmt(line.slice(3))
+          }}
+        />
+      );
+      continue;
+    }
+
+    // 5. Conserver les listes à puces.
+    if (/^[-*] /.test(line)) {
+      els.push(
+        <div
+          key={k++}
+          style={{
+            display: 'flex',
+            gap: 8,
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 2
+          }}
+        >
+          <span
+            style={{
+              color: 'var(--accent)',
+              flexShrink: 0,
+              marginTop: 1
+            }}
+          >
+            ▸
+          </span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: inlineFmt(line.slice(2))
+            }}
+          />
+        </div>
+      );
+      continue;
+    }
+
+    // 6. Conserver les listes numérotées.
+    if (/^\d+\. /.test(line)) {
+      const num = line.match(/^(\d+)\. /)?.[1] || '1';
+
+      els.push(
+        <div
+          key={k++}
+          style={{
+            display: 'flex',
+            gap: 10,
+            fontSize: 14,
+            lineHeight: 1.6,
+            marginBottom: 4
+          }}
+        >
+          <span
+            style={{
+              color: 'var(--accent)',
+              fontWeight: 700,
+              fontFamily: 'monospace',
+              minWidth: 22,
+              flexShrink: 0
+            }}
+          >
+            {num}.
+          </span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: inlineFmt(line.slice(num.length + 2))
+            }}
+          />
+        </div>
+      );
+      continue;
+    }
+
+    // 7. Conserver les espaces et paragraphes ordinaires.
+    if (line.trim() === '') {
+      els.push(<div key={k++} style={{ height: 6 }} />);
+      continue;
+    }
+
+    els.push(
+      <p
+        key={k++}
+        style={{
+          fontSize: 14,
+          lineHeight: 1.72,
+          marginBottom: 3
+        }}
+        dangerouslySetInnerHTML={{
+          __html: inlineFmt(line)
+        }}
+      />
+    );
+  }
+
+  return <div>{els}</div>;
+}
+
+
 function RichText({ text }: { text: string }) {
   const segments = parseGraphSegments(text)
+  const [, forceKatexRefresh] = useState(0)
+
+  // Le rendu texte doit être relancé lorsque KaTeX est effectivement chargé.
+  useEffect(() => {
+    const refresh = () => forceKatexRefresh((n) => n + 1)
+    if ((window as any).__katexReady || (window as any).katex) {
+      refresh()
+      return
+    }
+    window.addEventListener('katex-ready', refresh)
+    return () => window.removeEventListener('katex-ready', refresh)
+  }, [])
+
   return (
     <div style={{ lineHeight: 1.9, color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-      {/* KaTeX CSS chargé dynamiquement */}
       <KaTeXLoader />
       {segments.map((seg, idx) => {
         if (seg.type === 'graph') {
           try {
             const parsed = JSON.parse(seg.content)
             return <div key={idx} className="graph-capture" data-graph-idx={segments.slice(0, idx).filter(s => s.type === 'graph').length}><SmartGraph spec={parsed} /></div>
-          } catch(parseErr) {
-            // Tentative de réparation JSON simple (guillemets manquants, trailing comma)
+          } catch {
             try {
               const fixed = seg.content
-                .replace(/,\s*}/g, '}')           // trailing comma
-                .replace(/,\s*]/g, ']')           // trailing comma dans array
-                .replace(/([{,]\s*)(\w+):/g, '$1"$2":')  // clés sans guillemets
+                .replace(/,\s*}/g, '}')
+                .replace(/,\s*]/g, ']')
+                .replace(/([{,]\s*)(\w+):/g, '$1"$2":')
               const parsed = JSON.parse(fixed)
               return <div key={idx} className="graph-capture" data-graph-idx={segments.slice(0, idx).filter(s => s.type === 'graph').length}><SmartGraph spec={parsed} /></div>
             } catch {
               return (
-                <div key={idx} style={{ fontSize: 11, color: '#fcd34d', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', borderRadius: 8, margin: '6px 0', fontFamily:'monospace' }}>
+                <div key={idx} style={{ fontSize: 11, color: '#fcd34d', padding: '8px 12px', background: 'rgba(245,158,11,0.08)', borderRadius: 8, margin: '6px 0', fontFamily: 'monospace' }}>
                   📊 Graphique — expression IA non parseable. Relancez la résolution.
                 </div>
               )
             }
           }
         }
-        return seg.content ? (
-          <div key={idx}>
-            {preprocessBareLatex(seg.content).split('\n').map((ln, j) => {
-              if (!ln.trim()) return <div key={j} style={{ height: 7 }} />
-              if (ln.startsWith('## ')) return (
-                <h3 key={j} style={{ fontSize: 15, fontWeight: 700, color: '#818cf8', marginTop: 22, marginBottom: 8, borderBottom: '1px solid rgba(99,102,241,0.2)', paddingBottom: 5 }}>
-                  <LatexLine line={ln.slice(3)} />
-                </h3>
-              )
-              if (ln.startsWith('### ')) return (
-                <h4 key={j} style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', marginTop: 16, marginBottom: 6 }}>
-                  <LatexLine line={ln.slice(4)} />
-                </h4>
-              )
-              if (ln.startsWith('> ')) return (
-                <blockquote key={j} style={{ margin: '10px 0', padding: '10px 16px', borderLeft: '3px solid #4f6ef7', background: 'rgba(79,110,247,0.08)', borderRadius: '0 8px 8px 0', color: '#a5b4fc', fontSize: 13 }}>
-                  <LatexLine line={ln.slice(2)} />
-                </blockquote>
-              )
-              if (ln.startsWith('- ')) return (
-                <p key={j} style={{ margin: '3px 0', paddingLeft: 18, position: 'relative', fontSize: 13 }}>
-                  <span style={{ position: 'absolute', left: 0, color: '#4f6ef7', fontWeight: 700 }}>›</span>
-                  <LatexLine line={ln.slice(2)} />
-                </p>
-              )
-              if (ln.match(/^\d+\.\s/)) return (
-                <p key={j} style={{ margin: '4px 0', paddingLeft: 24, fontSize: 13, position: 'relative' }}>
-                  <strong style={{ position: 'absolute', left: 0, color: '#4f6ef7' }}>{ln.split(/\.\s/)[0]}.</strong>
-                  <LatexLine line={ln.replace(/^\d+\.\s/, '')} />
-                </p>
-              )
-              // Ligne normale avec LaTeX
-              return (
-                <p key={j} style={{ margin: '2px 0', fontSize: 13 }}>
-                  <LatexLine line={ln} />
-                </p>
-              )
-            })}
-          </div>
-        ) : null
+        return seg.content ? <div key={idx}>{renderText(seg.content)}</div> : null
       })}
     </div>
   )
@@ -1172,7 +1610,10 @@ function KaTeXLoader() {
     // JS
     const script = document.createElement('script')
     script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js'
-    script.onload = () => { (window as any).__katexReady = true }
+    script.onload = () => {
+      (window as any).__katexReady = true
+      window.dispatchEvent(new Event('katex-ready'))
+    }
     document.head.appendChild(script)
   }, [])
   return null

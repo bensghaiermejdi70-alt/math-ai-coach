@@ -602,9 +602,15 @@ function wrapBareLatexInText(text: string): string {
 
   // Convertir les délimiteurs LaTeX classiques en délimiteurs
   // compris par notre renderer.
+  const looksLikeProse = (s: string): boolean => {
+    const cleaned = s.replace(/\\(?:text|mathrm|operatorname)\s*\{[^}]*\}/g, '')
+    return FRENCH_ACCENT.test(cleaned) || FRENCH_STOP.test(cleaned)
+  }
   source = source
-    .replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner}$$`)
-    .replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner}$`)
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_m: string, inner: string) =>
+      inner.includes('$') || looksLikeProse(inner) ? inner : `$$${inner}$$`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_m: string, inner: string) =>
+      inner.includes('$') || looksLikeProse(inner) ? inner : `$${inner}$`)
 
   // Convertir les environnements aligned/align en bloc mathématique.
   source = source.replace(
@@ -682,6 +688,9 @@ function wrapBareLatexInText(text: string): string {
 
       // Les titres Markdown restent inchangés.
       if (/^#{1,6}\s/.test(t)) return line
+
+      // Une formule déjà délimitée doit rester au rendu inline côté client.
+      if (t.includes('$')) return line
 
       // Les lignes déjà protégées restent inchangées.
       if (t.startsWith('$') || t.endsWith('$')) return line
