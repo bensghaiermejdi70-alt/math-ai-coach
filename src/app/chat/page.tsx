@@ -445,96 +445,46 @@ function openChatPdf(messages: { role: string; content: string }[]): void {
 }
 
 function improveCopiedMath(src: string): string {
-  let s = src;
-
-  // Convertir les matrices en lignes lisibles dans le texte copié.
-  s = s.replace(
-    /\\begin\{([pv]?matrix)\}([\s\S]*?)\\end\{\1\}/g,
-    (_: string, _type: string, body: string) =>
-      '\n' +
-      body
-        .split(/\\\\/)
-        .map((r: string) =>
-          '[ ' +
-          r
-            .replace(/\\(?:left|right)\b/g, '')
-            .split('&')
-            .map((x: string) => x.trim())
-            .join('  |  ') +
-          ' ]'
-        )
-        .join('\n') +
-      '\n'
-  );
-
-  // Supprimer les délimiteurs mathématiques LaTeX.
-  s = s.replace(/\$\$?/g, '');
-
-  // Espaces et symboles mathématiques.
-  s = s
-    .replace(/\\(?:qquad|quad|enspace)\b/g, ' ')
-    .replace(/\\times\b/g, ' × ')
-    .replace(/\\cdot\b/g, ' × ')
-    .replace(/\\(?:neq|ne)\b/g, ' ≠ ')
-    .replace(/\\(?:leq|le)\b/g, ' ≤ ')
-    .replace(/\\(?:geq|ge)\b/g, ' ≥ ')
-    .replace(/\\in\b/g, ' ∈ ')
-    .replace(/\\notin\b/g, ' ∉ ')
-    .replace(/\\mathbb\{N\}/g, 'ℕ')
-    .replace(/\\mathbb\{R\}/g, 'ℝ')
-    .replace(/\\longrightarrow\b|\\rightarrow\b/g, ' → ')
-    .replace(/\\text\{([^{}]*)\}/g, '$1')
-    .replace(/\\mathrm\{([^{}]*)\}/g, '$1')
-    .replace(/\\,/g, ' ')
-    .replace(/\\;/g, ' ');
-
-  // Fractions simples.
-  s = s.replace(
-    /\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
-    '($1)/($2)'
-  );
-
-  // Indices et exposants.
-  s = s
-    .replace(/_\{([^{}]*)\}/g, '_$1')
-    .replace(/\^\{([^{}]*)\}/g, '^$1')
-    .replace(/\\left\b|\\right\b/g, '');
-
-  // Retirer les commandes LaTeX encore présentes.
-  s = s
-    .replace(/\\[a-zA-Z]+/g, '')
-    .replace(/[{}]/g, '')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/ *([=+−×÷≠≤≥→]) */g, ' $1 ')
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n[ \t]+/g, '\n')
-    .replace(/\n{3,}/g, '\n\n');
-
-  return s.trim();
+  return latexToReadable(src.replace(/```graph[\s\S]*?```/g, '[Graphique interactif]'));
 }
 
 function latexToReadable(src: string): string {
   let s = src;
 
+  // Retirer les délimiteurs mathématiques extérieurs.
+  s = s.replace(/\$\$?/g, '');
+
+  // Retirer l'habillage \boxed sans supprimer son contenu.
+  s = s.replace(/\\boxed\s*\{/g, '');
+
   // Matrices : conserver une ligne par rangée.
   s = s.replace(
-    /\\begin\{([pv]?matrix)\}([\s\S]*?)\\end\{\1\}/g,
+    /\\begin\{([pPbBvV]?matrix)\}([\s\S]*?)\\end\{\1\}/g,
     (_: string, _type: string, body: string) =>
       '\n' +
       body
         .split(/\\\\/)
+        .map((r: string) => r.replace(/\\(?:hline|cline)(?:\s*\{[^}]*\})?/g, '').trim())
+        .filter((r: string) => r !== '')
         .map((r: string) =>
           '[ ' +
           r
             .replace(/\\(?:left|right)\b/g, '')
             .split('&')
             .map((x: string) => x.trim())
-            .join('  |  ') +
-          ' ]'
+            .join('  ')
+          + ' ]'
         )
         .join('\n') +
       '\n'
   );
+
+  // Environnements alignés : conserver les différentes lignes.
+  s = s
+    .replace(/\\begin\{aligned\*?\}/g, '\n')
+    .replace(/\\end\{aligned\*?\}/g, '\n')
+    .replace(/\\begin\{array\}\{[^{}]*\}/g, '\n')
+    .replace(/\\end\{array\}/g, '\n');
 
   // Fractions et coefficients binomiaux.
   s = s.replace(
@@ -548,36 +498,49 @@ function latexToReadable(src: string): string {
 
   // Symboles mathématiques.
   s = s
-    .replace(/\\times\b/g, ' × ')
-    .replace(/\\cdot\b/g, ' · ')
-    .replace(/\\div\b/g, ' ÷ ')
-    .replace(/\\pm\b/g, ' ± ')
-    .replace(/\\neq\b|\\ne\b/g, ' ≠ ')
-    .replace(/\\leq\b|\\le\b/g, ' ≤ ')
-    .replace(/\\geq\b|\\ge\b/g, ' ≥ ')
-    .replace(/\\approx\b/g, ' ≈ ')
-    .replace(/\\infty\b/g, '∞')
-    .replace(/\\in\b/g, ' ∈ ')
-    .replace(/\\notin\b/g, ' ∉ ')
-    .replace(/\\cup\b/g, ' ∪ ')
-    .replace(/\\cap\b/g, ' ∩ ')
-    .replace(/\\emptyset\b/g, '∅')
-    .replace(/\\forall\b/g, '∀')
-    .replace(/\\exists\b/g, '∃')
-    .replace(/\\Rightarrow\b/g, ' ⇒ ')
-    .replace(/\\Leftarrow\b/g, ' ⇐ ')
-    .replace(/\\Leftrightarrow\b/g, ' ⇔ ')
-    .replace(/\\rightarrow\b|\\to\b/g, ' → ')
-    .replace(/\\leftarrow\b/g, ' ← ')
+    .replace(/\\times(?![a-zA-Z])/g, ' × ')
+    .replace(/\\cdot(?![a-zA-Z])/g, ' · ')
+    .replace(/\\div(?![a-zA-Z])/g, ' ÷ ')
+    .replace(/\\pm(?![a-zA-Z])/g, ' ± ')
+    .replace(/\\neq(?![a-zA-Z])|\\ne(?![a-zA-Z])/g, ' ≠ ')
+    .replace(/\\leq(?![a-zA-Z])|\\le(?![a-zA-Z])/g, ' ≤ ')
+    .replace(/\\geq(?![a-zA-Z])|\\ge(?![a-zA-Z])/g, ' ≥ ')
+    .replace(/\\approx(?![a-zA-Z])/g, ' ≈ ')
+    .replace(/\\infty(?![a-zA-Z])/g, '∞')
+    .replace(/\\notin(?![a-zA-Z])/g, ' ∉ ')
+    .replace(/\\in(?![a-zA-Z])/g, ' ∈ ')
+    .replace(/\\cup(?![a-zA-Z])/g, ' ∪ ')
+    .replace(/\\cap(?![a-zA-Z])/g, ' ∩ ')
+    .replace(/\\emptyset(?![a-zA-Z])/g, '∅')
+    .replace(/\\forall(?![a-zA-Z])/g, '∀')
+    .replace(/\\exists(?![a-zA-Z])/g, '∃')
+    .replace(/\\Longleftrightarrow(?![a-zA-Z])|\\Leftrightarrow(?![a-zA-Z])/g, ' ⇔ ')
+    .replace(/\\iff(?![a-zA-Z])/g, ' ⇔ ')
+    .replace(/\\Longrightarrow(?![a-zA-Z])|\\Rightarrow(?![a-zA-Z])/g, ' ⇒ ')
+    .replace(/\\Leftarrow(?![a-zA-Z])/g, ' ⇐ ')
+    .replace(/\\rightarrow(?![a-zA-Z])|\\to(?![a-zA-Z])/g, ' → ')
+    .replace(/\\leftarrow(?![a-zA-Z])/g, ' ← ')
+    .replace(/\\nearrow(?![a-zA-Z])/g, ' ↗ ')
+    .replace(/\\searrow(?![a-zA-Z])/g, ' ↘ ')
+    .replace(/\\uparrow(?![a-zA-Z])/g, ' ↑ ')
+    .replace(/\\downarrow(?![a-zA-Z])/g, ' ↓ ')
     .replace(/\\overrightarrow\{([^{}]*)\}/g, '$1⃗')
     .replace(/\\vec\{([^{}]*)\}/g, '$1⃗')
+    .replace(/\\mathbb\s*\{N\}/g, 'ℕ')
+    .replace(/\\mathbb\s*\{R\}/g, 'ℝ')
+    .replace(/\\mathbb\s*\{Z\}/g, 'ℤ')
+    .replace(/\\mathbb\s*\{Q\}/g, 'ℚ')
+    .replace(/\\mathbb\s*\{C\}/g, 'ℂ')
+    .replace(/\\mathbb\s*\{K\}/g, '𝕂')
     .replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
     .replace(/\\sqrt\b/g, '√')
-    .replace(/\\ln\b/g, 'ln')
-    .replace(/\\log\b/g, 'log')
-    .replace(/\\sin\b/g, 'sin')
-    .replace(/\\cos\b/g, 'cos')
-    .replace(/\\tan\b/g, 'tan')
+    .replace(/\\ln(?![a-zA-Z])/g, 'ln')
+    .replace(/\\log(?![a-zA-Z])/g, 'log')
+    .replace(/\\sin(?![a-zA-Z])/g, 'sin')
+    .replace(/\\cos(?![a-zA-Z])/g, 'cos')
+    .replace(/\\tan(?![a-zA-Z])/g, 'tan')
+    .replace(/\\lim(?![a-zA-Z])/g, 'lim')
+    .replace(/\\exp(?![a-zA-Z])/g, 'exp')
     .replace(/\\sum\b/g, '∑')
     .replace(/\\prod\b/g, '∏')
     .replace(/\\int\b/g, '∫')
@@ -604,7 +567,7 @@ function latexToReadable(src: string): string {
     .replace(/\\\]/g, ']')
     .replace(/\\\|/g, '|');
 
-  // Exposants et indices : u_{n+1} → u_(n+1), x^2 → x^2.
+  // Exposants et indices.
   s = s
     .replace(/_\s*\{([^{}]*)\}/g, '_($1)')
     .replace(/\^\s*\{([^{}]*)\}/g, '^($1)')
@@ -614,12 +577,14 @@ function latexToReadable(src: string): string {
   s = s
     .replace(/\\(?:text|mathrm|mathbf|mathit|operatorname)\s*\{([^{}]*)\}/g, '$1')
     .replace(/\\(?:,|;|:|!|quad|qquad|enspace)(?![a-zA-Z])/g, ' ')
-    .replace(/\$\$?/g, '')
-    .replace(/\\\\/g, '\n')
+    .replace(/\\(?:begin|end)\{(?:aligned|aligned\*)\}/g, '')
     .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/&/g, ' ')
     .replace(/[{}]/g, '')
+    .replace(/\\\\/g, '\n')
+    .replace(/\\(?=\s)/g, ' ')
     .replace(/[ \t]+/g, ' ')
-    .replace(/\s*([=+−×÷≠≤≥→])\s*/g, ' $1 ')
+    .replace(/\s*([=+−×÷≠≤≥⇔⇒→])\s*/g, ' $1 ')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n[ \t]+/g, '\n')
     .replace(/\n{3,}/g, '\n\n');
@@ -2462,14 +2427,16 @@ export default function ChatPage() {
                 </button>
                 <button onClick={() => {
                   const lines = messages.map(m => {
-                    const clean = m.content
-                      .replace(/```graph[\s\S]*?```/g, '[Graphique interactif]')
-                      .split('\n').map((ln: string) =>
-                        ln.replace(/\$\$([\s\S]+?)\$\$/g, (_: string, math: string) => latexToReadable(math))
-                          .replace(/\$([^$\n]+?)\$/g, (_: string, math: string) => latexToReadable(math))
-                          .replace(/^## /,'').replace(/^### /,'').replace(/\*\*(.+?)\*\*/g,'$1')
-                          .replace(/^> /,'→ ').replace(/^- /,'• ')
-                      ).join('\n')
+                    const clean = improveCopiedMath(m.content)
+                      .split('\n')
+                      .map((ln: string) =>
+                        ln.replace(/^## /, '')
+                          .replace(/^### /, '')
+                          .replace(/\*\*(.+?)\*\*/g, '$1')
+                          .replace(/^> /, '→ ')
+                          .replace(/^- /, '• ')
+                      )
+                      .join('\n')
                     return (m.role === 'user' ? '👤 Élève:\n' : '🤖 Prof IA:\n') + clean
                   }).join('\n\n─────────────\n\n')
                   copyToClipboard(lines.trim()).then(() => { setPdfMsg('Copié !'); setTimeout(() => setPdfMsg(''), 2500) }).catch(() => setPdfMsg('Erreur copie'))
