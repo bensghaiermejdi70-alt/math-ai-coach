@@ -2,8 +2,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { ADMIN_EMAIL } from '@/lib/types/monetisation'
+import { emailConfirmationAbonnement } from '@/lib/emails/templates'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,20 +47,18 @@ async function sendConfirmationEmail(
       .eq('id', userId)
       .single()
 
-    if (profileError) {
-      console.error('[CONFIRMATION EMAIL] Erreur profil:', profileError.message)
+    if (profileError || !prof?.email) {
+      console.error(
+        '[CONFIRMATION EMAIL] Profil ou email introuvable:',
+        profileError?.message || 'Email absent'
+      )
       return
     }
 
-    if (!prof?.email) {
-      console.error('[CONFIRMATION EMAIL] Aucun email dans le profil.')
-      return
-    }
+    const apiKey = process.env.RESEND_API_KEY
 
-    const internalSecret = process.env.INTERNAL_API_SECRET
-
-    if (!internalSecret) {
-      console.error('[CONFIRMATION EMAIL] INTERNAL_API_SECRET absent.')
+    if (!apiKey) {
+      console.error('[CONFIRMATION EMAIL] RESEND_API_KEY absente.')
       return
     }
 
@@ -68,36 +68,32 @@ async function sendConfirmationEmail(
       year: 'numeric',
     })
 
-    const response = await fetch(`${origin}/api/emails`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-internal-secret': internalSecret,
-      },
-      body: JSON.stringify({
-        type: 'confirmation_abonnement',
-        to: prof.email,
-        data: {
-          nom: prof.full_name || prof.email.split('@')[0],
-          plan,
-          dateExpiration: dateExp,
-          montant: pricePaid || 0,
-        },
-      }),
+    const resend = new Resend(apiKey)
+
+    const result = await resend.emails.send({
+      from: 'MathBacAI <noreply@mathbacai.com>',
+      to: [prof.email],
+      subject: '✅ Abonnement Bac.AI confirmé',
+      html: emailConfirmationAbonnement(
+        prof.full_name || prof.email.split('@')[0],
+        plan,
+        dateExp,
+        pricePaid || 0
+      ),
     })
 
-    const responseBody = await response.text()
-
-    if (!response.ok) {
+    if (result.error) {
       console.error(
-        '[CONFIRMATION EMAIL] Échec de /api/emails:',
-        response.status,
-        responseBody
+        '[CONFIRMATION EMAIL] Erreur Resend:',
+        result.error.message
       )
       return
     }
 
-    console.log('[CONFIRMATION EMAIL] API email appelée avec succès.')
+    console.log(
+      '[CONFIRMATION EMAIL] Envoi accepté par Resend. ID:',
+      result.data?.id
+    )
   } catch (error) {
     console.error('[CONFIRMATION EMAIL] Erreur:', error)
   }
