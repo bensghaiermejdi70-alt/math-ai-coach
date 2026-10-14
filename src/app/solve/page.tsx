@@ -3822,16 +3822,6 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                 {subject==='physique'?'Physique-Chimie · Bac Tunisie/France · Correction IA + graphiques':subject==='informatique'?'Algo · SQL · Réseaux · Pascal · Python · Correction IA':subject==='svt'?'Génétique · Immunologie · Physiologie · Géologie · Correction IA':subject==='anglais'?'Grammar · Writing · Essay · Literature · Full English correction':subject==='litterature'?'Commentaire · Dissertation · Contraction · Auteurs · Correction IA':'Résous · Vérifie ta solution · Graphiques · PDF imprimable'}
               </p>
             </div>
-            <button
-              onClick={() => setShowHistory(p => !p)}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 11, border: `1px solid ${showHistory ? 'rgba(79,110,247,0.4)' : 'rgba(255,255,255,0.1)'}`, background: showHistory ? 'rgba(79,110,247,0.1)' : 'rgba(255,255,255,0.04)', color: showHistory ? '#818cf8' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' }}>
-              🕘 Historique
-              {history.length > 0 && (
-                <span style={{ background: '#4f6ef7', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900 }}>
-                  {history.length}
-                </span>
-              )}
-            </button>
           </div>
 
           {/* ── HISTORIQUE ── */}
@@ -3956,7 +3946,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
           </div>
 
           {/* ── MODE TABS ── */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             {([['solve', '🧮', 'Résoudre'], ['verify', '🔍', 'Vérifier ma solution']] as const).map(([m, icon, label]) => (
               <button key={m}
                 onClick={() => { setMode(m); if (phase === 'done') setPhase('input') }}
@@ -3964,6 +3954,16 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                 {icon} {label}
               </button>
             ))}
+            <button
+              onClick={() => setShowHistory(p => !p)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 11, border: `1px solid ${showHistory ? 'rgba(79,110,247,0.4)' : 'rgba(255,255,255,0.1)'}`, background: showHistory ? 'rgba(79,110,247,0.1)' : 'rgba(255,255,255,0.04)', color: showHistory ? '#818cf8' : 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' }}>
+              🕘 Historique
+              {history.length > 0 && (
+                <span style={{ background: '#4f6ef7', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 900 }}>
+                  {history.length}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* ── ZONE SAISIE ── */}
