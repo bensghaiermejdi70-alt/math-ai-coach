@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
           'Authorization': `Bearer ${RESEND_KEY}`,
         },
         body: JSON.stringify({
-          from: 'MathBac.AI <noreply@mathsbac.com>',
+          from: 'MathBacAI <noreply@mathbacai.com>',
           to:   [ADMIN_EMAIL],
           subject: `💰 Nouveau paiement — ${esc(plan)} · ${esc(price)}`,
           html: `
