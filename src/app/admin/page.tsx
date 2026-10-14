@@ -15,6 +15,40 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: 'badge-red',
 }
 
+
+const ADMIN_CSS = `
+.adm-root{min-height:100vh;background:var(--bg);display:flex}
+.adm-aside{width:240px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);padding:24px;position:sticky;top:0;display:flex;flex-direction:column;flex-shrink:0}
+.adm-logo{margin-bottom:32px}
+.adm-nav{display:flex;flex-direction:column;gap:4px}
+.adm-footer{margin-top:auto;padding-top:24px;border-top:1px solid var(--border)}
+.adm-main{flex:1;min-width:0;padding:32px;overflow:auto}
+.adm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.adm-row{display:flex;gap:20px;align-items:flex-start}
+.adm-info{display:grid;grid-template-columns:1fr 1fr;gap:6px 32px}
+.adm-info span{overflow-wrap:anywhere}
+.adm-actions{display:flex;flex-direction:column;gap:8px;min-width:200px}
+.adm-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+@media (max-width:768px){
+  .adm-root{flex-direction:column}
+  .adm-aside{width:100% !important;min-height:0 !important;position:static !important;padding:14px 16px !important;border-right:none !important;border-bottom:1px solid var(--border)}
+  .adm-logo{margin-bottom:12px !important}
+  .adm-nav{flex-direction:row !important;overflow-x:auto;gap:8px !important;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .adm-navbtn{width:auto !important;flex-shrink:0;white-space:nowrap;gap:8px;min-height:42px}
+  .adm-footer{margin-top:12px !important;padding-top:12px !important}
+  .adm-main{padding:16px !important}
+  .adm-stats{grid-template-columns:1fr 1fr !important;gap:10px !important;margin-bottom:20px !important}
+  .adm-subcard{padding:16px !important}
+  .adm-row{flex-direction:column !important;gap:16px !important}
+  .adm-info{grid-template-columns:1fr !important;gap:6px !important}
+  .adm-actions{width:100% !important;min-width:0 !important}
+  .adm-actions .btn{min-height:48px;font-size:15px !important}
+  .adm-actions select,.adm-actions textarea{font-size:16px !important}
+  .adm-grid2{grid-template-columns:1fr !important}
+}
+`
+
 export default function AdminPage() {
   const router = useRouter()
   const { user, isAdmin, isLoading } = useAuth()
@@ -112,11 +146,12 @@ export default function AdminPage() {
   )
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--bg)', display:'flex' }}>
+    <div className="adm-root">
+      <style>{ADMIN_CSS}</style>
 
       {/* Sidebar */}
-      <aside style={{ width:240, minHeight:'100vh', background:'var(--surface)', borderRight:'1px solid var(--border)', padding:24, position:'sticky', top:0, display:'flex', flexDirection:'column' }}>
-        <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none', marginBottom:32 }}>
+      <aside className="adm-aside">
+        <Link href="/" className="adm-logo" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
           <div style={{ width:36, height:36, background:'linear-gradient(135deg,var(--accent),var(--accent2))', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center' }}>
             <span style={{ color:'white', fontFamily:'var(--font-display)', fontWeight:800 }}>M</span>
           </div>
@@ -126,14 +161,14 @@ export default function AdminPage() {
           </div>
         </Link>
 
-        <nav style={{ display:'flex', flexDirection:'column', gap:4 }}>
+        <nav className="adm-nav">
           {[
             { id:'pending', label:'En attente', icon:'⏳', count:stats.pending, highlight: stats.pending > 0 },
             { id:'active',  label:'Actifs',     icon:'✅', count:stats.active  },
             { id:'all',     label:'Tous',        icon:'📋', count:stats.total   },
             { id:'stats',   label:'Statistiques',icon:'📊'                     },
           ].map(item => (
-            <button key={item.id} onClick={() => setTab(item.id as any)}
+            <button key={item.id} className="adm-navbtn" onClick={() => setTab(item.id as any)}
               style={{
                 display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%',
                 padding:'10px 14px', borderRadius:10, border:'none', cursor:'pointer', transition:'all 0.2s',
@@ -154,7 +189,7 @@ export default function AdminPage() {
         </nav>
 
         {/* Lien vers gestion paiements */}
-        <div style={{marginTop:'auto',paddingTop:24,borderTop:'1px solid var(--border)'}}>
+        <div className="adm-footer">
           <a href="/admin/payments" style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',borderRadius:10,background:'rgba(79,110,247,0.08)',border:'1px solid rgba(79,110,247,0.2)',color:'var(--accent)',fontSize:13,fontWeight:600,textDecoration:'none',transition:'all 0.2s'}}
             onMouseEnter={e=>e.currentTarget.style.background='rgba(79,110,247,0.16)'}
             onMouseLeave={e=>e.currentTarget.style.background='rgba(79,110,247,0.08)'}>
@@ -164,10 +199,10 @@ export default function AdminPage() {
       </aside>
 
       {/* Main */}
-      <main style={{ flex:1, padding:32, overflow:'auto' }}>
+      <main className="adm-main">
 
         {/* Stats */}
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:32 }}>
+        <div className="adm-stats">
           {[
             { label:'Total demandes',    value:stats.total,          icon:'📋' },
             { label:'Abonnements actifs',value:stats.active,         icon:'✅' },
@@ -194,11 +229,11 @@ export default function AdminPage() {
               : (
                 <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
                   {list.map((sub: any) => (
-                    <div key={sub.id} className="card" style={{ padding:24, transition:'border-color 0.2s' }}
+                    <div key={sub.id} className="card adm-subcard" style={{ padding:24, transition:'border-color 0.2s' }}
                       onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(79,110,247,0.3)')}
                       onMouseLeave={e => (e.currentTarget.style.borderColor = '')}>
-                      <div style={{ display:'flex', gap:20, alignItems:'flex-start' }}>
-                        <div style={{ flex:1 }}>
+                      <div className="adm-row">
+                        <div style={{ flex:1, minWidth:0 }}>
                           {/* Badges */}
                           <div style={{ display:'flex', gap:8, marginBottom:14, flexWrap:'wrap' }}>
                             <span className={`badge ${STATUS_STYLE[sub.status]||'badge-blue'}`} style={{ textTransform:'capitalize' }}>{sub.status}</span>
@@ -220,7 +255,7 @@ export default function AdminPage() {
                           </div>
 
                           {/* Infos */}
-                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px 32px', fontSize:13 }}>
+                          <div className="adm-info" style={{ fontSize:13 }}>
                             {[
                               ['Email',     sub.profiles?.email    || 'N/A'],
                               ['Nom',       sub.profiles?.full_name || 'N/A'],
@@ -247,7 +282,7 @@ export default function AdminPage() {
 
                         {/* Actions si pending */}
                         {sub.status === 'pending' && (
-                          <div style={{ display:'flex', flexDirection:'column', gap:8, minWidth:200 }}>
+                          <div className="adm-actions">
                             {/* Sélecteur matière */}
                             <div>
                               <label style={{ fontSize:10, color:'var(--muted)', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.08em', display:'block', marginBottom:4 }}>
@@ -310,7 +345,7 @@ export default function AdminPage() {
             </div>
 
             {/* Matières + Plans */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+            <div className="adm-grid2">
               <div className="card" style={{padding:24}}>
                 <h3 style={{fontSize:14,fontWeight:700,marginBottom:16}}>🏆 Matières populaires</h3>
                 {['mathematiques','physique','svt','informatique','anglais','francais','economie','gestion'].map(mat=>{
