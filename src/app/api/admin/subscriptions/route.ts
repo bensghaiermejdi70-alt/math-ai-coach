@@ -12,23 +12,53 @@ const supabase = createClient(
 
 // ── 🔒 Garde-fou : seul un admin peut appeler ces routes ──────────
 // Lit l'identité réelle depuis le cookie de session (aucune confiance au client).
-async function requireAdmin(): Promise<boolean> {
+async function requireAdmin(): Promise<string | null> {
   try {
     const authClient = createServerSupabaseClient()
     const { data: { user } } = await authClient.auth.getUser()
-    if (!user) return false
-    if (user.email === ADMIN_EMAIL) return true
+    if (!user) return null
+    if (user.email === ADMIN_EMAIL) return user.id
     // Sinon, vérifier le rôle en base (cohérent avec isAdmin de l'app)
     const { data: prof } = await supabase
       .from('profiles').select('role').eq('id', user.id).single()
-    return prof?.role === 'admin'
+    return prof?.role === 'admin' ? user.id : null
   } catch {
-    return false
+    return null
   }
 }
 
 const FORBIDDEN = () =>
   NextResponse.json({ error: 'Accès refusé — réservé à l’administrateur.' }, { status: 403 })
+
+// ── Email de confirmation (côté serveur : le secret ne quitte jamais le serveur) ──
+async function sendConfirmationEmail(origin: string, userId: string, plan: string, endIso: string, pricePaid: number) {
+  try {
+    const { data: prof } = await supabase
+      .from('profiles').select('email, full_name').eq('id', userId).single()
+    if (!prof?.email) return
+    const dateExp = new Date(endIso).toLocaleDateString('fr-TN', { day: 'numeric', month: 'long', year: 'numeric' })
+    await fetch(`${origin}/api/emails`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': process.env.INTERNAL_API_SECRET || 'dev-secret',
+      },
+      body: JSON.stringify({
+        type: 'confirmation_abonnement',
+        to: prof.email,
+        data: { nom: prof.full_name || prof.email.split('@')[0], plan, dateExpiration: dateExp, montant: pricePaid || 0 },
+      }),
+    })
+  } catch (e) {
+    console.error('Email err:', e)
+  }
+}
+
+async function logAdmin(adminId: string, action: string, targetUserId: string | null, details: any) {
+  const { error } = await supabase.from('admin_logs')
+    .insert({ admin_id: adminId, action, target_user_id: targetUserId, details })
+  if (error) console.error('admin_logs err:', error.message)
+}
 
 // ── GET : lire toutes les subscriptions ──────────────────────────
 export async function GET() {
@@ -55,7 +85,8 @@ export async function GET() {
 
 // ── PATCH : activer / désactiver ─────────────────────────────────
 export async function PATCH(req: NextRequest) {
-  if (!(await requireAdmin())) return FORBIDDEN()
+  const adminId = await requireAdmin()
+  if (!adminId) return FORBIDDEN()
 
   try {
     const body = await req.json()
@@ -86,7 +117,7 @@ export async function PATCH(req: NextRequest) {
       const finalPlanType = `${basePlan}_${matiereKey}`
 
       // Insérer subscription active
-      await supabase.from('subscriptions').insert({
+      const { error: insErr } = await supabase.from('subscriptions').insert({
         user_id:              profile.id,
         plan_type:            finalPlanType,
         status:               'active',
@@ -99,14 +130,18 @@ export async function PATCH(req: NextRequest) {
         subscription_start:   new Date().toISOString(),
         subscription_end:     endDate.toISOString(),
       })
+      if (insErr) return NextResponse.json({ error: 'subscriptions: ' + insErr.message }, { status: 500 })
 
-      // Mettre à jour le profil — RESET current_session_id pour éviter blocage
-      await supabase.from('profiles').update({
+      // Mettre à jour le profil (le verrou d'appareils est géré par les RPC claim/verify_device_session)
+      const { error: profErr } = await supabase.from('profiles').update({
         is_active:          true,
         plan_type:          finalPlanType,
         subscription_end:   endDate.toISOString(),
-        current_session_id: null,   // ← reset pour éviter déconnexion forcée
       }).eq('id', profile.id)
+      if (profErr) return NextResponse.json({ error: 'profiles: ' + profErr.message }, { status: 500 })
+
+      await logAdmin(adminId, 'activate_by_email', profile.id, { email: email_target, plan: finalPlanType })
+      await sendConfirmationEmail(req.nextUrl.origin, profile.id, finalPlanType, endDate.toISOString(), 0)
 
       return NextResponse.json({ ok: true, plan_type: finalPlanType })
     }
@@ -162,12 +197,21 @@ export async function PATCH(req: NextRequest) {
         ? `${basePlan2}_${matiere2}`
         : null
 
-      await supabase.from('profiles').update({
+      const { error: profErr2 } = await supabase.from('profiles').update({
         is_active:          status === 'active',
         plan_type:          finalPlan2,
         subscription_end:   status === 'active' ? endDate : null,
-        current_session_id: status === 'active' ? null : undefined, // reset à l'activation
       }).eq('id', resolvedUserId)
+      if (profErr2) return NextResponse.json({ error: 'profiles: ' + profErr2.message }, { status: 500 })
+
+      await logAdmin(adminId, status === 'active' ? 'activate_subscription' : 'update_subscription',
+        resolvedUserId, { subscription_id: id, status, plan: finalPlan2, ends_at: endDate })
+
+      if (status === 'active') {
+        const { data: subRow } = await supabase
+          .from('subscriptions').select('price_paid').eq('id', id).single()
+        await sendConfirmationEmail(req.nextUrl.origin, resolvedUserId, finalPlan2 || '', endDate, subRow?.price_paid || 0)
+      }
     }
 
     return NextResponse.json({ ok: true })
