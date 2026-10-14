@@ -3357,7 +3357,7 @@ ${MB_VEC_CSS}</style>
 
   <div class="doc-title">
     <div style="font-size:14px;font-weight:800;letter-spacing:0.04em;color:#818cf8">MATHBACAI</div>
-    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://app.mathsbac.com" style="color:#6366f1;text-decoration:none">http://app.mathsbac.com</a></div>
+    <div style="font-size:11px;color:#6366f1;margin-bottom:10px"><a href="http://mathbacai.com" style="color:#6366f1;text-decoration:none">http://mathbacai.com</a></div>
     <h1>${esc(exam.title)}</h1>
     <div class="sub">Correction IA détaillée · ${exam.totalPoints}/20 pts · ${new Date().toLocaleDateString('fr-FR')}</div>
   </div>
@@ -3366,7 +3366,7 @@ ${MB_VEC_CSS}</style>
 
   ${bodyHtml}
 
-  <div class="footer">MATHBACAI · http://app.mathsbac.com — Correction générée par IA</div>
+  <div class="footer">MATHBACAI · http://mathbacai.com — Correction générée par IA</div>
 </div>
 <script>
   function telechargerPDF(){
@@ -7270,7 +7270,7 @@ function SimulationFrancePageInner() {
 
 Vos abonnements actifs : ${matieresList}
 
-→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
+→ mathbacai.com/abonnement?matiere=${matiereUIKey}`)
           return
         }
       }
@@ -7312,7 +7312,7 @@ Vos abonnements actifs : ${matieresList}
         const matieresList = activeMatieres.length > 0
           ? activeMatieres.join(', ')
           : matiereActive || 'votre matière'
-        alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathsbac.com/abonnement?matiere=${matiereUIKey}`)
+        alert(`🔒 Votre abonnement ne couvre pas "${matiereUIKey}".\n\nVos abonnements actifs : ${matieresList}\n\n→ mathbacai.com/abonnement?matiere=${matiereUIKey}`)
         return
       }
     }

@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
                 Vérifier le paiement puis activer l'abonnement depuis le panel admin.
               </div>
               <div style="margin-top:16px;text-align:center">
-                <a href="https://app.mathsbac.com/activation"
+                <a href="https://mathbacai.com/activation"
                    style="background:#4f6ef7;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">
                   → Ouvrir le panel admin
                 </a>

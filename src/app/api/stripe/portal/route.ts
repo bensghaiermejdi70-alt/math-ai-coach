@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Créer la session du portail Stripe
     const session = await stripe.billingPortal.sessions.create({
       customer:   profile.stripe_customer_id,
-      return_url: 'https://app.mathsbac.com/abonnement-france',
+      return_url: 'https://mathbacai.com/abonnement-france',
     })
 
     return NextResponse.json({ url: session.url })

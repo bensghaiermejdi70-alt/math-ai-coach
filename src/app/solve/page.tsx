@@ -2631,7 +2631,7 @@ function SolvePageInner() {
       ? (solverLimit === -1 || solverUsed < (solverLimit || 20))
       : checkQuota('solver')
     if (!isAdmin && !_quotaOk) {
-      alert(`Quota atteint — ${solverUsed}/${solverLimit || 20} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathsbac.com/abonnement`)
+      alert(`Quota atteint — ${solverUsed}/${solverLimit || 20} résolutions cette semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20/sem (🇹🇳) | 19€/mois · 20/sem (🇫🇷)\n🚀 Sprint Bac : 90 DT/mois · Illimité (🇹🇳) | 29€/mois · Illimité (🇫🇷)\n🎓 Annuel : 600 DT (🇹🇳) | 199€ (🇫🇷)\n\n→ mathbacai.com/abonnement`)
       return
     }
 
@@ -3916,7 +3916,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                 <button key={m.key}
                   onClick={() => {
                     if (!hasAccess) {
-                      alert('🔒 ' + m.label + ' n\'est pas inclus dans votre abonnement.\n→ mathsbac.com/abonnement')
+                      alert('🔒 ' + m.label + ' n\'est pas inclus dans votre abonnement.\n→ mathbacai.com/abonnement')
                       return
                     }
                     setSelectedMatiere(m.key)

@@ -2084,7 +2084,7 @@ export default function ChatPage() {
     if (!content || loading) return
 
     if (!isAdmin && !checkQuota('chat')) {
-      alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathsbac.com/abonnement`)
+      alert(`Quota atteint — ${chatLimit} messages/semaine.\nRenouvellement lundi prochain.\n\n📚 MathBac Mensuel : 60 DT/mois · 20 msg/sem\n🚀 Sprint Bac (mai-juin) : 90 DT/mois · 30 msg/sem\n🎓 Annuel : 600 DT/an (Sprint inclus)\n\n→ mathbacai.com/abonnement`)
       return
     }
 
@@ -2469,7 +2469,7 @@ export default function ChatPage() {
                     <button key={m.key}
                       onClick={() => {
                         if (!hasAccess) {
-                          alert(`🔒 Votre abonnement ne couvre pas ${m.label}.\nAbonnez-vous sur mathsbac.com/abonnement`)
+                          alert(`🔒 Votre abonnement ne couvre pas ${m.label}.\nAbonnez-vous sur mathbacai.com/abonnement`)
                           return
                         }
                         setSelectedMatiere(m.key)

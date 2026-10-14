@@ -117,7 +117,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
             <p style="margin:0;color:#4f6ef7;font-weight:bold">${planLabels[planType] || planType}</p>
             <p style="margin:4px 0 0;color:#10b981;font-size:20px;font-weight:bold">${amount} €/mois</p>
           </div>
-          <a href="https://app.mathsbac.com/profile"
+          <a href="https://mathbacai.com/profile"
             style="display:inline-block;background:#4f6ef7;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:8px 0;font-size:16px">
             ✅ Voir mon abonnement actif →
           </a>
@@ -125,7 +125,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
             Connectez-vous avec l'email : <strong style="color:white">${emailEsc}</strong>
           </p>
           <p style="color:#666;font-size:12px;margin-top:24px">
-            Pour toute question : WhatsApp 99 268 970<br/>app.mathsbac.com
+            Pour toute question : WhatsApp 99 268 970<br/>mathbacai.com
           </p>
         </div>
       `,
@@ -148,7 +148,7 @@ async function sendConfirmationEmails(email: string, planType: string, amount: n
         <p><strong>Plan :</strong> ${planLabels[planType] || planType}</p>
         <p><strong>Montant :</strong> ${amount} €</p>
         <p>L'abonnement a été activé automatiquement.</p>
-        <a href="https://app.mathsbac.com/admin/payments"
+        <a href="https://mathbacai.com/admin/payments"
           style="background:#4f6ef7;color:white;padding:10px 20px;border-radius:8px;text-decoration:none">
           Panel admin →
         </a>
