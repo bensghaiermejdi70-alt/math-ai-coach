@@ -31,26 +31,75 @@ const FORBIDDEN = () =>
   NextResponse.json({ error: 'Accès refusé — réservé à l’administrateur.' }, { status: 403 })
 
 // ── Email de confirmation (côté serveur : le secret ne quitte jamais le serveur) ──
-async function sendConfirmationEmail(origin: string, userId: string, plan: string, endIso: string, pricePaid: number) {
+async function sendConfirmationEmail(
+  origin: string,
+  userId: string,
+  plan: string,
+  endIso: string,
+  pricePaid: number
+) {
   try {
-    const { data: prof } = await supabase
-      .from('profiles').select('email, full_name').eq('id', userId).single()
-    if (!prof?.email) return
-    const dateExp = new Date(endIso).toLocaleDateString('fr-TN', { day: 'numeric', month: 'long', year: 'numeric' })
-    await fetch(`${origin}/api/emails`, {
+    const { data: prof, error: profileError } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('[CONFIRMATION EMAIL] Erreur profil:', profileError.message)
+      return
+    }
+
+    if (!prof?.email) {
+      console.error('[CONFIRMATION EMAIL] Aucun email dans le profil.')
+      return
+    }
+
+    const internalSecret = process.env.INTERNAL_API_SECRET
+
+    if (!internalSecret) {
+      console.error('[CONFIRMATION EMAIL] INTERNAL_API_SECRET absent.')
+      return
+    }
+
+    const dateExp = new Date(endIso).toLocaleDateString('fr-TN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+
+    const response = await fetch(`${origin}/api/emails`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-internal-secret': process.env.INTERNAL_API_SECRET || 'dev-secret',
+        'x-internal-secret': internalSecret,
       },
       body: JSON.stringify({
         type: 'confirmation_abonnement',
         to: prof.email,
-        data: { nom: prof.full_name || prof.email.split('@')[0], plan, dateExpiration: dateExp, montant: pricePaid || 0 },
+        data: {
+          nom: prof.full_name || prof.email.split('@')[0],
+          plan,
+          dateExpiration: dateExp,
+          montant: pricePaid || 0,
+        },
       }),
     })
-  } catch (e) {
-    console.error('Email err:', e)
+
+    const responseBody = await response.text()
+
+    if (!response.ok) {
+      console.error(
+        '[CONFIRMATION EMAIL] Échec de /api/emails:',
+        response.status,
+        responseBody
+      )
+      return
+    }
+
+    console.log('[CONFIRMATION EMAIL] API email appelée avec succès.')
+  } catch (error) {
+    console.error('[CONFIRMATION EMAIL] Erreur:', error)
   }
 }
 

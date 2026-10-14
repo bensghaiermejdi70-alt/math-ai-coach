@@ -92,9 +92,20 @@ export async function POST(req: NextRequest) {
       html,
     })
 
+    if (result.error) {
+      console.error('[RESEND] Échec envoi email:', result.error)
+
+      return NextResponse.json(
+        { success: false, error: result.error.message },
+        { status: 502 }
+      )
+    }
+
+    console.log('[RESEND] Email accepté pour envoi.')
+
     return NextResponse.json({
       success: true,
-      id: result?.data?.id,
+      id: result.data?.id,
     })
 
   } catch (error: any) {
