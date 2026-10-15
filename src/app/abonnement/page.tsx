@@ -105,6 +105,28 @@ const MATIERES = [
     ],
   },
   {
+    key: 'francais',
+    icon: '🇫🇷',
+    label: 'Français',
+    desc: 'Compréhension · Production écrite · Langue · Bac Blanc Français · Programme CNP officiel',
+    color: '#3b82f6',
+    gradient: 'linear-gradient(135deg,rgba(59,130,246,0.15),rgba(99,102,241,0.07))',
+    border: 'rgba(59,130,246,0.4)',
+    available: true,
+    accesPayant: [
+      'Simulation Bac Français IA',
+      'Chat Professeur Français',
+      'Correction Production écrite IA',
+      'Bac Blanc Français (mai-juin)',
+    ],
+    accesFree: [
+      'Cours Français officiels · Programme CNP',
+      'Examens officiels Français + corrections',
+      'Annales Bac Français Tunisie — toutes sections',
+      'Méthodologie · Langue (grammaire, conjugaison) · Conseils de rédaction gratuits',
+    ],
+  },
+  {
     key: 'economie',
     icon: '📈',
     label: 'Économie',
