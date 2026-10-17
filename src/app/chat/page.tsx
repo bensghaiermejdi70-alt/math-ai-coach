@@ -3,6 +3,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Navbar from '@/components/layout/Navbar'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { useCaptures } from '@/lib/captures'
+import { CapturesPanel } from '@/components/captures/CapturesPanel'
 
 // ── Charge KaTeX une seule fois globalement ───────────────────────
 function useKaTeX() {
@@ -1993,7 +1995,7 @@ function MessageBubble({ msg, onDelete, onEdit }: { msg: Msg; onDelete: (id: num
 // PAGE PRINCIPALE — avec quotas Supabase
 // ══════════════════════════════════════════
 export default function ChatPage() {
-  const { isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription, matiereActive, activeMatieres, checkMatiereAccess } = useAuth()
+  const { user, isAdmin, hasActiveSubscription, checkQuota, incrementQuota, quotas, quotaLimits, refreshSubscription, matiereActive, activeMatieres, checkMatiereAccess } = useAuth()
   // Recalculer à chaque render (quotas peut changer après refreshSubscription)
   // Matière sélectionnée — initialisée depuis l'abonnement actif
   // Détection programme pour ÉCO uniquement : abonnement éco-gestion → France (1 matière) ;
@@ -2051,6 +2053,9 @@ export default function ChatPage() {
   const [pendingImage, setPendingImage] = useState<{base64:string; mediaType:string; name:string} | null>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  // ── Historique captures (20 dernières, synchronisées mobile ↔ PC) ──
+  const { items: captures, loading: capturesLoading, error: capturesError, add: addCapture, remove: removeCapture, refresh: refreshCaptures } = useCaptures(user?.id)
+  const [showCaptures, setShowCaptures] = useState(false)
   // Charger l'historique au montage
   useEffect(() => { setSessions(loadSessions()) }, [])
 
@@ -2581,6 +2586,26 @@ export default function ChatPage() {
 
             {/* Zone de saisie */}
             <div style={{ padding: '4px 0 14px', flexShrink: 0 }}>
+              {user && showCaptures && (
+                <div style={{ maxHeight: '45vh', overflowY: 'auto', marginBottom: 8 }}>
+                  <CapturesPanel
+                    onlyImages
+                    items={captures}
+                    loading={capturesLoading}
+                    error={capturesError}
+                    onDelete={removeCapture}
+                    onClose={() => setShowCaptures(false)}
+                    onAttach={file => {
+                      const reader = new FileReader()
+                      reader.onload = ev => {
+                        const b64 = ((ev.target?.result as string) || '').split(',')[1]
+                        if (b64) setPendingImage({ base64: b64, mediaType: file.type || 'image/jpeg', name: file.name })
+                      }
+                      reader.readAsDataURL(file)
+                      setShowCaptures(false)
+                    }} />
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '10px 12px', transition: 'border-color 0.2s' }}
                 onFocusCapture={e => (e.currentTarget.style.borderColor = '#6366f1')}
                 onBlurCapture={e => (e.currentTarget.style.borderColor = 'var(--border)')}>
@@ -2598,6 +2623,7 @@ export default function ChatPage() {
                 <input ref={imageInputRef} type="file" accept=".png,.jpg,.jpeg,.webp,.gif" style={{ display:'none' }}
                   onChange={e => {
                     const f = e.target.files?.[0]; if (!f) return
+                    if (user?.id) addCapture(f) // sauvegarde dans l'historique captures
                     const reader = new FileReader()
                     reader.onload = ev => {
                       const b64 = (ev.target?.result as string).split(',')[1]
@@ -2610,6 +2636,7 @@ export default function ChatPage() {
                 <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display:'none' }}
                   onChange={e => {
                     const f = e.target.files?.[0]; if (!f) return
+                    if (user?.id) addCapture(f) // sauvegarde dans l'historique captures
                     const reader = new FileReader()
                     reader.onload = ev => {
                       const b64 = (ev.target?.result as string).split(',')[1]
@@ -2634,6 +2661,12 @@ export default function ChatPage() {
                       onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}>
                       📸
                     </button>
+                    {user && (
+                      <button onClick={() => { if (!showCaptures) refreshCaptures(); setShowCaptures(!showCaptures) }} title="Historique captures"
+                        style={{ height:30, padding:'0 9px', borderRadius:7, border:`1px solid ${showCaptures ? '#06d6a0' : 'var(--border)'}`, background: showCaptures ? 'rgba(6,214,160,0.12)' : 'var(--surface2)', color: showCaptures ? '#06d6a0' : 'var(--muted)', fontSize:13, cursor:'pointer', display:'flex', alignItems:'center', gap:5, flexShrink:0, transition:'all 0.2s', fontFamily:'inherit' }}>
+                        🗂️{captures.filter(c => c.media_type.startsWith('image/')).length > 0 && <span style={{ fontSize:11, fontWeight:700 }}>{captures.filter(c => c.media_type.startsWith('image/')).length}</span>}
+                      </button>
+                    )}
                   </div>
                   <textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}

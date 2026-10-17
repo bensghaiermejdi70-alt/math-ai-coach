@@ -28,6 +28,8 @@ interface PanelProps {
   onRead?: (file: File) => void
   /** Joindre la capture comme figure/pièce jointe — bouton masqué si absent */
   onAttach?: (file: File) => void
+  /** N'affiche que les images (ex. chat, qui n'accepte pas les PDF) */
+  onlyImages?: boolean
 }
 
 function fmtDate(iso: string): string {
@@ -35,7 +37,8 @@ function fmtDate(iso: string): string {
   catch { return '' }
 }
 
-export function CapturesPanel({ items, loading, error, onDelete, onClose, onRead, onAttach }: PanelProps) {
+export function CapturesPanel({ items: allItems, loading, error, onDelete, onClose, onRead, onAttach, onlyImages }: PanelProps) {
+  const items = onlyImages ? allItems.filter(i => i.media_type.startsWith('image/')) : allItems
   const [busyId, setBusyId] = useState<string | null>(null)
   const [localErr, setLocalErr] = useState('')
 
@@ -52,7 +55,7 @@ export function CapturesPanel({ items, loading, error, onDelete, onClose, onRead
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(6,214,160,0.25)', borderRadius: 18, padding: 16, marginBottom: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#06d6a0' }}>📸 Mes captures — {items.length}/{MAX_CAPTURES}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#06d6a0' }}>📸 Mes captures — {allItems.length}/{MAX_CAPTURES}</span>
         <button onClick={onClose} aria-label="Fermer" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 16, fontWeight: 700 }}>✕</button>
       </div>
       <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 12, lineHeight: 1.5 }}>
