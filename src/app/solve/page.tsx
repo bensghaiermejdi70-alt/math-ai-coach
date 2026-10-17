@@ -5,6 +5,8 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { sumQuotasAcrossMatiere } from '@/lib/types/monetisation'
+import { useCaptures } from '@/lib/captures'
+import { CapturesButton, CapturesPanel } from '@/components/captures/CapturesPanel'
 
 // ════════════════════════════════════════════════════════════════════
 // QUOTAS HEBDOMADAIRES — Solveur IA (géré par Supabase via AuthContext)
@@ -2250,7 +2252,12 @@ function SymbolPad({ onInsert }: { onInsert: (s: string) => void }) {
 // ══════════════════════════════════════════════════════════════════════
 // UPLOAD FICHIER
 // ══════════════════════════════════════════════════════════════════════
-function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
+function FileUpload({ onExtracted, onSource, incoming, onIncomingConsumed }: {
+  onExtracted: (text: string) => void
+  onSource?: (file: File) => void            // appelé pour chaque nouveau fichier (→ historique captures)
+  incoming?: File | null                     // fichier venant de l'historique captures (OCR direct)
+  onIncomingConsumed?: () => void
+}) {
   const [dragging, setDragging] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fileName, setFileName] = useState('')
@@ -2258,8 +2265,11 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = useCallback(async (file: File) => {
+  const handleFile = useCallback(async (file: File, fromHistory = false) => {
     setError(''); setFileName(file.name); setLoading(true)
+    if (!fromHistory && onSource && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+      try { onSource(file) } catch {}
+    }
     const ext = file.name.split('.').pop()?.toLowerCase()
     // Nettoie le texte importé : retire les délimiteurs LaTeX et les symboles $ (que l'utilisateur ne veut pas voir)
     const cleanImported = (t: string) => t
@@ -2297,7 +2307,11 @@ function FileUpload({ onExtracted }: { onExtracted: (text: string) => void }) {
       }
       reader.readAsDataURL(file)
     } catch { setError('Erreur fichier.'); setLoading(false) }
-  }, [onExtracted])
+  }, [onExtracted, onSource])
+
+  useEffect(() => {
+    if (incoming) { handleFile(incoming, true); onIncomingConsumed?.() }
+  }, [incoming, handleFile, onIncomingConsumed])
 
   return (
     <div>
@@ -2476,6 +2490,10 @@ function SolvePageInner() {
   const [streaming, setStreaming] = useState(false)
   const [passNum, setPassNum] = useState(0)
   const [attachments, setAttachments] = useState<{ data: string; mediaType: string; name: string }[]>([])
+  // ── Historique captures (20 dernières, synchronisées mobile ↔ PC) ──
+  const { items: captures, loading: capturesLoading, error: capturesError, add: addCapture, remove: removeCapture, refresh: refreshCaptures } = useCaptures(user?.id)
+  const [showCaptures, setShowCaptures] = useState(false)
+  const [incomingFile, setIncomingFile] = useState<File | null>(null)
 
   useEffect(() => {
     setHistory(loadSolveHistory(user?.id ?? undefined))
@@ -2537,12 +2555,13 @@ function SolvePageInner() {
     setTimeout(() => { ta.focus(); ta.setSelectionRange(start + sym.length, start + sym.length) }, 10)
   }, [input])
 
-  const addAttachment = (file: File) => {
+  const addAttachment = (file: File, fromHistory = false) => {
     if (!file) return
     const okTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf']
     const mediaType = file.type === 'image/jpg' ? 'image/jpeg' : file.type
     if (!okTypes.includes(file.type)) { setError('Pièce jointe : formats acceptés = image (PNG, JPG, WEBP) ou PDF.'); return }
     if (file.size > 8 * 1024 * 1024) { setError('Pièce jointe trop lourde (max 8 Mo).'); return }
+    if (!fromHistory && user?.id) addCapture(file) // sauvegarde dans l'historique captures
     const reader = new FileReader()
     reader.onload = (e) => {
       const base64 = ((e.target?.result as string) || '').split(',')[1]
@@ -3964,7 +3983,25 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                 </span>
               )}
             </button>
+            {user && (
+              <CapturesButton
+                count={captures.length}
+                active={showCaptures}
+                onClick={() => { if (!showCaptures) refreshCaptures(); setShowCaptures(!showCaptures) }} />
+            )}
           </div>
+
+          {/* ── HISTORIQUE CAPTURES ── */}
+          {user && showCaptures && (
+            <CapturesPanel
+              items={captures}
+              loading={capturesLoading}
+              error={capturesError}
+              onDelete={removeCapture}
+              onClose={() => setShowCaptures(false)}
+              onRead={file => { if (phase === 'done') setPhase('input'); setIncomingFile(file); setShowCaptures(false) }}
+              onAttach={file => { if (phase === 'done') setPhase('input'); addAttachment(file, true); setShowCaptures(false) }} />
+          )}
 
           {/* ── ZONE SAISIE ── */}
           {(phase === 'input' || phase === 'solving') && (
@@ -4008,7 +4045,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
                 {/* ── Pièce jointe (figure / tableau / annexe) ── */}
                 <div style={{ marginTop: 16 }}>
                   <input id="solve-attach-input" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple style={{ display: 'none' }}
-                    onChange={e => { const fs = e.target.files; if (fs) Array.from(fs).forEach(addAttachment); e.currentTarget.value = '' }} />
+                    onChange={e => { const fs = e.target.files; if (fs) Array.from(fs).forEach(f => addAttachment(f)); e.currentTarget.value = '' }} />
                   <button onClick={() => document.getElementById('solve-attach-input')?.click()}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', cursor: 'pointer', fontFamily: 'inherit' }}>
                     📎 Joindre une figure / tableau
@@ -4082,7 +4119,7 @@ Réponds UNIQUEMENT avec un tableau JSON valide contenant exactement 3 chaînes 
 
               {/* DROITE — upload */}
               <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 18, padding: 20 }}>
-                <FileUpload onExtracted={text => setInput(text)} />
+                <FileUpload onExtracted={text => setInput(text)} onSource={f => { if (user?.id) addCapture(f) }} incoming={incomingFile} onIncomingConsumed={() => setIncomingFile(null)} />
               </div>
             </div>
           )}
