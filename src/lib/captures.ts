@@ -25,24 +25,53 @@ const EXT_BY_TYPE: Record<string, string> = {
   'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf',
 }
 
-// Réduit les photos de téléphone (4-10 Mo) → ~300-600 Ko, lisibles pour l'OCR
-async function compressImage(file: File): Promise<File> {
-  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file
+const TYPE_BY_EXT: Record<string, string> = {
+  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+  pdf: 'application/pdf', heic: 'image/heic', heif: 'image/heif',
+}
+
+// Certaines caméras mobiles donnent un type vide ou HEIC : on le déduit de l'extension
+function guessType(file: File): string {
+  if (file.type) return file.type.toLowerCase()
+  const ext = (file.name.split('.').pop() || '').toLowerCase()
+  return TYPE_BY_EXT[ext] || ''
+}
+
+async function loadDrawable(file: File): Promise<{ src: CanvasImageSource; w: number; h: number; close: () => void }> {
   try {
     const bmp = await createImageBitmap(file)
+    return { src: bmp, w: bmp.width, h: bmp.height, close: () => bmp.close?.() }
+  } catch {
+    const url = URL.createObjectURL(file)
+    try {
+      const img = await new Promise<HTMLImageElement>((res, rej) => {
+        const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = url
+      })
+      return { src: img, w: img.naturalWidth, h: img.naturalHeight, close: () => URL.revokeObjectURL(url) }
+    } catch (e) { URL.revokeObjectURL(url); throw e }
+  }
+}
+
+// Réduit les photos de téléphone (4-10 Mo) → ~300-600 Ko et convertit HEIC/inconnu → JPEG
+async function compressImage(file: File): Promise<File> {
+  const t = guessType(file)
+  if (t === 'application/pdf' || t === 'image/gif') return file
+  try {
+    const d = await loadDrawable(file)
     const MAX_SIDE = 1600
-    const scale = Math.min(1, MAX_SIDE / Math.max(bmp.width, bmp.height))
-    const w = Math.max(1, Math.round(bmp.width * scale))
-    const h = Math.max(1, Math.round(bmp.height * scale))
+    const scale = Math.min(1, MAX_SIDE / Math.max(d.w, d.h))
+    const w = Math.max(1, Math.round(d.w * scale))
+    const h = Math.max(1, Math.round(d.h * scale))
     const canvas = document.createElement('canvas')
     canvas.width = w; canvas.height = h
     const ctx = canvas.getContext('2d')
-    if (!ctx) { bmp.close?.(); return file }
+    if (!ctx) { d.close(); return file }
     ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h) // PNG transparent → fond blanc
-    ctx.drawImage(bmp, 0, 0, w, h)
-    bmp.close?.()
+    ctx.drawImage(d.src, 0, 0, w, h)
+    d.close()
     const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, 'image/jpeg', 0.8))
-    if (!blob || (scale === 1 && blob.size >= file.size)) return file
+    if (!blob) return file
+    if (scale === 1 && blob.size >= file.size && EXT_BY_TYPE[t]) return file
     const base = (file.name || 'capture').replace(/\.[^.]+$/, '')
     return new File([blob], base + '.jpg', { type: 'image/jpeg' })
   } catch {
@@ -57,9 +86,11 @@ function ensureExt(name: string, ext: string): string {
 
 export async function saveCapture(userId: string, file: File): Promise<CaptureItem> {
   const supabase = createClient()
-  const f = await compressImage(file)
-  const ext = EXT_BY_TYPE[f.type]
+  let f = await compressImage(file)
+  const type = EXT_BY_TYPE[f.type] ? f.type : guessType(f)
+  const ext = EXT_BY_TYPE[type]
   if (!ext) throw new Error('Format non pris en charge')
+  if (f.type !== type) f = new File([f], f.name, { type })
   if (f.size > MAX_UPLOAD_BYTES) throw new Error('Fichier trop lourd (max 10 Mo)')
 
   const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`

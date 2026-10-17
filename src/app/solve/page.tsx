@@ -2267,7 +2267,7 @@ function FileUpload({ onExtracted, onSource, incoming, onIncomingConsumed }: {
 
   const handleFile = useCallback(async (file: File, fromHistory = false) => {
     setError(''); setFileName(file.name); setLoading(true)
-    if (!fromHistory && onSource && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+    if (!fromHistory && onSource && !/\.(txt|md)$/i.test(file.name)) {
       try { onSource(file) } catch {}
     }
     const ext = file.name.split('.').pop()?.toLowerCase()
