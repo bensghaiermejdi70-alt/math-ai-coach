@@ -77,7 +77,7 @@ const physiqueChimieChapitres: FicheChapitreFrance[] = [
 
 export const FICHES_FRANCE: FicheMatiereFrance[] = [
   { slug: 'mathematiques',    nom: 'Mathématiques',       icone: '🧮', disponible: true,  chapitres: mathematiquesChapitres },
-  { slug: 'physique-chimie',  nom: 'Physique-Chimie',      icone: '⚛️', disponible: false, chapitres: physiqueChimieChapitres }, // passer à true quand les 16 PDF sont dans public/fiches/france/physique-chimie/
+  { slug: 'physique-chimie',  nom: 'Physique-Chimie',      icone: '⚛️', disponible: true,  chapitres: physiqueChimieChapitres },
   { slug: 'svt',              nom: 'SVT',                  icone: '🌱', disponible: true,  chapitres: svtChapitres },
   { slug: 'informatique',     nom: 'Informatique (NSI)',   icone: '💻', disponible: false, chapitres: [] },
   { slug: 'francais',         nom: 'Français',             icone: '📖', disponible: false, chapitres: [] },
