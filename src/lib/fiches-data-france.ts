@@ -75,13 +75,24 @@ const physiqueChimieChapitres: FicheChapitreFrance[] = [
   { numero: 16, titre: 'Circuit RC', unite: 'Ondes et signaux', file: 'chapitre16_circuit_rc.pdf' },
 ]
 
+const anglaisChapitres: FicheChapitreFrance[] = [
+  { numero: 1, titre: 'Identities and Exchanges',             unite: 'Axe 1', file: 'chapitre1_identities_exchanges.pdf' },
+  { numero: 2, titre: 'Private and Public Spheres',           unite: 'Axe 2', file: 'chapitre2_private_public_sphere.pdf' },
+  { numero: 3, titre: 'Art and Power',                        unite: 'Axe 3', file: 'chapitre3_art_power.pdf' },
+  { numero: 4, titre: 'Citizenship and Virtual Worlds',       unite: 'Axe 4', file: 'chapitre4_citizenship_virtual_worlds.pdf' },
+  { numero: 5, titre: 'Fictions and Realities',               unite: 'Axe 5', file: 'chapitre5_fictions_realities.pdf' },
+  { numero: 6, titre: 'Scientific Innovation and Responsibility', unite: 'Axe 6', file: 'chapitre6_scientific_innovation.pdf' },
+  { numero: 7, titre: 'Diversity and Inclusion',              unite: 'Axe 7', file: 'chapitre7_diversity_inclusion.pdf' },
+  { numero: 8, titre: 'Territory and Memory',                 unite: 'Axe 8', file: 'chapitre8_territory_memory.pdf' },
+]
+
 export const FICHES_FRANCE: FicheMatiereFrance[] = [
   { slug: 'mathematiques',    nom: 'Mathématiques',       icone: '🧮', disponible: true,  chapitres: mathematiquesChapitres },
   { slug: 'physique-chimie',  nom: 'Physique-Chimie',      icone: '⚛️', disponible: true,  chapitres: physiqueChimieChapitres },
   { slug: 'svt',              nom: 'SVT',                  icone: '🌱', disponible: true,  chapitres: svtChapitres },
   { slug: 'informatique',     nom: 'Informatique (NSI)',   icone: '💻', disponible: false, chapitres: [] },
   { slug: 'francais',         nom: 'Français',             icone: '📖', disponible: false, chapitres: [] },
-  { slug: 'anglais',          nom: 'Anglais',              icone: '🇬🇧', disponible: false, chapitres: [] },
+  { slug: 'anglais',          nom: 'Anglais',              icone: '🇬🇧', disponible: true,  chapitres: anglaisChapitres },
   { slug: 'eco-gestion',      nom: 'Éco-Gestion',          icone: '📈', disponible: false, chapitres: [] },
 ]
 
